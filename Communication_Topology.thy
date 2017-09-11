@@ -33,20 +33,18 @@ value "Map.empty (Var ''x'' \<mapsto> 4)"
   
 datatype val = 
   V_Chan chan 
-| V_Closure prim env
+| V_Closure prim "var \<rightharpoonup> val"
 | V_Unit
-and env = 
-  Env "var \<rightharpoonup> val"
 
-datatype cont = Cont var exp env
+type_synonym cont = "var \<times> exp \<times> (var \<rightharpoonup> val)"
 
-datatype state = St exp env "cont list"
+type_synonym state = "exp \<times> (var \<rightharpoonup> val) \<times> cont list"
   
 inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   SS_Var: "
    (\<rho> x) = Some \<omega>
    \<Longrightarrow>
-   (St (E_Var x) (Env \<rho>)  ((Cont x_ct e_ct (Env \<rho>_ct)) # \<kappa>)) \<rightarrow> (St e_ct (Env (\<rho>_ct(x_ct \<mapsto> \<omega>))) \<kappa>)
+   (E_Var x, \<rho>, (x_ct, e_ct, \<rho>_ct) # \<kappa>) \<rightarrow> (e_ct, \<rho>_ct(x_ct \<mapsto> \<omega>), \<kappa>)
   "
   
   
