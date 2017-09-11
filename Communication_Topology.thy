@@ -30,18 +30,24 @@ and bind =
   
 value "Map.empty (Var ''x'' \<mapsto> 4)"
   
+  
 datatype val = 
   V_Chan chan 
-| V_Closure val env
+| V_Closure prim env
 | V_Unit
-and env = Env "var \<Rightarrow> val option"
-
-
+and env = 
+  Env "var \<rightharpoonup> val"
 
 datatype cont = Cont var exp env
 
 datatype state = St exp env "cont list"
-inductive seq_step :: ""
+  
+inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
+  SS_Var: "
+   (\<rho> x) = Some \<omega>
+   \<Longrightarrow>
+   (St (E_Var x) (Env \<rho>)  ((Cont x_ct e_ct (Env \<rho>_ct)) # \<kappa>)) \<rightarrow> (St e_ct (Env (\<rho>_ct(x_ct \<mapsto> \<omega>))) \<kappa>)
+  "
   
   
 end
