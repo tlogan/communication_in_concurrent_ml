@@ -49,9 +49,9 @@ value "Map.empty (Var ''x'' \<mapsto> 4)"
 
   
 datatype val = 
-  V_Chan chan 
+  V_Chan chan ("\<lbrace>_\<rbrace>")
 | V_Closure prim "var \<rightharpoonup> val" ("\<lbrace>_, _\<rbrace>")
-| V_Unit
+| V_Unit ("\<lbrace>\<rbrace>")
 
   
 fun closure :: "bind \<Rightarrow> (var \<rightharpoonup> val) \<Rightarrow> val option" ("\<lbrace>_, _\<rbrace>?") where
@@ -69,6 +69,11 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<r
     \<Longrightarrow>
     (RESULT x, \<rho>, \<langle>x_ct, e_ct, \<rho>_ct\<rangle> # \<kappa>) \<rightarrow> (e_ct, \<rho>_ct(x_ct \<mapsto> \<omega>), \<kappa>)
   " |
+   SS_Let_Unit: "
+    \<omega> = \<lbrace>\<rbrace>
+    \<Longrightarrow>
+    (LET x = \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<rightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
+  " |
   SS_Let_Prim: "
     \<omega> = \<lbrace>p, \<rho>\<rbrace>
     \<Longrightarrow>
@@ -78,7 +83,7 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<r
     (\<rho> x_f) = Some \<omega>_f \<Longrightarrow> Some \<omega>_f = \<lbrace>FN x_f_abs x_a_abs. e_abs, \<rho>_abs\<rbrace>? \<Longrightarrow>
     (\<rho> x_a) = Some \<omega>_a
     \<Longrightarrow>
-    (LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<rightarrow> (e_abs, \<rho>_abs(x_f_abs \<mapsto> \<omega>_f, x_a_abs \<mapsto> \<omega>_a ), \<langle>x, e, \<rho>\<rangle> # \<kappa> )
+    (LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<rightarrow> (e_abs, \<rho>_abs(x_f_abs \<mapsto> \<omega>_f, x_a_abs \<mapsto> \<omega>_a), \<langle>x, e, \<rho>\<rangle> # \<kappa> )
   "
   
 abbreviation a where "a \<equiv> Var ''a''"
