@@ -79,12 +79,17 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<r
     \<Longrightarrow>
     (LET x = (B_Prim p) in e, \<rho>, \<kappa>) \<rightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
-  SS_Let_App: "
-    (\<rho> x_f) = Some \<omega>_f \<Longrightarrow> Some \<omega>_f = \<lbrace>FN x_f_abs x_a_abs. e_abs, \<rho>_abs\<rbrace>? \<Longrightarrow>
-    (\<rho> x_a) = Some \<omega>_a
+  SS_Let_App: "\<lbrakk>
+    (\<rho> x_f) = Some \<omega>_f ; 
+    Some \<omega>_f = \<lbrace>FN x_f_abs x_a_abs. e_abs, \<rho>_abs\<rbrace>? ;
+    (\<rho> x_a) = Some \<omega>_a \<rbrakk>
     \<Longrightarrow>
-    (LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<rightarrow> (e_abs, \<rho>_abs(x_f_abs \<mapsto> \<omega>_f, x_a_abs \<mapsto> \<omega>_a), \<langle>x, e, \<rho>\<rangle> # \<kappa> )
+    (LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<rightarrow> (e_abs, \<rho>_abs(x_f_abs \<mapsto> \<omega>_f, x_a_abs \<mapsto> \<omega>_a), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
+  
+inductive seq_steps :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where
+  SSS_Refl: "x \<rightarrow>* x" |
+  SSS_Step: "\<lbrakk>x \<rightarrow> y ; y \<rightarrow>* z\<rbrakk> \<Longrightarrow> x \<rightarrow>* z"
   
 abbreviation a where "a \<equiv> Var ''a''"
 abbreviation b where "b \<equiv> Var ''b''"
