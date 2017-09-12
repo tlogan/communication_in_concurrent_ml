@@ -30,8 +30,8 @@ and bind =
 | B_Prim prim
 | B_App var var
     
-abbreviation exp_let :: "string \<Rightarrow> bind \<Rightarrow> exp \<Rightarrow> exp" ("LET _ = _ |> _" [0,0, 61] 61) where
-  "LET x = b |> e \<equiv> E_Let (Var x) b e"
+abbreviation exp_let :: "string \<Rightarrow> bind \<Rightarrow> exp \<Rightarrow> exp" ("LET _ = _ in _" [0,0, 61] 61) where
+  "LET x = b in e \<equiv> E_Let (Var x) b e"
   
 abbreviation exp_var :: "string \<Rightarrow> exp" ("VAR _" [61] 61) where
   "VAR x \<equiv> E_Var (Var x)"
@@ -54,8 +54,8 @@ abbreviation bind_app :: "string \<Rightarrow> string \<Rightarrow> bind" ("APP 
 abbreviation bind_case :: "string \<Rightarrow> string \<Rightarrow> exp \<Rightarrow> string \<Rightarrow> exp \<Rightarrow> bind" ("CASE _ LEFT _ |> _ RIGHT _ |> _" [0,0,0,0, 61] 61) where
   "CASE x LEFT xl |> el RIGHT xr |> er \<equiv> B_Prim (PT_Case (Var x) (Var xl) el (Var xr) er)"
   
-abbreviation bind_abs :: "string => string => exp => bind" ("FUN _, _ |> _" [0, 0, 61] 61) where
-  "FUN f, x |> e \<equiv> B_Prim (PT_Abs (Var f) (Var x) e)"
+abbreviation bind_abs :: "string => string => exp => bind" ("FN _, _ . _" [0, 0, 61] 61) where
+  "FN f, x . e \<equiv> B_Prim (PT_Abs (Var f) (Var x) e)"
   
 abbreviation bind_pair :: "string => string => bind" ("\<lparr>_, _\<rparr>" [0, 0] 61) where
   "\<lparr>x, y\<rparr> \<equiv> B_Prim (PT_Pair (Var x) (Var y))"
@@ -75,20 +75,24 @@ datatype val =
 | V_Unit
   
   
-value "LET ''y'' = \<lparr>\<rparr> |> VAR ''y''"
+value "LET ''y'' = \<lparr>\<rparr> in VAR ''y''"
 
 value "
-LET ''y'' = \<lparr>\<rparr> |>
-LET ''x'' = CHAN \<lparr>\<rparr> |>
-LET ''z'' = \<lparr>''x'', ''y''\<rparr> |>
-LET ''a'' = SEND ''x'' ''y'' |>
-LET ''b'' = FST ''z'' |>
-LET ''c'' = RIGHT ''b'' |>
+LET ''y'' = \<lparr>\<rparr> in
+LET ''x'' = CHAN \<lparr>\<rparr> in
+LET ''z'' = \<lparr>''x'', ''y''\<rparr> in
+LET ''a'' = SEND ''x'' ''y'' in
+LET ''b'' = FST ''z'' in
+LET ''c'' = RIGHT ''b'' in
 LET ''d'' = 
   CASE ''c''
   LEFT ''cl'' |> VAR ''cl''
   RIGHT ''cr'' |> VAR ''cr''
-|>
+in
+LET ''g'' = FN ''ff'', ''xx'' .
+  LET ''x'' = APP ''ff'' ''xx'' in 
+  VAR ''x''
+in
 VAR ''z''
 "
 
