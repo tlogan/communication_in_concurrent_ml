@@ -13,8 +13,7 @@ datatype exp =
 | E_Result var ("RESULT _" [61] 61)
 
 and prim = 
-  PT_Case var var exp var exp
-| PT_Abs var var exp
+  PT_Abs var var exp
 | PT_Pair var var
 | PT_Left var
 | PT_Right var
@@ -27,11 +26,9 @@ and bind =
 | B_Recv var ("RECV _" [61] 61)
 | B_Fst var ("FST _" [61] 61)
 | B_Snd var ("SND _" [61] 61)
+| B_Case var var exp var exp ("CASE _ LEFT _ |> _ RIGHT _ |> _" [0,0,0,0, 61] 61)
 | B_Prim prim
 | B_App var var ("APP _ _" [61, 61] 61)
-
-abbreviation bind_case :: "var \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bind" ("CASE _ LEFT _ |> _ RIGHT _ |> _" [0,0,0,0, 61] 61) where
-  "CASE x LEFT xl |> el RIGHT xr |> er \<equiv> B_Prim (PT_Case x xl el xr er)"
   
 abbreviation bind_abs :: "var => var => exp => bind" ("FN _ _ . _" [0, 0, 61] 61) where
   "FN f x . e \<equiv> B_Prim (PT_Abs f x e)"
@@ -75,14 +72,32 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<r
     (LET x = \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<rightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   SS_Let_Prim: "
-    \<omega> = \<lbrace>p, \<rho>\<rbrace>
+    Some \<omega> = \<lbrace>b, \<rho>\<rbrace>?
     \<Longrightarrow>
-    (LET x = (B_Prim p) in e, \<rho>, \<kappa>) \<rightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
+    (LET x = b in e, \<rho>, \<kappa>) \<rightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
+  " |
+  SS_Let_Case_Left: "
+    \<lbrakk>(\<rho> x_sum) = \<lbrace>LEFT x_ll, \<rho>_l\<rbrace>? ; (\<rho>_l x_ll) = Some \<omega>_l \<rbrakk>
+    \<Longrightarrow>
+    (LET x = CASE x_sum LEFT x_l |> e_l RIGHT _ |> _ in e, \<rho>, \<kappa>) \<rightarrow> (e_l, \<rho>(x_l \<mapsto> \<omega>_l), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
+  " |
+  SS_Let_Case_Right: "
+    \<lbrakk>(\<rho> x_sum) = \<lbrace>RIGHT x_rr, \<rho>_r\<rbrace>? ; (\<rho>_r x_rr) = Some \<omega>_r \<rbrakk>
+    \<Longrightarrow>
+    (LET x = CASE x_sum LEFT _ |> _ RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<rightarrow> (e_r, \<rho>(x_r \<mapsto> \<omega>_r), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
+  " |
+  SS_Fst: "
+  \<lbrakk> (\<rho> x_p) = \<lbrace>\<lparr>x1, _\<rparr>, \<rho>_p\<rbrace>? ; (\<rho>_p x1) = Some \<omega> \<rbrakk>
+  \<Longrightarrow>
+  (LET x = FST x_p in e, \<rho>, \<kappa>) \<rightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
+  " |
+  SS_Snd: "
+  \<lbrakk> (\<rho> x_p) = \<lbrace>\<lparr>_, x2\<rparr>, \<rho>_p\<rbrace>? ; (\<rho>_p x2) = Some \<omega> \<rbrakk>
+  \<Longrightarrow>
+  (LET x = FST x_p in e, \<rho>, \<kappa>) \<rightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   SS_Let_App: "\<lbrakk>
-    (\<rho> x_f) = Some \<omega>_f ; 
-    Some \<omega>_f = \<lbrace>FN x_f_abs x_a_abs. e_abs, \<rho>_abs\<rbrace>? ;
-    (\<rho> x_a) = Some \<omega>_a \<rbrakk>
+    (\<rho> x_f) = Some \<omega>_f ; Some \<omega>_f = \<lbrace>FN x_f_abs x_a_abs. e_abs, \<rho>_abs\<rbrace>? ; (\<rho> x_a) = Some \<omega>_a \<rbrakk>
     \<Longrightarrow>
     (LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<rightarrow> (e_abs, \<rho>_abs(x_f_abs \<mapsto> \<omega>_f, x_a_abs \<mapsto> \<omega>_a), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
