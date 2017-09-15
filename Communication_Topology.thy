@@ -122,6 +122,8 @@ inductive seq_steps :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<
   Seqs_Step: "\<lbrakk>x \<hookrightarrow> y ; y \<hookrightarrow>* z\<rbrakk> \<Longrightarrow> x \<hookrightarrow>* z"
   
 type_synonym trace = "var list"
+type_synonym val_pool = "trace \<rightharpoonup> val"
+type_synonym state_pool = "trace \<rightharpoonup> state"
   
 inductive leaf :: "(trace \<rightharpoonup> state) \<Rightarrow> trace \<Rightarrow> bool" where
   Leaf: "
@@ -133,7 +135,8 @@ inductive leaf :: "(trace \<rightharpoonup> state) \<Rightarrow> trace \<Rightar
   leaf t \<pi>
   "
 
-inductive sync_step :: "(trace \<rightharpoonup> val) \<Rightarrow> (trace \<rightharpoonup> val) \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
+
+inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
   Sync_Send_Recv: "
   \<lbrakk>
   \<not>(prefix \<pi>_s \<pi>_r) ; \<not>(prefix \<pi>_r \<pi>_s) ;
@@ -144,26 +147,37 @@ inductive sync_step :: "(trace \<rightharpoonup> val) \<Rightarrow> (trace \<rig
   \<lbrace>ALWAYS EVT x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>? = Some \<omega>_r'
   \<rbrakk>
   \<Longrightarrow>
-  s(\<pi>_s \<mapsto> \<omega>_s, \<pi>_r \<mapsto> \<omega>_r) \<leadsto> s(\<pi>_s \<mapsto> \<omega>_s', \<pi>_r \<mapsto> \<omega>_r')
+  vpool(\<pi>_s \<mapsto> \<omega>_s, \<pi>_r \<mapsto> \<omega>_r) \<leadsto> vpool(\<pi>_s \<mapsto> \<omega>_s', \<pi>_r \<mapsto> \<omega>_r')
   "
+  
 
-inductive concur_step :: "(trace \<rightharpoonup> state) \<Rightarrow> (trace \<rightharpoonup> state) \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
+inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Concur_Seq_Lift: "
   \<lbrakk> (t \<pi>) = Some st; st = (LET x = _ in _, _, _); st \<hookrightarrow> st'\<rbrakk>
   \<Longrightarrow>
-  t \<rightarrow> t(\<pi>@[x] \<mapsto> st')
+  stpool \<rightarrow> stpool(\<pi>@[x] \<mapsto> st')
   " |
   Concur_Sync_Lift: "
-  \<lbrakk> 
-  leaf t \<pi>_1 ;
-  (t \<pi>_1) = Some st_1 ; st_1 = (LET x_1 = SYNC x_evt_1 in e_1, \<rho>_1, \<kappa>_1) ;
-  (\<rho>_1 x_evt_1) = Some \<omega>_1 ;
-  \<omega>_1 \<leadsto> \<omega>_1' ;
-  SOME \<omega>_1' = \<lbrace>ALWAYS EVT x_a_1, [x_a_1 \<mapsto> \<omega>_a_1]\<rbrace>? ;
-  st_1' = (e_1, \<rho>_1(x_1 \<mapsto> \<omega>_a_1), \<kappa>_1)
+  \<lbrakk>
+  vpool \<leadsto> vpool';
+  
+  \<forall> \<pi> . (
+    leaf stpool \<pi> \<longrightarrow>
+    (stpool \<pi>) = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<longrightarrow>
+    (\<rho> x_evt) = Some \<omega> \<longrightarrow>
+    (vpool \<pi>) = Some \<omega> \<longrightarrow>
+    (vpool' \<pi>) = Some \<omega>' \<longrightarrow>
+    Some \<omega>' = \<lbrace>ALWAYS EVT x_a, [x_a \<mapsto> \<omega>_a]\<rbrace>? \<longrightarrow>
+    stpool_sync (\<pi>@[x]) = Some (e, \<rho>(x \<mapsto> \<omega>_a), \<kappa>)
+  ) ;
+
+  \<forall> \<pi> x. stpool (\<pi>@[x]) = Some _ \<longrightarrow> vpool' \<pi> = Some _ ;
+
+  \<forall> \<pi> x y. stpool (\<pi>@[x]) = Some _ \<longrightarrow> stpool (\<pi>@[y]) = Some _ \<longrightarrow> x = y
+
   \<rbrakk>
   \<Longrightarrow>
-  t \<rightarrow> t(\<pi>_1@[x_1] \<mapsto> st_1')
+  stpool \<rightarrow> stpool ++ stpool_sync
   "
 
   
