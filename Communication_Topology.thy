@@ -139,9 +139,13 @@ inductive leaf :: "(trace \<rightharpoonup> state) \<Rightarrow> trace \<Rightar
 inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
   Sync_Send_Recv: "
   \<lbrakk>
-  \<not>(prefix \<pi>_s \<pi>_r) ; \<not>(prefix \<pi>_r \<pi>_s) ;
-  Some \<omega>_s = \<lbrace>SEND EVT x_ch x_m, \<rho>_s\<rbrace>? ;
-  Some \<omega>_r = \<lbrace>RECV EVT x_ch, \<rho>_r\<rbrace>? ;
+
+  Some \<omega>_s = \<lbrace>SEND EVT x_ch_s x_m, \<rho>_s\<rbrace>? ;
+  Some \<omega>_r = \<lbrace>RECV EVT x_ch_r, \<rho>_r\<rbrace>? ;
+
+  \<rho>_s x_ch_s = Some (V_Chan ch) ;
+  \<rho>_r x_ch_r = Some (V_Chan ch) ;
+
   \<lbrace>ALWAYS EVT x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>? = Some \<omega>_s' ;
   (\<rho>_s x_m) = Some \<omega>_m ;
   \<lbrace>ALWAYS EVT x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>? = Some \<omega>_r'
@@ -149,7 +153,6 @@ inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (inf
   \<Longrightarrow>
   vpool(\<pi>_s \<mapsto> \<omega>_s, \<pi>_r \<mapsto> \<omega>_r) \<leadsto> vpool(\<pi>_s \<mapsto> \<omega>_s', \<pi>_r \<mapsto> \<omega>_r')
   "
-  
 
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Concur_Seq_Lift: "
@@ -159,9 +162,12 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
   " |
   Concur_Sync_Lift: "
   \<lbrakk>
+
   vpool \<leadsto> vpool';
-  
-  \<forall> \<pi> . (
+  (stpool_sync []) = None ;
+  (\<forall> \<pi> x. stpool_sync (\<pi>@[x]) = Some _ \<longrightarrow> vpool' \<pi> = Some _ );
+  (\<forall> \<pi> x y. stpool_sync (\<pi>@[x]) = Some _ \<longrightarrow> stpool_sync (\<pi>@[y]) = Some _ \<longrightarrow> x = y) ;
+  (\<forall> \<pi> .
     leaf stpool \<pi> \<longrightarrow>
     (stpool \<pi>) = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<longrightarrow>
     (\<rho> x_evt) = Some \<omega> \<longrightarrow>
@@ -169,11 +175,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
     (vpool' \<pi>) = Some \<omega>' \<longrightarrow>
     Some \<omega>' = \<lbrace>ALWAYS EVT x_a, [x_a \<mapsto> \<omega>_a]\<rbrace>? \<longrightarrow>
     stpool_sync (\<pi>@[x]) = Some (e, \<rho>(x \<mapsto> \<omega>_a), \<kappa>)
-  ) ;
-
-  \<forall> \<pi> x. stpool (\<pi>@[x]) = Some _ \<longrightarrow> vpool' \<pi> = Some _ ;
-
-  \<forall> \<pi> x y. stpool (\<pi>@[x]) = Some _ \<longrightarrow> stpool (\<pi>@[y]) = Some _ \<longrightarrow> x = y
+  )
 
   \<rbrakk>
   \<Longrightarrow>
