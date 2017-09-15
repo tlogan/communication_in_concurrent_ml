@@ -1,5 +1,5 @@
 theory Communication_Topology
-  imports Main
+  imports Main "~~/src/HOL/Library/Sublist"
 begin
   
 datatype var = Var string
@@ -32,6 +32,15 @@ and bind =
   B_Prim prim |
   B_App var var ("APP _ _" [61, 61] 61)
   
+abbreviation bind_send_evt :: "var => var => bind" ("SEND EVT _ _" [0, 61] 61) where
+  "SEND EVT x y \<equiv> B_Prim (P_Send_Evt x y)"
+  
+abbreviation bind_recv_evt :: "var => bind" ("RECV EVT _" [61] 61) where
+  "RECV EVT x \<equiv> B_Prim (P_Recv_Evt x)"
+
+abbreviation bind_always_evt :: "var \<Rightarrow> bind" ("ALWAYS EVT _" [61] 61) where
+  "ALWAYS EVT x \<equiv> B_Prim (P_Always_Evt x)"
+  
 abbreviation bind_abs :: "var => var => exp => bind" ("FN _ _ . _" [0, 0, 61] 61) where
   "FN f x . e \<equiv> B_Prim (P_Abs f x e)"
   
@@ -62,65 +71,101 @@ datatype cont = Cont var exp "var \<rightharpoonup> val" ("\<langle>_,_,_\<rangl
 
 type_synonym state = "exp \<times> (var \<rightharpoonup> val) \<times> cont list"
   
-inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
+inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<hookrightarrow>" 55) where 
   Seq_Result: "
     (\<rho> x) = Some \<omega>
     \<Longrightarrow>
-    (RESULT x, \<rho>, \<langle>x_ct, e_ct, \<rho>_ct\<rangle> # \<kappa>) \<rightarrow> (e_ct, \<rho>_ct(x_ct \<mapsto> \<omega>), \<kappa>)
+    (RESULT x, \<rho>, \<langle>x_ct, e_ct, \<rho>_ct\<rangle> # \<kappa>) \<hookrightarrow> (e_ct, \<rho>_ct(x_ct \<mapsto> \<omega>), \<kappa>)
   " |
    Seq_Let_Unit: "
-    \<omega> = \<lbrace>\<rbrace>
+    \<lbrace>\<rbrace> = \<omega>
     \<Longrightarrow>
-    (LET x = \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<rightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
+    (LET x = \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   Seq_Let_Prim: "
-    Some \<omega> = \<lbrace>b, \<rho>\<rbrace>?
+    \<lbrace>b, \<rho>\<rbrace>? = Some \<omega>
     \<Longrightarrow>
-    (LET x = b in e, \<rho>, \<kappa>) \<rightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
+    (LET x = b in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   Seq_Let_Case_Left: "
     \<lbrakk>(\<rho> x_sum) = \<lbrace>LEFT x_ll, \<rho>_l\<rbrace>? ; (\<rho>_l x_ll) = Some \<omega>_l \<rbrakk>
     \<Longrightarrow>
-    (LET x = CASE x_sum LEFT x_l |> e_l RIGHT _ |> _ in e, \<rho>, \<kappa>) \<rightarrow> (e_l, \<rho>(x_l \<mapsto> \<omega>_l), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
+    (LET x = CASE x_sum LEFT x_l |> e_l RIGHT _ |> _ in e, \<rho>, \<kappa>) \<hookrightarrow> (e_l, \<rho>(x_l \<mapsto> \<omega>_l), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   " |
   Seq_Let_Case_Right: "
     \<lbrakk>(\<rho> x_sum) = \<lbrace>RIGHT x_rr, \<rho>_r\<rbrace>? ; (\<rho>_r x_rr) = Some \<omega>_r \<rbrakk>
     \<Longrightarrow>
-    (LET x = CASE x_sum LEFT _ |> _ RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<rightarrow> (e_r, \<rho>(x_r \<mapsto> \<omega>_r), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
+    (LET x = CASE x_sum LEFT _ |> _ RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<hookrightarrow> (e_r, \<rho>(x_r \<mapsto> \<omega>_r), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   " |
   Seq_Fst: "
-  \<lbrakk> (\<rho> x_p) = \<lbrace>\<lparr>x1, _\<rparr>, \<rho>_p\<rbrace>? ; (\<rho>_p x1) = Some \<omega> \<rbrakk>
-  \<Longrightarrow>
-  (LET x = FST x_p in e, \<rho>, \<kappa>) \<rightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
+    \<lbrakk> (\<rho> x_p) = \<lbrace>\<lparr>x1, _\<rparr>, \<rho>_p\<rbrace>? ; (\<rho>_p x1) = Some \<omega> \<rbrakk>
+    \<Longrightarrow>
+    (LET x = FST x_p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   Seq_Snd: "
-  \<lbrakk> (\<rho> x_p) = \<lbrace>\<lparr>_, x2\<rparr>, \<rho>_p\<rbrace>? ; (\<rho>_p x2) = Some \<omega> \<rbrakk>
-  \<Longrightarrow>
-  (LET x = FST x_p in e, \<rho>, \<kappa>) \<rightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
-  " |
-  Seq_Let_App: "\<lbrakk>
-    (\<rho> x_f) = Some \<omega>_f ; Some \<omega>_f = \<lbrace>FN x_f_abs x_a_abs. e_abs, \<rho>_abs\<rbrace>? ; (\<rho> x_a) = Some \<omega>_a \<rbrakk>
+    \<lbrakk> (\<rho> x_p) = \<lbrace>\<lparr>_, x2\<rparr>, \<rho>_p\<rbrace>? ; (\<rho>_p x2) = Some \<omega> \<rbrakk>
     \<Longrightarrow>
-    (LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<rightarrow> (e_abs, \<rho>_abs(x_f_abs \<mapsto> \<omega>_f, x_a_abs \<mapsto> \<omega>_a), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
+    (LET x = FST x_p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
+  " |
+  Seq_Let_App: "
+    \<lbrakk>
+    (\<rho> x_f) = Some \<omega>_f ; 
+    Some \<omega>_f = \<lbrace>FN x_f_abs x_a_abs. e_abs, \<rho>_abs\<rbrace>? ; 
+    (\<rho> x_a) = Some \<omega>_a 
+    \<rbrakk>
+    \<Longrightarrow>
+    (LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<hookrightarrow> (e_abs, \<rho>_abs(x_f_abs \<mapsto> \<omega>_f, x_a_abs \<mapsto> \<omega>_a), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
   
-inductive seq_steps :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where
-  Seqs_Refl: "x \<rightarrow>* x" |
-  Seqs_Step: "\<lbrakk>x \<rightarrow> y ; y \<rightarrow>* z\<rbrakk> \<Longrightarrow> x \<rightarrow>* z"
+inductive seq_steps :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<hookrightarrow>*" 55) where
+  Seqs_Refl: "x \<hookrightarrow>* x" |
+  Seqs_Step: "\<lbrakk>x \<hookrightarrow> y ; y \<hookrightarrow>* z\<rbrakk> \<Longrightarrow> x \<hookrightarrow>* z"
   
-(*
 type_synonym trace = "var list"
-inductive sync_step :: "(trace \<rightharpoonup> state) \<Rightarrow> (trace \<rightharpoonup> state) \<Rightarrow> bool" (infix "\<leadsto>" 55) where
-  Sync_Lift: "
-    \<lbrakk>(*if \<pi> is leaf in t *) t(\<pi>) = Some st;  st = (LET x = _ in _, _, _) ; st \<rightarrow> st'\<rbrakk>
-    \<Longrightarrow>
-    t \<leadsto> t(\<pi>@[x] \<mapsto> st')
-  " |
-  Sync_Send_Recv: "
-    \<lbrakk>(*if \<pi> is leaf in t *) 
-    t \<leadsto> t(\<pi>_s \<mapsto> ())
+  
+inductive leaf :: "(trace \<rightharpoonup> state) \<Rightarrow> trace \<Rightarrow> bool" where
+  Leaf: "
+  \<lbrakk>
+  (t \<pi>) = Some _ ;
+  \<nexists> \<pi>' . (t \<pi>') = Some _ \<and> (strict_prefix \<pi> \<pi>')
+  \<rbrakk> 
+  \<Longrightarrow>
+  leaf t \<pi>
   "
-*)
+
+inductive sync_step :: "(trace \<rightharpoonup> val) \<Rightarrow> (trace \<rightharpoonup> val) \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
+  Sync_Send_Recv: "
+  \<lbrakk>
+  \<not>(prefix \<pi>_s \<pi>_r) ; \<not>(prefix \<pi>_r \<pi>_s) ;
+  Some \<omega>_s = \<lbrace>SEND EVT x_ch x_m, \<rho>_s\<rbrace>? ;
+  Some \<omega>_r = \<lbrace>RECV EVT x_ch, \<rho>_r\<rbrace>? ;
+  \<lbrace>ALWAYS EVT x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>? = Some \<omega>_s' ;
+  (\<rho>_s x_m) = Some \<omega>_m ;
+  \<lbrace>ALWAYS EVT x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>? = Some \<omega>_r'
+  \<rbrakk>
+  \<Longrightarrow>
+  s(\<pi>_s \<mapsto> \<omega>_s, \<pi>_r \<mapsto> \<omega>_r) \<leadsto> s(\<pi>_s \<mapsto> \<omega>_s', \<pi>_r \<mapsto> \<omega>_r')
+  "
+
+inductive concur_step :: "(trace \<rightharpoonup> state) \<Rightarrow> (trace \<rightharpoonup> state) \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
+  Concur_Seq_Lift: "
+  \<lbrakk> (t \<pi>) = Some st; st = (LET x = _ in _, _, _); st \<hookrightarrow> st'\<rbrakk>
+  \<Longrightarrow>
+  t \<rightarrow> t(\<pi>@[x] \<mapsto> st')
+  " |
+  Concur_Sync_Lift: "
+  \<lbrakk> 
+  leaf t \<pi>_1 ;
+  (t \<pi>_1) = Some st_1 ; st_1 = (LET x_1 = SYNC x_evt_1 in e_1, \<rho>_1, \<kappa>_1) ;
+  (\<rho>_1 x_evt_1) = Some \<omega>_1 ;
+  \<omega>_1 \<leadsto> \<omega>_1' ;
+  SOME \<omega>_1' = \<lbrace>ALWAYS EVT x_a_1, [x_a_1 \<mapsto> \<omega>_a_1]\<rbrace>? ;
+  st_1' = (e_1, \<rho>_1(x_1 \<mapsto> \<omega>_a_1), \<kappa>_1)
+  \<rbrakk>
+  \<Longrightarrow>
+  t \<rightarrow> t(\<pi>_1@[x_1] \<mapsto> st_1')
+  "
+
   
   
 abbreviation a where "a \<equiv> Var ''a''"
@@ -141,7 +186,8 @@ value "
 LET a = \<lparr>\<rparr> in
 LET b = CHAN \<lparr>\<rparr> in
 LET c = \<lparr>a, b\<rparr> in
-LET x = SEND b a in
+LET x = SEND EVT b a in
+LET x = SYNC x in
 LET y = FST c in
 LET z = RIGHT y in
 LET d = 
@@ -154,7 +200,6 @@ LET e = FN f x .
   RESULT a
 in
 RESULT c
-"
-  
+" 
   
 end
