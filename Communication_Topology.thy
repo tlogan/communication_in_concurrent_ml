@@ -73,47 +73,39 @@ type_synonym state = "exp \<times> (var \<rightharpoonup> val) \<times> cont lis
   
 inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<hookrightarrow>" 55) where 
   Seq_Result: "
-    (\<rho> x) = Some \<omega>
-    \<Longrightarrow>
+    (\<rho> x) = Some \<omega> \<Longrightarrow>
     (RESULT x, \<rho>, \<langle>x_ct, e_ct, \<rho>_ct\<rangle> # \<kappa>) \<hookrightarrow> (e_ct, \<rho>_ct(x_ct \<mapsto> \<omega>), \<kappa>)
   " |
-   Seq_Let_Unit: "
-    \<lbrace>\<rbrace> = \<omega>
-    \<Longrightarrow>
+  Seq_Let_Unit: "
+    \<lbrace>\<rbrace> = \<omega> \<Longrightarrow>
     (LET x = \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   Seq_Let_Prim: "
-    \<lbrace>b, \<rho>\<rbrace>? = Some \<omega>
-    \<Longrightarrow>
+    \<lbrace>b, \<rho>\<rbrace>? = Some \<omega> \<Longrightarrow>
     (LET x = b in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   Seq_Let_Case_Left: "
-    \<lbrakk>(\<rho> x_sum) = \<lbrace>LEFT x_ll, \<rho>_l\<rbrace>? ; (\<rho>_l x_ll) = Some \<omega>_l \<rbrakk>
-    \<Longrightarrow>
+    \<lbrakk>(\<rho> x_sum) = \<lbrace>LEFT x_ll, \<rho>_l\<rbrace>? ; (\<rho>_l x_ll) = Some \<omega>_l \<rbrakk> \<Longrightarrow>
     (LET x = CASE x_sum LEFT x_l |> e_l RIGHT _ |> _ in e, \<rho>, \<kappa>) \<hookrightarrow> (e_l, \<rho>(x_l \<mapsto> \<omega>_l), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   " |
   Seq_Let_Case_Right: "
-    \<lbrakk>(\<rho> x_sum) = \<lbrace>RIGHT x_rr, \<rho>_r\<rbrace>? ; (\<rho>_r x_rr) = Some \<omega>_r \<rbrakk>
-    \<Longrightarrow>
+    \<lbrakk>(\<rho> x_sum) = \<lbrace>RIGHT x_rr, \<rho>_r\<rbrace>? ; (\<rho>_r x_rr) = Some \<omega>_r \<rbrakk> \<Longrightarrow>
     (LET x = CASE x_sum LEFT _ |> _ RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<hookrightarrow> (e_r, \<rho>(x_r \<mapsto> \<omega>_r), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   " |
   Seq_Fst: "
-    \<lbrakk> (\<rho> x_p) = \<lbrace>\<lparr>x1, _\<rparr>, \<rho>_p\<rbrace>? ; (\<rho>_p x1) = Some \<omega> \<rbrakk>
-    \<Longrightarrow>
+    \<lbrakk> (\<rho> x_p) = \<lbrace>\<lparr>x1, _\<rparr>, \<rho>_p\<rbrace>? ; (\<rho>_p x1) = Some \<omega> \<rbrakk> \<Longrightarrow>
     (LET x = FST x_p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   Seq_Snd: "
-    \<lbrakk> (\<rho> x_p) = \<lbrace>\<lparr>_, x2\<rparr>, \<rho>_p\<rbrace>? ; (\<rho>_p x2) = Some \<omega> \<rbrakk>
-    \<Longrightarrow>
+    \<lbrakk> (\<rho> x_p) = \<lbrace>\<lparr>_, x2\<rparr>, \<rho>_p\<rbrace>? ; (\<rho>_p x2) = Some \<omega> \<rbrakk> \<Longrightarrow>
     (LET x = FST x_p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   Seq_Let_App: "
     \<lbrakk>
-    (\<rho> x_f) = Some \<omega>_f ; 
-    Some \<omega>_f = \<lbrace>FN x_f_abs x_a_abs. e_abs, \<rho>_abs\<rbrace>? ; 
-    (\<rho> x_a) = Some \<omega>_a 
-    \<rbrakk>
-    \<Longrightarrow>
+      (\<rho> x_f) = Some \<omega>_f ; 
+      Some \<omega>_f = \<lbrace>FN x_f_abs x_a_abs. e_abs, \<rho>_abs\<rbrace>? ; 
+      (\<rho> x_a) = Some \<omega>_a 
+    \<rbrakk> \<Longrightarrow>
     (LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<hookrightarrow> (e_abs, \<rho>_abs(x_f_abs \<mapsto> \<omega>_f, x_a_abs \<mapsto> \<omega>_a), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
   
@@ -127,62 +119,68 @@ type_synonym state_pool = "trace \<rightharpoonup> state"
   
 inductive leaf :: "(trace \<rightharpoonup> state) \<Rightarrow> trace \<Rightarrow> bool" where
   Leaf: "
-  \<lbrakk>
-  (t \<pi>) = Some _ ;
-  \<nexists> \<pi>' . (t \<pi>') = Some _ \<and> (strict_prefix \<pi> \<pi>')
-  \<rbrakk> 
-  \<Longrightarrow>
-  leaf t \<pi>
+    \<lbrakk>
+      (t \<pi>) = Some _ ;
+      \<nexists> \<pi>' . (t \<pi>') = Some _ \<and> (strict_prefix \<pi> \<pi>')
+    \<rbrakk> \<Longrightarrow>
+    leaf t \<pi>
   "
 
 
 inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
   Sync_Send_Recv: "
-  \<lbrakk>
+    \<lbrakk>
+      Some \<omega>_s = \<lbrace>SEND EVT x_ch_s x_m, \<rho>_s\<rbrace>? ;
+      Some \<omega>_r = \<lbrace>RECV EVT x_ch_r, \<rho>_r\<rbrace>? ;
 
-  Some \<omega>_s = \<lbrace>SEND EVT x_ch_s x_m, \<rho>_s\<rbrace>? ;
-  Some \<omega>_r = \<lbrace>RECV EVT x_ch_r, \<rho>_r\<rbrace>? ;
+      \<rho>_s x_ch_s = Some (V_Chan ch) ;
+      \<rho>_r x_ch_r = Some (V_Chan ch) ;
 
-  \<rho>_s x_ch_s = Some (V_Chan ch) ;
-  \<rho>_r x_ch_r = Some (V_Chan ch) ;
-
-  \<lbrace>ALWAYS EVT x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>? = Some \<omega>_s' ;
-  (\<rho>_s x_m) = Some \<omega>_m ;
-  \<lbrace>ALWAYS EVT x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>? = Some \<omega>_r'
-  \<rbrakk>
-  \<Longrightarrow>
-  vpool(\<pi>_s \<mapsto> \<omega>_s, \<pi>_r \<mapsto> \<omega>_r) \<leadsto> vpool(\<pi>_s \<mapsto> \<omega>_s', \<pi>_r \<mapsto> \<omega>_r')
+      \<lbrace>ALWAYS EVT x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>? = Some \<omega>_s' ;
+      (\<rho>_s x_m) = Some \<omega>_m ;
+      \<lbrace>ALWAYS EVT x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>? = Some \<omega>_r'
+    \<rbrakk> \<Longrightarrow>
+    vpool(\<pi>_s \<mapsto> \<omega>_s, \<pi>_r \<mapsto> \<omega>_r) \<leadsto> vpool(\<pi>_s \<mapsto> \<omega>_s', \<pi>_r \<mapsto> \<omega>_r')
   "
 
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
-  Concur_Seq_Lift: "
-  \<lbrakk> (t \<pi>) = Some st; st = (LET x = _ in _, _, _); st \<hookrightarrow> st'\<rbrakk>
-  \<Longrightarrow>
-  stpool \<rightarrow> stpool(\<pi>@[x] \<mapsto> st')
+  Concur_Lift_Seq: "
+    \<lbrakk> (stpool \<pi>) = Some st; st = (LET x = _ in _, _, _); st \<hookrightarrow> st'\<rbrakk> \<Longrightarrow>
+    stpool \<rightarrow> stpool(\<pi>@[x] \<mapsto> st')
   " |
-  Concur_Sync_Lift: "
-  \<lbrakk>
-
-  vpool \<leadsto> vpool';
-  (stpool_sync []) = None ;
-  (\<forall> \<pi> x. stpool_sync (\<pi>@[x]) = Some _ \<longrightarrow> vpool' \<pi> = Some _ );
-  (\<forall> \<pi> x y. stpool_sync (\<pi>@[x]) = Some _ \<longrightarrow> stpool_sync (\<pi>@[y]) = Some _ \<longrightarrow> x = y) ;
-  (\<forall> \<pi> .
-    leaf stpool \<pi> \<longrightarrow>
-    (stpool \<pi>) = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<longrightarrow>
-    (\<rho> x_evt) = Some \<omega> \<longrightarrow>
-    (vpool \<pi>) = Some \<omega> \<longrightarrow>
-    (vpool' \<pi>) = Some \<omega>' \<longrightarrow>
-    Some \<omega>' = \<lbrace>ALWAYS EVT x_a, [x_a \<mapsto> \<omega>_a]\<rbrace>? \<longrightarrow>
-    stpool_sync (\<pi>@[x]) = Some (e, \<rho>(x \<mapsto> \<omega>_a), \<kappa>)
-  )
-
-  \<rbrakk>
-  \<Longrightarrow>
-  stpool \<rightarrow> stpool ++ stpool_sync
+  Concur_Lift_Sync: "
+    \<lbrakk>
+      vpool \<leadsto> vpool';
+      (stpool_sync []) = None ;
+      (\<forall> \<pi> x. stpool_sync (\<pi>@[x]) = Some _ \<longrightarrow> vpool' \<pi> = Some _ );
+      (\<forall> \<pi> x y. stpool_sync (\<pi>@[x]) = Some _ \<longrightarrow> stpool_sync (\<pi>@[y]) = Some _ \<longrightarrow> x = y) ;
+      (\<forall> \<pi> .
+        leaf stpool \<pi> \<longrightarrow>
+        (stpool \<pi>) = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<longrightarrow>
+        (\<rho> x_evt) = Some \<omega> \<longrightarrow>  
+        (vpool \<pi>) = Some \<omega> \<longrightarrow>
+        (vpool' \<pi>) = Some \<omega>' \<longrightarrow>
+        Some \<omega>' = \<lbrace>ALWAYS EVT x_a, [x_a \<mapsto> \<omega>_a]\<rbrace>? \<longrightarrow>
+        stpool_sync (\<pi>@[x]) = Some (e, \<rho>(x \<mapsto> \<omega>_a), \<kappa>)
+      )
+    \<rbrakk> \<Longrightarrow>
+    stpool \<rightarrow> stpool ++ stpool_sync
+  " |
+  Concur_Let_Chan: "
+    \<lbrakk> 
+      (stpool \<pi>) = Some st; st = (LET x = CHAN \<lparr>\<rparr> in e, \<rho>, \<kappa>); 
+      st' = (e, \<rho>(x \<mapsto> \<lbrace>Chan (\<pi>@[x])\<rbrace>), \<kappa>)
+    \<rbrakk> \<Longrightarrow>
+    stpool \<rightarrow> stpool((\<pi>@[x]) \<mapsto> st')
+  " |
+  Concur_Let_Spawn: "
+    \<lbrakk> 
+      (stpool \<pi>) = Some st; st = (LET x = SPAWN e_child in e, \<rho>, \<kappa>); 
+      st' = (e, \<rho>(x \<mapsto> \<lbrace>\<rbrace>), \<kappa>) ;
+      st'' = (e_child, \<rho>, \<kappa>)
+    \<rbrakk> \<Longrightarrow>
+    stpool \<rightarrow> stpool(\<pi>@[x] \<mapsto> st', \<pi>@[x] \<mapsto> st'')
   "
-
-  
   
 abbreviation a where "a \<equiv> Var ''a''"
 abbreviation b where "b \<equiv> Var ''b''"
