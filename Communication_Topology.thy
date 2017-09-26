@@ -9,6 +9,7 @@ value " Var ''x''"
 type_synonym control_path = "(var + unit) list"
 datatype chan = Ch control_path
   
+(* ANF grammar *)
 datatype exp = 
   E_Let var bind exp ("LET _ = _ in _" [0,0, 61] 61) |
   E_Result var ("RESULT _" [61] 61)
@@ -114,9 +115,6 @@ inductive seq_steps :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<
   Seqs_Step: "\<lbrakk>x \<hookrightarrow> y ; y \<hookrightarrow>* z\<rbrakk> \<Longrightarrow> x \<hookrightarrow>* z"
   
 
-
-  
-  
 abbreviation control_path_append_var :: "control_path => var => control_path" (infixl ";;" 61) where
   "\<pi>;;x \<equiv> \<pi> @ [Inl x]"
   
@@ -235,6 +233,159 @@ definition fan_out :: "exp \<Rightarrow> var \<Rightarrow> bool" where
   
 definition fan_in :: "exp \<Rightarrow> var \<Rightarrow> bool" where
   "fan_in e x \<longleftrightarrow> \<not> single_sender e x \<and> single_receiver e x "
+
+
+(* unrestricted grammar*)
+
+datatype u_exp =
+  U_Let var  u_exp u_exp (".LET _ = _ in _" [0,0, 61] 61) |
+  U_Var var ("._" [61] 61)|
+  U_Abs var var u_exp (".FN _ _ .  _" [0, 0, 61] 61)|
+  U_Pair u_exp u_exp (".\<lparr>_, _\<rparr>" [0, 0] 61)|
+  U_Left u_exp (".LEFT _" [61] 61)|
+  U_Right u_exp (".RIGHT _" [61] 61)|
+  U_Send_Evt u_exp u_exp (".SEND EVT _ _" [61] 61)|
+  U_Recv_Evt u_exp (".RECV EVT _" [61] 61)|
+  U_Always_Evt u_exp (".ALWAYS EVT _" [61] 61)|
+  U_Unit (".\<lparr>\<rparr>") |
+  U_Chan (".CHAN \<lparr>\<rparr>") |
+  U_Spawn u_exp (".SPAWN _" [61] 61) |
+  U_Sync u_exp (".SYNC _" [61] 61) |
+  U_Fst u_exp (".FST _" [61] 61) |
+  U_Snd u_exp (".SND _" [61] 61) |
+  U_Case u_exp var u_exp var u_exp (".CASE _ LEFT _ |> _ RIGHT _ |> _" [0,0,0,0, 61] 61) |
+  U_App u_exp u_exp (".APP _ _" [61, 61] 61)
+  
+  
+fun rename :: "var \<Rightarrow> var \<Rightarrow> u_exp \<Rightarrow> u_exp" where
+  "rename x0 x1 (.y) = (if x0 = y then .x1 else .y)" |
+  "rename x0 x1 (.LET x2 = eb in e) = (.LET x2 = rename x0 x1 eb in
+    (if x0 = x2 then e else (rename x0 x1 e))
+  )" |
+  "rename x0 x1 (.FN f x2 . e) = (.FN f x2 .
+    (if x0 = f \<or> x0 = x2 then e else (rename x0 x1 e))
+  )" | 
+  "rename x0 x1 (.\<lparr>e1, e2\<rparr>) = .\<lparr>rename x0 x1 e1, rename x0 x1 e2\<rparr>" |
+  "rename x0 x1 (.LEFT e) = .LEFT (rename x0 x1 e)" |
+  "rename x0 x1 (.RIGHT e) = .RIGHT (rename x0 x1 e)" |
+  "rename x0 x1 (.SEND EVT e1 e2) = .SEND EVT (rename x0 x1 e1) (rename x0 x1 e2)" |
+  "rename x0 x1 (.RECV EVT e) = .RECV EVT (rename x0 x1 e)" |
+  "rename x0 x1 (.ALWAYS EVT e) = .ALWAYS EVT (rename x0 x1 e)" |
+  "rename x0 x1 (.\<lparr>\<rparr>) = .\<lparr>\<rparr>" |
+  "rename x0 x1 (.CHAN \<lparr>\<rparr>) = .CHAN \<lparr>\<rparr>" |
+  "rename x0 x1 (.SPAWN e) = .SPAWN (rename x0 x1 e)" |
+  "rename x0 x1 (.SYNC e) = .SYNC (rename x0 x1 e)" |
+  "rename x0 x1 (.FST e) = .FST (rename x0 x1 e)" |
+  "rename x0 x1 (.SND e) = .SND (rename x0 x1 e)" |
+  "rename x0 x1 (.CASE e1 LEFT x2 |> e2 RIGHT x3 |> e3) = 
+    (.CASE rename x0 x1 e1 
+      LEFT x2 |> (if x0 = x2 then e2 else (rename x0 x1 e2)) 
+      RIGHT x3 |> (if x0 = x3 then e3 else (rename x0 x1 e3)) 
+    )
+  " |
+  "rename x0 x1 (.APP e1 e2) = .APP (rename x0 x1 e1) (rename x0 x1 e2)"
+ 
+abbreviation sym where "sym \<equiv> Var ''sym''" 
+  
+(*definition sym :: "nat \<Rightarrow> string" where "sym i = ''x'' @ [char_of_nat i]"*)
+  
+fun normalize :: "u_exp \<Rightarrow> exp" 
+and normalize_cont :: "u_exp \<Rightarrow> (var \<Rightarrow> exp) \<Rightarrow> exp" where
+  "normalize e = normalize_cont e (\<lambda> x . RESULT x)" |
+  "normalize_cont (.x) k = k x" |
+  "normalize_cont (.LET x = .xb in e) k = 
+    normalize_cont (rename x xb e) k
+  " |
+  "normalize_cont (.LET x = eb in e) k = 
+    normalize_cont eb (\<lambda> xb . 
+      normalize_cont (rename x xb e) k
+    )
+  " |
+  "normalize_cont (.FN f x . e) k =
+    (let f' = sym in
+    (let x' = sym in
+    (let e' = (rename f f' (rename x x' e)) in
+    LET sym = (FN f x . normalize e) in (k sym)
+    )))
+  " |
+  "normalize_cont (.\<lparr>e1, e2\<rparr>) k =
+    normalize_cont e1 (\<lambda> x1 .
+      normalize_cont e2 (\<lambda> x2 .
+        LET sym = \<lparr>x1, x2\<rparr> in (k sym)
+      )
+    )
+  " |
+  "normalize_cont (.LEFT e) k =
+    normalize_cont e (\<lambda> xb .
+      LET sym = LEFT xb in (k sym)
+    )
+  " |
+  "normalize_cont (.RIGHT e) k =
+    normalize_cont e (\<lambda> xb .
+      LET sym = RIGHT xb in (k sym)
+    )
+  " |
+  "normalize_cont (.SEND EVT e1 e2) k =
+    normalize_cont e1 (\<lambda> x1 .
+      normalize_cont e2 (\<lambda> x2 .
+        LET sym = SEND EVT x1 x2 in (k sym)
+     ) 
+   )
+  " |
+  "normalize_cont (.RECV EVT e) k =
+    normalize_cont e (\<lambda> xb .
+      LET sym = RECV EVT xb in (k sym)
+    )
+  " |
+  "normalize_cont (.ALWAYS EVT e) k =
+    normalize_cont e (\<lambda> xb .
+      LET sym = ALWAYS EVT xb in (k sym)
+    )
+  " |
+  "normalize_cont (.\<lparr>\<rparr>) k =
+    LET sym = \<lparr>\<rparr> in (k sym)
+  "|
+  "normalize_cont (.CHAN \<lparr>\<rparr>) k =
+    LET sym = CHAN \<lparr>\<rparr> in (k sym)
+  "|
+  "normalize_cont (.SPAWN e) k =
+    LET sym = SPAWN (normalize e) in (k sym)
+  " |
+  "normalize_cont (.SYNC e) k =
+    normalize_cont e (\<lambda> xb .
+      LET sym = SYNC xb in (k sym)
+    )
+  " |
+  "normalize_cont (.FST e) k =
+    normalize_cont e (\<lambda> xb .
+      LET sym = FST xb in (k sym)
+    )
+  " |
+  "normalize_cont (.SND e) k =
+    normalize_cont e (\<lambda> xb .
+      LET sym = SND xb in (k sym)
+    )
+  " |
+  "normalize_cont (.CASE e LEFT xl |> el RIGHT xr |> er) k =
+    normalize_cont e (\<lambda> x .
+      (let xl' = sym in
+      (let el' = (rename xl xl' el) in
+      (let xr' = sym in  
+      (let er' = (rename xr xr' er) in
+      LET sym = CASE x LEFT xl' |> (normalize el') RIGHT xr' |> (normalize er') in (k sym)  
+      ))))
+    )
+  " |
+  "normalize_cont (.APP e1 e2) k =
+    normalize_cont e1 (\<lambda> x1 .
+      normalize_cont e2 (\<lambda> x2 .
+        LET sym = APP x1 x2 in (k sym)
+     ) 
+   )
+  "
+  
+ 
+  
   
 abbreviation a where "a \<equiv> Var ''a''"
 abbreviation b where "b \<equiv> Var ''b''"
@@ -243,31 +394,51 @@ abbreviation c where "c \<equiv> Var ''c''"
 abbreviation d where "d \<equiv> Var ''d''"
 abbreviation e where "e \<equiv> Var ''e''"
 abbreviation f where "f \<equiv> Var ''f''"
-  
+abbreviation w where "w \<equiv> Var ''w''"
 abbreviation x where "x \<equiv> Var ''x''"
 abbreviation y where "y \<equiv> Var ''y''"
 abbreviation z where "z \<equiv> Var ''z''"
   
-value "LET y = \<lparr>\<rparr> in VAR y"
+definition prog_one where 
+  "prog_one = 
+    LET a = CHAN \<lparr>\<rparr> in
+    LET b = SPAWN (
+      LET c = CHAN \<lparr>\<rparr> in
+      LET x = SEND EVT a c in
+      LET y = SYNC x in
+      LET z = RECV EVT c in
+      RESULT z
+    ) in
+    LET d = RECV EVT a in
+    LET e = SYNC d in
+    LET f = SEND EVT e b in
+    LET w = SYNC f in
+    RESULT w
+  "
+(*
+theorem prog_one_properties: "
+  single_receiver prog_one a \<and>
+  single_sender prog_one a \<and>
+  single_receiver prog_one c \<and>
+  single_sender prog_one c
+"
+*) 
 
-value "
-LET a = \<lparr>\<rparr> in
-LET b = CHAN \<lparr>\<rparr> in
-LET c = \<lparr>a, b\<rparr> in
-LET x = SEND EVT b a in
-LET x = SYNC x in
-LET y = FST c in
-LET z = RIGHT y in
-LET d = 
-  CASE z
-  LEFT d |> RESULT d
-  RIGHT d |> RESULT d
-in
-LET e = FN f x .
-  LET a = APP f x in
-  RESULT a
-in
-RESULT c
-" 
-  
-end
+(*  
+definition prog_two where 
+  "prog_two = 
+    .LET a = .CHAN \<lparr>\<rparr> in
+    .LET b = .SPAWN (
+      .LET c = .CHAN \<lparr>\<rparr> in
+      .LET x = .SEND EVT .a .c in
+      .LET y = .SYNC .x in
+      .LET z = .RECV EVT .c in
+      .z
+    ) in
+    .LET d = .RECV EVT .a in
+    .LET e = .SYNC .d in
+    .LET f = .SEND EVT .e .b in
+    .LET w = .SYNC .f in
+    .w
+  "
+*)
