@@ -257,6 +257,26 @@ datatype u_exp =
   U_App u_exp u_exp (".APP _ _" [61, 61] 61)
   
   
+fun program_size :: "u_exp \<Rightarrow> nat" where
+  "program_size (.y) = 1" |
+  "program_size (.LET x2 = eb in e) = 1 + (program_size eb) + (program_size e)" |
+  "program_size (.FN f x2 . e) = 1 + (program_size e)" | 
+  "program_size (.\<lparr>e1, e2\<rparr>) = 1 + (program_size e1) + (program_size e2)" |
+  "program_size (.LEFT e) = 1 + (program_size e)" |
+  "program_size (.RIGHT e) = 1 + (program_size e)" |
+  "program_size (.SEND EVT e1 e2) = 1 + (program_size e1) + (program_size e2)" |
+  "program_size (.RECV EVT e) =  1 + (program_size e)" |
+  "program_size (.ALWAYS EVT e) = 1 + (program_size e)" |
+  "program_size (.\<lparr>\<rparr>) = 1" |
+  "program_size (.CHAN \<lparr>\<rparr>) = 1" |
+  "program_size (.SPAWN e) = 1 + (program_size e)" |
+  "program_size (.SYNC e) = 1 + (program_size e)" |
+  "program_size (.FST e) = 1 + (program_size e)" |
+  "program_size (.SND e) = 1 + (program_size e)" |
+  "program_size (.CASE e1 LEFT x2 |> e2 RIGHT x3 |> e3) = 1 + (program_size e1) + (program_size e2) + (program_size e3)" |
+  "program_size (.APP e1 e2) = 1 + (program_size e1) + (program_size e2)"
+  
+  
 fun rename :: "var \<Rightarrow> var \<Rightarrow> u_exp \<Rightarrow> u_exp" where
   "rename x0 x1 (.y) = (if x0 = y then .x1 else .y)" |
   "rename x0 x1 (.LET x2 = eb in e) = (.LET x2 = rename x0 x1 eb in
@@ -284,107 +304,134 @@ fun rename :: "var \<Rightarrow> var \<Rightarrow> u_exp \<Rightarrow> u_exp" wh
     )
   " |
   "rename x0 x1 (.APP e1 e2) = .APP (rename x0 x1 e1) (rename x0 x1 e2)"
- 
-abbreviation sym where "sym \<equiv> Var ''sym''" 
   
-(*definition sym :: "nat \<Rightarrow> string" where "sym i = ''x'' @ [char_of_nat i]"*)
   
-fun normalize :: "u_exp \<Rightarrow> exp" 
-and normalize_cont :: "u_exp \<Rightarrow> (var \<Rightarrow> exp) \<Rightarrow> exp" where
-  "normalize e = normalize_cont e (\<lambda> x . RESULT x)" |
-  "normalize_cont (.x) k = k x" |
-  "normalize_cont (.LET x = .xb in e) k = 
-    normalize_cont (rename x xb e) k
+theorem program_size_rename_equal[simp]: "program_size (rename x0 x1 e) = program_size e"
+by (induction e) auto
+  
+definition sym :: "nat \<Rightarrow> var" where "sym i = Var (''g'' @ [char_of_nat i])"
+  
+
+function (sequential) normalize_cont :: "nat \<Rightarrow> u_exp \<Rightarrow> (var \<Rightarrow> exp) \<Rightarrow> exp" where
+  "normalize_cont i (.x) k = k x" |
+  "normalize_cont i (.LET x = .xb in e) k = 
+    normalize_cont i (rename x xb e) k
   " |
-  "normalize_cont (.LET x = eb in e) k = 
-    normalize_cont eb (\<lambda> xb . 
-      normalize_cont (rename x xb e) k
+  "normalize_cont i (.LET x = eb in e) k = 
+    normalize_cont i eb (\<lambda> xb . 
+      normalize_cont i (rename x xb e) k
     )
   " |
-  "normalize_cont (.FN f x . e) k =
-    (let f' = sym in
-    (let x' = sym in
+  "normalize_cont i (.FN f x . e) k =
+    (let g = sym i in
+    (let f' = sym (i+1) in
+    (let x' = sym (i+2) in
     (let e' = (rename f f' (rename x x' e)) in
-    LET sym = (FN f x . normalize e) in (k sym)
-    )))
+    LET g = (FN f x . normalize_cont (i+3) e' (\<lambda> x . RESULT x)) in (k g)
+    ))))
   " |
-  "normalize_cont (.\<lparr>e1, e2\<rparr>) k =
-    normalize_cont e1 (\<lambda> x1 .
-      normalize_cont e2 (\<lambda> x2 .
-        LET sym = \<lparr>x1, x2\<rparr> in (k sym)
+  "normalize_cont i (.\<lparr>e1, e2\<rparr>) k =
+    (let g = sym i in
+    normalize_cont (i+1) e1 (\<lambda> x1 .
+      normalize_cont (i+2) e2 (\<lambda> x2 .
+        LET g = \<lparr>x1, x2\<rparr> in (k g)
       )
-    )
+    ))
   " |
-  "normalize_cont (.LEFT e) k =
-    normalize_cont e (\<lambda> xb .
-      LET sym = LEFT xb in (k sym)
-    )
+  "normalize_cont i (.LEFT e) k =
+    (let g = sym i in
+    normalize_cont (i+1) e (\<lambda> xb .
+      LET g = LEFT xb in (k g)
+    ))
   " |
-  "normalize_cont (.RIGHT e) k =
-    normalize_cont e (\<lambda> xb .
-      LET sym = RIGHT xb in (k sym)
-    )
+  "normalize_cont i (.RIGHT e) k =
+    (let g = sym i in
+    normalize_cont (i+1) e (\<lambda> xb .
+      LET g = RIGHT xb in (k g)
+    ))
   " |
-  "normalize_cont (.SEND EVT e1 e2) k =
-    normalize_cont e1 (\<lambda> x1 .
-      normalize_cont e2 (\<lambda> x2 .
-        LET sym = SEND EVT x1 x2 in (k sym)
+  "normalize_cont i (.SEND EVT e1 e2) k =
+    (let g = sym i in
+    normalize_cont (i+1) e1 (\<lambda> x1 .
+      normalize_cont (i+2) e2 (\<lambda> x2 .
+        LET g = SEND EVT x1 x2 in (k g)
      ) 
-   )
+   ))
   " |
-  "normalize_cont (.RECV EVT e) k =
-    normalize_cont e (\<lambda> xb .
-      LET sym = RECV EVT xb in (k sym)
+  "normalize_cont i (.RECV EVT e) k =
+    (let g = sym i in
+    normalize_cont (i+1) e (\<lambda> xb .
+      LET g = RECV EVT xb in (k g)
+    ))
+  " |
+  "normalize_cont i (.ALWAYS EVT e) k =
+    (let g = sym i in
+    normalize_cont (i+1) e (\<lambda> xb .
+      LET g = ALWAYS EVT xb in (k g)
+    ))
+  " |
+  "normalize_cont i (.\<lparr>\<rparr>) k =
+    (let g = sym i in
+    LET g = \<lparr>\<rparr> in (k g)
     )
-  " |
-  "normalize_cont (.ALWAYS EVT e) k =
-    normalize_cont e (\<lambda> xb .
-      LET sym = ALWAYS EVT xb in (k sym)
-    )
-  " |
-  "normalize_cont (.\<lparr>\<rparr>) k =
-    LET sym = \<lparr>\<rparr> in (k sym)
   "|
-  "normalize_cont (.CHAN \<lparr>\<rparr>) k =
-    LET sym = CHAN \<lparr>\<rparr> in (k sym)
+  "normalize_cont i (.CHAN \<lparr>\<rparr>) k =
+    (let g = sym i in
+    LET g = CHAN \<lparr>\<rparr> in (k g)
+    )
   "|
-  "normalize_cont (.SPAWN e) k =
-    LET sym = SPAWN (normalize e) in (k sym)
-  " |
-  "normalize_cont (.SYNC e) k =
-    normalize_cont e (\<lambda> xb .
-      LET sym = SYNC xb in (k sym)
+  "normalize_cont i (.SPAWN e) k =
+    (let g = sym i in
+    LET g = SPAWN (normalize_cont (i+1) e (\<lambda> x . RESULT x)) in (k g)
     )
   " |
-  "normalize_cont (.FST e) k =
-    normalize_cont e (\<lambda> xb .
-      LET sym = FST xb in (k sym)
-    )
+  "normalize_cont i (.SYNC e) k =
+    (let g = sym i in
+    normalize_cont (i+1) e (\<lambda> xb .
+      LET g = SYNC xb in (k g)
+    ))
   " |
-  "normalize_cont (.SND e) k =
-    normalize_cont e (\<lambda> xb .
-      LET sym = SND xb in (k sym)
-    )
+  "normalize_cont i(.FST e) k =
+    (let g = sym i in
+    normalize_cont (i+1) e (\<lambda> xb .
+      LET g = FST xb in (k g)
+    ))
   " |
-  "normalize_cont (.CASE e LEFT xl |> el RIGHT xr |> er) k =
-    normalize_cont e (\<lambda> x .
-      (let xl' = sym in
-      (let el' = (rename xl xl' el) in
-      (let xr' = sym in  
-      (let er' = (rename xr xr' er) in
-      LET sym = CASE x LEFT xl' |> (normalize el') RIGHT xr' |> (normalize er') in (k sym)  
-      ))))
-    )
+  "normalize_cont i (.SND e) k =
+    (let g = sym i in
+    normalize_cont (i+1) e (\<lambda> xb .
+      LET g = SND xb in (k g)
+    ))
   " |
-  "normalize_cont (.APP e1 e2) k =
-    normalize_cont e1 (\<lambda> x1 .
-      normalize_cont e2 (\<lambda> x2 .
-        LET sym = APP x1 x2 in (k sym)
-     ) 
-   )
+  "normalize_cont i (.CASE e LEFT xl |> el RIGHT xr |> er) k =
+    (let g = sym i in
+    (let xl' = sym (i+1) in
+    (let el' = (rename xl xl' el) in
+    (let xr' = sym (i+2) in  
+    (let er' = (rename xr xr' er) in
+    normalize_cont (i+3) e (\<lambda> x .
+      LET g = 
+        CASE x 
+        LEFT xl' |> (normalize_cont (i+4) el' (\<lambda> x . RESULT x)) 
+        RIGHT xr' |> (normalize_cont (i+5) er' (\<lambda> x . RESULT x)) 
+      in (k g)  
+    ))))))
+  " |
+  "normalize_cont i (.APP e1 e2) k =
+    (let g = sym i in
+    normalize_cont (i+1) e1 (\<lambda> x1 .
+      normalize_cont (i+2) e2 (\<lambda> x2 .
+        LET g = APP x1 x2 in (k g)
+      ) 
+    ))
   "
-  
- 
+by pat_completeness auto
+termination by (relation "measure (\<lambda>(i, e, k). program_size e)") auto
+
+    
+definition normalize :: "u_exp \<Rightarrow> exp" where
+  "normalize e = normalize_cont 100 e  (\<lambda> x . RESULT x)"
+
   
   
 abbreviation a where "a \<equiv> Var ''a''"
