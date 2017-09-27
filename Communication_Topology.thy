@@ -304,14 +304,25 @@ fun rename :: "var \<Rightarrow> var \<Rightarrow> u_exp \<Rightarrow> u_exp" wh
     )
   " |
   "rename x0 x1 (.APP e1 e2) = .APP (rename x0 x1 e1) (rename x0 x1 e2)"
-  
+
   
 theorem program_size_rename_equal[simp]: "program_size (rename x0 x1 e) = program_size e"
-by (induction e) auto
+  by (induction e) auto
+ 
   
-definition sym :: "nat \<Rightarrow> var" where "sym i = Var (''g'' @ [char_of_nat i])"
+(* code from John Wickerson https://stackoverflow.com/questions/23864965/string-of-nat-in-isabelle *)  
+fun string_of_nat :: "nat \<Rightarrow> string" where
+  "string_of_nat n = (
+    if n < 10 then 
+      [char_of_nat (48 + n)] 
+    else 
+      string_of_nat (n div 10) @ [char_of_nat (48 + (n mod 10))]
+  )"
   
-
+definition sym :: "nat \<Rightarrow> var" where "sym i = Var (''g'' @ (string_of_nat i))"
+  
+(*related normalize algorithm explained at http://matt.might.net/articles/a-normalization/ *) 
+(*termination proofs explained in http://isabelle.in.tum.de/doc/functions.pdf*)
 function (sequential) normalize_cont :: "nat \<Rightarrow> u_exp \<Rightarrow> (var \<Rightarrow> exp) \<Rightarrow> exp" where
   "normalize_cont i (.x) k = k x" |
   "normalize_cont i (.LET x = .xb in e) k = 
@@ -319,7 +330,7 @@ function (sequential) normalize_cont :: "nat \<Rightarrow> u_exp \<Rightarrow> (
   " |
   "normalize_cont i (.LET x = eb in e) k = 
     normalize_cont i eb (\<lambda> xb . 
-      normalize_cont i (rename x xb e) k
+      normalize_cont (i+1) (rename x xb e) k
     )
   " |
   "normalize_cont i (.FN f x . e) k =
@@ -480,7 +491,7 @@ theorem prog_one_properties: "
 "
 *) 
 
-(*  
+ 
 definition prog_two where 
   "prog_two = 
     .LET a = .CHAN \<lparr>\<rparr> in
@@ -497,4 +508,5 @@ definition prog_two where
     .LET w = .SYNC .f in
     .w
   "
-*)
+  
+value "normalize prog_two"
