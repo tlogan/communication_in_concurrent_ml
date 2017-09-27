@@ -330,7 +330,7 @@ function (sequential) normalize_cont :: "nat \<Rightarrow> u_exp \<Rightarrow> (
   " |
   "normalize_cont i (.LET x = eb in e) k = 
     normalize_cont i eb (\<lambda> xb . 
-      normalize_cont (i+1) (rename x xb e) k
+      normalize_cont i (rename x xb e) k
     )
   " |
   "normalize_cont i (.FN f x . e) k =
