@@ -477,16 +477,12 @@ definition prog_one where
     LET a = CHAN \<lparr>\<rparr> in
     LET b = SPAWN (
       LET c = CHAN \<lparr>\<rparr> in
-      LET x = SEND EVT a c in
-      LET y = SYNC x in
-      LET z = RECV EVT c in
-      RESULT z
+      LET d = SEND EVT a b in
+      RESULT d
     ) in
-    LET d = RECV EVT a in
-    LET e = SYNC d in
-    LET f = SEND EVT e b in
-    LET w = SYNC f in
-    RESULT w
+    LET e = RECV EVT a in
+    LET f = SYNC e in
+    RESULT f
   "
   
   
@@ -517,6 +513,23 @@ apply (auto simp add: single_receiver_def single_side_def state_pool_possible_de
     
 definition prog_two where 
   "prog_two = 
+    LET a = CHAN \<lparr>\<rparr> in
+    LET b = SPAWN (
+      LET c = CHAN \<lparr>\<rparr> in
+      LET x = SEND EVT a c in
+      LET y = SYNC x in
+      LET z = RECV EVT c in
+      RESULT z
+    ) in
+    LET d = RECV EVT a in
+    LET e = SYNC d in
+    LET f = SEND EVT e b in
+    LET w = SYNC f in
+    RESULT w
+  "
+    
+definition prog_three where 
+  "prog_three = 
     .LET a = .CHAN \<lparr>\<rparr> in
     .LET b = .SPAWN (
       .LET c = .CHAN \<lparr>\<rparr> in
@@ -532,10 +545,10 @@ definition prog_two where
     .w
   "
   
-value "normalize prog_two"
+value "normalize prog_three"
   
-definition prog_three where
-  "prog_three = 
+definition prog_four where
+  "prog_four = 
     .LET a = .FN f x .
       .CASE .x
       LEFT b |> .RIGHT (.APP .f .b)
@@ -544,6 +557,6 @@ definition prog_three where
     .APP .a (.LEFT (.LEFT (.LEFT (.RIGHT .\<lparr>\<rparr>))))
   "
   
-value "normalize prog_three"
+value "normalize prog_four"
   
 
