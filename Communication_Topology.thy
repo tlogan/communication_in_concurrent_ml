@@ -1,5 +1,5 @@
 theory Communication_Topology
-  imports Main "~~/src/HOL/Library/Sublist"
+  imports Main "~~/src/HOL/Library/Sublist" "~~/src/HOL/IMP/Star"
 begin
   
 datatype var = Var string
@@ -335,10 +335,7 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
       x_a_abs \<mapsto> \<omega>_a
     ), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
-  
-inductive seq_steps :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<hookrightarrow>*" 55) where
-  Seqs_Refl: "x \<hookrightarrow>* x" |
-  Seqs_Step: "\<lbrakk>x \<hookrightarrow> y ; y \<hookrightarrow>* z\<rbrakk> \<Longrightarrow> x \<hookrightarrow>* z"
+
   
 
 abbreviation control_path_append_var :: "control_path => var => control_path" (infixl ";;" 61) where
@@ -404,9 +401,8 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
     )
   "
   
-inductive concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where
-  Concurs_Refl: "x \<rightarrow>* x" |
-  Concurs_Step: "\<lbrakk>x \<rightarrow> y ; y \<rightarrow>* z\<rbrakk> \<Longrightarrow> x \<rightarrow>* z"
+abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
+  "x \<rightarrow>* y \<equiv> star concur_step x y"
   
 definition send_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
   "send_sites stpool ch = {\<pi>. \<exists> x x_evt e \<kappa> \<rho> x_ch x_m \<rho>_evt. 
@@ -501,13 +497,17 @@ theorem prog_one_properties: "
   single_receiver prog_one a
 "
 apply (auto simp add: single_receiver_def single_side_def state_pool_possible_def)
-  apply (erule concur_steps.cases)
-   apply (simp)
-   apply (frule_tac P="\<lambda> x . \<pi>_1 \<in> recv_sites x (Ch (\<pi> ;; a)) " in ssubst, assumption)
-   apply (drule_tac P="\<lambda> x . \<pi>_2 \<in> recv_sites x (Ch (\<pi> ;; a))" in ssubst, assumption)
-   apply simp
-  apply simp
-  apply (drule_tac P="\<lambda> x . x \<rightarrow> y" in ssubst, auto)
+apply (erule star.cases)
+apply (simp)
+apply (frule_tac P="\<lambda> x . \<pi>_1 \<in> recv_sites x (Ch (\<pi> ;; a)) " in ssubst, assumption)
+apply (drule_tac P="\<lambda> x . \<pi>_2 \<in> recv_sites x (Ch (\<pi> ;; a))" in ssubst, assumption)
+apply simp
+apply simp
+apply (drule_tac P="\<lambda> x . x \<rightarrow> y" in ssubst, auto)
+apply (auto simp add: prog_one_def)
+apply (erule concur_step.cases, auto)
+
+    
 
     
     
