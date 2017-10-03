@@ -368,7 +368,7 @@ inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (inf
 
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Concur_Lift_Seq: "
-    \<lbrakk> (stpool \<pi>) = Some st; st = (LET x = _ in _, _, _); st \<hookrightarrow> st'\<rbrakk> \<Longrightarrow>
+    \<lbrakk> (stpool \<pi>) = Some (LET x = b in e, \<rho>, \<kappa>); (LET x = b in e, \<rho>, \<kappa>) \<hookrightarrow> st'\<rbrakk> \<Longrightarrow>
     stpool \<rightarrow> stpool(\<pi>;;x \<mapsto> st')
   " |
   Concur_Lift_Sync: "
@@ -496,16 +496,27 @@ by (auto simp add: recv_sites_def)
 theorem prog_one_properties: "
   single_receiver prog_one a
 "
-apply (auto simp add: single_receiver_def single_side_def state_pool_possible_def)
-apply (erule star.cases)
-apply (simp)
-apply (frule_tac P="\<lambda> x . \<pi>_1 \<in> recv_sites x (Ch (\<pi> ;; a)) " in ssubst, assumption)
-apply (drule_tac P="\<lambda> x . \<pi>_2 \<in> recv_sites x (Ch (\<pi> ;; a))" in ssubst, assumption)
-apply simp
-apply simp
-apply (drule_tac P="\<lambda> x . x \<rightarrow> y" in ssubst, auto)
-apply (auto simp add: prog_one_def)
-apply (erule concur_step.cases, auto)
+  apply (auto simp add: single_receiver_def single_side_def state_pool_possible_def)
+  apply (erule star.cases)
+   apply (simp)
+   apply (frule_tac ?P="\<lambda> x . \<pi>_1 \<in> recv_sites x (Ch (\<pi> ;; a))" in ssubst, assumption)
+   apply (drule_tac ?P="\<lambda> x . \<pi>_2 \<in> recv_sites x (Ch (\<pi> ;; a))" in ssubst, assumption)
+   apply simp_all
+  thm ssubst
+  apply (frule_tac ?P="\<lambda> x . x \<rightarrow> y" in ssubst, auto)
+  apply (erule concur_step.cases, auto)
+     apply (erule seq_step.cases, simp)
+           apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
+          apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
+         apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
+        apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
+       apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
+      apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
+     apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
+    
+    
+    
+
 
     
 
