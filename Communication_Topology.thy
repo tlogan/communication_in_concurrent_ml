@@ -360,23 +360,6 @@ inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (inf
     [\<pi>_s \<mapsto> \<lbrace>P_Send_Evt x_ch_s x_m, \<rho>_s\<rbrace>, \<pi>_r \<mapsto> \<lbrace>P_Recv_Evt x_ch_r, \<rho>_r\<rbrace>] \<leadsto> 
     [\<pi>_s \<mapsto> \<lbrace>P_Always_Evt x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>, \<pi>_r \<mapsto> \<lbrace>P_Always_Evt x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>]
   "
-
-  
-definition paths_are_extensions :: "val_pool \<Rightarrow> state_pool \<Rightarrow> bool" where
-  "paths_are_extensions vpool' stpool_sync \<longleftrightarrow> (\<forall> \<pi> x. vpool' \<pi> = None \<longrightarrow> stpool_sync (\<pi>;;x) = None)"
-  
-definition path_extensions_unique :: "state_pool \<Rightarrow> bool" where
-  "path_extensions_unique stpool_sync \<longleftrightarrow> (\<forall> \<pi> x y. stpool_sync (\<pi>;;x) \<noteq> None \<longrightarrow> stpool_sync (\<pi>;;y) \<noteq> None \<longrightarrow> x = y)"
-  
-definition path_extensions_from_sync :: "val_pool \<Rightarrow> val_pool \<Rightarrow> state_pool \<Rightarrow> state_pool \<Rightarrow> bool" where
-  "path_extensions_from_sync vpool vpool' stpool stpool_sync \<longleftrightarrow> (\<forall> \<pi> . (\<exists> x x_evt e \<rho> \<kappa> x_a \<omega>_a.
-      leaf stpool \<pi> \<longrightarrow>
-      (stpool \<pi>) = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<longrightarrow>
-      (vpool \<pi>) = (\<rho> x_evt) \<longrightarrow>
-      (vpool' \<pi>) = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<longrightarrow>
-      stpool_sync (\<pi>;;x) = Some (e, \<rho>(x \<mapsto> \<omega>_a), \<kappa>)
-    ))
-  "
   
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Concur_Lift_Seq: "
@@ -384,12 +367,22 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
     stpool \<rightarrow> stpool(\<pi>;;x \<mapsto> st')
   " |
   Concur_Lift_Sync: "
-    \<lbrakk>
+    \<lbrakk> 
       vpool \<leadsto> vpool';
-      (stpool_sync []) = None ;
-      paths_are_extensions vpool' stpool_sync;
-      path_extensions_unique stpool_sync;
-      path_extensions_from_sync vpool vpool' stpool stpool_sync
+
+      (*some stpool_sync paths are extensions from sync events *)
+      leaf stpool \<pi> ;
+      stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) ;
+      vpool \<pi> = (\<rho> x_evt) ;
+      vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
+      stpool_sync (\<pi>;;x) = Some (e, \<rho>(x \<mapsto> \<omega>_a), \<kappa>);
+
+      (*all stpool_sync paths are extensions of vpool' paths*)
+      vpool' \<pi> \<noteq> None ; stpool_sync [] = None ; 
+   
+      (*all stpool_sync path extensions are unique *)
+      x \<noteq> y ; stpool_sync (\<pi>;;y) = None
+  
     \<rbrakk> \<Longrightarrow>
     stpool \<rightarrow> stpool ++ stpool_sync
   " |
@@ -406,6 +399,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
       \<pi>;;. \<mapsto> (e_child, \<rho>, \<kappa>) 
     )
   "
+
   
 abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "x \<rightarrow>* y \<equiv> star concur_step x y"
@@ -462,17 +456,9 @@ definition fan_in :: "exp \<Rightarrow> var \<Rightarrow> bool" where
   "fan_in e x \<longleftrightarrow> \<not> single_sender e x \<and> single_receiver e x "
   
   
-  
 lemma recv_sites_empty[simp]: "recv_sites [[] \<mapsto> (prog, Map.empty, \<kappa>)] ch = {}"
 by (auto simp add: recv_sites_def)
-    
-lemma no_path_extensions_from_sync[intro!]: "
-  b \<noteq> SYNC x_evt \<Longrightarrow>
-  path_extensions_from_sync vpool vpool' [[] \<mapsto> (LET x = b in e, Map.empty, [])] stpool_sync
-"
-by (auto simp add: path_extensions_from_sync_def)
   
-
     
 abbreviation a where "a \<equiv> Var ''a''"
 abbreviation b where "b \<equiv> Var ''b''"
@@ -505,7 +491,6 @@ lemma "\<forall> x . P x \<Longrightarrow> (P 4 \<longrightarrow> Q) \<Longright
   apply (drule spec)
   apply (assumption)
 done
-
   
 theorem prog_one_properties: "
   single_receiver prog_one a
@@ -516,7 +501,6 @@ theorem prog_one_properties: "
    apply (frule_tac ?P="\<lambda> x . \<pi>_1 \<in> recv_sites x (Ch (\<pi> ;; a))" in ssubst, assumption)
    apply (drule_tac ?P="\<lambda> x . \<pi>_2 \<in> recv_sites x (Ch (\<pi> ;; a))" in ssubst, assumption)
    apply simp_all
-  thm ssubst
   apply (frule_tac ?P="\<lambda> x . x \<rightarrow> y" in ssubst, auto)
   apply (erule concur_step.cases, auto)
      apply (erule seq_step.cases, simp)
@@ -527,7 +511,9 @@ theorem prog_one_properties: "
        apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
       apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
      apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
-    apply (erule sync_step.cases, auto)
+    apply (erule sync_step.cases)
+    apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
+     apply (case_tac \<pi>', simp)
     
     
     
