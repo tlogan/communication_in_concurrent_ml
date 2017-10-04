@@ -389,7 +389,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
   Concur_Let_Chan: "
     stpool \<pi> = Some (LET x = CHAN \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<Longrightarrow>
     stpool \<rightarrow> stpool(
-       \<pi>;;x \<mapsto> (e, \<rho>(x \<mapsto> \<lbrace>Chan (\<pi>;;x)\<rbrace>), \<kappa>)
+       \<pi>;;x \<mapsto> (e, \<rho>(x \<mapsto> \<lbrace>Ch (\<pi>;;x)\<rbrace>), \<kappa>)
     )
   " |
   Concur_Let_Spawn: "
@@ -495,15 +495,10 @@ done
 theorem prog_one_properties: "
   single_receiver prog_one a
 "
-  apply (auto simp add: single_receiver_def single_side_def state_pool_possible_def)
-  apply (erule star.cases)
-   apply (simp)
-   apply (frule_tac ?P="\<lambda> x . \<pi>_1 \<in> recv_sites x (Ch (\<pi> ;; a))" in ssubst, assumption)
-   apply (drule_tac ?P="\<lambda> x . \<pi>_2 \<in> recv_sites x (Ch (\<pi> ;; a))" in ssubst, assumption)
-   apply simp_all
-  apply (frule_tac ?P="\<lambda> x . x \<rightarrow> y" in ssubst, auto)
+  apply (simp add: single_receiver_def single_side_def state_pool_possible_def, auto)
+  apply (erule star.cases, auto)
   apply (erule concur_step.cases, auto)
-     apply (erule seq_step.cases, simp)
+     apply (erule seq_step.cases, auto)
            apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
           apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
          apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
@@ -511,10 +506,13 @@ theorem prog_one_properties: "
        apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
       apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
      apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
-    apply (erule sync_step.cases)
+    apply (erule sync_step.cases, auto)
     apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
-     apply (case_tac \<pi>', simp)
-    
+   apply (case_tac \<pi>')
+    apply (auto)
+   apply (simp add: prog_one_def, auto)
+   apply (erule star.cases)
+    apply auto
     
     
 
