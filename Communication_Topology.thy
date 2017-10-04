@@ -513,6 +513,8 @@ theorem prog_one_properties: "
    apply (simp add: prog_one_def, auto)
    apply (erule star.cases)
     apply auto
+    apply (simp add: recv_sites_def, auto)
+    apply (case_tac \<pi>_1, case_tac[1-2] \<pi>_2, auto)
     
     
 
