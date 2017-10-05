@@ -458,7 +458,7 @@ lemma recv_sites_empty[simp]: "recv_sites [[] \<mapsto> (prog, Map.empty, \<kapp
 by (auto simp add: recv_sites_def)
   
     
-abbreviation a where "a \<equiv> Var ''a''"
+definition a where "a = Var ''a''"
 abbreviation b where "b \<equiv> Var ''b''"
 abbreviation c where "c \<equiv> Var ''c''"
   
@@ -487,7 +487,9 @@ lemma "\<forall> x . P x \<Longrightarrow> (P 4 \<longrightarrow> Q) \<Longright
   apply (erule mp)
   apply (drule spec)
   apply (assumption)
-done
+  done
+    
+value "[Inl a]"
   
 theorem prog_one_properties: "
   single_receiver prog_one a
@@ -502,13 +504,28 @@ theorem prog_one_properties: "
    apply (case_tac "\<pi>' = []")
     apply (auto)
    apply (simp add: prog_one_def, auto)
-   apply (erule star.cases)
-    apply auto
+   apply (erule star.cases, auto)
     apply (simp add: recv_sites_def, auto)
     apply (case_tac "\<pi>_1 = [Inl a]", auto) 
     apply (case_tac "\<pi>_1 = []", auto) 
    apply (erule concur_step.cases, auto)
-      apply (case_tac "(\<pi>' :: ((var + unit) list)) = [Inl a]")
+      apply (case_tac "\<pi>' = [Inl a]", auto) (* type unifaction fails if `a` is defined as abbreviation *)
+       apply (erule seq_step.cases, auto)
+      apply (case_tac "\<pi>' = []", auto)
+      apply (erule seq_step.cases, auto)
+     apply (case_tac "\<pi>' = [Inl a]", auto)
+     apply (case_tac "\<pi>' = []", auto)
+    apply (case_tac "\<pi>' = [Inl a]", auto)
+    apply (case_tac "\<pi>' = []", auto)
+    apply (erule star.cases, simp add: recv_sites_def, auto, case_tac "\<pi>_1 = [Inl a]", auto, case_tac "\<pi>_1 = []", auto) 
+    apply (simp add: recv_sites_def, auto)
+    apply (erule concur_step.cases, auto)
+       apply (case_tac "\<pi>' = [Inl a]", auto)
+        apply (erule seq_step.cases, auto)
+       apply (case_tac "\<pi>' = []", auto)
+       apply (erule seq_step.cases, auto)
+    
+
 
     
     
