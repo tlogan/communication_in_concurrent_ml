@@ -333,6 +333,10 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
       x_a_abs \<mapsto> \<omega>_a
     ), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
+  
+  
+lemma "(\<And> x . S \<Longrightarrow> (P x \<longrightarrow> R x) \<Longrightarrow> T \<Longrightarrow> Q) \<Longrightarrow> (S \<Longrightarrow> (\<forall> x. P x \<longrightarrow> R x) \<Longrightarrow> T \<Longrightarrow> Q)"
+  by auto
 
   
 
@@ -359,45 +363,92 @@ inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (inf
     [\<pi>_s \<mapsto> \<lbrace>P_Always_Evt x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>, \<pi>_r \<mapsto> \<lbrace>P_Always_Evt x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>]
   "
   
+lemma "(\<And> x y.\<lbrakk> S y ; P x ; R x; T y\<rbrakk> \<Longrightarrow> Q y) \<Longrightarrow> (\<And> y . \<lbrakk>S y ; (\<forall> x. P x \<longrightarrow> R x); (\<exists> x . P x) ; T y \<rbrakk> \<Longrightarrow> Q y)"
+sorry
+  
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Concur_Lift_Seq: "
-    \<lbrakk> (stpool \<pi>) = Some (LET x = b in e, \<rho>, \<kappa>); (LET x = b in e, \<rho>, \<kappa>) \<hookrightarrow> st'\<rbrakk> \<Longrightarrow>
-    stpool \<rightarrow> stpool(\<pi>;;x \<mapsto> st')
+    \<lbrakk> 
+      leaf stpool \<pi> ;
+      (stpool \<pi>) = Some (LET x = b in e, \<rho>, \<kappa>) ;
+      (LET x = b in e, \<rho>, \<kappa>) \<hookrightarrow> st'
+    \<rbrakk> \<Longrightarrow>
+    stpool \<rightarrow> stpool(
+      \<pi>;;x \<mapsto> st'
+    )
   " |
   Concur_Lift_Sync: "
-    \<lbrakk> 
-      vpool \<leadsto> vpool';
-
-      (*some stpool_sync paths are extensions from sync events *)
+    \<lbrakk>
       leaf stpool \<pi> ;
-      stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) ;
-      vpool \<pi> = (\<rho> x_evt) ;
+      vpool \<leadsto> vpool' ;
+      stpool_sync \<pi>' = Some (e', \<rho>', \<kappa>) ;
+      \<pi>' = \<pi>;;x ;
+      \<rho>' = \<rho>(x \<mapsto> \<omega>_a) ;
       vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
-      stpool_sync (\<pi>;;x) = Some (e, \<rho>(x \<mapsto> \<omega>_a), \<kappa>);
-
-      (*all stpool_sync paths are extensions of vpool' paths*)
-      vpool' \<pi> \<noteq> None ; stpool_sync [] = None ; 
-   
-      (*all stpool_sync path extensions are unique *)
-      x \<noteq> y ; stpool_sync (\<pi>;;y) = None
-  
+      vpool \<pi> = \<rho> x_evt ;
+      stpool \<pi> = Some (LET x = SYNC x_evt in e', \<rho>, \<kappa>)
     \<rbrakk> \<Longrightarrow>
     stpool \<rightarrow> stpool ++ stpool_sync
   " |
   Concur_Let_Chan: "
-    stpool \<pi> = Some (LET x = CHAN \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<Longrightarrow>
+    \<lbrakk> 
+      leaf stpool \<pi> ;
+      stpool \<pi> = Some (LET x = CHAN \<lparr>\<rparr> in e, \<rho>, \<kappa>)
+    \<rbrakk> \<Longrightarrow>
     stpool \<rightarrow> stpool(
-       \<pi>;;x \<mapsto> (e, \<rho>(x \<mapsto> \<lbrace>Ch (\<pi>;;x)\<rbrace>), \<kappa>)
+      \<pi>;;x \<mapsto> (e, \<rho>(x \<mapsto> \<lbrace>Ch (\<pi>;;x)\<rbrace>), \<kappa>)
     )
   " |
   Concur_Let_Spawn: "
-    stpool \<pi> = Some (LET x = SPAWN e_child in e, \<rho>, \<kappa>) \<Longrightarrow>
+    \<lbrakk> 
+      leaf stpool \<pi> ;
+      stpool \<pi> = Some (LET x = SPAWN e_child in e, \<rho>, \<kappa>)
+    \<rbrakk> \<Longrightarrow>
     stpool \<rightarrow> stpool(
       \<pi>;;x \<mapsto> (e, \<rho>(x \<mapsto> \<lbrace>\<rbrace>), \<kappa>), 
       \<pi>;;. \<mapsto> (e_child, \<rho>, \<kappa>) 
     )
   "
 
+  
+  
+  
+lemma "
+(
+  \<And> \<pi> \<pi>' e' \<rho>' \<kappa> x \<omega>_a x_a \<rho> x_evt . \<lbrakk>
+    leaf stpool \<pi> ;
+    vpool \<leadsto> vpool' ;
+    stpool_sync \<pi>' = Some (e', \<rho>', \<kappa>) ;
+    \<pi>' = \<pi>;;x ;
+    \<rho>' = \<rho>(x \<mapsto> \<omega>_a) ;
+    vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
+    vpool \<pi> = \<rho> x_evt ;
+    stpool \<pi> = Some (LET x = SYNC x_evt in e', \<rho>, \<kappa>)
+  \<rbrakk> \<Longrightarrow>
+  stpool \<rightarrow> stpool ++ stpool_sync
+) 
+
+\<Longrightarrow>
+
+(\<lbrakk>
+    vpool \<leadsto> vpool' ;
+    (\<forall> \<pi>' e' \<rho>' \<kappa> .
+      stpool_sync \<pi>' = Some (e', \<rho>', \<kappa>) \<longrightarrow>
+      (\<exists> x \<omega>_a x_a \<rho> x_evt .
+        \<pi>' = \<pi>;;x \<and>
+        \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<and>
+        vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
+        vpool \<pi> = \<rho> x_evt \<and>
+        stpool \<pi> = Some (LET x = SYNC x_evt in e', \<rho>, \<kappa>) \<and>
+        leaf stpool \<pi>
+      )
+    ) ;
+    (\<exists> \<pi>'. stpool_sync \<pi>' \<noteq> None)
+  \<rbrakk> \<Longrightarrow>
+  stpool \<rightarrow> stpool ++ stpool_sync
+)
+"
+sorry
   
 abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "x \<rightarrow>* y \<equiv> star concur_step x y"
@@ -483,24 +534,20 @@ definition prog_one where
     RESULT f
   "
   
-lemma "\<forall> x . P x \<Longrightarrow> (P 4 \<longrightarrow> Q) \<Longrightarrow> Q"
-  apply (erule mp)
-  apply (drule spec)
-  apply (assumption)
-  done
+
     
-value "[Inl a]"
-  
 theorem prog_one_properties: "
   single_receiver prog_one a
 "
   apply (simp add: single_receiver_def single_side_def state_pool_possible_def, auto)
+    thm star.cases
   apply (erule star.cases, auto)
   apply (erule concur_step.cases, auto)
-     apply (erule seq_step.cases, auto)
-           apply (case_tac[1-7] "\<pi>' = []", (simp_all add: prog_one_def)[14])
-    apply (erule sync_step.cases, auto)
-    apply (case_tac "\<pi>' = []", simp add: prog_one_def, simp add: prog_one_def)
+        apply (erule seq_step.cases, auto)  
+              apply (case_tac[1-7] "\<pi>' = []", (simp_all add: prog_one_def)[14])     
+      (* redo from here*)
+       apply (erule sync_step.cases, auto)
+      apply (case_tac "\<pi>'=[]", simp add: prog_one_def, simp add: prog_one_def)
    apply (case_tac "\<pi>' = []")
     apply (auto)
    apply (simp add: prog_one_def, auto)
