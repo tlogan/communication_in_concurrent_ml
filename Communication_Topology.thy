@@ -4,8 +4,6 @@ begin
   
 datatype var = Var string
   
-value " Var ''x''"
-  
 type_synonym control_path = "(var + unit) list"
 datatype chan = Ch control_path
   
@@ -485,7 +483,6 @@ definition prog_one where
     RESULT f
   "
   
-  
 lemma "\<forall> x . P x \<Longrightarrow> (P 4 \<longrightarrow> Q) \<Longrightarrow> Q"
   apply (erule mp)
   apply (drule spec)
@@ -499,16 +496,21 @@ theorem prog_one_properties: "
   apply (erule star.cases, auto)
   apply (erule concur_step.cases, auto)
      apply (erule seq_step.cases, auto)
-           apply (case_tac[1-7] \<pi>', (simp_all add: prog_one_def)[14])
+           apply (case_tac[1-7] "\<pi>' = []", (simp_all add: prog_one_def)[14])
     apply (erule sync_step.cases, auto)
-    apply (case_tac \<pi>', simp add: prog_one_def, simp add: prog_one_def)
-   apply (case_tac \<pi>')
+    apply (case_tac "\<pi>' = []", simp add: prog_one_def, simp add: prog_one_def)
+   apply (case_tac "\<pi>' = []")
     apply (auto)
    apply (simp add: prog_one_def, auto)
    apply (erule star.cases)
     apply auto
     apply (simp add: recv_sites_def, auto)
-    apply (case_tac \<pi>_1, case_tac[1-2] \<pi>_2, auto)
+    apply (case_tac "\<pi>_1 = [Inl a]", auto) 
+    apply (case_tac "\<pi>_1 = []", auto) 
+   apply (erule concur_step.cases, auto)
+      apply (case_tac "(\<pi>' :: ((var + unit) list)) = [Inl a]")
+
+    
     
     
 
