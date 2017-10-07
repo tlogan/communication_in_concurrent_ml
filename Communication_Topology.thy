@@ -338,8 +338,6 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
 lemma "(\<And> x . S \<Longrightarrow> (P x \<longrightarrow> R x) \<Longrightarrow> T \<Longrightarrow> Q) \<Longrightarrow> (S \<Longrightarrow> (\<forall> x. P x \<longrightarrow> R x) \<Longrightarrow> T \<Longrightarrow> Q)"
   by auto
 
-  
-
 abbreviation control_path_append_var :: "control_path => var => control_path" (infixl ";;" 61) where
   "\<pi>;;x \<equiv> \<pi> @ [Inl x]"
   
@@ -362,9 +360,60 @@ inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (inf
     [\<pi>_s \<mapsto> \<lbrace>P_Send_Evt x_ch_s x_m, \<rho>_s\<rbrace>, \<pi>_r \<mapsto> \<lbrace>P_Recv_Evt x_ch_r, \<rho>_r\<rbrace>] \<leadsto> 
     [\<pi>_s \<mapsto> \<lbrace>P_Always_Evt x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>, \<pi>_r \<mapsto> \<lbrace>P_Always_Evt x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>]
   "
+
+
   
-lemma "(\<And> x y.\<lbrakk> S y ; P x ; R x; T y\<rbrakk> \<Longrightarrow> Q y) \<Longrightarrow> (\<And> y . \<lbrakk>S y ; (\<forall> x. P x \<longrightarrow> R x); (\<exists> x . P x) ; T y \<rbrakk> \<Longrightarrow> Q y)"
-sorry
+lemma "
+(\<And> x y z.\<lbrakk> S y ; P x ; R x z; T y\<rbrakk> \<Longrightarrow> Q y) 
+\<Longrightarrow> 
+(\<And> y . \<lbrakk>S y ; (\<forall> x. P x \<longrightarrow> (\<exists> z . R x z)); (\<exists> x . P x) ; T y \<rbrakk> \<Longrightarrow> Q y)
+"
+by (metis (mono_tags))
+(*         
+ * Instead of stating a theorem as
+ * (\<And> y . \<lbrakk>S y ; (\<forall> x. P x \<longrightarrow> (\<exists> z . R x z)); (\<exists> x . P x) ; T y \<rbrakk> \<Longrightarrow> Q y)
+ * we can observe that it is necessitated by 
+ * (\<And> x y z . \<lbrakk> S y ; P x ; R x z; T y\<rbrakk> \<Longrightarrow> Q y)
+ * and state the theorem as such, the stronger statement.
+ *) 
+lemma "
+(
+  \<And> vpool vpool' stpool stpool_sync \<pi> \<pi>' e \<rho>' \<kappa> x \<omega>_a x_a \<rho> x_evt . \<lbrakk>
+    vpool \<leadsto> vpool' ;
+    stpool_sync \<pi>' = Some (e', \<rho>', \<kappa>) ;
+    \<pi>' = \<pi>;;x ;
+    \<rho>' = \<rho>(x \<mapsto> \<omega>_a) ;
+    vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
+    vpool \<pi> = \<rho> x_evt ;
+    stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) ;
+    leaf stpool \<pi>
+  \<rbrakk> \<Longrightarrow>
+  step (stpool, stpool ++ stpool_sync)
+) 
+
+\<Longrightarrow>
+
+(
+  \<And> vpool vpool' stpool stpool_sync . \<lbrakk>
+    vpool \<leadsto> vpool' ;
+    (\<forall> \<pi>' e \<rho>' \<kappa> .
+      stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) \<longrightarrow>
+      (\<exists> x \<omega>_a x_a \<rho> x_evt \<pi> .
+        \<pi>' = \<pi>;;x \<and>
+        \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<and>
+        vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
+        vpool \<pi> = \<rho> x_evt \<and>
+        stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and>
+        leaf stpool \<pi>
+      )
+    ) ;
+    (\<exists> \<pi>'. stpool_sync \<pi>' \<noteq> None)
+  \<rbrakk> \<Longrightarrow>
+  step (stpool, stpool ++ stpool_sync)
+)
+"  
+by (metis (mono_tags))
+  
   
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Concur_Lift_Seq: "
@@ -380,13 +429,13 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
   Concur_Lift_Sync: "
     \<lbrakk>
       leaf stpool \<pi> ;
-      vpool \<leadsto> vpool' ;
-      stpool_sync \<pi>' = Some (e', \<rho>', \<kappa>) ;
-      \<pi>' = \<pi>;;x ;
-      \<rho>' = \<rho>(x \<mapsto> \<omega>_a) ;
-      vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
+      stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) ;
       vpool \<pi> = \<rho> x_evt ;
-      stpool \<pi> = Some (LET x = SYNC x_evt in e', \<rho>, \<kappa>)
+      vpool \<leadsto> vpool' ;
+      vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
+      stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) ;
+      \<pi>' = \<pi>;;x ;
+      \<rho>' = \<rho>(x \<mapsto> \<omega>_a)
     \<rbrakk> \<Longrightarrow>
     stpool \<rightarrow> stpool ++ stpool_sync
   " |
@@ -410,46 +459,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
     )
   "
 
-  
-  
-  
-lemma "
-(
-  \<And> \<pi> \<pi>' e' \<rho>' \<kappa> x \<omega>_a x_a \<rho> x_evt . \<lbrakk>
-    leaf stpool \<pi> ;
-    vpool \<leadsto> vpool' ;
-    stpool_sync \<pi>' = Some (e', \<rho>', \<kappa>) ;
-    \<pi>' = \<pi>;;x ;
-    \<rho>' = \<rho>(x \<mapsto> \<omega>_a) ;
-    vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
-    vpool \<pi> = \<rho> x_evt ;
-    stpool \<pi> = Some (LET x = SYNC x_evt in e', \<rho>, \<kappa>)
-  \<rbrakk> \<Longrightarrow>
-  stpool \<rightarrow> stpool ++ stpool_sync
-) 
 
-\<Longrightarrow>
-
-(\<lbrakk>
-    vpool \<leadsto> vpool' ;
-    (\<forall> \<pi>' e' \<rho>' \<kappa> .
-      stpool_sync \<pi>' = Some (e', \<rho>', \<kappa>) \<longrightarrow>
-      (\<exists> x \<omega>_a x_a \<rho> x_evt .
-        \<pi>' = \<pi>;;x \<and>
-        \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<and>
-        vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
-        vpool \<pi> = \<rho> x_evt \<and>
-        stpool \<pi> = Some (LET x = SYNC x_evt in e', \<rho>, \<kappa>) \<and>
-        leaf stpool \<pi>
-      )
-    ) ;
-    (\<exists> \<pi>'. stpool_sync \<pi>' \<noteq> None)
-  \<rbrakk> \<Longrightarrow>
-  stpool \<rightarrow> stpool ++ stpool_sync
-)
-"
-sorry
-  
 abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "x \<rightarrow>* y \<equiv> star concur_step x y"
   
@@ -534,8 +544,6 @@ definition prog_one where
     RESULT f
   "
   
-
-    
 theorem prog_one_properties: "
   single_receiver prog_one a
 "
