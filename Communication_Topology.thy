@@ -380,7 +380,7 @@ lemma "
 (
   \<And> vpool vpool' stpool stpool_sync \<pi> \<pi>' e \<rho>' \<kappa> x \<omega>_a x_a \<rho> x_evt . \<lbrakk>
     vpool \<leadsto> vpool' ;
-    stpool_sync \<pi>' = Some (e', \<rho>', \<kappa>) ;
+    stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) ;
     \<pi>' = \<pi>;;x ;
     \<rho>' = \<rho>(x \<mapsto> \<omega>_a) ;
     vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
@@ -388,7 +388,7 @@ lemma "
     stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) ;
     leaf stpool \<pi>
   \<rbrakk> \<Longrightarrow>
-  step (stpool, stpool ++ stpool_sync)
+  step stpool (stpool ++ stpool_sync)
 ) 
 
 \<Longrightarrow>
@@ -407,12 +407,12 @@ lemma "
         leaf stpool \<pi>
       )
     ) ;
-    (\<exists> \<pi>'. stpool_sync \<pi>' \<noteq> None)
+    (\<exists> \<pi>' e \<rho>' \<kappa> . stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) )
   \<rbrakk> \<Longrightarrow>
-  step (stpool, stpool ++ stpool_sync)
+  step stpool (stpool ++ stpool_sync)
 )
-"  
-by (metis (mono_tags))
+"
+by meson
   
   
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
@@ -459,6 +459,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
     )
   "
 
+      
 
 abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "x \<rightarrow>* y \<equiv> star concur_step x y"
