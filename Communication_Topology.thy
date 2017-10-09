@@ -565,51 +565,35 @@ theorem prog_one_properties: "
            apply (case_tac[1-7] "\<pi>' = []", (simp_all add: prog_one_def)[14])
     (* lift_sync *)
     apply (erule sync_step.cases, auto)
-      apply (case_tac "\<pi>'=[]", simp add: prog_one_def, simp add: prog_one_def)
+      apply (case_tac "\<pi>'=[]", (simp add: prog_one_def)[2], auto)
    (* let_chan*)
    apply (case_tac "\<pi>' = []", auto)
+   (* star *)
    apply (erule star.cases, auto)
     apply (simp add: prog_one_def recv_sites_def, auto)
     apply (smt bind.distinct(31) exp.inject(1) fun_upd_def option.inject option.simps(3) prod.inject)
    apply (erule concur_step.cases, auto)
-      apply (case_tac "\<pi>' = []", auto)
-       apply (simp add: prog_one_def recv_sites_def leaf_def)
-       apply (metis strict_prefix_simps(2))
-      apply (case_tac "\<pi>' = [Inl x]", auto)
-      apply (simp add: prog_one_def recv_sites_def leaf_def)
-      apply (erule seq_step.cases, auto)
-     apply (smt bind.distinct(19) bind.distinct(31) exp.inject(1) map_upd_Some_unfold option.simps(3) prod.inject prog_one_def)
-    apply (case_tac "\<pi>' = [Inl x]", auto)
-     apply (simp add: prog_one_def recv_sites_def leaf_def)
+         (*lift_seq*) 
+      apply (erule seq_step.cases, auto)  
+            apply (case_tac[1-7] "\<pi>' = [Inl (Var ''a'')]", (simp_all add: prog_one_def)[14], auto)
+            apply (case_tac[1-7] "\<pi>' = []", (simp_all add: prog_one_def)[14])
+    
+      (* lift_sync *)
+     apply (erule sync_step.cases, auto)
+     apply (case_tac "\<pi>'=[Inl x]", (simp add: prog_one_def)[2])
+     apply (case_tac "\<pi>'=[]", (simp add: prog_one_def)[2], auto)
+    
+    (* let_chan*)
+    apply (case_tac "\<pi>' = [Inl x]", simp add: prog_one_def, auto)
     apply (case_tac "\<pi>' = []", auto)
-    apply (simp add: prog_one_def recv_sites_def leaf_def)
+    apply (simp add: prog_one_def recv_sites_def leaf_def, auto)
     apply (metis strict_prefix_simps(2))
+    (* let_spawn *)
    apply (case_tac "\<pi>' = [Inl x]", auto)
-    apply (simp add: prog_one_def recv_sites_def)
-    apply (erule star.cases, auto)
-     apply (smt bind.distinct(19) bind.distinct(31) bind.distinct(49) exp.inject(1) map_upd_Some_unfold option.simps(3) prod.inject)
-    apply (erule concur_step.cases, auto)
-       apply (case_tac "\<pi>' = [Inl x, Inr ()]", auto)
-        apply (erule seq_step.cases, auto)
-              apply (case_tac[1-7] "xa = a", auto)
-       apply (case_tac "\<pi>' = [Inl (Var ''a''), Inr ()]", auto)
-    apply (erule seq_step.cases, auto)
-       apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b'')]", auto)
-        apply (erule seq_step.cases, auto)
-        apply (erule star.cases, auto)
-         apply (case_tac "\<pi>_1 = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
-          apply (case_tac "\<pi>_2 = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
-           apply (smt Pair_inject bind.distinct(19) bind.distinct(31) bind.distinct(49) exp.inject(1) fun_upd_def option.inject option.simps(3))
-
-
     
-    
-    
-
-
-    
-
-    
+    (* star *)
+   
+     
     
 definition prog_two where 
   "prog_two = 
