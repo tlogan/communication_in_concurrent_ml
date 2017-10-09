@@ -351,7 +351,6 @@ definition leaf :: "(control_path \<rightharpoonup> state) \<Rightarrow> control
       (\<nexists> \<pi>' . (stpool \<pi>') \<noteq> None \<and> (strict_prefix \<pi> \<pi>'))
   "
 
-
 inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
   Sync_Send_Recv: "
     \<lbrakk>
@@ -361,8 +360,6 @@ inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (inf
     [\<pi>_s \<mapsto> \<lbrace>P_Always_Evt x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>, \<pi>_r \<mapsto> \<lbrace>P_Always_Evt x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>]
   "
 
-
-  
 lemma "
 (\<And> x y z.\<lbrakk> S y ; P x ; R x z; T y\<rbrakk> \<Longrightarrow> Q y) 
 \<Longrightarrow> 
@@ -478,6 +475,18 @@ definition recv_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_pa
     \<rho>_evt x_ch = Some \<lbrace>ch\<rbrace>
   }"
   
+lemma recv_sites_by_meta[intro]: "
+(
+  stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and> 
+  \<rho> x_evt = Some \<lbrace>P_Recv_Evt x_ch, \<rho>_evt\<rbrace> \<and> 
+  \<rho>_evt x_ch = Some \<lbrace>ch\<rbrace>
+) \<Longrightarrow> (
+ \<pi> \<in> recv_sites stpool ch
+)
+"
+by (simp add: recv_sites_def)
+    
+  
 fun channel_exists :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
   "channel_exists stpool (Ch \<pi>) \<longleftrightarrow> (\<exists> x e \<rho> \<kappa>. stpool \<pi> = Some (LET x = CHAN \<lparr>\<rparr> in e, \<rho>, \<kappa>))"
   
@@ -520,7 +529,7 @@ lemma recv_sites_empty[simp]: "recv_sites [[] \<mapsto> (prog, Map.empty, \<kapp
 by (auto simp add: recv_sites_def)
   
     
-definition a where "a = Var ''a''"
+abbreviation a where "a \<equiv> Var ''a''"
 abbreviation b where "b \<equiv> Var ''b''"
 abbreviation c where "c \<equiv> Var ''c''"
   
@@ -549,38 +558,48 @@ theorem prog_one_properties: "
   single_receiver prog_one a
 "
   apply (simp add: single_receiver_def single_side_def state_pool_possible_def, auto)
-    thm star.cases
   apply (erule star.cases, auto)
   apply (erule concur_step.cases, auto)
-        apply (erule seq_step.cases, auto)  
-              apply (case_tac[1-7] "\<pi>' = []", (simp_all add: prog_one_def)[14])     
-      (* redo from here*)
-       apply (erule sync_step.cases, auto)
+     (*lift_seq*) 
+     apply (erule seq_step.cases, auto)  
+           apply (case_tac[1-7] "\<pi>' = []", (simp_all add: prog_one_def)[14])
+    (* lift_sync *)
+    apply (erule sync_step.cases, auto)
       apply (case_tac "\<pi>'=[]", simp add: prog_one_def, simp add: prog_one_def)
-   apply (case_tac "\<pi>' = []")
-    apply (auto)
-   apply (simp add: prog_one_def, auto)
+   (* let_chan*)
+   apply (case_tac "\<pi>' = []", auto)
    apply (erule star.cases, auto)
-    apply (simp add: recv_sites_def, auto)
-    apply (case_tac "\<pi>_1 = [Inl a]", auto) 
-    apply (case_tac "\<pi>_1 = []", auto) 
+    apply (simp add: prog_one_def recv_sites_def, auto)
+    apply (smt bind.distinct(31) exp.inject(1) fun_upd_def option.inject option.simps(3) prod.inject)
    apply (erule concur_step.cases, auto)
-      apply (case_tac "\<pi>' = [Inl a]", auto) (* type unifaction fails if `a` is defined as abbreviation *)
-       apply (erule seq_step.cases, auto)
       apply (case_tac "\<pi>' = []", auto)
+       apply (simp add: prog_one_def recv_sites_def leaf_def)
+       apply (metis strict_prefix_simps(2))
+      apply (case_tac "\<pi>' = [Inl x]", auto)
+      apply (simp add: prog_one_def recv_sites_def leaf_def)
       apply (erule seq_step.cases, auto)
-     apply (case_tac "\<pi>' = [Inl a]", auto)
-     apply (case_tac "\<pi>' = []", auto)
-    apply (case_tac "\<pi>' = [Inl a]", auto)
+     apply (smt bind.distinct(19) bind.distinct(31) exp.inject(1) map_upd_Some_unfold option.simps(3) prod.inject prog_one_def)
+    apply (case_tac "\<pi>' = [Inl x]", auto)
+     apply (simp add: prog_one_def recv_sites_def leaf_def)
     apply (case_tac "\<pi>' = []", auto)
-    apply (erule star.cases, simp add: recv_sites_def, auto, case_tac "\<pi>_1 = [Inl a]", auto, case_tac "\<pi>_1 = []", auto) 
-    apply (simp add: recv_sites_def, auto)
+    apply (simp add: prog_one_def recv_sites_def leaf_def)
+    apply (metis strict_prefix_simps(2))
+   apply (case_tac "\<pi>' = [Inl x]", auto)
+    apply (simp add: prog_one_def recv_sites_def)
+    apply (erule star.cases, auto)
+     apply (smt bind.distinct(19) bind.distinct(31) bind.distinct(49) exp.inject(1) map_upd_Some_unfold option.simps(3) prod.inject)
     apply (erule concur_step.cases, auto)
-       apply (case_tac "\<pi>' = [Inl a]", auto)
+       apply (case_tac "\<pi>' = [Inl x, Inr ()]", auto)
         apply (erule seq_step.cases, auto)
-       apply (case_tac "\<pi>' = []", auto)
-       apply (erule seq_step.cases, auto)
-    
+              apply (case_tac[1-7] "xa = a", auto)
+       apply (case_tac "\<pi>' = [Inl (Var ''a''), Inr ()]", auto)
+    apply (erule seq_step.cases, auto)
+       apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b'')]", auto)
+        apply (erule seq_step.cases, auto)
+        apply (erule star.cases, auto)
+         apply (case_tac "\<pi>_1 = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
+          apply (case_tac "\<pi>_2 = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
+           apply (smt Pair_inject bind.distinct(19) bind.distinct(31) bind.distinct(49) exp.inject(1) fun_upd_def option.inject option.simps(3))
 
 
     
