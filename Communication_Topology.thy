@@ -346,6 +346,14 @@ definition leaf :: "(control_path \<rightharpoonup> state) \<Rightarrow> control
       (stpool \<pi>) \<noteq> None \<and>
       (\<nexists> \<pi>' . (stpool \<pi>') \<noteq> None \<and> (strict_prefix \<pi> \<pi>'))
   "
+  
+lemma leaf_elim[elim]: "
+  leaf stpool \<pi>
+\<Longrightarrow>
+  stpool (\<pi>;;x) = None 
+"
+  apply (simp add: leaf_def)
+  by (metis old.prod.exhaust option.exhaust prefix_order.dual_order.refl prefix_snocD)
 
 inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
   Sync_Send_Recv: "
@@ -653,13 +661,29 @@ theorem prog_one_properties: "
                       apply (erule seq_step.cases, auto)
                       apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c, Inl d]", auto)
                        apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c]", auto)
-                       apply (case_tac "\<pi>' = [Inl a, Inl b, Inl e]", auto)
-                       apply (case_tac "\<pi>' = [Inl a, Inr ()]", auto)
-                       apply (case_tac "\<pi>' = [Inl a, Inl b]", auto)
-                       apply (case_tac "\<pi>' = [Inl a]", auto)
+                       apply (case_tac "\<pi>' = [Inl a, Inl b, Inl e]", auto, case_tac "\<pi>' = [Inl a, Inr ()]", auto, case_tac "\<pi>' = [Inl a, Inl b]", auto, case_tac "\<pi>' = [Inl a]", auto)
                       apply (case_tac "\<pi>' = []", auto)
                       apply (simp add: recv_sites_def leaf_def, auto)
                       apply (meson strict_prefix_simps(2) strict_prefix_simps(3))
+                      apply (case_tac[1-6] "\<pi>' = [Inl a, Inl b, Inl e]", auto)
+                      apply (case_tac[1-6] "\<pi>' = [Inl a, Inr ()]", auto)
+                      apply (case_tac[1-6] "\<pi>' = [Inl a, Inl b]", auto)
+                      apply (erule star.cases, auto)
+                       (* star/refl *)
+                       apply (simp add: recv_sites_def leaf_def, auto)
+                       apply (smt Pair_inject bind.distinct(19) bind.distinct(49) bind.inject(2) exp.inject(1) map_upd_Some_unfold option.distinct(1) prefix_Cons prefix_order.eq_refl prim.distinct(37) val.inject(2))
+                      (* star/step *)
+                      apply (erule concur_step.cases, auto)
+                      apply (erule seq_step.cases, auto)
+                      apply (case_tac[1-7] "\<pi>' = [Inl a, Inl b, Inl e]", auto)
+                      apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c, Inl d]", auto)
+                      apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c]", auto)
+                       apply (case_tac "\<pi>' = [Inl a, Inr ()] ", auto)
+                       apply (case_tac "\<pi>' = [Inl a, Inl b]", auto)
+                       apply (case_tac "\<pi>' = [Inl a]", auto)
+                      apply (case_tac "\<pi>' = []", auto)
+                      apply ((drule leaf_elim[of _ "[Inl a, Inr (), Inl c]" "d"])+, auto)
+    
     
     
     
