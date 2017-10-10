@@ -53,10 +53,6 @@ abbreviation bind_inl :: "var => bind" ("LEFT _" [61] 61) where
 abbreviation bind_inr :: "var => bind" ("RIGHT _" [61] 61) where
   "RIGHT x \<equiv> B_Prim (P_Right x)"
   
-value "Map.empty (Var ''x'' \<mapsto> 4)"
-  
-
-
 (* unrestricted grammar*)
 
 datatype u_exp =
@@ -413,7 +409,7 @@ by meson
   
   
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
-  Concur_Lift_Seq: "
+  Concur_Seq: "
     \<lbrakk> 
       leaf stpool \<pi> ;
       (stpool \<pi>) = Some (LET x = b in e, \<rho>, \<kappa>) ;
@@ -423,25 +419,22 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
       \<pi>;;x \<mapsto> st'
     )
   " |
-  Concur_Lift_Sync: "
+  Concur_Sync: "
     \<lbrakk>
-      vpool \<leadsto> vpool' ;
    
       leaf stpool \<pi>1 ;
       stpool \<pi>1 = Some (LET x1 = SYNC x1_evt in e1, \<rho>1, \<kappa>1) ;
-      vpool \<pi>1 = \<rho>1 x1_evt ;
-      vpool' \<pi>'1 = Some \<lbrace>P_Always_Evt x'1, [x'1 \<mapsto> \<omega>1]\<rbrace> ;
-      \<pi>'1 = \<pi>1;;x1 ;
-      \<rho>'1 = \<rho>1(x1 \<mapsto> \<omega>1) ;
+      \<rho>1 x1_evt = Some \<lbrace>P_Send_Evt x_ch1 x_m, \<rho>_s\<rbrace> ;
+      \<rho>_s x_ch1 = Some (V_Chan c); 
+      
+      \<rho>_s x_m = Some \<omega>_m ;
 
       stpool \<pi>2 = Some (LET x2 = SYNC x2_evt in e2, \<rho>2, \<kappa>2) ;
-      vpool \<pi>2 = \<rho>2 x2_evt ;
-      vpool' \<pi>'2 = Some \<lbrace>P_Always_Evt x'2, [x'2 \<mapsto> \<omega>2]\<rbrace> ;
-      \<pi>'2 = \<pi>2;;x2 ;
-      \<rho>'2 = \<rho>2(x2 \<mapsto> \<omega>2)
+      \<rho>2 x2_evt = Some \<lbrace>P_Recv_Evt x_ch2, \<rho>_r\<rbrace> ;
+      \<rho>_r x_ch2 = Some (V_Chan c)
 
     \<rbrakk> \<Longrightarrow>
-    stpool \<rightarrow> stpool ++ [\<pi>'1 \<mapsto> (e1, \<rho>'1, k1), \<pi>'2 \<mapsto> (e1, \<rho>'2, k2)]
+    stpool \<rightarrow> stpool ++ [\<pi>1;;x1 \<mapsto> (e1, \<rho>1(x1 \<mapsto> \<lbrace>\<rbrace>), k1), \<pi>2;;x2 \<mapsto> (e1, \<rho>2(x2 \<mapsto> \<omega>_m), k2)]
   " |
   Concur_Let_Chan: "
     \<lbrakk> 
@@ -565,65 +558,57 @@ definition prog_one where
 theorem prog_one_properties: "
   single_receiver prog_one a
 "
-  apply (simp add: single_receiver_def single_side_def state_pool_possible_def, auto)
+  apply (simp add: single_receiver_def single_side_def state_pool_possible_def prog_one_def, auto)
     
-  (* star *)
   apply (erule star.cases, auto)
-  apply (simp add: prog_one_def)
+  (* star/step *)
   apply (erule concur_step.cases, auto)
-    
-     (*lift_seq*) 
+     (*Concur_Seq*) 
      apply (erule seq_step.cases, auto)  
            apply (case_tac[1-7] "\<pi>' = []", auto)
-    
-    (* lift_sync *)
-    apply (erule sync_step.cases, auto)
+    (* Concur_Sync *)
     apply (case_tac "\<pi>1=[]", auto)
-    
-   (* let_chan*)
+   (* Concur_Let_Chan*)
    apply (case_tac "\<pi>' = []", auto)
-    
-   (* star *)
    apply (erule star.cases, auto)
+    (* star/refl *)
     apply (simp add: recv_sites_def leaf_def, auto)
     apply (smt bind.distinct(31) exp.inject(1) fun_upd_def option.inject option.simps(3) prod.inject)
+   (* star/step *)
    apply (erule concur_step.cases, auto)
-      (*lift_seq*) 
+      (*Concur_Seq*) 
       apply (erule seq_step.cases, auto)  
             apply (case_tac[1-7] "\<pi>' = [Inl a]", auto)
             apply (case_tac[1-7] "\<pi>' = []", auto)
-     (* lift_sync *)
-     apply (erule sync_step.cases, auto)
+     (* Concur_Sync *)
      apply (case_tac "\<pi>1=[Inl a]", auto)
      apply (case_tac "\<pi>1=[]", auto)
-    
-    (* let_chan*)
+    (* Concur_Let_Chan*)
     apply (case_tac "\<pi>' = [Inl a]", auto)
     apply (case_tac "\<pi>' = []", auto)
     apply (simp add: recv_sites_def leaf_def, auto)
     apply (metis strict_prefix_simps(2))
-    
-   (* let_spawn *)
+   (* Concur_Let_Spawn *)
    apply (case_tac "\<pi>' = [Inl a]", auto) 
-    
-    (* star *)
     apply (erule star.cases, auto)
+     (* star/refl *)
      apply (simp add: recv_sites_def leaf_def, auto)
      apply (smt bind.distinct(19) bind.distinct(31) bind.distinct(49) exp.inject(1) map_upd_Some_unfold map_upd_nonempty map_upd_triv option.inject prod.inject)
+    (* star/step *)
     apply (erule concur_step.cases)
-    
-       (*lift_seq*)
+       (*Concur_Seq*)
        apply (erule seq_step.cases, auto)  
              apply (case_tac[1-7] "\<pi>' = []", auto)
              apply (case_tac[1-7] "\<pi>' = [Inl a]", auto)
              apply (case_tac[1-7] "\<pi>' = [Inl a, Inr ()]", auto)
              apply (case_tac[1-7] "\<pi>' = [Inl a, Inl b]", auto)
-         (* star *)
        apply (erule star.cases, auto)
+        (* star/refl *)
         apply (simp add: recv_sites_def leaf_def, auto)
         apply (smt Pair_inject bind.distinct(19) exp.inject(1) fun_upd_def map_upd_Some_unfold option.simps(3) prefix_Cons prefix_order.eq_refl)
+       (* star/step*)
        apply (erule concur_step.cases, auto)
-          (*lift_seq*)
+          (*Concur_Seq*)
           apply (erule seq_step.cases, auto)  
              apply (case_tac[1-7] "\<pi>' = [Inl a, Inl b, Inl e]", auto)
              apply (case_tac[1-7] "\<pi>' = [Inl a, Inr ()]", auto)
@@ -634,9 +619,51 @@ theorem prog_one_properties: "
                 apply (meson strict_prefix_simps(2) strict_prefix_simps(3))
                apply (case_tac[1-6] "\<pi>' = [Inl a]", auto)
                apply (case_tac[1-6] "\<pi>' = []", auto)
+         (* Concur_Sync *)
+         apply (case_tac "\<pi>1 = [Inl a, Inl b, Inl e]", auto)
+         apply (case_tac "\<pi>1 = [Inl a, Inr ()]", auto)
+         apply (case_tac "\<pi>1 = [Inl a, Inl b]", auto)
+         apply (case_tac "\<pi>1 = [Inl a]", auto)
+         apply (case_tac "\<pi>1 = []", auto)
+        (* Concur_Let_Chan*)
+        apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
+        apply (case_tac "\<pi>' = [Inl (Var ''a''), Inr ()]", auto)
+         apply (erule star.cases, auto)
+          (* star/refl *)
+          apply (simp add: recv_sites_def leaf_def, auto)
+          apply (smt Pair_inject bind.distinct(19) bind.distinct(31) bind.distinct(49) exp.inject(1) map_upd_Some_unfold option.inject option.simps(3) prefix_order.eq_refl)
+         (* star/step *)
+         apply (erule concur_step.cases, auto)
+            (* Concur_Seq*)
+            apply (erule seq_step.cases, auto)
+                  apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c]", auto)
+                   apply (case_tac "\<pi>' = [Inl a, Inl b, Inl e]", auto)
+                   apply (case_tac "\<pi>' = [Inl a, Inr ()]", auto)
+                   apply (case_tac "\<pi>' = [Inl a, Inl b]", auto)
+                   apply (case_tac "\<pi>' = [Inl a]", auto)
+                   apply (case_tac "\<pi>' = []", auto)
+                  apply (erule star.cases, auto)
+                   (* star/refl *)
+                   apply (simp add: recv_sites_def leaf_def, auto)
+                   (* proof of this step took over 20s to auto-generate*)
+                   apply (smt Pair_inject bind.distinct(19) bind.distinct(49) bind.inject(2) exp.inject(1) fun_upd_apply option.distinct(1) option.inject prefix_Cons prefix_order.eq_refl prim.distinct(37) val.inject(2))
+                  (* star/step*)
+                  apply (erule concur_step.cases, auto)
+                      (* Concur_Seq *)
+                      apply (erule seq_step.cases, auto)
+                      apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c, Inl d]", auto)
+                       apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c]", auto)
+                       apply (case_tac "\<pi>' = [Inl a, Inl b, Inl e]", auto)
+                       apply (case_tac "\<pi>' = [Inl a, Inr ()]", auto)
+                       apply (case_tac "\<pi>' = [Inl a, Inl b]", auto)
+                       apply (case_tac "\<pi>' = [Inl a]", auto)
+                      apply (case_tac "\<pi>' = []", auto)
+                      apply (simp add: recv_sites_def leaf_def, auto)
+                      apply (meson strict_prefix_simps(2) strict_prefix_simps(3))
     
-         (* lift_sync *)
-         apply (erule sync_step.cases, auto)
+    
+    
+    
     
     
 definition prog_two where 
