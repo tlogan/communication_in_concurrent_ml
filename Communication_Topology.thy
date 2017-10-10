@@ -700,13 +700,20 @@ theorem prog_one_properties: "
                   apply (case_tac "\<pi>' = [Inl (Var ''a'')]", auto)
                    apply ((drule leaf_elim[of _ "[Inl (Var ''a'')]" "Inr ()"])+, auto)
                   apply (case_tac "\<pi>' = []", auto)
-                 (* <- Concur_Seq *)
                  apply (case_tac[1-6] "\<pi>' = [Inl a, Inl b, Inl e]", auto)
                  apply (case_tac[1-6] "\<pi>' = [Inl a, Inr ()]", auto)
                  apply (case_tac[1-6] "\<pi>' = [Inl a, Inl b]", auto)
                   apply ((drule leaf_elim[of _ "[Inl a, Inl b]" "Inl e"])+, auto)
                  apply (case_tac[1-6] "\<pi>' = [Inl a]", auto)
                  apply (case_tac[1-6] "\<pi>' = []", auto)
+           (* Concur_Sync *)
+           apply (case_tac "\<pi>1 = [Inl (Var ''a''), Inr (), Inl (Var ''c'')]", auto)
+           apply (case_tac "\<pi>1 = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
+           apply (case_tac "\<pi>1 = [Inl (Var ''a''), Inr ()]", auto)
+           apply (case_tac "\<pi>1 = [Inl (Var ''a''), Inl (Var ''b'')]", auto)
+           apply (case_tac "\<pi>1 = [Inl (Var ''a'')]", auto)
+           apply (case_tac "\<pi>1 = []", auto)
+          (* Concur_Let_Chan *)
     
     
     
