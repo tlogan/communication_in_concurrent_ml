@@ -482,17 +482,6 @@ definition recv_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_pa
     \<rho> x_evt = Some \<lbrace>P_Recv_Evt x_ch, \<rho>_evt\<rbrace> \<and> 
     \<rho>_evt x_ch = Some \<lbrace>ch\<rbrace>
   }"
-  
-lemma recv_sites_by_meta[intro]: "
-(
-  stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and> 
-  \<rho> x_evt = Some \<lbrace>P_Recv_Evt x_ch, \<rho>_evt\<rbrace> \<and> 
-  \<rho>_evt x_ch = Some \<lbrace>ch\<rbrace>
-) \<Longrightarrow> (
- \<pi> \<in> recv_sites stpool ch
-)
-"
-by (simp add: recv_sites_def)
     
   
 fun channel_exists :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
@@ -532,10 +521,6 @@ definition fan_out :: "exp \<Rightarrow> var \<Rightarrow> bool" where
 definition fan_in :: "exp \<Rightarrow> var \<Rightarrow> bool" where
   "fan_in e x \<longleftrightarrow> \<not> single_sender e x \<and> single_receiver e x "
   
-  
-lemma recv_sites_empty[simp]: "recv_sites [[] \<mapsto> (prog, Map.empty, \<kappa>)] ch = {}"
-by (auto simp add: recv_sites_def)
-  
     
 abbreviation a where "a \<equiv> Var ''a''"
 abbreviation b where "b \<equiv> Var ''b''"
@@ -563,12 +548,29 @@ definition prog_one where
     RESULT f
   "
   
+
+
+ (*
+  apply (case_tac "\<pi>' = [];;a;;b;;e;;f")
+  apply (case_tac "\<pi>' = [];;a;;b;;e")
+  apply (case_tac "\<pi>' = [];;a;;b")
+  apply (case_tac "\<pi>' = [];;a")
+  apply (case_tac "\<pi>' = []")
+  apply (case_tac "\<pi>' = [];;a;;.;;c;;d;;w")
+  apply (case_tac "\<pi>' = [];;a;;.;;c;;d")
+  apply (case_tac "\<pi>' = [];;a;;.;;c")
+  apply (case_tac "\<pi>' = [];;a;;.")
+*)
+
+
 theorem prog_one_properties: "
   single_receiver prog_one a
 "
   apply (simp add: single_receiver_def single_side_def state_pool_possible_def prog_one_def, auto)
-    
+(*
   apply (erule star.cases, auto)
+  (* star/refl *)
+  apply (smt fun_upd_def mem_Collect_eq option.inject option.simps(3) prod.inject recv_sites_def)
   (* star/step *)
   apply (erule concur_step.cases, auto)
      (*Concur_Seq*) 
@@ -714,6 +716,154 @@ theorem prog_one_properties: "
            apply (case_tac "\<pi>1 = [Inl (Var ''a'')]", auto)
            apply (case_tac "\<pi>1 = []", auto)
           (* Concur_Let_Chan *)
+          apply (case_tac "\<pi>' = [Inl a, Inr (), Inl c]", auto)
+          apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
+          apply (case_tac "\<pi>' = [Inl a, Inr ()]", auto)
+           apply ((drule leaf_elim[of _ "[Inl a, Inr ()]" "Inl c"])+, auto)
+          apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b'')]", auto)
+          apply (case_tac "\<pi>' = [Inl a]", auto)
+          apply (case_tac "\<pi>' = []", auto)
+          apply ((drule leaf_elim[of _ "[]" "Inl a"])+, auto)
+         (* Concur_Let_Spawn *)
+         apply (case_tac "\<pi>' = [Inl a, Inr (), Inl c]", auto)
+         apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
+         apply (case_tac "\<pi>' = [Inl a, Inr ()]", auto)
+         apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b'')]", auto)
+         apply (case_tac "\<pi>' = [Inl a]", auto)
+          apply ((drule leaf_elim[of _ "[Inl a]" "Inr ()"])+, auto)
+         apply (case_tac "\<pi>' = []", auto)
+        apply (case_tac "\<pi>' = [Inl a, Inl b]", auto)
+        apply (case_tac "\<pi>' = [Inl a]", auto)
+        apply (case_tac "\<pi>' = []", auto)
+        apply ((drule leaf_elim[of _ "[]" "Inl a"])+, auto)
+       (* Concur_Let_Spawn*)
+       apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
+       apply (case_tac "\<pi>' = [Inl (Var ''a''), Inr ()]", auto)
+       apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b'')]", auto)
+       apply (case_tac "\<pi>' = [Inl (Var ''a'')]", auto)
+        apply ((drule leaf_elim[of _ "[Inl (Var ''a'')]" "Inl (Var ''b'')"])+, auto)
+       apply (case_tac "\<pi>' = []", auto)
+      (* Concur_Let_Spawn*)
+      apply (case_tac "\<pi>1 = [Inl a, Inr ()]", auto)
+      apply (case_tac "\<pi>1 = [Inl a, Inl b]", auto)
+      apply (case_tac "\<pi>1 = [Inl a]", auto)
+      apply (case_tac "\<pi>1 = []", auto)
+     (* Concur_Let_Chan *)
+     apply (case_tac "\<pi>' = [Inl a, Inr ()]", auto)
+      apply (erule star.cases, auto)
+       (* star/refl *)
+       apply (simp add: recv_sites_def leaf_def, auto)
+       apply (smt bind.distinct(19) bind.distinct(31) bind.distinct(49) exp.inject(1) map_upd_Some_unfold option.inject option.simps(3) prod.inject)
+      (* star/step *)
+      apply (erule concur_step.cases, auto)
+         (* Concr_Seq *)
+         apply (erule seq_step.cases, auto)
+               apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c]", auto)
+                apply (case_tac "\<pi>' = [Inl a, Inr ()]", auto)
+                apply (case_tac "\<pi>' = [Inl a, Inl b]", auto)
+                apply (case_tac "\<pi>' = [Inl a]", auto)
+                apply (case_tac "\<pi>' = []", auto)
+               apply (erule star.cases, auto)
+                (* star/refl *)
+                apply (simp add: recv_sites_def leaf_def, auto)
+                apply (smt Pair_inject bind.distinct(19) bind.distinct(31) bind.distinct(49) bind.inject(2) exp.inject(1) fun_upd_def option.inject option.simps(3) prim.distinct(37) val.inject(2))
+               (* star/step *)
+               apply (erule concur_step.cases, auto)
+                  (* Concur_Seq *)
+                  apply (erule seq_step.cases, auto)
+                      apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c, Inl d]", auto)
+                      apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c]", auto)
+                       apply (case_tac "\<pi>' = [Inl a, Inr ()]", auto)
+                       apply (case_tac "\<pi>' = [Inl a, Inl b]", auto)
+                       apply (case_tac "\<pi>' = [Inl a]", auto)
+                       apply (case_tac "\<pi>' = []", auto)
+                      apply ((drule leaf_elim[of _ "[Inl a, Inr (), Inl c]" "Inl d"])+, auto)
+                      apply (case_tac[1-6] "\<pi>' = [Inl a, Inr ()]", auto)
+                      apply (case_tac[1-6] "\<pi>' = [Inl a, Inl b]", auto)
+                      apply (erule star.cases)
+                       (* star/refl *)
+                       apply (simp add: recv_sites_def leaf_def, auto)
+                       apply (smt Pair_inject bind.distinct(19) bind.distinct(49) bind.inject(2) exp.inject(1) map_upd_Some_unfold option.simps(3) prefix_Cons prefix_order.eq_refl prim.distinct(37) val.inject(2))
+                      (* star/step *)
+                      apply (erule concur_step.cases, auto)
+                         (* Concur_Seq*)
+                         apply (erule seq_step.cases, auto)
+                      apply (case_tac[1-7] "\<pi>' = [Inl a, Inl b, Inl e]", auto)
+                      apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c, Inl d]", auto)
+                      apply (case_tac[1-7] "\<pi>' = [Inl a, Inr (), Inl c]", auto)
+                      apply (case_tac "\<pi>' = [Inl a, Inr ()]", auto)
+                      apply (case_tac "\<pi>' = [Inl a, Inl b]", auto)
+                      apply (case_tac "\<pi>' = [Inl a]", auto)
+                      apply (case_tac "\<pi>' = []", auto)
+                      apply ((drule leaf_elim[of _ "[Inl a, Inr (), Inl c]" "Inl d"])+, auto)
+                      apply (case_tac[1-6] "\<pi>' = [Inl a, Inr ()]", auto)
+                      apply (case_tac[1-6] "\<pi>' = [Inl a, Inl b]", auto)
+                      apply ((drule leaf_elim[of _ "[Inl a, Inl b]" "Inl e"])+, auto)
+                      apply (case_tac[1-6] "\<pi>' = [Inl a]", auto)
+                      apply (case_tac[1-6] "\<pi>' = []", auto)
+                      (* Concur_Sync *)
+                      apply (case_tac "\<pi>1 = [Inl a, Inl b, Inl e]", auto)
+                      apply (case_tac "\<pi>1 = [Inl (Var ''a''), Inr (), Inl (Var ''c''), Inl (Var ''d'')]", auto)
+                      apply (case_tac "\<pi>1 = [Inl (Var ''a''), Inr (), Inl (Var ''c'')]", auto)
+                      apply (case_tac "\<pi>2 = [Inl a, Inl b, Inl e]", auto)
+                      apply (case_tac "\<pi>1 = [Inl a, Inr ()]", auto)
+                      apply (case_tac "\<pi>1 = [Inl a, Inl b]", auto)
+                      apply (case_tac "\<pi>1 = [Inl a]", auto)
+                      apply (case_tac "\<pi>1 = []", auto)
+                      apply (case_tac "\<pi>1 = [Inl a, Inr ()]", auto)
+                      apply (case_tac "\<pi>1 = [Inl a, Inl b]", auto)
+                      apply (case_tac "\<pi>1 = [Inl a]", auto)
+  apply (case_tac "\<pi>1 = []", auto)
+
+                      (* Concur_Let_Chan *)
+                      apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
+                      apply (case_tac "\<pi>' = [Inl (Var ''a''), Inr (), Inl (Var ''c''), Inl (Var ''d'')]", auto)
+                      apply (case_tac "\<pi>' = [Inl (Var ''a''), Inr (), Inl (Var ''c'')]", auto)
+                      apply (case_tac "\<pi>' = [Inl (Var ''a''), Inr ()]", auto)
+                      apply ((drule leaf_elim[of _ "[Inl a, Inr ()]" "Inl c"])+, auto)
+                      apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b'')]", auto)
+                      apply (case_tac "\<pi>' = [Inl (Var ''a'')]", auto)
+                      apply (case_tac "\<pi>' = []", auto)
+                      apply ((drule leaf_elim[of _ "[]" "Inl a"])+, auto)
+                      (* Concur_Let_Spawn *)
+                      apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
+                      apply (case_tac "\<pi>' = [Inl a, Inr (), Inl c, Inl d]", auto)
+                      apply (case_tac "\<pi>' = [Inl a, Inr (), Inl c]", auto)
+                      apply (case_tac "\<pi>' = [Inl a, Inr ()]", auto)
+                      apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b'')]", auto)
+                      apply (case_tac "\<pi>' = [Inl a]", auto)
+                      apply ((drule leaf_elim[of _ "[Inl a]" "Inl b"])+, auto)
+                      apply (case_tac "\<pi>' = []", auto)
+                    apply (case_tac[1-6] "\<pi>' = [Inl a]", auto)
+                    apply (case_tac[1-6] "\<pi>' = []", auto)
+              apply (case_tac "\<pi>1 = [Inl (Var ''a''), Inr (), Inl (Var ''c''), Inl d]", auto)  
+              apply (case_tac "\<pi>1 = [Inl (Var ''a''), Inr (), Inl (Var ''c'')]", auto)   
+              apply (case_tac "\<pi>1 = [Inl (Var ''a''), Inr ()]", auto)
+              apply (case_tac "\<pi>1 = [Inl (Var ''a''), Inl b]", auto)
+              apply (case_tac "\<pi>1 = [Inl a]", auto)
+              apply (case_tac "\<pi>1 = []", auto)
+              (* Concur_Let_Chan *)
+              apply (case_tac "\<pi>' = [Inl (Var ''a''), Inr (), Inl (Var ''c''), Inl d]", auto)
+              apply (case_tac "\<pi>' = [Inl (Var ''a''), Inr (), Inl (Var ''c'')]", auto)
+              apply (case_tac "\<pi>' = [Inl (Var ''a''), Inr ()]", auto)
+              apply ((drule leaf_elim[of _ "[Inl a, Inr ()]" "Inl c"])+, auto)
+              apply (case_tac "\<pi>' = [Inl a, Inl b]", auto)
+              apply (case_tac "\<pi>' = [Inl a]", auto)
+              apply (case_tac "\<pi>' = []", auto)
+              apply ((drule leaf_elim[of _ "[]" "Inl a"])+, auto)
+              (* Concur_Let_Spawn *)
+              apply (case_tac "\<pi>' = [Inl a, Inr (), Inl c, Inl d]", auto)
+              apply (case_tac "\<pi>' = [Inl a, Inr (), Inl c]", auto)
+              apply (case_tac "\<pi>' = [Inl a, Inr ()]", auto)
+              apply (case_tac "\<pi>' = [Inl a, Inl b]", auto)
+              apply (case_tac "\<pi>' = [Inl a]", auto)
+               apply ((drule leaf_elim[of _ "[Inl a]" "Inr ()"])+, auto)
+              apply (case_tac "\<pi>' = []", auto)
+             apply (case_tac[1-6] "\<pi>' = [Inl a, Inr ()]", auto)
+             apply (case_tac[1-6] "\<pi>' = [Inl a, Inl b]", auto)
+    
+    *)
+    
     
     
     
