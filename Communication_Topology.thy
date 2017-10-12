@@ -316,7 +316,7 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
   " |
   Seq_Snd: "
     \<lbrakk> (\<rho> x_p) = Some \<lbrace>P_Pair _ x2, \<rho>_p\<rbrace> ; (\<rho>_p x2) = Some \<omega> \<rbrakk> \<Longrightarrow>
-    (LET x = FST x_p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
+    (LET x = SND x_p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   Seq_Let_App: "
     \<lbrakk>
@@ -329,6 +329,16 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
       x_a_abs \<mapsto> \<omega>_a
     ), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
+
+
+inductive_cases Seq_Result_E[elim!]: "(RESULT x, \<rho>, \<langle>x_ct, e_ct, \<rho>_ct\<rangle> # \<kappa>) \<hookrightarrow> st"
+inductive_cases Seq_Let_Unit_E: "(LET x = \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<hookrightarrow> st"
+inductive_cases Seq_Let_Prim_E[elim!]: "(LET x = B_Prim p in e, \<rho>, \<kappa>) \<hookrightarrow> st" 
+inductive_cases Seq_Let_Case_Left_E[elim!]: "(LET x = CASE x_sum LEFT x_l |> e_l RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<hookrightarrow> st" 
+inductive_cases Seq_Let_Case_Right_E[elim!]: "(LET x = CASE x_sum LEFT x_l |> e_l RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<hookrightarrow> st" 
+inductive_cases Seq_Fst_E[elim!] : "(LET x = FST x_p in e, \<rho>, \<kappa>) \<hookrightarrow> st"
+inductive_cases Seq_Snd_E[elim!] : "(LET x = SND x_p in e, \<rho>, \<kappa>) \<hookrightarrow> st"
+inductive_cases Seq_Let_App_E[elim!]: "(LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<hookrightarrow> st"
   
   
 lemma "(\<And> x . S \<Longrightarrow> (P x \<longrightarrow> R x) \<Longrightarrow> T \<Longrightarrow> Q) \<Longrightarrow> (S \<Longrightarrow> (\<forall> x. P x \<longrightarrow> R x) \<Longrightarrow> T \<Longrightarrow> Q)"
@@ -547,36 +557,8 @@ definition prog_one where
     LET f = SYNC e in
     RESULT f
   "
-  
 
- (*
-  apply (erule star.cases, auto)
-  apply (
-    (smt fun_upd_def mem_Collect_eq option.inject option.simps(3) prod.inject recv_sites_def)?
-  )
-  apply (erule concur_step.cases, auto)
-  apply (erule seq_step.cases, auto)
 
-  apply ((
-    (case_tac "\<pi>' = [];;a;;.;;c;;d;;w", auto),
-    (((drule leaf_elim)+), auto)?,
-    (case_tac "\<pi>' = [];;a;;.;;c;;d", auto),
-    (((drule leaf_elim)+), auto)?,
-    (case_tac "\<pi>' = [];;a;;b;;e;;f", auto),
-    (((drule leaf_elim)+), auto)?,
-    (case_tac "\<pi>' = [];;a;;.;;c", auto),
-    (((drule leaf_elim)+), auto)?,
-    (case_tac "\<pi>' = [];;a;;b;;e", auto),
-    (((drule leaf_elim)+), auto)?,
-    (case_tac "\<pi>' = [];;a;;.", auto),
-    (((drule leaf_elim)+), auto)?,
-    (case_tac "\<pi>' = [];;a;;b", auto),
-    (((drule leaf_elim)+), auto)?,
-    (case_tac "\<pi>' = [];;a", auto),
-    (((drule leaf_elim)+), auto)?,
-    (case_tac "\<pi>' = []", auto)
-  ))
- *)
 
 theorem prog_one_properties: "
   single_receiver prog_one a
@@ -828,7 +810,7 @@ theorem prog_one_properties: "
                       apply (case_tac "\<pi>1 = [Inl a, Inr ()]", auto)
                       apply (case_tac "\<pi>1 = [Inl a, Inl b]", auto)
                       apply (case_tac "\<pi>1 = [Inl a]", auto)
-  apply (case_tac "\<pi>1 = []", auto)
+                      apply (case_tac "\<pi>1 = []", auto)
 
                       (* Concur_Let_Chan *)
                       apply (case_tac "\<pi>' = [Inl (Var ''a''), Inl (Var ''b''), Inl (Var ''e'')]", auto)
@@ -999,6 +981,7 @@ theorem prog_one_properties: "
 done
 
 
+
 definition prog_two where 
   "prog_two = 
     LET a = CHAN \<lparr>\<rparr> in
@@ -1046,5 +1029,3 @@ definition prog_four where
   "
   
 value "normalize prog_four"
-  
-
