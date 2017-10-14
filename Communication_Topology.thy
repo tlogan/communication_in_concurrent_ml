@@ -387,6 +387,39 @@ by (metis (mono_tags))
  * (\<And> x y z . \<lbrakk> S y ; P x ; R x z; T y\<rbrakk> \<Longrightarrow> Q y)
  * and state the theorem as such, the stronger statement.
  *) 
+
+lemma "
+(
+  \<And> vpool vpool' stpool stpool_sync . 
+    vpool \<leadsto> vpool' \<Longrightarrow>
+    (\<forall> \<pi>' e \<rho>' \<kappa> .
+      stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) \<longrightarrow>
+      (\<exists> x \<omega>_a x_a \<rho> x_evt \<pi> .
+        \<pi>' = \<pi>;;x \<and>
+        \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<and>
+        vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
+        vpool \<pi> = \<rho> x_evt \<and>
+        stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and>
+        leaf stpool \<pi>
+      )
+    ) \<Longrightarrow>
+    (\<exists> \<pi>' e \<rho>' \<kappa> . stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) )
+  
+)
+ \<Longrightarrow>
+(
+  \<And> vpool vpool' stpool stpool_sync \<pi> \<pi>' e \<rho>' \<kappa> x \<omega>_a x_a \<rho> x_evt .
+    vpool \<leadsto> vpool' \<Longrightarrow>
+    stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) \<Longrightarrow>
+    \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<Longrightarrow>
+    vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<Longrightarrow>
+    vpool \<pi> = \<rho> x_evt \<Longrightarrow>
+    stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<Longrightarrow>
+    leaf stpool \<pi>
+)
+"
+
+
 lemma "
 (
   \<And> vpool vpool' stpool stpool_sync \<pi> \<pi>' e \<rho>' \<kappa> x \<omega>_a x_a \<rho> x_evt . \<lbrakk>
@@ -447,6 +480,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
       
       \<rho>_s x_m = Some \<omega>_m ;
 
+      leaf stpool \<pi>2 ;
       stpool \<pi>2 = Some (LET x2 = SYNC x2_evt in e2, \<rho>2, \<kappa>2) ;
       \<rho>2 x2_evt = Some \<lbrace>P_Recv_Evt x_ch2, \<rho>_r\<rbrace> ;
       \<rho>_r x_ch2 = Some (V_Chan c)
@@ -979,8 +1013,6 @@ theorem prog_one_properties: "
    apply (case_tac "\<pi>' = []", auto)
   apply (case_tac "\<pi>' = []", auto)
 done
-
-
 
 definition prog_two where 
   "prog_two = 
