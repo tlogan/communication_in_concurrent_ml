@@ -136,6 +136,8 @@ fun string_of_nat :: "nat \<Rightarrow> string" where
     else 
       string_of_nat (n div 10) @ [char_of_nat (48 + (n mod 10))]
   )"
+
+
   
 definition sym :: "nat \<Rightarrow> var" where "sym i = Var (''g'' @ (string_of_nat i))"
   
@@ -330,7 +332,6 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
     ), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
 
-
 inductive_cases Seq_Result_E[elim!]: "(RESULT x, \<rho>, \<langle>x_ct, e_ct, \<rho>_ct\<rangle> # \<kappa>) \<hookrightarrow> st"
 inductive_cases Seq_Let_Unit_E: "(LET x = \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<hookrightarrow> st"
 inductive_cases Seq_Let_Prim_E[elim!]: "(LET x = B_Prim p in e, \<rho>, \<kappa>) \<hookrightarrow> st" 
@@ -418,7 +419,7 @@ lemma "
     leaf stpool \<pi>
 )
 "
-
+  using option.simps(3) by fastforce
 
 lemma "
 (
@@ -546,7 +547,7 @@ definition single_side :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_
     state_pool_possible e stpool \<longrightarrow>
     (* channel_exists stpool (Ch (\<pi>;;x)) \<longrightarrow> *)
     \<pi>_1 \<in> (sites_of stpool (Ch (\<pi>;;x))) \<longrightarrow>
-    \<pi>_2 \<in>(sites_of stpool (Ch (\<pi>;;x))) \<longrightarrow>
+    \<pi>_2 \<in> (sites_of stpool (Ch (\<pi>;;x))) \<longrightarrow>
     (prefix \<pi>_1 \<pi>_2 \<or> prefix \<pi>_2 \<pi>_1) 
   )"  
   
