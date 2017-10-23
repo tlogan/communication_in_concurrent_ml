@@ -1,5 +1,5 @@
 theory Communication_Topology
-  imports Main "~~/src/HOL/Library/Sublist" "~~/src/HOL/IMP/Star"
+  imports Main "~~/src/HOL/Library/Sublist" "~~/src/HOL/IMP/Star" "~~/src/HOL/Eisbach/Eisbach_Tools"
 begin
   
 datatype var = Var string
@@ -366,6 +366,7 @@ lemma leaf_elim: "
   apply (simp add: leaf_def)
   by (metis old.prod.exhaust option.exhaust prefix_order.dual_order.refl prefix_snocD)
 
+
 inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
   Sync_Send_Recv: "
     \<lbrakk>
@@ -594,55 +595,61 @@ definition prog_one where
   "
 
 
+method case_tac_all for \<pi> =
+  (
+    case_tac "\<pi> = [];;(Var ''a'');;.;;c;;d;;w", auto,
+    case_tac "\<pi> = [];;(Var ''a'');;.;;c;;d", auto,
+    case_tac "\<pi> = [];;(Var ''a'');;b;;e;;f", auto,
+    case_tac "\<pi> = [];;(Var ''a'');;.;;c", auto,
+    case_tac "\<pi> = [];;(Var ''a'');;b;;e", auto,
+    case_tac "\<pi> = [];;(Var ''a'');;.", auto,
+    case_tac "\<pi> = [];;(Var ''a'');;b", auto,
+    case_tac "\<pi> = [];;(Var ''a'')", auto,
+    case_tac "\<pi> = []", auto
+  )
 
+
+method condition_split =
+  (match premises in I: "(if P then _ else _) = Some _" for P \<Rightarrow> \<open>cases P\<close>, auto)
+
+method open_up =
+ (simp add: recv_sites_def leaf_def, auto)
+
+
+
+
+method leaf_elim_loop for stpool :: state_pool and l :: control_path uses I = (
+  match (stpool) in 
+    "Map.empty" \<Rightarrow> \<open> fail \<close> \<bar>
+    "m((p :: control_path) \<mapsto> (_ :: state))" for m p \<Rightarrow> 
+        \<open>(print_term l, print_term p, print_fact I, (insert I, (drule leaf_elim[of _ l "List.last p"]), auto); leaf_elim_loop m l I: I)\<close>
+)
+
+method multi_leaf_elim = (
+  match premises in 
+    I[thin]: "leaf stpool lf" for stpool lf \<Rightarrow> \<open>print_term "''NEW MATCH''", (leaf_elim_loop stpool lf I: I)\<close>
+)
+
+method multi_elim = 
+  (
+    (erule star.cases, auto),
+    (open_up),
+    (condition_split)+,
+    (erule concur_step.cases, auto),
+    (erule seq_step.cases),
+    (condition_split)+,
+    (multi_leaf_elim)?
+  )
+ 
 theorem prog_one_properties: "
   single_receiver prog_one a
 "
   apply (simp add: single_receiver_def single_side_def state_pool_possible_def prog_one_def, auto)
-  apply (erule star.cases, auto)
-  (* star/refl *)
-  apply (smt fun_upd_def mem_Collect_eq option.inject option.simps(3) prod.inject recv_sites_def)
-  (* star/step *)
-  apply (erule concur_step.cases, auto)
-     (*Concur_Seq*) 
-     apply (erule seq_step.cases, auto)  
-           apply (case_tac[1-7] "\<pi>' = []", auto)
-    (* Concur_Sync *)
-    apply (case_tac "\<pi>1=[]", auto)
-   (* Concur_Let_Chan*)
-   apply (case_tac "\<pi>' = []", auto)
-   apply (erule star.cases, auto)
-    (* star/refl *)
-    apply (simp add: recv_sites_def leaf_def, auto)
-    apply (smt bind.distinct(31) exp.inject(1) fun_upd_def option.inject option.simps(3) prod.inject)
-   (* star/step *)
-   apply (erule concur_step.cases, auto)
-      (*Concur_Seq*) 
-      apply (erule seq_step.cases, auto)  
-            apply (case_tac[1-7] "\<pi>' = [];;a", auto)
-            apply (case_tac[1-7] "\<pi>' = []", auto)
-     (* Concur_Sync *)
-     apply (case_tac "\<pi>1=[Inl a]", auto)
-     apply (case_tac "\<pi>1=[]", auto)
-    (* Concur_Let_Chan*)
-    apply (case_tac "\<pi>' = [];;a", auto)
-    apply (case_tac "\<pi>' = []", auto)
-    apply (simp add: recv_sites_def leaf_def, auto)
-    apply (metis strict_prefix_simps(2))
-   (* Concur_Let_Spawn *)
-   apply (case_tac "\<pi>' = [];;a", auto) 
-    apply (erule star.cases, auto)
-     (* star/refl *)
-     apply (simp add: recv_sites_def leaf_def, auto)
-     apply (smt bind.distinct(19) bind.distinct(31) bind.distinct(49) exp.inject(1) map_upd_Some_unfold map_upd_nonempty map_upd_triv option.inject prod.inject)
-    (* star/step *)
-    apply (erule concur_step.cases)
-       (*Concur_Seq*)
-       apply (erule seq_step.cases, auto)  
-             apply (case_tac[1-7] "\<pi>' = []", auto)
-             apply (case_tac[1-7] "\<pi>' = [];;a", auto)
-             apply (case_tac[1-7] "\<pi>' = [];;a;;.", auto)
-             apply (case_tac[1-7] "\<pi>' = [];;a;;b", auto)
+  (* loop point *)
+  apply (multi_elim)
+  apply (multi_elim)
+  apply (multi_elim)
+  
        apply (erule star.cases, auto)
         (* star/refl *)
         apply (simp add: recv_sites_def leaf_def, auto)
@@ -656,8 +663,7 @@ theorem prog_one_properties: "
                 apply (case_tac[1-7] "\<pi>' = [];;a;;b", auto)
                  apply (case_tac "\<pi>' = [];;a", auto)
                  apply (case_tac "\<pi>' = []", auto)
-                apply (simp add: recv_sites_def leaf_def, auto)
-                apply (meson strict_prefix_simps(2) strict_prefix_simps(3))
+                 apply ((drule leaf_elim[of _ "[Inl a, Inl b]" "Inl e"])+, auto)
                apply (case_tac[1-6] "\<pi>' = [];;a", auto)
                apply (case_tac[1-6] "\<pi>' = []", auto)
          (* Concur_Sync *)
@@ -1014,6 +1020,7 @@ theorem prog_one_properties: "
    apply (case_tac "\<pi>' = []", auto)
   apply (case_tac "\<pi>' = []", auto)
 done
+*)
 
 definition prog_two where 
   "prog_two = 
