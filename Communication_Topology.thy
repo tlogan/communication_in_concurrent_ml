@@ -600,8 +600,6 @@ method condition_split = (
     I: "(if P then _ else _) = Some _" for P \<Rightarrow> \<open>cases P\<close>
 , auto)
 
-method open_up =
- (simp add: recv_sites_def leaf_def, auto)
 
 method leaf_elim_loop for stpool :: state_pool and l :: control_path uses I = (
   match (stpool) in 
@@ -610,52 +608,30 @@ method leaf_elim_loop for stpool :: state_pool and l :: control_path uses I = (
         \<open>((insert I, (drule leaf_elim[of _ l "List.last p"]), auto); leaf_elim_loop m l I: I)\<close>
 )
 
-method multi_leaf_elim = (
+method leaf_elim_search = (
   match premises in 
     I: "leaf stpool lf" for stpool lf \<Rightarrow> \<open>(leaf_elim_loop stpool lf I: I)\<close>
 )
 
-method multi_elim = 
+method topo_solve = 
   (
     (erule star.cases, auto),
-    (open_up),
+    (simp add: recv_sites_def send_sites_def leaf_def, auto),
     (condition_split+),
     (erule concur_step.cases, auto),
     (erule seq_step.cases),
-    (condition_split | multi_leaf_elim)+
+    (condition_split | leaf_elim_search)+
   )
  
 theorem prog_one_properties: "single_receiver prog_one a"
   apply (simp add: single_receiver_def single_side_def state_pool_possible_def prog_one_def, auto)
-  apply (multi_elim)+
+  apply topo_solve+
 done
 
 
-method open_up2 =
- (simp add: send_sites_def leaf_def, auto)
-
-method multi_elim2 = 
-  (
-    (erule star.cases, auto),
-    (open_up2),
-    (condition_split+),
-    (erule concur_step.cases, auto),
-    (erule seq_step.cases),
-    (condition_split | multi_leaf_elim)+
-  )
 theorem prog_one_properties2: "single_sender prog_one a"
   apply (simp add: single_sender_def single_side_def state_pool_possible_def prog_one_def, auto)
-  apply (multi_elim2)
-  apply (multi_elim2)
-  apply (multi_elim2)
-  apply (multi_elim2)
-  apply (multi_elim2)
-  apply (multi_elim2)
-  apply (multi_elim2)
-  apply (multi_elim2)
-  apply (multi_elim2)
-  apply (multi_elim2)
-  apply (multi_elim2)
+  apply topo_solve+
 done
 
 definition prog_two where 
