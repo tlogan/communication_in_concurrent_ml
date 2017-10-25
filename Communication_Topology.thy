@@ -595,20 +595,6 @@ definition prog_one where
   "
 
 
-method case_tac_all for \<pi> =
-  (
-    case_tac "\<pi> = [];;(Var ''a'');;.;;c;;d;;w", auto,
-    case_tac "\<pi> = [];;(Var ''a'');;.;;c;;d", auto,
-    case_tac "\<pi> = [];;(Var ''a'');;b;;e;;f", auto,
-    case_tac "\<pi> = [];;(Var ''a'');;.;;c", auto,
-    case_tac "\<pi> = [];;(Var ''a'');;b;;e", auto,
-    case_tac "\<pi> = [];;(Var ''a'');;.", auto,
-    case_tac "\<pi> = [];;(Var ''a'');;b", auto,
-    case_tac "\<pi> = [];;(Var ''a'')", auto,
-    case_tac "\<pi> = []", auto
-  )
-
-
 method condition_split = (
   match premises in 
     I: "(if P then _ else _) = Some _" for P \<Rightarrow> \<open>cases P\<close>
@@ -641,17 +627,35 @@ method multi_elim =
  
 theorem prog_one_properties: "single_receiver prog_one a"
   apply (simp add: single_receiver_def single_side_def state_pool_possible_def prog_one_def, auto)
-  apply (multi_elim)
-  apply (multi_elim)
-  apply (multi_elim)
-  apply (multi_elim)
-  apply (multi_elim)
-  apply (multi_elim)
-  apply (multi_elim)
-  apply (multi_elim)
-  apply (multi_elim)
-  apply (multi_elim)
-  apply (multi_elim)
+  apply (multi_elim)+
+done
+
+
+method open_up2 =
+ (simp add: send_sites_def leaf_def, auto)
+
+method multi_elim2 = 
+  (
+    (erule star.cases, auto),
+    (open_up2),
+    (condition_split+),
+    (erule concur_step.cases, auto),
+    (erule seq_step.cases),
+    (condition_split | multi_leaf_elim)+
+  )
+theorem prog_one_properties2: "single_sender prog_one a"
+  apply (simp add: single_sender_def single_side_def state_pool_possible_def prog_one_def, auto)
+  apply (multi_elim2)
+  apply (multi_elim2)
+  apply (multi_elim2)
+  apply (multi_elim2)
+  apply (multi_elim2)
+  apply (multi_elim2)
+  apply (multi_elim2)
+  apply (multi_elim2)
+  apply (multi_elim2)
+  apply (multi_elim2)
+  apply (multi_elim2)
 done
 
 definition prog_two where 
