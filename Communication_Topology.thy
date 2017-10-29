@@ -359,12 +359,12 @@ definition leaf :: "(control_path \<rightharpoonup> state) \<Rightarrow> control
   "
   
 lemma leaf_elim: "
-  leaf stpool \<pi>
+  \<lbrakk> leaf stpool \<pi>; strict_prefix \<pi> \<pi>' \<rbrakk>
 \<Longrightarrow>
-  stpool (\<pi> @ [x]) = None 
+   stpool \<pi>' = None 
 "
   apply (simp add: leaf_def)
-  by (metis old.prod.exhaust option.exhaust prefix_order.dual_order.refl prefix_snocD)
+  by (metis option.exhaust prod_cases3)
 
 
 inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
@@ -601,16 +601,16 @@ method condition_split = (
 , auto)
 
 
-method leaf_elim_loop for stpool :: state_pool and l :: control_path uses I = (
-  match (stpool) in 
+method leaf_elim_loop for m :: state_pool and stpool :: state_pool and l :: control_path uses I = (
+  match (m) in 
     "Map.empty" \<Rightarrow> \<open> fail \<close> \<bar>
-    "m((p :: control_path) \<mapsto> (_ :: state))" for m p \<Rightarrow> 
-        \<open>((insert I, (drule leaf_elim[of _ l "List.last p"]), auto); leaf_elim_loop m l I: I)\<close>
+    "m'((p :: control_path) \<mapsto> (_ :: state))" for m' p \<Rightarrow> 
+        \<open>((insert I, (drule leaf_elim[of stpool l p]), auto); leaf_elim_loop m' stpool l I: I)\<close>
 )
 
 method leaf_elim_search = (
   match premises in 
-    I: "leaf stpool lf" for stpool lf \<Rightarrow> \<open>(leaf_elim_loop stpool lf I: I)\<close>
+    I: "leaf stpool lf" for stpool lf \<Rightarrow> \<open>(leaf_elim_loop stpool stpool lf I: I)\<close>
 )
 
 method topo_solve = 
@@ -633,6 +633,13 @@ theorem prog_one_properties2: "single_sender prog_one a"
   apply (simp add: single_sender_def single_side_def state_pool_possible_def prog_one_def, auto)
   apply topo_solve+
 done
+
+
+lemma "True"
+thm HOL.TrueI
+apply (rule HOL.TrueI)
+done
+
 
 definition prog_two where 
   "prog_two = 
