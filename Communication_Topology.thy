@@ -688,3 +688,15 @@ definition prog_four where
   "
   
 value "normalize prog_four"
+
+inductive abc :: "nat \<Rightarrow> nat \<Rightarrow> bool" where 
+  abceq: "
+    ((qqq :: nat) = (qqqq :: nat)) \<Longrightarrow>
+    (abc qqq qqqq)
+  "
+
+
+lemma "True"
+thm HOL.TrueI
+apply (rule HOL.TrueI)
+done
