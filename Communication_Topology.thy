@@ -695,8 +695,24 @@ inductive abc :: "nat \<Rightarrow> nat \<Rightarrow> bool" where
     (abc qqq qqqq)
   "
 
-
 lemma "True"
-thm HOL.TrueI
 apply (rule HOL.TrueI)
 done
+
+lemma TrueI: True
+  unfolding True_def 
+apply (rule refl)
+done
+
+
+
+value "set"
+context
+  assumes "linear": "\<And>x y. x \<le> y \<or> y \<le> x"
+begin
+inductive sorted :: "'a list \<Rightarrow> bool" where
+  Nil : "sorted []" |
+  Cons: "\<forall>y\<in>set xs. xx \<le> y \<Longrightarrow> sorted xs \<Longrightarrow> sorted (xx # xs)"
+
+
+
