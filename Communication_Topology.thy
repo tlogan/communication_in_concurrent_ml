@@ -714,5 +714,3 @@ inductive sorted :: "'a list \<Rightarrow> bool" where
   Nil : "sorted []" |
   Cons: "\<forall>y\<in>set xs. xx \<le> y \<Longrightarrow> sorted xs \<Longrightarrow> sorted (xx # xs)"
 
-
-
