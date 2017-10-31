@@ -706,11 +706,22 @@ done
 
 
 
-value "set"
-context
-  assumes "linear": "\<And>x y. x \<le> y \<or> y \<le> x"
-begin
-inductive sorted :: "'a list \<Rightarrow> bool" where
-  Nil : "sorted []" |
-  Cons: "\<forall>y\<in>set xs. xx \<le> y \<Longrightarrow> sorted xs \<Longrightarrow> sorted (xx # xs)"
+inductive sorted :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> bool" where
+Nil : "sorted P Nil" |
+Single : "sorted P (Cons xx Nil)" |
+Cons : "P xx yy \<Longrightarrow> sorted P (Cons yy yys) \<Longrightarrow> sorted P (Cons xx (Cons yy yys))"
+
+
+
+lemma "sorted (\<lambda> x y . )[1, 2, 3]"
+apply rule
+apply auto
+apply rule
+
+
+definition Xll :: "('a \<Rightarrow> bool) \<Rightarrow> bool"  (binder "x$" 10)
+  where "Xll P \<equiv> (P = (\<lambda>x. True))"
+
+value "x$ P . P"
+value "All (\<lambda> P . P)"
 
