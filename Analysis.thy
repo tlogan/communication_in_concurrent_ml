@@ -58,8 +58,8 @@ definition send_sites :: "var \<Rightarrow> exp \<Rightarrow> var set" where
   }"
 
 definition send_paths :: "var \<Rightarrow> exp \<Rightarrow> abstract_path set" where 
-  "send_paths c e = {path @ [Inl x] | (path::abstract_path) (x::var) . 
-    (x \<in> send_sites c) \<and>  (path @ (Inl x) \<in> paths_to x e)
+  "send_paths c e = {path @ [Inl x] | path x . 
+    (x \<in> send_sites c e) \<and>  (path @ [Inl x] \<in> paths_to x e)
   }" 
 
 datatype topo_class = OneShot | OneToOne | FanOut | FanIn | Any
