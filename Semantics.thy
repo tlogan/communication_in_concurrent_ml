@@ -2,6 +2,10 @@ theory Semantics
   imports Main Syntax "~~/src/HOL/Library/Sublist" "~~/src/HOL/IMP/Star"
 begin
 
+  
+type_synonym control_path = "(var + unit) list"
+datatype chan = Ch control_path
+
 datatype val = 
   V_Chan chan ("\<lbrace>_\<rbrace>") |
   V_Closure prim "var \<rightharpoonup> val" ("\<lbrace>_, _\<rbrace>") |
@@ -75,7 +79,7 @@ abbreviation control_path_append_unit :: "control_path  => control_path" ("_;;."
   
   
 definition leaf :: "(control_path \<rightharpoonup> state) \<Rightarrow> control_path \<Rightarrow> bool" where
-  "leaf stpool \<pi> \<longleftrightarrow>
+  "leaf stpool \<pi> \<equiv>
       (stpool \<pi>) \<noteq> None \<and>
       (\<nexists> \<pi>' . (stpool \<pi>') \<noteq> None \<and> (strict_prefix \<pi> \<pi>'))
   "

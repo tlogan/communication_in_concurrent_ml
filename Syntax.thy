@@ -3,9 +3,6 @@ theory Syntax
 begin
   
 datatype var = Var string
-  
-type_synonym control_path = "(var + unit) list"
-datatype chan = Ch control_path
 
 (* ANF grammar *)
 datatype exp = 

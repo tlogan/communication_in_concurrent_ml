@@ -14,7 +14,6 @@ abbreviation y where "y \<equiv> Var ''y''"
 abbreviation z where "z \<equiv> Var ''z''"
 
 
-
 method condition_split = (
   match premises in 
     I: "(if P then _ else _) = Some _" for P \<Rightarrow> \<open>cases P\<close>
@@ -122,9 +121,6 @@ inductive abc :: "nat \<Rightarrow> nat \<Rightarrow> bool" where
     (abc qqq qqqq)
   "
 
-lemma "True"
-apply (rule HOL.TrueI)
-done
 
 lemma TrueI: True
   unfolding True_def 
