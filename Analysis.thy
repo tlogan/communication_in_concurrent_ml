@@ -32,13 +32,53 @@ inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
     \<lbrakk> {Unit} \<subseteq> (\<rho> x); \<rho> \<Turnstile> e \<rbrakk> \<Longrightarrow> 
     \<rho> \<Turnstile> (LET x = \<lparr>\<rparr> in e)
   " |
-  Let_Prim: "
+  Let_Abs : "
     \<lbrakk> 
-      p = (P_Abs f' x' e') \<Longrightarrow> {Prim p} \<subseteq> (\<rho> f') \<and> \<rho> \<Turnstile> e';
-      {Prim p} \<subseteq> (\<rho> x);
+      {Prim (P_Abs f' x' e')} \<subseteq> (\<rho> f');
+      \<rho> \<Turnstile> e';
+      {Prim (P_Abs f' x' e')} \<subseteq> (\<rho> x);
       \<rho> \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = B_Prim p in e)
+    \<rho> \<Turnstile> (LET x = B_Prim (P_Abs f' x' e') in e)
+  " |
+  Let_Pair : "
+    \<lbrakk> 
+      {Prim (P_Pair x1 x2)} \<subseteq> (\<rho> x);
+      \<rho> \<Turnstile> e 
+    \<rbrakk> \<Longrightarrow> 
+    \<rho> \<Turnstile> (LET x = B_Prim (P_Pair x1 x2) in e)
+  " |
+  Let_Left : "
+    \<lbrakk> 
+      {Prim (P_Left x_p)} \<subseteq> (\<rho> x);
+      {Prim (P_Pair _ _)} \<subseteq> \<rho> x_p;
+      \<rho> \<Turnstile> e 
+    \<rbrakk> \<Longrightarrow> 
+    \<rho> \<Turnstile> (LET x = B_Prim (P_Left x_p) in e)
+  " |
+  Let_Right : "
+    \<lbrakk> 
+      {Prim (P_Right x_p)} \<subseteq> (\<rho> x);
+      {Prim (P_Pair _ _)} \<subseteq> \<rho> x_p;
+      \<rho> \<Turnstile> e 
+    \<rbrakk> \<Longrightarrow> 
+    \<rho> \<Turnstile> (LET x = B_Prim (P_Right x_p) in e)
+  " |
+  Let_Send_Evt : "
+    \<lbrakk> 
+      {Prim (P_Send_Evt x_ch x_m)} \<subseteq> (\<rho> x);
+      {Chan x_ch} \<subseteq> \<rho> x_ch;
+      \<rho> \<Turnstile> e 
+    \<rbrakk> \<Longrightarrow> 
+    \<rho> \<Turnstile> (LET x = B_Prim (P_Send_Evt x_ch x_m) in e)
+  " |
+  Let_Recv_Evt : "
+    \<lbrakk> 
+      {Prim (P_Recv_Evt x_ch)} \<subseteq> (\<rho> x);
+      {Chan x_ch} \<subseteq> \<rho> x_ch;
+      \<rho> \<Turnstile> e 
+    \<rbrakk> \<Longrightarrow> 
+    \<rho> \<Turnstile> (LET x = B_Prim (P_Recv_Evt x_ch) in e)
   " |
   Let_Case: "
     \<lbrakk>
@@ -73,9 +113,12 @@ inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
     \<rbrakk>\<Longrightarrow> 
     \<rho> \<Turnstile> (LET x = APP x_f x_a in e)
   " |
-  Let_Sync: "
-   path_sub_accept \<rho> \<pi> e \<Longrightarrow>
-   path_sub_accept \<rho> (Inl x # \<pi>) (LET x = SYNC x_evt in e)
+  Let_Sync_Send: "
+    \<lbrakk>
+      \<And> x_ch x_m . Prim (Send_Evt x_ch x_m) \<in> \<rho> x_evt \<Longrightarrow>
+        
+    \<rbrakk>\<Longrightarrow>  
+    \<rho> \<Turnstile> (LET x = SYNC x_evt in e)
   " |
   Let_Chan: "
     path_sub_accept \<rho> \<pi> e \<Longrightarrow>
