@@ -78,9 +78,9 @@ inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
   " |
   Let_Case: "
     \<lbrakk>
-      \<And> x_l' . Prim (Left x_l') \<in> \<rho> x_sum \<Longrightarrow> 
-        \<rho> x_l' \<subseteq> \<rho> x_l \<and> \<rho> (result_var e_l) \<subseteq> \<rho> x \<and> \<rho> \<Turnstile> e_l;
-      \<And> x_r' . Prim (Right x_r') \<in> \<rho> x_sum \<Longrightarrow> 
+      \<And> x_l' . (Prim (P_Left x_l')) \<in> \<rho> x_sum \<Longrightarrow> 
+        (\<rho> x_l' \<subseteq> \<rho> x_l) \<and> (\<rho> (result_var e_l) \<subseteq> \<rho> x) \<and> \<rho> \<Turnstile> e_l;
+      \<And> x_r' :: var . Prim (P_Right x_r') \<in> \<rho> x_sum \<Longrightarrow>
         \<rho> x_r' \<subseteq> \<rho> x_r \<and> \<rho> (result_var e_r) \<subseteq> \<rho> x \<and> \<rho> \<Turnstile> e_r
     \<rbrakk>\<Longrightarrow> 
     \<rho> \<Turnstile> (LET x = CASE x_sum LEFT x_l |> e_l RIGHT x_r |> e_r in e)
@@ -111,26 +111,29 @@ inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
   " |
   Let_Sync  : "
     \<lbrakk>
-      \<And> x_ch x_m . Prim (Send_Evt x_ch x_m) \<in> \<rho> x_evt \<Longrightarrow> 
+      \<And> x_ch x_m . Prim (P_Send_Evt x_ch x_m) \<in> \<rho> x_evt \<Longrightarrow> 
         {Unit} \<subseteq> \<rho> x;
-      \<And> x_ch . Prim (Recv_Evt x_ch) \<in> \<rho> x_evt \<Longrightarrow>
-        (\<Union> x'. {x_m . Prim (Send_Evt x_ch x_m) \<in> \<rho> x'}) \<subseteq> \<rho> x;
+      \<And> x_ch . Prim (P_Recv_Evt x_ch) \<in> \<rho> x_evt \<Longrightarrow>
+        (\<Union> x'. {v . \<exists> x_m . v \<in> \<rho> x_m \<and> Prim (P_Send_Evt x_ch x_m) \<in> \<rho> x'}) \<subseteq> \<rho> x;
       \<rho> \<Turnstile> e
     \<rbrakk>\<Longrightarrow>  
     \<rho> \<Turnstile> (LET x = SYNC x_evt in e)
   " |
   Let_Chan: "
-    path_sub_accept \<rho> \<pi> e \<Longrightarrow>
-    path_sub_accept \<rho> (Inl x # \<pi>) (LET x = CHAN \<lparr>\<rparr> in e)
+    \<lbrakk>
+      {Chan x} \<subseteq> \<rho> x;
+      \<rho> \<Turnstile> e
+    \<rbrakk>\<Longrightarrow>  
+    \<rho> \<Turnstile> (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Spawn_Parent: " 
-    path_sub_accept \<rho> \<pi> e \<Longrightarrow>
-    path_sub_accept \<rho> (Inl x # \<pi>) (LET x = SPAWN _ in e)
-  " |
-  Let_Spawn_Child: " 
-    path_sub_accept \<rho> \<pi> e_child \<Longrightarrow>
-    path_sub_accept \<rho> (Inr () # \<pi>) (LET x = SPAWN e_child in _)
-  " 
+    \<lbrakk>
+      {Unit} \<subseteq> \<rho> x;
+      \<rho> \<Turnstile> e_child;
+      \<rho> \<Turnstile> e
+    \<rbrakk>\<Longrightarrow>  
+    \<rho> \<Turnstile> (LET x = SPAWN e_child in e)
+  "
 
 
 type_synonym abstract_path = "(var + unit) list"
