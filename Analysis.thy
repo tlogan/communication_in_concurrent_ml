@@ -20,8 +20,75 @@ datatype abstract_value = Chan var | Unit | Prim prim
 
 type_synonym abstract_value_env = "var \<Rightarrow> abstract_value set"
 
-inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>" 55) where  
-  Something: "x \<Turnstile> y" (*TO DO*)
+fun result_var :: "exp \<Rightarrow> var" where
+  "result_var (RESULT x) = x" |
+  "result_var (LET _ = _ in e) = result_var e"
+
+inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>" 55) where
+  Result: "
+    \<rho> \<Turnstile> (RESULT x)
+  " |
+  Let_Unit: "
+    \<lbrakk> {Unit} \<subseteq> (\<rho> x); \<rho> \<Turnstile> e \<rbrakk> \<Longrightarrow> 
+    \<rho> \<Turnstile> (LET x = \<lparr>\<rparr> in e)
+  " |
+  Let_Prim: "
+    \<lbrakk> 
+      p = (P_Abs f' x' e') \<Longrightarrow> {Prim p} \<subseteq> (\<rho> f') \<and> \<rho> \<Turnstile> e';
+      {Prim p} \<subseteq> (\<rho> x);
+      \<rho> \<Turnstile> e 
+    \<rbrakk> \<Longrightarrow> 
+    \<rho> \<Turnstile> (LET x = B_Prim p in e)
+  " |
+  Let_Case: "
+    \<lbrakk>
+      \<And> x_l' . Prim (Left x_l') \<in> \<rho> x_sum \<Longrightarrow> 
+        \<rho> x_l' \<subseteq> \<rho> x_l \<and> \<rho> (result_var e_l) \<subseteq> \<rho> x \<and> \<rho> \<Turnstile> e_l;
+      \<And> x_r' . Prim (Right x_r') \<in> \<rho> x_sum \<Longrightarrow> 
+        \<rho> x_r' \<subseteq> \<rho> x_r \<and> \<rho> (result_var e_r) \<subseteq> \<rho> x \<and> \<rho> \<Turnstile> e_r
+    \<rbrakk>\<Longrightarrow> 
+    \<rho> \<Turnstile> (LET x = CASE x_sum LEFT x_l |> e_l RIGHT x_r |> e_r in e)
+  " |
+  Let_Fst: "
+    \<lbrakk> 
+      \<And> x1 . Prim (P_Pair x1 _) \<in> (\<rho> x_p) \<Longrightarrow> \<rho> x1 \<subseteq> \<rho> x; 
+      \<rho> \<Turnstile> e 
+    \<rbrakk> \<Longrightarrow> 
+    \<rho> \<Turnstile> (LET x = FST x_p in e)
+  " |
+  Let_Snd: "
+    \<lbrakk> 
+      \<And> x2 . Prim (P_Pair _ x2) \<in> (\<rho> x_p) \<Longrightarrow> \<rho> x2 \<subseteq> \<rho> x; 
+      \<rho> \<Turnstile> e
+    \<rbrakk> \<Longrightarrow> 
+    \<rho> \<Turnstile> (LET x = SND x_p in e)
+  " |
+  Let_App: "
+    \<lbrakk>
+      \<And> x' e' . Prim (P_Abs _ x' e') \<in> \<rho> x_f \<Longrightarrow>
+        \<rho> x_a \<subseteq> \<rho> x' \<and>
+        \<rho> (result_var e') \<subseteq> \<rho> x
+      ;
+      \<rho> \<Turnstile> e
+    \<rbrakk>\<Longrightarrow> 
+    \<rho> \<Turnstile> (LET x = APP x_f x_a in e)
+  " |
+  Let_Sync: "
+   path_sub_accept \<rho> \<pi> e \<Longrightarrow>
+   path_sub_accept \<rho> (Inl x # \<pi>) (LET x = SYNC x_evt in e)
+  " |
+  Let_Chan: "
+    path_sub_accept \<rho> \<pi> e \<Longrightarrow>
+    path_sub_accept \<rho> (Inl x # \<pi>) (LET x = CHAN \<lparr>\<rparr> in e)
+  " |
+  Let_Spawn_Parent: " 
+    path_sub_accept \<rho> \<pi> e \<Longrightarrow>
+    path_sub_accept \<rho> (Inl x # \<pi>) (LET x = SPAWN _ in e)
+  " |
+  Let_Spawn_Child: " 
+    path_sub_accept \<rho> \<pi> e_child \<Longrightarrow>
+    path_sub_accept \<rho> (Inr () # \<pi>) (LET x = SPAWN e_child in _)
+  " 
 
 
 type_synonym abstract_path = "(var + unit) list"
@@ -85,10 +152,6 @@ inductive path_sub_accept :: "abstract_value_env \<Rightarrow> abstract_path \<R
 definition path_accept :: "abstract_path \<Rightarrow> exp \<Rightarrow> bool" where
   "path_accept \<pi> e \<equiv> (\<exists> \<rho> . \<rho> \<Turnstile> e \<and> path_sub_accept \<rho> \<pi> e)"
 
-definition paths_to :: "var \<Rightarrow> exp \<Rightarrow> abstract_path set" where
-  "paths_to x e = {\<pi> @ [Inl x] | \<pi> . path_accept (\<pi> @ [Inl x]) e}"
-
-
 inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" where
   Refl: "subexp e e" |
   Step: "subexp e' e \<Longrightarrow> subexp e' (LET _ = _ in e)"
@@ -109,7 +172,7 @@ definition recv_sites :: "var \<Rightarrow> exp \<Rightarrow> var set" where
 
 definition paths :: "var set \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> abstract_path set" where 
   "paths sites c e = {path @ [Inl x] | path x . 
-    (x \<in> sites) \<and>  (path @ [Inl x] \<in> paths_to x e)
+    (x \<in> sites) \<and>  path_accept (path @ [Inl x]) e
   }" 
 
 definition send_paths where 
@@ -159,9 +222,6 @@ inductive class_pair_accept :: "topo_class_pair \<Rightarrow> exp \<Rightarrow> 
 
 
 type_synonym topo_class_env = "var \<Rightarrow> topo_class"
-
-definition test :: "bool \<Rightarrow> bool" where
-  Something:  "test b \<equiv> b"
 
 definition class_env_accept :: "topo_class_env \<Rightarrow> exp \<Rightarrow> bool" where 
   "class_env_accept E e \<equiv> (\<forall> (x::var) (t::topo_class) . ((E x) = t) \<and> (class_pair_accept (x, t) e))"
