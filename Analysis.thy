@@ -51,7 +51,6 @@ inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
   Let_Left : "
     \<lbrakk> 
       {Prim (P_Left x_p)} \<subseteq> (\<rho> x);
-      {Prim (P_Pair _ _)} \<subseteq> \<rho> x_p;
       \<rho> \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
     \<rho> \<Turnstile> (LET x = B_Prim (P_Left x_p) in e)
@@ -59,7 +58,6 @@ inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
   Let_Right : "
     \<lbrakk> 
       {Prim (P_Right x_p)} \<subseteq> (\<rho> x);
-      {Prim (P_Pair _ _)} \<subseteq> \<rho> x_p;
       \<rho> \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
     \<rho> \<Turnstile> (LET x = B_Prim (P_Right x_p) in e)
@@ -67,7 +65,6 @@ inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
   Let_Send_Evt : "
     \<lbrakk> 
       {Prim (P_Send_Evt x_ch x_m)} \<subseteq> (\<rho> x);
-      {Chan x_ch} \<subseteq> \<rho> x_ch;
       \<rho> \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
     \<rho> \<Turnstile> (LET x = B_Prim (P_Send_Evt x_ch x_m) in e)
@@ -75,7 +72,6 @@ inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
   Let_Recv_Evt : "
     \<lbrakk> 
       {Prim (P_Recv_Evt x_ch)} \<subseteq> (\<rho> x);
-      {Chan x_ch} \<subseteq> \<rho> x_ch;
       \<rho> \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
     \<rho> \<Turnstile> (LET x = B_Prim (P_Recv_Evt x_ch) in e)
@@ -113,10 +109,13 @@ inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
     \<rbrakk>\<Longrightarrow> 
     \<rho> \<Turnstile> (LET x = APP x_f x_a in e)
   " |
-  Let_Sync_Send: "
+  Let_Sync  : "
     \<lbrakk>
-      \<And> x_ch x_m . Prim (Send_Evt x_ch x_m) \<in> \<rho> x_evt \<Longrightarrow>
-        
+      \<And> x_ch x_m . Prim (Send_Evt x_ch x_m) \<in> \<rho> x_evt \<Longrightarrow> 
+        {Unit} \<subseteq> \<rho> x;
+      \<And> x_ch . Prim (Recv_Evt x_ch) \<in> \<rho> x_evt \<Longrightarrow>
+        (\<Union> x'. {x_m . Prim (Send_Evt x_ch x_m) \<in> \<rho> x'}) \<subseteq> \<rho> x;
+      \<rho> \<Turnstile> e
     \<rbrakk>\<Longrightarrow>  
     \<rho> \<Turnstile> (LET x = SYNC x_evt in e)
   " |
