@@ -67,7 +67,6 @@ inductive_cases Seq_Fst_E[elim!] : "(LET x = FST x_p in e, \<rho>, \<kappa>) \<h
 inductive_cases Seq_Snd_E[elim!] : "(LET x = SND x_p in e, \<rho>, \<kappa>) \<hookrightarrow> st"
 inductive_cases Seq_Let_App_E[elim!]: "(LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<hookrightarrow> st"
   
-  
 lemma "(\<And> x . S \<Longrightarrow> (P x \<longrightarrow> R x) \<Longrightarrow> T \<Longrightarrow> Q) \<Longrightarrow> (S \<Longrightarrow> (\<forall> x. P x \<longrightarrow> R x) \<Longrightarrow> T \<Longrightarrow> Q)"
   by auto
 
