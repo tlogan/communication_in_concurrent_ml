@@ -194,6 +194,8 @@ inductive path_sub_accept :: "abstract_value_env \<Rightarrow> abstract_path \<R
     path_sub_accept \<rho> (Inr () # \<pi>) (LET x = SPAWN e_child in _)
   " 
 
+
+(*  What's the way to show that the number of acceptable paths \<le> 1 ?*)
 definition path_accept :: "abstract_path \<Rightarrow> exp \<Rightarrow> bool" where
   "path_accept \<pi> e \<equiv> (\<exists> \<rho> . \<rho> \<Turnstile> e \<and> path_sub_accept \<rho> \<pi> e)"
 
@@ -226,12 +228,26 @@ definition send_paths where
 definition recv_paths where 
   "recv_paths c e = paths (recv_sites c e) c e"
 
-definition path_count :: "abstract_path set \<Rightarrow> nat"  where
-  "path_count s = card s" (*TO DO*)
 
-definition process_count :: "abstract_path set \<Rightarrow> nat"  where
-  "process_count s = card s"(*TO DO*)
+inductive one_path_max :: "abstract_path set \<Rightarrow> bool"  where
+  "
+    \<lbrakk>
+      card (pset) \<le> 1
+    \<rbrakk> \<Longrightarrow>
+    one_path_max pset
+  "
 
+inductive one_process_max :: "abstract_path set \<Rightarrow> bool"  where
+  "
+    \<lbrakk>
+      \<And> path . path \<in> pset \<Longrightarrow> no_process_loop path (* TO DO *)
+    \<rbrakk> \<Longrightarrow>
+    one_process_max pset
+  "
+
+(*
+value "one_path_max (send_paths (Var ''x'') (RESULT (Var ''x'')))"
+*)
 
 datatype topo_class = OneShot | OneToOne | FanOut | FanIn | Any
 
@@ -239,27 +255,27 @@ type_synonym topo_class_pair = "var \<times> topo_class"
 
 inductive class_pair_accept :: "topo_class_pair \<Rightarrow> exp \<Rightarrow> bool" where
   OneShot: "
-    path_count (send_paths c e) \<le> 1 \<Longrightarrow> 
+    one_path_max (send_paths c e) \<Longrightarrow> 
     class_pair_accept (c, OneShot) e
   " | 
 
   OneToOne: "
     \<lbrakk> 
-      process_count (send_paths c e) \<le> 1 ;
-      process_count (receive_paths c e) \<le> 1 
+      one_process_max (send_paths c e) ;
+      one_process_max (recv_paths c e) 
     \<rbrakk> \<Longrightarrow> 
     class_pair_accept (c, OneToOne) e
   " | 
 
   FanOut: "
     \<lbrakk> 
-      process_count (send_paths c e) \<le> 1
+      one_process_max (send_paths c e)
     \<rbrakk> \<Longrightarrow> 
     class_pair_accept (c, FanOut) e
   " | 
 
   FanIn: "
-    process_count (receive_paths c e) \<le> 1 \<Longrightarrow> 
+    one_process_max (receive_paths c e) \<Longrightarrow> 
     class_pair_accept (c, OneToOne) e
   " | 
 
