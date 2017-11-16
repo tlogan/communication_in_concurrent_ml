@@ -196,6 +196,7 @@ inductive path_sub_accept :: "abstract_value_env \<Rightarrow> abstract_path \<R
 
 
 (*  What's the way to show that the number of acceptable paths \<le> 1 ?*)
+
 definition path_accept :: "abstract_path \<Rightarrow> exp \<Rightarrow> bool" where
   "path_accept \<pi> e \<equiv> (\<exists> \<rho> . \<rho> \<Turnstile> e \<and> path_sub_accept \<rho> \<pi> e)"
 
