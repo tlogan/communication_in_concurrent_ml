@@ -2,20 +2,6 @@ theory Analysis
   imports Main Syntax
 begin
 
-
-(*
-
-determine values of higher-order abstractions and channels
-determine program points (Var x) send/receive on a static channel (Var c)
-determine which paths reach (Var x)
-determine total number of processes and paths that reach every (Var x)
-
-
-How to represent loops statically?
-  stop after first loop is recorded.  Only care if there is either one or more.
-*)
-
-
 datatype abstract_value = Chan var | Unit | Prim prim
 
 type_synonym abstract_value_env = "var \<Rightarrow> abstract_value set"
@@ -87,14 +73,14 @@ inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
   " |
   Let_Fst: "
     \<lbrakk> 
-      \<And> x1 . Prim (P_Pair x1 _) \<in> (\<rho> x_p) \<Longrightarrow> \<rho> x1 \<subseteq> \<rho> x; 
+      \<And> x1 x2. Prim (P_Pair x1 x2) \<in> (\<rho> x_p) \<Longrightarrow> \<rho> x1 \<subseteq> \<rho> x; 
       \<rho> \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
     \<rho> \<Turnstile> (LET x = FST x_p in e)
   " |
   Let_Snd: "
     \<lbrakk> 
-      \<And> x2 . Prim (P_Pair _ x2) \<in> (\<rho> x_p) \<Longrightarrow> \<rho> x2 \<subseteq> \<rho> x; 
+      \<And> x1 x2 . Prim (P_Pair x1 x2) \<in> (\<rho> x_p) \<Longrightarrow> \<rho> x2 \<subseteq> \<rho> x; 
       \<rho> \<Turnstile> e
     \<rbrakk> \<Longrightarrow> 
     \<rho> \<Turnstile> (LET x = SND x_p in e)
@@ -233,7 +219,7 @@ definition recv_paths where
 inductive one_path_max :: "abstract_path set \<Rightarrow> bool"  where
   "
     \<lbrakk>
-      card (pset) \<le> 1
+      \<And> path . path \<in> pset \<Longrightarrow> no_path_loop path (* TO DO *)
     \<rbrakk> \<Longrightarrow>
     one_path_max pset
   "
