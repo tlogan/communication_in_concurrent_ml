@@ -1,0 +1,52 @@
+<pre><span class="syntax0"><span class="gutter"> 1 </span><span class="syntax-KEYWORD1">theory</span> Syntax
+<span class="gutter"> 2 </span>  <span class="syntax-KEYWORD2">imports</span> Main
+<span class="gutter"> 3 </span><span class="syntax-KEYWORD2">begin</span>
+<span class="gutter"> 4 </span>  
+<span class="gutterH"> 5 </span><span class="syntax-KEYWORD1">datatype</span> var <span class="syntax-OPERATOR">=</span> Var string
+<span class="gutter"> 6 </span>
+<span class="gutter"> 7 </span><span class="syntax-COMMENT1">(* ANF grammar *)</span>
+<span class="gutter"> 8 </span><span class="syntax-KEYWORD1">datatype</span> exp <span class="syntax-OPERATOR">=</span> 
+<span class="gutter"> 9 </span>  E_Let var bind exp <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;LET _ = _ in _&quot;</span> <span class="syntax-OPERATOR">[</span>0<span class="syntax-OPERATOR">,</span>0<span class="syntax-OPERATOR">,</span> 61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-OPERATOR">|</span>
+<span class="gutterH">10 </span>  E_Result var <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;RESULT _&quot;</span> <span class="syntax-OPERATOR">[</span>61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span>
+<span class="gutter">11 </span>
+<span class="gutter">12 </span><span class="syntax-KEYWORD2">and</span> prim <span class="syntax-OPERATOR">=</span> 
+<span class="gutter">13 </span>  P_Abs var var exp <span class="syntax-OPERATOR">|</span>
+<span class="gutter">14 </span>  P_Pair var var <span class="syntax-OPERATOR">|</span>
+<span class="gutterH">15 </span>  P_Left var <span class="syntax-OPERATOR">|</span>
+<span class="gutter">16 </span>  P_Right var <span class="syntax-OPERATOR">|</span>
+<span class="gutter">17 </span>  P_Send_Evt var var <span class="syntax-OPERATOR">|</span>
+<span class="gutter">18 </span>  P_Recv_Evt var <span class="syntax-OPERATOR">|</span>
+<span class="gutter">19 </span>  P_Always_Evt var
+<span class="gutterH">20 </span>
+<span class="gutter">21 </span><span class="syntax-KEYWORD2">and</span> bind <span class="syntax-OPERATOR">=</span> 
+<span class="gutter">22 </span>  B_Unit <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;&#10631;&#10632;&quot;</span><span class="syntax-OPERATOR">)</span> <span class="syntax-OPERATOR">|</span>
+<span class="gutter">23 </span>  B_Chan <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;CHAN &#10631;&#10632;&quot;</span><span class="syntax-OPERATOR">)</span> <span class="syntax-OPERATOR">|</span>
+<span class="gutter">24 </span>  B_Spawn exp <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;SPAWN _&quot;</span> <span class="syntax-OPERATOR">[</span>61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-OPERATOR">|</span>
+<span class="gutterH">25 </span>  B_Sync var <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;SYNC _&quot;</span> <span class="syntax-OPERATOR">[</span>61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-OPERATOR">|</span>
+<span class="gutter">26 </span>  B_Fst var <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;FST _&quot;</span> <span class="syntax-OPERATOR">[</span>61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-OPERATOR">|</span>
+<span class="gutter">27 </span>  B_Snd var <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;SND _&quot;</span> <span class="syntax-OPERATOR">[</span>61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-OPERATOR">|</span>
+<span class="gutter">28 </span>  B_Case var var exp var exp <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;CASE _ LEFT _ |&gt; _ RIGHT _ |&gt; _&quot;</span> <span class="syntax-OPERATOR">[</span>0<span class="syntax-OPERATOR">,</span>0<span class="syntax-OPERATOR">,</span>0<span class="syntax-OPERATOR">,</span>0<span class="syntax-OPERATOR">,</span> 61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-OPERATOR">|</span>
+<span class="gutter">29 </span>  B_Prim prim <span class="syntax-OPERATOR">|</span>
+<span class="gutterH">30 </span>  B_App var var <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;APP _ _&quot;</span> <span class="syntax-OPERATOR">[</span>61<span class="syntax-OPERATOR">,</span> 61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span>
+<span class="gutter">31 </span>  
+<span class="gutter">32 </span><span class="syntax-KEYWORD1">abbreviation</span> bind_send_evt <span class="syntax-OPERATOR">::</span> <span class="syntax-LITERAL1">&quot;var =&gt; var =&gt; bind&quot;</span> <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;SEND EVT _ _&quot;</span> <span class="syntax-OPERATOR">[</span>0<span class="syntax-OPERATOR">,</span> 61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-KEYWORD2">where</span>
+<span class="gutter">33 </span>  <span class="syntax-LITERAL1">&quot;SEND EVT x y &equiv; B_Prim (P_Send_Evt x y)&quot;</span>
+<span class="gutter">34 </span>  
+<span class="gutterH">35 </span><span class="syntax-KEYWORD1">abbreviation</span> bind_recv_evt <span class="syntax-OPERATOR">::</span> <span class="syntax-LITERAL1">&quot;var =&gt; bind&quot;</span> <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;RECV EVT _&quot;</span> <span class="syntax-OPERATOR">[</span>61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-KEYWORD2">where</span>
+<span class="gutter">36 </span>  <span class="syntax-LITERAL1">&quot;RECV EVT x &equiv; B_Prim (P_Recv_Evt x)&quot;</span>
+<span class="gutter">37 </span>
+<span class="gutter">38 </span><span class="syntax-KEYWORD1">abbreviation</span> bind_always_evt <span class="syntax-OPERATOR">::</span> <span class="syntax-LITERAL1">&quot;var &rArr; bind&quot;</span> <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;ALWAYS EVT _&quot;</span> <span class="syntax-OPERATOR">[</span>61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-KEYWORD2">where</span>
+<span class="gutter">39 </span>  <span class="syntax-LITERAL1">&quot;ALWAYS EVT x &equiv; B_Prim (P_Always_Evt x)&quot;</span>
+<span class="gutterH">40 </span>  
+<span class="gutter">41 </span><span class="syntax-KEYWORD1">abbreviation</span> bind_abs <span class="syntax-OPERATOR">::</span> <span class="syntax-LITERAL1">&quot;var =&gt; var =&gt; exp =&gt; bind&quot;</span> <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;FN _ _ . _&quot;</span> <span class="syntax-OPERATOR">[</span>0<span class="syntax-OPERATOR">,</span> 0<span class="syntax-OPERATOR">,</span> 61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-KEYWORD2">where</span>
+<span class="gutter">42 </span>  <span class="syntax-LITERAL1">&quot;FN f x . e &equiv; B_Prim (P_Abs f x e)&quot;</span>
+<span class="gutter">43 </span>  
+<span class="gutter">44 </span><span class="syntax-KEYWORD1">abbreviation</span> bind_pair <span class="syntax-OPERATOR">::</span> <span class="syntax-LITERAL1">&quot;var =&gt; var =&gt; bind&quot;</span> <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;&#10631;_, _&#10632;&quot;</span> <span class="syntax-OPERATOR">[</span>0<span class="syntax-OPERATOR">,</span> 0<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-KEYWORD2">where</span>
+<span class="gutterH">45 </span>  <span class="syntax-LITERAL1">&quot;&#10631;x, y&#10632; &equiv; B_Prim (P_Pair x y)&quot;</span>
+<span class="gutter">46 </span>  
+<span class="gutter">47 </span><span class="syntax-KEYWORD1">abbreviation</span> bind_inl <span class="syntax-OPERATOR">::</span> <span class="syntax-LITERAL1">&quot;var =&gt; bind&quot;</span> <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;LEFT _&quot;</span> <span class="syntax-OPERATOR">[</span>61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-KEYWORD2">where</span>
+<span class="gutter">48 </span>  <span class="syntax-LITERAL1">&quot;LEFT x &equiv; B_Prim (P_Left x)&quot;</span>
+<span class="gutter">49 </span>  
+<span class="gutterH">50 </span><span class="syntax-KEYWORD1">abbreviation</span> bind_inr <span class="syntax-OPERATOR">::</span> <span class="syntax-LITERAL1">&quot;var =&gt; bind&quot;</span> <span class="syntax-OPERATOR">(</span><span class="syntax-LITERAL1">&quot;RIGHT _&quot;</span> <span class="syntax-OPERATOR">[</span>61<span class="syntax-OPERATOR">]</span> 61<span class="syntax-OPERATOR">)</span> <span class="syntax-KEYWORD2">where</span>
+<span class="gutter">51 </span>  <span class="syntax-LITERAL1">&quot;RIGHT x &equiv; B_Prim (P_Right x)&quot;</span>
+</span></pre>

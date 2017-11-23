@@ -10,115 +10,120 @@ fun result_var :: "exp \<Rightarrow> var" where
   "result_var (RESULT x) = x" |
   "result_var (LET _ = _ in e) = result_var e"
 
-inductive val_env_accept :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>" 55) where
+inductive val_env_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>" 55) where
   Result: "
-    \<rho> \<Turnstile> (RESULT x)
+    (\<V>, \<C>) \<Turnstile> (RESULT x)
   " |
   Let_Unit: "
-    \<lbrakk> {Unit} \<subseteq> (\<rho> x); \<rho> \<Turnstile> e \<rbrakk> \<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = \<lparr>\<rparr> in e)
+    \<lbrakk> {Unit} \<subseteq> (\<V> x); (\<V>, \<C>) \<Turnstile> e \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile> (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Abs : "
     \<lbrakk> 
-      {Prim (P_Abs f' x' e')} \<subseteq> (\<rho> f');
-      \<rho> \<Turnstile> e';
-      {Prim (P_Abs f' x' e')} \<subseteq> (\<rho> x);
-      \<rho> \<Turnstile> e 
+      {Prim (P_Abs f' x' e')} \<subseteq> (\<V> f');
+      (\<V>, \<C>) \<Turnstile> e';
+      {Prim (P_Abs f' x' e')} \<subseteq> (\<V> x);
+      (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = B_Prim (P_Abs f' x' e') in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Abs f' x' e') in e)
   " |
   Let_Pair : "
     \<lbrakk> 
-      {Prim (P_Pair x1 x2)} \<subseteq> (\<rho> x);
-      \<rho> \<Turnstile> e 
+      {Prim (P_Pair x1 x2)} \<subseteq> (\<V> x);
+      (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = B_Prim (P_Pair x1 x2) in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Pair x1 x2) in e)
   " |
   Let_Left : "
     \<lbrakk> 
-      {Prim (P_Left x_p)} \<subseteq> (\<rho> x);
-      \<rho> \<Turnstile> e 
+      {Prim (P_Left x_p)} \<subseteq> (\<V> x);
+      (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = B_Prim (P_Left x_p) in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Left x_p) in e)
   " |
   Let_Right : "
     \<lbrakk> 
-      {Prim (P_Right x_p)} \<subseteq> (\<rho> x);
-      \<rho> \<Turnstile> e 
+      {Prim (P_Right x_p)} \<subseteq> (\<V> x);
+      (\<V>, \<C>) \<Turnstile> e
     \<rbrakk> \<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = B_Prim (P_Right x_p) in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Right x_p) in e)
   " |
   Let_Send_Evt : "
     \<lbrakk> 
-      {Prim (P_Send_Evt x_ch x_m)} \<subseteq> (\<rho> x);
-      \<rho> \<Turnstile> e 
+      {Prim (P_Send_Evt x_ch x_m)} \<subseteq> (\<V> x);
+      (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = B_Prim (P_Send_Evt x_ch x_m) in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Send_Evt x_ch x_m) in e)
   " |
   Let_Recv_Evt : "
     \<lbrakk> 
-      {Prim (P_Recv_Evt x_ch)} \<subseteq> (\<rho> x);
-      \<rho> \<Turnstile> e 
+      {Prim (P_Recv_Evt x_ch)} \<subseteq> (\<V> x);
+      (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = B_Prim (P_Recv_Evt x_ch) in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Recv_Evt x_ch) in e)
   " |
   Let_Case: "
     \<lbrakk>
-      \<And> x_l' . (Prim (P_Left x_l')) \<in> \<rho> x_sum \<Longrightarrow> 
-        (\<rho> x_l' \<subseteq> \<rho> x_l) \<and> (\<rho> (result_var e_l) \<subseteq> \<rho> x) \<and> \<rho> \<Turnstile> e_l;
+      \<And> x_l' . (Prim (P_Left x_l')) \<in> \<V> x_sum \<Longrightarrow> 
+        (\<rho> x_l' \<subseteq> \<rho> x_l) \<and> (\<V> (result_var e_l) \<subseteq> \<rho> x) \<and> (\<V>, \<C>) \<Turnstile> e_l
+      ;
       \<And> x_r' :: var . Prim (P_Right x_r') \<in> \<rho> x_sum \<Longrightarrow>
-        \<rho> x_r' \<subseteq> \<rho> x_r \<and> \<rho> (result_var e_r) \<subseteq> \<rho> x \<and> \<rho> \<Turnstile> e_r
+        \<rho> x_r' \<subseteq> \<rho> x_r \<and> \<rho> (result_var e_r) \<subseteq> \<rho> x \<and> (\<V>, \<C>) \<Turnstile> e_r
+      ;
+      (\<V>, \<C>) \<Turnstile> e
     \<rbrakk>\<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = CASE x_sum LEFT x_l |> e_l RIGHT x_r |> e_r in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = CASE x_sum LEFT x_l |> e_l RIGHT x_r |> e_r in e)
   " |
   Let_Fst: "
     \<lbrakk> 
-      \<And> x1 x2. Prim (P_Pair x1 x2) \<in> (\<rho> x_p) \<Longrightarrow> \<rho> x1 \<subseteq> \<rho> x; 
-      \<rho> \<Turnstile> e 
+      \<And> x1 x2. Prim (P_Pair x1 x2) \<in> (\<rho> x_p) \<Longrightarrow> \<V> x1 \<subseteq> \<V> x; 
+      (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = FST x_p in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = FST x_p in e)
   " |
   Let_Snd: "
     \<lbrakk> 
-      \<And> x1 x2 . Prim (P_Pair x1 x2) \<in> (\<rho> x_p) \<Longrightarrow> \<rho> x2 \<subseteq> \<rho> x; 
-      \<rho> \<Turnstile> e
+      \<And> x1 x2 . Prim (P_Pair x1 x2) \<in> (\<V> x_p) \<Longrightarrow> \<V> x2 \<subseteq> \<V> x; 
+      (\<V>, \<C>) \<Turnstile> e
     \<rbrakk> \<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = SND x_p in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = SND x_p in e)
   " |
   Let_App: "
     \<lbrakk>
-      \<And> x' e' . Prim (P_Abs _ x' e') \<in> \<rho> x_f \<Longrightarrow>
-        \<rho> x_a \<subseteq> \<rho> x' \<and>
-        \<rho> (result_var e') \<subseteq> \<rho> x
+      \<And> f' x' e' . Prim (P_Abs f' x' e') \<in> \<V> f \<Longrightarrow>
+        \<rho> x_a \<subseteq> \<V> x' \<and>
+        \<rho> (result_var e') \<subseteq> \<V> x
       ;
-      \<rho> \<Turnstile> e
+      (\<V>, \<C>) \<Turnstile> e
     \<rbrakk>\<Longrightarrow> 
-    \<rho> \<Turnstile> (LET x = APP x_f x_a in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = APP f x_a in e)
   " |
   Let_Sync  : "
     \<lbrakk>
-      \<And> x_ch x_m . Prim (P_Send_Evt x_ch x_m) \<in> \<rho> x_evt \<Longrightarrow> 
-        {Unit} \<subseteq> \<rho> x;
-      \<And> x_ch . Prim (P_Recv_Evt x_ch) \<in> \<rho> x_evt \<Longrightarrow>
-        (\<Union> x'. {v . \<exists> x_m . v \<in> \<rho> x_m \<and> Prim (P_Send_Evt x_ch x_m) \<in> \<rho> x'}) \<subseteq> \<rho> x;
-      \<rho> \<Turnstile> e
+      \<And> x_ch x_m . Prim (P_Send_Evt x_ch x_m) \<in> \<V> x_evt \<Longrightarrow> 
+        {Unit} \<subseteq> \<V> x \<and> \<V> x_m \<subseteq> \<C> x_ch
+      ;
+      \<And> x_ch . Prim (P_Recv_Evt x_ch) \<in> \<V> x_evt \<Longrightarrow>
+        \<C> x_ch \<subseteq> \<V> x
+      ;
+      (\<V>, \<C>) \<Turnstile> e
     \<rbrakk>\<Longrightarrow>  
-    \<rho> \<Turnstile> (LET x = SYNC x_evt in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = SYNC x_evt in e)
   " |
   Let_Chan: "
     \<lbrakk>
-      {Chan x} \<subseteq> \<rho> x;
-      \<rho> \<Turnstile> e
+      {Chan x} \<subseteq> \<V> x;
+      (\<V>, \<C>) \<Turnstile> e
     \<rbrakk>\<Longrightarrow>  
-    \<rho> \<Turnstile> (LET x = CHAN \<lparr>\<rparr> in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Spawn_Parent: " 
     \<lbrakk>
-      {Unit} \<subseteq> \<rho> x;
-      \<rho> \<Turnstile> e_child;
-      \<rho> \<Turnstile> e
+      {Unit} \<subseteq> \<V> x;
+      (\<V>, \<C>) \<Turnstile> e_child;
+      (\<V>, \<C>) \<Turnstile> e
     \<rbrakk>\<Longrightarrow>  
-    \<rho> \<Turnstile> (LET x = SPAWN e_child in e)
+    (\<V>, \<C>) \<Turnstile> (LET x = SPAWN e_child in e)
   "
 
 
