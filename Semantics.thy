@@ -28,39 +28,39 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
     (LET x = \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<lbrace>\<rbrace>), \<kappa>)
   " |
   Seq_Let_Prim: "
-    (LET x = B_Prim p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>), \<kappa>)
+    (LET x = Prim p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>), \<kappa>)
   " |
   Seq_Let_Case_Left: "
-    \<lbrakk>(\<rho> x_sum) = Some \<lbrace>P_Left x_ll, \<rho>_l\<rbrace> ; (\<rho>_l x_ll) = Some \<omega>_l \<rbrakk> \<Longrightarrow>
+    \<lbrakk>(\<rho> x_sum) = Some \<lbrace>Left x_ll, \<rho>_l\<rbrace> ; (\<rho>_l x_ll) = Some \<omega>_l \<rbrakk> \<Longrightarrow>
     (LET x = CASE x_sum LEFT x_l |> e_l RIGHT _ |> _ in e, \<rho>, \<kappa>) \<hookrightarrow> (e_l, \<rho>(x_l \<mapsto> \<omega>_l), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   " |
   Seq_Let_Case_Right: "
-    \<lbrakk>(\<rho> x_sum) = Some \<lbrace>P_Right x_rr, \<rho>_r\<rbrace> ; (\<rho>_r x_rr) = Some \<omega>_r \<rbrakk> \<Longrightarrow>
+    \<lbrakk>(\<rho> x_sum) = Some \<lbrace>Right x_rr, \<rho>_r\<rbrace> ; (\<rho>_r x_rr) = Some \<omega>_r \<rbrakk> \<Longrightarrow>
     (LET x = CASE x_sum LEFT _ |> _ RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<hookrightarrow> (e_r, \<rho>(x_r \<mapsto> \<omega>_r), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   " |
   Seq_Fst: "
-    \<lbrakk> (\<rho> x_p) = Some \<lbrace>P_Pair x1 _, \<rho>_p\<rbrace> ; (\<rho>_p x1) = Some \<omega> \<rbrakk> \<Longrightarrow>
+    \<lbrakk> (\<rho> x_p) = Some \<lbrace>Pair x1 _, \<rho>_p\<rbrace> ; (\<rho>_p x1) = Some \<omega> \<rbrakk> \<Longrightarrow>
     (LET x = FST x_p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   Seq_Snd: "
-    \<lbrakk> (\<rho> x_p) = Some \<lbrace>P_Pair _ x2, \<rho>_p\<rbrace> ; (\<rho>_p x2) = Some \<omega> \<rbrakk> \<Longrightarrow>
+    \<lbrakk> (\<rho> x_p) = Some \<lbrace>Pair _ x2, \<rho>_p\<rbrace> ; (\<rho>_p x2) = Some \<omega> \<rbrakk> \<Longrightarrow>
     (LET x = SND x_p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
   " |
   Seq_Let_App: "
     \<lbrakk>
-      (\<rho> x_f) = Some \<lbrace>P_Abs x_f_abs x_a_abs e_abs, \<rho>_abs\<rbrace> ; 
+      (\<rho> x_f) = Some \<lbrace>Abs x_f_abs x_a_abs e_abs, \<rho>_abs\<rbrace> ; 
       (\<rho> x_a) = Some \<omega>_a 
     \<rbrakk> \<Longrightarrow>
     (LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<hookrightarrow> 
     (e_abs, \<rho>_abs(
-      x_f_abs \<mapsto> \<lbrace>P_Abs x_f_abs x_a_abs e_abs, \<rho>_abs\<rbrace>, 
+      x_f_abs \<mapsto> \<lbrace>Abs x_f_abs x_a_abs e_abs, \<rho>_abs\<rbrace>, 
       x_a_abs \<mapsto> \<omega>_a
     ), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
 
 inductive_cases Seq_Result_E[elim!]: "(RESULT x, \<rho>, \<langle>x_ct, e_ct, \<rho>_ct\<rangle> # \<kappa>) \<hookrightarrow> st"
 inductive_cases Seq_Let_Unit_E: "(LET x = \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<hookrightarrow> st"
-inductive_cases Seq_Let_Prim_E[elim!]: "(LET x = B_Prim p in e, \<rho>, \<kappa>) \<hookrightarrow> st" 
+inductive_cases Seq_Let_Prim_E[elim!]: "(LET x = Prim p in e, \<rho>, \<kappa>) \<hookrightarrow> st" 
 inductive_cases Seq_Let_Case_Left_E[elim!]: "(LET x = CASE x_sum LEFT x_l |> e_l RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<hookrightarrow> st" 
 inductive_cases Seq_Let_Case_Right_E[elim!]: "(LET x = CASE x_sum LEFT x_l |> e_l RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<hookrightarrow> st" 
 inductive_cases Seq_Fst_E[elim!] : "(LET x = FST x_p in e, \<rho>, \<kappa>) \<hookrightarrow> st"
@@ -97,8 +97,8 @@ inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (inf
     \<lbrakk>
       Some (V_Chan _) = \<rho>_s x_ch_s; \<rho>_r x_ch_r = \<rho>_s x_ch_s ; (\<rho>_s x_m) = Some \<omega>_m
     \<rbrakk> \<Longrightarrow>
-    [\<pi>_s \<mapsto> \<lbrace>P_Send_Evt x_ch_s x_m, \<rho>_s\<rbrace>, \<pi>_r \<mapsto> \<lbrace>P_Recv_Evt x_ch_r, \<rho>_r\<rbrace>] \<leadsto> 
-    [\<pi>_s \<mapsto> \<lbrace>P_Always_Evt x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>, \<pi>_r \<mapsto> \<lbrace>P_Always_Evt x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>]
+    [\<pi>_s \<mapsto> \<lbrace>Send_Evt x_ch_s x_m, \<rho>_s\<rbrace>, \<pi>_r \<mapsto> \<lbrace>Recv_Evt x_ch_r, \<rho>_r\<rbrace>] \<leadsto> 
+    [\<pi>_s \<mapsto> \<lbrace>Always_Evt x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>, \<pi>_r \<mapsto> \<lbrace>Always_Evt x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>]
   "
 
 lemma "
@@ -124,7 +124,7 @@ lemma "
       (\<exists> x \<omega>_a x_a \<rho> x_evt \<pi> .
         \<pi>' = \<pi>;;x \<and>
         \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<and>
-        vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
+        vpool' \<pi> = Some \<lbrace>Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
         vpool \<pi> = \<rho> x_evt \<and>
         stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and>
         leaf stpool \<pi>
@@ -139,7 +139,7 @@ lemma "
     vpool \<leadsto> vpool' \<Longrightarrow>
     stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) \<Longrightarrow>
     \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<Longrightarrow>
-    vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<Longrightarrow>
+    vpool' \<pi> = Some \<lbrace>Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<Longrightarrow>
     vpool \<pi> = \<rho> x_evt \<Longrightarrow>
     stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<Longrightarrow>
     leaf stpool \<pi>
@@ -154,7 +154,7 @@ lemma "
     stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) ;
     \<pi>' = \<pi>;;x ;
     \<rho>' = \<rho>(x \<mapsto> \<omega>_a) ;
-    vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
+    vpool' \<pi> = Some \<lbrace>Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
     vpool \<pi> = \<rho> x_evt ;
     stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) ;
     leaf stpool \<pi>
@@ -172,7 +172,7 @@ lemma "
       (\<exists> x \<omega>_a x_a \<rho> x_evt \<pi> .
         \<pi>' = \<pi>;;x \<and>
         \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<and>
-        vpool' \<pi> = Some \<lbrace>P_Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
+        vpool' \<pi> = Some \<lbrace>Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
         vpool \<pi> = \<rho> x_evt \<and>
         stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and>
         leaf stpool \<pi>
@@ -202,14 +202,14 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
    
       leaf stpool \<pi>1 ;
       stpool \<pi>1 = Some (LET x1 = SYNC x1_evt in e1, \<rho>1, \<kappa>1) ;
-      \<rho>1 x1_evt = Some \<lbrace>P_Send_Evt x_ch1 x_m, \<rho>_s\<rbrace> ;
+      \<rho>1 x1_evt = Some \<lbrace>Send_Evt x_ch1 x_m, \<rho>_s\<rbrace> ;
       \<rho>_s x_ch1 = Some (V_Chan c); 
       
       \<rho>_s x_m = Some \<omega>_m ;
 
       leaf stpool \<pi>2 ;
       stpool \<pi>2 = Some (LET x2 = SYNC x2_evt in e2, \<rho>2, \<kappa>2) ;
-      \<rho>2 x2_evt = Some \<lbrace>P_Recv_Evt x_ch2, \<rho>_r\<rbrace> ;
+      \<rho>2 x2_evt = Some \<lbrace>Recv_Evt x_ch2, \<rho>_r\<rbrace> ;
       \<rho>_r x_ch2 = Some (V_Chan c)
 
     \<rbrakk> \<Longrightarrow>
@@ -243,14 +243,14 @@ abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> 
 definition send_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
   "send_sites stpool ch = {\<pi>. \<exists> x x_evt e \<kappa> \<rho> x_ch x_m \<rho>_evt. 
     stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and> 
-    \<rho> x_evt = Some \<lbrace>P_Send_Evt x_ch x_m, \<rho>_evt\<rbrace> \<and> 
+    \<rho> x_evt = Some \<lbrace>Send_Evt x_ch x_m, \<rho>_evt\<rbrace> \<and> 
     \<rho>_evt x_ch = Some \<lbrace>ch\<rbrace>
   }"
   
 definition recv_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
   "recv_sites stpool ch = {\<pi>. \<exists> x x_evt e \<kappa> \<rho> x_ch \<rho>_evt. 
     stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and> 
-    \<rho> x_evt = Some \<lbrace>P_Recv_Evt x_ch, \<rho>_evt\<rbrace> \<and> 
+    \<rho> x_evt = Some \<lbrace>Recv_Evt x_ch, \<rho>_evt\<rbrace> \<and> 
     \<rho>_evt x_ch = Some \<lbrace>ch\<rbrace>
   }"
     
