@@ -217,12 +217,23 @@ definition paths :: "var set \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> a
     (x \<in> sites) \<and>  path_accept (path @ [Inl x]) e
   }" 
 
+definition processes :: "var set \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> abstract_path set" where 
+  "processes sites c e = {\<pi> \<in> paths sites c e .
+    (\<pi> @ [Inr ()]) \<in> paths sites c e \<or>
+    (\<forall> \<pi>' . (\<pi> @ \<pi>') \<notin> paths sites c e)
+  }" 
+
 definition send_paths where 
   "send_paths c e = paths (send_sites c e) c e"
 
 definition recv_paths where 
   "recv_paths c e = paths (recv_sites c e) c e"
 
+definition exactly_one :: "abstract_path set \<Rightarrow> bool" where
+  "exactly_one \<T> \<longleftrightarrow> (\<exists> p \<in> \<T> . (\<forall> p' \<in> \<T> . p = p'))"
+
+definition empty_set :: "abstract_path set \<Rightarrow> bool" where
+  "empty_set \<T> \<longleftrightarrow> (\<nexists> p . p \<in> \<T>)"
 
 inductive one_path_max :: "abstract_path set \<Rightarrow> bool"  where
   "
