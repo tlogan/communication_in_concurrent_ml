@@ -6,49 +6,49 @@ datatype var = Var string
 
 (* ANF grammar *)
 datatype exp = 
-  E_Let var bind exp ("LET _ = _ in _" [0,0, 61] 61) |
-  E_Result var ("RESULT _" [61] 61)
+  Let var bind exp ("LET _ = _ in _" [0,0, 61] 61) |
+  Result var ("RESULT _" [61] 61)
 
 and prim = 
-  P_Abs var var exp |
-  P_Pair var var |
-  P_Left var |
-  P_Right var |
-  P_Send_Evt var var |
-  P_Recv_Evt var |
-  P_Always_Evt var
+  Abs var var exp |
+  Pair var var |
+  Left var |
+  Right var |
+  Send_Evt var var |
+  Recv_Evt var |
+  Always_Evt var
 
 and bind = 
-  B_Unit ("\<lparr>\<rparr>") |
-  B_Chan ("CHAN \<lparr>\<rparr>") |
-  B_Spawn exp ("SPAWN _" [61] 61) |
-  B_Sync var ("SYNC _" [61] 61) |
-  B_Fst var ("FST _" [61] 61) |
-  B_Snd var ("SND _" [61] 61) |
-  B_Case var var exp var exp ("CASE _ LEFT _ |> _ RIGHT _ |> _" [0,0,0,0, 61] 61) |
-  B_Prim prim |
-  B_App var var ("APP _ _" [61, 61] 61)
+  Unit ("\<lparr>\<rparr>") |
+  Chan ("CHAN \<lparr>\<rparr>") |
+  Spawn exp ("SPAWN _" [61] 61) |
+  Sync var ("SYNC _" [61] 61) |
+  Fst var ("FST _" [61] 61) |
+  Snd var ("SND _" [61] 61) |
+  Case var var exp var exp ("CASE _ LEFT _ |> _ RIGHT _ |> _" [0,0,0,0, 61] 61) |
+  Prim prim |
+  App var var ("APP _ _" [61, 61] 61)
   
 abbreviation bind_send_evt :: "var => var => bind" ("SEND EVT _ _" [0, 61] 61) where
-  "SEND EVT x y \<equiv> B_Prim (P_Send_Evt x y)"
+  "SEND EVT x y \<equiv> Prim (Send_Evt x y)"
   
 abbreviation bind_recv_evt :: "var => bind" ("RECV EVT _" [61] 61) where
-  "RECV EVT x \<equiv> B_Prim (P_Recv_Evt x)"
+  "RECV EVT x \<equiv> Prim (Recv_Evt x)"
 
 abbreviation bind_always_evt :: "var \<Rightarrow> bind" ("ALWAYS EVT _" [61] 61) where
-  "ALWAYS EVT x \<equiv> B_Prim (P_Always_Evt x)"
+  "ALWAYS EVT x \<equiv> Prim (Always_Evt x)"
   
 abbreviation bind_abs :: "var => var => exp => bind" ("FN _ _ . _" [0, 0, 61] 61) where
-  "FN f x . e \<equiv> B_Prim (P_Abs f x e)"
+  "FN f x . e \<equiv> Prim (Abs f x e)"
   
 abbreviation bind_pair :: "var => var => bind" ("\<lparr>_, _\<rparr>" [0, 0] 61) where
-  "\<lparr>x, y\<rparr> \<equiv> B_Prim (P_Pair x y)"
+  "\<lparr>x, y\<rparr> \<equiv> Prim (Pair x y)"
   
 abbreviation bind_inl :: "var => bind" ("LEFT _" [61] 61) where
-  "LEFT x \<equiv> B_Prim (P_Left x)"
+  "LEFT x \<equiv> Prim (Left x)"
   
 abbreviation bind_inr :: "var => bind" ("RIGHT _" [61] 61) where
-  "RIGHT x \<equiv> B_Prim (P_Right x)"
+  "RIGHT x \<equiv> Prim (Right x)"
   
 (* unrestricted grammar*)
 

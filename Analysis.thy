@@ -2,7 +2,7 @@ theory Analysis
   imports Main Syntax
 begin
 
-datatype abstract_value = Chan var | Unit | Prim prim
+datatype abstract_value = A_Chan var ("^Chan _" [61] 61) | A_Unit ("^\<lparr>\<rparr>") | A_Prim prim ("^ _" [61] 61 )
 
 type_synonym abstract_value_env = "var \<Rightarrow> abstract_value set"
 
@@ -12,119 +12,120 @@ fun result_var :: "exp \<Rightarrow> var" where
 
 inductive val_env_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>" 55) where
   Result: "
-    (\<V>, \<C>) \<Turnstile> (RESULT x)
+    (\<V>, \<C>) \<Turnstile> RESULT x
   " |
   Let_Unit: "
-    \<lbrakk> {Unit} \<subseteq> (\<V> x); (\<V>, \<C>) \<Turnstile> e \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> (LET x = \<lparr>\<rparr> in e)
+    \<lbrakk> {^\<lparr>\<rparr>} \<subseteq> \<V> x; (\<V>, \<C>) \<Turnstile> e \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile> LET x = \<lparr>\<rparr> in e
   " |
   Let_Abs : "
     \<lbrakk> 
-      {Prim (P_Abs f' x' e')} \<subseteq> (\<V> f');
+      {^Abs f' x' e'} \<subseteq> \<V> f';
       (\<V>, \<C>) \<Turnstile> e';
-      {Prim (P_Abs f' x' e')} \<subseteq> (\<V> x);
+      {^Abs f' x' e'} \<subseteq> \<V> x;
       (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Abs f' x' e') in e)
+    (\<V>, \<C>) \<Turnstile> LET x = FN f' x' . e' in e
   " |
   Let_Pair : "
     \<lbrakk> 
-      {Prim (P_Pair x1 x2)} \<subseteq> (\<V> x);
+      {^Pair x\<^sub>1 x\<^sub>2} \<subseteq> \<V> x;
       (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Pair x1 x2) in e)
+    (\<V>, \<C>) \<Turnstile> LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e
   " |
   Let_Left : "
     \<lbrakk> 
-      {Prim (P_Left x_p)} \<subseteq> (\<V> x);
+      {^Left x\<^sub>p} \<subseteq> \<V> x;
       (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Left x_p) in e)
+    (\<V>, \<C>) \<Turnstile> LET x = LEFT x\<^sub>p in e
   " |
   Let_Right : "
     \<lbrakk> 
-      {Prim (P_Right x_p)} \<subseteq> (\<V> x);
+      {^Right x\<^sub>p} \<subseteq> \<V> x;
       (\<V>, \<C>) \<Turnstile> e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Right x_p) in e)
+    (\<V>, \<C>) \<Turnstile> LET x = RIGHT x\<^sub>p in e
   " |
   Let_Send_Evt : "
     \<lbrakk> 
-      {Prim (P_Send_Evt x_ch x_m)} \<subseteq> (\<V> x);
+      {^Send_Evt x\<^sub>c x\<^sub>m} \<subseteq> \<V> x;
       (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Send_Evt x_ch x_m) in e)
+    (\<V>, \<C>) \<Turnstile> LET x = SEND EVT x\<^sub>c x\<^sub>m in e
   " |
   Let_Recv_Evt : "
     \<lbrakk> 
-      {Prim (P_Recv_Evt x_ch)} \<subseteq> (\<V> x);
+      {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x;
       (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> (LET x = B_Prim (P_Recv_Evt x_ch) in e)
+    (\<V>, \<C>) \<Turnstile> LET x = RECV EVT x\<^sub>c in e
   " |
   Let_Case: "
     \<lbrakk>
-      \<And> x_l' . (Prim (P_Left x_l')) \<in> \<V> x_sum \<Longrightarrow> 
-        (\<rho> x_l' \<subseteq> \<rho> x_l) \<and> (\<V> (result_var e_l) \<subseteq> \<rho> x) \<and> (\<V>, \<C>) \<Turnstile> e_l
+      \<And> x\<^sub>l' . ^Left x\<^sub>l' \<in> \<V> x\<^sub>s \<Longrightarrow> 
+        (\<rho> x\<^sub>l' \<subseteq> \<rho> x\<^sub>l) \<and> (\<V> (result_var e\<^sub>l) \<subseteq> \<rho> x) \<and> (\<V>, \<C>) \<Turnstile> e\<^sub>l
       ;
-      \<And> x_r' :: var . Prim (P_Right x_r') \<in> \<rho> x_sum \<Longrightarrow>
-        \<rho> x_r' \<subseteq> \<rho> x_r \<and> \<rho> (result_var e_r) \<subseteq> \<rho> x \<and> (\<V>, \<C>) \<Turnstile> e_r
+      \<And> x\<^sub>r' . ^Right x\<^sub>r' \<in> \<V> x\<^sub>s \<Longrightarrow>
+        \<rho> x\<^sub>r' \<subseteq> \<rho> x\<^sub>r \<and> \<rho> (result_var e\<^sub>r) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile> e\<^sub>r
       ;
       (\<V>, \<C>) \<Turnstile> e
-    \<rbrakk>\<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> (LET x = CASE x_sum LEFT x_l |> e_l RIGHT x_r |> e_r in e)
+    \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile> LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e
   " |
   Let_Fst: "
     \<lbrakk> 
-      \<And> x1 x2. Prim (P_Pair x1 x2) \<in> (\<rho> x_p) \<Longrightarrow> \<V> x1 \<subseteq> \<V> x; 
+      \<And> x\<^sub>1 x\<^sub>2. ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<Longrightarrow> \<V> x\<^sub>1 \<subseteq> \<V> x; 
       (\<V>, \<C>) \<Turnstile> e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> (LET x = FST x_p in e)
+    (\<V>, \<C>) \<Turnstile> LET x = FST x\<^sub>p in e
   " |
   Let_Snd: "
     \<lbrakk> 
-      \<And> x1 x2 . Prim (P_Pair x1 x2) \<in> (\<V> x_p) \<Longrightarrow> \<V> x2 \<subseteq> \<V> x; 
+      \<And> x\<^sub>1 x\<^sub>2 . ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<Longrightarrow> \<V> x\<^sub>2 \<subseteq> \<V> x; 
       (\<V>, \<C>) \<Turnstile> e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> (LET x = SND x_p in e)
+    (\<V>, \<C>) \<Turnstile> LET x = SND x\<^sub>p in e
   " |
   Let_App: "
     \<lbrakk>
-      \<And> f' x' e' . Prim (P_Abs f' x' e') \<in> \<V> f \<Longrightarrow>
-        \<rho> x_a \<subseteq> \<V> x' \<and>
-        \<rho> (result_var e') \<subseteq> \<V> x
+      \<And> f' x' e' . ^Abs f' x' e' \<in> \<V> f \<Longrightarrow>
+        \<V> x\<^sub>a \<subseteq> \<V> x' \<and>
+        \<V> (result_var e') \<subseteq> \<V> x
       ;
       (\<V>, \<C>) \<Turnstile> e
-    \<rbrakk>\<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> (LET x = APP f x_a in e)
+    \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile> LET x = APP f x\<^sub>a in e
   " |
   Let_Sync  : "
     \<lbrakk>
-      \<And> x_ch x_m . Prim (P_Send_Evt x_ch x_m) \<in> \<V> x_evt \<Longrightarrow> 
-        {Unit} \<subseteq> \<V> x \<and> \<V> x_m \<subseteq> \<C> x_ch
+      \<And> x\<^sub>c x\<^sub>m . ^Send_Evt x\<^sub>c x\<^sub>m \<in> \<V> x\<^sub>e \<Longrightarrow> 
+        {^\<lparr>\<rparr>} \<subseteq> \<V> x \<and> \<V> x_m \<subseteq> \<C> x\<^sub>c
       ;
-      \<And> x_ch . Prim (P_Recv_Evt x_ch) \<in> \<V> x_evt \<Longrightarrow>
-        \<C> x_ch \<subseteq> \<V> x
+      \<And> x\<^sub>c . ^Recv_Evt x\<^sub>c \<in> \<V> x\<^sub>e \<Longrightarrow>
+        \<C> x\<^sub>c \<subseteq> \<V> x
       ;
       (\<V>, \<C>) \<Turnstile> e
-    \<rbrakk>\<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile> (LET x = SYNC x_evt in e)
+    \<rbrakk> \<Longrightarrow>  
+    (\<V>, \<C>) \<Turnstile> LET x = SYNC x\<^sub>e in e
   " |
   Let_Chan: "
     \<lbrakk>
-      {Chan x} \<subseteq> \<V> x;
+      {^Chan x} \<subseteq> \<V> x;
       (\<V>, \<C>) \<Turnstile> e
-    \<rbrakk>\<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile> (LET x = CHAN \<lparr>\<rparr> in e)
+    \<rbrakk> \<Longrightarrow>  
+    (\<V>, \<C>) \<Turnstile> LET x = CHAN \<lparr>\<rparr> in e
   " |
-  Let_Spawn_Parent: " 
+  Let_Spawn_Parent: "
     \<lbrakk>
-      {Unit} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile> e_child;
+      {^\<lparr>\<rparr>} \<subseteq> \<V> x;
+      (\<V>, \<C>) \<Turnstile> e\<^sub>c;
       (\<V>, \<C>) \<Turnstile> e
-    \<rbrakk>\<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile> (LET x = SPAWN e_child in e)
+    \<rbrakk> \<Longrightarrow>  
+    (\<V>, \<C>) \<Turnstile> LET x = SPAWN e\<^sub>c in e
   "
+
 
 
 type_synonym abstract_path = "(var + unit) list"
@@ -132,82 +133,84 @@ type_synonym abstract_path = "(var + unit) list"
 inductive path_sub_accept :: "abstract_value_env \<Rightarrow> abstract_path \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "path_sub_accept \<rho> [Inl x] (RESULT x)" |
   Let_Unit: "
-    path_sub_accept \<rho> \<pi> e \<Longrightarrow> 
-    path_sub_accept \<rho> ((Inl x) # \<pi>) (LET x = \<lparr>\<rparr> in e)
+    path_sub_accept \<V> \<pi> e \<Longrightarrow> 
+    path_sub_accept \<V> (Inl x # \<pi>) (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Prim: "
-    path_sub_accept \<rho> \<pi> e \<Longrightarrow> 
-    path_sub_accept \<rho> ((Inl x) # \<pi>) (LET x = B_Prim p in e)
+    path_sub_accept \<V> \<pi> e \<Longrightarrow> 
+    path_sub_accept \<V> (Inl x # \<pi>) (LET x = Prim p in e)
   " |
   Let_Case_Left: "
     \<lbrakk>
-      path_sub_accept \<rho> \<pi>_l e_l; 
-      path_sub_accept \<rho> \<pi> e 
+      path_sub_accept \<V> \<pi>\<^sub>l e\<^sub>l; 
+      path_sub_accept \<V> \<pi> e 
     \<rbrakk>\<Longrightarrow> 
-    path_sub_accept \<rho> (\<pi>_l @ ((Inl x) # \<pi>)) (LET x = CASE x_sum LEFT x_l |> e_l RIGHT _ |> _ in e)
+    path_sub_accept \<V> (\<pi>\<^sub>l @ (Inl x # \<pi>)) (LET x = CASE _ LEFT x\<^sub>l |> e\<^sub>l RIGHT _ |> _ in e)
   " |
   Let_Case_Right: "
     \<lbrakk>
-      path_sub_accept \<rho> \<pi>_r e_r;
-      path_sub_accept \<rho> \<pi> e
+      path_sub_accept \<V> \<pi>\<^sub>r e\<^sub>r;
+      path_sub_accept \<V> \<pi> e
     \<rbrakk> \<Longrightarrow> 
-    path_sub_accept \<rho> (\<pi>_r @ ((Inl x) # \<pi>)) (LET x = CASE x_sum LEFT _ |> _ RIGHT x_r |> e_r in e)
+    path_sub_accept \<V> (\<pi>_r @ (Inl x # \<pi>)) (LET x = CASE _ LEFT _ |> _ RIGHT x\<^sub>r |> e\<^sub>r in e)
   " |
   Let_Fst: "
-    path_sub_accept \<rho> \<pi> e \<Longrightarrow> 
-    path_sub_accept \<rho> ((Inl x) # \<pi>) (LET x = FST _ in e)
+    path_sub_accept \<V> \<pi> e \<Longrightarrow> 
+    path_sub_accept \<V> (Inl x # \<pi>) (LET x = FST _ in e)
   " |
   Let_Snd: "
-    path_sub_accept \<rho> \<pi> e \<Longrightarrow> 
-    path_sub_accept \<rho> ((Inl x) # \<pi>) (LET x = SND _ in e)
+    path_sub_accept \<V> \<pi> e \<Longrightarrow> 
+    path_sub_accept \<V> (Inl x # \<pi>) (LET x = SND _ in e)
   " |
   Let_App: "
     \<lbrakk>
-      (Prim (P_Abs f' x' e' )) \<in> (\<rho> x_f);
-       path_sub_accept (\<rho>(x' := (\<rho> x') \<inter> (\<rho> x_a))) \<pi>' e'
-    \<rbrakk>\<Longrightarrow> 
-    path_sub_accept \<rho> (\<pi>' @ ((Inl x) # \<pi>)) (LET x = APP x_f x_a in e)
+      ^Abs f' x' e' \<in> \<V> f;
+      path_sub_accept (\<V>(x' := \<V> x' \<inter> \<V> x\<^sub>a)) \<pi>' e';
+      path_sub_accept \<V> \<pi> e
+    \<rbrakk> \<Longrightarrow> 
+    path_sub_accept \<V> (\<pi>' @ (Inl x # \<pi>)) (LET x = APP f x\<^sub>a in e)
   " |
   Let_Sync: "
-   path_sub_accept \<rho> \<pi> e \<Longrightarrow>
-   path_sub_accept \<rho> (Inl x # \<pi>) (LET x = SYNC x_evt in e)
+   path_sub_accept \<V> \<pi> e \<Longrightarrow>
+   path_sub_accept \<V> (Inl x # \<pi>) (LET x = SYNC _ in e)
   " |
   Let_Chan: "
-    path_sub_accept \<rho> \<pi> e \<Longrightarrow>
-    path_sub_accept \<rho> (Inl x # \<pi>) (LET x = CHAN \<lparr>\<rparr> in e)
+    path_sub_accept \<V> \<pi> e \<Longrightarrow>
+    path_sub_accept \<V> (Inl x # \<pi>) (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Spawn_Parent: " 
-    path_sub_accept \<rho> \<pi> e \<Longrightarrow>
-    path_sub_accept \<rho> (Inl x # \<pi>) (LET x = SPAWN _ in e)
+    path_sub_accept \<V> \<pi> e \<Longrightarrow>
+    path_sub_accept \<V> (Inl x # \<pi>) (LET x = SPAWN _ in e)
   " |
   Let_Spawn_Child: " 
-    path_sub_accept \<rho> \<pi> e_child \<Longrightarrow>
-    path_sub_accept \<rho> (Inr () # \<pi>) (LET x = SPAWN e_child in _)
+    path_sub_accept \<V> \<pi> e\<^sub>c \<Longrightarrow>
+    path_sub_accept \<V> (Inr () # \<pi>) (LET x = SPAWN e\<^sub>c in _)
   " 
 
 
 (*  What's the way to show that the number of acceptable paths \<le> 1 ?*)
 
 definition path_accept :: "abstract_path \<Rightarrow> exp \<Rightarrow> bool" where
-  "path_accept \<pi> e \<equiv> (\<exists> \<rho> . \<rho> \<Turnstile> e \<and> path_sub_accept \<rho> \<pi> e)"
+  "path_accept \<pi> e \<equiv> (\<exists> \<V> \<C> . (\<V>, \<C>) \<Turnstile> e \<and> path_sub_accept \<V> \<pi> e)"
 
 inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" where
   Refl: "subexp e e" |
   Step: "subexp e' e \<Longrightarrow> subexp e' (LET _ = _ in e)"
 
 definition send_sites :: "var \<Rightarrow> exp \<Rightarrow> var set" where
-  "send_sites c e = {x . \<exists> y e' \<rho> z. 
+  "send_sites c e = {x . \<exists> y e' z \<V> \<C>. 
     subexp (LET x = SYNC y in e') e \<and> 
-    val_env_accept \<rho> e \<and> 
-    Prim (P_Send_Evt c z) \<in> (\<rho> y)
+    (\<V>, \<C>) \<Turnstile> e \<and> 
+    ^Send_Evt c z \<in> \<V> y
   }"
 
 definition recv_sites :: "var \<Rightarrow> exp \<Rightarrow> var set" where
-  "recv_sites c e = {x . \<exists> y e' \<rho>. 
+  "recv_sites c e = {x . \<exists> y e' \<V> \<C>. 
     subexp (LET x = SYNC y in e') e \<and> 
-    val_env_accept \<rho> e \<and> 
-    Prim (P_Recv_Evt c) \<in> (\<rho> y)
+    (\<V>, \<C>) \<Turnstile> e \<and> 
+    ^Recv_Evt c \<in> \<V> y
   }"
+
 
 definition paths :: "var set \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> abstract_path set" where 
   "paths sites c e = {path @ [Inl x] | path x . 
