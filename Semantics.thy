@@ -20,55 +20,57 @@ type_synonym val_pool = "control_path \<rightharpoonup> val"
 type_synonym state_pool = "control_path \<rightharpoonup> state"
   
 inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<hookrightarrow>" 55) where 
-  Seq_Result: "
-    (\<rho> x) = Some \<omega> \<Longrightarrow>
-    (RESULT x, \<rho>, \<langle>x_ct, e_ct, \<rho>_ct\<rangle> # \<kappa>) \<hookrightarrow> (e_ct, \<rho>_ct(x_ct \<mapsto> \<omega>), \<kappa>)
+  Result: "
+    \<rho> x = Some \<omega> \<Longrightarrow>
+    (RESULT x, \<rho>, \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>) \<hookrightarrow> (e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>), \<kappa>)
   " |
-  Seq_Let_Unit: "
+  Let_Unit: "
     (LET x = \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<lbrace>\<rbrace>), \<kappa>)
   " |
-  Seq_Let_Prim: "
+  Let_Prim: "
     (LET x = Prim p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>), \<kappa>)
   " |
-  Seq_Let_Case_Left: "
-    \<lbrakk>(\<rho> x_sum) = Some \<lbrace>Left x_ll, \<rho>_l\<rbrace> ; (\<rho>_l x_ll) = Some \<omega>_l \<rbrakk> \<Longrightarrow>
-    (LET x = CASE x_sum LEFT x_l |> e_l RIGHT _ |> _ in e, \<rho>, \<kappa>) \<hookrightarrow> (e_l, \<rho>(x_l \<mapsto> \<omega>_l), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
-  " |
-  Seq_Let_Case_Right: "
-    \<lbrakk>(\<rho> x_sum) = Some \<lbrace>Right x_rr, \<rho>_r\<rbrace> ; (\<rho>_r x_rr) = Some \<omega>_r \<rbrakk> \<Longrightarrow>
-    (LET x = CASE x_sum LEFT _ |> _ RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<hookrightarrow> (e_r, \<rho>(x_r \<mapsto> \<omega>_r), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
-  " |
-  Seq_Fst: "
-    \<lbrakk> (\<rho> x_p) = Some \<lbrace>Pair x1 _, \<rho>_p\<rbrace> ; (\<rho>_p x1) = Some \<omega> \<rbrakk> \<Longrightarrow>
-    (LET x = FST x_p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
-  " |
-  Seq_Snd: "
-    \<lbrakk> (\<rho> x_p) = Some \<lbrace>Pair _ x2, \<rho>_p\<rbrace> ; (\<rho>_p x2) = Some \<omega> \<rbrakk> \<Longrightarrow>
-    (LET x = SND x_p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
-  " |
-  Seq_Let_App: "
+  Let_Case_Left: "
     \<lbrakk>
-      (\<rho> x_f) = Some \<lbrace>Abs x_f_abs x_a_abs e_abs, \<rho>_abs\<rbrace> ; 
-      (\<rho> x_a) = Some \<omega>_a 
+      \<rho> x\<^sub>s = Some \<lbrace>Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>; 
+      \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l 
     \<rbrakk> \<Longrightarrow>
-    (LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<hookrightarrow> 
-    (e_abs, \<rho>_abs(
-      x_f_abs \<mapsto> \<lbrace>Abs x_f_abs x_a_abs e_abs, \<rho>_abs\<rbrace>, 
-      x_a_abs \<mapsto> \<omega>_a
+    (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT _ |> _ in e, \<rho>, \<kappa>) \<hookrightarrow> (e\<^sub>l, \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
+  " |
+  Let_Case_Right: "
+    \<lbrakk>
+      \<rho> x\<^sub>s = Some \<lbrace>Right x\<^sub>r', \<rho>\<^sub>r\<rbrace>; 
+      \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r 
+    \<rbrakk> \<Longrightarrow>
+    (LET x = CASE x\<^sub>s LEFT _ |> _ RIGHT x\<^sub>r |> e\<^sub>r in e, \<rho>, \<kappa>) \<hookrightarrow> (e\<^sub>r, \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
+  " |
+  Fst: "
+    \<lbrakk> 
+      \<rho> x\<^sub>p = Some \<lbrace>Pair x\<^sub>1 _, \<rho>\<^sub>p\<rbrace>; 
+      \<rho>\<^sub>p x\<^sub>1 = Some \<omega> 
+    \<rbrakk> \<Longrightarrow>
+    (LET x = FST x\<^sub>p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
+  " |
+  Snd: "
+    \<lbrakk> 
+      \<rho> x\<^sub>p = Some \<lbrace>Pair _ x\<^sub>2, \<rho>\<^sub>p\<rbrace>; 
+      \<rho>\<^sub>p x\<^sub>2 = Some \<omega> 
+    \<rbrakk> \<Longrightarrow>
+    (LET x = SND x\<^sub>p in e, \<rho>, \<kappa>) \<hookrightarrow> (e, \<rho>(x \<mapsto> \<omega>), \<kappa>)
+  " |
+  Let_App: "
+    \<lbrakk>
+      \<rho> f = Some \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace> ; 
+      \<rho> x\<^sub>a = Some \<omega>\<^sub>a 
+    \<rbrakk> \<Longrightarrow>
+    (LET x = APP f x\<^sub>a in e, \<rho>, \<kappa>) \<hookrightarrow> 
+    (e\<^sub>l, \<rho>\<^sub>l(
+      f\<^sub>l \<mapsto> \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>, 
+      x\<^sub>l \<mapsto> \<omega>\<^sub>a
     ), \<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
 
-inductive_cases Seq_Result_E[elim!]: "(RESULT x, \<rho>, \<langle>x_ct, e_ct, \<rho>_ct\<rangle> # \<kappa>) \<hookrightarrow> st"
-inductive_cases Seq_Let_Unit_E: "(LET x = \<lparr>\<rparr> in e, \<rho>, \<kappa>) \<hookrightarrow> st"
-inductive_cases Seq_Let_Prim_E[elim!]: "(LET x = Prim p in e, \<rho>, \<kappa>) \<hookrightarrow> st" 
-inductive_cases Seq_Let_Case_Left_E[elim!]: "(LET x = CASE x_sum LEFT x_l |> e_l RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<hookrightarrow> st" 
-inductive_cases Seq_Let_Case_Right_E[elim!]: "(LET x = CASE x_sum LEFT x_l |> e_l RIGHT x_r |> e_r in e, \<rho>, \<kappa>) \<hookrightarrow> st" 
-inductive_cases Seq_Fst_E[elim!] : "(LET x = FST x_p in e, \<rho>, \<kappa>) \<hookrightarrow> st"
-inductive_cases Seq_Snd_E[elim!] : "(LET x = SND x_p in e, \<rho>, \<kappa>) \<hookrightarrow> st"
-inductive_cases Seq_Let_App_E[elim!]: "(LET x = APP x_f x_a in e, \<rho>, \<kappa>) \<hookrightarrow> st"
-  
-lemma "(\<And> x . S \<Longrightarrow> (P x \<longrightarrow> R x) \<Longrightarrow> T \<Longrightarrow> Q) \<Longrightarrow> (S \<Longrightarrow> (\<forall> x. P x \<longrightarrow> R x) \<Longrightarrow> T \<Longrightarrow> Q)"
-  by auto
+inductive_cases Result_E[elim!]: "(RESULT x, \<rho>, \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>) \<hookrightarrow> (e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>), \<kappa>)"
 
 abbreviation control_path_append_var :: "control_path => var => control_path" (infixl ";;" 61) where
   "\<pi>;;x \<equiv> \<pi> @ [Inl x]"
@@ -78,19 +80,19 @@ abbreviation control_path_append_unit :: "control_path  => control_path" ("_;;."
   
   
 definition leaf :: "(control_path \<rightharpoonup> state) \<Rightarrow> control_path \<Rightarrow> bool" where
-  "leaf stpool \<pi> \<equiv>
-      (stpool \<pi>) \<noteq> None \<and>
-      (\<nexists> \<pi>' . (stpool \<pi>') \<noteq> None \<and> (strict_prefix \<pi> \<pi>'))
+  "leaf \<E> \<pi> \<equiv>
+      \<E> \<pi> \<noteq> None \<and>
+      (\<nexists> \<pi>' . \<E> \<pi>' \<noteq> None \<and> strict_prefix \<pi> \<pi>')
   "
   
 lemma leaf_elim: "
-  \<lbrakk> leaf stpool \<pi>; strict_prefix \<pi> \<pi>' \<rbrakk>
-\<Longrightarrow>
-   stpool \<pi>' = None 
+  \<lbrakk> leaf \<E> \<pi>; strict_prefix \<pi> \<pi>' \<rbrakk> \<Longrightarrow>
+   \<E> \<pi>' = None 
 "
-  apply (simp add: leaf_def)
-  by (metis option.exhaust prod_cases3)
+ apply (simp add: leaf_def)
+by (metis option.exhaust prod_cases3)
 
+(*
 
 inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
   Sync_Send_Recv: "
@@ -100,20 +102,6 @@ inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (inf
     [\<pi>_s \<mapsto> \<lbrace>Send_Evt x_ch_s x_m, \<rho>_s\<rbrace>, \<pi>_r \<mapsto> \<lbrace>Recv_Evt x_ch_r, \<rho>_r\<rbrace>] \<leadsto> 
     [\<pi>_s \<mapsto> \<lbrace>Always_Evt x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>, \<pi>_r \<mapsto> \<lbrace>Always_Evt x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>]
   "
-
-lemma "
-(\<And> x y z.\<lbrakk> S y ; P x ; R x z; T y\<rbrakk> \<Longrightarrow> Q y) 
-\<Longrightarrow> 
-(\<And> y . \<lbrakk>S y ; (\<forall> x. P x \<longrightarrow> (\<exists> z . R x z)); (\<exists> x . P x) ; T y \<rbrakk> \<Longrightarrow> Q y)
-"
-by (metis (mono_tags))
-(*         
- * Instead of stating a theorem as
- * (\<And> y . \<lbrakk>S y ; (\<forall> x. P x \<longrightarrow> (\<exists> z . R x z)); (\<exists> x . P x) ; T y \<rbrakk> \<Longrightarrow> Q y)
- * we can observe that it is necessitated by 
- * (\<And> x y z . \<lbrakk> S y ; P x ; R x z; T y\<rbrakk> \<Longrightarrow> Q y)
- * and state the theorem as such, the stronger statement.
- *) 
 
 lemma "
 (
@@ -184,54 +172,57 @@ lemma "
 )
 "
 by meson
-  
+*)  
   
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
-  Concur_Seq: "
+  Lift: "
     \<lbrakk> 
-      leaf stpool \<pi> ;
-      (stpool \<pi>) = Some (LET x = b in e, \<rho>, \<kappa>) ;
+      leaf \<E> \<pi> ;
+      \<E> \<pi> = Some (LET x = b in e, \<rho>, \<kappa>) ;
       (LET x = b in e, \<rho>, \<kappa>) \<hookrightarrow> st'
     \<rbrakk> \<Longrightarrow>
-    stpool \<rightarrow> stpool(
+    \<E> \<rightarrow> \<E>(
       \<pi>;;x \<mapsto> st'
     )
   " |
-  Concur_Sync: "
+  Sync: "
     \<lbrakk>
    
-      leaf stpool \<pi>1 ;
-      stpool \<pi>1 = Some (LET x1 = SYNC x1_evt in e1, \<rho>1, \<kappa>1) ;
-      \<rho>1 x1_evt = Some \<lbrace>Send_Evt x_ch1 x_m, \<rho>_s\<rbrace> ;
-      \<rho>_s x_ch1 = Some (V_Chan c); 
+      leaf \<E> \<pi>\<^sub>s ;
+      \<E> \<pi>\<^sub>s = Some (LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s, \<rho>\<^sub>s, \<kappa>\<^sub>s);
+      \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>;
+      \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch c\<rbrace>; 
       
-      \<rho>_s x_m = Some \<omega>_m ;
+      \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m ;
 
-      leaf stpool \<pi>2 ;
-      stpool \<pi>2 = Some (LET x2 = SYNC x2_evt in e2, \<rho>2, \<kappa>2) ;
-      \<rho>2 x2_evt = Some \<lbrace>Recv_Evt x_ch2, \<rho>_r\<rbrace> ;
-      \<rho>_r x_ch2 = Some (V_Chan c)
+      leaf \<E> \<pi>\<^sub>r ;
+      \<E> \<pi>\<^sub>r = Some (LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r, \<rho>\<^sub>r, \<kappa>\<^sub>r);
+      \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>;
+      \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch c\<rbrace>
 
     \<rbrakk> \<Longrightarrow>
-    stpool \<rightarrow> stpool ++ [\<pi>1;;x1 \<mapsto> (e1, \<rho>1(x1 \<mapsto> \<lbrace>\<rbrace>), k1), \<pi>2;;x2 \<mapsto> (e1, \<rho>2(x2 \<mapsto> \<omega>_m), k2)]
+    \<E> \<rightarrow> \<E> ++ [
+      \<pi>\<^sub>s;;x\<^sub>s \<mapsto> (e\<^sub>s, \<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>), \<kappa>\<^sub>s), 
+      \<pi>\<^sub>r;;x\<^sub>r \<mapsto> (e\<^sub>r, \<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m), \<kappa>\<^sub>r)
+    ]
   " |
-  Concur_Let_Chan: "
+  Let_Chan: "
     \<lbrakk> 
-      leaf stpool \<pi> ;
-      stpool \<pi> = Some (LET x = CHAN \<lparr>\<rparr> in e, \<rho>, \<kappa>)
+      leaf \<E> \<pi> ;
+      \<E> \<pi> = Some (LET x = CHAN \<lparr>\<rparr> in e, \<rho>, \<kappa>)
     \<rbrakk> \<Longrightarrow>
-    stpool \<rightarrow> stpool(
+    \<E> \<rightarrow> \<E>(
       \<pi>;;x \<mapsto> (e, \<rho>(x \<mapsto> \<lbrace>Ch (\<pi>;;x)\<rbrace>), \<kappa>)
     )
   " |
-  Concur_Let_Spawn: "
+  Let_Spawn: "
     \<lbrakk> 
-      leaf stpool \<pi> ;
-      stpool \<pi> = Some (LET x = SPAWN e_child in e, \<rho>, \<kappa>)
+      leaf \<E> \<pi> ;
+      \<E> \<pi> = Some (LET x = SPAWN e\<^sub>c in e, \<rho>, \<kappa>)
     \<rbrakk> \<Longrightarrow>
-    stpool \<rightarrow> stpool(
+    \<E> \<rightarrow> \<E>(
       \<pi>;;x \<mapsto> (e, \<rho>(x \<mapsto> \<lbrace>\<rbrace>), \<kappa>), 
-      \<pi>;;. \<mapsto> (e_child, \<rho>, \<kappa>) 
+      \<pi>;;. \<mapsto> (e\<^sub>c, \<rho>, \<kappa>) 
     )
   "
 
@@ -241,40 +232,34 @@ abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> 
   "x \<rightarrow>* y \<equiv> star concur_step x y"
   
 definition send_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
-  "send_sites stpool ch = {\<pi>. \<exists> x x_evt e \<kappa> \<rho> x_ch x_m \<rho>_evt. 
-    stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and> 
-    \<rho> x_evt = Some \<lbrace>Send_Evt x_ch x_m, \<rho>_evt\<rbrace> \<and> 
-    \<rho>_evt x_ch = Some \<lbrace>ch\<rbrace>
+  "send_sites \<E> ch = {\<pi>. \<exists> x x\<^sub>e e \<kappa> \<rho> x\<^sub>c x\<^sub>m \<rho>\<^sub>e. 
+    \<E> \<pi> = Some (LET x = SYNC x\<^sub>e in e, \<rho>, \<kappa>) \<and> 
+    \<rho> x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace> \<and> 
+    \<rho>\<^sub>e x\<^sub>c = Some \<lbrace>ch\<rbrace>
   }"
-  
+
 definition recv_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
-  "recv_sites stpool ch = {\<pi>. \<exists> x x_evt e \<kappa> \<rho> x_ch \<rho>_evt. 
-    stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and> 
-    \<rho> x_evt = Some \<lbrace>Recv_Evt x_ch, \<rho>_evt\<rbrace> \<and> 
-    \<rho>_evt x_ch = Some \<lbrace>ch\<rbrace>
+  "recv_sites \<E> ch = {\<pi>. \<exists> x x\<^sub>e e \<kappa> \<rho> x\<^sub>c \<rho>\<^sub>e. 
+    \<E> \<pi> = Some (LET x = SYNC x\<^sub>e in e, \<rho>, \<kappa>) \<and> 
+    \<rho> x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>c, \<rho>\<^sub>e\<rbrace> \<and> 
+    \<rho>\<^sub>e x\<^sub>c = Some \<lbrace>ch\<rbrace>
   }"
-    
-  
-fun channel_exists :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "channel_exists stpool (Ch \<pi>) \<longleftrightarrow> (\<exists> x e \<rho> \<kappa>. stpool \<pi> = Some (LET x = CHAN \<lparr>\<rparr> in e, \<rho>, \<kappa>))"
   
 definition state_pool_possible :: "exp \<Rightarrow> state_pool \<Rightarrow> bool" where
-  "state_pool_possible e stpool \<longleftrightarrow> [[] \<mapsto> (e, Map.empty, [])] \<rightarrow>* stpool"
+  "state_pool_possible e \<E> \<equiv> [[] \<mapsto> (e, Map.empty, [])] \<rightarrow>* \<E>"
   
 definition one_shot :: "exp \<Rightarrow> var \<Rightarrow> bool" where
-  "one_shot e x \<longleftrightarrow> (\<forall> stpool \<pi>. 
-    state_pool_possible e stpool \<longrightarrow>
-    (* channel_exists stpool (Ch (\<pi>;;x)) \<longrightarrow> *) (*chan_exists doesn't seem necessary*)
-    card (send_sites stpool (Ch (\<pi>;;x))) \<le> 1
+  "one_shot e x \<equiv> (\<forall> \<E> \<pi>. 
+    state_pool_possible e \<E> \<longrightarrow>
+    card (send_sites \<E> (Ch (\<pi>;;x))) \<le> 1
   )"
   
 definition single_side :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_path set) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "single_side sites_of e x \<longleftrightarrow> (\<forall> stpool \<pi> \<pi>_1 \<pi>_2 .
-    state_pool_possible e stpool \<longrightarrow>
-    (* channel_exists stpool (Ch (\<pi>;;x)) \<longrightarrow> *)
-    \<pi>_1 \<in> (sites_of stpool (Ch (\<pi>;;x))) \<longrightarrow>
-    \<pi>_2 \<in> (sites_of stpool (Ch (\<pi>;;x))) \<longrightarrow>
-    (prefix \<pi>_1 \<pi>_2 \<or> prefix \<pi>_2 \<pi>_1) 
+  "single_side sites_of e x \<equiv> (\<forall> \<E> \<pi> \<pi>\<^sub>1 \<pi>\<^sub>2 .
+    state_pool_possible e \<E> \<longrightarrow>
+    \<pi>\<^sub>1 \<in> sites_of \<E> (Ch (\<pi>;;x)) \<longrightarrow>
+    \<pi>\<^sub>2 \<in> sites_of \<E> (Ch (\<pi>;;x)) \<longrightarrow>
+    (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1) 
   )"  
   
 definition single_receiver :: "exp \<Rightarrow> var \<Rightarrow> bool" where 

@@ -233,14 +233,8 @@ definition send_processes where
 definition recv_processes where 
   "recv_processes c e = processes (recv_sites c e) e"
 
-definition exactly_one :: "abstract_path set \<Rightarrow> bool" where
-  "exactly_one \<T> \<longleftrightarrow> (\<exists> p \<in> \<T> . (\<forall> p' \<in> \<T> . p = p'))"
-
-definition empty_set :: "abstract_path set \<Rightarrow> bool" where
-  "empty_set \<T> \<longleftrightarrow> (\<nexists> p . p \<in> \<T>)"
-
 definition one_max :: "abstract_path set \<Rightarrow> bool"  where
-  "one_max \<T> \<longleftrightarrow> empty_set \<T> \<or> exactly_one \<T>"
+  "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)"
 
 
 datatype topo_class = OneShot | OneToOne | FanOut | FanIn | Any
@@ -276,7 +270,7 @@ inductive class_pair_accept :: "topo_class_pair \<Rightarrow> exp \<Rightarrow> 
 type_synonym topo_class_env = "var \<Rightarrow> topo_class"
 
 definition class_env_accept :: "topo_class_env \<Rightarrow> exp \<Rightarrow> bool" where 
-  "class_env_accept E e \<equiv> (\<forall> (x::var) (t::topo_class) . ((E x) = t) \<and> (class_pair_accept (x, t) e))"
+  "class_env_accept \<A> e \<equiv> (\<forall> x . class_pair_accept (x, \<A> x) e)"
 
 
 
