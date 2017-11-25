@@ -1,5 +1,5 @@
 theory Analysis
-  imports Main Syntax
+  imports Main Syntax Semantics
 begin
 
 datatype abstract_value = A_Chan var ("^Chan _" [61] 61) | A_Unit ("^\<lparr>\<rparr>") | A_Prim prim ("^ _" [61] 61 )
@@ -65,7 +65,7 @@ inductive val_env_accept :: "abstract_value_env \<times> abstract_value_env \<Ri
   Let_Case: "
     \<lbrakk>
       \<And> x\<^sub>l' . ^Left x\<^sub>l' \<in> \<V> x\<^sub>s \<Longrightarrow> 
-        (\<rho> x\<^sub>l' \<subseteq> \<rho> x\<^sub>l) \<and> (\<V> (result_var e\<^sub>l) \<subseteq> \<rho> x) \<and> (\<V>, \<C>) \<Turnstile> e\<^sub>l
+        \<rho> x\<^sub>l' \<subseteq> \<rho> x\<^sub>l \<and> \<V> (result_var e\<^sub>l) \<subseteq> \<rho> x \<and> (\<V>, \<C>) \<Turnstile> e\<^sub>l
       ;
       \<And> x\<^sub>r' . ^Right x\<^sub>r' \<in> \<V> x\<^sub>s \<Longrightarrow>
         \<rho> x\<^sub>r' \<subseteq> \<rho> x\<^sub>r \<and> \<rho> (result_var e\<^sub>r) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile> e\<^sub>r
@@ -126,6 +126,27 @@ inductive val_env_accept :: "abstract_value_env \<times> abstract_value_env \<Ri
     (\<V>, \<C>) \<Turnstile> LET x = SPAWN e\<^sub>c in e
   "
 
+fun absval :: "val option \<Rightarrow> abstract_value set" where
+  "absval (Some \<lbrace>Ch \<pi> x\<rbrace>) = {^Chan x}" |
+  "absval (Some \<lbrace>p, \<rho>\<rbrace>) = {^p}" |
+  "absval (Some \<lbrace>\<rbrace>) = {^\<lparr>\<rparr>}" |
+  "absval None = {}"
+
+definition absval_env :: "(var \<rightharpoonup> val) \<Rightarrow> var \<Rightarrow> abstract_value set" where
+  "absval_env \<rho> x = absval (\<rho> x)"
+
+
+definition abstract_more_precise :: "abstract_value_env \<Rightarrow> abstract_value_env \<Rightarrow> prop" (infix "\<sqsubseteq>" 55) where
+  "abstract_more_precise \<V> \<V>' \<equiv> (\<And> x . \<V> x \<subseteq> \<V>' x)"
+
+theorem abstract_value_analysis_sound : "
+  (\<V>, \<C>) \<Turnstile> e \<Longrightarrow> 
+  [[] \<mapsto> (e, empty, [])] \<rightarrow>* \<E> \<Longrightarrow>
+  (\<And> \<pi> . \<E> \<pi> = Some (e', \<rho>, \<kappa>) \<Longrightarrow>
+    absval_env \<rho> \<sqsubseteq> \<V>
+  )
+"
+sorry
 
 type_synonym abstract_path = "(var + unit) list"
 
@@ -234,7 +255,7 @@ definition recv_processes where
   "recv_processes c e = processes (recv_sites c e) e"
 
 definition one_max :: "abstract_path set \<Rightarrow> bool"  where
-  "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)"
+  "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)" 
 
 
 datatype topo_class = OneShot | OneToOne | FanOut | FanIn | Any

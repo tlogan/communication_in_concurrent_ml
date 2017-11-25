@@ -4,7 +4,7 @@ begin
 
   
 type_synonym control_path = "(var + unit) list"
-datatype chan = Ch control_path
+datatype chan = Ch control_path var
 
 datatype val = 
   V_Chan chan ("\<lbrace>_\<rbrace>") |
@@ -191,14 +191,14 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
       leaf \<E> \<pi>\<^sub>s ;
       \<E> \<pi>\<^sub>s = Some (LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s, \<rho>\<^sub>s, \<kappa>\<^sub>s);
       \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>;
-      \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch c\<rbrace>; 
+      \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace>; 
       
       \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m ;
 
       leaf \<E> \<pi>\<^sub>r ;
       \<E> \<pi>\<^sub>r = Some (LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r, \<rho>\<^sub>r, \<kappa>\<^sub>r);
       \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>;
-      \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch c\<rbrace>
+      \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>
 
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [
@@ -212,7 +212,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
       \<E> \<pi> = Some (LET x = CHAN \<lparr>\<rparr> in e, \<rho>, \<kappa>)
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E>(
-      \<pi>;;x \<mapsto> (e, \<rho>(x \<mapsto> \<lbrace>Ch (\<pi>;;x)\<rbrace>), \<kappa>)
+      \<pi>;;x \<mapsto> (e, \<rho>(x \<mapsto> \<lbrace>Ch \<pi> x\<rbrace>), \<kappa>)
     )
   " |
   Let_Spawn: "
@@ -251,14 +251,14 @@ definition state_pool_possible :: "exp \<Rightarrow> state_pool \<Rightarrow> bo
 definition one_shot :: "exp \<Rightarrow> var \<Rightarrow> bool" where
   "one_shot e x \<equiv> (\<forall> \<E> \<pi>. 
     state_pool_possible e \<E> \<longrightarrow>
-    card (send_sites \<E> (Ch (\<pi>;;x))) \<le> 1
+    card (send_sites \<E> (Ch \<pi> x)) \<le> 1
   )"
   
 definition single_side :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_path set) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   "single_side sites_of e x \<equiv> (\<forall> \<E> \<pi> \<pi>\<^sub>1 \<pi>\<^sub>2 .
     state_pool_possible e \<E> \<longrightarrow>
-    \<pi>\<^sub>1 \<in> sites_of \<E> (Ch (\<pi>;;x)) \<longrightarrow>
-    \<pi>\<^sub>2 \<in> sites_of \<E> (Ch (\<pi>;;x)) \<longrightarrow>
+    \<pi>\<^sub>1 \<in> sites_of \<E> (Ch \<pi> x) \<longrightarrow>
+    \<pi>\<^sub>2 \<in> sites_of \<E> (Ch \<pi> x) \<longrightarrow>
     (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1) 
   )"  
   
