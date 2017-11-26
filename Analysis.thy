@@ -139,12 +139,35 @@ definition absval_env :: "(var \<rightharpoonup> val) \<Rightarrow> var \<Righta
 definition abstract_more_precise :: "abstract_value_env \<Rightarrow> abstract_value_env \<Rightarrow> prop" (infix "\<sqsubseteq>" 55) where
   "abstract_more_precise \<V> \<V>' \<equiv> (\<And> x . \<V> x \<subseteq> \<V>' x)"
 
-theorem abstract_value_analysis_sound : "
-  (\<V>, \<C>) \<Turnstile> e \<Longrightarrow> 
-  [[] \<mapsto> (e, empty, [])] \<rightarrow>* \<E> \<Longrightarrow>
-  (\<And> \<pi> . \<E> \<pi> = Some (e', \<rho>, \<kappa>) \<Longrightarrow>
+inductive abstract_value_flow_pool :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>p" 55) where
+  Dummy: "E \<Turnstile>\<^sub>p E'"
+
+theorem abstract_value_flow_preservation : "
+  \<lbrakk>
+    (\<V>, \<C>) \<Turnstile>\<^sub>p \<E>; 
+    \<E> \<rightarrow> \<E>'
+  \<rbrakk> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>p \<E>'
+"
+sorry
+
+theorem abstract_value_flow_precision : "
+  (\<V>, \<C>) \<Turnstile>\<^sub>p \<E>  (* or should it be (\<V>, \<C>) \<Turnstile>\<^sub>r \<rho> *)
+  \<Longrightarrow>
+  (\<And> \<pi> . \<E> \<pi> = Some (e, \<rho>, \<kappa>) \<Longrightarrow>
     absval_env \<rho> \<sqsubseteq> \<V>
-  )
+  ) 
+"
+sorry
+
+theorem abstract_value_flow_sound : "
+  \<lbrakk>
+    (\<V>, \<C>) \<Turnstile> e; 
+    [[] \<mapsto> (e, empty, [])] \<rightarrow>* \<E>' 
+  \<rbrakk> \<Longrightarrow>
+  (\<And> \<pi> . \<E>' \<pi> = Some (e', \<rho>', \<kappa>') \<Longrightarrow>
+    absval_env \<rho>' \<sqsubseteq> \<V>
+  ) 
 "
 sorry
 
