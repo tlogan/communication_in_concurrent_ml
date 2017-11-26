@@ -22,7 +22,7 @@ and bind =
   Unit ("\<lparr>\<rparr>") |
   Chan ("CHAN \<lparr>\<rparr>") |
   Spawn exp ("SPAWN _" [61] 61) |
-  Sync var ("SYNC _" [61] 61) |
+  Sync var ("SYNC _" [61] 61)  |
   Fst var ("FST _" [61] 61) |
   Snd var ("SND _" [61] 61) |
   Case var var exp var exp ("CASE _ LEFT _ |> _ RIGHT _ |> _" [0,0,0,0, 61] 61) |
