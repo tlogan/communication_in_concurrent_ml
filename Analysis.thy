@@ -208,13 +208,16 @@ where
   "
 
 inductive abstract_value_flow_stack :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile> _ \<Rrightarrow> _" [56, 0, 56] 56) where
+  Empty: "(\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> []" |
+  Nonempty: "
+    \<lbrakk> 
+      \<W> \<subseteq> \<V> x;
+      (\<V>, \<C>) \<Turnstile> e; 
+      (\<V>, \<C>) \<parallel>\<approx> \<rho>; 
+      (\<V>, \<C>) \<Turnstile> \<V> (result_var e) \<Rrightarrow> \<kappa>
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> \<langle>x, e, \<rho>\<rangle> # \<kappa>
   "
-    (\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> \<kappa>
-  "
-
-
-  
-  
 
 inductive abstract_value_flow_state :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
   "
@@ -227,11 +230,13 @@ inductive abstract_value_flow_state :: "abstract_value_env \<times> abstract_val
   "
 
 inductive abstract_value_flow_pool :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<parallel>\<lless>" 55) where
-  "
+  Empty: "(\<V>, \<C>) \<parallel>\<lless> empty" |
+  Nonempty: "
     \<lbrakk>
-      \<And> \<pi> . \<E> \<pi> = Some \<sigma> \<Longrightarrow> (\<V>, \<C>) \<TTurnstile> \<sigma>
+      (\<V>, \<C>) \<TTurnstile> \<sigma>;
+      (\<V>, \<C>) \<parallel>\<lless> \<E>
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>) \<parallel>\<lless> \<E>
+    (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> \<mapsto> \<sigma>)
   "
 
 theorem abstract_value_flow_preservation : "
