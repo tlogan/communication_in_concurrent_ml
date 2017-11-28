@@ -266,7 +266,7 @@ theorem abstract_value_flow_precision : "
   \<Longrightarrow>
   absval_env \<rho> \<sqsubseteq> \<V>
 "
-sorry
+ sorry
 
 theorem lift_flow: "(\<V>, \<C>) \<Turnstile> e \<Longrightarrow> (\<V>, \<C>) \<parallel>\<lless> [[] \<mapsto> (e, empty, [])]"
  apply rule
@@ -274,6 +274,22 @@ theorem lift_flow: "(\<V>, \<C>) \<Turnstile> e \<Longrightarrow> (\<V>, \<C>) \
     apply auto
    apply (rule, rule, rule)
 done
+
+theorem abstract_value_flow_pool_sound : "
+  \<lbrakk>
+    (\<V>, \<C>) \<parallel>\<lless> \<E>; 
+    \<E> \<rightarrow>* \<E>';
+    \<E>' \<pi> = Some (e', \<rho>', \<kappa>')
+  \<rbrakk> \<Longrightarrow>
+  absval_env \<rho>' \<sqsubseteq> \<V>
+"
+ apply (drule abstract_value_flow_preservation_star [of \<V> \<C> _ \<E>'])
+  apply auto
+ thm abstract_value_flow_precision
+ apply (erule abstract_value_flow_precision [of \<V> \<C> \<E>' \<pi> e' \<rho>' \<kappa>'])
+ apply auto
+done
+
 
 theorem abstract_value_flow_sound : "
   \<lbrakk>
@@ -285,11 +301,8 @@ theorem abstract_value_flow_sound : "
 "
  thm lift_flow
  apply (drule lift_flow)
- thm abstract_value_flow_preservation_star
- apply (drule abstract_value_flow_preservation_star [of \<V> \<C> _ \<E>'])
-  apply auto
- thm abstract_value_flow_precision
- apply (erule abstract_value_flow_precision [of \<V> \<C> \<E>' \<pi> e' \<rho>' \<kappa>'])
+ thm abstract_value_flow_pool_sound
+ apply (erule abstract_value_flow_pool_sound [of \<V> \<C> _ \<E>' \<pi> e' \<rho>' \<kappa>'])
  apply auto
 done
 
