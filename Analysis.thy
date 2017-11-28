@@ -220,7 +220,7 @@ inductive abstract_value_flow_stack :: "abstract_value_env \<times> abstract_val
   "
 
 inductive abstract_value_flow_state :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
-  "
+  Any: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile> e; 
       (\<V>, \<C>) \<parallel>\<approx> \<rho>; 
@@ -269,7 +269,10 @@ theorem abstract_value_flow_precision : "
 sorry
 
 theorem lift_flow: "(\<V>, \<C>) \<Turnstile> e \<Longrightarrow> (\<V>, \<C>) \<parallel>\<lless> [[] \<mapsto> (e, empty, [])]"
- apply (rule+, auto, rule+)
+ apply rule
+  apply rule
+    apply auto
+   apply (rule, rule, rule)
 done
 
 theorem abstract_value_flow_sound : "
