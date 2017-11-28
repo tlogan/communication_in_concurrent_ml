@@ -212,10 +212,10 @@ inductive abstract_value_flow_stack :: "abstract_value_env \<times> abstract_val
   Nonempty: "
     \<lbrakk> 
       \<W> \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile> e; 
+      (\<V>, \<C>) \<Turnstile> e;
       (\<V>, \<C>) \<parallel>\<approx> \<rho>; 
       (\<V>, \<C>) \<Turnstile> \<V> (result_var e) \<Rrightarrow> \<kappa>
-    \<rbrakk> \<Longrightarrow>
+    \<rbrakk> \<Longrightarrow> 
     (\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> \<langle>x, e, \<rho>\<rangle> # \<kappa>
   "
 
@@ -248,25 +248,48 @@ theorem abstract_value_flow_preservation : "
 "
 sorry
 
-theorem abstract_value_flow_precision : "
-  (\<V>, \<C>) \<parallel>\<lless>  \<E>  (* or should it be (\<V>, \<C>) \<parallel>\<approx> \<rho> *)
-  \<Longrightarrow>
-  (\<And> \<pi> . \<E> \<pi> = Some (e, \<rho>, \<kappa>) \<Longrightarrow>
-    absval_env \<rho> \<sqsubseteq> \<V>
-  ) 
+theorem abstract_value_flow_preservation_star : "
+  \<lbrakk>
+    (\<V>, \<C>) \<parallel>\<lless> \<E>; 
+    \<E> \<rightarrow>* \<E>'
+  \<rbrakk> \<Longrightarrow>
+  (\<V>, \<C>) \<parallel>\<lless> \<E>'
 "
 sorry
+
+
+theorem abstract_value_flow_precision : "
+  \<lbrakk>
+    (\<V>, \<C>) \<parallel>\<lless>  \<E>  (* or should it be (\<V>, \<C>) \<parallel>\<approx> \<rho> *);
+    \<E> \<pi> = Some (e, \<rho>, \<kappa>)
+  \<rbrakk>
+  \<Longrightarrow>
+  absval_env \<rho> \<sqsubseteq> \<V>
+"
+sorry
+
+theorem lift_flow: "(\<V>, \<C>) \<Turnstile> e \<Longrightarrow> (\<V>, \<C>) \<parallel>\<lless> [[] \<mapsto> (e, empty, [])]"
+ apply (rule+, auto, rule+)
+done
 
 theorem abstract_value_flow_sound : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile> e; 
-    [[] \<mapsto> (e, empty, [])] \<rightarrow>* \<E>'
+    [[] \<mapsto> (e, empty, [])] \<rightarrow>* \<E>';
+    \<E>' \<pi> = Some (e', \<rho>', \<kappa>')
   \<rbrakk> \<Longrightarrow>
-  (\<And> \<pi> . \<E>' \<pi> = Some (e', \<rho>', \<kappa>') \<Longrightarrow>
-    absval_env \<rho>' \<sqsubseteq> \<V>
-  ) 
+  absval_env \<rho>' \<sqsubseteq> \<V>
 "
-sorry
+ thm lift_flow
+ apply (drule lift_flow)
+ thm abstract_value_flow_preservation_star
+ apply (drule abstract_value_flow_preservation_star [of \<V> \<C> _ \<E>'])
+  apply auto
+ thm abstract_value_flow_precision
+ apply (erule abstract_value_flow_precision [of \<V> \<C> \<E>' \<pi> e' \<rho>' \<kappa>'])
+ apply auto
+done
+
 
 type_synonym abstract_path = "(var + unit) list"
 
