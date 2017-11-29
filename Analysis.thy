@@ -138,8 +138,8 @@ definition absval_env :: "(var \<rightharpoonup> val) \<Rightarrow> var \<Righta
   )"
 
 
-definition abstract_more_precise :: "abstract_value_env \<Rightarrow> abstract_value_env \<Rightarrow> prop" (infix "\<sqsubseteq>" 55) where
-  "abstract_more_precise \<V> \<V>' \<equiv> (\<And> x . \<V> x \<subseteq> \<V>' x)"
+definition abstract_more_precise :: "abstract_value_env \<Rightarrow> abstract_value_env \<Rightarrow> bool" (infix "\<sqsubseteq>" 55) where
+  "abstract_more_precise \<V> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
 
 inductive abstract_value_flow_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<parallel>>" 55)
 and  abstract_value_flow_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> (var \<rightharpoonup> val) \<Rightarrow> bool" (infix "\<parallel>\<approx>" 55) 
@@ -235,7 +235,7 @@ inductive abstract_value_flow_pool :: "abstract_value_env \<times> abstract_valu
     \<lbrakk>
       (\<V>, \<C>) \<TTurnstile> \<sigma>;
       (\<V>, \<C>) \<parallel>\<lless> \<E>
-    \<rbrakk> \<Longrightarrow>
+    \<rbrakk> \<Longrightarrow> 
     (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> \<mapsto> \<sigma>)
   "
 
@@ -257,21 +257,78 @@ theorem abstract_value_flow_preservation_star : "
 "
 sorry
 
+theorem abstract_value_flow_state_precision : "
+  (\<V>, \<C>) \<TTurnstile> (e, \<rho>, \<kappa>)
+  \<Longrightarrow>
+  absval_env \<rho> \<sqsubseteq> \<V>
+"
+sorry
 
-theorem abstract_value_flow_precision : "
+
+lemma xyz : "
   \<lbrakk>
-    (\<V>, \<C>) \<parallel>\<lless>  \<E>  (* or should it be (\<V>, \<C>) \<parallel>\<approx> \<rho> *);
+    (\<V>, \<C>) \<parallel>\<lless> \<E>; 
+    \<E> \<pi> = Some \<sigma> 
+  \<rbrakk>
+  \<Longrightarrow>
+  (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> \<mapsto> \<sigma>)
+"
+by (simp add: fun_upd_idem)
+
+
+
+lemma abc: "(\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> \<mapsto> \<sigma>) \<Longrightarrow> (\<V>, \<C>) \<TTurnstile> \<sigma>"
+ thm abstract_value_flow_pool.cases
+ apply (erule abstract_value_flow_pool.cases)
+  apply simp+
+ apply (erule conjE)
+ apply (case_tac "\<sigma> = \<sigma>'", simp)
+ sorry
+
+lemma abstract_value_flow_pool_to_state : "
+  \<lbrakk>
+    (\<V>, \<C>) \<parallel>\<lless> \<E>; 
+    \<E> \<pi> = Some \<sigma> 
+  \<rbrakk>
+  \<Longrightarrow>
+  (\<V>, \<C>) \<TTurnstile> \<sigma>
+"
+ apply (drule xyz, simp)
+ apply (erule abc)
+sorry
+
+
+theorem abstract_value_flow_pool_precision : "
+  \<lbrakk>
+    (\<V>, \<C>) \<parallel>\<lless> \<E>;
     \<E> \<pi> = Some (e, \<rho>, \<kappa>)
   \<rbrakk>
   \<Longrightarrow>
   absval_env \<rho> \<sqsubseteq> \<V>
 "
- sorry
+ apply (drule abstract_value_flow_pool_to_state, simp)
+ apply (erule abstract_value_flow_state_precision)
+done
+
+(*
+thm abstract_value_flow_pool.cases
+ apply (erule abstract_value_flow_pool.cases)
+ apply (unfold absval_env_def)
+ apply (unfold abstract_more_precise_def)
+ thm Pure.asm_rl
+ apply (rule Pure.asm_rl)
+ apply (case_tac "\<rho> x = None")
+  apply simp
+ apply simp
+ apply (erule exE, rename_tac \<omega>, simp)
+ thm abstract_value_flow_pool.cases
+ *)
 
 theorem lift_flow: "(\<V>, \<C>) \<Turnstile> e \<Longrightarrow> (\<V>, \<C>) \<parallel>\<lless> [[] \<mapsto> (e, empty, [])]"
  apply rule
   apply rule
     apply auto
+   apply rule
    apply (rule, rule, rule)
 done
 
@@ -283,10 +340,11 @@ theorem abstract_value_flow_pool_sound : "
   \<rbrakk> \<Longrightarrow>
   absval_env \<rho>' \<sqsubseteq> \<V>
 "
+thm abstract_value_flow_preservation_star [of \<V> \<C> _ \<E>']
  apply (drule abstract_value_flow_preservation_star [of \<V> \<C> _ \<E>'])
   apply auto
- thm abstract_value_flow_precision
- apply (erule abstract_value_flow_precision [of \<V> \<C> \<E>' \<pi> e' \<rho>' \<kappa>'])
+ thm abstract_value_flow_pool_precision
+ apply (erule abstract_value_flow_pool_precision [of \<V> \<C> \<E>' \<pi> e' \<rho>' \<kappa>'])
  apply auto
 done
 
