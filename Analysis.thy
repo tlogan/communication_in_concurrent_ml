@@ -219,6 +219,7 @@ inductive abstract_value_flow_stack :: "abstract_value_env \<times> abstract_val
     (\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> \<langle>x, e, \<rho>\<rangle> # \<kappa>
   "
 
+
 inductive abstract_value_flow_state :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
   Any: "
     \<lbrakk>
@@ -265,7 +266,21 @@ theorem abstract_value_flow_state_precision : "
 sorry
 
 
-lemma xyz : "
+(*functions do not have structural equality*)
+lemma "
+  \<exists> \<E> . \<E>(\<pi> \<mapsto> \<sigma>) = \<E>
+"
+by auto
+
+lemma abc: "(\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> \<mapsto> \<sigma>) \<Longrightarrow> (\<V>, \<C>) \<TTurnstile> \<sigma>"
+ apply (erule abstract_value_flow_pool.cases)
+  apply simp+
+  apply (erule conjE)
+  apply (case_tac "\<sigma> = \<sigma>'")
+   apply (auto)
+sorry
+
+lemma abstract_value_flow_pool_upd_idem : "
   \<lbrakk>
     (\<V>, \<C>) \<parallel>\<lless> \<E>; 
     \<E> \<pi> = Some \<sigma> 
@@ -275,16 +290,6 @@ lemma xyz : "
 "
 by (simp add: fun_upd_idem)
 
-
-
-lemma abc: "(\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> \<mapsto> \<sigma>) \<Longrightarrow> (\<V>, \<C>) \<TTurnstile> \<sigma>"
- thm abstract_value_flow_pool.cases
- apply (erule abstract_value_flow_pool.cases)
-  apply simp+
- apply (erule conjE)
- apply (case_tac "\<sigma> = \<sigma>'", simp)
- sorry
-
 lemma abstract_value_flow_pool_to_state : "
   \<lbrakk>
     (\<V>, \<C>) \<parallel>\<lless> \<E>; 
@@ -293,10 +298,9 @@ lemma abstract_value_flow_pool_to_state : "
   \<Longrightarrow>
   (\<V>, \<C>) \<TTurnstile> \<sigma>
 "
- apply (drule xyz, simp)
+ apply (drule abstract_value_flow_pool_upd_idem, simp)
  apply (erule abc)
-sorry
-
+done
 
 theorem abstract_value_flow_pool_precision : "
   \<lbrakk>
@@ -328,7 +332,6 @@ theorem lift_flow: "(\<V>, \<C>) \<Turnstile> e \<Longrightarrow> (\<V>, \<C>) \
  apply rule
   apply rule
     apply auto
-   apply rule
    apply (rule, rule, rule)
 done
 
