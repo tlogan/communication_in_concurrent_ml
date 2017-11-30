@@ -132,10 +132,10 @@ fun absval :: "val \<Rightarrow> abstract_value" where
   "absval \<lbrace>\<rbrace> = ^\<lparr>\<rparr>"
 
 definition absval_env :: "(var \<rightharpoonup> val) \<Rightarrow> abstract_value_env" where
-  "absval_env \<rho> x = (case (\<rho> x) of 
+  "absval_env \<rho> = (\<lambda> x . (case (\<rho> x) of 
     Some \<omega> \<Rightarrow> {absval \<omega>} |
     None \<Rightarrow> {}
-  )"
+  ))"
 
 
 definition abstract_more_precise :: "abstract_value_env \<Rightarrow> abstract_value_env \<Rightarrow> bool" (infix "\<sqsubseteq>" 55) where
