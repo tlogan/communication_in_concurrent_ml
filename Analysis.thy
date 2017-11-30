@@ -231,7 +231,7 @@ inductive abstract_value_flow_pool :: "abstract_value_env \<times> abstract_valu
     (\<V>, \<C>) \<parallel>\<lless> \<E>
   "
 
-(*
+
 theorem abstract_value_flow_preservation : "
   \<lbrakk>
     (\<V>, \<C>) \<parallel>\<lless> \<E>; 
@@ -239,17 +239,29 @@ theorem abstract_value_flow_preservation : "
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<parallel>\<lless> \<E>'
 "
+ apply (erule concur_step.cases)
 sorry
-*)
+
+theorem abstract_value_flow_preservation_star' : "
+  \<E> \<rightarrow>* \<E>' \<Longrightarrow>
+  ((\<V>, \<C>) \<parallel>\<lless> \<E> \<longrightarrow> (\<V>, \<C>) \<parallel>\<lless> \<E>')
+"
+ thm star.induct[of concur_step]
+ apply (erule star.induct[of concur_step], auto)
+ apply (rename_tac \<E> \<E>' \<E>'')
+ apply (erule notE)
+ apply (erule abstract_value_flow_preservation, auto)
+done
+ 
 
 theorem abstract_value_flow_preservation_star : "
   \<lbrakk>
-    (\<V>, \<C>) \<parallel>\<lless> \<E>; 
+    (\<V>, \<C>) \<parallel>\<lless> \<E>;  
     \<E> \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<parallel>\<lless> \<E>'
 "
-sorry
+by (drule abstract_value_flow_preservation_star', auto)
 
 theorem abstract_value_flow_env_precision : "
   (\<V>, \<C>) \<parallel>\<approx> \<rho>
