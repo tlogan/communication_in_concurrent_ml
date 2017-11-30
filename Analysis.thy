@@ -131,7 +131,7 @@ fun absval :: "val \<Rightarrow> abstract_value" where
   "absval \<lbrace>p, \<rho>\<rbrace> = ^p" |
   "absval \<lbrace>\<rbrace> = ^\<lparr>\<rparr>"
 
-definition absval_env :: "(var \<rightharpoonup> val) \<Rightarrow> var \<Rightarrow> abstract_value set" where
+definition absval_env :: "(var \<rightharpoonup> val) \<Rightarrow> abstract_value_env" where
   "absval_env \<rho> x = (case (\<rho> x) of 
     Some \<omega> \<Rightarrow> {absval \<omega>} |
     None \<Rightarrow> {}
@@ -140,6 +140,9 @@ definition absval_env :: "(var \<rightharpoonup> val) \<Rightarrow> var \<Righta
 
 definition abstract_more_precise :: "abstract_value_env \<Rightarrow> abstract_value_env \<Rightarrow> bool" (infix "\<sqsubseteq>" 55) where
   "abstract_more_precise \<V> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
+
+
+
 
 inductive abstract_value_flow_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<parallel>>" 55)
 and  abstract_value_flow_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> (var \<rightharpoonup> val) \<Rightarrow> bool" (infix "\<parallel>\<approx>" 55) 
@@ -156,55 +159,46 @@ where
   " |
   Pair: "
     \<lbrakk>
-      (\<V>, \<C>) \<Turnstile> e;
       (\<V>, \<C>) \<parallel>\<approx> \<rho>
     \<rbrakk> \<Longrightarrow>
     (\<V>, \<C>) \<parallel>> \<lbrace>Pair _ _, \<rho>\<rbrace>
   " |
   Left: "
     \<lbrakk>
-      (\<V>, \<C>) \<Turnstile> e;
       (\<V>, \<C>) \<parallel>\<approx> \<rho>
     \<rbrakk> \<Longrightarrow>
     (\<V>, \<C>) \<parallel>> \<lbrace>Left _, \<rho>\<rbrace>
   " |
   Right: "
     \<lbrakk>
-      (\<V>, \<C>) \<Turnstile> e;
       (\<V>, \<C>) \<parallel>\<approx> \<rho>
     \<rbrakk> \<Longrightarrow>
     (\<V>, \<C>) \<parallel>> \<lbrace>Right _, \<rho>\<rbrace>
   " |
   Send_Evt: "
     \<lbrakk>
-      (\<V>, \<C>) \<Turnstile> e;
       (\<V>, \<C>) \<parallel>\<approx> \<rho>
     \<rbrakk> \<Longrightarrow>
     (\<V>, \<C>) \<parallel>> \<lbrace>Send_Evt _ _, \<rho>\<rbrace>
   " |
   Recv_Evt: "
     \<lbrakk>
-      (\<V>, \<C>) \<Turnstile> e;
       (\<V>, \<C>) \<parallel>\<approx> \<rho>
     \<rbrakk> \<Longrightarrow>
     (\<V>, \<C>) \<parallel>> \<lbrace>Recv_Evt _, \<rho>\<rbrace>
   " |
   Always_Evt: "
     \<lbrakk>
-      (\<V>, \<C>) \<Turnstile> e;
       (\<V>, \<C>) \<parallel>\<approx> \<rho>
     \<rbrakk> \<Longrightarrow>
     (\<V>, \<C>) \<parallel>> \<lbrace>Always_Evt _, \<rho>\<rbrace>
   " |
 
-  Empty: "(\<V>, \<C>) \<parallel>\<approx> empty" |
-  Nonempty: "
-    \<lbrakk>
-      {absval \<omega>} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<parallel>> \<omega>;
-      (\<V>, \<C>) \<parallel>\<approx> \<rho>
-    \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>) \<parallel>\<approx> \<rho>(x \<mapsto> \<omega>)
+  Any : "
+    (\<And> x \<omega> . \<rho> x = Some \<omega> \<Longrightarrow>
+      {absval \<omega>} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<parallel>> \<omega>
+    ) \<Longrightarrow>
+    (\<V>, \<C>) \<parallel>\<approx> \<rho>
   "
 
 inductive abstract_value_flow_stack :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile> _ \<Rrightarrow> _" [56, 0, 56] 56) where
@@ -231,15 +225,13 @@ inductive abstract_value_flow_state :: "abstract_value_env \<times> abstract_val
   "
 
 inductive abstract_value_flow_pool :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<parallel>\<lless>" 55) where
-  Empty: "(\<V>, \<C>) \<parallel>\<lless> empty" |
-  Nonempty: "
-    \<lbrakk>
-      (\<V>, \<C>) \<TTurnstile> \<sigma>;
-      (\<V>, \<C>) \<parallel>\<lless> \<E>
-    \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> \<mapsto> \<sigma>)
+  Any: "
+    (\<And> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<Longrightarrow> (\<V>, \<C>) \<TTurnstile> \<sigma>)
+    \<Longrightarrow> 
+    (\<V>, \<C>) \<parallel>\<lless> \<E>
   "
 
+(*
 theorem abstract_value_flow_preservation : "
   \<lbrakk>
     (\<V>, \<C>) \<parallel>\<lless> \<E>; 
@@ -248,6 +240,7 @@ theorem abstract_value_flow_preservation : "
   (\<V>, \<C>) \<parallel>\<lless> \<E>'
 "
 sorry
+*)
 
 theorem abstract_value_flow_preservation_star : "
   \<lbrakk>
@@ -258,37 +251,25 @@ theorem abstract_value_flow_preservation_star : "
 "
 sorry
 
+theorem abstract_value_flow_env_precision : "
+  (\<V>, \<C>) \<parallel>\<approx> \<rho>
+  \<Longrightarrow>
+  absval_env \<rho> \<sqsubseteq> \<V>
+"
+ apply (unfold abstract_more_precise_def, unfold absval_env_def)
+ apply (rule allI, rename_tac x)
+ apply (case_tac "\<rho> x = None", auto, rename_tac \<omega>)
+ apply (erule abstract_value_flow_env.cases, auto)
+done
+
 theorem abstract_value_flow_state_precision : "
   (\<V>, \<C>) \<TTurnstile> (e, \<rho>, \<kappa>)
   \<Longrightarrow>
   absval_env \<rho> \<sqsubseteq> \<V>
 "
-sorry
-
-
-(*functions do not have structural equality*)
-lemma "
-  \<exists> \<E> . \<E>(\<pi> \<mapsto> \<sigma>) = \<E>
-"
-by auto
-
-lemma abc: "(\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> \<mapsto> \<sigma>) \<Longrightarrow> (\<V>, \<C>) \<TTurnstile> \<sigma>"
- apply (erule abstract_value_flow_pool.cases)
-  apply simp+
-  apply (erule conjE)
-  apply (case_tac "\<sigma> = \<sigma>'")
-   apply (auto)
-sorry
-
-lemma abstract_value_flow_pool_upd_idem : "
-  \<lbrakk>
-    (\<V>, \<C>) \<parallel>\<lless> \<E>; 
-    \<E> \<pi> = Some \<sigma> 
-  \<rbrakk>
-  \<Longrightarrow>
-  (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> \<mapsto> \<sigma>)
-"
-by (simp add: fun_upd_idem)
+ apply (erule abstract_value_flow_state.cases, auto)
+ apply (erule abstract_value_flow_env_precision)
+done
 
 lemma abstract_value_flow_pool_to_state : "
   \<lbrakk>
@@ -298,10 +279,9 @@ lemma abstract_value_flow_pool_to_state : "
   \<Longrightarrow>
   (\<V>, \<C>) \<TTurnstile> \<sigma>
 "
- apply (drule abstract_value_flow_pool_upd_idem, simp)
- apply (erule abc)
-done
+by (erule abstract_value_flow_pool.cases, auto)
 
+  
 theorem abstract_value_flow_pool_precision : "
   \<lbrakk>
     (\<V>, \<C>) \<parallel>\<lless> \<E>;
@@ -314,25 +294,19 @@ theorem abstract_value_flow_pool_precision : "
  apply (erule abstract_value_flow_state_precision)
 done
 
-(*
-thm abstract_value_flow_pool.cases
- apply (erule abstract_value_flow_pool.cases)
- apply (unfold absval_env_def)
- apply (unfold abstract_more_precise_def)
- thm Pure.asm_rl
- apply (rule Pure.asm_rl)
- apply (case_tac "\<rho> x = None")
-  apply simp
- apply simp
- apply (erule exE, rename_tac \<omega>, simp)
- thm abstract_value_flow_pool.cases
- *)
+theorem lift_flow_exp_to_state: "(\<V>, \<C>) \<Turnstile> e \<Longrightarrow> (\<V>, \<C>) \<TTurnstile> (e, empty, [])"
+ apply (rule abstract_value_flow_state.Any, auto)
+ apply (rule+, auto, rule) (* uses flow_value_env and flow_stack*)
+done
 
-theorem lift_flow: "(\<V>, \<C>) \<Turnstile> e \<Longrightarrow> (\<V>, \<C>) \<parallel>\<lless> [[] \<mapsto> (e, empty, [])]"
- apply rule
-  apply rule
-    apply auto
-   apply (rule, rule, rule)
+theorem  lift_flow_state_to_pool: "(\<V>, \<C>) \<TTurnstile> (e, Map.empty, []) \<Longrightarrow> (\<V>, \<C>) \<parallel>\<lless> [[] \<mapsto> (e, Map.empty, [])]"
+  apply (rule abstract_value_flow_pool.Any)
+  apply (case_tac "\<pi> = []", auto)
+done
+
+theorem lift_flow_exp_to_pool: "(\<V>, \<C>) \<Turnstile> e \<Longrightarrow> (\<V>, \<C>) \<parallel>\<lless> [[] \<mapsto> (e, empty, [])]"
+  apply (drule lift_flow_exp_to_state)
+  apply (erule lift_flow_state_to_pool)
 done
 
 theorem abstract_value_flow_pool_sound : "
@@ -343,12 +317,8 @@ theorem abstract_value_flow_pool_sound : "
   \<rbrakk> \<Longrightarrow>
   absval_env \<rho>' \<sqsubseteq> \<V>
 "
-thm abstract_value_flow_preservation_star [of \<V> \<C> _ \<E>']
- apply (drule abstract_value_flow_preservation_star [of \<V> \<C> _ \<E>'])
-  apply auto
- thm abstract_value_flow_pool_precision
- apply (erule abstract_value_flow_pool_precision [of \<V> \<C> \<E>' \<pi> e' \<rho>' \<kappa>'])
- apply auto
+ apply (drule abstract_value_flow_preservation_star [of \<V> \<C> _ \<E>'], auto)
+ apply (erule abstract_value_flow_pool_precision [of \<V> \<C> \<E>' \<pi> e' \<rho>' \<kappa>'], auto)
 done
 
 
@@ -360,11 +330,8 @@ theorem abstract_value_flow_sound : "
   \<rbrakk> \<Longrightarrow>
   absval_env \<rho>' \<sqsubseteq> \<V>
 "
- thm lift_flow
- apply (drule lift_flow)
- thm abstract_value_flow_pool_sound
- apply (erule abstract_value_flow_pool_sound [of \<V> \<C> _ \<E>' \<pi> e' \<rho>' \<kappa>'])
- apply auto
+ apply (drule lift_flow_exp_to_pool)
+ apply (erule abstract_value_flow_pool_sound [of \<V> \<C> _ \<E>' \<pi> e' \<rho>' \<kappa>'], auto)
 done
 
 
@@ -475,7 +442,7 @@ definition recv_processes where
   "recv_processes c e = processes (recv_sites c e) e"
 
 definition one_max :: "abstract_path set \<Rightarrow> bool"  where
-  "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)" 
+  "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)"
 
 
 datatype topo_class = OneShot | OneToOne | FanOut | FanIn | Any
@@ -502,16 +469,29 @@ inductive communication_topology' :: "topo_class_pair \<Rightarrow> exp \<Righta
 
   FanIn: "
     one_max (recv_processes c e) \<Longrightarrow> 
-    communication_topology' (c, OneToOne) e
+    communication_topology' (c, FanIn) e
   " | 
 
-  Any: "communication_topology' (c, OneToOne) e"
+  Any: "communication_topology' (c, Any) e"
 
 
 type_synonym topo_class_env = "var \<Rightarrow> topo_class"
 
+definition communication_topology :: "topo_class_env \<Rightarrow> exp \<Rightarrow> bool" where 
+  "communication_topology \<A> e \<longleftrightarrow> (\<forall> x . communication_topology' (x, \<A> x) e)"
+(*
+HOL example above \<up>
+
+definitions with type _bool_ seem to be more flexible than those with type _prop_
+
+Pure example:
 definition communication_topology :: "topo_class_env \<Rightarrow> exp \<Rightarrow> prop" where 
   "communication_topology \<A> e \<equiv> (\<And> x . communication_topology' (x, \<A> x) e)"
+
+yet theorems are easier to prove when described in the Pure logic.
+so HOL formulas will need to be lifted to Pure formulas.
+
+*)
 
 
 
