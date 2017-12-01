@@ -199,6 +199,8 @@ where
     (\<V>, \<C>) \<parallel>\<approx> \<rho>
   "
 
+thm flow_env.cases
+
 inductive abstract_value_flow_stack :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile> _ \<Rrightarrow> _" [56, 0, 56] 56) where
   Empty: "(\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> []" |
   Nonempty: "
@@ -229,6 +231,31 @@ inductive abstract_value_flow_pool :: "abstract_value_env \<times> abstract_valu
     (\<V>, \<C>) \<parallel>\<lless> \<E>
   "
 
+lemma flow_state_to_flow_env: "
+  (\<V>, \<C>) \<TTurnstile> <<RESULT x,\<rho>,\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>>> \<Longrightarrow> \<rho> x = Some \<omega> \<Longrightarrow> 
+  (\<V>, \<C>) \<parallel>\<approx> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)
+"
+ apply (rule flow_value_flow_env.Any, auto)
+    apply (erule abstract_value_flow_state.cases, auto)
+    apply (erule flow_env.cases, auto)
+    apply (erule abstract_value_flow_stack.cases, auto)
+   apply (erule abstract_value_flow_state.cases, auto)
+   apply (erule flow_env.cases, auto)
+  apply (rename_tac x' \<omega>')
+  apply (erule abstract_value_flow_state.cases, auto)
+  apply (erule flow_env.cases, auto)
+  apply (drule spec)+
+  apply (erule impE, auto)
+  apply (erule abstract_value_flow_stack.cases, auto)+
+  apply (erule flow_env.cases, auto)+
+  apply (rename_tac x' \<omega>')
+ apply (erule abstract_value_flow_state.cases, auto)
+ apply (erule flow_env.cases, auto)
+ apply (drule spec)+
+ apply (erule impE, auto)
+ apply (erule abstract_value_flow_stack.cases, auto)+
+ apply (erule flow_env.cases, auto)+
+done
 
 (* why does the type preservation proof from plt induct on \<turnstile> e : \<tau> ? instead of doing invert on e \<rightarrow> e'*)
 theorem abstract_value_flow_state_preservation : "
@@ -238,6 +265,12 @@ theorem abstract_value_flow_state_preservation : "
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<TTurnstile> \<sigma>'
 "
+ apply (erule seq_step.cases, auto)
+        apply (rule abstract_value_flow_state.Any)
+          apply (erule abstract_value_flow_state.cases, auto)    
+          apply (erule abstract_value_flow_stack.cases, auto)
+         apply (erule flow_state_to_flow_env, auto)
+        apply
 sorry
 
 lemma abstract_value_flow_seq_preservation: "
