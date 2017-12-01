@@ -240,6 +240,17 @@ theorem abstract_value_flow_state_preservation : "
 "
 sorry
 
+lemma abstract_value_flow_seq_preservation: "
+  (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (<<LET x = b in e,\<rho>,\<kappa>>>) \<Longrightarrow> 
+  <<LET x = b in e,\<rho>,\<kappa>>> \<hookrightarrow> \<sigma>' \<Longrightarrow> (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> ;; x \<mapsto> \<sigma>')
+"
+ apply (rule abstract_value_flow_pool.Any, auto)
+  apply (erule abstract_value_flow_pool.cases, auto)
+  apply ((drule spec)+, auto)
+  apply (erule abstract_value_flow_state_preservation, auto)
+ apply (erule abstract_value_flow_pool.cases, auto)
+done
+
 theorem abstract_value_flow_preservation : "
   \<lbrakk>
     (\<V>, \<C>) \<parallel>\<lless> \<E>; 
@@ -247,20 +258,8 @@ theorem abstract_value_flow_preservation : "
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<parallel>\<lless> \<E>'
 "
- apply (erule concur_step.cases; simp+)
-    apply (erule abstract_value_flow_pool.cases)
-    apply (drule spec)+
-    apply (drule mp, simp)
-    apply simp
-    apply (erule conjE)
-    thm abstract_value_flow_state_preservation
-    apply (drule abstract_value_flow_state_preservation, simp)
-    thm abstract_value_flow_pool.Any
-    apply (rule abstract_value_flow_pool.Any)
-    apply (rule allI)+
-    apply (rule impI)
-    apply (case_tac "\<pi> ;; x = \<pi>'", simp+)
-    apply auto
+ apply (erule concur_step.cases, auto)
+  apply (erule abstract_value_flow_seq_preservation, auto)
 sorry
 
 theorem abstract_value_flow_preservation_star' : "
