@@ -234,7 +234,7 @@ inductive abstract_value_flow_pool :: "abstract_value_env \<times> abstract_valu
 lemma flow_state_to_flow_exp: "
   (\<V>, \<C>) \<TTurnstile> <<RESULT x,\<rho>,\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>>> \<Longrightarrow> \<rho> x = Some \<omega> \<Longrightarrow> (\<V>, \<C>) \<Turnstile> e\<^sub>\<kappa>
 "
- apply (erule abstract_value_flow_state.cases, auto)    
+ apply (erule abstract_value_flow_state.cases, auto)
  apply (erule abstract_value_flow_stack.cases, auto)
 done
 
@@ -283,6 +283,117 @@ lemma flow_state_lemma_1: "
   apply (erule flow_state_to_flow_stack, auto)
 done
 
+lemma flow_state_to_flow_exp_2: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = \<lparr>\<rparr> in e,\<rho>,\<kappa>>> \<Longrightarrow> (\<V>, \<C>) \<Turnstile> e
+"
+ apply (erule abstract_value_flow_state.cases, auto)  
+ apply (erule abstract_value_flow.cases, auto)
+done
+
+lemma flow_state_to_flow_env_2: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = \<lparr>\<rparr> in e,\<rho>,\<kappa>>> \<Longrightarrow> (\<V>, \<C>) \<parallel>\<approx> \<rho>(x \<mapsto> \<lbrace>\<rbrace>)
+"
+ apply (rule flow_value_flow_env.Any, auto)
+    apply (erule abstract_value_flow_state.cases, auto)
+    apply (erule abstract_value_flow.cases, auto)
+   apply (rule flow_value_flow_env.Unit)
+  apply (rename_tac x' \<omega>')
+  apply (erule abstract_value_flow_state.cases, auto)
+  apply (erule flow_env.cases, auto)
+ apply (erule abstract_value_flow_state.cases, auto)
+ apply (erule flow_env.cases, auto)
+done
+
+lemma flow_state_to_flow_stack_2: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = \<lparr>\<rparr> in e,\<rho>,\<kappa>>> \<Longrightarrow> (\<V>, \<C>) \<Turnstile> \<V> (result_var e) \<Rrightarrow> \<kappa>
+"
+ apply (erule abstract_value_flow_state.cases, auto)
+done
+
+lemma flow_state_lemma_2: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = \<lparr>\<rparr> in e,\<rho>,\<kappa>>> \<Longrightarrow> (\<V>, \<C>) \<TTurnstile> <<e,\<rho>(x \<mapsto> \<lbrace>\<rbrace>),\<kappa>>>
+"
+ apply (rule abstract_value_flow_state.Any)
+    apply (erule flow_state_to_flow_exp_2)
+   apply (erule flow_state_to_flow_env_2)
+  apply (erule flow_state_to_flow_stack_2)
+done
+
+lemma flow_state_to_flow_exp_3: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = Prim p in e,\<rho>,\<kappa>>> \<Longrightarrow> (\<V>, \<C>) \<Turnstile> e
+"
+ apply (erule abstract_value_flow_state.cases, auto)  
+ apply (erule abstract_value_flow.cases, auto)
+done
+
+lemma flow_state_to_flow_env_3: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = Prim p in e,\<rho>,\<kappa>>> \<Longrightarrow> (\<V>, \<C>) \<parallel>\<approx> \<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>)
+"
+ apply (rule flow_value_flow_env.Any, auto)
+    apply (erule abstract_value_flow_state.cases, auto)
+    apply (erule abstract_value_flow.cases, auto)
+   apply (erule abstract_value_flow_state.cases, auto)
+   apply ((erule abstract_value_flow.cases, auto); rule, auto)
+  apply (rename_tac x' \<omega>')
+  apply (erule abstract_value_flow_state.cases, auto)
+  apply (erule flow_env.cases, auto)
+ apply (erule abstract_value_flow_state.cases, auto)
+ apply (erule flow_env.cases, auto)
+done
+
+lemma flow_state_to_flow_stack_3: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = Prim p in e,\<rho>,\<kappa>>> \<Longrightarrow> (\<V>, \<C>) \<Turnstile> \<V> (result_var e) \<Rrightarrow> \<kappa>
+"
+ apply (erule abstract_value_flow_state.cases, auto)
+done
+
+lemma flow_state_lemma_3: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = Prim p in e,\<rho>,\<kappa>>> \<Longrightarrow>  (\<V>, \<C>) \<TTurnstile> <<e,\<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>),\<kappa>>>
+"
+ apply (rule abstract_value_flow_state.Any)
+    apply (erule flow_state_to_flow_exp_3)
+   apply (erule flow_state_to_flow_env_3)
+  apply (erule flow_state_to_flow_stack_3)
+done
+
+lemma flow_state_to_flow_exp_4: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e,\<rho>,\<kappa>>> \<Longrightarrow> 
+  \<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace> \<Longrightarrow> 
+  \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> (\<V>, \<C>) \<Turnstile> e\<^sub>l
+"
+ apply (erule abstract_value_flow_state.cases, auto)
+ apply (erule abstract_value_flow.cases, auto)
+ apply (erule flow_env.cases, auto)
+ apply (drule spec)+
+ apply (drule mp, auto)
+done
+
+
+lemma flow_state_to_flow_env_4: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e,\<rho>,\<kappa>>> \<Longrightarrow> 
+  \<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace> \<Longrightarrow> \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
+  (\<V>, \<C>) \<parallel>\<approx> \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)
+"
+sorry
+
+lemma flow_state_to_flow_stack_4: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e,\<rho>,\<kappa>>> \<Longrightarrow>
+  \<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace> \<Longrightarrow> \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile> \<V> (result_var e\<^sub>l) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
+"
+sorry
+
+lemma flow_state_lemma_4: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e,\<rho>,\<kappa>>> \<Longrightarrow> 
+  \<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace> \<Longrightarrow> 
+  \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> (\<V>, \<C>) \<TTurnstile> <<e\<^sub>l,\<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l),\<langle>x,e,\<rho>\<rangle> # \<kappa>>>
+"
+ apply (rule abstract_value_flow_state.Any)
+    apply (erule flow_state_to_flow_exp_4, simp, auto)
+   apply (erule flow_state_to_flow_env_4, simp, auto)
+  apply (erule flow_state_to_flow_stack_4, simp, auto)
+done
+
 theorem abstract_value_flow_state_preservation : "
   \<lbrakk>
     (\<V>, \<C>) \<TTurnstile> \<sigma>; 
@@ -292,6 +403,8 @@ theorem abstract_value_flow_state_preservation : "
 "
  apply (erule seq_step.cases, auto)
         apply (erule flow_state_lemma_1, auto)
+       apply (erule flow_state_lemma_2)
+      apply (erule flow_state_lemma_3)
 sorry
 
 lemma abstract_value_flow_seq_preservation: "
