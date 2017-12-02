@@ -231,6 +231,13 @@ inductive abstract_value_flow_pool :: "abstract_value_env \<times> abstract_valu
     (\<V>, \<C>) \<parallel>\<lless> \<E>
   "
 
+lemma flow_state_to_flow_exp: "
+  (\<V>, \<C>) \<TTurnstile> <<RESULT x,\<rho>,\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>>> \<Longrightarrow> \<rho> x = Some \<omega> \<Longrightarrow> (\<V>, \<C>) \<Turnstile> e\<^sub>\<kappa>
+"
+ apply (erule abstract_value_flow_state.cases, auto)    
+ apply (erule abstract_value_flow_stack.cases, auto)
+done
+
 lemma flow_state_to_flow_env: "
   (\<V>, \<C>) \<TTurnstile> <<RESULT x,\<rho>,\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>>> \<Longrightarrow> \<rho> x = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<parallel>\<approx> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)
@@ -257,7 +264,25 @@ lemma flow_state_to_flow_env: "
  apply (erule flow_env.cases, auto)+
 done
 
-(* why does the type preservation proof from plt induct on \<turnstile> e : \<tau> ? instead of doing invert on e \<rightarrow> e'*)
+lemma flow_state_to_flow_stack: "
+  (\<V>, \<C>) \<TTurnstile> <<RESULT x,\<rho>,\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>>> \<Longrightarrow> \<rho> x = Some \<omega> \<Longrightarrow> (\<V>, \<C>) \<Turnstile> \<V> (result_var e\<^sub>\<kappa>) \<Rrightarrow> \<kappa>
+"
+ apply (erule abstract_value_flow_state.cases, auto)
+ apply (erule flow_env.cases, auto)
+ apply (drule spec)+
+ apply (erule impE, auto)
+ apply (erule abstract_value_flow_stack.cases, auto)+
+done
+
+lemma flow_state_lemma_1: "
+  (\<V>, \<C>) \<TTurnstile> <<RESULT x,\<rho>,\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>>> \<Longrightarrow> \<rho> x = Some \<omega> \<Longrightarrow> (\<V>, \<C>) \<TTurnstile> <<e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>),\<kappa>>>
+"
+ apply (rule abstract_value_flow_state.Any)
+    apply (erule flow_state_to_flow_exp, auto)
+   apply (erule flow_state_to_flow_env, auto)
+  apply (erule flow_state_to_flow_stack, auto)
+done
+
 theorem abstract_value_flow_state_preservation : "
   \<lbrakk>
     (\<V>, \<C>) \<TTurnstile> \<sigma>; 
@@ -266,11 +291,7 @@ theorem abstract_value_flow_state_preservation : "
   (\<V>, \<C>) \<TTurnstile> \<sigma>'
 "
  apply (erule seq_step.cases, auto)
-        apply (rule abstract_value_flow_state.Any)
-          apply (erule abstract_value_flow_state.cases, auto)    
-          apply (erule abstract_value_flow_stack.cases, auto)
-         apply (erule flow_state_to_flow_env, auto)
-        apply
+        apply (erule flow_state_lemma_1, auto)
 sorry
 
 lemma abstract_value_flow_seq_preservation: "
