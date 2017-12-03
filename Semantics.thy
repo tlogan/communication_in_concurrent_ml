@@ -35,25 +35,25 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
       \<rho> x\<^sub>s = Some \<lbrace>Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>; 
       \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l 
     \<rbrakk> \<Longrightarrow>
-    <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT _ |> _ in e, \<rho>, \<kappa>>> \<hookrightarrow> <<e\<^sub>l, \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l), \<langle>x, e, \<rho>\<rangle> # \<kappa>>>
+    <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e, \<rho>, \<kappa>>> \<hookrightarrow> <<e\<^sub>l, \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l), \<langle>x, e, \<rho>\<rangle> # \<kappa>>>
   " |
   Let_Case_Right: "
     \<lbrakk>
       \<rho> x\<^sub>s = Some \<lbrace>Right x\<^sub>r', \<rho>\<^sub>r\<rbrace>; 
       \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r 
     \<rbrakk> \<Longrightarrow>
-    <<LET x = CASE x\<^sub>s LEFT _ |> _ RIGHT x\<^sub>r |> e\<^sub>r in e, \<rho>, \<kappa>>> \<hookrightarrow> <<e\<^sub>r, \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r), \<langle>x, e, \<rho>\<rangle> # \<kappa>>>
+    <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e, \<rho>, \<kappa>>> \<hookrightarrow> <<e\<^sub>r, \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r), \<langle>x, e, \<rho>\<rangle> # \<kappa>>>
   " |
   Fst: "
     \<lbrakk> 
-      \<rho> x\<^sub>p = Some \<lbrace>Pair x\<^sub>1 _, \<rho>\<^sub>p\<rbrace>; 
+      \<rho> x\<^sub>p = Some \<lbrace>Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>; 
       \<rho>\<^sub>p x\<^sub>1 = Some \<omega> 
     \<rbrakk> \<Longrightarrow>
     <<LET x = FST x\<^sub>p in e, \<rho>, \<kappa>>> \<hookrightarrow> <<e, \<rho>(x \<mapsto> \<omega>), \<kappa>>>
   " |
   Snd: "
     \<lbrakk> 
-      \<rho> x\<^sub>p = Some \<lbrace>Pair _ x\<^sub>2, \<rho>\<^sub>p\<rbrace>; 
+      \<rho> x\<^sub>p = Some \<lbrace>Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>; 
       \<rho>\<^sub>p x\<^sub>2 = Some \<omega> 
     \<rbrakk> \<Longrightarrow>
     <<LET x = SND x\<^sub>p in e, \<rho>, \<kappa>>> \<hookrightarrow> <<e, \<rho>(x \<mapsto> \<omega>), \<kappa>>>
