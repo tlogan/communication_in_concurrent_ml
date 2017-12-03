@@ -1,11 +1,11 @@
 theory Communication_Topology_Analysis
-  imports Main Syntax Semantics Abstract_Value_Analysis
+  imports Main Syntax Semantics Abstract_Value_Flow_Analysis
 begin
 
 type_synonym abstract_path = "(var + unit) list"
 
 
-inductive path_in_exp' :: "abstract_value_env \<Rightarrow> abstract_path \<Rightarrow> exp \<Rightarrow> bool" where
+inductive path_in_exp' :: "abstract_env \<Rightarrow> abstract_path \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "path_in_exp' \<rho> [Inl x] (RESULT x)" |
   Let_Unit: "
     path_in_exp' \<V> \<pi> e \<Longrightarrow> 
