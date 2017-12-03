@@ -596,15 +596,45 @@ lemma flow_state_to_flow_env_8: "
         apply (erule flow_over_state.cases, auto)
         apply (erule flow.cases, auto, (drule spec)+, auto)
          apply (erule flow_over_env.cases, auto, (drule spec)+, auto)
-        apply (erule flow_over_env.cases, auto)        
-sorry
+        apply (erule flow_over_env.cases, auto)
+       apply (erule flow_over_state.cases, auto)
+       apply (erule flow_over_env.cases, auto)
+      apply (erule flow_over_state.cases, auto)
+      apply (erule flow_over_env.cases, auto, (drule spec)+, auto)
+      apply (erule flow_over_value.cases, auto)
+     apply (erule flow_over_state.cases, auto)
+     apply (erule flow_over_env.cases, auto)
+    apply (erule flow_over_state.cases, auto)
+    apply (erule flow.cases, auto, (drule spec)+, auto)
+     apply (erule flow_over_env.cases, auto, (drule spec)+, auto)
+    apply (erule flow_over_env.cases, auto)
+   apply (erule flow_over_state.cases, auto)
+   apply (erule flow_over_env.cases, auto)
+  apply (rename_tac x' \<omega>)
+  apply (erule flow_over_state.cases, auto)
+  apply (erule flow_over_env.cases, auto, (drule spec)+, auto)
+  apply (erule flow_over_value.cases, auto)
+  apply (erule flow_over_env.cases, auto)
+ apply (erule flow_over_state.cases, auto)
+ apply (erule flow_over_env.cases, auto, (drule spec)+, auto)
+ apply (erule flow_over_value.cases, auto)
+ apply (erule flow_over_env.cases, auto)
+done
 
 lemma flow_state_to_flow_stack_8: "
   (\<V>, \<C>) \<TTurnstile> <<LET x = APP f x\<^sub>a in e,\<rho>,\<kappa>>> \<Longrightarrow> 
   \<rho> f = Some \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace> \<Longrightarrow> \<rho> x\<^sub>a = Some \<omega>\<^sub>a \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
 "
-sorry
+ apply (rule flow_over_stack.Nonempty)
+    apply (erule flow_over_state.cases, auto) 
+    apply (erule flow.cases, auto)
+    apply (erule flow_over_env.cases, (drule spec)+, auto)
+   apply (erule flow_over_state.cases, auto) 
+   apply (erule flow.cases, auto)
+  apply (erule flow_over_state.cases, auto) 
+ apply (erule flow_over_state.cases, auto) 
+done
 
 lemma flow_over_state_8: "
   (\<V>, \<C>) \<TTurnstile> <<LET x = APP f x\<^sub>a in e,\<rho>,\<kappa>>> \<Longrightarrow>
