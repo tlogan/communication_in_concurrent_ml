@@ -356,15 +356,8 @@ lemma flow_state_to_flow_exp_4: "
  apply (erule flow_over_state.cases, auto)
  apply (erule flow.cases, auto)
  apply (erule flow_over_env.cases, auto)
- apply (drule spec)+
- apply (drule mp, auto)
+ apply ((drule spec)+, auto)
 done
-
-lemma abc: "
-  |\<omega>| \<in> \<V> x' \<Longrightarrow>
-  (\<V> x') \<subseteq> (\<V> x) \<Longrightarrow> |\<omega>| \<in> \<V> x
-"
-sorry
 
 lemma flow_state_to_flow_env_4: "
   (\<V>, \<C>) \<TTurnstile> <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e,\<rho>,\<kappa>>> \<Longrightarrow> 
@@ -397,7 +390,16 @@ lemma flow_state_to_flow_stack_4: "
   \<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace> \<Longrightarrow> \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
 "
-sorry
+ apply (rule flow_over_stack.Nonempty)
+    apply (erule flow_over_state.cases, auto, rename_tac \<omega>)
+    apply (erule flow_over_env.cases, auto)
+    apply ((drule spec)+, auto)
+    apply (erule flow.cases, auto)
+   apply (erule flow_over_state.cases, auto)
+   apply (erule flow.cases, auto)
+  apply (erule flow_over_state.cases, auto)
+ apply (erule flow_over_state.cases, auto)
+done
 
 lemma flow_over_state_4: "
   (\<V>, \<C>) \<TTurnstile> <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e,\<rho>,\<kappa>>> \<Longrightarrow> 
@@ -408,6 +410,70 @@ lemma flow_over_state_4: "
     apply (erule flow_state_to_flow_exp_4, simp, auto)
    apply (erule flow_state_to_flow_env_4, simp, auto)
   apply (erule flow_state_to_flow_stack_4, simp, auto)
+done
+
+lemma flow_state_to_flow_exp_5: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e,\<rho>,\<kappa>>> \<Longrightarrow> 
+  \<rho> x\<^sub>s = Some \<lbrace>prim.Right x\<^sub>r', \<rho>\<^sub>r\<rbrace> \<Longrightarrow> 
+  \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> (\<V>, \<C>) \<Turnstile> e\<^sub>r
+"
+ apply (erule flow_over_state.cases, auto)
+ apply (erule flow.cases, auto)
+ apply (erule flow_over_env.cases, auto)
+ apply ((drule spec)+, auto)
+done
+
+lemma flow_state_to_flow_env_5: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e,\<rho>,\<kappa>>> \<Longrightarrow> 
+  \<rho> x\<^sub>s = Some \<lbrace>prim.Right x\<^sub>r', \<rho>\<^sub>r\<rbrace> \<Longrightarrow> \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> 
+  (\<V>, \<C>) \<parallel>\<approx> \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r)
+"
+ apply (rule flow_over_value_flow_over_env.Any, auto)
+    apply (erule flow_over_state.cases, auto)
+    apply (erule flow_over_env.cases, auto)
+    apply ((drule spec)+, auto)
+    apply (erule flow_over_value.cases, auto)
+    apply (erule flow_over_env.cases, auto)
+    apply ((drule spec)+, auto)
+    apply (erule flow.cases, auto)
+   apply (erule flow_over_state.cases, auto)
+   apply (erule flow_over_env.cases, auto)
+   apply ((drule spec)+, auto)
+   apply (erule flow_over_value.cases, auto)
+   apply (erule flow_over_env.cases, auto)
+  apply (rename_tac x' \<omega>')
+  apply (erule flow_over_state.cases, auto)
+  apply (erule flow_over_env.cases, auto)
+ apply (rename_tac x' \<omega>')
+ apply (erule flow_over_state.cases, auto)
+ apply (erule flow_over_env.cases, auto)
+done
+
+lemma flow_state_to_flow_stack_5: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e,\<rho>,\<kappa>>> \<Longrightarrow>
+  \<rho> x\<^sub>s = Some \<lbrace>prim.Right x\<^sub>r', \<rho>\<^sub>r\<rbrace> \<Longrightarrow> \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
+"
+ apply (rule flow_over_stack.Nonempty)
+    apply (erule flow_over_state.cases, auto, rename_tac \<omega>)
+    apply (erule flow_over_env.cases, auto)
+    apply ((drule spec)+, auto)
+    apply (erule flow.cases, auto)
+   apply (erule flow_over_state.cases, auto)
+   apply (erule flow.cases, auto)
+  apply (erule flow_over_state.cases, auto)
+ apply (erule flow_over_state.cases, auto)
+done
+
+lemma flow_over_state_5: "
+  (\<V>, \<C>) \<TTurnstile> <<LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e,\<rho>,\<kappa>>> \<Longrightarrow> 
+  \<rho> x\<^sub>s = Some \<lbrace>prim.Right x\<^sub>r', \<rho>\<^sub>r\<rbrace> \<Longrightarrow> 
+  \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> (\<V>, \<C>) \<TTurnstile> <<e\<^sub>r,\<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r),\<langle>x,e,\<rho>\<rangle> # \<kappa>>>
+"
+ apply (rule flow_over_state.Any)
+    apply (erule flow_state_to_flow_exp_5, simp, auto)
+   apply (erule flow_state_to_flow_env_5, simp, auto)
+  apply (erule flow_state_to_flow_stack_5, simp, auto)
 done
 
 theorem flow_over_state_preservation : "
@@ -421,6 +487,8 @@ theorem flow_over_state_preservation : "
         apply (erule flow_over_state_1, auto)
        apply (erule flow_over_state_2)
       apply (erule flow_over_state_3)
+     apply (erule flow_over_state_4, simp, auto)
+    apply (erule flow_over_state_5, simp, auto)
 sorry
 
 lemma flow_seq_preservation: "
