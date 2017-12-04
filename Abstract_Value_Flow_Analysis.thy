@@ -665,7 +665,7 @@ theorem flow_over_state_preservation : "
  apply (erule flow_over_state_8, auto)
 done
 
-lemma flow_seq_preservation: "
+lemma flow_seq_step_preservation: "
   (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (<<LET x = b in e,\<rho>,\<kappa>>>) \<Longrightarrow> 
   <<LET x = b in e,\<rho>,\<kappa>>> \<hookrightarrow> \<sigma>' \<Longrightarrow> (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> ;; x \<mapsto> \<sigma>')
 "
@@ -684,7 +684,7 @@ theorem flow_preservation : "
   (\<V>, \<C>) \<parallel>\<lless> \<E>'
 "
  apply (erule concur_step.cases, auto)
-  apply (erule flow_seq_preservation, auto)
+  apply (erule flow_seq_step_preservation, auto)
 sorry
 
 theorem flow_preservation_star' : "

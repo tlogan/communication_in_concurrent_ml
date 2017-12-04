@@ -174,7 +174,7 @@ by meson
 *)  
   
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
-  Lift: "
+  Seq_Step: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
       \<E> \<pi> = Some (<<LET x = b in e, \<rho>, \<kappa>>>) ;
