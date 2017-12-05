@@ -182,7 +182,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E>(\<pi>;;x \<mapsto> \<sigma>')
   " |
-  Let_Sync: "
+  Sync: "
     \<lbrakk>
    
       leaf \<E> \<pi>\<^sub>s ;
