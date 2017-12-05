@@ -676,6 +676,96 @@ lemma flow_seq_step_preservation: "
  apply (erule flow_over_pool.cases, auto)
 done
 
+
+lemma flow_let_sync_preservation: "
+  (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow>
+  \<E>' = \<E>(\<pi>\<^sub>s ;; x\<^sub>s \<mapsto> <<e\<^sub>s,\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>),\<kappa>\<^sub>s>>, \<pi>\<^sub>r ;; x\<^sub>r \<mapsto> <<e\<^sub>r,\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m),\<kappa>\<^sub>r>>) \<Longrightarrow>
+  leaf \<E> \<pi>\<^sub>s \<Longrightarrow> \<E> \<pi>\<^sub>s = Some (<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>) \<Longrightarrow>
+  \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> \<Longrightarrow> \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m \<Longrightarrow>
+  leaf \<E> \<pi>\<^sub>r \<Longrightarrow> \<E> \<pi>\<^sub>r = Some (<<LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r,\<rho>\<^sub>r,\<kappa>\<^sub>r>>) \<Longrightarrow>
+  \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow> \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow> 
+  (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi>\<^sub>s ;; x\<^sub>s \<mapsto> <<e\<^sub>s,\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>),\<kappa>\<^sub>s>>, \<pi>\<^sub>r ;; x\<^sub>r \<mapsto> <<e\<^sub>r,\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m),\<kappa>\<^sub>r>>)
+"
+sorry
+
+lemma flow_let_chan_preservation: "
+  (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow> \<E>' = \<E>(\<pi> ;; x \<mapsto> <<e,\<rho>(x \<mapsto> \<lbrace>Ch \<pi> x\<rbrace>),\<kappa>>>) \<Longrightarrow> 
+  leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (<<LET x = CHAN \<lparr>\<rparr> in e,\<rho>,\<kappa>>>) \<Longrightarrow> 
+  (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> ;; x \<mapsto> <<e,\<rho>(x \<mapsto> \<lbrace>Ch \<pi> x\<rbrace>),\<kappa>>>)
+"
+sorry
+
+
+lemma flow_over_pool_to_exp_3: "
+  (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow> \<E>' = \<E>(\<pi> ;; x \<mapsto> <<e,\<rho>(x \<mapsto> \<lbrace>\<rbrace>),\<kappa>>>, \<pi>;;. \<mapsto> <<e\<^sub>c,\<rho>,[]>>) \<Longrightarrow> 
+  leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (<<LET x = SPAWN e\<^sub>c in e,\<rho>,\<kappa>>>) \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile> e
+"sorry
+
+lemma flow_over_pool_to_env_3: "
+  (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow> \<E>' = \<E>(\<pi> ;; x \<mapsto> <<e,\<rho>(x \<mapsto> \<lbrace>\<rbrace>),\<kappa>>>, \<pi>;;. \<mapsto> <<e\<^sub>c,\<rho>,[]>>) \<Longrightarrow> 
+  leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (<<LET x = SPAWN e\<^sub>c in e,\<rho>,\<kappa>>>) \<Longrightarrow> 
+  (\<V>, \<C>) \<parallel>\<approx> \<rho>(x \<mapsto> \<lbrace>\<rbrace>)"
+sorry
+
+lemma flow_over_pool_to_stack_3: "
+  (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow> \<E>' = \<E>(\<pi> ;; x \<mapsto> <<e,\<rho>(x \<mapsto> \<lbrace>\<rbrace>),\<kappa>>>, \<pi>;;. \<mapsto> <<e\<^sub>c,\<rho>,[]>>) \<Longrightarrow> 
+  leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (<<LET x = SPAWN e\<^sub>c in e,\<rho>,\<kappa>>>) \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
+"
+sorry
+
+lemma flow_over_pool_to_exp_4: "
+  (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow> \<E>' = \<E>(\<pi> ;; x \<mapsto> <<e,\<rho>(x \<mapsto> \<lbrace>\<rbrace>),\<kappa>>>, \<pi>;;. \<mapsto> <<e\<^sub>c,\<rho>,[]>>) \<Longrightarrow> 
+  leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (<<LET x = SPAWN e\<^sub>c in e,\<rho>,\<kappa>>>) \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile> e\<^sub>c
+"   
+ apply (erule flow_over_pool.cases, auto)
+ apply (drule spec[of _ \<pi>])
+ apply (drule spec[of _ "<<LET x = SPAWN e\<^sub>c in e,\<rho>,\<kappa>>>"], auto)
+ apply (erule flow_over_state.cases, auto)
+ apply (erule flow.cases, auto)
+done
+
+lemma flow_over_pool_to_env_4: "
+  (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow> \<E>' = \<E>(\<pi> ;; x \<mapsto> <<e,\<rho>(x \<mapsto> \<lbrace>\<rbrace>),\<kappa>>>, \<pi>;;. \<mapsto> <<e\<^sub>c,\<rho>,[]>>) \<Longrightarrow> 
+  leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (<<LET x = SPAWN e\<^sub>c in e,\<rho>,\<kappa>>>) \<Longrightarrow> 
+  (\<V>, \<C>) \<parallel>\<approx> \<rho>
+"   
+ apply (erule flow_over_pool.cases, auto)
+ apply (drule spec[of _ \<pi>])
+ apply (drule spec[of _ "<<LET x = SPAWN e\<^sub>c in e,\<rho>,\<kappa>>>"], auto)
+ apply (erule flow_over_state.cases, auto)
+done
+
+lemma flow_over_pool_to_stack_4: "
+  (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow> \<E>' = \<E>(\<pi> ;; x \<mapsto> <<e,\<rho>(x \<mapsto> \<lbrace>\<rbrace>),\<kappa>>>, \<pi>;;. \<mapsto> <<e\<^sub>c,\<rho>,[]>>) \<Longrightarrow> 
+  leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (<<LET x = SPAWN e\<^sub>c in e,\<rho>,\<kappa>>>) \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile> \<V> (\<lfloor>e\<^sub>c\<rfloor>) \<Rrightarrow> []
+"   
+ apply (rule flow_over_stack.Empty)
+done
+
+
+lemma flow_let_spawn_preservation: "
+  (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow> \<E>' = \<E>(\<pi> ;; x \<mapsto> <<e,\<rho>(x \<mapsto> \<lbrace>\<rbrace>),\<kappa>>>, \<pi>;;. \<mapsto> <<e\<^sub>c,\<rho>,[]>>) \<Longrightarrow>
+  leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (<<LET x = SPAWN e\<^sub>c in e,\<rho>,\<kappa>>>) \<Longrightarrow> 
+  (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi> ;; x \<mapsto> <<e,\<rho>(x \<mapsto> \<lbrace>\<rbrace>),\<kappa>>>, \<pi>;;. \<mapsto> <<e\<^sub>c,\<rho>,[]>>)
+"
+  apply (rule flow_over_pool.Any, auto)
+    apply (rule flow_over_state.Any)
+     apply (erule flow_over_pool_to_exp_3, auto)
+    apply (erule flow_over_pool_to_env_3, auto)
+   apply (erule flow_over_pool_to_stack_3, auto)
+   apply (unfold not_def, erule impE, auto)
+   apply (rule flow_over_state.Any)
+     apply (erule flow_over_pool_to_exp_4, auto)
+    apply (erule flow_over_pool_to_env_4, auto)
+   apply (erule flow_over_pool_to_stack_4, auto)
+  apply (erule flow_over_pool.cases, auto)
+done
+
 theorem flow_preservation : "
   \<lbrakk>
     (\<V>, \<C>) \<parallel>\<lless> \<E>; 
@@ -684,8 +774,11 @@ theorem flow_preservation : "
   (\<V>, \<C>) \<parallel>\<lless> \<E>'
 "
  apply (erule concur_step.cases, auto)
-  apply (erule flow_seq_step_preservation, auto)
-sorry
+    apply (erule flow_seq_step_preservation, auto)
+   apply ((erule flow_let_sync_preservation; blast?), auto)
+  apply (erule flow_let_chan_preservation, auto)
+ apply (erule flow_let_spawn_preservation, auto)
+done
 
 theorem flow_preservation_star' : "
   \<E> \<rightarrow>* \<E>' \<Longrightarrow>

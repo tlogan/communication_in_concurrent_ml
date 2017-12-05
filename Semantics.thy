@@ -219,7 +219,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E>(
       \<pi>;;x \<mapsto> (<<e, \<rho>(x \<mapsto> \<lbrace>\<rbrace>), \<kappa>>>), 
-      \<pi>;;. \<mapsto> (<<e\<^sub>c, \<rho>, \<kappa>>>) 
+      \<pi>;;. \<mapsto> (<<e\<^sub>c, \<rho>, []>>) 
     )
   "
 
