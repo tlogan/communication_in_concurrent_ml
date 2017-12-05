@@ -271,7 +271,6 @@ lemma flow_over_state_to_env: "
  apply (drule spec[of _ x]; auto)
   apply (erule flow_over_stack.cases; auto)+
  apply (erule flow_over_env.cases; auto)+
-
 done
 
 lemma flow_over_state_to_stack: "
@@ -304,12 +303,14 @@ lemma flow_over_state_to_env_2: "
   (\<V>, \<C>) \<TTurnstile> <<LET x = \<lparr>\<rparr> in e,\<rho>,\<kappa>>> \<Longrightarrow> (\<V>, \<C>) \<parallel>\<approx> \<rho>(x \<mapsto> \<lbrace>\<rbrace>)
 "
  apply (rule flow_over_value_flow_over_env.Any, auto)
-    apply (erule flow_over_state.cases, auto)
-    apply (erule flow.cases, auto)
-   apply (rule flow_over_value_flow_over_env.Unit)
-  apply (rename_tac x' \<omega>')
+     apply (erule flow_over_state.cases, auto)
+     apply (erule flow.cases, auto)
+    apply (rule flow_over_value_flow_over_env.Unit)
+   apply (rename_tac x' \<omega>')
+   apply (erule flow_over_state.cases, auto)
+   apply (erule flow_over_env.cases, auto)
   apply (erule flow_over_state.cases, auto)
-  apply (erule flow_over_env.cases, auto)
+ apply (erule flow_over_env.cases, auto)
  apply (erule flow_over_state.cases, auto)
  apply (erule flow_over_env.cases, auto)
 done
@@ -340,14 +341,16 @@ lemma flow_over_state_to_env_3: "
   (\<V>, \<C>) \<TTurnstile> <<LET x = Prim p in e,\<rho>,\<kappa>>> \<Longrightarrow> (\<V>, \<C>) \<parallel>\<approx> \<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>)
 "
  apply (rule flow_over_value_flow_over_env.Any, auto)
+     apply (erule flow_over_state.cases, auto)
+     apply (erule flow.cases, auto)
     apply (erule flow_over_state.cases, auto)
-    apply (erule flow.cases, auto)
+    apply ((erule flow.cases, auto); rule, auto)
+   apply (rename_tac x' \<omega>')
    apply (erule flow_over_state.cases, auto)
-   apply ((erule flow.cases, auto); rule, auto)
-  apply (rename_tac x' \<omega>')
-  apply (erule flow_over_state.cases, auto)
+   apply (erule flow_over_env.cases, auto)
+   apply (erule flow_over_state.cases, auto)
   apply (erule flow_over_env.cases, auto)
- apply (erule flow_over_state.cases, auto)
+  apply (erule flow_over_state.cases, auto)
  apply (erule flow_over_env.cases, auto)
 done
 
