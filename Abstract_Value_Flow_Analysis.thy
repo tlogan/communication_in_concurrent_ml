@@ -102,12 +102,12 @@ inductive flow :: "abstract_env \<times> abstract_env \<Rightarrow> exp \<Righta
     \<lbrakk>
       \<forall> x\<^sub>s\<^sub>c x\<^sub>m x\<^sub>c . 
         ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> \<V> x\<^sub>e \<longrightarrow> 
-        {^Chan x\<^sub>c} \<subseteq> \<V> x\<^sub>s\<^sub>c \<longrightarrow>
+        ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<longrightarrow>
         {^\<lparr>\<rparr>} \<subseteq> \<V> x \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
       ;
       \<forall> x\<^sub>r\<^sub>c x\<^sub>c . 
         ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<longrightarrow>
-        {^Chan x\<^sub>c} \<subseteq> \<V> x\<^sub>r\<^sub>c \<longrightarrow>
+        ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow>
         \<C> x\<^sub>c \<subseteq> \<V> x
       ;
       (\<V>, \<C>) \<Turnstile> e
@@ -793,41 +793,37 @@ lemma flow_over_pool_to_env_1: "
 "
  apply (rule flow_over_value_flow_over_env.Any, auto)
     apply (erule flow_over_pool.cases, auto)
-
     apply (frule spec[of _ \<pi>\<^sub>s])
     apply (drule spec[of _ \<pi>\<^sub>r])
-
     apply (drule spec[of _ "<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>"])
     apply (drule spec[of _ "<<LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r,\<rho>\<^sub>r,\<kappa>\<^sub>r>>"])
-    
     apply (drule mp[of "\<E> \<pi>\<^sub>s = Some (<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>) "])
     apply (drule mp[of "\<E> \<pi>\<^sub>r = Some (<<LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r,\<rho>\<^sub>r,\<kappa>\<^sub>r>>)"], auto)
-
     apply (erule flow_over_state.cases[of "(\<V>, \<C>)" "<<LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r,\<rho>\<^sub>r,\<kappa>\<^sub>r>>"], auto)
     apply (erule flow_over_state.cases[of "(\<V>, \<C>)" "<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>"], auto)
-
-    apply (erule flow_over_env.cases, auto)
-    apply (erule flow_over_env.cases, auto)
-
+    apply (erule flow_over_env.cases[of "(\<V>, \<C>)" "\<rho>\<^sub>r"], auto)
+    apply (erule flow_over_env.cases[of "(\<V>, \<C>)" "\<rho>\<^sub>s"], auto)
+    apply (thin_tac "\<forall>x \<pi> x\<^sub>c. \<rho>\<^sub>r x = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace> \<longrightarrow> ^Chan x\<^sub>c \<in> \<C> x\<^sub>c")
+    apply (thin_tac "\<forall>x \<pi> x\<^sub>c. \<rho>\<^sub>s x = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace> \<longrightarrow> ^Chan x\<^sub>c \<in> \<C> x\<^sub>c")
     apply (drule spec[of _ x\<^sub>r\<^sub>e])
-    apply (drule spec[of _ bogus\<^sub>r\<^sub>e])
-
     apply (drule spec[of _ x\<^sub>s\<^sub>e])
-    apply (drule spec[of _ bogus\<^sub>s\<^sub>e])
-
     apply (drule spec[of _ "\<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"])
-    apply (drule spec[of _ bogus\<^sub>r\<^sub>\<pi>])
-
     apply (drule spec[of _ "\<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"])
-    apply (drule spec[of _ bogus\<^sub>s\<^sub>\<pi>])
-
-    apply (drule spec[of _ bogus\<^sub>c])
-    apply (drule spec[of _ bogus\<^sub>c])
-    
     apply (drule mp[of "\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"], simp)
-    apply (drule mp[of "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"], simp)
-    apply (erule conjE)+
-
+    apply (drule mp[of "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"]; auto)
+    apply (erule flow_over_value.cases[of "(\<V>, \<C>)" "\<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"]; auto)
+    apply (erule flow_over_value.cases[of "(\<V>, \<C>)" "\<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> "]; auto)
+    apply (erule flow_over_env.cases[of "(\<V>, \<C>)" "\<rho>\<^sub>r\<^sub>e"], auto)
+    apply (erule flow_over_env.cases[of "(\<V>, \<C>)" "\<rho>\<^sub>s\<^sub>e"], auto)
+    apply (erule flow.cases[of "(\<V>, \<C>)" "LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r"]; auto)
+    apply (erule flow.cases[of "(\<V>, \<C>)" "LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s"]; auto)
+    apply (thin_tac "\<forall>x\<^sub>s\<^sub>c x\<^sub>m. ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> \<V> x\<^sub>r\<^sub>e \<longrightarrow> (\<forall>x\<^sub>c. ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<longrightarrow> ^\<lparr>\<rparr> \<in> \<V> x\<^sub>r \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c)")
+    apply (thin_tac "\<forall>x\<^sub>r\<^sub>c. ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>s\<^sub>e \<longrightarrow> (\<forall>x\<^sub>c. ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow> \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>s)")
+    apply (drule spec[of _ x\<^sub>r\<^sub>c])
+    apply (drule spec[of _ x\<^sub>r\<^sub>c])
+    apply (drule spec[of _ x\<^sub>s\<^sub>c])
+    apply (drule spec[of _ x\<^sub>s\<^sub>c])
+    apply (case_tac c; auto)
 sorry
 
 lemma flow_over_pool_to_stack_1: "
