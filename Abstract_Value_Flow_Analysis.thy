@@ -791,7 +791,7 @@ lemma flow_over_pool_to_env_1: "
   \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow> \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow> \<pi>\<^sub>s \<noteq> \<pi>\<^sub>r \<Longrightarrow> 
   (\<V>, \<C>) \<parallel>\<approx> \<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)
 "
- apply (rule flow_over_value_flow_over_env.Any, auto)
+apply (rule flow_over_value_flow_over_env.Any; auto)
     apply (erule flow_over_pool.cases, auto)
     apply (frule spec[of _ \<pi>\<^sub>s])
     apply (drule spec[of _ \<pi>\<^sub>r])
@@ -824,7 +824,23 @@ lemma flow_over_pool_to_env_1: "
     apply (drule spec[of _ x\<^sub>s\<^sub>c])
     apply (drule spec[of _ x\<^sub>s\<^sub>c])
     apply (case_tac c; auto)
-sorry
+    apply (rule flow_over_value_flow_over_env.Unit)
+   apply (erule flow_over_pool.cases, auto)
+   apply (drule spec[of _ \<pi>\<^sub>s])
+   apply (drule spec[of _ "<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>"]; auto)
+   apply (erule flow_over_state.cases; auto)
+   apply (drule flow_over_env.cases; auto)
+  apply (erule flow_over_pool.cases, auto)
+  apply (drule spec[of _ \<pi>\<^sub>s])
+  apply (drule spec[of _ "<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>"]; auto)
+  apply (erule flow_over_state.cases; auto)
+  apply (drule flow_over_env.cases; auto)
+ apply (erule flow_over_pool.cases, auto)
+ apply (drule spec[of _ \<pi>\<^sub>s])
+ apply (drule spec[of _ "<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>"]; auto)
+ apply (erule flow_over_state.cases[of "(\<V>, \<C>)" "<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>"]; auto)
+ apply (erule flow_over_env.cases[of "(\<V>, \<C>)" "\<rho>\<^sub>s"], auto)  
+done
 
 lemma flow_over_pool_to_stack_1: "
   (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow>
