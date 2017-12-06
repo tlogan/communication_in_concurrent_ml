@@ -768,8 +768,8 @@ done
 
 lemma flow_over_pool_to_exp_1: "
   (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow>
-  \<E> \<pi>\<^sub>s = Some (<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>) \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile> e\<^sub>s
+  \<E> \<pi>\<^sub>s = Some (<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>) \<Longrightarrow>
+  \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow> \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow> \<pi>\<^sub>s \<noteq> \<pi>\<^sub>r \<Longrightarrow> (\<V>, \<C>) \<Turnstile> e\<^sub>s
 "
  apply (erule flow_over_pool.cases, auto)
  apply (drule spec[of _ \<pi>\<^sub>s])
@@ -788,21 +788,47 @@ lemma flow_over_pool_to_env_1: "
   \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m \<Longrightarrow>
   leaf \<E> \<pi>\<^sub>r \<Longrightarrow>
   \<E> \<pi>\<^sub>r = Some (<<LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r,\<rho>\<^sub>r,\<kappa>\<^sub>r>>) \<Longrightarrow>
-  \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow> \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow> \<pi>\<^sub>s \<noteq> \<pi>\<^sub>r \<Longrightarrow>
+  \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow> \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow> \<pi>\<^sub>s \<noteq> \<pi>\<^sub>r \<Longrightarrow> 
   (\<V>, \<C>) \<parallel>\<approx> \<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)
 "
  apply (rule flow_over_value_flow_over_env.Any, auto)
     apply (erule flow_over_pool.cases, auto)
-    apply (drule spec[of _ \<pi>\<^sub>s])
-    apply (drule spec[of _ "<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>"]; auto)
-    apply (erule flow_over_state.cases, auto)
+
+    apply (frule spec[of _ \<pi>\<^sub>s])
+    apply (drule spec[of _ \<pi>\<^sub>r])
+
+    apply (drule spec[of _ "<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>"])
+    apply (drule spec[of _ "<<LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r,\<rho>\<^sub>r,\<kappa>\<^sub>r>>"])
+    
+    apply (drule mp[of "\<E> \<pi>\<^sub>s = Some (<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>) "])
+    apply (drule mp[of "\<E> \<pi>\<^sub>r = Some (<<LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r,\<rho>\<^sub>r,\<kappa>\<^sub>r>>)"], auto)
+
+    apply (erule flow_over_state.cases[of "(\<V>, \<C>)" "<<LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r,\<rho>\<^sub>r,\<kappa>\<^sub>r>>"], auto)
+    apply (erule flow_over_state.cases[of "(\<V>, \<C>)" "<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>"], auto)
+
     apply (erule flow_over_env.cases, auto)
+    apply (erule flow_over_env.cases, auto)
+
+    apply (drule spec[of _ x\<^sub>r\<^sub>e])
+    apply (drule spec[of _ bogus\<^sub>r\<^sub>e])
+
     apply (drule spec[of _ x\<^sub>s\<^sub>e])
-    apply (drule spec[of _ x\<^sub>s\<^sub>c])
+    apply (drule spec[of _ bogus\<^sub>s\<^sub>e])
+
+    apply (drule spec[of _ "\<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"])
+    apply (drule spec[of _ bogus\<^sub>r\<^sub>\<pi>])
+
     apply (drule spec[of _ "\<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"])
-    apply (drule spec[of _ \<pi>])
-    apply (drule spec[of _ x\<^sub>c]; simp)
-done
+    apply (drule spec[of _ bogus\<^sub>s\<^sub>\<pi>])
+
+    apply (drule spec[of _ bogus\<^sub>c])
+    apply (drule spec[of _ bogus\<^sub>c])
+    
+    apply (drule mp[of "\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"], simp)
+    apply (drule mp[of "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"], simp)
+    apply (erule conjE)+
+
+sorry
 
 lemma flow_over_pool_to_stack_1: "
   (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow>
@@ -875,7 +901,7 @@ lemma flow_over_pool_to_env_2: "
     apply (drule spec[of _ x\<^sub>r\<^sub>c])
     apply (drule spec[of _ x\<^sub>m], auto)
 
-done
+sorry
 
 lemma flow_over_pool_to_stack_2: "
   (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow>
@@ -892,12 +918,15 @@ done
 lemma flow_let_sync_preservation: "
   (\<V>, \<C>) \<parallel>\<lless> \<E> \<Longrightarrow>
   \<E>' = \<E>(\<pi>\<^sub>s ;; x\<^sub>s \<mapsto> <<e\<^sub>s,\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>),\<kappa>\<^sub>s>>, \<pi>\<^sub>r ;; x\<^sub>r \<mapsto> <<e\<^sub>r,\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m),\<kappa>\<^sub>r>>) \<Longrightarrow>
-  leaf \<E> \<pi>\<^sub>s \<Longrightarrow> \<E> \<pi>\<^sub>s = Some (<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>) \<Longrightarrow>
-  \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> \<Longrightarrow> \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow>
+  leaf \<E> \<pi>\<^sub>s \<Longrightarrow>
+  \<E> \<pi>\<^sub>s = Some (<<LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s,\<rho>\<^sub>s,\<kappa>\<^sub>s>>) \<Longrightarrow>
+  \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow>
   \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m \<Longrightarrow>
-  leaf \<E> \<pi>\<^sub>r \<Longrightarrow> \<E> \<pi>\<^sub>r = Some (<<LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r,\<rho>\<^sub>r,\<kappa>\<^sub>r>>) \<Longrightarrow>
-  \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow> \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow> 
-  (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi>\<^sub>s ;; x\<^sub>s \<mapsto> <<e\<^sub>s,\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>),\<kappa>\<^sub>s>>, \<pi>\<^sub>r ;; x\<^sub>r \<mapsto> <<e\<^sub>r,\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m),\<kappa>\<^sub>r>>)
+  leaf \<E> \<pi>\<^sub>r \<Longrightarrow>
+  \<E> \<pi>\<^sub>r = Some (<<LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r,\<rho>\<^sub>r,\<kappa>\<^sub>r>>) \<Longrightarrow>
+  \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow> (\<V>, \<C>) \<parallel>\<lless> \<E>(\<pi>\<^sub>s ;; x\<^sub>s \<mapsto> <<e\<^sub>s,\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>),\<kappa>\<^sub>s>>, \<pi>\<^sub>r ;; x\<^sub>r \<mapsto> <<e\<^sub>r,\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m),\<kappa>\<^sub>r>>)
 "
  apply (rule flow_over_pool.Any, auto)
      apply (rule flow_over_state.Any)
