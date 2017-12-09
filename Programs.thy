@@ -1,5 +1,7 @@
 theory Programs
   imports Main Syntax Semantics "~~/src/HOL/Library/Sublist" "~~/src/HOL/IMP/Star" "~~/src/HOL/Eisbach/Eisbach_Tools"
+    Abstract_Value_Flow_Analysis Abstract_Value_Flow_Soundness
+    Communication_Topology_Analysis
 begin
     
 abbreviation a where "a \<equiv> Var ''a''"
@@ -57,13 +59,15 @@ definition prog_one where
   "
  
 theorem prog_one_properties: "single_receiver prog_one a"
-  apply (simp add: single_receiver_def single_side_def state_pool_possible_def prog_one_def, auto)
+  apply (unfold single_receiver_def single_side_def single_side'_def recv_sites_def prog_one_def)
+  apply auto
   apply topo_solve+
 done
 
 
 theorem prog_one_properties2: "single_sender prog_one a"
-  apply (simp add: single_sender_def single_side_def state_pool_possible_def prog_one_def, auto)
+  apply (unfold single_sender_def single_side_def single_side'_def send_sites_def prog_one_def)
+  apply auto
   apply topo_solve+
 done
 
@@ -101,8 +105,6 @@ definition prog_three where
     .w
   "
   
-value "normalize prog_three"
-  
 definition prog_four where
   "prog_four = 
     .LET a = .FN f x .
@@ -112,52 +114,5 @@ definition prog_four where
     in
     .APP .a (.LEFT (.LEFT (.LEFT (.RIGHT .\<lparr>\<rparr>))))
   "
-  
-value "normalize prog_four"
-
-inductive abc :: "nat \<Rightarrow> nat \<Rightarrow> bool" where 
-  abceq: "
-    ((qqq :: nat) = (qqqq :: nat)) \<Longrightarrow>
-    (abc qqq qqqq)
-  "
-
-
-lemma TrueI: True
-  unfolding True_def 
-apply (rule refl)
-done
-
-
-
-inductive sorted :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> bool" where
-Nil : "sorted P Nil" |
-Single : "sorted P (Cons xx Nil)" |
-Cons : "P xx yy \<Longrightarrow> sorted P (Cons yy yys) \<Longrightarrow> sorted P (Cons xx (Cons yy yys))"
-
-datatype nat =
-  Z | S nat
-
-inductive lte :: "nat \<Rightarrow> nat \<Rightarrow> bool" where
-  Eq : "lte n n" |
-  Lt : "lte n1 n2 \<Longrightarrow> lte n1 (S n2) "
-
-lemma "sorted lte [Z, (S Z), (S Z), (S (S (S Z)))]"
- apply (rule Cons)
-  apply (rule Lt)
-  apply (rule Eq)
- apply (rule Cons)
-  apply (rule Eq)
- apply (rule Cons)
-  apply (rule Lt)
-  apply (rule Lt)
-  apply (rule Eq)
- apply (rule Single)
-done
-
-definition Xll :: "('a \<Rightarrow> bool) \<Rightarrow> bool"  (binder "x$" 10)
-  where "Xll P \<equiv> (P = (\<lambda>x. True))"
-
-value "x$ P . P"
-value "All (\<lambda> P . P)"
 
 end
