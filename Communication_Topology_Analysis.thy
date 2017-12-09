@@ -5,7 +5,7 @@ begin
 type_synonym abstract_path = "(var + unit) list"
 
 
-inductive path_in_exp' :: "abstract_env \<Rightarrow> abstract_path \<Rightarrow> exp \<Rightarrow> bool" where
+inductive path_in_exp' :: "abstract_value_env \<Rightarrow> abstract_path \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "path_in_exp' \<rho> [Inl x] (RESULT x)" |
   Let_Unit: "
     path_in_exp' \<V> \<pi> e \<Longrightarrow> 
@@ -112,57 +112,48 @@ definition one_max :: "abstract_path set \<Rightarrow> bool"  where
   "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)"
 
 
-datatype topo_class = OneShot | OneToOne | FanOut | FanIn | Any
+datatype topo = OneShot | OneToOne | FanOut | FanIn | Any
 
-type_synonym topo_class_pair = "var \<times> topo_class"
+type_synonym topo_pair = "var \<times> topo"
 
-inductive communication_topology' :: "topo_class_pair \<Rightarrow> exp \<Rightarrow> bool" where
+inductive communication_topology' :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<parallel>\<bind>" 55) where
   OneShot: "
     one_max (send_paths c e) \<Longrightarrow> 
-    communication_topology' (c, OneShot) e
+    (c, OneShot) \<parallel>\<bind> e
   " | 
   OneToOne: "
     \<lbrakk> 
       one_max (send_processes c e) ;
       one_max (recv_processes c e) 
     \<rbrakk> \<Longrightarrow> 
-    communication_topology' (c, OneToOne) e
+    (c, OneToOne) \<parallel>\<bind> e
   " | 
 
   FanOut: "
     one_max (send_processes c e) \<Longrightarrow> 
-    communication_topology' (c, FanOut) e
+    (c, FanOut) \<parallel>\<bind> e
   " | 
 
   FanIn: "
     one_max (recv_processes c e) \<Longrightarrow> 
-    communication_topology' (c, FanIn) e
+    (c, FanIn) \<parallel>\<bind> e
   " | 
 
-  Any: "communication_topology' (c, Any) e"
+  Any: "(c, Any) \<parallel>\<bind> e"
 
 
-type_synonym topo_class_env = "var \<Rightarrow> topo_class"
+type_synonym topo_env = "var \<Rightarrow> topo"
 
-definition communication_topology :: "topo_class_env \<Rightarrow> exp \<Rightarrow> bool" where 
-  "communication_topology \<A> e \<longleftrightarrow> (\<forall> x . communication_topology' (x, \<A> x) e)"
-(*
-HOL example above \<up>
-
-definitions with type _bool_ seem to be more flexible than those with type _prop_
-
-Pure example:
-definition communication_topology :: "topo_class_env \<Rightarrow> exp \<Rightarrow> prop" where 
-  "communication_topology \<A> e \<equiv> (\<And> x . communication_topology' (x, \<A> x) e)"
-
-yet theorems are easier to prove when described in the Pure logic.
-so HOL formulas will need to be lifted to Pure formulas.
-
-*)
+definition communication_topology :: "topo_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<bind>" 55) where 
+  "\<A> \<bind> e \<longleftrightarrow> (\<forall> x . (x, \<A> x) \<parallel>\<bind> e)"
 
 
 
-inductive precision_order :: "topo_class \<Rightarrow> topo_class \<Rightarrow> bool" (infix "\<preceq>" 55) where  
+definition env_to_topo_env :: "(var \<rightharpoonup> val) \<Rightarrow> topo_env" ("\<langle>\<langle>_\<rangle>\<rangle>" [0]61) where
+  "\<langle>\<langle>\<rho>\<rangle>\<rangle> = (\<lambda> x . Any)"
+
+
+inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix "\<preceq>" 55) where  
   Edge1 : "OneShot \<preceq> OneToOne" | 
   Edge2 : "OneToOne \<preceq> FanOut" |
   Edge3 : "OneToOne \<preceq> FanIn" |
@@ -171,4 +162,6 @@ inductive precision_order :: "topo_class \<Rightarrow> topo_class \<Rightarrow> 
   Refl : "t \<preceq> t" |
   Trans : "\<lbrakk> a \<preceq> b ; b \<preceq> c \<rbrakk> \<Longrightarrow> a \<preceq> c"
 
+definition topo_env_prevision :: "topo_env \<Rightarrow> topo_env \<Rightarrow> bool" (infix "\<sqsubseteq>\<^sub>t" 55) where
+  "\<A> \<sqsubseteq>\<^sub>t \<A>' \<equiv> (\<forall> x . \<A> x \<preceq> \<A>' x)"
 end

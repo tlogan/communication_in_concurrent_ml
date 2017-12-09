@@ -922,7 +922,7 @@ theorem flow_over_env_precision : "
   \<Longrightarrow>
   \<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>
 "
- apply (unfold abstract_more_precise_def, unfold env_to_abstract_env_def)
+ apply (unfold abstract_value_env_precision_def, unfold env_to_abstract_value_env_def)
  apply (rule allI, rename_tac x)
  apply (case_tac "\<rho> x = None", auto, rename_tac \<omega>)
  apply (erule flow_over_env.cases, auto)

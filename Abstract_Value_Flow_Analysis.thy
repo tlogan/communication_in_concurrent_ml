@@ -4,13 +4,13 @@ begin
 
 datatype abstract_value = A_Chan var ("^Chan _" [61] 61) | A_Unit ("^\<lparr>\<rparr>") | A_Prim prim ("^_" [61] 61 )
 
-type_synonym abstract_env = "var \<Rightarrow> abstract_value set"
+type_synonym abstract_value_env = "var \<Rightarrow> abstract_value set"
 
 fun result_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
   "\<lfloor>RESULT x\<rfloor> = x" |
   "\<lfloor>LET _ = _ in e\<rfloor> = \<lfloor>e\<rfloor>"
 
-inductive flow :: "abstract_env \<times> abstract_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>" 55) where
+inductive flow :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>" 55) where
   Result: "
     (\<V>, \<C>) \<Turnstile> RESULT x
   " |
@@ -135,19 +135,19 @@ fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) 
   "|\<lbrace>p, \<rho>\<rbrace>| = ^p" |
   "|\<lbrace>\<rbrace>| = ^\<lparr>\<rparr>"
 
-definition env_to_abstract_env :: "(var \<rightharpoonup> val) \<Rightarrow> abstract_env" ("\<parallel>_\<parallel>" [0]61) where
+definition env_to_abstract_value_env :: "(var \<rightharpoonup> val) \<Rightarrow> abstract_value_env" ("\<parallel>_\<parallel>" [0]61) where
   "\<parallel>\<rho>\<parallel>= (\<lambda> x . (case (\<rho> x) of 
     Some \<omega> \<Rightarrow> {|\<omega>|} |
     None \<Rightarrow> {}
   ))"
 
 
-definition abstract_more_precise :: "abstract_env \<Rightarrow> abstract_env \<Rightarrow> bool" (infix "\<sqsubseteq>" 55) where
+definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abstract_value_env \<Rightarrow> bool" (infix "\<sqsubseteq>" 55) where
   "\<V> \<sqsubseteq> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
 
 
-inductive flow_over_value :: "abstract_env \<times> abstract_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<parallel>>" 55)
-and  flow_over_env :: "abstract_env \<times> abstract_env \<Rightarrow> (var \<rightharpoonup> val) \<Rightarrow> bool" (infix "\<parallel>\<approx>" 55) 
+inductive flow_over_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<parallel>>" 55)
+and  flow_over_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> (var \<rightharpoonup> val) \<Rightarrow> bool" (infix "\<parallel>\<approx>" 55) 
 where
   Unit: "(\<V>, \<C>) \<parallel>> \<lbrace>\<rbrace>" |
   Chan: "(\<V>, \<C>) \<parallel>> \<lbrace>c\<rbrace>" |
@@ -199,7 +199,7 @@ where
     (\<V>, \<C>) \<parallel>\<approx> \<rho>
   "
 
-inductive flow_over_stack :: "abstract_env \<times> abstract_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile> _ \<Rrightarrow> _" [56, 0, 56] 55) where
+inductive flow_over_stack :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile> _ \<Rrightarrow> _" [56, 0, 56] 55) where
   Empty: "(\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> []" |
   Nonempty: "
     \<lbrakk> 
@@ -212,7 +212,7 @@ inductive flow_over_stack :: "abstract_env \<times> abstract_env \<Rightarrow> a
   "
 
 
-inductive flow_over_state :: "abstract_env \<times> abstract_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
+inductive flow_over_state :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
   Any: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile> e; 
@@ -222,7 +222,7 @@ inductive flow_over_state :: "abstract_env \<times> abstract_env \<Rightarrow> s
     (\<V>, \<C>) \<TTurnstile> <<e, \<rho>, \<kappa>>>
   "
 
-inductive flow_over_pool :: "abstract_env \<times> abstract_env \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<parallel>\<lless>" 55) where
+inductive flow_over_pool :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<parallel>\<lless>" 55) where
   Any: "
     (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<TTurnstile> \<sigma>)
     \<Longrightarrow> 
