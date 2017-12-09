@@ -9,12 +9,10 @@ begin
 theorem topology_sound : "
   \<lbrakk>
     \<A> \<bind> e; 
-    [[] \<mapsto> <<e, empty, []>>] \<rightarrow>* \<E>';
-    \<E>' \<pi> = Some (<<e', \<rho>', \<kappa>'>>)
+    [[] \<mapsto> <<e, empty, []>>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  \<langle>\<langle>\<rho>'\<rangle>\<rangle> \<sqsubseteq>\<^sub>t \<A>
+  \<langle>\<langle>\<E>'\<rangle>\<rangle> \<sqsubseteq>\<^sub>t \<A>
 "
  sorry
-
 
 end

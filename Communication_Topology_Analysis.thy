@@ -147,11 +147,14 @@ type_synonym topo_env = "var \<Rightarrow> topo"
 definition communication_topology :: "topo_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<bind>" 55) where 
   "\<A> \<bind> e \<longleftrightarrow> (\<forall> x . (x, \<A> x) \<parallel>\<bind> e)"
 
-
-
-definition env_to_topo_env :: "(var \<rightharpoonup> val) \<Rightarrow> topo_env" ("\<langle>\<langle>_\<rangle>\<rangle>" [0]61) where
-  "\<langle>\<langle>\<rho>\<rangle>\<rangle> = (\<lambda> x . Any)"
-
+definition env_to_topo_env :: "state_pool \<Rightarrow> topo_env" ("\<langle>\<langle>_\<rangle>\<rangle>" [0]61) where
+  "\<langle>\<langle>\<E>\<rangle>\<rangle> = (\<lambda> x . 
+    (if one_shot' \<E> x then OneShot
+    else (if point_to_point' \<E> x then OneToOne
+    else (if fan_out' \<E> x then FanOut
+    else (if fan_in' \<E> x then FanOut
+    else Any))))
+  )"
 
 inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix "\<preceq>" 55) where  
   Edge1 : "OneShot \<preceq> OneToOne" | 

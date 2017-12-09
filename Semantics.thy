@@ -244,33 +244,65 @@ definition recv_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_pa
   
 definition state_pool_possible :: "exp \<Rightarrow> state_pool \<Rightarrow> bool" where
   "state_pool_possible e \<E> \<equiv> [[] \<mapsto> (<<e, Map.empty, []>>)] \<rightarrow>* \<E>"
-  
-definition one_shot :: "exp \<Rightarrow> var \<Rightarrow> bool" where
-  "one_shot e x \<equiv> (\<forall> \<E> \<pi>. 
-    state_pool_possible e \<E> \<longrightarrow>
-    card (send_sites \<E> (Ch \<pi> x)) \<le> 1
-  )"
-  
-definition single_side :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_path set) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "single_side sites_of e x \<equiv> (\<forall> \<E> \<pi> \<pi>\<^sub>1 \<pi>\<^sub>2 .
-    state_pool_possible e \<E> \<longrightarrow>
+
+lemma "\<exists> x . (P x \<longrightarrow> Q) \<Longrightarrow> \<forall> x . (P x \<longrightarrow> Q)"  
+sorry
+
+
+lemma "\<forall> x . (P x \<longrightarrow> Q) \<Longrightarrow> \<exists> x . (P x \<longrightarrow> Q)"  
+by auto
+
+definition single_side' :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_path set) \<Rightarrow> state_pool \<Rightarrow> var \<Rightarrow> bool" where
+  "single_side' sites_of \<E> x \<longleftrightarrow> (\<forall> \<pi> \<pi>\<^sub>1 \<pi>\<^sub>2 .
     \<pi>\<^sub>1 \<in> sites_of \<E> (Ch \<pi> x) \<longrightarrow>
     \<pi>\<^sub>2 \<in> sites_of \<E> (Ch \<pi> x) \<longrightarrow>
     (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1) 
   )"  
-  
+
+definition single_side :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_path set) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+  "single_side sites_of e x \<equiv> (\<forall> \<E>. state_pool_possible e \<E> \<longrightarrow>
+    single_side' sites_of \<E> x
+  )"  
+
+definition one_shot' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where
+  "one_shot' \<E> x \<longleftrightarrow> (\<forall> \<pi> . \<E> (\<pi>;;x) \<noteq> None \<longrightarrow>
+    card (send_sites \<E> (Ch \<pi> x)) \<le> 1
+  )"
+
+definition one_shot :: "exp \<Rightarrow> var \<Rightarrow> bool" where
+  "one_shot e x \<longleftrightarrow> (\<forall> \<E> . state_pool_possible e \<E> \<longrightarrow>
+    one_shot' \<E> x
+  )"
+
+
+definition single_receiver' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where 
+  "single_receiver' = single_side' recv_sites"
+
 definition single_receiver :: "exp \<Rightarrow> var \<Rightarrow> bool" where 
   "single_receiver = single_side recv_sites"
   
+
+definition single_sender' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where 
+  "single_sender' = single_side' recv_sites"
+
 definition single_sender :: "exp \<Rightarrow> var \<Rightarrow> bool" where 
   "single_sender = single_side send_sites"
+
+definition point_to_point' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where
+  "point_to_point' \<E> x \<longleftrightarrow> single_sender' \<E> x \<and> single_receiver' \<E> x"
   
 definition point_to_point :: "exp \<Rightarrow> var \<Rightarrow> bool" where
   "point_to_point e x \<longleftrightarrow> single_sender e x \<and> single_receiver e x"
   
+definition fan_out' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where
+  "fan_out' \<E> x \<longleftrightarrow> single_sender' \<E> x \<and> \<not> single_receiver' \<E> x "
+
 definition fan_out :: "exp \<Rightarrow> var \<Rightarrow> bool" where
   "fan_out e x \<longleftrightarrow> single_sender e x \<and> \<not> single_receiver e x "
   
+definition fan_in' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where
+  "fan_in' \<E> x \<longleftrightarrow> \<not> single_sender' \<E> x \<and> single_receiver' \<E> x "
+
 definition fan_in :: "exp \<Rightarrow> var \<Rightarrow> bool" where
   "fan_in e x \<longleftrightarrow> \<not> single_sender e x \<and> single_receiver e x "
 
