@@ -3,6 +3,9 @@ theory Communication_Topology_Analysis
 begin
 
   
+
+datatype topo = OneShot | OneToOne | FanOut | FanIn | Any
+
 definition send_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
   "send_sites \<E> ch = {\<pi>. \<exists> x x\<^sub>e e \<kappa> \<rho> x\<^sub>c x\<^sub>m \<rho>\<^sub>e. 
     \<E> \<pi> = Some (<<LET x = SYNC x\<^sub>e in e, \<rho>, \<kappa>>>) \<and> 
@@ -17,85 +20,56 @@ definition recv_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_pa
     \<rho>\<^sub>e x\<^sub>c = Some \<lbrace>ch\<rbrace>
   }"
 
-definition single_side' :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_path set) \<Rightarrow> state_pool \<Rightarrow> var \<Rightarrow> bool" where
-  "single_side' sites_of \<E> x \<longleftrightarrow> (\<forall> \<pi> \<pi>\<^sub>1 \<pi>\<^sub>2 .
-    \<pi>\<^sub>1 \<in> sites_of \<E> (Ch \<pi> x) \<longrightarrow>
-    \<pi>\<^sub>2 \<in> sites_of \<E> (Ch \<pi> x) \<longrightarrow>
+definition single_side_pool :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_path set) \<Rightarrow> state_pool \<Rightarrow> chan \<Rightarrow> bool" where
+  "single_side_pool sites_of \<E> c \<longleftrightarrow> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
+    \<pi>\<^sub>1 \<in> sites_of \<E> c \<longrightarrow>
+    \<pi>\<^sub>2 \<in> sites_of \<E> c \<longrightarrow>
     (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1) 
-  )"  
-
-definition single_side :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_path set) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "single_side sites_of e x \<equiv> (\<forall> \<E>'. 
-    [[] \<mapsto> <<e, empty, []>>] \<rightarrow>* \<E>' \<longrightarrow>
-    single_side' sites_of \<E>' x
-  )"  
-
-definition one_shot' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where
-  "one_shot' \<E> x \<longleftrightarrow> (\<forall> \<pi> . \<E> (\<pi>;;x) \<noteq> None \<longrightarrow>
-    card (send_sites \<E> (Ch \<pi> x)) \<le> 1
   )"
 
-definition one_shot :: "exp \<Rightarrow> var \<Rightarrow> bool" where
-  "one_shot e x \<longleftrightarrow> (\<forall> \<E>' .
-    [[] \<mapsto> <<e, empty, []>>] \<rightarrow>* \<E>' \<longrightarrow>
-    one_shot' \<E>' x
-  )"
+definition one_shot :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
+  "one_shot \<E> c \<longleftrightarrow> card (send_sites \<E> c) \<le> 1"
 
 
-definition single_receiver' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where 
-  "single_receiver' = single_side' recv_sites"
+definition single_receiver :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where 
+  "single_receiver = single_side_pool recv_sites"
 
-definition single_receiver :: "exp \<Rightarrow> var \<Rightarrow> bool" where 
-  "single_receiver = single_side recv_sites"
+
+definition single_sender :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where 
+  "single_sender = single_side_pool recv_sites"
+
+definition point_to_point :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
+  "point_to_point \<E> c \<longleftrightarrow> single_sender \<E> c \<and> single_receiver \<E> c"
   
-
-definition single_sender' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where 
-  "single_sender' = single_side' recv_sites"
-
-definition single_sender :: "exp \<Rightarrow> var \<Rightarrow> bool" where 
-  "single_sender = single_side send_sites"
-
-definition point_to_point' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where
-  "point_to_point' \<E> x \<longleftrightarrow> single_sender' \<E> x \<and> single_receiver' \<E> x"
+definition fan_out :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
+  "fan_out \<E> c \<longleftrightarrow> single_sender \<E> c \<and> \<not> single_receiver \<E> c"
   
-definition point_to_point :: "exp \<Rightarrow> var \<Rightarrow> bool" where
-  "point_to_point e x \<longleftrightarrow> single_sender e x \<and> single_receiver e x"
-  
-definition fan_out' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where
-  "fan_out' \<E> x \<longleftrightarrow> single_sender' \<E> x \<and> \<not> single_receiver' \<E> x "
+definition fan_in :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
+  "fan_in \<E> c \<longleftrightarrow> \<not> single_sender \<E> c \<and> single_receiver \<E> c"
 
-definition fan_out :: "exp \<Rightarrow> var \<Rightarrow> bool" where
-  "fan_out e x \<longleftrightarrow> single_sender e x \<and> \<not> single_receiver e x "
-  
-definition fan_in' :: "state_pool \<Rightarrow> var \<Rightarrow> bool" where
-  "fan_in' \<E> x \<longleftrightarrow> \<not> single_sender' \<E> x \<and> single_receiver' \<E> x "
-
-definition fan_in :: "exp \<Rightarrow> var \<Rightarrow> bool" where
-  "fan_in e x \<longleftrightarrow> \<not> single_sender e x \<and> single_receiver e x "
-
-datatype topo = OneShot | OneToOne | FanOut | FanIn | Any
 
 type_synonym topo_pair = "var \<times> topo"
 
 type_synonym topo_env = "var \<Rightarrow> topo"
 
+definition chan_to_topo :: "state_pool \<Rightarrow> chan \<Rightarrow> topo" ("\<langle>\<langle>_ ; _\<rangle>\<rangle>" [0,0]61) where
+  "\<langle>\<langle>\<E> ; c\<rangle>\<rangle> = 
+    (if one_shot \<E> c then OneShot
+    else (if point_to_point \<E> c then OneToOne
+    else (if fan_out \<E> c then FanOut
+    else (if fan_in \<E> c then FanOut
+    else Any))))
+  "
+
 definition env_to_topo_env :: "state_pool \<Rightarrow> topo_env" ("\<langle>\<langle>_\<rangle>\<rangle>" [0]61) where
-  "\<langle>\<langle>\<E>\<rangle>\<rangle> = (\<lambda> x . 
-    (if one_shot' \<E> x then OneShot
-    else (if point_to_point' \<E> x then OneToOne
-    else (if fan_out' \<E> x then FanOut
-    else (if fan_in' \<E> x then FanOut
+  "\<langle>\<langle>\<E>\<rangle>\<rangle> = (\<lambda> x .
+    (if \<forall> \<pi> . one_shot \<E> (Ch \<pi> x) then OneShot
+    else (if \<forall> \<pi> . point_to_point \<E> (Ch \<pi> x) then OneToOne
+    else (if \<forall> \<pi> . fan_out \<E> (Ch \<pi> x) then FanOut
+    else (if \<forall> \<pi> . fan_in \<E> (Ch \<pi> x) then FanOut
     else Any))))
   )"
 
-definition exp_to_topo_env :: "exp \<Rightarrow> topo_env" ("\<langle>\<langle>\<langle>_\<rangle>\<rangle>\<rangle>" [0]61) where
-  "\<langle>\<langle>\<langle>e\<rangle>\<rangle>\<rangle> = (\<lambda> x . 
-    (if one_shot e x then OneShot
-    else (if point_to_point e x then OneToOne
-    else (if fan_out e x then FanOut
-    else (if fan_in e x then FanOut
-    else Any))))
-  )"
 
 inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix "\<preceq>" 55) where  
   Edge1 : "OneShot \<preceq> OneToOne" | 
@@ -106,7 +80,7 @@ inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix
   Refl : "t \<preceq> t" |
   Trans : "\<lbrakk> a \<preceq> b ; b \<preceq> c \<rbrakk> \<Longrightarrow> a \<preceq> c"
 
-definition topo_env_prevision :: "topo_env \<Rightarrow> topo_env \<Rightarrow> bool" (infix "\<sqsubseteq>\<^sub>t" 55) where
+definition topo_env_precision :: "topo_env \<Rightarrow> topo_env \<Rightarrow> bool" (infix "\<sqsubseteq>\<^sub>t" 55) where
   "\<A> \<sqsubseteq>\<^sub>t \<A>' \<equiv> (\<forall> x . \<A> x \<preceq> \<A>' x)"
 
 
@@ -222,33 +196,34 @@ definition one_max :: "abstract_path set \<Rightarrow> bool"  where
   "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)"
 
 
-inductive communication_topology' :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<parallel>\<bind>" 55) where
+
+inductive communication_topology' :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>t" 55) where
   OneShot: "
     one_max (abstract_send_paths c e) \<Longrightarrow> 
-    (c, OneShot) \<parallel>\<bind> e
+    (c, OneShot) \<Turnstile>\<^sub>t e
   " | 
   OneToOne: "
     \<lbrakk> 
       one_max (abstract_send_processes c e) ;
       one_max (abstract_recv_processes c e) 
     \<rbrakk> \<Longrightarrow> 
-    (c, OneToOne) \<parallel>\<bind> e
+    (c, OneToOne) \<Turnstile>\<^sub>t e
   " | 
 
   FanOut: "
     one_max (abstract_send_processes c e) \<Longrightarrow> 
-    (c, FanOut) \<parallel>\<bind> e
+    (c, FanOut) \<Turnstile>\<^sub>t e
   " | 
 
   FanIn: "
     one_max (abstract_recv_processes c e) \<Longrightarrow> 
-    (c, FanIn) \<parallel>\<bind> e
+    (c, FanIn) \<Turnstile>\<^sub>t e
   " | 
 
-  Any: "(c, Any) \<parallel>\<bind> e"
+  Any: "(c, Any) \<Turnstile>\<^sub>t e"
 
 
 definition communication_topology :: "topo_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<bind>" 55) where 
-  "\<A> \<bind> e \<longleftrightarrow> (\<forall> x . (x, \<A> x) \<parallel>\<bind> e)"
+  "\<A> \<bind> e \<longleftrightarrow> (\<forall> x . (x, \<A> x) \<Turnstile>\<^sub>t e)"
 
 end
