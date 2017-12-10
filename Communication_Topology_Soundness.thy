@@ -9,7 +9,8 @@ begin
 theorem topology_pair_sound : "
   \<lbrakk>
     (x, t) \<Turnstile>\<^sub>t e; 
-    [[] \<mapsto> <<e, empty, []>>] \<rightarrow>* \<E>'
+    [[] \<mapsto> <<e, empty, []>>] \<rightarrow>* \<E>';
+    \<E>' \<pi> = Some (<<LET x' = CHAN \<lparr>\<rparr> in e', \<rho>', \<kappa>'>>)
   \<rbrakk> \<Longrightarrow>
   \<langle>\<langle>\<E>' ; Ch \<pi> x\<rangle>\<rangle> \<preceq> t
 "
@@ -33,8 +34,5 @@ theorem topology_sound : "
  apply (erule topology_sound', auto)
 done
  
-
-
-
 
 end

@@ -20,8 +20,8 @@ definition recv_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_pa
     \<rho>\<^sub>e x\<^sub>c = Some \<lbrace>ch\<rbrace>
   }"
 
-definition single_side_pool :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_path set) \<Rightarrow> state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "single_side_pool sites_of \<E> c \<longleftrightarrow> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
+definition single_side :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_path set) \<Rightarrow> state_pool \<Rightarrow> chan \<Rightarrow> bool" where
+  "single_side sites_of \<E> c \<longleftrightarrow> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
     \<pi>\<^sub>1 \<in> sites_of \<E> c \<longrightarrow>
     \<pi>\<^sub>2 \<in> sites_of \<E> c \<longrightarrow>
     (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1) 
@@ -32,11 +32,11 @@ definition one_shot :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
 
 
 definition single_receiver :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where 
-  "single_receiver = single_side_pool recv_sites"
+  "single_receiver = single_side recv_sites"
 
 
 definition single_sender :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where 
-  "single_sender = single_side_pool recv_sites"
+  "single_sender = single_side recv_sites"
 
 definition point_to_point :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
   "point_to_point \<E> c \<longleftrightarrow> single_sender \<E> c \<and> single_receiver \<E> c"
@@ -47,6 +47,8 @@ definition fan_out :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
 definition fan_in :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
   "fan_in \<E> c \<longleftrightarrow> \<not> single_sender \<E> c \<and> single_receiver \<E> c"
 
+definition abstract_topo :: "(state_pool \<Rightarrow> chan \<Rightarrow> bool) \<Rightarrow> state_pool \<Rightarrow> var \<Rightarrow> bool" where
+  "abstract_topo t \<E> x \<longleftrightarrow> (\<forall> \<pi> . \<exists> x' e' \<rho>' \<kappa>' . \<E> \<pi> = Some (<<LET x' = CHAN \<lparr>\<rparr> in e', \<rho>', \<kappa>'>>) \<longrightarrow> t \<E> (Ch \<pi> x))"
 
 type_synonym topo_pair = "var \<times> topo"
 
@@ -61,12 +63,14 @@ definition chan_to_topo :: "state_pool \<Rightarrow> chan \<Rightarrow> topo" ("
     else Any))))
   "
 
-definition env_to_topo_env :: "state_pool \<Rightarrow> topo_env" ("\<langle>\<langle>_\<rangle>\<rangle>" [0]61) where
+
+
+definition state_pool_to_topo_env :: "state_pool \<Rightarrow> topo_env" ("\<langle>\<langle>_\<rangle>\<rangle>" [0]61) where
   "\<langle>\<langle>\<E>\<rangle>\<rangle> = (\<lambda> x .
-    (if \<forall> \<pi> . one_shot \<E> (Ch \<pi> x) then OneShot
-    else (if \<forall> \<pi> . point_to_point \<E> (Ch \<pi> x) then OneToOne
-    else (if \<forall> \<pi> . fan_out \<E> (Ch \<pi> x) then FanOut
-    else (if \<forall> \<pi> . fan_in \<E> (Ch \<pi> x) then FanOut
+    (if abstract_topo one_shot \<E> x then OneShot
+    else (if abstract_topo point_to_point \<E> x then OneToOne
+    else (if abstract_topo fan_out \<E> x then FanOut
+    else (if abstract_topo fan_in \<E> x then FanOut
     else Any))))
   )"
 
