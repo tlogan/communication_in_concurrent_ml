@@ -34,7 +34,6 @@ definition one_shot :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
 definition single_receiver :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where 
   "single_receiver = single_side recv_sites"
 
-
 definition single_sender :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where 
   "single_sender = single_side recv_sites"
 
@@ -47,8 +46,8 @@ definition fan_out :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
 definition fan_in :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
   "fan_in \<E> c \<longleftrightarrow> \<not> single_sender \<E> c \<and> single_receiver \<E> c"
 
-definition abstract_topo :: "(state_pool \<Rightarrow> chan \<Rightarrow> bool) \<Rightarrow> state_pool \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_topo t \<E> x \<longleftrightarrow> (\<forall> \<pi> . \<exists> x' e' \<rho>' \<kappa>' . \<E> \<pi> = Some (<<LET x' = CHAN \<lparr>\<rparr> in e', \<rho>', \<kappa>'>>) \<longrightarrow> t \<E> (Ch \<pi> x))"
+definition var_topo :: "(state_pool \<Rightarrow> chan \<Rightarrow> bool) \<Rightarrow> state_pool \<Rightarrow> var \<Rightarrow> bool" where
+  "var_topo t \<E> x \<longleftrightarrow> (\<forall> \<pi> . \<exists> x' e' \<rho>' \<kappa>' . \<E> \<pi> = Some (<<LET x' = CHAN \<lparr>\<rparr> in e', \<rho>', \<kappa>'>>) \<longrightarrow> t \<E> (Ch \<pi> x))"
 
 type_synonym topo_pair = "var \<times> topo"
 
@@ -67,10 +66,10 @@ definition chan_to_topo :: "state_pool \<Rightarrow> chan \<Rightarrow> topo" ("
 
 definition state_pool_to_topo_env :: "state_pool \<Rightarrow> topo_env" ("\<langle>\<langle>_\<rangle>\<rangle>" [0]61) where
   "\<langle>\<langle>\<E>\<rangle>\<rangle> = (\<lambda> x .
-    (if abstract_topo one_shot \<E> x then OneShot
-    else (if abstract_topo point_to_point \<E> x then OneToOne
-    else (if abstract_topo fan_out \<E> x then FanOut
-    else (if abstract_topo fan_in \<E> x then FanOut
+    (if var_topo one_shot \<E> x then OneShot
+    else (if var_topo point_to_point \<E> x then OneToOne
+    else (if var_topo fan_out \<E> x then FanOut
+    else (if var_topo fan_in \<E> x then FanOut
     else Any))))
   )"
 
