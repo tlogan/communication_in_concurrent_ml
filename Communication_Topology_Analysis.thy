@@ -53,25 +53,19 @@ type_synonym topo_pair = "var \<times> topo"
 
 type_synonym topo_env = "var \<Rightarrow> topo"
 
-definition chan_to_topo :: "state_pool \<Rightarrow> chan \<Rightarrow> topo" ("\<langle>\<langle>_ ; _\<rangle>\<rangle>" [0,0]61) where
-  "\<langle>\<langle>\<E> ; c\<rangle>\<rangle> = 
-    (if one_shot \<E> c then OneShot
-    else (if point_to_point \<E> c then OneToOne
-    else (if fan_out \<E> c then FanOut
-    else (if fan_in \<E> c then FanOut
+definition var_to_topo :: "state_pool \<Rightarrow> var \<Rightarrow> topo" ("\<langle>\<langle>_ ; _\<rangle>\<rangle>" [0,0]61) where
+  "\<langle>\<langle>\<E> ; x\<rangle>\<rangle> = 
+    (if var_topo one_shot \<E> x then OneShot
+    else (if var_topo point_to_point \<E> x then OneToOne
+    else (if var_topo fan_out \<E> x then FanOut
+    else (if var_topo fan_in \<E> x then FanOut
     else Any))))
   "
 
 
 
 definition state_pool_to_topo_env :: "state_pool \<Rightarrow> topo_env" ("\<langle>\<langle>_\<rangle>\<rangle>" [0]61) where
-  "\<langle>\<langle>\<E>\<rangle>\<rangle> = (\<lambda> x .
-    (if var_topo one_shot \<E> x then OneShot
-    else (if var_topo point_to_point \<E> x then OneToOne
-    else (if var_topo fan_out \<E> x then FanOut
-    else (if var_topo fan_in \<E> x then FanOut
-    else Any))))
-  )"
+  "\<langle>\<langle>\<E>\<rangle>\<rangle> = (\<lambda> x . \<langle>\<langle>\<E> ; x\<rangle>\<rangle>)"
 
 
 inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix "\<preceq>" 55) where  
@@ -200,7 +194,7 @@ definition one_max :: "abstract_path set \<Rightarrow> bool"  where
 
 
 
-inductive communication_topology' :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>t" 55) where
+inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>t" 55) where
   OneShot: "
     one_max (abstract_send_paths c e) \<Longrightarrow> 
     (c, OneShot) \<Turnstile>\<^sub>t e
@@ -226,7 +220,7 @@ inductive communication_topology' :: "topo_pair \<Rightarrow> exp \<Rightarrow> 
   Any: "(c, Any) \<Turnstile>\<^sub>t e"
 
 
-definition communication_topology :: "topo_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<bind>" 55) where 
+definition topo_accept :: "topo_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<bind>" 55) where 
   "\<A> \<bind> e \<longleftrightarrow> (\<forall> x . (x, \<A> x) \<Turnstile>\<^sub>t e)"
 
 end

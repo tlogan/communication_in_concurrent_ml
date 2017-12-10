@@ -10,7 +10,7 @@ fun result_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
   "\<lfloor>RESULT x\<rfloor> = x" |
   "\<lfloor>LET _ = _ in e\<rfloor> = \<lfloor>e\<rfloor>"
 
-inductive flow :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>" 55) where
+inductive flow_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>" 55) where
   Result: "
     (\<V>, \<C>) \<Turnstile> RESULT x
   " |
@@ -146,8 +146,8 @@ definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abs
   "\<V> \<sqsubseteq> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
 
 
-inductive flow_over_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<parallel>>" 55)
-and  flow_over_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> (var \<rightharpoonup> val) \<Rightarrow> bool" (infix "\<parallel>\<approx>" 55) 
+inductive flow_over_value_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<parallel>>" 55)
+and  flow_over_env_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> (var \<rightharpoonup> val) \<Rightarrow> bool" (infix "\<parallel>\<approx>" 55) 
 where
   Unit: "(\<V>, \<C>) \<parallel>> \<lbrace>\<rbrace>" |
   Chan: "(\<V>, \<C>) \<parallel>> \<lbrace>c\<rbrace>" |
@@ -156,7 +156,7 @@ where
       {^Abs f x e} \<subseteq> \<V> f;
       (\<V>, \<C>) \<Turnstile> e;
       (\<V>, \<C>) \<parallel>\<approx> \<rho>
-    \<rbrakk> \<Longrightarrow>
+    \<rbrakk> \<Longrightarrow> 
     (\<V>, \<C>) \<parallel>> \<lbrace>Abs f x e, \<rho>\<rbrace>
   " |
   Pair: "
@@ -199,7 +199,7 @@ where
     (\<V>, \<C>) \<parallel>\<approx> \<rho>
   "
 
-inductive flow_over_stack :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile> _ \<Rrightarrow> _" [56, 0, 56] 55) where
+inductive flow_over_stack_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile> _ \<Rrightarrow> _" [56, 0, 56] 55) where
   Empty: "(\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> []" |
   Nonempty: "
     \<lbrakk> 
@@ -212,7 +212,7 @@ inductive flow_over_stack :: "abstract_value_env \<times> abstract_value_env \<R
   "
 
 
-inductive flow_over_state :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
+inductive flow_over_state_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
   Any: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile> e; 
@@ -222,7 +222,7 @@ inductive flow_over_state :: "abstract_value_env \<times> abstract_value_env \<R
     (\<V>, \<C>) \<TTurnstile> <<e, \<rho>, \<kappa>>>
   "
 
-inductive flow_over_pool :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<parallel>\<lless>" 55) where
+inductive flow_over_pool_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<parallel>\<lless>" 55) where
   Any: "
     (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<TTurnstile> \<sigma>)
     \<Longrightarrow> 
