@@ -86,89 +86,89 @@ definition topo_env_precision :: "topo_env \<Rightarrow> topo_env \<Rightarrow> 
 type_synonym abstract_path = "(var + unit) list"
 
 
-inductive path_in_exp' :: "abstract_value_env \<Rightarrow> abstract_path \<Rightarrow> exp \<Rightarrow> bool" where
-  Result: "path_in_exp' \<rho> [Inl x] (RESULT x)" |
+inductive path_in_exp' :: "abstract_value_env \<Rightarrow> abstract_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<Turnstile> _ \<triangleleft> _" [56, 0, 56] 55) where
+  Result: "\<V> \<Turnstile> [Inl x] \<triangleleft> (RESULT x)" |
   Let_Unit: "
-    path_in_exp' \<V> \<pi> e \<Longrightarrow> 
-    path_in_exp' \<V> (Inl x # \<pi>) (LET x = \<lparr>\<rparr> in e)
+    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
+    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Prim: "
-    path_in_exp' \<V> \<pi> e \<Longrightarrow> 
-    path_in_exp' \<V> (Inl x # \<pi>) (LET x = Prim p in e)
+    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
+    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = Prim p in e)
   " |
   Let_Case_Left: "
     \<lbrakk>
-      path_in_exp' \<V> \<pi>\<^sub>l e\<^sub>l; 
-      path_in_exp' \<V> \<pi> e 
+      \<V> \<Turnstile> \<pi>\<^sub>l \<triangleleft> e\<^sub>l; 
+      \<V> \<Turnstile> \<pi> \<triangleleft> e 
     \<rbrakk>\<Longrightarrow> 
-    path_in_exp' \<V> (\<pi>\<^sub>l @ (Inl x # \<pi>)) (LET x = CASE _ LEFT x\<^sub>l |> e\<^sub>l RIGHT _ |> _ in e)
+    \<V> \<Turnstile> (\<pi>\<^sub>l @ (Inl x # \<pi>)) \<triangleleft> (LET x = CASE _ LEFT x\<^sub>l |> e\<^sub>l RIGHT _ |> _ in e)
   " |
   Let_Case_Right: "
     \<lbrakk>
-      path_in_exp' \<V> \<pi>\<^sub>r e\<^sub>r;
-      path_in_exp' \<V> \<pi> e
+      \<V> \<Turnstile> \<pi>\<^sub>r \<triangleleft> e\<^sub>r;
+      \<V> \<Turnstile> \<pi> \<triangleleft> e
     \<rbrakk> \<Longrightarrow> 
-    path_in_exp' \<V> (\<pi>\<^sub>r @ (Inl x # \<pi>)) (LET x = CASE _ LEFT _ |> _ RIGHT x\<^sub>r |> e\<^sub>r in e)
+    \<V> \<Turnstile> (\<pi>\<^sub>r @ (Inl x # \<pi>)) \<triangleleft> (LET x = CASE _ LEFT _ |> _ RIGHT x\<^sub>r |> e\<^sub>r in e)
   " |
   Let_Fst: "
-    path_in_exp' \<V> \<pi> e \<Longrightarrow> 
-    path_in_exp' \<V> (Inl x # \<pi>) (LET x = FST _ in e)
+    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
+    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = FST _ in e)
   " |
   Let_Snd: "
-    path_in_exp' \<V> \<pi> e \<Longrightarrow> 
-    path_in_exp' \<V> (Inl x # \<pi>) (LET x = SND _ in e)
+    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
+    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = SND _ in e)
   " |
   Let_App: "
     \<lbrakk>
       ^Abs f' x' e' \<in> \<V> f;
-      path_in_exp' (\<V>(x' := \<V> x' \<inter> \<V> x\<^sub>a)) \<pi>' e';
-      path_in_exp' \<V> \<pi> e
+      (\<V>(x' := \<V> x' \<inter> \<V> x\<^sub>a)) \<Turnstile> \<pi>' \<triangleleft> e';
+      \<V> \<Turnstile> \<pi> \<triangleleft> e
     \<rbrakk> \<Longrightarrow> 
-    path_in_exp' \<V> (\<pi>' @ (Inl x # \<pi>)) (LET x = APP f x\<^sub>a in e)
+    \<V> \<Turnstile> (\<pi>' @ (Inl x # \<pi>)) \<triangleleft> (LET x = APP f x\<^sub>a in e)
   " |
   Let_Sync: "
-   path_in_exp' \<V> \<pi> e \<Longrightarrow>
-   path_in_exp' \<V> (Inl x # \<pi>) (LET x = SYNC _ in e)
+   \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow>
+   \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = SYNC _ in e)
   " |
   Let_Chan: "
-    path_in_exp' \<V> \<pi> e \<Longrightarrow>
-    path_in_exp' \<V> (Inl x # \<pi>) (LET x = CHAN \<lparr>\<rparr> in e)
+    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow>
+    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Spawn_Parent: " 
-    path_in_exp' \<V> \<pi> e \<Longrightarrow>
-    path_in_exp' \<V> (Inl x # \<pi>) (LET x = SPAWN _ in e)
+    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow>
+    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = SPAWN _ in e)
   " |
   Let_Spawn_Child: " 
-    path_in_exp' \<V> \<pi> e\<^sub>c \<Longrightarrow>
-    path_in_exp' \<V> (Inr () # \<pi>) (LET x = SPAWN e\<^sub>c in _)
+    \<V> \<Turnstile> \<pi> \<triangleleft> e\<^sub>c \<Longrightarrow>
+    \<V> \<Turnstile> (Inr () # \<pi>) \<triangleleft> (LET x = SPAWN e\<^sub>c in _)
   " 
 
 
-definition path_in_exp :: "abstract_path \<Rightarrow> exp \<Rightarrow> bool" where
-  "path_in_exp \<pi> e \<equiv> (\<exists> \<V> \<C> . (\<V>, \<C>) \<Turnstile> e \<and> path_in_exp' \<V> \<pi> e)"
+definition path_in_exp :: "abstract_path \<Rightarrow> exp \<Rightarrow> bool" (infix "\<triangleleft>" 55)where
+  "\<pi> \<triangleleft> e \<equiv> (\<exists> \<V> \<C> . (\<V>, \<C>) \<Turnstile> e \<and> (\<V> \<Turnstile> \<pi> \<triangleleft> e))"
 
-inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" where
-  Refl: "subexp e e" |
-  Step: "subexp e' e \<Longrightarrow> subexp e' (LET _ = _ in e)"
+inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<unlhd>" 55)where
+  Refl: "e \<unlhd> e" |
+  Step: "e' \<unlhd> e \<Longrightarrow> e' \<unlhd> (LET x = b in e)"
 
 definition abstract_send_sites :: "var \<Rightarrow> exp \<Rightarrow> var set" where
-  "abstract_send_sites c e = {x . \<exists> y e' z \<V> \<C>. 
-    subexp (LET x = SYNC y in e') e \<and> 
+  "abstract_send_sites x\<^sub>c e = {x . \<exists> x\<^sub>e e' x\<^sub>m \<V> \<C>. 
+    (LET x = SYNC x\<^sub>e in e') \<unlhd> e \<and> 
     (\<V>, \<C>) \<Turnstile> e \<and> 
-    ^Send_Evt c z \<in> \<V> y
+    {^Send_Evt x\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
   }"
 
 definition abstract_recv_sites :: "var \<Rightarrow> exp \<Rightarrow> var set" where
-  "abstract_recv_sites c e = {x . \<exists> y e' \<V> \<C>. 
-    subexp (LET x = SYNC y in e') e \<and> 
+  "abstract_recv_sites x\<^sub>c e = {x . \<exists> x\<^sub>e e' \<V> \<C>. 
+    (LET x = SYNC x\<^sub>e in e') \<unlhd> e \<and> 
     (\<V>, \<C>) \<Turnstile> e \<and> 
-    ^Recv_Evt c \<in> \<V> y
+    {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x\<^sub>e
   }"
 
 
 definition abstract_paths :: "var set \<Rightarrow> exp \<Rightarrow> abstract_path set" where 
-  "abstract_paths sites e = {path @ [Inl x] | path x . 
-    (x \<in> sites) \<and>  path_in_exp (path @ [Inl x]) e
+  "abstract_paths sites e = {\<pi>;;x | \<pi> x . 
+    (x \<in> sites) \<and>  (\<pi>;;x) \<triangleleft> e
   }" 
 
 definition abstract_processes :: "var set \<Rightarrow> exp \<Rightarrow> abstract_path set" where 
@@ -191,7 +191,6 @@ definition abstract_recv_processes where
 
 definition one_max :: "abstract_path set \<Rightarrow> bool"  where
   "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)"
-
 
 
 inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>t" 55) where
@@ -222,5 +221,32 @@ inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (
 
 definition topo_accept :: "topo_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<bind>" 55) where 
   "\<A> \<bind> e \<longleftrightarrow> (\<forall> x . (x, \<A> x) \<Turnstile>\<^sub>t e)"
+
+(*
+
+inductive topo_pair_over_value_accept :: "topo_pair \<Rightarrow> val \<Rightarrow> bool" (infix "\<parallel>>\<^sub>t" 55)
+and  topo_pair_over_env_accept :: "topo_pair \<Rightarrow> (var \<rightharpoonup> val) \<Rightarrow> bool" (infix "\<parallel>\<approx>\<^sub>t" 55) 
+where
+inductive topo_pair_over_stack_accept :: "topo_pair \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile>\<^sub>t _ \<Rrightarrow> _" [56, 0, 56] 55)
+
+inductive topo_pair_over_state_accept :: "topo_pair \<Rightarrow> state \<Rightarrow> bool" (infix "\<TTurnstile>\<^sub>t" 55) where
+  Any: "
+    \<lbrakk>
+      (\<V>, \<C>) \<Turnstile> e; 
+      (\<V>, \<C>) \<parallel>\<approx> \<rho>; 
+      (\<V>, \<C>) \<Turnstile> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<C>) \<TTurnstile> <<e, \<rho>, \<kappa>>>
+  "
+
+inductive topo_pair_over_pool_accept :: "topo_pair \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<parallel>\<lless>\<^sub>t" 55) where
+  Any: "
+    (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<TTurnstile> \<sigma>)
+    \<Longrightarrow> 
+    (\<V>, \<C>) \<parallel>\<lless> \<E>
+  "
+
+*)
+ 
 
 end
