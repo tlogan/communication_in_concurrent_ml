@@ -81,12 +81,7 @@ definition topo_env_precision :: "topo_env \<Rightarrow> topo_env \<Rightarrow> 
   "\<A> \<sqsubseteq>\<^sub>t \<A>' \<equiv> (\<forall> x . \<A> x \<preceq> \<A>' x)"
 
 
-
-
-type_synonym abstract_path = "(var + unit) list"
-
-
-inductive path_in_exp' :: "abstract_value_env \<Rightarrow> abstract_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<Turnstile> _ \<triangleleft> _" [56, 0, 56] 55) where
+inductive path_in_exp' :: "abstract_value_env \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<Turnstile> _ \<triangleleft> _" [56, 0, 56] 55) where
   Result: "\<V> \<Turnstile> [Inl x] \<triangleleft> (RESULT x)" |
   Let_Unit: "
     \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
@@ -120,7 +115,7 @@ inductive path_in_exp' :: "abstract_value_env \<Rightarrow> abstract_path \<Righ
   " |
   Let_App: "
     \<lbrakk>
-      ^Abs f' x' e' \<in> \<V> f;
+      {^Abs f' x' e'} \<subseteq> \<V> f;
       (\<V>(x' := \<V> x' \<inter> \<V> x\<^sub>a)) \<Turnstile> \<pi>' \<triangleleft> e';
       \<V> \<Turnstile> \<pi> \<triangleleft> e
     \<rbrakk> \<Longrightarrow> 
@@ -143,57 +138,71 @@ inductive path_in_exp' :: "abstract_value_env \<Rightarrow> abstract_path \<Righ
     \<V> \<Turnstile> (Inr () # \<pi>) \<triangleleft> (LET x = SPAWN e\<^sub>c in _)
   " 
 
-
-definition path_in_exp :: "abstract_path \<Rightarrow> exp \<Rightarrow> bool" (infix "\<triangleleft>" 55)where
+definition path_in_exp :: "control_path \<Rightarrow> exp \<Rightarrow> bool" (infix "\<triangleleft>" 55)where
   "\<pi> \<triangleleft> e \<equiv> (\<exists> \<V> \<C> . (\<V>, \<C>) \<Turnstile> e \<and> (\<V> \<Turnstile> \<pi> \<triangleleft> e))"
 
 inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<unlhd>" 55)where
   Refl: "e \<unlhd> e" |
   Step: "e' \<unlhd> e \<Longrightarrow> e' \<unlhd> (LET x = b in e)"
 
-definition abstract_send_sites :: "var \<Rightarrow> exp \<Rightarrow> var set" where
+
+class xyz =
+  fixes accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> 'a \<Rightarrow> bool"
+  fixes exp_in :: "exp \<Rightarrow> 'a \<Rightarrow> bool"
+  fixes path_in :: "control_path \<Rightarrow> 'a \<Rightarrow> bool"
+
+
+definition (in xyz) abstract_send_sites :: "var \<Rightarrow> 'a \<Rightarrow> var set" where
   "abstract_send_sites x\<^sub>c e = {x . \<exists> x\<^sub>e e' x\<^sub>m \<V> \<C>. 
-    (LET x = SYNC x\<^sub>e in e') \<unlhd> e \<and> 
-    (\<V>, \<C>) \<Turnstile> e \<and> 
+    exp_in (LET x = SYNC x\<^sub>e in e') e \<and> 
+    accept (\<V>, \<C>) e \<and> 
     {^Send_Evt x\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
   }"
 
-definition abstract_recv_sites :: "var \<Rightarrow> exp \<Rightarrow> var set" where
+definition (in xyz) abstract_recv_sites :: "var \<Rightarrow> 'a \<Rightarrow> var set" where
   "abstract_recv_sites x\<^sub>c e = {x . \<exists> x\<^sub>e e' \<V> \<C>. 
-    (LET x = SYNC x\<^sub>e in e') \<unlhd> e \<and> 
-    (\<V>, \<C>) \<Turnstile> e \<and> 
+    exp_in (LET x = SYNC x\<^sub>e in e') e \<and> 
+    accept (\<V>, \<C>) e \<and> 
     {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x\<^sub>e
   }"
 
+instantiation exp :: xyz
+begin
+  definition accept_exp_xyz: "accept \<T> e = flow_accept \<T> e" 
+  definition exp_in_exp_xyz: "exp_in e' e = subexp e' e" 
+  definition path_in_exp_xyz: "path_in \<pi> e = \<pi> \<triangleleft> e" 
+  instance proof
+  qed
+end
 
-definition abstract_paths :: "var set \<Rightarrow> exp \<Rightarrow> abstract_path set" where 
-  "abstract_paths sites e = {\<pi>;;x | \<pi> x . 
-    (x \<in> sites) \<and>  (\<pi>;;x) \<triangleleft> e
+definition (in xyz) control_paths :: "var set \<Rightarrow> 'a \<Rightarrow> control_path set" where 
+  "control_paths sites e = {\<pi>;;x | \<pi> x . 
+    (x \<in> sites) \<and>  path_in (\<pi>;;x) e
   }" 
 
-definition abstract_processes :: "var set \<Rightarrow> exp \<Rightarrow> abstract_path set" where 
-  "abstract_processes sites e = {\<pi> \<in> abstract_paths sites e .
-    (\<exists> \<pi>' . (\<pi> @ [Inr ()] @ \<pi>') \<in> abstract_paths sites e) \<or>
-    (\<forall> \<pi>' . (\<pi> @ \<pi>') \<notin> abstract_paths sites e)
+definition (in xyz) abstract_processes :: "var set \<Rightarrow> 'a \<Rightarrow> control_path set" where 
+  "abstract_processes sites e = {\<pi> \<in> control_paths sites e .
+    (\<exists> \<pi>' . (\<pi> @ [Inr ()] @ \<pi>') \<in> control_paths sites e) \<or>
+    (\<forall> \<pi>' . (\<pi> @ \<pi>') \<notin> control_paths sites e)
   }" 
 
-definition abstract_send_paths where 
-  "abstract_send_paths c e = abstract_paths (abstract_send_sites c e) e"
+definition (in xyz) abstract_send_paths :: "var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
+  "abstract_send_paths c e = control_paths (abstract_send_sites c e) e"
 
-definition abstract_recv_paths where 
-  "abstract_recv_paths c e = abstract_paths (abstract_recv_sites c e) e"
+definition (in xyz) abstract_recv_paths :: "var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
+  "abstract_recv_paths c e = control_paths (abstract_recv_sites c e) e"
 
-definition abstract_send_processes where 
+definition (in xyz) abstract_send_processes :: "var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
   "abstract_send_processes c e = abstract_processes (abstract_send_sites c e) e"
 
-definition abstract_recv_processes where 
+definition (in xyz) abstract_recv_processes :: "var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
   "abstract_recv_processes c e = abstract_processes (abstract_recv_sites c e) e"
 
-definition one_max :: "abstract_path set \<Rightarrow> bool"  where
+definition one_max :: "control_path set \<Rightarrow> bool"  where
   "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)"
 
 
-inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>t" 55) where
+inductive (in xyz) topo_pair_accept :: "topo_pair \<Rightarrow> 'a \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>t" 55) where
   OneShot: "
     one_max (abstract_send_paths c e) \<Longrightarrow> 
     (c, OneShot) \<Turnstile>\<^sub>t e
@@ -218,9 +227,45 @@ inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (
 
   Any: "(c, Any) \<Turnstile>\<^sub>t e"
 
-
 definition topo_accept :: "topo_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<bind>" 55) where 
   "\<A> \<bind> e \<longleftrightarrow> (\<forall> x . (x, \<A> x) \<Turnstile>\<^sub>t e)"
+
+
+
+
+
+inductive exp_in_pool :: "exp \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<lhd>|" 55)where
+  Any: "
+    \<lbrakk>
+      \<E> \<pi> = Some (<<e, \<rho>, \<kappa>>>);
+      e' \<unlhd> e
+    \<rbrakk> \<Longrightarrow>
+    e' \<lhd>| \<E>
+  "
+
+
+definition abstract_send_sites_pool :: "var \<Rightarrow> state_pool \<Rightarrow> var set" where
+  "abstract_send_sites_pool x\<^sub>c \<E> = {x . \<exists> x\<^sub>e e' x\<^sub>m \<V> \<C>. 
+    (LET x = SYNC x\<^sub>e in e') \<lhd>| \<E> \<and> 
+    (\<V>, \<C>) \<parallel>\<lless> \<E> \<and> 
+    {^Send_Evt x\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
+  }"
+
+definition abstract_recv_sites_pool :: "var \<Rightarrow> state_pool \<Rightarrow> var set" where
+  "abstract_recv_sites_pool x\<^sub>c \<E> = {x . \<exists> x\<^sub>e e' \<V> \<C>. 
+    (LET x = SYNC x\<^sub>e in e') \<lhd>| \<E> \<and> 
+    (\<V>, \<C>) \<parallel>\<lless> \<E> \<and> 
+    {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x\<^sub>e
+  }"
+
+
+
+inductive topo_pair_over_pool_accept :: "topo_pair \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<parallel>\<lless>\<^sub>t" 55) where
+  Any: "
+    (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (x, t) \<TTurnstile>\<^sub>t \<sigma>)
+    \<Longrightarrow> 
+    (x, t) \<parallel>\<lless>\<^sub>t \<E>
+  "
 
 (*
 
@@ -239,12 +284,6 @@ inductive topo_pair_over_state_accept :: "topo_pair \<Rightarrow> state \<Righta
     (\<V>, \<C>) \<TTurnstile> <<e, \<rho>, \<kappa>>>
   "
 
-inductive topo_pair_over_pool_accept :: "topo_pair \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<parallel>\<lless>\<^sub>t" 55) where
-  Any: "
-    (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<TTurnstile> \<sigma>)
-    \<Longrightarrow> 
-    (\<V>, \<C>) \<parallel>\<lless> \<E>
-  "
 
 *)
  
