@@ -10,9 +10,16 @@ fun result_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
   "\<lfloor>RESULT x\<rfloor> = x" |
   "\<lfloor>LET _ = _ in e\<rfloor> = \<lfloor>e\<rfloor>"
 
-inductive flow_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>" 55) where
-  Result: "
-    (\<V>, \<C>) \<Turnstile> RESULT x
+
+class flow =
+  fixes accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> 'a \<Rightarrow> bool" (infix "\<Turnstile>" 55)
+
+instantiation exp :: flow
+begin
+
+inductive accept_exp where
+  "
+    (\<V>, \<C>) \<Turnstile> (RESULT x)
   " |
   Let_Unit: "
     \<lbrakk> {^\<lparr>\<rparr>} \<subseteq> \<V> x; (\<V>, \<C>) \<Turnstile> e \<rbrakk> \<Longrightarrow> 
@@ -130,6 +137,12 @@ inductive flow_accept :: "abstract_value_env \<times> abstract_value_env \<Right
     (\<V>, \<C>) \<Turnstile> LET x = SPAWN e\<^sub>c in e
   "
 
+instance proof
+qed
+
+end
+
+
 fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) where
   "|\<lbrace>Ch \<pi> x\<rbrace>| = ^Chan x" |
   "|\<lbrace>p, \<rho>\<rbrace>| = ^p" |
@@ -199,6 +212,13 @@ where
     (\<V>, \<C>) \<parallel>\<approx> \<rho>
   "
 
+instantiation val :: flow
+begin
+fun accept_val where "(\<V>, \<C>) \<Turnstile> \<omega> = (\<V>, \<C>) \<parallel>> \<omega> "
+instance proof
+qed
+end
+
 inductive flow_over_stack_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile> _ \<Rrightarrow> _" [56, 0, 56] 55) where
   Empty: "(\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> []" |
   Nonempty: "
@@ -228,5 +248,6 @@ inductive flow_over_pool_accept :: "abstract_value_env \<times> abstract_value_e
     \<Longrightarrow> 
     (\<V>, \<C>) \<parallel>\<lless> \<E>
   "
+
 
 end

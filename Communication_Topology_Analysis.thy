@@ -168,11 +168,11 @@ definition (in xyz) abstract_recv_sites :: "var \<Rightarrow> 'a \<Rightarrow> v
 
 instantiation exp :: xyz
 begin
-  definition accept_exp_xyz: "accept \<T> e = flow_accept \<T> e" 
-  definition exp_in_exp_xyz: "exp_in e' e = subexp e' e" 
-  definition path_in_exp_xyz: "path_in \<pi> e = \<pi> \<triangleleft> e" 
-  instance proof
-  qed
+definition accept_exp: "accept \<T> e = flow_accept \<T> e" 
+definition exp_in_exp: "exp_in e' e = subexp e' e" 
+definition path_in_exp: "path_in \<pi> e = \<pi> \<triangleleft> e" 
+instance proof
+qed
 end
 
 definition (in xyz) control_paths :: "var set \<Rightarrow> 'a \<Rightarrow> control_path set" where 
