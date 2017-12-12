@@ -37,7 +37,6 @@ fun cont_stack_cons :: "cont \<Rightarrow> cont_stack \<Rightarrow> cont_stack" 
 
 datatype state = State exp env cont_stack ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
   
-type_synonym val_pool = "control_path \<rightharpoonup> val"
 datatype state_pool = SP "control_path \<rightharpoonup> state"
 
 inductive state_pool_entry_accept :: "state_pool \<Rightarrow> control_path \<Rightarrow> state \<Rightarrow> bool" ("_ _ \<diamond> _" [56, 0, 56]55)where
@@ -125,7 +124,7 @@ lemma leaf_elim: "
 "
 using leaf_def by blast
 (*
-
+type_synonym val_pool = "control_path \<rightharpoonup> val"
 inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
   Sync_Send_Recv: "
     \<lbrakk>

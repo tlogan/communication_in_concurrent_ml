@@ -160,7 +160,7 @@ definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abs
 
 
 inductive flow_over_value_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<parallel>>" 55)
-and  flow_over_env_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> (var \<rightharpoonup> val) \<Rightarrow> bool" (infix "\<parallel>\<approx>" 55) 
+and  flow_over_env_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> env \<Rightarrow> bool" (infix "\<parallel>\<approx>" 55) 
 where
   Unit: "(\<V>, \<C>) \<parallel>> \<lbrace>\<rbrace>" |
   Chan: "(\<V>, \<C>) \<parallel>> \<lbrace>c\<rbrace>" |
@@ -205,7 +205,7 @@ where
 
   Any : "
     \<lbrakk>
-      (\<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>
+      (\<forall> x \<omega> . \<rho> x \<rhd> \<omega> \<longrightarrow>
         {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<parallel>> \<omega>
       )
     \<rbrakk> \<Longrightarrow>
@@ -214,40 +214,62 @@ where
 
 instantiation val :: flow
 begin
-fun accept_val where "(\<V>, \<C>) \<Turnstile> \<omega> = (\<V>, \<C>) \<parallel>> \<omega> "
+fun accept_val where "(\<V>, \<C>) \<Turnstile> \<omega> \<longleftrightarrow> (\<V>, \<C>) \<parallel>> \<omega> "
 instance proof
 qed
 end
 
-inductive flow_over_stack_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile> _ \<Rrightarrow> _" [56, 0, 56] 55) where
-  Empty: "(\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> []" |
+instantiation env :: flow
+begin
+fun accept_env where "(\<V>, \<C>) \<Turnstile> \<omega> \<longleftrightarrow> (\<V>, \<C>) \<parallel>\<approx> \<omega> "
+instance proof
+qed
+end
+
+
+datatype abstract_stack_bind = ASB "abstract_value set" "cont_stack" (infix "\<Rrightarrow>" 70)
+instantiation abstract_stack_bind :: flow
+begin
+inductive accept_abstract_stack_bind where
+  Empty: "(\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> [.]" |
   Nonempty: "
     \<lbrakk> 
       \<W> \<subseteq> \<V> x;
       (\<V>, \<C>) \<Turnstile> e;
-      (\<V>, \<C>) \<parallel>\<approx> \<rho>; 
+      (\<V>, \<C>) \<Turnstile> \<rho>; 
       (\<V>, \<C>) \<Turnstile> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> \<langle>x, e, \<rho>\<rangle> # \<kappa>
+    (\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> (\<langle>x, e, \<rho>\<rangle> :# \<kappa>)
   "
+instance proof
+qed
+end
 
-
-inductive flow_over_state_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
+instantiation state :: flow
+begin
+inductive accept_state where
   Any: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile> e; 
-      (\<V>, \<C>) \<parallel>\<approx> \<rho>; 
+      (\<V>, \<C>) \<Turnstile> \<rho>; 
       (\<V>, \<C>) \<Turnstile> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>) \<TTurnstile> <<e, \<rho>, \<kappa>>>
+    (\<V>, \<C>) \<Turnstile> \<langle>e; \<rho>; \<kappa>\<rangle>
   "
+instance proof
+qed
+end
 
-inductive flow_over_pool_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<parallel>\<lless>" 55) where
+instantiation state_pool :: flow
+begin
+inductive accept_state_pool where
   Any: "
-    (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<TTurnstile> \<sigma>)
+    (\<forall> \<pi> \<sigma> . \<E> \<pi> \<diamond> \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile> \<sigma>)
     \<Longrightarrow> 
-    (\<V>, \<C>) \<parallel>\<lless> \<E>
+    (\<V>, \<C>) \<Turnstile> \<E>
   "
-
+instance proof
+qed
+end
 
 end
