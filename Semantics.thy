@@ -38,7 +38,25 @@ fun cont_stack_cons :: "cont \<Rightarrow> cont_stack \<Rightarrow> cont_stack" 
 datatype state = State exp env cont_stack ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
   
 type_synonym val_pool = "control_path \<rightharpoonup> val"
-type_synonym state_pool = "control_path \<rightharpoonup> state"
+datatype state_pool = SP "control_path \<rightharpoonup> state"
+
+inductive state_pool_entry_accept :: "state_pool \<Rightarrow> control_path \<Rightarrow> state \<Rightarrow> bool" ("_ _ \<diamond> _" [56, 0, 56]55)where
+  Any: "
+    (f \<pi> = Some \<omega>)
+    \<Longrightarrow> 
+    (SP f) x \<diamond> \<omega>
+  "
+
+inductive state_pool_none_accept :: "state_pool \<Rightarrow> control_path \<Rightarrow> bool" ("_ _ \<diamond>." [56, 0]55)where
+  Any: "
+    (f \<pi> = None)
+    \<Longrightarrow> 
+    (SP f) \<pi> \<diamond>.
+  "
+
+fun state_pool_update :: "state_pool \<Rightarrow> (control_path \<rightharpoonup> state) \<Rightarrow> state_pool" (infixl "+:" 61) where
+  "(SP f) +: mp = SP (f ++ mp)"
+
   
 inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<hookrightarrow>" 55) where 
   Result: "
@@ -97,18 +115,15 @@ abbreviation control_path_append_unit :: "control_path  => control_path" ("_;;."
   "\<pi>;;. \<equiv> \<pi> @ [Inr ()]"
   
   
-definition leaf :: "(control_path \<rightharpoonup> state) \<Rightarrow> control_path \<Rightarrow> bool" where
-  "leaf \<E> \<pi> \<equiv>
-      \<E> \<pi> \<noteq> None \<and>
-      (\<nexists> \<pi>' . \<E> \<pi>' \<noteq> None \<and> strict_prefix \<pi> \<pi>')
-  "
-  
+definition leaf :: "state_pool \<Rightarrow> control_path \<Rightarrow> bool" where
+  "leaf \<E> \<pi> \<equiv> \<not>(\<E> \<pi> \<diamond>.) \<and> (\<nexists> \<pi>' . \<not>(\<E> \<pi>' \<diamond>.) \<and> strict_prefix \<pi> \<pi>')"
+
+
 lemma leaf_elim: "
   \<lbrakk> leaf \<E> \<pi>; strict_prefix \<pi> \<pi>' \<rbrakk> \<Longrightarrow>
-   \<E> \<pi>' = None 
+   \<E> \<pi>' \<diamond>.
 "
-by (simp add: leaf_def, auto)
-
+using leaf_def by blast
 (*
 
 inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
@@ -195,28 +210,28 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
   Seq_Step: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = b in e'; \<rho>; \<kappa>\<rangle>) ;
+      \<E> \<pi> \<diamond> \<langle>LET x = b in e'; \<rho>; \<kappa>\<rangle> ;
       \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<sigma>'
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E>(\<pi>;;x \<mapsto> \<sigma>')
+    \<E> \<rightarrow> \<E> +: [\<pi>;;x \<mapsto> \<sigma>']
   " |
   Sync: "
     \<lbrakk>
    
       leaf \<E> \<pi>\<^sub>s ;
-      \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>);
+      \<E> \<pi>\<^sub>s \<diamond> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>;
       \<rho>\<^sub>s x\<^sub>s\<^sub>e \<rhd> \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>;
       \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c \<rhd> \<lbrace>c\<rbrace>; 
       
       \<rho>\<^sub>s\<^sub>e x\<^sub>m \<rhd> \<omega>\<^sub>m ;
 
       leaf \<E> \<pi>\<^sub>r ;
-      \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>);
+      \<E> \<pi>\<^sub>r \<diamond> \<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>;
       \<rho>\<^sub>r x\<^sub>r\<^sub>e \<rhd> \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>;
       \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c \<rhd> \<lbrace>c\<rbrace>
 
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [
+    \<E> \<rightarrow> \<E> +: [
       \<pi>\<^sub>s;;x\<^sub>s \<mapsto> (\<langle>e\<^sub>s; \<rho>\<^sub>s @: [x\<^sub>s \<mapsto> \<lbrace>\<rbrace>]; \<kappa>\<^sub>s\<rangle>), 
       \<pi>\<^sub>r;;x\<^sub>r \<mapsto> (\<langle>e\<^sub>r; \<rho>\<^sub>r @: [x\<^sub>r \<mapsto> \<omega>\<^sub>m]; \<kappa>\<^sub>r\<rangle>)
     ]
@@ -224,23 +239,22 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
   Let_Chan: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>)
+      \<E> \<pi> \<diamond> \<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E>(
+    \<E> \<rightarrow> \<E> +: [
       \<pi>;;x \<mapsto> (\<langle>e; \<rho> @: [x \<mapsto> \<lbrace>Ch \<pi> x\<rbrace>]; \<kappa>\<rangle>)
-    )
+    ]
   " |
   Let_Spawn: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)
+      \<E> \<pi> \<diamond> \<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E>(
+    \<E> \<rightarrow> \<E> +: [
       \<pi>;;x \<mapsto> (\<langle>e; \<rho> @: [x \<mapsto> \<lbrace>\<rbrace>]; \<kappa>\<rangle>), 
       \<pi>;;. \<mapsto> (\<langle>e\<^sub>c; \<rho>; [.]\<rangle>) 
-    )
-  "
-      
+    ]
+  "   
 
 abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "x \<rightarrow>* y \<equiv> star concur_step x y"
