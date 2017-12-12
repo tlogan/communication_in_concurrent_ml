@@ -11,89 +11,83 @@ fun result_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
   "\<lfloor>LET _ = _ in e\<rfloor> = \<lfloor>e\<rfloor>"
 
 
-class flow =
-  fixes accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> 'a \<Rightarrow> bool" (infix "\<Turnstile>" 55)
-
-instantiation exp :: flow
-begin
-
-inductive accept_exp where
+inductive accept_exp :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>e" 55) where
   "
-    (\<V>, \<C>) \<Turnstile> (RESULT x)
+    (\<V>, \<C>) \<Turnstile>\<^sub>e (RESULT x)
   " |
   Let_Unit: "
-    \<lbrakk> {^\<lparr>\<rparr>} \<subseteq> \<V> x; (\<V>, \<C>) \<Turnstile> e \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> LET x = \<lparr>\<rparr> in e
+    \<lbrakk> {^\<lparr>\<rparr>} \<subseteq> \<V> x; (\<V>, \<C>) \<Turnstile>\<^sub>e e \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e
   " |
   Let_Abs : "
     \<lbrakk> 
       {^Abs f' x' e'} \<subseteq> \<V> f';
-      (\<V>, \<C>) \<Turnstile> e';
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e';
       {^Abs f' x' e'} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile> e 
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> LET x = FN f' x' . e' in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FN f' x' . e' in e
   " |
   Let_Pair : "
     \<lbrakk> 
       {^Pair x\<^sub>1 x\<^sub>2} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile> e 
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e
   " |
   Let_Left : "
     \<lbrakk> 
       {^Left x\<^sub>p} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile> e 
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> LET x = LEFT x\<^sub>p in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = LEFT x\<^sub>p in e
   " |
   Let_Right : "
     \<lbrakk> 
       {^Right x\<^sub>p} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile> e
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> LET x = RIGHT x\<^sub>p in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = RIGHT x\<^sub>p in e
   " |
   Let_Send_Evt : "
     \<lbrakk> 
       {^Send_Evt x\<^sub>c x\<^sub>m} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile> e 
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> LET x = SEND EVT x\<^sub>c x\<^sub>m in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SEND EVT x\<^sub>c x\<^sub>m in e
   " |
   Let_Recv_Evt : "
     \<lbrakk> 
       {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile> e 
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> LET x = RECV EVT x\<^sub>c in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = RECV EVT x\<^sub>c in e
   " |
   Let_Case: "
     \<lbrakk>
       \<forall> x\<^sub>l' . ^Left x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow> 
-        \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile> e\<^sub>l
+        \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l
       ;
       \<forall> x\<^sub>r' . ^Right x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow>
-        \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile> e\<^sub>r
+        \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r
       ;
-      (\<V>, \<C>) \<Turnstile> e
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e
   " |
   Let_Fst: "
     \<lbrakk> 
       \<forall> x\<^sub>1 x\<^sub>2. ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>1 \<subseteq> \<V> x; 
-      (\<V>, \<C>) \<Turnstile> e 
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> LET x = FST x\<^sub>p in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FST x\<^sub>p in e
   " |
   Let_Snd: "
     \<lbrakk> 
       \<forall> x\<^sub>1 x\<^sub>2 . ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>2 \<subseteq> \<V> x; 
-      (\<V>, \<C>) \<Turnstile> e
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> LET x = SND x\<^sub>p in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SND x\<^sub>p in e
   " |
   Let_App: "
     \<lbrakk>
@@ -101,9 +95,9 @@ inductive accept_exp where
         \<V> x\<^sub>a \<subseteq> \<V> x' \<and>
         \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x
       ;
-      (\<V>, \<C>) \<Turnstile> e
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> LET x = APP f x\<^sub>a in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e
   " |
   Let_Sync  : "
     \<lbrakk>
@@ -117,30 +111,25 @@ inductive accept_exp where
         ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow>
         \<C> x\<^sub>c \<subseteq> \<V> x
       ;
-      (\<V>, \<C>) \<Turnstile> e
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e
     \<rbrakk> \<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile> LET x = SYNC x\<^sub>e in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SYNC x\<^sub>e in e
   " |
   Let_Chan: "
     \<lbrakk>
       {^Chan x} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile> e
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e
     \<rbrakk> \<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile> LET x = CHAN \<lparr>\<rparr> in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CHAN \<lparr>\<rparr> in e
   " |
   Let_Spawn_Parent: "
     \<lbrakk>
       {^\<lparr>\<rparr>} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile> e\<^sub>c;
-      (\<V>, \<C>) \<Turnstile> e
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>c;
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e
     \<rbrakk> \<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile> LET x = SPAWN e\<^sub>c in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SPAWN e\<^sub>c in e
   "
-
-instance proof
-qed
-
-end
 
 
 fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) where
@@ -159,117 +148,89 @@ definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abs
   "\<V> \<sqsubseteq> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
 
 
-inductive flow_over_value_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<parallel>>" 55)
-and  flow_over_env_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> env \<Rightarrow> bool" (infix "\<parallel>\<approx>" 55) 
+inductive accept_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55)
+and  accept_val_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
 where
-  Unit: "(\<V>, \<C>) \<parallel>> \<lbrace>\<rbrace>" |
-  Chan: "(\<V>, \<C>) \<parallel>> \<lbrace>c\<rbrace>" |
+  Unit: "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>" |
+  Chan: "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>c\<rbrace>" |
   Abs: "
     \<lbrakk>
       {^Abs f x e} \<subseteq> \<V> f;
-      (\<V>, \<C>) \<Turnstile> e;
-      (\<V>, \<C>) \<parallel>\<approx> \<rho>
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+      (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<parallel>> \<lbrace>Abs f x e, \<rho>\<rbrace>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Abs f x e, \<rho>\<rbrace>
   " |
   Pair: "
-    (\<V>, \<C>) \<parallel>\<approx> \<rho>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
     \<Longrightarrow>
-    (\<V>, \<C>) \<parallel>> \<lbrace>Pair _ _, \<rho>\<rbrace>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Pair _ _, \<rho>\<rbrace>
   " |
   Left: "
-    (\<V>, \<C>) \<parallel>\<approx> \<rho>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
     \<Longrightarrow>
-    (\<V>, \<C>) \<parallel>> \<lbrace>Left _, \<rho>\<rbrace>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Left _, \<rho>\<rbrace>
   " |
   Right: "
-    (\<V>, \<C>) \<parallel>\<approx> \<rho>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
     \<Longrightarrow>
-    (\<V>, \<C>) \<parallel>> \<lbrace>Right _, \<rho>\<rbrace>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Right _, \<rho>\<rbrace>
   " |
   Send_Evt: "
-    (\<V>, \<C>) \<parallel>\<approx> \<rho>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
     \<Longrightarrow>
-    (\<V>, \<C>) \<parallel>> \<lbrace>Send_Evt _ _, \<rho>\<rbrace>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Send_Evt _ _, \<rho>\<rbrace>
   " |
   Recv_Evt: "
-    (\<V>, \<C>) \<parallel>\<approx> \<rho>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
     \<Longrightarrow>
-    (\<V>, \<C>) \<parallel>> \<lbrace>Recv_Evt _, \<rho>\<rbrace>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Recv_Evt _, \<rho>\<rbrace>
   " |
   Always_Evt: "
-    (\<V>, \<C>) \<parallel>\<approx> \<rho>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
     \<Longrightarrow>
-    (\<V>, \<C>) \<parallel>> \<lbrace>Always_Evt _, \<rho>\<rbrace>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Always_Evt _, \<rho>\<rbrace>
   " |
 
   Any : "
     \<lbrakk>
-      (\<forall> x \<omega> . \<rho> x \<rhd> \<omega> \<longrightarrow>
-        {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<parallel>> \<omega>
+      (\<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>
+        {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>
       )
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>) \<parallel>\<approx> \<rho>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
   "
 
-instantiation val :: flow
-begin
-fun accept_val where "(\<V>, \<C>) \<Turnstile> \<omega> \<longleftrightarrow> (\<V>, \<C>) \<parallel>> \<omega> "
-instance proof
-qed
-end
 
-instantiation env :: flow
-begin
-fun accept_env where "(\<V>, \<C>) \<Turnstile> \<omega> \<longleftrightarrow> (\<V>, \<C>) \<parallel>\<approx> \<omega> "
-instance proof
-qed
-end
-
-
-datatype abstract_stack_bind = ASB "abstract_value set" "cont_stack" (infix "\<Rrightarrow>" 70)
-instantiation abstract_stack_bind :: flow
-begin
-inductive accept_abstract_stack_bind where
-  Empty: "(\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> [.]" |
+inductive accept_stack :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile>\<^sub>\<kappa> _ \<Rrightarrow> _" [56,0,56]55) where
+  Empty: "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<W> \<Rrightarrow> []" |
   Nonempty: "
     \<lbrakk> 
       \<W> \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile> e;
-      (\<V>, \<C>) \<Turnstile> \<rho>; 
-      (\<V>, \<C>) \<Turnstile> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+      (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>; 
+      (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> \<W> \<Rrightarrow> (\<langle>x, e, \<rho>\<rangle> :# \<kappa>)
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<W> \<Rrightarrow> (\<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
-instance proof
-qed
-end
 
-instantiation state :: flow
-begin
-inductive accept_state where
+
+inductive accept_state :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<sigma>" 55)  where
   Any: "
     \<lbrakk>
-      (\<V>, \<C>) \<Turnstile> e; 
-      (\<V>, \<C>) \<Turnstile> \<rho>; 
-      (\<V>, \<C>) \<Turnstile> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e; 
+      (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>; 
+      (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>) \<Turnstile> \<langle>e; \<rho>; \<kappa>\<rangle>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>
   "
-instance proof
-qed
-end
 
-instantiation state_pool :: flow
-begin
-inductive accept_state_pool where
+
+inductive accept_state_pool :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<E>" 55) where
   Any: "
-    (\<forall> \<pi> \<sigma> . \<E> \<pi> \<diamond> \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile> \<sigma>)
+    (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>)
     \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile> \<E>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
   "
-instance proof
-qed
-end
-
+   
 end
