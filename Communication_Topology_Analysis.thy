@@ -8,46 +8,46 @@ type_synonym topo_pair = "var \<times> topo"
 type_synonym topo_env = "var \<Rightarrow> topo"
 
 class com_topo =
-  fixes abstract_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> 'a \<Rightarrow> bool" (infix "\<Turnstile>" 55)
+  fixes flow_accept :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> 'a \<Rightarrow> bool" (infix "\<Turnstile>" 55)
   fixes exp_accept :: "exp \<Rightarrow> 'a \<Rightarrow> bool"
-  fixes path_accept :: "control_path \<Rightarrow> 'a \<Rightarrow> bool"
+  fixes flow_path_accept :: "abstract_value_env \<Rightarrow> control_path \<Rightarrow> 'a \<Rightarrow> bool" (" _ \<tturnstile> _ \<triangleleft> _ " [56,0,56]55)
 
 definition (in com_topo) abstract_send_sites :: "var \<Rightarrow> 'a \<Rightarrow> var set" where
-  "abstract_send_sites x\<^sub>c e \<equiv> {x . \<exists> x\<^sub>e e' x\<^sub>m \<V> \<C>. 
-    exp_accept (LET x = SYNC x\<^sub>e in e') e \<and> 
-    abstract_accept (\<V>, \<C>) e \<and> 
+  "abstract_send_sites x\<^sub>c g \<equiv> {x . \<exists> x\<^sub>e e' x\<^sub>m \<V> \<C>. 
+    exp_accept (LET x = SYNC x\<^sub>e in e') g \<and> 
+    (\<V>, \<C>) \<Turnstile> g \<and> 
     {^Send_Evt x\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
   }"
 
 definition (in com_topo) abstract_recv_sites :: "var \<Rightarrow> 'a \<Rightarrow> var set" where
-  "abstract_recv_sites x\<^sub>c e \<equiv> {x . \<exists> x\<^sub>e e' \<V> \<C>. 
-    exp_accept (LET x = SYNC x\<^sub>e in e') e \<and> 
-    abstract_accept (\<V>, \<C>) e \<and> 
+  "abstract_recv_sites x\<^sub>c g \<equiv> {x . \<exists> x\<^sub>e e' \<V> \<C>. 
+    exp_accept (LET x = SYNC x\<^sub>e in e') g \<and> 
+    (\<V>, \<C>) \<Turnstile> g \<and> 
     {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x\<^sub>e
   }"
 
-definition (in com_topo) control_paths :: "var set \<Rightarrow> 'a \<Rightarrow> control_path set" where 
-  "control_paths sites e \<equiv> {\<pi>;;x | \<pi> x . 
-    (x \<in> sites) \<and>  path_accept (\<pi>;;x) e
+definition (in com_topo) control_paths :: "abstract_value_env \<Rightarrow> var set \<Rightarrow> 'a \<Rightarrow> control_path set" where 
+  "control_paths \<V> sites g \<equiv> {\<pi>;;x | \<pi> x . 
+    (x \<in> sites) \<and> \<V> \<tturnstile> (\<pi>;;x) \<triangleleft> g
   }" 
 
-definition (in com_topo) abstract_processes :: "var set \<Rightarrow> 'a \<Rightarrow> control_path set" where 
-  "abstract_processes sites e \<equiv> {\<pi> \<in> control_paths sites e .
-    (\<exists> \<pi>' . (\<pi> @ [Inr ()] @ \<pi>') \<in> control_paths sites e) \<or>
-    (\<forall> \<pi>' . (\<pi> @ \<pi>') \<notin> control_paths sites e)
+definition (in com_topo) abstract_processes :: "abstract_value_env \<Rightarrow> var set \<Rightarrow> 'a \<Rightarrow> control_path set" where 
+  "abstract_processes \<V> sites e \<equiv> {\<pi> \<in> control_paths \<V> sites e .
+    (\<exists> \<pi>' . (\<pi> @ [Inr ()] @ \<pi>') \<in> control_paths \<V> sites e) \<or>
+    (\<forall> \<pi>' . (\<pi> @ \<pi>') \<notin> control_paths \<V> sites e)
   }"
 
-definition (in com_topo) abstract_send_paths :: "var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
-  "abstract_send_paths c e \<equiv> control_paths (abstract_send_sites c e) e"
+definition (in com_topo) abstract_send_paths :: "abstract_value_env \<Rightarrow> var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
+  "abstract_send_paths \<V> c g \<equiv> control_paths \<V> (abstract_send_sites c g) g"
 
-definition (in com_topo) abstract_recv_paths :: "var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
-  "abstract_recv_paths c e \<equiv> control_paths (abstract_recv_sites c e) e"
+definition (in com_topo) abstract_recv_paths :: "abstract_value_env \<Rightarrow> var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
+  "abstract_recv_paths \<V> c g \<equiv> control_paths \<V> (abstract_recv_sites c g) g"
 
-definition (in com_topo) abstract_send_processes :: "var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
-  "abstract_send_processes c e = abstract_processes (abstract_send_sites c e) e"
+definition (in com_topo) abstract_send_processes :: "abstract_value_env \<Rightarrow> var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
+  "abstract_send_processes \<V> c g \<equiv> abstract_processes \<V> (abstract_send_sites c g) g"
 
-definition (in com_topo) abstract_recv_processes :: "var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
-  "abstract_recv_processes c e = abstract_processes (abstract_recv_sites c e) e"
+definition (in com_topo) abstract_recv_processes :: "abstract_value_env \<Rightarrow> var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
+  "abstract_recv_processes \<V> c g \<equiv> abstract_processes \<V> (abstract_recv_sites c g) g"
 
 definition one_max :: "control_path set \<Rightarrow> bool"  where
   "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)"
@@ -55,24 +55,34 @@ definition one_max :: "control_path set \<Rightarrow> bool"  where
 
 inductive (in com_topo) topo_pair_accept :: "topo_pair \<Rightarrow> 'a \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
   OneShot: "
-    one_max (abstract_send_paths c e) \<Longrightarrow> 
+    \<lbrakk>
+      (\<V>, \<C>) \<Turnstile> e;
+      one_max (abstract_send_paths \<V> c e) 
+    \<rbrakk> \<Longrightarrow> 
     (c, OneShot) \<TTurnstile> e
   " | 
   OneToOne: "
     \<lbrakk> 
-      one_max (abstract_send_processes c e) ;
-      one_max (abstract_recv_processes c e) 
+      (\<V>, \<C>) \<Turnstile> e;
+      one_max (abstract_send_processes \<V> c e) ;
+      one_max (abstract_recv_processes \<V> c e) 
     \<rbrakk> \<Longrightarrow> 
     (c, OneToOne) \<TTurnstile> e
   " | 
 
   FanOut: "
-    one_max (abstract_send_processes c e) \<Longrightarrow> 
+    \<lbrakk>
+      (\<V>, \<C>) \<Turnstile> e;
+      one_max (abstract_send_processes \<V> c e) 
+    \<rbrakk> \<Longrightarrow> 
     (c, FanOut) \<TTurnstile> e
   " | 
 
   FanIn: "
-    one_max (abstract_recv_processes c e) \<Longrightarrow> 
+    \<lbrakk>
+      (\<V>, \<C>) \<Turnstile> e;
+      one_max (abstract_recv_processes \<V> c e) 
+    \<rbrakk> \<Longrightarrow> 
     (c, FanIn) \<TTurnstile> e
   " | 
 
@@ -149,66 +159,62 @@ definition topo_env_precision :: "topo_env \<Rightarrow> topo_env \<Rightarrow> 
   "\<A> \<sqsubseteq>\<^sub>t \<A>' \<equiv> (\<forall> x . \<A> x \<preceq> \<A>' x)"
 
 
-inductive path_in_exp' :: "abstract_value_env \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<Turnstile> _ \<triangleleft> _" [56, 0, 56] 55) where
-  Result: "\<V> \<Turnstile> [Inl x] \<triangleleft> (RESULT x)" |
+inductive flow_path_in_exp :: "abstract_value_env \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile>\<^sub>e _ \<triangleleft> _" [56, 0, 56] 55) where
+  Result: "\<V> \<tturnstile>\<^sub>e [Inl x] \<triangleleft> (RESULT x)" |
   Let_Unit: "
-    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
-    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = \<lparr>\<rparr> in e)
+    \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e \<Longrightarrow> 
+    \<V> \<tturnstile>\<^sub>e (Inl x # \<pi>) \<triangleleft> (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Prim: "
-    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
-    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = Prim p in e)
+    \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e \<Longrightarrow> 
+    \<V> \<tturnstile>\<^sub>e (Inl x # \<pi>) \<triangleleft> (LET x = Prim p in e)
   " |
   Let_Case_Left: "
     \<lbrakk>
-      \<V> \<Turnstile> \<pi>\<^sub>l \<triangleleft> e\<^sub>l; 
-      \<V> \<Turnstile> \<pi> \<triangleleft> e 
+      \<V> \<tturnstile>\<^sub>e \<pi>\<^sub>l \<triangleleft> e\<^sub>l; 
+      \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e 
     \<rbrakk>\<Longrightarrow> 
-    \<V> \<Turnstile> (\<pi>\<^sub>l @ (Inl x # \<pi>)) \<triangleleft> (LET x = CASE _ LEFT x\<^sub>l |> e\<^sub>l RIGHT _ |> _ in e)
+    \<V> \<tturnstile>\<^sub>e (\<pi>\<^sub>l @ (Inl x # \<pi>)) \<triangleleft> (LET x = CASE _ LEFT x\<^sub>l |> e\<^sub>l RIGHT _ |> _ in e)
   " |
   Let_Case_Right: "
     \<lbrakk>
-      \<V> \<Turnstile> \<pi>\<^sub>r \<triangleleft> e\<^sub>r;
-      \<V> \<Turnstile> \<pi> \<triangleleft> e
+      \<V> \<tturnstile>\<^sub>e \<pi>\<^sub>r \<triangleleft> e\<^sub>r;
+      \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e
     \<rbrakk> \<Longrightarrow> 
-    \<V> \<Turnstile> (\<pi>\<^sub>r @ (Inl x # \<pi>)) \<triangleleft> (LET x = CASE _ LEFT _ |> _ RIGHT x\<^sub>r |> e\<^sub>r in e)
+    \<V> \<tturnstile>\<^sub>e (\<pi>\<^sub>r @ (Inl x # \<pi>)) \<triangleleft> (LET x = CASE _ LEFT _ |> _ RIGHT x\<^sub>r |> e\<^sub>r in e)
   " |
   Let_Fst: "
-    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
-    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = FST _ in e)
+    \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e \<Longrightarrow> 
+    \<V> \<tturnstile>\<^sub>e (Inl x # \<pi>) \<triangleleft> (LET x = FST _ in e)
   " |
   Let_Snd: "
-    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
-    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = SND _ in e)
+    \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e \<Longrightarrow> 
+    \<V> \<tturnstile>\<^sub>e (Inl x # \<pi>) \<triangleleft> (LET x = SND _ in e)
   " |
   Let_App: "
     \<lbrakk>
       {^Abs f' x' e'} \<subseteq> \<V> f;
-      (\<V>(x' := \<V> x' \<inter> \<V> x\<^sub>a)) \<Turnstile> \<pi>' \<triangleleft> e';
-      \<V> \<Turnstile> \<pi> \<triangleleft> e
+      (\<V>(x' := \<V> x' \<inter> \<V> x\<^sub>a)) \<tturnstile>\<^sub>e \<pi>' \<triangleleft> e';
+      \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e
     \<rbrakk> \<Longrightarrow> 
-    \<V> \<Turnstile> (\<pi>' @ (Inl x # \<pi>)) \<triangleleft> (LET x = APP f x\<^sub>a in e)
+    \<V> \<tturnstile>\<^sub>e (\<pi>' @ (Inl x # \<pi>)) \<triangleleft> (LET x = APP f x\<^sub>a in e)
   " |
   Let_Sync: "
-   \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow>
-   \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = SYNC _ in e)
+   \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e \<Longrightarrow>
+   \<V> \<tturnstile>\<^sub>e (Inl x # \<pi>) \<triangleleft> (LET x = SYNC _ in e)
   " |
   Let_Chan: "
-    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow>
-    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = CHAN \<lparr>\<rparr> in e)
+    \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e \<Longrightarrow>
+    \<V> \<tturnstile>\<^sub>e (Inl x # \<pi>) \<triangleleft> (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Spawn_Parent: " 
-    \<V> \<Turnstile> \<pi> \<triangleleft> e \<Longrightarrow>
-    \<V> \<Turnstile> (Inl x # \<pi>) \<triangleleft> (LET x = SPAWN _ in e)
+    \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e \<Longrightarrow>
+    \<V> \<tturnstile>\<^sub>e (Inl x # \<pi>) \<triangleleft> (LET x = SPAWN _ in e)
   " |
   Let_Spawn_Child: " 
-    \<V> \<Turnstile> \<pi> \<triangleleft> e\<^sub>c \<Longrightarrow>
-    \<V> \<Turnstile> (Inr () # \<pi>) \<triangleleft> (LET x = SPAWN e\<^sub>c in _)
-  " 
-
-definition path_in_exp :: "control_path \<Rightarrow> exp \<Rightarrow> bool" (infix "\<triangleleft>" 55)where
-  "\<pi> \<triangleleft> e \<equiv> (\<exists> \<V> \<C> . (\<V>, \<C>) \<Turnstile>\<^sub>e e \<and> \<V> \<Turnstile> \<pi> \<triangleleft> e)"
-
+    \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e\<^sub>c \<Longrightarrow>
+    \<V> \<tturnstile>\<^sub>e (Inr () # \<pi>) \<triangleleft> (LET x = SPAWN e\<^sub>c in _)
+  "
 
 inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<unlhd>" 55)where
   Refl: "e \<unlhd> e" |
@@ -216,15 +222,18 @@ inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<unlhd>"
 
 instantiation exp :: com_topo
 begin
-definition abstract_accept_exp where "\<T> \<Turnstile> e \<equiv> \<T> \<Turnstile>\<^sub>e e" 
+definition flow_accept_exp where "\<T> \<Turnstile> e \<equiv> \<T> \<Turnstile>\<^sub>e e" 
 definition exp_accept_exp where "exp_accept e' e \<equiv> e' \<unlhd> e"
-definition path_accept_exp where "path_accept \<pi> e \<equiv> \<pi> \<triangleleft> e"
+definition flow_path_accept_exp where " \<V> \<tturnstile> \<pi> \<triangleleft> e  \<equiv> \<V> \<tturnstile>\<^sub>e \<pi> \<triangleleft> e"
 instance proof qed
 end 
 
+abbreviation topo_pair_accept_exp :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<TTurnstile>\<^sub>e" 55) where
+  "\<T> \<TTurnstile>\<^sub>e e \<equiv> \<T> \<TTurnstile> e "
+
 
 definition topo_accept :: "topo_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<bind>" 55) where 
-  "\<A> \<bind> e \<equiv> (\<forall> x . (x, \<A> x) \<TTurnstile> e)"
+  "\<A> \<bind> e \<equiv> (\<forall> x . (x, \<A> x) \<TTurnstile>\<^sub>e e)"
 
 
 inductive exp_in_pool :: "exp \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<lhd>|" 55)where
@@ -237,20 +246,24 @@ inductive exp_in_pool :: "exp \<Rightarrow> state_pool \<Rightarrow> bool" (infi
   "
 
 
-definition path_in_state_pool :: "control_path \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<triangleleft>-" 55)where
-  "\<pi> \<triangleleft>- \<E> \<equiv> (\<exists> \<V> \<C> \<pi>' e' \<rho>' \<kappa>' \<pi>''. 
+definition path_in_state_pool :: "abstract_value_env \<Rightarrow> control_path \<Rightarrow> state_pool \<Rightarrow> bool" ("_ \<tturnstile>\<^sub>\<E> _ \<triangleleft> _ " [56,0,56]55) where
+  "\<V> \<tturnstile>\<^sub>\<E> \<pi> \<triangleleft> \<E>  \<equiv> (\<exists> \<V> \<C> \<pi>' e' \<rho>' \<kappa>' \<pi>''. 
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<and> 
     \<E> \<pi>' = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<and> 
-    \<V> \<Turnstile> \<pi>'' \<triangleleft> e'
+    \<V> \<tturnstile>\<^sub>e \<pi>'' \<triangleleft> e'
   )"
 
 datatype state_pool' = SP state_pool
 instantiation state_pool' :: com_topo
 begin
-fun abstract_accept_state_pool' where "\<T> \<Turnstile> (SP \<E>) = \<T> \<Turnstile>\<^sub>\<E> \<E>" 
+fun flow_accept_state_pool' where "\<T> \<Turnstile> (SP \<E>) = \<T> \<Turnstile>\<^sub>\<E> \<E>" 
 fun exp_accept_state_pool' where "exp_accept e' (SP \<E>) = e' \<lhd>| \<E>"
-fun path_accept_state_pool' where "path_accept \<pi> (SP \<E>) = \<pi> \<triangleleft>- \<E>"
+fun flow_path_accept_state_pool' where "\<V> \<tturnstile> \<pi> \<triangleleft> (SP \<E>) = \<V> \<tturnstile>\<^sub>\<E> \<pi> \<triangleleft> \<E>"
 instance proof qed
 end 
+
+
+abbreviation topo_pair_accept_state_pool :: "topo_pair \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<TTurnstile>\<^sub>\<E>" 55) where
+  "\<T> \<TTurnstile>\<^sub>\<E> \<E> \<equiv> \<T> \<TTurnstile> (SP \<E>) "
 
 end
