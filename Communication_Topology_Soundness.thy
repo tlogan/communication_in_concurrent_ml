@@ -8,15 +8,15 @@ begin
 
 theorem topology_pair_sound : "
   \<lbrakk>
-    (x, t) \<Turnstile>\<^sub>t e; 
-    [[] \<mapsto> <<e, empty, []>>] \<rightarrow>* \<E>'
+    (x, t) \<TTurnstile> e; 
+    [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   \<langle>\<langle>\<E>' ; x\<rangle>\<rangle> \<preceq> t
 "
 sorry
 
 lemma topology_sound': "
-  (x, \<A> x) \<Turnstile>\<^sub>t e \<Longrightarrow> [[] \<mapsto> <<e,Map.empty,[]>>] \<rightarrow>* \<E>' \<Longrightarrow> (\<langle>\<langle>\<E>'\<rangle>\<rangle>) x \<preceq> \<A> x
+  (x, \<A> x) \<TTurnstile> e \<Longrightarrow> [[] \<mapsto> \<langle>e; Map.empty; []\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> (\<langle>\<langle>\<E>'\<rangle>\<rangle>) x \<preceq> \<A> x
 "
  apply (drule topology_pair_sound, simp)
  apply (unfold state_pool_to_topo_env_def, auto)
@@ -25,7 +25,7 @@ done
 theorem topology_sound : "
   \<lbrakk>
     \<A> \<bind> e; 
-    [[] \<mapsto> <<e, empty, []>>] \<rightarrow>* \<E>'
+    [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   \<langle>\<langle>\<E>'\<rangle>\<rangle> \<sqsubseteq>\<^sub>t \<A>
 "

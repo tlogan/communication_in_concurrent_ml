@@ -35,7 +35,7 @@ definition (in com_topo) abstract_processes :: "var set \<Rightarrow> 'a \<Right
   "abstract_processes sites e \<equiv> {\<pi> \<in> control_paths sites e .
     (\<exists> \<pi>' . (\<pi> @ [Inr ()] @ \<pi>') \<in> control_paths sites e) \<or>
     (\<forall> \<pi>' . (\<pi> @ \<pi>') \<notin> control_paths sites e)
-  }" 
+  }"
 
 definition (in com_topo) abstract_send_paths :: "var \<Rightarrow> 'a \<Rightarrow> control_path set"  where 
   "abstract_send_paths c e \<equiv> control_paths (abstract_send_sites c e) e"
@@ -79,28 +79,25 @@ inductive (in com_topo) topo_pair_accept :: "topo_pair \<Rightarrow> 'a \<Righta
   Any: "(c, Any) \<TTurnstile> e"
 
 
-
-
 (***************)
 
 
-
 definition send_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
-  "send_sites \<E> ch = {\<pi>. \<exists> x x\<^sub>e e \<kappa> \<rho> x\<^sub>c x\<^sub>m \<rho>\<^sub>e. 
+  "send_sites \<E> ch \<equiv> {\<pi>. \<exists> x x\<^sub>e e \<kappa> \<rho> x\<^sub>c x\<^sub>m \<rho>\<^sub>e. 
     \<E> \<pi> = Some (\<langle>LET x = SYNC x\<^sub>e in e; \<rho>; \<kappa>\<rangle>) \<and> 
     \<rho> x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace> \<and> 
     \<rho>\<^sub>e x\<^sub>c = Some \<lbrace>ch\<rbrace>
   }"
 
 definition recv_sites :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
-  "recv_sites \<E> ch = {\<pi>. \<exists> x x\<^sub>e e \<kappa> \<rho> x\<^sub>c \<rho>\<^sub>e. 
+  "recv_sites \<E> ch \<equiv> {\<pi>. \<exists> x x\<^sub>e e \<kappa> \<rho> x\<^sub>c \<rho>\<^sub>e. 
     \<E> \<pi> = Some (\<langle>LET x = SYNC x\<^sub>e in e; \<rho>; \<kappa>\<rangle>) \<and> 
     \<rho> x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>c, \<rho>\<^sub>e\<rbrace> \<and> 
     \<rho>\<^sub>e x\<^sub>c = Some \<lbrace>ch\<rbrace>
   }"
 
 definition single_side :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_path set) \<Rightarrow> state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "single_side sites_of \<E> c \<longleftrightarrow> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
+  "single_side sites_of \<E> c \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
     \<pi>\<^sub>1 \<in> sites_of \<E> c \<longrightarrow>
     \<pi>\<^sub>2 \<in> sites_of \<E> c \<longrightarrow>
     (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1) 
@@ -210,7 +207,8 @@ inductive path_in_exp' :: "abstract_value_env \<Rightarrow> control_path \<Right
   " 
 
 definition path_in_exp :: "control_path \<Rightarrow> exp \<Rightarrow> bool" (infix "\<triangleleft>" 55)where
-  "\<pi> \<triangleleft> e \<equiv> (\<exists> \<V> \<C> . (\<V>, \<C>) \<Turnstile>\<^sub>e e \<and> (\<V> \<Turnstile> \<pi> \<triangleleft> e))"
+  "\<pi> \<triangleleft> e \<equiv> (\<exists> \<V> \<C> . (\<V>, \<C>) \<Turnstile>\<^sub>e e \<and> \<V> \<Turnstile> \<pi> \<triangleleft> e)"
+
 
 inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<unlhd>" 55)where
   Refl: "e \<unlhd> e" |
@@ -238,12 +236,20 @@ inductive exp_in_pool :: "exp \<Rightarrow> state_pool \<Rightarrow> bool" (infi
     e' \<lhd>| \<E>
   "
 
+
+definition path_in_state_pool :: "control_path \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<triangleleft>-" 55)where
+  "\<pi> \<triangleleft>- \<E> \<equiv> (\<exists> \<V> \<C> \<pi>' e' \<rho>' \<kappa>' \<pi>''. 
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<and> 
+    \<E> \<pi>' = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<and> 
+    \<V> \<Turnstile> \<pi>'' \<triangleleft> e'
+  )"
+
 datatype state_pool' = SP state_pool
 instantiation state_pool' :: com_topo
 begin
 fun abstract_accept_state_pool' where "\<T> \<Turnstile> (SP \<E>) = \<T> \<Turnstile>\<^sub>\<E> \<E>" 
 fun exp_accept_state_pool' where "exp_accept e' (SP \<E>) = e' \<lhd>| \<E>"
-fun path_accept_state_pool' where "path_accept \<pi> (SP \<E>) = \<pi> \<triangleleft> e"
+fun path_accept_state_pool' where "path_accept \<pi> (SP \<E>) = \<pi> \<triangleleft>- \<E>"
 instance proof qed
 end 
 
