@@ -10,14 +10,14 @@ type_synonym topo_env = "var \<Rightarrow> topo"
 
 
 definition send_paths :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
-  "send_paths \<E> ch \<equiv> {\<pi>. \<exists> x x\<^sub>e e \<kappa> \<rho> x\<^sub>c x\<^sub>m \<rho>\<^sub>e. 
+  "send_paths \<E> ch \<equiv> {\<pi> ;; x | \<pi> x x\<^sub>e e \<kappa> \<rho> x\<^sub>c x\<^sub>m \<rho>\<^sub>e. 
     \<E> \<pi> = Some (\<langle>LET x = SYNC x\<^sub>e in e; \<rho>; \<kappa>\<rangle>) \<and>
     \<rho> x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace> \<and> 
     \<rho>\<^sub>e x\<^sub>c = Some \<lbrace>ch\<rbrace>
   }"
 
 definition recv_paths :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
-  "recv_paths \<E> ch \<equiv> {\<pi>. \<exists> x x\<^sub>e e \<kappa> \<rho> x\<^sub>c \<rho>\<^sub>e. 
+  "recv_paths \<E> ch \<equiv> {\<pi> ;; x | \<pi> x x\<^sub>e e \<kappa> \<rho> x\<^sub>c \<rho>\<^sub>e. 
     \<E> \<pi> = Some (\<langle>LET x = SYNC x\<^sub>e in e; \<rho>; \<kappa>\<rangle>) \<and> 
     \<rho> x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>c, \<rho>\<^sub>e\<rbrace> \<and> 
     \<rho>\<^sub>e x\<^sub>c = Some \<lbrace>ch\<rbrace>
@@ -32,7 +32,7 @@ definition single_side :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_
 
 
 definition one_max :: "control_path set \<Rightarrow> bool"  where
-  "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)"
+  "one_max \<T> \<equiv>  (\<nexists> \<pi> . \<pi> \<in> \<T>) \<or> (\<exists>! \<pi> . \<pi> \<in> \<T>)"
 
 definition one_shot :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
   "one_shot \<E> c \<equiv> one_max (send_paths \<E> c)"
@@ -144,14 +144,14 @@ inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<unlhd>"
 
 
 fun abstract_send_sites :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> var set" where
-  "abstract_send_sites (\<V>, \<C>) x\<^sub>c e = {x . \<exists> x\<^sub>e e' x\<^sub>m . 
+  "abstract_send_sites (\<V>, \<C>) x\<^sub>c e = {x | x x\<^sub>e e' x\<^sub>m . 
     (LET x = SYNC x\<^sub>e in e') \<unlhd> e \<and> 
     (\<V>, \<C>) \<Turnstile>\<^sub>e e \<and> 
     {^Send_Evt x\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
   }"
 
 fun abstract_recv_sites :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> var set" where
-  "abstract_recv_sites (\<V>, \<C>) x\<^sub>c e = {x . \<exists> x\<^sub>e e'. 
+  "abstract_recv_sites (\<V>, \<C>) x\<^sub>c e = {x | x x\<^sub>e e'. 
     (LET x = SYNC x\<^sub>e in e') \<unlhd> e \<and> 
     (\<V>, \<C>) \<Turnstile>\<^sub>e e \<and> 
     {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x\<^sub>e

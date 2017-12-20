@@ -24,6 +24,8 @@ theorem topology_one_shot_sound: "
   \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
   one_max (send_paths \<E>' (Ch \<pi> x))
 "
+  apply (unfold one_max_def; simp)
+  apply (unfold abstract_send_paths_def; simp)
 sorry
 
 theorem topology_pair_sound : "
