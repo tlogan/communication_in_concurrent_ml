@@ -12,22 +12,17 @@ lemma xyz: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  (\<forall> \<pi> . \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<longrightarrow> \<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>)
+  \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<longrightarrow> \<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>
 "
- apply (rule allI, rule impI)
- apply (drule flow_sound[of \<V> \<C> e \<E>' _ e' \<rho>' \<kappa>'], auto)
+ apply (rule impI)
+ apply (erule flow_sound[of \<V> \<C> e \<E>'], auto)
 done
 
-
-lemma topology_one_shot_sound: "
+theorem topology_one_shot_sound: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
-  one_max (abstract_send_paths \<V> x e) \<Longrightarrow> 
-  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
-  one_shot \<E>' (Ch \<pi> x)
+  one_max (abstract_send_paths (\<V>, \<C>) x e) \<Longrightarrow> 
+  \<langle>\<langle>\<E>' ; x\<rangle>\<rangle> \<preceq> OneShot
 "
- apply (drule xyz, auto)
- apply (simp add: one_shot_def send_paths_def abstract_value_env_precision_def env_to_abstract_value_env_def)
- apply (simp add: one_max_def abstract_send_paths_def control_paths_def abstract_send_sites_def)
 sorry
 
 theorem topology_pair_sound : "
