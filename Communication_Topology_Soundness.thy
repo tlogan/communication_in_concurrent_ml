@@ -19,9 +19,10 @@ lemma xyz: "
 done
 
 theorem topology_one_shot_sound: "
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
-  one_max (abstract_send_paths (\<V>, \<C>) x e) \<Longrightarrow> 
-  \<langle>\<langle>\<E>' ; x\<rangle>\<rangle> \<preceq> OneShot
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> one_max (abstract_send_paths (\<V>, \<C>) x e) \<Longrightarrow> 
+  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
+  one_max (send_paths \<E>' (Ch \<pi> x))
 "
 sorry
 
