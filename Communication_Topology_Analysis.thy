@@ -30,31 +30,35 @@ definition single_side :: "(state_pool \<Rightarrow> chan \<Rightarrow> control_
     (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1) 
   )"
 
+
+definition one_max :: "control_path set \<Rightarrow> bool"  where
+  "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)"
+
 definition one_shot :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "one_shot \<E> c \<longleftrightarrow> card (send_paths \<E> c) \<le> 1"
+  "one_shot \<E> c \<equiv> one_max (send_paths \<E> c)"
 
 definition single_receiver :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where 
-  "single_receiver = single_side recv_paths"
+  "single_receiver \<equiv> single_side recv_paths"
 
 definition single_sender :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where 
-  "single_sender = single_side recv_paths"
+  "single_sender \<equiv> single_side recv_paths"
 
-definition point_to_point :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "point_to_point \<E> c \<longleftrightarrow> single_sender \<E> c \<and> single_receiver \<E> c"
+definition one_to_one :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
+  "one_to_one \<E> c \<equiv> single_sender \<E> c \<and> single_receiver \<E> c"
   
 definition fan_out :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "fan_out \<E> c \<longleftrightarrow> single_sender \<E> c \<and> \<not> single_receiver \<E> c"
+  "fan_out \<E> c \<equiv> single_sender \<E> c \<and> \<not> single_receiver \<E> c"
   
 definition fan_in :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "fan_in \<E> c \<longleftrightarrow> \<not> single_sender \<E> c \<and> single_receiver \<E> c"
+  "fan_in \<E> c \<equiv> \<not> single_sender \<E> c \<and> single_receiver \<E> c"
 
 definition var_topo :: "(state_pool \<Rightarrow> chan \<Rightarrow> bool) \<Rightarrow> state_pool \<Rightarrow> var \<Rightarrow> bool" where
-  "var_topo t \<E> x \<longleftrightarrow> (\<forall> \<pi> . (\<exists> e' \<rho>' \<kappa>' . \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e'; \<rho>'; \<kappa>'\<rangle>)) \<longrightarrow> t \<E> (Ch \<pi> x))"
+  "var_topo t \<E> x \<equiv> (\<forall> \<pi> . (\<exists> e' \<rho>' \<kappa>' . \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e'; \<rho>'; \<kappa>'\<rangle>)) \<longrightarrow> t \<E> (Ch \<pi> x))"
 
 definition var_to_topo :: "state_pool \<Rightarrow> var \<Rightarrow> topo" ("\<langle>\<langle>_ ; _\<rangle>\<rangle>" [0,0]61) where
-  "\<langle>\<langle>\<E> ; x\<rangle>\<rangle> = 
+  "\<langle>\<langle>\<E> ; x\<rangle>\<rangle> \<equiv>
     (if var_topo one_shot \<E> x then OneShot
-    else (if var_topo point_to_point \<E> x then OneToOne
+    else (if var_topo one_to_one \<E> x then OneToOne
     else (if var_topo fan_out \<E> x then FanOut
     else (if var_topo fan_in \<E> x then FanOut
     else Any))))
@@ -139,8 +143,6 @@ inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<unlhd>"
   Step: "e' \<unlhd> e \<Longrightarrow> e' \<unlhd> (LET x = b in e)"
 
 
-
-
 definition abstract_send_sites :: "var \<Rightarrow> exp \<Rightarrow> var set" where
   "abstract_send_sites x\<^sub>c e \<equiv> {x . \<exists> x\<^sub>e e' x\<^sub>m \<V> \<C>. 
     (LET x = SYNC x\<^sub>e in e') \<unlhd> e \<and> 
@@ -178,44 +180,42 @@ definition abstract_send_processes :: "abstract_value_env \<Rightarrow> var \<Ri
 definition abstract_recv_processes :: "abstract_value_env \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> control_path set" where 
   "abstract_recv_processes \<V> x e \<equiv> abstract_processes \<V> (abstract_recv_sites x e) e"
 
-definition one_max :: "control_path set \<Rightarrow> bool"  where
-  "one_max \<T> \<equiv>  (\<nexists> p . p \<in> \<T>) \<or> (\<exists>! p . p \<in> \<T>)"
 
 
 inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
   OneShot: "
     \<lbrakk>
-      (\<V>, \<C>) \<Turnstile>\<^sub>e g;
-      one_max (abstract_send_paths \<V> x g) 
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+      one_max (abstract_send_paths \<V> x e) 
     \<rbrakk> \<Longrightarrow> 
-    (x, OneShot) \<TTurnstile> g
+    (x, OneShot) \<TTurnstile> e
   " | 
   OneToOne: "
     \<lbrakk> 
-      (\<V>, \<C>) \<Turnstile>\<^sub>e g;
-      one_max (abstract_send_processes \<V> x g) ;
-      one_max (abstract_recv_processes \<V> x g) 
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+      one_max (abstract_send_processes \<V> x e);
+      one_max (abstract_recv_processes \<V> x e) 
     \<rbrakk> \<Longrightarrow> 
-    (x, OneToOne) \<TTurnstile> g
+    (x, OneToOne) \<TTurnstile> e
   " | 
 
   FanOut: "
     \<lbrakk>
-      (\<V>, \<C>) \<Turnstile>\<^sub>e g;
-      one_max (abstract_send_processes \<V> x g) 
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+      one_max (abstract_send_processes \<V> x e) 
     \<rbrakk> \<Longrightarrow> 
-    (x, FanOut) \<TTurnstile> g
+    (x, FanOut) \<TTurnstile> e
   " | 
 
   FanIn: "
     \<lbrakk>
-      (\<V>, \<C>) \<Turnstile>\<^sub>e g;
-      one_max (abstract_recv_processes \<V> x g) 
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+      one_max (abstract_recv_processes \<V> x e) 
     \<rbrakk> \<Longrightarrow> 
-    (x, FanIn) \<TTurnstile> g
+    (x, FanIn) \<TTurnstile> e
   " | 
 
-  Any: "(x, Any) \<TTurnstile> g"
+  Any: "(x, Any) \<TTurnstile> e"
 
 
 definition topo_accept :: "topo_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<bind>" 55) where 
