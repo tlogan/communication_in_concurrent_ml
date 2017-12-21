@@ -20,12 +20,38 @@ done
 
 theorem topology_one_shot_sound: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> one_max (abstract_send_paths (\<V>, \<C>) x e) \<Longrightarrow> 
-  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
-  one_max (send_paths \<E>' (Ch \<pi> x))
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  abstract_one_shot (\<V>, \<C>) x e \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+  one_shot \<E>' (Ch \<pi> x)
 "
-  apply (unfold one_max_def; simp)
-  apply (unfold abstract_send_paths_def; simp)
+sorry
+
+theorem topology_one_to_one_sound: "
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  abstract_one_to_one (\<V>, \<C>) x e \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+  one_shot \<E>' (Ch \<pi> x) \<or> one_to_one \<E>' (Ch \<pi> x)
+"
+sorry
+
+theorem topology_fan_out_sound: "
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  abstract_fan_out (\<V>, \<C>) x e \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+  one_shot \<E>' (Ch \<pi> x) \<or> one_to_one \<E>' (Ch \<pi> x) \<or> fan_out \<E>' (Ch \<pi> x)
+"
+sorry
+
+theorem topology_fan_in_sound: "
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  abstract_fan_in (\<V>, \<C>) x e \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+  one_shot \<E>' (Ch \<pi> x) \<or> one_to_one \<E>' (Ch \<pi> x) \<or> fan_in \<E>' (Ch \<pi> x)
+"
 sorry
 
 theorem topology_pair_sound : "
@@ -35,7 +61,9 @@ theorem topology_pair_sound : "
   \<rbrakk> \<Longrightarrow>
   \<langle>\<langle>\<E>'; x\<rangle>\<rangle> \<preceq> t
 "
- apply (erule topo_pair_accept.cases; auto)
+ apply (
+   erule topo_pair_accept.cases; auto; unfold var_to_topo_def; unfold var_topo_def
+ )
 sorry
 
 
