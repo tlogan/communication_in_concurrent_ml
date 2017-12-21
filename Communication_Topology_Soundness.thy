@@ -54,6 +54,16 @@ theorem topology_fan_in_sound: "
 "
 sorry
 
+lemma "
+ \<lbrakk>
+  (LET x = SYNC x\<^sub>e in e') \<unlhd> e;
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+  {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x\<^sub>e
+ \<rbrakk> \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e'; \<rho>'; \<kappa>'\<rangle>)
+"
+sorry
+
 theorem topology_pair_sound : "
   \<lbrakk>
     (x, t) \<TTurnstile> e;
@@ -61,9 +71,11 @@ theorem topology_pair_sound : "
   \<rbrakk> \<Longrightarrow>
   \<langle>\<langle>\<E>'; x\<rangle>\<rangle> \<preceq> t
 "
- apply (
-   erule topo_pair_accept.cases; auto; unfold var_to_topo_def; unfold var_topo_def
- )
+ apply (erule topo_pair_accept.cases; auto; unfold var_to_topo_def; unfold var_topo_def)
+     apply (drule topology_one_shot_sound; blast?)
+      apply (simp add: abstract_one_shot_def abstract_send_paths_def abstract_recv_paths_def abstract_recv_sites_def abstract_send_sites_def control_paths_def one_max_def; blast?)
+      
+
 sorry
 
 

@@ -158,8 +158,8 @@ definition abstract_recv_sites :: "(abstract_value_env \<times> abstract_value_e
   }"
 
 definition control_paths :: "abstract_value_env \<Rightarrow> var set \<Rightarrow> exp \<Rightarrow> control_path set" where 
-  "control_paths \<V> sites g \<equiv> {\<pi>;;x | \<pi> x . 
-    (x \<in> sites) \<and> \<V> \<tturnstile> (\<pi>;;x) \<triangleleft> g
+  "control_paths \<V> sites e \<equiv> {\<pi>;;x | \<pi> x . 
+    (x \<in> sites) \<and> \<V> \<tturnstile> (\<pi>;;x) \<triangleleft> e
   }" 
 
 definition abstract_processes :: "abstract_value_env \<Rightarrow> var set \<Rightarrow> exp \<Rightarrow> control_path set" where 
