@@ -19,50 +19,45 @@ lemma xyz: "
 done
 
 theorem topology_one_shot_sound: "
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  abstract_one_shot (\<V>, \<C>) x e \<Longrightarrow>
+  abstract_one_shot (\<V>, \<C>, e) x \<Longrightarrow>
+
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> x)
 "
 sorry
 
 theorem topology_one_to_one_sound: "
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  abstract_one_to_one (\<V>, \<C>) x e \<Longrightarrow>
+  abstract_one_to_one (\<V>, \<C>, e) x \<Longrightarrow>
+
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> x) \<or> one_to_one \<E>' (Ch \<pi> x)
 "
 sorry
 
 theorem topology_fan_out_sound: "
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  abstract_fan_out (\<V>, \<C>) x e \<Longrightarrow>
+  abstract_fan_out (\<V>, \<C>, e) x \<Longrightarrow>
+
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> x) \<or> one_to_one \<E>' (Ch \<pi> x) \<or> fan_out \<E>' (Ch \<pi> x)
 "
 sorry
 
 theorem topology_fan_in_sound: "
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  abstract_fan_in (\<V>, \<C>) x e \<Longrightarrow>
+  abstract_fan_in (\<V>, \<C>, e) x \<Longrightarrow>
+  
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> x) \<or> one_to_one \<E>' (Ch \<pi> x) \<or> fan_in \<E>' (Ch \<pi> x)
 "
 sorry
 
-lemma "
- \<lbrakk>
-  (LET x = SYNC x\<^sub>e in e') \<unlhd> e;
-  (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-  {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x\<^sub>e
- \<rbrakk> \<Longrightarrow>
-  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e'; \<rho>'; \<kappa>'\<rangle>)
-"
-sorry
 
 theorem topology_pair_sound : "
   \<lbrakk>

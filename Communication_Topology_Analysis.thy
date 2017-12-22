@@ -143,70 +143,71 @@ inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<unlhd>"
   Step: "e' \<unlhd> e \<Longrightarrow> e' \<unlhd> (LET x = b in e)"
 
 
-definition abstract_send_sites :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> var set" where
-  "abstract_send_sites \<A> x\<^sub>c e \<equiv> case \<A> of (\<V>, \<C>) \<Rightarrow> {x | x x\<^sub>e e' x\<^sub>m . 
+(*can we determine the sync variable point from just the abstract value environments?*)
+definition abstract_send_sites :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> var set" where
+  "abstract_send_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {x | x x\<^sub>s\<^sub>c x\<^sub>e e' x\<^sub>m . 
     (LET x = SYNC x\<^sub>e in e') \<unlhd> e \<and> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e \<and> 
-    {^Send_Evt x\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
+    ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
+    {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
+    {^\<lparr>\<rparr>} \<subseteq> \<V> x \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
   }"
 
-definition abstract_recv_sites :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> var set" where
-  "abstract_recv_sites \<A> x\<^sub>c e \<equiv> case \<A> of (\<V>, \<C>) \<Rightarrow> {x | x x\<^sub>e e'. 
+definition abstract_recv_sites :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> var set" where
+  "abstract_recv_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {x | x x\<^sub>r\<^sub>c x\<^sub>e e'. 
     (LET x = SYNC x\<^sub>e in e') \<unlhd> e \<and> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e \<and> 
-    {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x\<^sub>e
+    ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
+    {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e \<and>
+    \<C> x\<^sub>c \<subseteq> \<V> x
   }"
 
-definition control_paths :: "abstract_value_env \<Rightarrow> var set \<Rightarrow> exp \<Rightarrow> control_path set" where 
-  "control_paths \<V> sites e \<equiv> {\<pi>;;x | \<pi> x . 
+definition control_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var set \<Rightarrow> control_path set" where 
+  "control_paths \<A> sites \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow>  {\<pi>;;x | \<pi> x . 
     (x \<in> sites) \<and> \<V> \<tturnstile> (\<pi>;;x) \<triangleleft> e
   }" 
 
-definition abstract_processes :: "abstract_value_env \<Rightarrow> var set \<Rightarrow> exp \<Rightarrow> control_path set" where 
-  "abstract_processes \<V> sites e \<equiv> {\<pi> \<in> control_paths \<V> sites e .
-    (\<exists> \<pi>' . (\<pi> @ [Inr ()] @ \<pi>') \<in> control_paths \<V> sites e) \<or>
-    (\<forall> \<pi>' . (\<pi> @ \<pi>') \<notin> control_paths \<V> sites e)
+definition abstract_processes :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var set \<Rightarrow> control_path set" where 
+  "abstract_processes \<A> sites \<equiv> {\<pi> \<in> control_paths \<A> sites .
+    (\<exists> \<pi>' . (\<pi> @ [Inr ()] @ \<pi>') \<in> control_paths \<A> sites) \<or>
+    (\<forall> \<pi>' . (\<pi> @ \<pi>') \<notin> control_paths \<A> sites)
   }"
 
-definition abstract_send_paths :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> control_path set" where 
-  "abstract_send_paths \<A> x e \<equiv> case \<A> of (\<V>, \<C>) \<Rightarrow> control_paths \<V> (abstract_send_sites (\<V>, \<C>) x e) e"
+definition abstract_send_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path set" where 
+  "abstract_send_paths \<A> x \<equiv> control_paths \<A> (abstract_send_sites \<A> x)"
 
-definition abstract_recv_paths :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> control_path set" where 
-  "abstract_recv_paths \<A> x e \<equiv> case \<A> of (\<V>, \<C>) \<Rightarrow>  control_paths \<V> (abstract_recv_sites (\<V>, \<C>) x e) e"
+definition abstract_recv_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path set" where 
+  "abstract_recv_paths \<A> x \<equiv> control_paths \<A> (abstract_recv_sites \<A> x)"
 
-definition abstract_send_processes :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> control_path set" where 
-  "abstract_send_processes \<A> x e \<equiv> case \<A> of (\<V>, \<C>) \<Rightarrow> abstract_processes \<V> (abstract_send_sites (\<V>, \<C>) x e) e"
+definition abstract_send_processes :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path set" where 
+  "abstract_send_processes \<A> x \<equiv> abstract_processes \<A> (abstract_send_sites \<A> x)"
 
-definition abstract_recv_processes :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> control_path set" where 
-  "abstract_recv_processes \<A> x e \<equiv> case \<A> of (\<V>, \<C>) \<Rightarrow> abstract_processes \<V> (abstract_recv_sites (\<V>, \<C>) x e) e"
+definition abstract_recv_processes :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path set" where 
+  "abstract_recv_processes \<A> x \<equiv> abstract_processes \<A> (abstract_recv_sites \<A> x)"
 
-definition abstract_one_shot :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
-  "abstract_one_shot \<A> x e \<equiv> one_max (abstract_send_paths \<A> x e) \<and> one_max (abstract_recv_paths \<A> x e)"
+definition abstract_one_shot :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
+  "abstract_one_shot \<A> x \<equiv> one_max (abstract_send_paths \<A> x) \<and> one_max (abstract_recv_paths \<A> x)"
 
-definition abstract_one_to_one :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
-  "abstract_one_to_one \<A> x e \<equiv> one_max (abstract_send_processes \<A> x e) \<and> one_max (abstract_recv_processes \<A> x e)"
+definition abstract_one_to_one :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
+  "abstract_one_to_one \<A> x \<equiv> one_max (abstract_send_processes \<A> x) \<and> one_max (abstract_recv_processes \<A> x)"
 
-definition abstract_fan_out :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
-  "abstract_fan_out \<A> x e \<equiv> one_max (abstract_send_processes \<A> x e)"
+definition abstract_fan_out :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
+  "abstract_fan_out \<A> x \<equiv> one_max (abstract_send_processes \<A> x)"
 
-definition abstract_fan_in :: "(abstract_value_env \<times> abstract_value_env) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
-  "abstract_fan_in \<A> x e \<equiv> one_max (abstract_recv_processes \<A> x e)"
-
-
+definition abstract_fan_in :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
+  "abstract_fan_in \<A> x \<equiv> one_max (abstract_recv_processes \<A> x)"
 
 
 inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
   OneShot: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-      abstract_one_shot (\<V>, \<C>) x e
+      abstract_one_shot (\<V>, \<C>, e) x
     \<rbrakk> \<Longrightarrow> 
     (x, OneShot) \<TTurnstile> e
   " | 
   OneToOne: "
     \<lbrakk> 
       (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-      abstract_one_to_one (\<V>, \<C>) x e
+      abstract_one_to_one (\<V>, \<C>, e) x
     \<rbrakk> \<Longrightarrow> 
     (x, OneToOne) \<TTurnstile> e
   " | 
@@ -214,7 +215,7 @@ inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (
   FanOut: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-      abstract_fan_out (\<V>, \<C>) x e
+      abstract_fan_out (\<V>, \<C>, e) x
     \<rbrakk> \<Longrightarrow> 
     (x, FanOut) \<TTurnstile> e
   " | 
@@ -222,7 +223,7 @@ inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (
   FanIn: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-      abstract_fan_in (\<V>, \<C>) x e
+      abstract_fan_in (\<V>, \<C>, e) x
     \<rbrakk> \<Longrightarrow> 
     (x, FanIn) \<TTurnstile> e
   " | 
