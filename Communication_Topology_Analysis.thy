@@ -3,7 +3,7 @@ theory Communication_Topology_Analysis
 begin
 
 
-datatype topo = OneShot | OneToOne | FanOut | FanIn | Any
+datatype topo = Non | OneShot | OneToOne | FanOut | FanIn | Many
 type_synonym topo_pair = "var \<times> topo"
 type_synonym topo_env = "var \<Rightarrow> topo"
 
@@ -57,22 +57,24 @@ definition var_topo :: "(state_pool \<Rightarrow> chan \<Rightarrow> bool) \<Rig
 
 definition var_to_topo :: "state_pool \<Rightarrow> var \<Rightarrow> topo" ("\<langle>\<langle>_ ; _\<rangle>\<rangle>" [0,0]61) where
   "\<langle>\<langle>\<E> ; x\<rangle>\<rangle> \<equiv>
-    (if var_topo one_shot \<E> x then OneShot
+    (if (\<nexists> \<pi> e' \<rho>' \<kappa>'. \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e'; \<rho>'; \<kappa>'\<rangle>)) then Non
+    else (if var_topo one_shot \<E> x then OneShot
     else (if var_topo one_to_one \<E> x then OneToOne
     else (if var_topo fan_out \<E> x then FanOut
     else (if var_topo fan_in \<E> x then FanIn
-    else Any))))
+    else Many)))))
   "
 
 definition state_pool_to_topo_env :: "state_pool \<Rightarrow> topo_env" ("\<langle>\<langle>_\<rangle>\<rangle>" [0]61) where
   "\<langle>\<langle>\<E>\<rangle>\<rangle> = (\<lambda> x . \<langle>\<langle>\<E> ; x\<rangle>\<rangle>)"
 
 inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix "\<preceq>" 55) where  
+  Edge0 : "Non \<preceq> OneShot" |
   Edge1 : "OneShot \<preceq> OneToOne" | 
   Edge2 : "OneToOne \<preceq> FanOut" |
   Edge3 : "OneToOne \<preceq> FanIn" |
-  Edge4 : "FanOut \<preceq> Any" |
-  Edge5 : "FanIn \<preceq> Any" |
+  Edge4 : "FanOut \<preceq> Many" |
+  Edge5 : "FanIn \<preceq> Many" |
   Refl : "t \<preceq> t" |
   Trans : "\<lbrakk> a \<preceq> b ; b \<preceq> c \<rbrakk> \<Longrightarrow> a \<preceq> c"
 

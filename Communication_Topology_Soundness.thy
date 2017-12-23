@@ -59,6 +59,34 @@ theorem topology_fan_in_sound: "
 sorry
 
 
+lemma non_precise: "
+  Non \<preceq> t
+"  
+ apply (cases t, auto)
+      apply (rule precision_order.Refl)
+     apply (rule precision_order.Edge0)
+    apply (
+      rule precision_order.Trans[of "Non" "OneShot" "OneToOne"],
+      rule precision_order.Edge0, rule precision_order.Edge1
+    )
+   apply (
+     rule precision_order.Trans[of "Non" "OneShot" "FanOut"], rule precision_order.Edge0,
+     rule precision_order.Trans[of "OneShot" "OneToOne" "FanOut"], rule precision_order.Edge1,
+     rule precision_order.Edge2
+   )
+  apply (
+    rule precision_order.Trans[of "Non" "OneShot" "FanIn"], rule precision_order.Edge0,
+    rule precision_order.Trans[of "OneShot" "OneToOne" "FanIn"], rule precision_order.Edge1,
+    rule precision_order.Edge3
+  )
+ apply (
+   rule precision_order.Trans[of "Non" "OneShot" "Many"], rule precision_order.Edge0,
+   rule precision_order.Trans[of "OneShot" "OneToOne" "Many"], rule precision_order.Edge1,
+   rule precision_order.Trans[of "OneToOne" "FanOut" "Many"], rule precision_order.Edge2,
+   rule precision_order.Edge4
+ )
+done
+
 theorem topology_pair_sound : "
   \<lbrakk>
     (x, t) \<TTurnstile> e;
@@ -66,11 +94,15 @@ theorem topology_pair_sound : "
   \<rbrakk> \<Longrightarrow>
   \<langle>\<langle>\<E>'; x\<rangle>\<rangle> \<preceq> t
 "
- apply (erule topo_pair_accept.cases; auto; unfold var_to_topo_def; unfold var_topo_def)
-     apply (drule topology_one_shot_sound; blast?)
-      apply (simp add: abstract_one_shot_def abstract_send_paths_def abstract_recv_paths_def abstract_recv_sites_def abstract_send_sites_def control_paths_def one_max_def; blast?)
-      
+ apply (unfold var_to_topo_def, unfold var_topo_def)
+ apply (cases "\<nexists>\<pi> e' \<rho>' \<kappa>'. \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>)")
+  apply (simp, rule non_precise)
+ apply (cases "var_topo one_shot \<E>' x"; unfold var_topo_def)
+  apply simp
 
+  
+
+       
 sorry
 
 
