@@ -106,48 +106,65 @@ lemma one_to_one_precise: "
 "
 sorry
 
+lemma fan_out_precise: "
+  (x, t) \<TTurnstile> e \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
+  \<not> one_shot \<E>' (Ch \<pi> x) \<Longrightarrow>
+  \<not> one_to_one \<E>' (Ch \<pi> x) \<Longrightarrow> 
+  fan_out \<E>' (Ch \<pi> x) \<Longrightarrow> 
+  FanOut \<preceq> t
+"
+sorry
+
+lemma fan_in_precise: "
+  (x, t) \<TTurnstile> e \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
+  \<not> one_shot \<E>' (Ch \<pi> x) \<Longrightarrow>
+  \<not> one_to_one \<E>' (Ch \<pi> x) \<Longrightarrow> 
+  fan_in \<E>' (Ch \<pi> x) \<Longrightarrow> 
+  FanIn \<preceq> t
+"
+sorry
+
+lemma many_precise: "
+  (x, t) \<TTurnstile> e \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
+  \<not> one_shot \<E>' (Ch \<pi> x) \<Longrightarrow> \<not> one_to_one \<E>' (Ch \<pi> x) \<Longrightarrow> 
+  \<not> fan_out \<E>' (Ch \<pi> x) \<Longrightarrow> \<not> fan_in \<E>' (Ch \<pi> x) \<Longrightarrow> 
+  Many \<preceq> t
+"
+sorry
+
+
+
 theorem topology_pair_sound : "
   \<lbrakk>
     (x, t) \<TTurnstile> e;
     [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  \<langle>\<langle>\<E>'; x\<rangle>\<rangle> \<preceq> t
+  \<langle>\<langle>\<E>'; \<pi>; x\<rangle>\<rangle> \<preceq> t
 "
- apply (unfold var_to_topo_def, unfold var_topo_def)
- apply (cases "\<nexists>\<pi> e' \<rho>' \<kappa>'. \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>)")
+ apply (unfold var_to_topo_def)
+ apply (cases "\<nexists> e' \<rho>' \<kappa>'. \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>)")
   apply (simp, rule non_precise)
- apply (cases "var_topo one_shot \<E>' x"; unfold var_topo_def)
-  apply (simp, erule exE, erule allE, erule impE, simp, (erule exE)+) 
+ apply (cases "one_shot \<E>' (Ch \<pi> x)")
+  apply (simp, (erule exE)+) 
   apply (rule one_shot_precise; auto)
- apply (cases "var_topo one_to_one \<E>' x"; unfold var_topo_def)
-  apply (simp, rule conjI)
-   apply (
-    rule impI,
-    thin_tac "\<exists>\<pi>. (\<exists>e' \<rho>' \<kappa>'. \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>)) \<and> \<not> one_shot \<E>' (Ch \<pi> x)",
-    thin_tac "\<forall>\<pi>. (\<exists>e' \<rho>' \<kappa>'. \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>)) \<longrightarrow> one_to_one \<E>' (Ch \<pi> x)",
-    erule exE, erule allE, erule impE, simp, (erule exE)+
-   ) 
-   apply (rule one_shot_precise; auto)
-  
-
-(*
-, erule exE, erule allE, erule impE, simp, (erule exE)+, rule conjI)
-   apply (rule impI, rule one_shot_precise; auto)
-  apply (erule conjE, (erule exE)+)
-  apply (erule one_to_one_precise; auto)
-*)
-  
-
-       
+ apply (cases "one_to_one \<E>' (Ch \<pi> x)")
+  apply (simp, (erule exE)+) 
+  apply (rule one_to_one_precise; auto)
+ apply (cases "fan_out \<E>' (Ch \<pi> x)")
+  apply (simp, (erule exE)+) 
+  apply (rule fan_out_precise; auto)
+ apply (cases "fan_in \<E>' (Ch \<pi> x)")
+  apply (simp, (erule exE)+) 
+  apply (rule fan_in_precise; auto)
+ apply (simp, (erule exE)+) 
+ apply (rule many_precise; auto)    
 sorry
-
-
-lemma topology_sound': "
-  (x, \<A> x) \<TTurnstile> e \<Longrightarrow> [[] \<mapsto> \<langle>e; Map.empty; []\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> (\<langle>\<langle>\<E>'\<rangle>\<rangle>) x \<preceq> \<A> x
-"
- apply (drule topology_pair_sound, simp)
- apply (unfold state_pool_to_topo_env_def, auto)
-done
 
 
 theorem topology_sound : "
@@ -155,12 +172,13 @@ theorem topology_sound : "
     \<A> \<bind> e;
     [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  \<langle>\<langle>\<E>'\<rangle>\<rangle> \<sqsubseteq>\<^sub>t \<A>
+  \<langle>\<langle>\<E>'; \<pi>\<rangle>\<rangle> \<sqsubseteq>\<^sub>t \<A>
 "
  apply (unfold topo_accept_def)
  apply (unfold topo_env_precision_def)
  apply (intro allI, drule spec)
- apply (erule topology_sound', auto)
+ apply (drule topology_pair_sound, simp)
+ apply (unfold state_pool_to_topo_env_def, auto)
 done
 
 end

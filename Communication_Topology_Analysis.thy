@@ -52,21 +52,18 @@ definition fan_out :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
 definition fan_in :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
   "fan_in \<E> c \<equiv> single_receiver \<E> c"
 
-definition var_topo :: "(state_pool \<Rightarrow> chan \<Rightarrow> bool) \<Rightarrow> state_pool \<Rightarrow> var \<Rightarrow> bool" where
-  "var_topo t \<E> x \<equiv> (\<forall> \<pi> . (\<exists> e' \<rho>' \<kappa>' . \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e'; \<rho>'; \<kappa>'\<rangle>)) \<longrightarrow> t \<E> (Ch \<pi> x))"
-
-definition var_to_topo :: "state_pool \<Rightarrow> var \<Rightarrow> topo" ("\<langle>\<langle>_ ; _\<rangle>\<rangle>" [0,0]61) where
-  "\<langle>\<langle>\<E> ; x\<rangle>\<rangle> \<equiv>
-    (if (\<nexists> \<pi> e' \<rho>' \<kappa>'. \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e'; \<rho>'; \<kappa>'\<rangle>)) then Non
-    else (if var_topo one_shot \<E> x then OneShot
-    else (if var_topo one_to_one \<E> x then OneToOne
-    else (if var_topo fan_out \<E> x then FanOut
-    else (if var_topo fan_in \<E> x then FanIn
+definition var_to_topo :: "state_pool \<Rightarrow> control_path \<Rightarrow> var \<Rightarrow> topo" ("\<langle>\<langle>_ ; _ ; _\<rangle>\<rangle>" [0,0,0]61) where
+  "\<langle>\<langle>\<E> ; \<pi>; x\<rangle>\<rangle> \<equiv>
+    (if (\<nexists> e' \<rho>' \<kappa>'. \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e'; \<rho>'; \<kappa>'\<rangle>)) then Non
+    else (if  one_shot \<E> (Ch \<pi> x) then OneShot
+    else (if one_to_one \<E> (Ch \<pi> x) then OneToOne
+    else (if fan_out \<E> (Ch \<pi> x) then FanOut
+    else (if fan_in \<E> (Ch \<pi> x) then FanIn
     else Many)))))
   "
 
-definition state_pool_to_topo_env :: "state_pool \<Rightarrow> topo_env" ("\<langle>\<langle>_\<rangle>\<rangle>" [0]61) where
-  "\<langle>\<langle>\<E>\<rangle>\<rangle> = (\<lambda> x . \<langle>\<langle>\<E> ; x\<rangle>\<rangle>)"
+definition state_pool_to_topo_env :: "state_pool \<Rightarrow> control_path \<Rightarrow> topo_env" ("\<langle>\<langle>_ ; _\<rangle>\<rangle>" [0, 0]61) where
+  "\<langle>\<langle>\<E> ; \<pi>\<rangle>\<rangle> = (\<lambda> x . \<langle>\<langle>\<E> ; \<pi>; x\<rangle>\<rangle>)"
 
 inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix "\<preceq>" 55) where  
   Edge0 : "Non \<preceq> OneShot" |
