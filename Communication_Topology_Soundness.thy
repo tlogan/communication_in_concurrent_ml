@@ -87,6 +87,25 @@ lemma non_precise: "
  )
 done
 
+lemma one_shot_precise: "
+  (x, t) \<TTurnstile> e \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+  one_shot \<E>' (Ch \<pi> x) \<Longrightarrow> 
+  OneShot \<preceq> t
+"  
+sorry
+
+lemma one_to_one_precise: "
+  (x, t) \<TTurnstile> e \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
+  \<not> one_shot \<E>' (Ch \<pi> x) \<Longrightarrow>
+  one_to_one \<E>' (Ch \<pi> x) \<Longrightarrow> 
+  OneToOne \<preceq> t
+"
+sorry
+
 theorem topology_pair_sound : "
   \<lbrakk>
     (x, t) \<TTurnstile> e;
@@ -98,8 +117,25 @@ theorem topology_pair_sound : "
  apply (cases "\<nexists>\<pi> e' \<rho>' \<kappa>'. \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>)")
   apply (simp, rule non_precise)
  apply (cases "var_topo one_shot \<E>' x"; unfold var_topo_def)
-  apply simp
+  apply (simp, erule exE, erule allE, erule impE, simp, (erule exE)+) 
+  apply (rule one_shot_precise; auto)
+ apply (cases "var_topo one_to_one \<E>' x"; unfold var_topo_def)
+  apply (simp, rule conjI)
+   apply (
+    rule impI,
+    thin_tac "\<exists>\<pi>. (\<exists>e' \<rho>' \<kappa>'. \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>)) \<and> \<not> one_shot \<E>' (Ch \<pi> x)",
+    thin_tac "\<forall>\<pi>. (\<exists>e' \<rho>' \<kappa>'. \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>)) \<longrightarrow> one_to_one \<E>' (Ch \<pi> x)",
+    erule exE, erule allE, erule impE, simp, (erule exE)+
+   ) 
+   apply (rule one_shot_precise; auto)
+  
 
+(*
+, erule exE, erule allE, erule impE, simp, (erule exE)+, rule conjI)
+   apply (rule impI, rule one_shot_precise; auto)
+  apply (erule conjE, (erule exE)+)
+  apply (erule one_to_one_precise; auto)
+*)
   
 
        
