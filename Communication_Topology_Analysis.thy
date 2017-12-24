@@ -3,7 +3,7 @@ theory Communication_Topology_Analysis
 begin
 
 
-datatype topo = Non | OneShot | OneToOne | FanOut | FanIn | Many
+datatype topo = Non | OneShot | OneToOne | FanOut | FanIn | ManyToMany
 type_synonym topo_pair = "var \<times> topo"
 type_synonym topo_env = "var \<Rightarrow> topo"
 
@@ -59,7 +59,7 @@ definition var_to_topo :: "state_pool \<Rightarrow> control_path \<Rightarrow> v
     else (if one_to_one \<E> (Ch \<pi> x) then OneToOne
     else (if fan_out \<E> (Ch \<pi> x) then FanOut
     else (if fan_in \<E> (Ch \<pi> x) then FanIn
-    else Many)))))
+    else ManyToMany)))))
   "
 
 definition state_pool_to_topo_env :: "state_pool \<Rightarrow> control_path \<Rightarrow> topo_env" ("\<langle>\<langle>_ ; _\<rangle>\<rangle>" [0, 0]61) where
@@ -70,8 +70,8 @@ inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix
   Edge1 : "OneShot \<preceq> OneToOne" | 
   Edge2 : "OneToOne \<preceq> FanOut" |
   Edge3 : "OneToOne \<preceq> FanIn" |
-  Edge4 : "FanOut \<preceq> Many" |
-  Edge5 : "FanIn \<preceq> Many" |
+  Edge4 : "FanOut \<preceq> ManyToMany" |
+  Edge5 : "FanIn \<preceq> ManyToMany" |
   Refl : "t \<preceq> t" |
   Trans : "\<lbrakk> a \<preceq> b ; b \<preceq> c \<rbrakk> \<Longrightarrow> a \<preceq> c"
 
@@ -227,7 +227,7 @@ inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (
     (x, FanIn) \<TTurnstile> e
   " | 
 
-  Any: "(x, Any) \<TTurnstile> e"
+  ManyToMany: "(x, ManyToMany) \<TTurnstile> e"
 
 
 definition topo_accept :: "topo_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<bind>" 55) where 

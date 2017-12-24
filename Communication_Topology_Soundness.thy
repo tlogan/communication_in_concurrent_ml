@@ -80,9 +80,9 @@ lemma non_precise: "
     rule precision_order.Edge3
   )
  apply (
-   rule precision_order.Trans[of "Non" "OneShot" "Many"], rule precision_order.Edge0,
-   rule precision_order.Trans[of "OneShot" "OneToOne" "Many"], rule precision_order.Edge1,
-   rule precision_order.Trans[of "OneToOne" "FanOut" "Many"], rule precision_order.Edge2,
+   rule precision_order.Trans[of "Non" "OneShot" "ManyToMany"], rule precision_order.Edge0,
+   rule precision_order.Trans[of "OneShot" "OneToOne" "ManyToMany"], rule precision_order.Edge1,
+   rule precision_order.Trans[of "OneToOne" "FanOut" "ManyToMany"], rule precision_order.Edge2,
    rule precision_order.Edge4
  )
 done
@@ -94,7 +94,23 @@ lemma one_shot_precise: "
   one_shot \<E>' (Ch \<pi> x) \<Longrightarrow> 
   OneShot \<preceq> t
 "  
-sorry
+ apply (erule topo_pair_accept.cases; auto)
+     apply (rule precision_order.Refl)
+    apply (rule precision_order.Edge1)
+   apply (
+    rule precision_order.Trans[of "OneShot" "OneToOne" "FanOut"], rule precision_order.Edge1,
+    rule precision_order.Edge2
+   )
+  apply (
+   rule precision_order.Trans[of "OneShot" "OneToOne" "FanIn"], rule precision_order.Edge1,
+   rule precision_order.Edge3
+  )
+ apply (
+   rule precision_order.Trans[of "OneShot" "OneToOne" "ManyToMany"], rule precision_order.Edge1,
+   rule precision_order.Trans[of "OneToOne" "FanOut" "ManyToMany"], rule precision_order.Edge2,
+   rule precision_order.Edge4
+ )
+done
 
 lemma one_to_one_precise: "
   (x, t) \<TTurnstile> e \<Longrightarrow>
@@ -104,7 +120,17 @@ lemma one_to_one_precise: "
   one_to_one \<E>' (Ch \<pi> x) \<Longrightarrow> 
   OneToOne \<preceq> t
 "
-sorry
+ apply (erule topo_pair_accept.cases; auto)
+     apply (drule topology_one_shot_sound; auto)
+    apply (rule precision_order.Refl)
+   apply (rule precision_order.Edge2)
+  apply (rule precision_order.Edge3)
+ apply (
+   rule precision_order.Trans[of "OneToOne" "FanOut" "ManyToMany"], rule precision_order.Edge2,
+   rule precision_order.Edge4
+ )
+done
+
 
 lemma fan_out_precise: "
   (x, t) \<TTurnstile> e \<Longrightarrow>
@@ -115,7 +141,13 @@ lemma fan_out_precise: "
   fan_out \<E>' (Ch \<pi> x) \<Longrightarrow> 
   FanOut \<preceq> t
 "
-sorry
+ apply (erule topo_pair_accept.cases; auto)
+     apply (drule topology_one_shot_sound; auto)
+    apply (drule topology_one_to_one_sound; auto)
+   apply (rule precision_order.Refl)
+  apply (drule topology_fan_in_sound; auto; (simp add: one_to_one_def fan_in_def fan_out_def))
+ apply (rule precision_order.Edge4)
+done
 
 lemma fan_in_precise: "
   (x, t) \<TTurnstile> e \<Longrightarrow>
@@ -126,19 +158,29 @@ lemma fan_in_precise: "
   fan_in \<E>' (Ch \<pi> x) \<Longrightarrow> 
   FanIn \<preceq> t
 "
-sorry
+ apply (erule topo_pair_accept.cases; auto)
+     apply (drule topology_one_shot_sound; auto)
+    apply (drule topology_one_to_one_sound; auto)
+   apply (drule topology_fan_out_sound; auto; (simp add: one_to_one_def fan_in_def fan_out_def))
+  apply (rule precision_order.Refl)
+ apply (rule precision_order.Edge5)
+done
 
-lemma many_precise: "
+lemma many_to_many_precise: "
   (x, t) \<TTurnstile> e \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   \<E>' \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
   \<not> one_shot \<E>' (Ch \<pi> x) \<Longrightarrow> \<not> one_to_one \<E>' (Ch \<pi> x) \<Longrightarrow> 
   \<not> fan_out \<E>' (Ch \<pi> x) \<Longrightarrow> \<not> fan_in \<E>' (Ch \<pi> x) \<Longrightarrow> 
-  Many \<preceq> t
+  ManyToMany \<preceq> t
 "
-sorry
-
-
+ apply (erule topo_pair_accept.cases; auto)
+     apply (drule topology_one_shot_sound; auto)
+    apply (drule topology_one_to_one_sound; auto)
+   apply (drule topology_fan_out_sound; auto; (simp add: one_to_one_def fan_in_def fan_out_def))
+  apply (drule topology_fan_in_sound; auto; (simp add: one_to_one_def fan_in_def fan_out_def))
+ apply (rule precision_order.Refl)
+done
 
 theorem topology_pair_sound : "
   \<lbrakk>
@@ -163,8 +205,8 @@ theorem topology_pair_sound : "
   apply (simp, (erule exE)+) 
   apply (rule fan_in_precise; auto)
  apply (simp, (erule exE)+) 
- apply (rule many_precise; auto)    
-sorry
+ apply (rule many_to_many_precise; auto)    
+done
 
 
 theorem topology_sound : "
