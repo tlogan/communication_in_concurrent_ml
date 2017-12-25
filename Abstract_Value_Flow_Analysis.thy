@@ -43,7 +43,7 @@ inductive accept_exp :: "abstract_value_env \<times> abstract_value_env \<Righta
     (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = LEFT x\<^sub>p in e
   " |
   Let_Right : "
-    \<lbrakk> 
+    \<lbrakk>
       {^Right x\<^sub>p} \<subseteq> \<V> x;
       (\<V>, \<C>) \<Turnstile>\<^sub>e e
     \<rbrakk> \<Longrightarrow> 
