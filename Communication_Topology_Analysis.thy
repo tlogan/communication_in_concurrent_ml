@@ -78,8 +78,18 @@ definition topo_env_precision :: "topo_env \<Rightarrow> topo_env \<Rightarrow> 
   "\<A> \<sqsubseteq>\<^sub>t \<A>' \<equiv> (\<forall> x . \<A> x \<preceq> \<A>' x)"
 
 
-inductive flow_path_in_exp :: "abstract_value_env \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [56, 0, 56] 55) where
-  Result: "\<V> \<tturnstile> [Inl x] \<triangleleft> (RESULT x)" |
+inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<unlhd>" 55)where
+  Refl: "e \<unlhd> e" |
+  Step: "e' \<unlhd> e \<Longrightarrow> e' \<unlhd> (LET x = b in e)"
+
+
+inductive prefix_path_exp :: "abstract_value_env \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [56, 0, 56] 55) where
+  Empty: "
+   \<V> \<tturnstile> [] \<triangleleft> e
+  " |
+  Result: "
+   \<V> \<tturnstile> [Inl x] \<triangleleft> (RESULT x)
+  " |
   Let_Unit: "
     \<V> \<tturnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
     \<V> \<tturnstile> (Inl x # \<pi>) \<triangleleft> (LET x = \<lparr>\<rparr> in e)
@@ -134,11 +144,6 @@ inductive flow_path_in_exp :: "abstract_value_env \<Rightarrow> control_path \<R
     \<V> \<tturnstile> \<pi> \<triangleleft> e\<^sub>c \<Longrightarrow>
     \<V> \<tturnstile> (Inr () # \<pi>) \<triangleleft> (LET x = SPAWN e\<^sub>c in _)
   "
-
-inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<unlhd>" 55)where
-  Refl: "e \<unlhd> e" |
-  Step: "e' \<unlhd> e \<Longrightarrow> e' \<unlhd> (LET x = b in e)"
-
 
 definition abstract_send_sites :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> var set" where
   "abstract_send_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {x\<^sub>y | x\<^sub>y x\<^sub>s\<^sub>c x\<^sub>e e' x\<^sub>m . 

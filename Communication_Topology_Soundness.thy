@@ -6,6 +6,37 @@ theory Communication_Topology_Soundness
     Communication_Topology_Analysis
 begin
 
+lemma "
+  \<lbrakk>
+    (\<V>, \<C>) \<Turnstile>\<^sub>e  e; 
+    [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>';
+    \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)
+  \<rbrakk> \<Longrightarrow>
+  \<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>
+"
+by (erule Abstract_Value_Flow_Soundness.flow_sound)
+
+lemma xyz: "
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x\<^sub>l = b in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+  e \<noteq> RESULT x
+"
+ apply (erule star.cases; auto)
+  apply (case_tac "\<pi> = []"; auto)
+ apply (erule concur_step.cases)
+  apply (metis exp.distinct(1) fun_upd_apply option.distinct(1) option.inject state.inject)
+  apply (metis fun_upd_apply option.distinct(1) option.inject state.inject)
+  apply (metis exp.simps(4) fun_upd_apply option.distinct(1) option.inject state.inject)+
+done
+
+lemma "
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = b in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>) \<Longrightarrow>
+  \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e
+"
+sorry
+
 lemma topology_send_sound': "
 
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
@@ -23,7 +54,22 @@ lemma topology_send_sound': "
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
+
 "
+ apply (auto)
+(*
+ apply (frule Abstract_Value_Flow_Soundness.flow_sound[of _ _ _ _ \<pi>]; drule Abstract_Value_Flow_Soundness.flow_sound[of _ _ _ _ \<pi>\<^sub>y]; blast?; assumption?)
+ apply (unfold abstract_value_env_precision_def)
+ apply (unfold env_to_abstract_value_env_def)
+ apply (drule spec)
+ apply (drule spec[of _ x\<^sub>e])
+ apply (case_tac "\<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>"; simp)
+
+ apply (rule conjI)+
+  apply ((cases \<pi>\<^sub>y); auto)
+*)
+
+
 sorry
 
 lemma topology_send_sound: "
