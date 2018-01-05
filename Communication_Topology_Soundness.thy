@@ -6,32 +6,19 @@ theory Communication_Topology_Soundness
     Communication_Topology_Analysis
 begin
 
-lemma abstract_prefix_path_sound: "
+lemma prefix_path_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi> = Some (\<langle>LET x = b in e';\<rho>';\<kappa>'\<rangle>) 
   \<rbrakk> \<Longrightarrow>
   \<V> \<tturnstile> (\<pi>;;x) \<triangleleft> e
 "
- apply (frule Abstract_Value_Flow_Soundness.flow_sound; blast?; assumption?)
- apply (erule accept_exp.cases; cases "\<pi> ;; x"; auto)
-   apply (drule result_final; blast)
-sorry
-
-lemma sub_exp_sound: "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) 
-  \<rbrakk> \<Longrightarrow>
-  e' \<unlhd> e
-"
 sorry
 
 lemma abstract_send_chan_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
@@ -39,52 +26,70 @@ lemma abstract_send_chan_sound: "
   \<rbrakk> \<Longrightarrow> 
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c
 "
- apply (drule flow_sound[of _ _ _ \<E>' \<pi>\<^sub>y]; assumption?)
- apply (unfold abstract_value_env_precision_def env_to_abstract_value_env_def)
- apply (drule spec[of _ x\<^sub>s\<^sub>c]; auto?)
-sorry
+ apply (frule lift_flow_exp_to_pool)
+ apply (drule flow_preservation_star[of _ _ _ _ \<E>']; assumption?)
+ apply (erule accept_state_pool.cases; auto)
+ apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
+ apply (erule accept_state.cases; auto)
+ apply (erule accept_val_env.cases; auto)
+ apply (drule spec[of _ x\<^sub>e], drule spec[of _ "\<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>"]; simp)
+ apply (erule conjE)
+ apply (erule accept_value.cases; auto)
+ apply (erule accept_val_env.cases; auto)
+ apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "\<lbrace>Ch \<pi> x\<^sub>c\<rbrace>"]; simp)
+done
 
 lemma abstract_send_evt_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e ;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace> 
   \<rbrakk> \<Longrightarrow>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
 "
-  apply (drule flow_sound; assumption?)
-  apply (unfold abstract_value_env_precision_def)
-  apply (unfold env_to_abstract_value_env_def)
-  apply (drule spec[of _ x\<^sub>e]; auto)
+  apply (drule flow_sound_coro; assumption?; auto)
 done
 
 lemma abstract_send_unit_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' (\<pi>\<^sub>y ;; x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>y\<rangle>)
   \<rbrakk> \<Longrightarrow> 
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y
 "
-sorry
+ apply (drule flow_sound_coro; assumption?; auto; simp)
+done
 
 lemma abstract_send_message_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
-    \<E> (\<pi>\<^sub>y;;x\<^sub>y) = Some (\<langle>e\<^sub>y; \<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>); \<kappa>\<^sub>y\<rangle>)
+    \<E>' (\<pi>\<^sub>y;;x\<^sub>y) = Some (\<langle>e\<^sub>y; \<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>); \<kappa>\<^sub>y\<rangle>)
   \<rbrakk> \<Longrightarrow> 
   \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 "
-sorry
+  apply (frule lift_flow_exp_to_pool)
+  apply (drule flow_preservation_star[of _ _ _ _ \<E>']; assumption?)
+  apply (erule accept_state_pool.cases; auto)
+  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
+  apply (erule accept_state.cases; auto)
+  apply (erule accept_exp.cases[of _ "LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y"]; auto)
+  apply (thin_tac "\<forall>x\<^sub>r\<^sub>c. ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<longrightarrow> (\<forall>x\<^sub>c. ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow> \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y)")
+  apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ x\<^sub>m])
+  apply (frule abstract_send_evt_sound; assumption?)
+  apply (erule impE; simp)
+  apply (drule spec[of _ x\<^sub>c])
+  apply (drule abstract_send_chan_sound; assumption?; auto)
+done
 
 lemma topology_send_sound': "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
@@ -94,14 +99,14 @@ lemma topology_send_sound': "
   \<rbrakk> \<Longrightarrow> 
 
   \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and>
-  (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<unlhd> e \<and>
+  {SYNC x\<^sub>e} \<subseteq> \<X> x\<^sub>y \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 
 "
- apply (rule conjI, (erule abstract_prefix_path_sound; assumption))
- apply (rule conjI, (erule sub_exp_sound; assumption))
+ apply (rule conjI, (erule prefix_path_sound; assumption))
+ apply (rule conjI, (erule bind_flow_sound; assumption))
  apply (rule conjI, (erule abstract_send_chan_sound; assumption))
  apply (rule conjI, (erule abstract_send_evt_sound; assumption))
  apply (rule conjI, (erule abstract_send_unit_sound; assumption))
@@ -110,16 +115,15 @@ done
 
 lemma topology_send_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-  
     \<pi>\<^sub>y \<in> send_paths \<E>' (Ch \<pi> x\<^sub>c) 
   \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>y \<in> abstract_send_paths (\<V>, \<C>, e) x\<^sub>c
+  \<pi>\<^sub>y \<in> abstract_send_paths (\<V>, \<C>, \<X>) e x\<^sub>c
 "
  apply (unfold send_paths_def abstract_send_paths_def abstract_send_sites_def abstract_paths_def; auto)
-  apply (rule exI, rule exI, rule conjI, rule exI)  
-   apply (frule topology_send_sound'; assumption?; blast)
+  apply (rule exI, rule conjI)
+   apply (frule topology_send_sound'; assumption?; auto; blast)
   apply (frule topology_send_sound'; assumption?; blast)
  apply (frule topology_send_sound'; assumption?; blast)
 done
@@ -127,10 +131,10 @@ done
 
 theorem topology_single_path_send_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    single_path (abstract_send_paths (\<V>, \<C>, e) x\<^sub>c)
+    single_path (abstract_send_paths (\<V>, \<C>, \<X>) e x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
   single_path (send_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
@@ -141,12 +145,11 @@ theorem topology_single_path_send_sound: "
  apply (drule topology_send_sound; auto)
 done
 
-
 (****)
 
 lemma topology_recv_sound': "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
 
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>); 
@@ -156,7 +159,7 @@ lemma topology_recv_sound': "
   \<rbrakk> \<Longrightarrow> 
 
   \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and>
-  (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<unlhd> e \<and>
+  {LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y} \<subseteq> e_set \<and>
   ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
   \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y
@@ -165,15 +168,15 @@ sorry
 
 lemma topology_recv_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
     \<pi>\<^sub>y \<in> recv_paths \<E>' (Ch \<pi> x\<^sub>c) 
   \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>y \<in> abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c
+  \<pi>\<^sub>y \<in> abstract_recv_paths (\<V>, \<C>, \<X>) e x\<^sub>c
 "
  apply (unfold recv_paths_def abstract_recv_paths_def abstract_recv_sites_def abstract_paths_def; auto)
-  apply (rule exI, rule exI, rule conjI, rule exI)
+  apply (rule exI, rule conjI)
    apply (frule topology_recv_sound'; blast?; assumption?; blast)
   apply (frule topology_recv_sound'; blast?; assumption?; blast)
  apply (frule topology_recv_sound'; blast?; assumption?; blast)
@@ -181,10 +184,10 @@ done
 
 theorem topology_single_path_recv_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
 
-    single_path (abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c)
+    single_path (abstract_recv_paths (\<V>, \<C>, \<X>) e x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
   single_path (recv_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
@@ -198,10 +201,10 @@ done
 
 theorem topology_one_shot_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    abstract_one_shot (\<V>, \<C>, e) x\<^sub>c
+    abstract_one_shot (\<V>, \<C>, \<X>) e x\<^sub>c
   \<rbrakk> \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> x\<^sub>c)
 "
@@ -209,15 +212,15 @@ theorem topology_one_shot_sound: "
  apply (unfold one_shot_def, auto)
   apply (erule topology_single_path_send_sound; auto)
   apply (erule topology_single_path_recv_sound; auto)
-done
+sorry
 
 
 theorem topology_single_proc_send_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    single_proc (abstract_send_paths (\<V>, \<C>, e) x\<^sub>c)
+    single_proc (abstract_send_paths (\<V>, \<C>, \<X>) e x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
   single_proc (send_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
@@ -230,8 +233,8 @@ done
 
 theorem topology_single_proc_recv_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    single_proc (abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c);
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
+    single_proc (abstract_recv_paths (\<V>, \<C>, \<X>) e x\<^sub>c);
   
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -242,14 +245,14 @@ theorem topology_single_proc_recv_sound: "
  apply (erule allE; frule impE; auto)
   apply (drule topology_recv_sound; auto)
  apply (drule topology_recv_sound; auto)
-done
+sorry
 
 theorem topology_one_to_one_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    abstract_one_to_one (\<V>, \<C>, e) x\<^sub>c
+    abstract_one_to_one (\<V>, \<C>, \<X>) e x\<^sub>c
   \<rbrakk> \<Longrightarrow>
   one_to_one \<E>' (Ch \<pi> x\<^sub>c)
 "
@@ -261,10 +264,10 @@ done
 
 theorem topology_fan_out_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    abstract_fan_out (\<V>, \<C>, e) x\<^sub>c
+    abstract_fan_out (\<V>, \<C>, \<X>) e x\<^sub>c
   \<rbrakk> \<Longrightarrow>
   fan_out \<E>' (Ch \<pi> x\<^sub>c)
 "
@@ -275,10 +278,10 @@ done
 
 theorem topology_fan_in_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    abstract_fan_in (\<V>, \<C>, e) x\<^sub>c
+    abstract_fan_in (\<V>, \<C>, \<X>) e x\<^sub>c
   \<rbrakk> \<Longrightarrow>
   fan_in \<E>' (Ch \<pi> x\<^sub>c)
 "
