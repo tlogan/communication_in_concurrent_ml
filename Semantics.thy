@@ -3,7 +3,7 @@ theory Semantics
 begin
 
   
-type_synonym control_path = "(var + unit) list"
+type_synonym control_path = "(var + var) list"
 datatype chan = Ch control_path var
 
 
@@ -74,8 +74,8 @@ inductive_cases Result_E[elim!]: "\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<
 abbreviation control_path_append_var :: "control_path => var => control_path" (infixl ";;" 61) where
   "\<pi>;;x \<equiv> \<pi> @ [Inl x]"
   
-abbreviation control_path_append_unit :: "control_path  => control_path" ("_;;." [60]61) where
-  "\<pi>;;. \<equiv> \<pi> @ [Inr ()]"
+abbreviation control_path_append_unit :: "control_path => var \<Rightarrow> control_path" (infixl ";;." 61) where
+  "\<pi>;;.x \<equiv> \<pi> @ [Inr x]"
   
   
 definition leaf :: "state_pool \<Rightarrow> control_path \<Rightarrow> bool" where
@@ -215,9 +215,9 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [
       \<pi>;;x \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> \<lbrace>\<rbrace>]; \<kappa>\<rangle>), 
-      \<pi>;;. \<mapsto> (\<langle>e\<^sub>c; \<rho>; []\<rangle>) 
+      \<pi>;;.x \<mapsto> (\<langle>e\<^sub>c; \<rho>; []\<rangle>) 
     ]
-  "   
+  "
 
 abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "\<E> \<rightarrow>* \<E>' \<equiv> star concur_step \<E> \<E>'"

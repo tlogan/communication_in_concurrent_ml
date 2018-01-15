@@ -98,8 +98,8 @@ lemma topology_send_sound': "
     \<E>' (\<pi>\<^sub>y;;x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>y\<rangle>) 
   \<rbrakk> \<Longrightarrow> 
 
-  \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and>
-  {SYNC x\<^sub>e} \<subseteq> \<X> x\<^sub>y \<and>
+  \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and> (* is \<pi>\<^sub>y;;x\<^sub>y an partial path in e*)
+  {SYNC x\<^sub>e} \<subseteq> \<X> x\<^sub>y \<and> (* is (SYNC x\<^sub>e) bound to x\<^sub>y in e*)
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
@@ -158,8 +158,8 @@ lemma topology_recv_sound': "
     \<E>' (\<pi>\<^sub>y;;x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<omega>);\<kappa>\<^sub>y\<rangle>) 
   \<rbrakk> \<Longrightarrow> 
 
-  \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and>
-  {LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y} \<subseteq> e_set \<and>
+  \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and> (* is \<pi>\<^sub>y;;x\<^sub>y an partial path in e*)
+  {SYNC x\<^sub>e} \<subseteq> \<X> x\<^sub>y \<and>
   ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
   \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y

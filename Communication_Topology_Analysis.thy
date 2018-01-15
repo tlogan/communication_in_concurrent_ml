@@ -28,7 +28,7 @@ definition single_proc :: "control_path set \<Rightarrow> bool" where
   "single_proc \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
     \<pi>\<^sub>1 \<in> \<T> \<longrightarrow>
     \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
-    (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1) 
+    (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1)
   )"
 
 definition single_path :: "control_path set \<Rightarrow> bool"  where
@@ -135,7 +135,7 @@ inductive prefix_path_exp :: "abstract_value_env \<Rightarrow> control_path \<Ri
   " |
   Let_Spawn_Child: " 
     \<V> \<tturnstile> \<pi> \<triangleleft> e\<^sub>c \<Longrightarrow>
-    \<V> \<tturnstile> (Inr () # \<pi>) \<triangleleft> (LET x = SPAWN e\<^sub>c in _)
+    \<V> \<tturnstile> (Inr x # \<pi>) \<triangleleft> (LET x = SPAWN e\<^sub>c in _)
   "
 
 definition abstract_send_sites :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env) \<Rightarrow> var \<Rightarrow> var set" where

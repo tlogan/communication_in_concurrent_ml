@@ -5,26 +5,31 @@ begin
 datatype abstract_value = A_Chan var ("^Chan _" [61] 61) | A_Unit ("^\<lparr>\<rparr>") | A_Prim prim ("^_" [61] 61 )
 
 type_synonym abstract_value_env = "var \<Rightarrow> abstract_value set"
-type_synonym bind_env = "var \<Rightarrow> bind set"
+type_synonym bind_env = "var \<Rightarrow> bind set" 
 fun result_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
   "\<lfloor>RESULT x\<rfloor> = x" |
   "\<lfloor>LET _ = _ in e\<rfloor> = \<lfloor>e\<rfloor>"
 
+fun site_set :: "exp \<Rightarrow> (var + var) set" where
+  "site_set (RESULT _) = {}" |
+  "site_set (LET x = SPAWN _ in _) = {Inl x, Inr x}" |
+  "site_set (LET x = _ in e) = {Inl x}"
 
 inductive accept_exp :: "abstract_value_env \<times> abstract_value_env \<times> bind_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>e" 55) where
-  "
+  Result: "
     (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e (RESULT x)
   " |
   Let_Unit: "
     \<lbrakk> 
       {\<lparr>\<rparr>} \<subseteq> \<X> x;
-      {^\<lparr>\<rparr>} \<subseteq> \<V> x; 
-      (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e 
+      {^\<lparr>\<rparr>} \<subseteq> \<V> x;
+      (*site_set e \<in> \<Y> (Inl x)*)
+      (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e
     \<rbrakk> \<Longrightarrow> 
     (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e
   " |
   Let_Abs : "
-    \<lbrakk> 
+    \<lbrakk>
       {FN f' x' . e' } \<subseteq> \<X> f';
       {^Abs f' x' e'} \<subseteq> \<V> f';
       (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e';
@@ -226,7 +231,7 @@ inductive accept_stack :: "abstract_value_env \<times> abstract_value_env \<time
     \<lbrakk> 
       \<W> \<subseteq> \<V> x;
       (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
-      (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>\<rho> \<rho>; 
+      (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>\<rho> \<rho>;
       (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
     \<rbrakk> \<Longrightarrow> 
     (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>\<kappa> \<W> \<Rrightarrow> (\<langle>x, e, \<rho>\<rangle> # \<kappa>)
@@ -236,13 +241,12 @@ inductive accept_stack :: "abstract_value_env \<times> abstract_value_env \<time
 inductive accept_state :: "abstract_value_env \<times> abstract_value_env \<times> bind_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<sigma>" 55)  where
   Any: "
     \<lbrakk>
-      (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e; 
-      (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>\<rho> \<rho>; 
+      (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>e e;
+      (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>\<rho> \<rho>;
       (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
     \<rbrakk> \<Longrightarrow>
     (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>
   "
-
 
 inductive accept_state_pool :: "abstract_value_env \<times> abstract_value_env \<times> bind_env \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<E>" 55) where
   Any: "
