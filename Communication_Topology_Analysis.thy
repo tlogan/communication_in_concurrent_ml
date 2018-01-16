@@ -138,44 +138,45 @@ inductive prefix_path_exp :: "abstract_value_env \<Rightarrow> control_path \<Ri
     \<V> \<tturnstile> (Inr x # \<pi>) \<triangleleft> (LET x = SPAWN e\<^sub>c in _)
   "
 
-definition abstract_send_sites :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env) \<Rightarrow> var \<Rightarrow> var set" where
-  "abstract_send_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, \<X>) \<Rightarrow> {x\<^sub>y | x\<^sub>e x\<^sub>y x\<^sub>s\<^sub>c x\<^sub>m . 
+
+definition abstract_send_sites :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env \<times> site_env) \<Rightarrow> var \<Rightarrow> var set" where
+  "abstract_send_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, \<X>, \<Y>) \<Rightarrow> {x\<^sub>y | x\<^sub>e x\<^sub>y x\<^sub>s\<^sub>c x\<^sub>m . 
     {SYNC x\<^sub>e} \<subseteq> \<X> x\<^sub>y  \<and> 
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
     {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
     {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
   }"
 
-definition abstract_recv_sites :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env) \<Rightarrow> var \<Rightarrow> var set" where
-  "abstract_recv_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, \<X>) \<Rightarrow> {x\<^sub>y | x\<^sub>e x\<^sub>y x\<^sub>r\<^sub>c. 
+definition abstract_recv_sites :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env \<times> site_env) \<Rightarrow> var \<Rightarrow> var set" where
+  "abstract_recv_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, \<X>, \<Y>) \<Rightarrow> {x\<^sub>y | x\<^sub>e x\<^sub>y x\<^sub>r\<^sub>c. 
     {SYNC x\<^sub>e} \<subseteq> \<X> x\<^sub>y \<and> 
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
     {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e \<and>
     \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y
   }"
 
-definition abstract_paths :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env) \<Rightarrow> exp \<Rightarrow> var set \<Rightarrow> control_path set" where 
+definition abstract_paths :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env \<times> site_env) \<Rightarrow> exp \<Rightarrow> var set \<Rightarrow> control_path set" where 
   "abstract_paths \<A> e sites \<equiv> case \<A> of (\<V>, \<C>, _) \<Rightarrow>  {\<pi>\<^sub>y;;x\<^sub>y | \<pi>\<^sub>y x\<^sub>y . 
     (x\<^sub>y \<in> sites) \<and> \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e
   }" 
 
-definition abstract_send_paths :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> control_path set" where 
+definition abstract_send_paths :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env \<times> site_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> control_path set" where 
   "abstract_send_paths \<A> e x\<^sub>c \<equiv> abstract_paths \<A> e (abstract_send_sites \<A> x\<^sub>c)"
 
-definition abstract_recv_paths :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> control_path set" where 
+definition abstract_recv_paths :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env \<times> site_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> control_path set" where 
   "abstract_recv_paths \<A> e x\<^sub>c \<equiv> abstract_paths \<A> e (abstract_recv_sites \<A> x\<^sub>c)"
 
 
-definition abstract_one_shot :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+definition abstract_one_shot :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env \<times> site_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   "abstract_one_shot \<A> e x\<^sub>c \<equiv> single_path (abstract_send_paths \<A> e x\<^sub>c) \<and> single_path (abstract_recv_paths \<A> e x\<^sub>c)"
 
-definition abstract_one_to_one :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+definition abstract_one_to_one :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env \<times> site_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   "abstract_one_to_one \<A> e x\<^sub>c \<equiv> single_proc (abstract_send_paths \<A> e x\<^sub>c) \<and> single_proc (abstract_recv_paths \<A> e x\<^sub>c)"
 
-definition abstract_fan_out :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+definition abstract_fan_out :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env \<times> site_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   "abstract_fan_out \<A> e x\<^sub>c \<equiv> single_proc (abstract_send_paths \<A> e x\<^sub>c)"
 
-definition abstract_fan_in :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+definition abstract_fan_in :: "(abstract_value_env \<times> abstract_value_env \<times> bind_env \<times> site_env) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   "abstract_fan_in \<A> e x\<^sub>c \<equiv> single_proc (abstract_recv_paths \<A> e x\<^sub>c)"
 
 
