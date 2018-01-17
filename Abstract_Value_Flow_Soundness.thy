@@ -11,7 +11,7 @@ lemma flow_state_to_flow_exp: "
 done
 
 lemma flow_over_state_to_env: "
-  (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> \<rho> x = Some \<omega> \<Longrightarrow> 
+  (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>\<sigma>  \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> \<rho> x = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>, \<X>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)
 "
  apply (rule accept_value_accept_val_env.Any, auto)
