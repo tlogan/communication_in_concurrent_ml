@@ -170,7 +170,18 @@ by meson
 *)  
   
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
-  Seq_Step: "
+  (*
+  ---This case seemed to be missing---
+  Result_Seq_Step: "
+    \<lbrakk> 
+      leaf \<E> \<pi>;
+      \<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<kappa>\<rangle>) ;
+      \<langle>RESULT x; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<sigma>'
+    \<rbrakk> \<Longrightarrow>
+    \<E> \<rightarrow> \<E> ++ [\<pi> \<mapsto> \<sigma>']
+  " |
+  *)
+  Let_Seq_Step: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
       \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
