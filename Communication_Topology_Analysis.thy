@@ -128,6 +128,24 @@ inductive is_subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" where
     \<rbrakk> \<Longrightarrow>
     is_subexp (LET x = RECV EVT _ in e) e'
   " |
+  Let_Case_Left: "
+    \<lbrakk>
+      is_subexp e e'
+    \<rbrakk> \<Longrightarrow>
+    is_subexp (LET x = CASE _ LEFT _ |> e RIGHT _ |> _ in _) e'
+  " |
+  Let_Case_Right: "
+    \<lbrakk>
+      is_subexp e e'
+    \<rbrakk> \<Longrightarrow>
+    is_subexp (LET x = CASE _ LEFT _ |> _ RIGHT _ |> e in _) e'
+  " |
+  Let_Case: "
+    \<lbrakk>
+      is_subexp e e'
+    \<rbrakk> \<Longrightarrow>
+    is_subexp (LET x = CASE _ LEFT _ |> _ RIGHT _ |> _ in e) e'
+  " |
   Let_Sync: "
     \<lbrakk>
       is_subexp e e'
