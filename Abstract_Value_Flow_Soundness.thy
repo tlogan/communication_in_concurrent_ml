@@ -991,7 +991,7 @@ theorem flow_over_pool_sound : "
 done
 
 
-theorem flow_sound : "
+theorem isnt_abstract_value_sound : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e; 
     [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>';
@@ -1003,7 +1003,7 @@ theorem flow_sound : "
  apply (erule flow_over_pool_sound [of \<V> \<C> _ \<E>' \<pi> e' \<rho>' \<kappa>'], auto)
 done
 
-corollary flow_sound_coro: "
+corollary isnt_abstract_value_sound_coro: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e ;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -1012,7 +1012,7 @@ corollary flow_sound_coro: "
   \<rbrakk> \<Longrightarrow>
   {|\<omega>|} \<subseteq> \<V> x
 "
-  apply (drule flow_sound; assumption?)
+  apply (drule isnt_abstract_value_sound; assumption?)
   apply (unfold abstract_value_env_precision_def)
   apply (unfold env_to_abstract_value_env_def)
   apply (drule spec[of _ x]; auto)

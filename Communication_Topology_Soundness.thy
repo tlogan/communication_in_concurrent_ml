@@ -6,13 +6,13 @@ theory Communication_Topology_Soundness
     Communication_Topology_Analysis
 begin
 
-lemma prefix_path_valid: "
+lemma path_not_reachable_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi> = Some (\<langle>LET x = b in e';\<rho>';\<kappa>'\<rangle>) 
   \<rbrakk> \<Longrightarrow>
-  \<V> \<tturnstile> (\<pi>;;x) \<triangleleft> e
+  (\<V>, e) :\<downharpoonright> (\<pi>;;x)
 "
 sorry
 
@@ -24,7 +24,7 @@ lemma is_same_path: "
  by (metis leaf_def option.inject option.simps(3) prefix_order.le_less)
 *)
 
-lemma abstract_step_over_exp_valid: "
+lemma exp_not_reachable_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -32,9 +32,15 @@ lemma abstract_step_over_exp_valid: "
   \<rbrakk> \<Longrightarrow>
   (\<V>, e) \<downharpoonright> e'
 "
+ apply (frule lift_flow_exp_to_pool)
+ apply (drule flow_preservation_star[of _ _ _ \<E>']; assumption?)
+ apply (erule accept_state_pool.cases; auto)
+ apply (drule spec[of _ \<pi>'], drule spec[of _ "\<langle>e';\<rho>';\<kappa>'\<rangle>"], simp)
+ apply (erule accept_state.cases; auto)
+ apply (erule accept_exp.cases[of _ e']; auto)
 sorry
 
-lemma abstract_send_chan_valid: "
+lemma abstract_chan_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -57,7 +63,7 @@ lemma abstract_send_chan_valid: "
  apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "\<lbrace>Ch \<pi> x\<^sub>c\<rbrace>"]; simp)
 done
 
-lemma abstract_send_evt_valid: "
+lemma abstract_send_evt_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -66,10 +72,10 @@ lemma abstract_send_evt_valid: "
   \<rbrakk> \<Longrightarrow>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
 "
-  apply (drule flow_sound_coro; assumption?; auto)
+  apply (drule isnt_abstract_value_sound_coro; assumption?; auto)
 done
 
-lemma abstract_send_unit_valid: "
+lemma abstract_unit_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -77,10 +83,10 @@ lemma abstract_send_unit_valid: "
   \<rbrakk> \<Longrightarrow> 
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y
 "
- apply (drule flow_sound_coro; assumption?; auto; simp)
+ apply (drule isnt_abstract_value_sound_coro; assumption?; auto; simp)
 done
 
-lemma abstract_send_message_valid: "
+lemma abstract_message_isnt_sent_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -99,10 +105,10 @@ lemma abstract_send_message_valid: "
   apply (erule accept_exp.cases[of _ "LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y"]; auto)
   apply (thin_tac "\<forall>x\<^sub>r\<^sub>c. ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<longrightarrow> (\<forall>x\<^sub>c. ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow> \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y)")
   apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ x\<^sub>m])
-  apply (frule abstract_send_evt_valid; assumption?)
+  apply (frule abstract_send_evt_doesnt_exist_sound; assumption?)
   apply (erule impE; simp)
   apply (drule spec[of _ x\<^sub>c])
-  apply (drule abstract_send_chan_valid; assumption?; auto)
+  apply (drule abstract_chan_doesnt_exist_sound; assumption?; auto)
 done
 
 lemma isnt_send_path_sound': "
@@ -116,19 +122,19 @@ lemma isnt_send_path_sound': "
     \<E>' (\<pi>\<^sub>y;;x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>y\<rangle>) 
   \<rbrakk> \<Longrightarrow> 
 
-  \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and> (* is \<pi>\<^sub>y;;x\<^sub>y an partial path in e*)
-  (\<V>, e) \<downharpoonright>  (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
+  (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;x\<^sub>y) \<and>
+  (\<V>, e) \<downharpoonright> (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 
 "
- apply (rule conjI, (erule prefix_path_valid; assumption))
- apply (rule conjI, (erule abstract_step_over_exp_valid; assumption))
- apply (rule conjI, (erule abstract_send_chan_valid; assumption))
- apply (rule conjI, (erule abstract_send_evt_valid; assumption))
- apply (rule conjI, (erule abstract_send_unit_valid; assumption))
- apply (drule abstract_send_message_valid; assumption)
+ apply (rule conjI, (erule path_not_reachable_sound; assumption))
+ apply (rule conjI, (erule exp_not_reachable_sound; assumption))
+ apply (rule conjI, (erule abstract_chan_doesnt_exist_sound; assumption))
+ apply (rule conjI, (erule abstract_send_evt_doesnt_exist_sound; assumption))
+ apply (rule conjI, (erule abstract_unit_doesnt_exist_sound; assumption))
+ apply (drule abstract_message_isnt_sent_sound; assumption)
 done
 
 lemma isnt_send_path_sound: "
@@ -176,7 +182,7 @@ lemma topology_recv_sound': "
     \<E>' (\<pi>\<^sub>y;;x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<omega>);\<kappa>\<^sub>y\<rangle>) 
   \<rbrakk> \<Longrightarrow> 
 
-  \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and> (* is \<pi>\<^sub>y;;x\<^sub>y an partial path in e*)
+  (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;x\<^sub>y) \<and>
   (\<V>, e) \<downharpoonright> (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
@@ -263,7 +269,7 @@ theorem topology_single_proc_recv_sound: "
  apply (erule allE; frule impE; auto)
   apply (drule topology_recv_sound; auto)
  apply (drule topology_recv_sound; auto)
-sorry
+done
 
 theorem topology_one_to_one_sound: "
   \<lbrakk>
@@ -410,7 +416,7 @@ lemma many_to_many_precise: "
  apply (rule precision_order.Refl)
 done
 
-theorem topology_pair_sound : "
+theorem is_abstract_topo_sound' : "
   \<lbrakk>
     (x\<^sub>c, t) \<TTurnstile> e;
     [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
@@ -435,7 +441,7 @@ theorem topology_pair_sound : "
 done
 
 
-theorem topology_sound : "
+theorem is_abstract_topo_sound: "
   \<lbrakk>
     \<A> \<bind> e;
     [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
@@ -445,7 +451,7 @@ theorem topology_sound : "
  apply (unfold topo_accept_def)
  apply (unfold topo_env_precision_def)
  apply (intro allI, drule spec)
- apply (drule topology_pair_sound, simp)
+ apply (drule is_abstract_topo_sound', simp)
  apply (unfold state_pool_to_topo_env_def, auto)
 done
 

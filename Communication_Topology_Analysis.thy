@@ -75,7 +75,7 @@ inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix
 definition topo_env_precision :: "topo_env \<Rightarrow> topo_env \<Rightarrow> bool" (infix "\<sqsubseteq>\<^sub>t" 55) where
   "\<A> \<sqsubseteq>\<^sub>t \<A>' \<equiv> (\<forall> x . \<A> x \<preceq> \<A>' x)"
 
-inductive exp_reachable :: "abstract_value_env \<times> exp \<Rightarrow> exp \<Rightarrow> bool"(infix "\<downharpoonright>" 55) where
+inductive exp_reachable :: "abstract_value_env \<times> exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<downharpoonright>" 55) where
   Refl: "
     (\<V>, e) \<downharpoonright> e
   " |
@@ -115,67 +115,11 @@ inductive exp_reachable :: "abstract_value_env \<times> exp \<Rightarrow> exp \<
   "
 
 
-inductive prefix_path_exp :: "abstract_value_env \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [56, 0, 56] 55) where
+inductive path_reachable :: "abstract_value_env \<times> exp \<Rightarrow> control_path \<Rightarrow> bool" (infix ":\<downharpoonright>" 55) where
   Empty: "
-   \<V> \<tturnstile> [] \<triangleleft> e
-  " |
-  Result: "
-   \<V> \<tturnstile> [Inl x] \<triangleleft> (RESULT x)
-  " |
-  Let_Unit: "
-    \<V> \<tturnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
-    \<V> \<tturnstile> (Inl x # \<pi>) \<triangleleft> (LET x = \<lparr>\<rparr> in e)
-  " |
-  Let_Prim: "
-    \<V> \<tturnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
-    \<V> \<tturnstile> (Inl x # \<pi>) \<triangleleft> (LET x = Prim p in e)
-  " |
-  Let_Case_Left: "
-    \<lbrakk>
-      \<V> \<tturnstile> \<pi>\<^sub>l \<triangleleft> e\<^sub>l; 
-      \<V> \<tturnstile> \<pi> \<triangleleft> e 
-    \<rbrakk>\<Longrightarrow> 
-    \<V> \<tturnstile> (\<pi>\<^sub>l @ (Inl x # \<pi>)) \<triangleleft> (LET x = CASE _ LEFT x\<^sub>l |> e\<^sub>l RIGHT _ |> _ in e)
-  " |
-  Let_Case_Right: "
-    \<lbrakk>
-      \<V> \<tturnstile> \<pi>\<^sub>r \<triangleleft> e\<^sub>r;
-      \<V> \<tturnstile> \<pi> \<triangleleft> e
-    \<rbrakk> \<Longrightarrow> 
-    \<V> \<tturnstile> (\<pi>\<^sub>r @ (Inl x # \<pi>)) \<triangleleft> (LET x = CASE _ LEFT _ |> _ RIGHT x\<^sub>r |> e\<^sub>r in e)
-  " |
-  Let_Fst: "
-    \<V> \<tturnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
-    \<V> \<tturnstile> (Inl x # \<pi>) \<triangleleft> (LET x = FST _ in e)
-  " |
-  Let_Snd: "
-    \<V> \<tturnstile> \<pi> \<triangleleft> e \<Longrightarrow> 
-    \<V> \<tturnstile> (Inl x # \<pi>) \<triangleleft> (LET x = SND _ in e)
-  " |
-  Let_App: "
-    \<lbrakk>
-      {^Abs f\<^sub>p x\<^sub>p e\<^sub>b} \<subseteq> \<V> f;
-      \<V>(x\<^sub>p := (\<V> x\<^sub>p) \<inter> (\<V> x\<^sub>a)) \<tturnstile> \<pi>' \<triangleleft> e\<^sub>b;
-      \<V> \<tturnstile> \<pi> \<triangleleft> e
-    \<rbrakk> \<Longrightarrow> 
-    \<V> \<tturnstile> \<pi>' @ (Inl x # \<pi>) \<triangleleft> (LET x = APP f x\<^sub>a in e)
-  " |
-  Let_Sync: "
-   \<V> \<tturnstile> \<pi> \<triangleleft> e \<Longrightarrow>
-   \<V> \<tturnstile> (Inl x # \<pi>) \<triangleleft> (LET x = SYNC _ in e)
-  " |
-  Let_Chan: "
-    \<V> \<tturnstile> \<pi> \<triangleleft> e \<Longrightarrow>
-    \<V> \<tturnstile> (Inl x # \<pi>) \<triangleleft> (LET x = CHAN \<lparr>\<rparr> in e)
-  " |
-  Let_Spawn_Parent: " 
-    \<V> \<tturnstile> \<pi> \<triangleleft> e \<Longrightarrow>
-    \<V> \<tturnstile> (Inl x # \<pi>) \<triangleleft> (LET x = SPAWN _ in e)
-  " |
-  Let_Spawn_Child: " 
-    \<V> \<tturnstile> \<pi> \<triangleleft> e\<^sub>c \<Longrightarrow>
-    \<V> \<tturnstile> (Inr x # \<pi>) \<triangleleft> (LET x = SPAWN e\<^sub>c in _)
+   (\<V>, e) :\<downharpoonright> []
   "
+
 
 definition abstract_send_sites :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> var set" where
   "abstract_send_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {x\<^sub>y | x\<^sub>e x\<^sub>y x\<^sub>s\<^sub>c x\<^sub>m e'. 
@@ -195,7 +139,7 @@ definition abstract_recv_sites :: "(abstract_value_env \<times> abstract_value_e
 
 definition abstract_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var set \<Rightarrow> control_path set" where 
   "abstract_paths \<A> sites \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow>  {\<pi>\<^sub>y;;x\<^sub>y | \<pi>\<^sub>y x\<^sub>y . 
-    (x\<^sub>y \<in> sites) \<and> \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e
+    (x\<^sub>y \<in> sites) \<and> (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;x\<^sub>y)
   }" 
 
 definition abstract_send_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path set" where 
