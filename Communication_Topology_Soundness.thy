@@ -23,24 +23,15 @@ lemma is_same_path: "
 "
  by (metis leaf_def option.inject option.simps(3) prefix_order.le_less)
 
-lemma subexp_valid: "
+
+lemma abstract_step_over_exp_valid: "
   \<lbrakk>
-    \<E> \<rightarrow>* \<E>';
-    prefix \<pi> \<pi>'
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) 
   \<rbrakk> \<Longrightarrow>
-  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-  leaf \<E> \<pi> \<longrightarrow> 
-  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
-  is_subexp e e'
+  abstract_step_over_exp e e'
 "
- apply (erule star.induct[of concur_step])
-  apply (rename_tac \<E>)
-  apply (rule impI)+
-  apply (drule is_same_path; assumption?; simp; (erule conjE)+; (rule Refl)?)
- apply (auto, erule concur_step.cases; auto?)
-
 sorry
-
 
 lemma abstract_send_chan_valid: "
   \<lbrakk>
@@ -125,14 +116,14 @@ lemma isnt_send_path_sound': "
   \<rbrakk> \<Longrightarrow> 
 
   \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and> (* is \<pi>\<^sub>y;;x\<^sub>y an partial path in e*)
-  is_subexp e (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
+  abstract_step_over_exp e (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 
 "
  apply (rule conjI, (erule prefix_path_valid; assumption))
- apply (rule conjI, (erule subexp_valid; assumption))
+ apply (rule conjI, (erule abstract_step_over_exp_valid; assumption))
  apply (rule conjI, (erule abstract_send_chan_valid; assumption))
  apply (rule conjI, (erule abstract_send_evt_valid; assumption))
  apply (rule conjI, (erule abstract_send_unit_valid; assumption))
@@ -185,7 +176,7 @@ lemma topology_recv_sound': "
   \<rbrakk> \<Longrightarrow> 
 
   \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and> (* is \<pi>\<^sub>y;;x\<^sub>y an partial path in e*)
-  is_subexp e (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
+  abstract_step_over_exp e (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
   \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y
