@@ -6,7 +6,7 @@ theory Communication_Topology_Soundness
     Communication_Topology_Analysis
 begin
 
-lemma prefix_path_sound: "
+lemma prefix_path_valid: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -17,24 +17,32 @@ lemma prefix_path_sound: "
 sorry
 
 
+lemma is_same_path: "
+ \<E> \<pi> = Some \<sigma>  \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> prefix \<pi> \<pi>' \<Longrightarrow> \<E> \<pi>' = Some \<sigma>' \<Longrightarrow>
+ \<pi> = \<pi>' \<and> \<sigma> = \<sigma>'
+"
+ by (metis leaf_def option.inject option.simps(3) prefix_order.le_less)
 
-lemma subexp_sound: "
+lemma subexp_valid: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) 
+    \<E> \<rightarrow>* \<E>';
+    prefix \<pi> \<pi>'
   \<rbrakk> \<Longrightarrow>
+  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+  leaf \<E> \<pi> \<longrightarrow> 
+  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
   is_subexp e e'
 "
- apply (frule lift_flow_exp_to_pool)
- apply (drule flow_preservation_star[of _ _ _ \<E>']; assumption?)
- apply (erule accept_state_pool.cases; auto)
- apply (drule spec[of _ \<pi>], drule spec[of _ "\<langle>e';\<rho>';\<kappa>'\<rangle>"], simp)
- apply (erule accept_state.cases; auto)
+ apply (erule star.induct[of concur_step])
+  apply (rename_tac \<E>)
+  apply (rule impI)+
+  apply (drule is_same_path; assumption?; simp; (erule conjE)+; (rule Refl)?)
+ apply (auto, erule concur_step.cases; auto?)
+
 sorry
 
 
-lemma abstract_send_chan_sound: "
+lemma abstract_send_chan_valid: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -57,7 +65,7 @@ lemma abstract_send_chan_sound: "
  apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "\<lbrace>Ch \<pi> x\<^sub>c\<rbrace>"]; simp)
 done
 
-lemma abstract_send_evt_sound: "
+lemma abstract_send_evt_valid: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -69,7 +77,7 @@ lemma abstract_send_evt_sound: "
   apply (drule flow_sound_coro; assumption?; auto)
 done
 
-lemma abstract_send_unit_sound: "
+lemma abstract_send_unit_valid: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -80,7 +88,7 @@ lemma abstract_send_unit_sound: "
  apply (drule flow_sound_coro; assumption?; auto; simp)
 done
 
-lemma abstract_send_message_sound: "
+lemma abstract_send_message_valid: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -99,13 +107,13 @@ lemma abstract_send_message_sound: "
   apply (erule accept_exp.cases[of _ "LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y"]; auto)
   apply (thin_tac "\<forall>x\<^sub>r\<^sub>c. ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<longrightarrow> (\<forall>x\<^sub>c. ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow> \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y)")
   apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ x\<^sub>m])
-  apply (frule abstract_send_evt_sound; assumption?)
+  apply (frule abstract_send_evt_valid; assumption?)
   apply (erule impE; simp)
   apply (drule spec[of _ x\<^sub>c])
-  apply (drule abstract_send_chan_sound; assumption?; auto)
+  apply (drule abstract_send_chan_valid; assumption?; auto)
 done
 
-lemma topology_send_sound': "
+lemma isnt_send_path_sound': "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -123,27 +131,27 @@ lemma topology_send_sound': "
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 
 "
- apply (rule conjI, (erule prefix_path_sound; assumption))
- apply (rule conjI, (erule subexp_sound; assumption))
- apply (rule conjI, (erule abstract_send_chan_sound; assumption))
- apply (rule conjI, (erule abstract_send_evt_sound; assumption))
- apply (rule conjI, (erule abstract_send_unit_sound; assumption))
- apply (drule abstract_send_message_sound; assumption)
+ apply (rule conjI, (erule prefix_path_valid; assumption))
+ apply (rule conjI, (erule subexp_valid; assumption))
+ apply (rule conjI, (erule abstract_send_chan_valid; assumption))
+ apply (rule conjI, (erule abstract_send_evt_valid; assumption))
+ apply (rule conjI, (erule abstract_send_unit_valid; assumption))
+ apply (drule abstract_send_message_valid; assumption)
 done
 
-lemma topology_send_sound: "
+lemma isnt_send_path_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<pi>\<^sub>y \<in> send_paths \<E>' (Ch \<pi> x\<^sub>c) 
+    \<pi>\<^sub>y \<in> send_paths \<E>' (Ch \<pi> x\<^sub>c)
   \<rbrakk> \<Longrightarrow> 
   \<pi>\<^sub>y \<in> abstract_send_paths (\<V>, \<C>, e) x\<^sub>c
 "
  apply (unfold send_paths_def abstract_send_paths_def abstract_send_sites_def abstract_paths_def; auto)
   apply (rule exI, rule conjI)
-   apply (frule topology_send_sound'; assumption?; auto; blast)
-  apply (frule topology_send_sound'; assumption?; blast)
- apply (frule topology_send_sound'; assumption?; blast)
+   apply (frule isnt_send_path_sound'; assumption?; auto; blast)
+  apply (frule isnt_send_path_sound'; assumption?; blast)
+ apply (frule isnt_send_path_sound'; assumption?; blast)
 done
 
 
@@ -157,10 +165,10 @@ theorem topology_single_path_send_sound: "
   single_path (send_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
  apply (simp add: single_path_def; auto; erule allE; erule impE)
-  apply (drule topology_send_sound; auto)
+  apply (drule isnt_send_path_sound; auto)
  apply (erule allE; frule impE; auto)
-  apply (drule topology_send_sound; auto)
- apply (drule topology_send_sound; auto)
+  apply (drule isnt_send_path_sound; auto)
+ apply (drule isnt_send_path_sound; auto)
 done
 
 (****)
@@ -243,10 +251,10 @@ theorem topology_single_proc_send_sound: "
   single_proc (send_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
  apply (simp add: single_proc_def; auto; erule allE; erule impE)
-  apply (drule topology_send_sound; auto)
+  apply (drule isnt_send_path_sound; auto)
  apply (erule allE; frule impE; auto)
-  apply (drule topology_send_sound; auto)
- apply (drule topology_send_sound; auto)
+  apply (drule isnt_send_path_sound; auto)
+ apply (drule isnt_send_path_sound; auto)
 done
 
 theorem topology_single_proc_recv_sound: "
