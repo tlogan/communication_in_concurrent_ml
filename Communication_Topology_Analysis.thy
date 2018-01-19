@@ -75,135 +75,43 @@ inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix
 definition topo_env_precision :: "topo_env \<Rightarrow> topo_env \<Rightarrow> bool" (infix "\<sqsubseteq>\<^sub>t" 55) where
   "\<A> \<sqsubseteq>\<^sub>t \<A>' \<equiv> (\<forall> x . \<A> x \<preceq> \<A>' x)"
 
-
-inductive abstract_step_over_exp :: "exp \<Rightarrow> exp \<Rightarrow> bool" where
+inductive exp_reachable :: "abstract_value_env \<times> exp \<Rightarrow> exp \<Rightarrow> bool"(infix "\<downharpoonright>" 55) where
   Refl: "
-    abstract_step_over_exp e e
+    (\<V>, e) \<downharpoonright> e
   " |
-  Let_Unit: "
+  Let: "
     \<lbrakk>
-      abstract_step_over_exp e e'
+     (\<V>, e) \<downharpoonright> (LET x = b in e');
+     ^\<omega> \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = \<lparr>\<rparr> in e) e'
-  " |
-  Let_Abs_Body: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = FN _ _ . e in _) e'
-  " |
-  Let_Abs: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = FN _ _ . _ in e) e'
-  " |
-  Let_Pair: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = \<lparr>_, _\<rparr> in e) e'
-  " |
-  Let_Left: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = LEFT _ in e) e'
-  " |
-  Let_Right: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = RIGHT _ in e) e'
-  " |
-  Let_Send_Evt: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = SEND EVT _ _ in e) e'
-  " |
-  Let_Recv_Evt: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = RECV EVT _ in e) e'
-  " |
-  Let_Case_Left: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = CASE _ LEFT _ |> e RIGHT _ |> _ in _) e'
-  " |
-  Let_Case_Right: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = CASE _ LEFT _ |> _ RIGHT _ |> e in _) e'
-  " |
-  Let_Case: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = CASE _ LEFT _ |> _ RIGHT _ |> _ in e) e'
-  " |
-    Let_Fst: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow> 
-    abstract_step_over_exp (LET x = FST x\<^sub>p in e) e'
-  " |
-  Let_Snd: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow> 
-    abstract_step_over_exp (LET x = SND x\<^sub>p in e) e'
+    (\<V>, e) \<downharpoonright> e'
   " |
   Let_App: "
     \<lbrakk>
-      (*\<forall> f' x' e'' . ^Abs f' x' e'' \<in> \<V> f \<longrightarrow>
-        ...
-      ; *)
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow> 
-    abstract_step_over_exp (LET x = APP f x\<^sub>a in e) e'
+      (\<V>, e) \<downharpoonright> (LET x = APP f x\<^sub>a in _);
+      ^Abs f' x' e' \<in> \<V> f
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e) \<downharpoonright> e'
   " |
-  Let_Sync: "
+  Let_Case_Left: "
     \<lbrakk>
-      abstract_step_over_exp e e'
+      (\<V>, e) \<downharpoonright> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
+      ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = SYNC _ in e) e'
-  " | 
-  Let_Chan: "
+    (\<V>, e) \<downharpoonright> e\<^sub>l
+  " |
+  Let_Case_Right: "
     \<lbrakk>
-      abstract_step_over_exp e e'
+      (\<V>, e) \<downharpoonright> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
+      ^Right x\<^sub>r' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = CHAN \<lparr>\<rparr> in e) e'
-  " | 
-  Let_Spawn_Child: "
+    (\<V>, e) \<downharpoonright> e\<^sub>r
+  " |
+  Let_Spawn: "
     \<lbrakk>
-      abstract_step_over_exp e\<^sub>c e'
+      (\<V>, e) \<downharpoonright> (LET x = SPAWN e\<^sub>c in _)
     \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = SPAWN e\<^sub>c in _) e'
-  " | 
-  Let_Spawn_Parent: "
-    \<lbrakk>
-      abstract_step_over_exp e e'
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_exp (LET x = SPAWN _ in e) e'
-  "
-
-inductive abstract_step_over_pool :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" where
-  Any: "
-    \<lbrakk>
-      \<forall> \<pi>' e' \<rho>' \<kappa>'. \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
-        (\<exists> \<pi> e \<rho> \<kappa> . 
-          \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and> 
-          prefix \<pi> \<pi>' \<and>
-          leaf \<E> \<pi> \<and>
-          abstract_step_over_exp e e'
-        )
-    \<rbrakk> \<Longrightarrow>
-    abstract_step_over_pool \<E> \<E>'
+    (\<V>, e) \<downharpoonright> e\<^sub>c
   "
 
 
@@ -271,7 +179,7 @@ inductive prefix_path_exp :: "abstract_value_env \<Rightarrow> control_path \<Ri
 
 definition abstract_send_sites :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> var set" where
   "abstract_send_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {x\<^sub>y | x\<^sub>e x\<^sub>y x\<^sub>s\<^sub>c x\<^sub>m e'. 
-    abstract_step_over_exp e (LET x\<^sub>y = SYNC x\<^sub>e in e') \<and>
+    (\<V>, e) \<downharpoonright> (LET x\<^sub>y = SYNC x\<^sub>e in e') \<and>
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
     {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
     {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
@@ -279,7 +187,7 @@ definition abstract_send_sites :: "(abstract_value_env \<times> abstract_value_e
 
 definition abstract_recv_sites :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> var set" where
   "abstract_recv_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {x\<^sub>y | x\<^sub>e x\<^sub>y x\<^sub>r\<^sub>c e'. 
-    abstract_step_over_exp e (LET x\<^sub>y = SYNC x\<^sub>e in e') \<and>
+    (\<V>, e) \<downharpoonright> (LET x\<^sub>y = SYNC x\<^sub>e in e') \<and>
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
     {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e \<and>
     \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y

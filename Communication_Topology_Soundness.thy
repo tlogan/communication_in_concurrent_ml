@@ -16,20 +16,20 @@ lemma prefix_path_valid: "
 "
 sorry
 
-
+(*
 lemma is_same_path: "
  \<E> \<pi> = Some \<sigma>  \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> prefix \<pi> \<pi>' \<Longrightarrow> \<E> \<pi>' = Some \<sigma>' \<Longrightarrow>
  \<pi> = \<pi>' \<and> \<sigma> = \<sigma>'
 "
  by (metis leaf_def option.inject option.simps(3) prefix_order.le_less)
-
+*)
 
 lemma abstract_step_over_exp_valid: "
   \<lbrakk>
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) 
   \<rbrakk> \<Longrightarrow>
-  abstract_step_over_exp e e'
+  (\<V>, e) \<downharpoonright> e'
 "
 sorry
 
@@ -116,7 +116,7 @@ lemma isnt_send_path_sound': "
   \<rbrakk> \<Longrightarrow> 
 
   \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and> (* is \<pi>\<^sub>y;;x\<^sub>y an partial path in e*)
-  abstract_step_over_exp e (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
+  (\<V>, e) \<downharpoonright>  (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
@@ -176,7 +176,7 @@ lemma topology_recv_sound': "
   \<rbrakk> \<Longrightarrow> 
 
   \<V> \<tturnstile> (\<pi>\<^sub>y;;x\<^sub>y) \<triangleleft> e \<and> (* is \<pi>\<^sub>y;;x\<^sub>y an partial path in e*)
-  abstract_step_over_exp e (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
+  (\<V>, e) \<downharpoonright> (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
   \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y
