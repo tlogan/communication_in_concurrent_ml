@@ -26,6 +26,7 @@ lemma is_same_path: "
 
 lemma abstract_step_over_exp_valid: "
   \<lbrakk>
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) 
   \<rbrakk> \<Longrightarrow>
