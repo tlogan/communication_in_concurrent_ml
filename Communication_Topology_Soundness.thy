@@ -28,10 +28,18 @@ lemma exp_not_reachable_sound': "
   \<lbrakk>
     \<E> \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<longrightarrow> (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
+  (\<forall> \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' .
+    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    prefix \<pi> \<pi>' \<and> leaf \<E> \<pi> \<longrightarrow>
+    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)  \<longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<longrightarrow> (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
+  )
 "
- apply (erule star.induct[of concur_step])
+ apply (erule star.induct[of concur_step], auto)
  apply (rename_tac \<E>)
+ apply (rule pool_reachable.Any, auto)
+ apply (rule exI[of _ \<pi>], rule exI[of _ e], auto)
+ 
 sorry
 
 
@@ -61,8 +69,8 @@ lemma exp_not_reachable_sound: "
 "
  apply (rule exp_to_pool_reachable; blast?)
  apply (simp add: leaf_def)+
-using exp_not_reachable_sound' flow_preservation_star lift_flow_exp_to_pool 
-by blast
+ apply (smt Nil_prefix exp_not_reachable_sound' flow_preservation_star fun_upd_apply fun_upd_same leaf_def lift_flow_exp_to_pool option.distinct(1) prefix_bot.bot.not_eq_extremum)
+done
 
 lemma abstract_chan_doesnt_exist_sound: "
   \<lbrakk>
