@@ -24,6 +24,33 @@ lemma is_same_path: "
  by (metis leaf_def option.inject option.simps(3) prefix_order.le_less)
 *)
 
+lemma exp_not_reachable_sound': "
+  \<lbrakk>
+    \<E> \<rightarrow>* \<E>'
+  \<rbrakk> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<longrightarrow> (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
+"
+ apply (erule star.induct[of concur_step])
+ apply (rename_tac \<E>)
+sorry
+
+
+lemma exp_to_pool_reachable: "
+  \<lbrakk>
+    \<E> \<rightarrow>* \<E>';
+    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) ;
+    prefix \<pi> \<pi>'; leaf \<E> \<pi>;
+    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) ;
+    (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
+  \<rbrakk> \<Longrightarrow>
+  (\<V>, e) \<downharpoonright> e'
+"
+ apply (erule pool_reachable.cases; auto)
+ apply (drule spec[of _ \<pi>'], drule spec[of _ e'])
+ apply (erule impE; (rule exI[of _ \<rho>'], rule exI[of _ \<kappa>'])?; assumption?)
+ apply (metis leaf_def option.inject prefix_order.dual_order.order_iff_strict prefix_same_cases state.inject)
+done
+
 lemma exp_not_reachable_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
@@ -32,13 +59,10 @@ lemma exp_not_reachable_sound: "
   \<rbrakk> \<Longrightarrow>
   (\<V>, e) \<downharpoonright> e'
 "
- apply (frule lift_flow_exp_to_pool)
- apply (drule flow_preservation_star[of _ _ _ \<E>']; assumption?)
- apply (erule accept_state_pool.cases; auto)
- apply (drule spec[of _ \<pi>'], drule spec[of _ "\<langle>e';\<rho>';\<kappa>'\<rangle>"], simp)
- apply (erule accept_state.cases; auto)
- apply (erule accept_exp.cases[of _ e']; auto)
-sorry
+ apply (rule exp_to_pool_reachable; blast?)
+ apply (simp add: leaf_def)+
+using exp_not_reachable_sound' flow_preservation_star lift_flow_exp_to_pool 
+by blast
 
 lemma abstract_chan_doesnt_exist_sound: "
   \<lbrakk>
