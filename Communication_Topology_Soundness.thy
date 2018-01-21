@@ -43,6 +43,7 @@ lemma exp_not_reachable_sound': "
   apply ((rule exI)+; (rule conjI)+; (rule exI, rule exI)?; assumption?)
   apply (rule conjI, simp)
   apply (rule Refl)
+  apply (rename_tac \<E> \<E>\<^sub>m \<E>')
 sorry
 
 lemma exp_to_pool_reachable: "

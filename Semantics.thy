@@ -247,4 +247,17 @@ lemma result_final: "
   apply (metis exp.simps(4) fun_upd_apply option.distinct(1) option.inject state.inject)+
 done
 
+inductive star_left :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for R where
+ refl: "star_left R z z" |
+ step: "star_left R x y \<Longrightarrow> R y z \<Longrightarrow> star_left R x z"
+
+
+lemma "star R x y \<Longrightarrow> R y z \<longrightarrow> star_left R x z"
+sorry
+
+theorem star_equiv_star_rev: "star R x z \<longleftrightarrow> star_left R x z"
+ apply (case_tac "x = z"; auto?; (rule refl)?)
+ apply (erule star.cases; auto)
+sorry
+
 end
