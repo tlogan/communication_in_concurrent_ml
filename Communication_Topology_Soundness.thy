@@ -28,20 +28,18 @@ lemma exp_not_reachable_sound': "
   \<lbrakk>
     \<E> \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  (\<forall> \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' .
-    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    prefix \<pi> \<pi>' \<and> leaf \<E> \<pi> \<longrightarrow>
-    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)  \<longrightarrow>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<longrightarrow> (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
-  )
+  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+  prefix \<pi> \<pi>' \<longrightarrow> leaf \<E> \<pi> \<longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<longrightarrow>
+  (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
 "
  apply (erule star.induct[of concur_step], auto)
  apply (rename_tac \<E>)
  apply (rule pool_reachable.Any, auto)
- apply (rule exI[of _ \<pi>], rule exI[of _ e], auto)
+ apply (rule exI, rule exI)
  
 sorry
-
 
 lemma exp_to_pool_reachable: "
   \<lbrakk>
