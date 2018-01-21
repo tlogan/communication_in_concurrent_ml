@@ -24,37 +24,39 @@ lemma is_same_path: "
  by (metis leaf_def option.inject option.simps(3) prefix_order.le_less)
 *)
 
+lemma exp_not_reachable_sound'': "
+  \<lbrakk>
+    \<E> \<rightarrow> \<E>'
+  \<rbrakk> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<longrightarrow> (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
+"
+sorry
+
 lemma exp_not_reachable_sound': "
   \<lbrakk>
     \<E> \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
-  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-  prefix \<pi> \<pi>' \<longrightarrow> leaf \<E> \<pi> \<longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<longrightarrow>
-  (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<longrightarrow> (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
 "
  apply (erule star.induct[of concur_step], auto)
- apply (rename_tac \<E>)
- apply (rule pool_reachable.Any, auto)
- apply (rule exI, rule exI)
- 
+  apply (rename_tac \<E>, rule pool_reachable.Any, auto)
+  apply ((rule exI)+; (rule conjI)+; (rule exI, rule exI)?; assumption?)
+  apply (rule conjI, simp)
+  apply (rule Refl)
 sorry
 
 lemma exp_to_pool_reachable: "
   \<lbrakk>
-    \<E> \<rightarrow>* \<E>';
-    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) ;
-    prefix \<pi> \<pi>'; leaf \<E> \<pi>;
-    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) ;
-    (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
+    (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>';
+    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)
   \<rbrakk> \<Longrightarrow>
-  (\<V>, e) \<downharpoonright> e'
+  (\<exists> \<pi> e \<rho> \<kappa> . 
+    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and>
+    prefix \<pi> \<pi>' \<and>
+    (\<V>, e) \<downharpoonright> e'
+  )
 "
  apply (erule pool_reachable.cases; auto)
- apply (drule spec[of _ \<pi>'], drule spec[of _ e'])
- apply (erule impE; (rule exI[of _ \<rho>'], rule exI[of _ \<kappa>'])?; assumption?)
- apply (metis leaf_def option.inject prefix_order.dual_order.order_iff_strict prefix_same_cases state.inject)
 done
 
 lemma exp_not_reachable_sound: "
@@ -65,9 +67,8 @@ lemma exp_not_reachable_sound: "
   \<rbrakk> \<Longrightarrow>
   (\<V>, e) \<downharpoonright> e'
 "
- apply (rule exp_to_pool_reachable; blast?)
- apply (simp add: leaf_def)+
- apply (smt Nil_prefix exp_not_reachable_sound' flow_preservation_star fun_upd_apply fun_upd_same leaf_def lift_flow_exp_to_pool option.distinct(1) prefix_bot.bot.not_eq_extremum)
+ apply (insert exp_to_pool_reachable)
+ apply (smt exp_not_reachable_sound' flow_preservation_star fun_upd_apply lift_flow_exp_to_pool option.distinct(1) option.inject state.inject)
 done
 
 lemma abstract_chan_doesnt_exist_sound: "

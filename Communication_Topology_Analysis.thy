@@ -120,7 +120,7 @@ inductive pool_reachable :: "abstract_value_env \<times> state_pool \<Rightarrow
       \<forall> \<pi>' e' \<rho>' \<kappa>' . \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
         (\<exists> \<pi> e \<rho> \<kappa> . 
           \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and>
-          prefix \<pi> \<pi>' \<and> leaf \<E> \<pi> \<and>
+          prefix \<pi> \<pi>' \<and>
           (\<V>, e) \<downharpoonright> e'
         )
     \<rbrakk> \<Longrightarrow>
