@@ -16,19 +16,13 @@ lemma path_not_reachable_sound: "
 "
 sorry
 
-(*
-lemma is_same_path: "
- \<E> \<pi> = Some \<sigma>  \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> prefix \<pi> \<pi>' \<Longrightarrow> \<E> \<pi>' = Some \<sigma>' \<Longrightarrow>
- \<pi> = \<pi>' \<and> \<sigma> = \<sigma>'
-"
- by (metis leaf_def option.inject option.simps(3) prefix_order.le_less)
-*)
-
 lemma exp_not_reachable_sound'': "
   \<lbrakk>
-    \<E> \<rightarrow> \<E>'
-  \<rbrakk> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<longrightarrow> (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
+    \<E>\<^sub>m \<rightarrow> \<E>';
+    (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>\<^sub>m;
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<^sub>m 
+  \<rbrakk> \<Longrightarrow> 
+  (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
 "
 sorry
 
@@ -36,15 +30,17 @@ lemma exp_not_reachable_sound': "
   \<lbrakk>
     \<E> \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<longrightarrow> (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow> (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
 "
- apply (erule star.induct[of concur_step], auto)
-  apply (rename_tac \<E>, rule pool_reachable.Any, auto)
-  apply ((rule exI)+; (rule conjI)+; (rule exI, rule exI)?; assumption?)
-  apply (rule conjI, simp)
-  apply (rule Refl)
-  apply (rename_tac \<E> \<E>\<^sub>m \<E>')
-sorry
+ apply (drule star_implies_star_left)
+ apply (erule star_left.induct[of concur_step], auto)
+  apply (rule pool_reachable.Any, auto)
+  using exp_reachable.Refl apply blast
+  apply (rename_tac \<E>' \<E>\<^sub>m \<E>)
+  apply (drule star_left_implies_star)
+  apply (drule flow_preservation_star; assumption?)
+  apply (drule exp_not_reachable_sound''; auto)
+done
 
 lemma exp_to_pool_reachable: "
   \<lbrakk>
@@ -68,8 +64,11 @@ lemma exp_not_reachable_sound: "
   \<rbrakk> \<Longrightarrow>
   (\<V>, e) \<downharpoonright> e'
 "
- apply (insert exp_to_pool_reachable)
- apply (smt exp_not_reachable_sound' flow_preservation_star fun_upd_apply lift_flow_exp_to_pool option.distinct(1) option.inject state.inject)
+ apply (insert exp_to_pool_reachable[of \<V> "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" \<E>' \<pi>' e' \<rho>' \<kappa>'], auto)
+ apply (erule meta_impE, auto)
+ apply (drule lift_flow_exp_to_pool)
+ apply (drule exp_not_reachable_sound', auto)
+ apply (metis option.inject option.simps(3) state.inject)
 done
 
 lemma abstract_chan_doesnt_exist_sound: "

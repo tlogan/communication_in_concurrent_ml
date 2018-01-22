@@ -252,12 +252,15 @@ inductive star_left :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> '
  step: "star_left R x y \<Longrightarrow> R y z \<Longrightarrow> star_left R x z"
 
 
-lemma "star R x y \<Longrightarrow> R y z \<longrightarrow> star_left R x z"
+lemma "star R x z \<Longrightarrow> star R x y \<longrightarrow> R y z"
 sorry
 
-theorem star_equiv_star_rev: "star R x z \<longleftrightarrow> star_left R x z"
+theorem star_implies_star_left: "star R x z \<Longrightarrow> star_left R x z"
  apply (case_tac "x = z"; auto?; (rule refl)?)
  apply (erule star.cases; auto)
+sorry
+
+theorem star_left_implies_star: "star_left R x z \<Longrightarrow> star R x z"
 sorry
 
 end
