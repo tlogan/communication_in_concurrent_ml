@@ -18,12 +18,17 @@ sorry
 
 lemma exp_not_reachable_sound'': "
   \<lbrakk>
+    \<E> \<rightarrow>* \<E>\<^sub>m ;
     \<E>\<^sub>m \<rightarrow> \<E>';
     (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>\<^sub>m;
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<^sub>m 
   \<rbrakk> \<Longrightarrow> 
   (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
 "
+ apply (rule pool_reachable.Any, auto)
+ apply (erule pool_reachable.cases, auto)
+ apply (erule concur_step.cases)
+  apply (erule seq_step.cases, simp)
 sorry
 
 lemma exp_not_reachable_sound': "
@@ -36,7 +41,6 @@ lemma exp_not_reachable_sound': "
  apply (erule star_left.induct[of concur_step], auto)
   apply (rule pool_reachable.Any, auto)
   using exp_reachable.Refl apply blast
-  apply (rename_tac \<E>' \<E>\<^sub>m \<E>)
   apply (drule star_left_implies_star)
   apply (drule flow_preservation_star; assumption?)
   apply (drule exp_not_reachable_sound''; auto)
