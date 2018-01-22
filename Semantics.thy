@@ -260,7 +260,6 @@ next
   case step thus ?case by (metis star_left.step)
 qed
 
-
 lemma star_left_step1[simp, intro]: "r x y \<Longrightarrow> star_left r x y"
 by(metis star_left.refl star_left.step)
 

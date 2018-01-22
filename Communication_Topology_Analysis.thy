@@ -114,19 +114,6 @@ inductive exp_reachable :: "abstract_value_env \<times> exp \<Rightarrow> exp \<
     (\<V>, e) \<downharpoonright> e\<^sub>c
   "
 
-inductive pool_reachable :: "abstract_value_env \<times> state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<downharpoonright>\<downharpoonright>" 55) where
-  Any: "
-    \<lbrakk>
-      \<forall> \<pi>' e' \<rho>' \<kappa>' . \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
-        (\<exists> \<pi> e \<rho> \<kappa> . 
-          \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and>
-          prefix \<pi> \<pi>' \<and>
-          (\<V>, e) \<downharpoonright> e'
-        )
-    \<rbrakk> \<Longrightarrow>
-    (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
-  "
-
 inductive path_reachable :: "abstract_value_env \<times> exp \<Rightarrow> control_path \<Rightarrow> bool" (infix ":\<downharpoonright>" 55) where
   Empty: "
    (\<V>, e) :\<downharpoonright> []

@@ -16,51 +16,70 @@ lemma path_not_reachable_sound: "
 "
 sorry
 
-lemma exp_not_reachable_sound'': "
+lemma nonempty_pool: "
   \<lbrakk>
-    \<E> \<rightarrow>* \<E>\<^sub>m ;
-    \<E>\<^sub>m \<rightarrow> \<E>';
-    (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>\<^sub>m;
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<^sub>m 
-  \<rbrakk> \<Longrightarrow> 
-  (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
+   \<E> \<rightarrow> \<E>'
+  \<rbrakk>\<Longrightarrow>
+  (\<exists> \<pi> e \<rho> \<kappa> . 
+    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and> leaf \<E> \<pi>
+  )
 "
- apply (rule pool_reachable.Any, auto)
- apply (erule pool_reachable.cases, auto)
  apply (erule concur_step.cases)
-  apply (erule seq_step.cases, simp)
+ apply (auto)
+done
+
+lemma xyz: "
+ \<E>\<^sub>m \<rightarrow> \<E>' \<Longrightarrow>
+ \<E> \<rightarrow>* \<E>\<^sub>m \<Longrightarrow> 
+ (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
+ \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+ leaf \<E> \<pi> \<Longrightarrow> 
+ \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
+ prefix \<pi> \<pi>' \<Longrightarrow> 
+ \<E>\<^sub>m \<pi>\<^sub>m = Some (\<langle>e\<^sub>m;\<rho>\<^sub>m;\<kappa>\<^sub>m\<rangle>) \<Longrightarrow>
+ prefix \<pi> \<pi>\<^sub>m
+"
 sorry
 
-lemma exp_not_reachable_sound': "
+
+lemma exp_not_reachable_sound_alt': "
   \<lbrakk>
     \<E> \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow> (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>'
-"
- apply (drule star_implies_star_left)
- apply (erule star_left.induct[of concur_step], auto)
-  apply (rule pool_reachable.Any, auto)
-  using exp_reachable.Refl apply blast
-  apply (drule star_left_implies_star)
-  apply (drule flow_preservation_star; assumption?)
-  apply (drule exp_not_reachable_sound''; auto)
-done
-
-lemma exp_to_pool_reachable: "
-  \<lbrakk>
-    (\<V>, \<E>) \<downharpoonright>\<downharpoonright> \<E>';
-    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)
-  \<rbrakk> \<Longrightarrow>
-  (\<exists> \<pi> e \<rho> \<kappa> . 
-    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and>
-    prefix \<pi> \<pi>' \<and>
+  (\<forall> \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' .
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow>
+    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    leaf \<E> \<pi> \<longrightarrow>
+    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+    prefix \<pi> \<pi>' \<longrightarrow>
     (\<V>, e) \<downharpoonright> e'
   )
 "
- apply (erule pool_reachable.cases; auto)
-done
+ apply (drule star_implies_star_left)
+ apply (erule star_left.induct[of concur_step], auto)
+ apply (metis exp_reachable.Refl leaf_def option.inject option.simps(3) prefix_order.le_imp_less_or_eq state.inject)
+ apply (rename_tac \<E> \<E>\<^sub>m \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>')
+ apply ((drule spec)+, (erule impE)+, (rule exI)+, assumption)
+ apply (erule impE, assumption)
+ apply (frule nonempty_pool, (erule exE)+)
+ apply (rename_tac \<E> \<E>\<^sub>m \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m, erule conjE)
+ apply ((drule spec)+, erule impE, (rule exI)+, assumption)
+ apply (drule star_left_implies_star)
+ apply (erule impE)
+ (*need proof of prefix \<pi> \<pi>\<^sub>m*)
+ apply (drule xyz; simp?; auto) 
+ apply (drule flow_preservation_star; auto?)
+ apply (erule accept_state_pool.cases, auto)
+ apply (rename_tac \<E> \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m \<E>\<^sub>m)
+ apply ((drule spec)+, erule impE, assumption)
+ apply (erule accept_state.cases, auto)
+ apply (rename_tac \<E> \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' \<pi>\<^sub>m \<E>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m)
+ apply (thin_tac "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>m")
+ apply (thin_tac "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>m\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>m")
+ (*need proof of prefix \<pi>\<^sub>m \<pi>'*)
+sorry
 
-lemma exp_not_reachable_sound: "
+lemma exp_not_reachable_sound_alt: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -68,11 +87,8 @@ lemma exp_not_reachable_sound: "
   \<rbrakk> \<Longrightarrow>
   (\<V>, e) \<downharpoonright> e'
 "
- apply (insert exp_to_pool_reachable[of \<V> "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" \<E>' \<pi>' e' \<rho>' \<kappa>'], auto)
- apply (erule meta_impE, auto)
- apply (drule lift_flow_exp_to_pool)
- apply (drule exp_not_reachable_sound', auto)
- apply (metis option.inject option.simps(3) state.inject)
+ apply (insert exp_not_reachable_sound_alt', auto)
+ apply (smt Nil_prefix fun_upd_apply fun_upd_same leaf_def lift_flow_exp_to_pool option.distinct(1) prefix_bot.bot.not_eq_extremum)
 done
 
 lemma abstract_chan_doesnt_exist_sound: "
