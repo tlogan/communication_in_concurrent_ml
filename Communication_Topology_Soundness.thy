@@ -225,6 +225,7 @@ lemma trace_preservation: "
  apply (metis leaf_def option.distinct(1) strict_prefixI')+
 done
 
+(*
 lemma nonempty_pool_star_left: "
   \<lbrakk>
    star_left op \<rightarrow> \<E> \<E>\<^sub>m
@@ -250,7 +251,59 @@ lemma nonempty_pool_star_left: "
  apply (drule trace_preservation, assumption)
  apply ((rule exI)+, (rule conjI)+, (rule exI)+, assumption)
 sorry
+*)
 
+lemma nonempty_pool_star_left: "
+  \<lbrakk>
+   star_left op \<rightarrow> \<E> \<E>\<^sub>m
+  \<rbrakk>\<Longrightarrow>
+  (\<forall> \<E>'' . \<E>\<^sub>m \<rightarrow> \<E>'' \<longrightarrow> 
+  (\<forall> \<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+  (\<forall> \<pi>'' e'' \<rho>'' \<kappa>''. \<E>'' \<pi>'' = Some (\<langle>e'';\<rho>'';\<kappa>''\<rangle>) \<longrightarrow>
+      (\<exists> \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m . 
+        \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and> 
+        leaf \<E> \<pi> \<and>
+        \<E>\<^sub>m \<pi>\<^sub>m = Some (\<langle>e\<^sub>m;\<rho>\<^sub>m;\<kappa>\<^sub>m\<rangle>) \<and>
+        prefix \<pi> \<pi>\<^sub>m \<and>
+        leaf \<E>\<^sub>m \<pi>\<^sub>m \<and>
+        prefix \<pi>\<^sub>m \<pi>''
+      )
+   )))
+"
+sorry
+
+lemma exp_not_reachable_sound'': "
+   star_left op \<rightarrow> \<E> \<E>\<^sub>m \<Longrightarrow>
+   \<E>\<^sub>m \<rightarrow> \<E>' \<Longrightarrow>
+   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
+
+   \<forall>\<pi> e. (\<exists>\<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)) \<longrightarrow>
+          leaf \<E> \<pi> \<longrightarrow> (\<forall>\<pi>' e'. (\<exists>\<rho>' \<kappa>'. \<E>\<^sub>m \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)) \<longrightarrow> prefix \<pi> \<pi>' \<longrightarrow> (\<V>, e) \<downharpoonright> e') \<Longrightarrow>
+
+   \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> prefix \<pi> \<pi>' \<Longrightarrow> 
+   (\<V>, e) \<downharpoonright> e'
+"
+ apply (frule nonempty_pool_star_left)
+ apply (drule star_left_implies_star)
+ apply (drule flow_preservation_star, auto)
+ apply (drule spec[of _ \<pi>])
+ apply (drule spec[of _ \<E>'])
+ apply (drule spec[of _ e])
+ apply simp
+ apply (drule spec[of _ \<pi>])
+ apply (erule impE, (rule exI)+, assumption)
+ apply (rotate_tac 8)
+ apply (drule spec[of _ \<pi>'])
+ apply (erule impE, (rule exI)+, assumption)
+ apply ((erule conjE), (erule exE), (erule conjE)+, (erule exE)+)
+ apply ((drule spec)+, erule impE, (rule exI)+, assumption)
+ apply (erule impE, assumption)
+ apply (erule accept_state_pool.cases, auto)
+ apply ((drule spec)+, erule impE, assumption)
+ apply (erule accept_state.cases, auto)
+ apply (rename_tac \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m)
+ apply (erule concur_step.cases; (erule seq_step.cases)?; auto)
+sorry
 
 lemma exp_not_reachable_sound': "
   \<lbrakk>
@@ -266,10 +319,11 @@ lemma exp_not_reachable_sound': "
   )
 "
  apply (drule star_implies_star_left)
- apply (erule star_left.cases, auto)
+ apply (erule star_left.induct, auto)
  apply (metis exp_reachable.Refl leaf_def option.inject option.simps(3) prefix_order.le_imp_less_or_eq state.inject)
- apply (rename_tac \<E>\<^sub>m \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>')
-sorry
+ apply (rename_tac \<E> \<E>\<^sub>m \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>')
+ apply (insert exp_not_reachable_sound'', auto)
+done
 
 lemma exp_not_reachable_sound: "
   \<lbrakk>
