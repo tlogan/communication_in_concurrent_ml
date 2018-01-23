@@ -18,25 +18,50 @@ sorry
 
 lemma nonempty_pool: "
   \<lbrakk>
-   \<E> \<rightarrow> \<E>'
+    \<E> \<rightarrow> \<E>'
   \<rbrakk>\<Longrightarrow>
-  (\<exists> \<pi> e \<rho> \<kappa> . 
-    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and> leaf \<E> \<pi>
+  (\<exists> \<pi> \<sigma> \<pi>' \<sigma>'. 
+    \<E> \<pi> = Some \<sigma> \<and> 
+    leaf \<E> \<pi> \<and>
+    \<E>' \<pi>' = Some \<sigma>' \<and>
+    prefix \<pi> \<pi>'
   )
 "
- apply (erule concur_step.cases)
- apply (auto)
+ apply (erule concur_step.cases, auto)
 done
 
-lemma xyz: "
- \<E> \<rightarrow>* \<E>\<^sub>m \<Longrightarrow> 
- \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
- leaf \<E> \<pi> \<Longrightarrow>
- \<E>\<^sub>m \<pi>\<^sub>m = Some (\<langle>e\<^sub>m;\<rho>\<^sub>m;\<kappa>\<^sub>m\<rangle>) \<Longrightarrow>
- leaf \<E>\<^sub>m \<pi>\<^sub>m \<Longrightarrow>
- prefix \<pi> \<pi>\<^sub>m
+lemma trace_preservation: "
+  \<E> \<rightarrow> \<E>' \<Longrightarrow> 
+  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)
 "
- apply (case_tac "prefix \<pi> \<pi>\<^sub>m"; auto)
+ apply (erule concur_step.cases; (erule seq_step.cases)?; auto)
+ apply (metis leaf_def option.distinct(1) strict_prefixI')+
+done
+
+lemma nonempty_pool_star_left: "
+  \<lbrakk>
+   star_left op \<rightarrow> \<E> \<E>\<^sub>m
+  \<rbrakk>\<Longrightarrow>
+  (\<forall> \<E>'' . \<E>\<^sub>m \<rightarrow> \<E>'' \<longrightarrow>
+    (\<exists> \<pi> e \<rho> \<kappa> \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m. 
+      \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and> 
+      leaf \<E> \<pi> \<and>
+      \<E>\<^sub>m \<pi>\<^sub>m = Some (\<langle>e\<^sub>m;\<rho>\<^sub>m;\<kappa>\<^sub>m\<rangle>) \<and>
+      prefix \<pi> \<pi>\<^sub>m (*\<and>
+      leaf \<E>\<^sub>m \<pi>\<^sub>m \<and>
+      \<E>'' \<pi>'' = Some (\<langle>e'';\<rho>'';\<kappa>''\<rangle>) \<and>
+      prefix \<pi>\<^sub>m \<pi>''*)
+    )
+  )
+"
+ apply (erule star_left.induct; simp)
+  apply (metis nonempty_pool prefix_order.order_refl state.exhaust)
+ apply (rename_tac \<E> \<E>\<^sub>m \<E>', auto)
+ apply ((rule exI)+, (rule conjI)+, (rule exI)+, assumption)
+ apply (rule conjI, assumption)
+ apply (drule trace_preservation, assumption)
+ apply ((rule exI)+, (rule conjI)+, (rule exI)+, assumption, assumption)
 sorry
 
 
@@ -57,25 +82,53 @@ lemma exp_not_reachable_sound': "
  apply (erule star_left.induct[of concur_step], auto)
  apply (metis exp_reachable.Refl leaf_def option.inject option.simps(3) prefix_order.le_imp_less_or_eq state.inject)
  apply (rename_tac \<E> \<E>\<^sub>m \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>')
- apply ((drule spec)+, (erule impE)+, (rule exI)+, assumption)
- apply (erule impE, assumption)
- apply (frule nonempty_pool, (erule exE)+)
- apply (rename_tac \<E> \<E>\<^sub>m \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m, erule conjE)
- apply ((drule spec)+, erule impE, (rule exI)+, assumption)
- apply (drule star_left_implies_star)
- apply (erule impE)
- (*need proof of prefix \<pi> \<pi>\<^sub>m*)
- apply (drule xyz; simp?; auto) 
- apply (drule flow_preservation_star; auto?)
- apply (erule accept_state_pool.cases, auto)
- apply (rename_tac \<E> \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m \<E>\<^sub>m)
- apply ((drule spec)+, erule impE, assumption)
- apply (erule accept_state.cases, auto)
- apply (rename_tac \<E> \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' \<pi>\<^sub>m \<E>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m)
- apply (thin_tac "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>m")
- apply (thin_tac "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>m\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>m")
- (*need proof of prefix \<pi>\<^sub>m \<pi>'*)
+
+ apply (drule nonempty_pool_star_left)
+ apply (drule spec, erule impE, assumption)
+ apply (thin_tac "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)")
+ apply (thin_tac "leaf \<E> \<pi>")
+ apply (thin_tac "prefix \<pi> \<pi>'")
+ apply (erule exE)+
 sorry
+
+(*
+lemma exp_not_reachable_sound': "
+  \<lbrakk>
+    \<E> \<rightarrow>* \<E>'
+  \<rbrakk> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow>
+  (\<forall> \<pi>' e' \<rho>' \<kappa>' . \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+    (\<exists> \<pi> e \<rho> \<kappa> .
+      \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and>
+      (*leaf \<E> \<pi> \<and>*)
+      prefix \<pi> \<pi>' \<and>
+      (\<V>, e) \<downharpoonright> e'
+    )
+  )
+"
+ apply (drule star_implies_star_left)
+ apply (erule star_left.induct[of concur_step], auto)
+ apply (rename_tac \<E> \<pi>' e' \<rho>' \<kappa>')
+ apply ((rule exI)+, rule conjI, (rule exI)+, assumption)
+ apply (rule conjI, auto)
+ apply (rule Refl)
+ apply (rename_tac \<E> \<E>\<^sub>m \<E>' \<pi>' e' \<rho>' \<kappa>)
+ apply (drule nonempty_pool_star_left)
+ apply (drule spec, erule impE, assumption)
+ apply ((erule exE)+, (erule conjE)+)
+ apply ((drule spec)+, erule impE, (rule exI)+, assumption)
+ apply ((erule exE)+, (erule conjE)+)
+
+
+
+(*
+ apply (drule nonempty_pool, (erule exE)+, (erule conjE)+)
+ apply ((drule spec)+, erule impE, (rule exI)+)
+*)
+
+ 
+sorry
+*)
 
 lemma exp_not_reachable_sound: "
   \<lbrakk>
@@ -86,7 +139,7 @@ lemma exp_not_reachable_sound: "
   (\<V>, e) \<downharpoonright> e'
 "
  apply (insert exp_not_reachable_sound', auto)
- apply (smt Nil_prefix fun_upd_apply fun_upd_same leaf_def lift_flow_exp_to_pool option.distinct(1) prefix_bot.bot.not_eq_extremum)
+ apply (smt Nil_prefix fun_upd_apply fun_upd_same leaf_def lift_flow_exp_to_pool option.distinct(1) strict_prefix_def)
 done
 
 lemma abstract_chan_doesnt_exist_sound: "
@@ -285,7 +338,7 @@ theorem topology_one_shot_sound: "
  apply (unfold one_shot_def, auto)
   apply (erule topology_single_path_send_sound; auto)
   apply (erule topology_single_path_recv_sound; auto)
-done
+sorry
 
 
 theorem topology_single_proc_send_sound: "
