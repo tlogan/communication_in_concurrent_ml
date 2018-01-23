@@ -12,7 +12,7 @@ lemma path_not_reachable_sound: "
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi> = Some (\<langle>LET x = b in e';\<rho>';\<kappa>'\<rangle>) 
   \<rbrakk> \<Longrightarrow>
-  (\<V>, e) :\<downharpoonright> (\<pi>;;x)
+  (\<V>, e) :\<downharpoonright> (\<pi>;;`x)
 "
 sorry
 
@@ -190,7 +190,7 @@ lemma abstract_unit_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' (\<pi>\<^sub>y ;; x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>y\<rangle>)
+    \<E>' (\<pi>\<^sub>y ;;`x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>y\<rangle>)
   \<rbrakk> \<Longrightarrow> 
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y
 "
@@ -204,7 +204,7 @@ lemma abstract_message_isnt_sent_sound: "
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
-    \<E>' (\<pi>\<^sub>y;;x\<^sub>y) = Some (\<langle>e\<^sub>y; \<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>); \<kappa>\<^sub>y\<rangle>)
+    \<E>' (\<pi>\<^sub>y;;`x\<^sub>y) = Some (\<langle>e\<^sub>y; \<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>); \<kappa>\<^sub>y\<rangle>)
   \<rbrakk> \<Longrightarrow> 
   \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 "
@@ -230,10 +230,10 @@ lemma isnt_send_path_sound': "
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
-    \<E>' (\<pi>\<^sub>y;;x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>y\<rangle>) 
+    \<E>' (\<pi>\<^sub>y;;`x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>y\<rangle>) 
   \<rbrakk> \<Longrightarrow> 
 
-  (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;x\<^sub>y) \<and>
+  (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;`x\<^sub>y) \<and>
   (\<V>, e) \<downharpoonright> (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
@@ -290,10 +290,10 @@ lemma topology_recv_sound': "
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>); 
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>s\<^sub>c, \<rho>\<^sub>e\<rbrace>;
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
-    \<E>' (\<pi>\<^sub>y;;x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<omega>);\<kappa>\<^sub>y\<rangle>) 
+    \<E>' (\<pi>\<^sub>y;;`x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<omega>);\<kappa>\<^sub>y\<rangle>) 
   \<rbrakk> \<Longrightarrow> 
 
-  (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;x\<^sub>y) \<and>
+  (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;`x\<^sub>y) \<and>
   (\<V>, e) \<downharpoonright> (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>

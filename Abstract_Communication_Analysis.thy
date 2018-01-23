@@ -6,21 +6,6 @@ datatype topo = Non | OneShot | OneToOne | FanOut | FanIn | ManyToMany
 type_synonym topo_pair = "var \<times> topo"
 type_synonym topo_env = "var \<Rightarrow> topo"
 
-definition single_proc :: "control_path set \<Rightarrow> bool" where
-  "single_proc \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
-    \<pi>\<^sub>1 \<in> \<T> \<longrightarrow>
-    \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
-    (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1)
-  )"
-
-definition single_path :: "control_path set \<Rightarrow> bool"  where
-  "single_path \<T> \<equiv>  (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . 
-    \<pi>\<^sub>1 \<in> \<T> \<longrightarrow> 
-    \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
-    \<pi>\<^sub>1 = \<pi>\<^sub>2
-  )"
-
-
 definition var_to_topo :: "state_pool \<Rightarrow> control_path \<Rightarrow> var \<Rightarrow> topo" ("\<langle>\<langle>_ ; _ ; _\<rangle>\<rangle>" [0,0,0]61) where
   "\<langle>\<langle>\<E> ; \<pi>; x\<rangle>\<rangle> \<equiv>
     (if  one_shot \<E> (Ch \<pi> x) then OneShot
@@ -107,8 +92,8 @@ definition abstract_recv_sites :: "(abstract_value_env \<times> abstract_value_e
   }"
 
 definition abstract_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var set \<Rightarrow> control_path set" where 
-  "abstract_paths \<A> sites \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow>  {\<pi>\<^sub>y;;x\<^sub>y | \<pi>\<^sub>y x\<^sub>y . 
-    (x\<^sub>y \<in> sites) \<and> (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;x\<^sub>y)
+  "abstract_paths \<A> sites \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow>  {\<pi>\<^sub>y;;`x\<^sub>y | \<pi>\<^sub>y x\<^sub>y . 
+    (x\<^sub>y \<in> sites) \<and> (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;`x\<^sub>y)
   }" 
 
 definition abstract_send_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path set" where 

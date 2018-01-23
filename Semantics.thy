@@ -2,8 +2,14 @@ theory Semantics
   imports Main Syntax "~~/src/HOL/Library/Sublist" Stars
 begin
 
+datatype control_label = 
+  M var ("`_" [71] 70) | 
+  C var ("._" [71] 70) | 
+  Up var ("+_" [71] 70) |
+  Down var ("-_" [71] 70)
 
-type_synonym control_path = "(var + var) list"
+type_synonym control_path = "control_label list"
+
 datatype chan = Ch control_path var
 
 
@@ -11,6 +17,7 @@ datatype val =
   V_Chan chan ("\<lbrace>_\<rbrace>") |
   V_Closure prim "var \<rightharpoonup> val" ("\<lbrace>_, _\<rbrace>") |
   V_Unit ("\<lbrace>\<rbrace>")
+
  
 type_synonym val_env = "var \<rightharpoonup> val"
 
@@ -71,11 +78,8 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
 
 inductive_cases Result_E[elim!]: "\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>"
 
-abbreviation control_path_append_var :: "control_path => var => control_path" (infixl ";;" 61) where
-  "\<pi>;;x \<equiv> \<pi> @ [Inl x]"
-  
-abbreviation control_path_append_unit :: "control_path => var \<Rightarrow> control_path" (infixl ";;." 61) where
-  "\<pi>;;.x \<equiv> \<pi> @ [Inr x]"
+abbreviation control_path_append :: "control_path => control_label => control_path" (infixl ";;" 61) where
+  "\<pi>;;lab \<equiv> \<pi> @ [lab]"
   
   
 definition leaf :: "state_pool \<Rightarrow> control_path \<Rightarrow> bool" where
@@ -105,7 +109,7 @@ lemma "
     (\<forall> \<pi>' e \<rho>' \<kappa> .
       stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) \<longrightarrow>
       (\<exists> x \<omega>_a x_a \<rho> x_evt \<pi> .
-        \<pi>' = \<pi>;;x \<and>
+        \<pi>' = \<pi>;;`x \<and>
         \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<and>
         vpool' \<pi> = Some \<lbrace>Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
         vpool \<pi> = \<rho> x_evt \<and>
@@ -135,7 +139,7 @@ lemma "
   \<And> vpool vpool' stpool stpool_sync \<pi> \<pi>' e \<rho>' \<kappa> x \<omega>_a x_a \<rho> x_evt . \<lbrakk>
     vpool \<leadsto> vpool' ;
     stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) ;
-    \<pi>' = \<pi>;;x ;
+    \<pi>' = \<pi>;;`x ;
     \<rho>' = \<rho>(x \<mapsto> \<omega>_a) ;
     vpool' \<pi> = Some \<lbrace>Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
     vpool \<pi> = \<rho> x_evt ;
@@ -153,7 +157,7 @@ lemma "
     (\<forall> \<pi>' e \<rho>' \<kappa> .
       stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) \<longrightarrow>
       (\<exists> x \<omega>_a x_a \<rho> x_evt \<pi> .
-        \<pi>' = \<pi>;;x \<and>
+        \<pi>' = \<pi>;;`x \<and>
         \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<and>
         vpool' \<pi> = Some \<lbrace>Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
         vpool \<pi> = \<rho> x_evt \<and>
@@ -187,7 +191,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
       \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
       \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<sigma>'
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;x \<mapsto> \<sigma>']
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;`x \<mapsto> \<sigma>']
   " |
   Sync: "
     \<lbrakk>
@@ -206,8 +210,8 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
 
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [
-      \<pi>\<^sub>s;;x\<^sub>s \<mapsto> (\<langle>e\<^sub>s; \<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> \<lbrace>\<rbrace>]; \<kappa>\<^sub>s\<rangle>), 
-      \<pi>\<^sub>r;;x\<^sub>r \<mapsto> (\<langle>e\<^sub>r; \<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m]; \<kappa>\<^sub>r\<rangle>)
+      \<pi>\<^sub>s;;`x\<^sub>s \<mapsto> (\<langle>e\<^sub>s; \<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> \<lbrace>\<rbrace>]; \<kappa>\<^sub>s\<rangle>), 
+      \<pi>\<^sub>r;;`x\<^sub>r \<mapsto> (\<langle>e\<^sub>r; \<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m]; \<kappa>\<^sub>r\<rangle>)
     ]
   " |
   Let_Chan: "
@@ -216,7 +220,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
       \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>)
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [
-      \<pi>;;x \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> \<lbrace>Ch \<pi> x\<rbrace>]; \<kappa>\<rangle>)
+      \<pi>;;`x \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> \<lbrace>Ch \<pi> x\<rbrace>]; \<kappa>\<rangle>)
     ]
   " |
   Let_Spawn: "
@@ -225,7 +229,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
       \<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [
-      \<pi>;;x \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> \<lbrace>\<rbrace>]; \<kappa>\<rangle>), 
+      \<pi>;;`x \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> \<lbrace>\<rbrace>]; \<kappa>\<rangle>), 
       \<pi>;;.x \<mapsto> (\<langle>e\<^sub>c; \<rho>; []\<rangle>) 
     ]
   "
@@ -245,32 +249,6 @@ lemma result_final: "
   apply (metis exp.distinct(1) fun_upd_apply option.distinct(1) option.inject state.inject)
   apply (metis fun_upd_apply option.distinct(1) option.inject state.inject)
   apply (metis exp.simps(4) fun_upd_apply option.distinct(1) option.inject state.inject)+
-done
-
-inductive star_left :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" for R where
- refl: "star_left R z z" |
- step: "star_left R x y \<Longrightarrow> R y z \<Longrightarrow> star_left R x z"
-
-lemma star_left_trans: "
-  star_left r y z \<Longrightarrow> star_left r x y \<Longrightarrow> star_left r x z
-"
-proof(induction rule: star_left.induct)
-  case refl thus ?case .
-next
-  case step thus ?case by (metis star_left.step)
-qed
-
-lemma star_left_step1[simp, intro]: "r x y \<Longrightarrow> star_left r x y"
-by(metis star_left.refl star_left.step)
-
-theorem star_implies_star_left: "star R x z \<Longrightarrow> star_left R x z"
- apply (erule star.induct, rule star_left.refl)
- apply (meson star_left_step1 star_left_trans)
-done
-
-theorem star_left_implies_star: "star_left R x z \<Longrightarrow> star R x z"
- apply (erule star_left.induct, rule star.refl)
- apply (meson star_step1 star_trans)
 done
 
 end
