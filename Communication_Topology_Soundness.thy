@@ -29,25 +29,23 @@ lemma nonempty_pool: "
 done
 
 lemma xyz: "
- \<E>\<^sub>m \<rightarrow> \<E>' \<Longrightarrow>
  \<E> \<rightarrow>* \<E>\<^sub>m \<Longrightarrow> 
- (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
- leaf \<E> \<pi> \<Longrightarrow> 
- \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
- prefix \<pi> \<pi>' \<Longrightarrow> 
+ leaf \<E> \<pi> \<Longrightarrow>
  \<E>\<^sub>m \<pi>\<^sub>m = Some (\<langle>e\<^sub>m;\<rho>\<^sub>m;\<kappa>\<^sub>m\<rangle>) \<Longrightarrow>
+ leaf \<E>\<^sub>m \<pi>\<^sub>m \<Longrightarrow>
  prefix \<pi> \<pi>\<^sub>m
 "
+ apply (case_tac "prefix \<pi> \<pi>\<^sub>m"; auto)
 sorry
 
 
-lemma exp_not_reachable_sound_alt': "
+lemma exp_not_reachable_sound': "
   \<lbrakk>
     \<E> \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow>
   (\<forall> \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' .
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow>
     \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
     leaf \<E> \<pi> \<longrightarrow>
     \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
@@ -79,7 +77,7 @@ lemma exp_not_reachable_sound_alt': "
  (*need proof of prefix \<pi>\<^sub>m \<pi>'*)
 sorry
 
-lemma exp_not_reachable_sound_alt: "
+lemma exp_not_reachable_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -87,7 +85,7 @@ lemma exp_not_reachable_sound_alt: "
   \<rbrakk> \<Longrightarrow>
   (\<V>, e) \<downharpoonright> e'
 "
- apply (insert exp_not_reachable_sound_alt', auto)
+ apply (insert exp_not_reachable_sound', auto)
  apply (smt Nil_prefix fun_upd_apply fun_upd_same leaf_def lift_flow_exp_to_pool option.distinct(1) prefix_bot.bot.not_eq_extremum)
 done
 
@@ -287,7 +285,7 @@ theorem topology_one_shot_sound: "
  apply (unfold one_shot_def, auto)
   apply (erule topology_single_path_send_sound; auto)
   apply (erule topology_single_path_recv_sound; auto)
-sorry
+done
 
 
 theorem topology_single_proc_send_sound: "
