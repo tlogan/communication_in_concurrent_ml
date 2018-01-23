@@ -1,8 +1,8 @@
 theory Semantics
-  imports Main Syntax "~~/src/HOL/Library/Sublist" "~~/src/HOL/IMP/Star"
+  imports Main Syntax "~~/src/HOL/Library/Sublist" Stars
 begin
 
-  
+
 type_synonym control_path = "(var + var) list"
 datatype chan = Ch control_path var
 

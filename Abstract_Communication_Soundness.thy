@@ -1,9 +1,9 @@
-theory Communication_Topology_Soundness
+theory Abstract_Communication_Soundness
   imports 
     Main 
     Syntax Semantics 
     Abstract_Value_Flow_Analysis Abstract_Value_Flow_Soundness
-    Communication_Topology_Analysis
+    Communication_Analysis Abstract_Communication_Analysis
 begin
 
 lemma path_not_reachable_sound: "
