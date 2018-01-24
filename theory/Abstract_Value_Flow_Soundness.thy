@@ -1119,7 +1119,7 @@ lemma isnt_traceable_sound''': "
   \<rbrakk> \<Longrightarrow> 
   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
 "
- apply (erule concur_step.cases)
+ apply (erule concur_step.cases; (erule seq_step.cases; auto)?)
 sorry
 
 lemma isnt_traceable_sound'': "

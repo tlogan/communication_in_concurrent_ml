@@ -250,8 +250,8 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   " |
   Result: "
     \<lbrakk>
-      \<V> \<turnstile> e \<down> ((\<pi> ;; \<upharpoonleft>x) @ \<pi>', RESULT _); \<downharpoonright>\<pi>\<upharpoonleft>;
-      \<V> \<turnstile> e \<down> (\<pi> ;; \<upharpoonleft>x, LET _ = _ in e')
+      \<V> \<turnstile> e \<down> ((\<pi> ;; \<upharpoonleft>x) @ \<pi>', RESULT _); \<downharpoonright>\<pi>'\<upharpoonleft>;
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = _ in e')
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> ((\<pi> ;; \<upharpoonleft>x) @ (\<pi>' ;; \<downharpoonleft>x), e')
   " |
