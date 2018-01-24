@@ -456,6 +456,24 @@ theorem flow_over_state_preservation : "
  apply (erule flow_over_state_8, auto)
 done
 
+lemma flow_seq_step_down_preservation: "
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) \<Longrightarrow> 
+  \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>' \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; \<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>')
+"
+ apply (rule accept_state_pool.Any, auto)
+  apply (erule accept_state_pool.cases, auto)
+  apply ((drule spec)+, auto)
+sorry
+
+lemma flow_seq_step_up_preservation: "
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
+  \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<sigma>' \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>;;\<upharpoonleft>x \<mapsto> \<sigma>')
+"
+ apply (rule accept_state_pool.Any, auto)
+  apply (erule accept_state_pool.cases, auto)
+  apply ((drule spec)+, auto)
+sorry
+
 lemma flow_seq_step_preservation: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
   \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<sigma>' \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; `x \<mapsto> \<sigma>')
@@ -891,11 +909,13 @@ theorem flow_preservation : "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
 "
  apply (erule concur_step.cases, auto)
+       apply (erule flow_seq_step_down_preservation, auto)
+     apply (erule flow_seq_step_up_preservation, auto)
     apply (erule flow_seq_step_preservation, auto)
    apply ((erule flow_let_sync_preservation; blast?), auto)
   apply (erule flow_let_chan_preservation, auto)
  apply (erule flow_let_spawn_preservation, auto)
-done
+sorry
 
 theorem flow_preservation_star' : "
   \<E> \<rightarrow>* \<E>' \<Longrightarrow>

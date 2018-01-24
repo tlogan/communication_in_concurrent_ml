@@ -5,8 +5,8 @@ begin
 datatype control_label = 
   M var ("`_" [71] 70) | 
   C var ("._" [71] 70) | 
-  Up var ("+_" [71] 70) |
-  Down var ("-_" [71] 70)
+  Up var ("\<upharpoonleft>_" [71] 70) |
+  Down var ("\<downharpoonleft>_" [71] 70)
 
 type_synonym control_path = "control_label list"
 
@@ -91,107 +91,31 @@ lemma leaf_elim: "
    \<E> \<pi>' = None
 "
 using leaf_def by blast
-(*
-type_synonym val_pool = "control_path \<rightharpoonup> val"
-inductive sync_step :: "val_pool \<Rightarrow> val_pool \<Rightarrow> bool" (infix "\<leadsto>" 55) where 
-  Sync_Send_Recv: "
-    \<lbrakk>
-      Some (V_Chan _) = \<rho>_s x_ch_s; \<rho>_r x_ch_r = \<rho>_s x_ch_s ; (\<rho>_s x_m) = Some \<omega>_m
-    \<rbrakk> \<Longrightarrow>
-    [\<pi>_s \<mapsto> \<lbrace>Send_Evt x_ch_s x_m, \<rho>_s\<rbrace>, \<pi>_r \<mapsto> \<lbrace>Recv_Evt x_ch_r, \<rho>_r\<rbrace>] \<leadsto> 
-    [\<pi>_s \<mapsto> \<lbrace>Always_Evt x_a_s, [x_a_s \<mapsto> \<lbrace>\<rbrace>]\<rbrace>, \<pi>_r \<mapsto> \<lbrace>Always_Evt x_a_r, [x_a_r \<mapsto> \<omega>_m]\<rbrace>]
-  "
-
-lemma "
-(
-  \<And> vpool vpool' stpool stpool_sync . 
-    vpool \<leadsto> vpool' \<Longrightarrow>
-    (\<forall> \<pi>' e \<rho>' \<kappa> .
-      stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) \<longrightarrow>
-      (\<exists> x \<omega>_a x_a \<rho> x_evt \<pi> .
-        \<pi>' = \<pi>;;`x \<and>
-        \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<and>
-        vpool' \<pi> = Some \<lbrace>Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
-        vpool \<pi> = \<rho> x_evt \<and>
-        stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and>
-        leaf stpool \<pi>
-      )
-    ) \<Longrightarrow>
-    (\<exists> \<pi>' e \<rho>' \<kappa> . stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) )
-  
-)
- \<Longrightarrow>
-(
-  \<And> vpool vpool' stpool stpool_sync \<pi> \<pi>' e \<rho>' \<kappa> x \<omega>_a x_a \<rho> x_evt .
-    vpool \<leadsto> vpool' \<Longrightarrow>
-    stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) \<Longrightarrow>
-    \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<Longrightarrow>
-    vpool' \<pi> = Some \<lbrace>Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<Longrightarrow>
-    vpool \<pi> = \<rho> x_evt \<Longrightarrow>
-    stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<Longrightarrow>
-    leaf stpool \<pi>
-)
-"
-  using option.simps(3) by fastforce
-
-lemma "
-(
-  \<And> vpool vpool' stpool stpool_sync \<pi> \<pi>' e \<rho>' \<kappa> x \<omega>_a x_a \<rho> x_evt . \<lbrakk>
-    vpool \<leadsto> vpool' ;
-    stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) ;
-    \<pi>' = \<pi>;;`x ;
-    \<rho>' = \<rho>(x \<mapsto> \<omega>_a) ;
-    vpool' \<pi> = Some \<lbrace>Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> ;
-    vpool \<pi> = \<rho> x_evt ;
-    stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) ;
-    leaf stpool \<pi>
-  \<rbrakk> \<Longrightarrow>
-  step stpool (stpool ++ stpool_sync)
-) 
-
-\<Longrightarrow>
-
-(
-  \<And> vpool vpool' stpool stpool_sync . \<lbrakk>
-    vpool \<leadsto> vpool' ;
-    (\<forall> \<pi>' e \<rho>' \<kappa> .
-      stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) \<longrightarrow>
-      (\<exists> x \<omega>_a x_a \<rho> x_evt \<pi> .
-        \<pi>' = \<pi>;;`x \<and>
-        \<rho>' = \<rho>(x \<mapsto> \<omega>_a) \<and>
-        vpool' \<pi> = Some \<lbrace>Always_Evt x_a, [x_a \<mapsto> \<omega>_a]\<rbrace> \<and>
-        vpool \<pi> = \<rho> x_evt \<and>
-        stpool \<pi> = Some (LET x = SYNC x_evt in e, \<rho>, \<kappa>) \<and>
-        leaf stpool \<pi>
-      )
-    ) ;
-    (\<exists> \<pi>' e \<rho>' \<kappa> . stpool_sync \<pi>' = Some (e, \<rho>', \<kappa>) )
-  \<rbrakk> \<Longrightarrow>
-  step stpool (stpool ++ stpool_sync)
-)
-"
-by meson
-*)  
   
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
-  (*
-  ---This case seemed to be missing---
-  Result_Seq_Step: "
+  Seq_Step_Down: "
     \<lbrakk> 
       leaf \<E> \<pi>;
-      \<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<kappa>\<rangle>) ;
-      \<langle>RESULT x; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<sigma>'
+      \<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) ;
+      \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>'
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi> \<mapsto> \<sigma>']
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;\<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>']
   " |
-  *)
-  Let_Seq_Step: "
+  Seq_Step_Up: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
       \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
-      \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<sigma>'
+      \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;`x \<mapsto> \<sigma>']
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;\<upharpoonleft>x \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
+  " |
+  Seq_Step: "
+    \<lbrakk> 
+      leaf \<E> \<pi> ;
+      \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
+      \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<kappa>\<rangle>
+    \<rbrakk> \<Longrightarrow>
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;`x \<mapsto> \<langle>e'; \<rho>'; \<kappa>\<rangle>]
   " |
   Sync: "
     \<lbrakk>
@@ -237,7 +161,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
 abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "\<E> \<rightarrow>* \<E>' \<equiv> star concur_step \<E> \<E>'"
 
-
+(*
 lemma result_final: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   \<E>' \<pi> = Some (\<langle>LET x\<^sub>l = b in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
@@ -250,5 +174,6 @@ lemma result_final: "
   apply (metis fun_upd_apply option.distinct(1) option.inject state.inject)
   apply (metis exp.simps(4) fun_upd_apply option.distinct(1) option.inject state.inject)+
 done
+*)
 
 end
