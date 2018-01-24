@@ -1038,17 +1038,6 @@ corollary isnt_abstract_value_sound_coro: "
   apply (drule spec[of _ x]; auto)
 done
 
-
-lemma path_not_traceable_sound: "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi> = Some (\<langle>LET x = b in e';\<rho>';\<kappa>'\<rangle>) 
-  \<rbrakk> \<Longrightarrow>
-  \<V> \<turnstile> e :\<downharpoonright> (\<pi>;;`x)
-"
-sorry
-
 lemma nonempty_pool: "
   \<lbrakk>
     \<E> \<rightarrow> \<E>'
@@ -1119,16 +1108,16 @@ lemma nonempty_pool_star_left: "
 "
 sorry
 
-lemma exp_not_reachable_sound'': "
+lemma isnt_traceable_sound'': "
    star_left op \<rightarrow> \<E> \<E>\<^sub>m \<Longrightarrow>
    \<E>\<^sub>m \<rightarrow> \<E>' \<Longrightarrow>
    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
 
    \<forall>\<pi> e. (\<exists>\<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)) \<longrightarrow>
-          leaf \<E> \<pi> \<longrightarrow> (\<forall>\<pi>' e'. (\<exists>\<rho>' \<kappa>'. \<E>\<^sub>m \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)) \<longrightarrow> prefix \<pi> \<pi>' \<longrightarrow> \<V> \<turnstile> e \<down> e') \<Longrightarrow>
+          leaf \<E> \<pi> \<longrightarrow> (\<forall>\<pi>' e'. (\<exists>\<rho>' \<kappa>'. \<E>\<^sub>m \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)) \<longrightarrow> prefix \<pi> \<pi>' \<longrightarrow> \<V> \<turnstile> e \<down> (\<pi>', e')) \<Longrightarrow>
 
    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> prefix \<pi> \<pi>' \<Longrightarrow> 
-   \<V> \<turnstile> e \<down> e'
+   \<V> \<turnstile> e \<down> (\<pi>', e')
 "
  apply (frule nonempty_pool_star_left)
  apply (drule star_left_implies_star)
@@ -1152,7 +1141,7 @@ lemma exp_not_reachable_sound'': "
  apply (erule concur_step.cases; (erule seq_step.cases)?; auto)
 sorry
 
-lemma exp_not_reachable_sound': "
+lemma isnt_traceable_sound': "
   \<lbrakk>
     \<E> \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -1162,26 +1151,23 @@ lemma exp_not_reachable_sound': "
     leaf \<E> \<pi> \<longrightarrow>
     \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
     prefix \<pi> \<pi>' \<longrightarrow>
-    \<V> \<turnstile> e \<down> e'
+    \<V> \<turnstile> e \<down> (\<pi>', e')
   )
 "
  apply (drule star_implies_star_left)
  apply (erule star_left.induct, auto)
- apply (metis exp_reachable.Refl leaf_def option.inject option.simps(3) prefix_order.le_imp_less_or_eq state.inject)
- apply (rename_tac \<E> \<E>\<^sub>m \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>')
- apply (insert exp_not_reachable_sound'', auto)
-done
+sorry
 
-lemma exp_not_reachable_sound: "
+lemma isnt_traceable_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) 
   \<rbrakk> \<Longrightarrow>
-  \<V> \<turnstile> e \<down> e'
+  \<V> \<turnstile> e \<down> (\<pi>', e')
 "
- apply (insert exp_not_reachable_sound', auto)
- apply (smt Nil_prefix fun_upd_apply fun_upd_same leaf_def lift_flow_exp_to_pool option.distinct(1) strict_prefix_def)
-done
+ apply (insert isnt_traceable_sound', auto)
+using leaf_def lift_flow_exp_to_pool by fastforce
+
 
 end

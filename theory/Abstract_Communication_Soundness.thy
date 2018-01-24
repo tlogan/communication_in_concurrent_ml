@@ -88,16 +88,14 @@ lemma isnt_send_path_sound': "
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
     \<E>' (\<pi>\<^sub>y;;`x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>y\<rangle>) 
   \<rbrakk> \<Longrightarrow> 
-
-  (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;`x\<^sub>y) \<and>
-  (\<V>, e) \<downharpoonright> (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
+  \<V> \<turnstile> e \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 
 "
- apply (rule conjI, (erule path_not_traceable_sound; assumption))
- apply (rule conjI, (erule exp_not_reachable_sound; assumption))
+ apply (rule conjI)
+ apply (insert isnt_traceable_sound, blast)
  apply (rule conjI, (erule abstract_chan_doesnt_exist_sound; assumption))
  apply (rule conjI, (erule abstract_send_evt_doesnt_exist_sound; assumption))
  apply (rule conjI, (erule abstract_unit_doesnt_exist_sound; assumption))
@@ -112,11 +110,10 @@ lemma isnt_send_path_sound: "
   \<rbrakk> \<Longrightarrow> 
   \<pi>\<^sub>y \<in> abstract_send_paths (\<V>, \<C>, e) x\<^sub>c
 "
- apply (unfold send_paths_def abstract_send_paths_def abstract_send_sites_def abstract_paths_def; auto)
+ apply (unfold send_paths_def abstract_send_paths_def; auto)
   apply (rule exI, rule conjI)
    apply (frule isnt_send_path_sound'; assumption?; auto; blast)
   apply (frule isnt_send_path_sound'; assumption?; blast)
- apply (frule isnt_send_path_sound'; assumption?; blast)
 done
 
 
@@ -147,10 +144,8 @@ lemma topology_recv_sound': "
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>s\<^sub>c, \<rho>\<^sub>e\<rbrace>;
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
     \<E>' (\<pi>\<^sub>y;;`x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<omega>);\<kappa>\<^sub>y\<rangle>) 
-  \<rbrakk> \<Longrightarrow> 
-
-  (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;`x\<^sub>y) \<and>
-  (\<V>, e) \<downharpoonright> (LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
+  \<rbrakk> \<Longrightarrow>
+  \<V> \<turnstile> e \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
   \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y
@@ -166,11 +161,10 @@ lemma topology_recv_sound: "
   \<rbrakk> \<Longrightarrow> 
   \<pi>\<^sub>y \<in> abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c
 "
- apply (unfold recv_paths_def abstract_recv_paths_def abstract_recv_sites_def abstract_paths_def; auto)
+ apply (unfold recv_paths_def abstract_recv_paths_def; auto)
   apply (rule exI, rule conjI)
    apply (frule topology_recv_sound'; blast?; assumption?; blast)
   apply (frule topology_recv_sound'; blast?; assumption?; blast)
- apply (frule topology_recv_sound'; blast?; assumption?; blast)
 done
 
 theorem topology_single_path_recv_sound: "

@@ -235,48 +235,98 @@ definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abs
   "\<V> \<sqsubseteq> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
 
 
-inductive exp_reachable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<turnstile> _ \<down>  _" [56,0,56]55)  where
-  Refl: "
-    \<V> \<turnstile> e \<down> e
+fun is_path_balanced' :: "control_path \<Rightarrow> var list \<Rightarrow> bool"  where
+ "is_path_balanced' [] xs = True" |
+ "is_path_balanced' (\<downharpoonleft>y # \<pi>) (x # xs) = ((x = y) \<and> is_path_balanced' \<pi> xs)" |
+ "is_path_balanced' (\<upharpoonleft>y # \<pi>) xs = is_path_balanced' \<pi> (y # xs)" |
+ "is_path_balanced' (_ # \<pi>) xs = is_path_balanced' \<pi> xs"
+
+fun is_path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
+ "\<downharpoonright>\<pi>\<upharpoonleft> = is_path_balanced' \<pi> []"
+
+inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> exp) \<Rightarrow> bool" ("_ \<turnstile> _ \<down>  _" [56,0,56]55)  where
+  Start: "
+    \<V> \<turnstile> e \<down> ([], e)
   " |
-  Let: "
+  Result: "
     \<lbrakk>
-      \<V> \<turnstile> e \<down> (LET x = b in e');
-      ^\<omega> \<in> \<V> x
+      \<V> \<turnstile> e \<down> ((\<pi> ;; \<upharpoonleft>x) @ \<pi>', RESULT _); \<downharpoonright>\<pi>\<upharpoonleft>;
+      \<V> \<turnstile> e \<down> (\<pi> ;; \<upharpoonleft>x, LET _ = _ in e')
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e \<down> e'
+    \<V> \<turnstile> e \<down> ((\<pi> ;; \<upharpoonleft>x) @ (\<pi>' ;; \<downharpoonleft>x), e')
   " |
   Let_App: "
     \<lbrakk>
-      \<V> \<turnstile> e \<down> (LET x = APP f x\<^sub>a in _);
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = APP f x\<^sub>a in _);
       ^Abs f' x' e' \<in> \<V> f
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e \<down> e'
+    \<V> \<turnstile> e \<down> (\<pi>;;\<upharpoonleft>x, e')
   " |
   Let_Case_Left: "
     \<lbrakk>
-      \<V> \<turnstile> e \<down> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
       ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e \<down> e\<^sub>l
+    \<V> \<turnstile> e \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>l)
   " |
   Let_Case_Right: "
     \<lbrakk>
-      \<V> \<turnstile> e \<down> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
       ^Right x\<^sub>r' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e \<down> e\<^sub>r
+    \<V> \<turnstile> e \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>r)
+  " |
+  Let_Spawn_Child: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = SPAWN e\<^sub>c in _)
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> (\<pi>;;.x, e\<^sub>c)
   " |
   Let_Spawn: "
     \<lbrakk>
-      \<V> \<turnstile> e \<down> (LET x = SPAWN e\<^sub>c in _)
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = \<lparr>\<rparr> in e')
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e \<down> e\<^sub>c
-  "
-
-inductive path_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> bool" ("_ \<turnstile> _ :\<downharpoonright>  _" [56,0,56]55) where
-  Empty: "
-    \<V> \<turnstile> e :\<downharpoonright> []
+    \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
+  " |
+  Let_Unit: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = \<lparr>\<rparr> in e')
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
+  " |
+  Let_Chan: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = CHAN \<lparr>\<rparr> in e')
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
+  " |
+  Let_Sync: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = SYNC _ in e');
+      ^\<omega> \<in> \<V> x
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
+  " |
+  Let_Fst: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = FST _ in e');
+      ^\<omega> \<in> \<V> x
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
+  " |
+  Let_Snd: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = SND _ in e');
+      ^\<omega> \<in> \<V> x
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
+  " |
+  Let_Prim: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = Prim _ in e')
+      (*semantics does not check that prim is constructed from bound variables only*)
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
   "
 
 end
