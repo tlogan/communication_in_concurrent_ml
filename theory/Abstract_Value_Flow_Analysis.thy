@@ -146,11 +146,6 @@ definition env_to_abstract_value_env :: "(var \<rightharpoonup> val) \<Rightarro
     None \<Rightarrow> {}
   ))"
 
-
-definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abstract_value_env \<Rightarrow> bool" (infix "\<sqsubseteq>" 55) where
-  "\<V> \<sqsubseteq> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
-
-
 inductive accept_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55)
 and  accept_val_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
 where
@@ -235,4 +230,53 @@ inductive accept_state_pool :: "abstract_value_env \<times> abstract_value_env \
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
   "
    
+
+definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abstract_value_env \<Rightarrow> bool" (infix "\<sqsubseteq>" 55) where
+  "\<V> \<sqsubseteq> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
+
+
+inductive exp_reachable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<turnstile> _ \<down>  _" [56,0,56]55)  where
+  Refl: "
+    \<V> \<turnstile> e \<down> e
+  " |
+  Let: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (LET x = b in e');
+      ^\<omega> \<in> \<V> x
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> e'
+  " |
+  Let_App: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (LET x = APP f x\<^sub>a in _);
+      ^Abs f' x' e' \<in> \<V> f
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> e'
+  " |
+  Let_Case_Left: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
+      ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> e\<^sub>l
+  " |
+  Let_Case_Right: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
+      ^Right x\<^sub>r' \<in> \<V> x\<^sub>s
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> e\<^sub>r
+  " |
+  Let_Spawn: "
+    \<lbrakk>
+      \<V> \<turnstile> e \<down> (LET x = SPAWN e\<^sub>c in _)
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e \<down> e\<^sub>c
+  "
+
+inductive path_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> bool" ("_ \<turnstile> _ :\<downharpoonright>  _" [56,0,56]55) where
+  Empty: "
+    \<V> \<turnstile> e :\<downharpoonright> []
+  "
+
 end

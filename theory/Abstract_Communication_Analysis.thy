@@ -30,54 +30,9 @@ inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix
 definition topo_env_precision :: "topo_env \<Rightarrow> topo_env \<Rightarrow> bool" (infix "\<sqsubseteq>\<^sub>t" 55) where
   "\<A> \<sqsubseteq>\<^sub>t \<A>' \<equiv> (\<forall> x . \<A> x \<preceq> \<A>' x)"
 
-inductive exp_reachable :: "abstract_value_env \<times> exp \<Rightarrow> exp \<Rightarrow> bool" (infix "\<downharpoonright>" 55) where
-  Refl: "
-    (\<V>, e) \<downharpoonright> e
-  " |
-  Let: "
-    \<lbrakk>
-      (\<V>, e) \<downharpoonright> (LET x = b in e');
-      ^\<omega> \<in> \<V> x
-    \<rbrakk> \<Longrightarrow>
-    (\<V>, e) \<downharpoonright> e'
-  " |
-  Let_App: "
-    \<lbrakk>
-      (\<V>, e) \<downharpoonright> (LET x = APP f x\<^sub>a in _);
-      ^Abs f' x' e' \<in> \<V> f
-    \<rbrakk> \<Longrightarrow>
-    (\<V>, e) \<downharpoonright> e'
-  " |
-  Let_Case_Left: "
-    \<lbrakk>
-      (\<V>, e) \<downharpoonright> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
-      ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
-    \<rbrakk> \<Longrightarrow>
-    (\<V>, e) \<downharpoonright> e\<^sub>l
-  " |
-  Let_Case_Right: "
-    \<lbrakk>
-      (\<V>, e) \<downharpoonright> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
-      ^Right x\<^sub>r' \<in> \<V> x\<^sub>s
-    \<rbrakk> \<Longrightarrow>
-    (\<V>, e) \<downharpoonright> e\<^sub>r
-  " |
-  Let_Spawn: "
-    \<lbrakk>
-      (\<V>, e) \<downharpoonright> (LET x = SPAWN e\<^sub>c in _)
-    \<rbrakk> \<Longrightarrow>
-    (\<V>, e) \<downharpoonright> e\<^sub>c
-  "
-
-inductive path_reachable :: "abstract_value_env \<times> exp \<Rightarrow> control_path \<Rightarrow> bool" (infix ":\<downharpoonright>" 55) where
-  Empty: "
-   (\<V>, e) :\<downharpoonright> []
-  "
-
-
 definition abstract_send_sites :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> var set" where
   "abstract_send_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {x\<^sub>y | x\<^sub>e x\<^sub>y x\<^sub>s\<^sub>c x\<^sub>m e'. 
-    (\<V>, e) \<downharpoonright> (LET x\<^sub>y = SYNC x\<^sub>e in e') \<and>
+    \<V> \<turnstile> e \<down> (LET x\<^sub>y = SYNC x\<^sub>e in e') \<and>
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
     {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
     {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
@@ -85,7 +40,7 @@ definition abstract_send_sites :: "(abstract_value_env \<times> abstract_value_e
 
 definition abstract_recv_sites :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> var set" where
   "abstract_recv_sites \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {x\<^sub>y | x\<^sub>e x\<^sub>y x\<^sub>r\<^sub>c e'. 
-    (\<V>, e) \<downharpoonright> (LET x\<^sub>y = SYNC x\<^sub>e in e') \<and>
+    \<V> \<turnstile> e \<down> (LET x\<^sub>y = SYNC x\<^sub>e in e') \<and>
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
     {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e \<and>
     \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y
@@ -93,7 +48,7 @@ definition abstract_recv_sites :: "(abstract_value_env \<times> abstract_value_e
 
 definition abstract_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var set \<Rightarrow> control_path set" where 
   "abstract_paths \<A> sites \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow>  {\<pi>\<^sub>y;;`x\<^sub>y | \<pi>\<^sub>y x\<^sub>y . 
-    (x\<^sub>y \<in> sites) \<and> (\<V>, e) :\<downharpoonright> (\<pi>\<^sub>y;;`x\<^sub>y)
+    (x\<^sub>y \<in> sites) \<and> \<V>  \<turnstile> e :\<downharpoonright> (\<pi>\<^sub>y;;`x\<^sub>y)
   }" 
 
 definition abstract_send_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path set" where 
