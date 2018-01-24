@@ -1113,11 +1113,12 @@ lemma isnt_traceable_sound'': "
    \<E>\<^sub>m \<rightarrow> \<E>' \<Longrightarrow>
    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
 
-   \<forall>\<pi> e. (\<exists>\<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)) \<longrightarrow>
-          leaf \<E> \<pi> \<longrightarrow> (\<forall>\<pi>' e'. (\<exists>\<rho>' \<kappa>'. \<E>\<^sub>m \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)) \<longrightarrow> prefix \<pi> \<pi>' \<longrightarrow> \<V> \<turnstile> e \<down> (\<pi>', e')) \<Longrightarrow>
+   \<forall>\<pi> e. \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<longrightarrow>
+              (\<exists>\<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)) \<longrightarrow>
+              leaf \<E> \<pi> \<longrightarrow> (\<forall>\<pi>' e'. (\<exists>\<rho>' \<kappa>'. \<E>\<^sub>m \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)) \<longrightarrow> prefix \<pi> \<pi>' \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e')) \<Longrightarrow>
 
    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> prefix \<pi> \<pi>' \<Longrightarrow> 
-   \<V> \<turnstile> e \<down> (\<pi>', e')
+   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
 "
  apply (frule nonempty_pool_star_left)
  apply (drule star_left_implies_star)
@@ -1143,31 +1144,49 @@ sorry
 
 lemma isnt_traceable_sound': "
   \<lbrakk>
-    \<E> \<rightarrow>* \<E>'
+    star_left op \<rightarrow> \<E> \<E>'
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow>
   (\<forall> \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' .
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<longrightarrow>
     \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
     leaf \<E> \<pi> \<longrightarrow>
     \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
     prefix \<pi> \<pi>' \<longrightarrow>
-    \<V> \<turnstile> e \<down> (\<pi>', e')
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
   )
 "
- apply (drule star_implies_star_left)
  apply (erule star_left.induct, auto)
-sorry
+  apply (metis leaf_def option.distinct(1) option.sel prefix_order.dual_order.order_iff_strict state.inject)
+ apply (rename_tac \<E> \<E>\<^sub>m \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>')
+ apply (insert isnt_traceable_sound''[of _ _ _ \<V> \<C> e\<^sub>0], blast)
+done
+
+lemma first_step_implies_traceable: "
+  [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow> \<E> 
+  \<Longrightarrow>
+  (\<exists> \<pi> e \<rho> \<kappa> . 
+    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e)
+  ) 
+"
+by (meson Start fun_upd_same trace_preservation)
 
 lemma isnt_traceable_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>0;
+    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) 
   \<rbrakk> \<Longrightarrow>
-  \<V> \<turnstile> e \<down> (\<pi>', e')
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
 "
- apply (insert isnt_traceable_sound', auto)
-using leaf_def lift_flow_exp_to_pool by fastforce
-
+ apply (erule star.cases, auto)
+  apply (metis Start option.sel option.simps(3) state.inject)
+ apply (frule first_step_implies_traceable[of _ _ \<V>])
+ apply (rename_tac \<E>, auto)
+ apply (drule star_implies_star_left)
+ apply (insert isnt_traceable_sound'[of _ \<E>' \<V> \<C> e\<^sub>0], auto)
+ apply (smt Nil_prefix Start fun_upd_apply leaf_def lift_flow_exp_to_pool nonempty_pool star_left_step1 star_left_trans)
+done
 
 end
