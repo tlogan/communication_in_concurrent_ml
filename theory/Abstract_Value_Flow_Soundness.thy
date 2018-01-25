@@ -1061,34 +1061,6 @@ lemma trace_preservation: "
  apply (metis leaf_def option.distinct(1) strict_prefixI')+
 done
 
-(*
-lemma nonempty_pool_star_left: "
-  \<lbrakk>
-   star_left op \<rightarrow> \<E> \<E>\<^sub>m
-  \<rbrakk>\<Longrightarrow>
-  (\<forall> \<E>'' . \<E>\<^sub>m \<rightarrow> \<E>'' \<longrightarrow> 
-    (*(\<forall> \<pi>'' e'' \<rho>'' \<kappa>''. \<E>'' \<pi>'' = Some (\<langle>e'';\<rho>'';\<kappa>''\<rangle>) \<longrightarrow>*)
-      (\<exists> \<pi> e \<rho> \<kappa> \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m . 
-        \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and> 
-        leaf \<E> \<pi> \<and>
-        \<E>\<^sub>m \<pi>\<^sub>m = Some (\<langle>e\<^sub>m;\<rho>\<^sub>m;\<kappa>\<^sub>m\<rangle>) \<and>
-        prefix \<pi> \<pi>\<^sub>m (*\<and>
-        leaf \<E>\<^sub>m \<pi>\<^sub>m \<and>
-        prefix \<pi>\<^sub>m \<pi>'' *)
-      )
-    (*)*)
-  )
-"
- apply (erule star_left.induct; simp)
-  using nonempty_pool apply blast
- apply (rename_tac \<E> \<E>\<^sub>m \<E>', auto)
- apply ((rule exI)+, (rule conjI)+, (rule exI)+, assumption)
- apply (rule conjI, assumption)
- apply (drule trace_preservation, assumption)
- apply ((rule exI)+, (rule conjI)+, (rule exI)+, assumption)
-sorry
-*)
-
 lemma nonempty_pool_star_left: "
   \<lbrakk>
    star_left op \<rightarrow> \<E> \<E>\<^sub>m
@@ -1104,21 +1076,24 @@ lemma nonempty_pool_star_left: "
       )
    )))
 "
- apply (erule star_left.induct, simp)
-  apply (rename_tac \<E>, (rule allI, rule impI)+, (erule exE)+)
-  apply ((rule impI), rule allI, rule impI, (erule exE)+, rule impI)
-  apply (rule exI, rule conjI, (rule exI)+, assumption)
-  apply (rule conjI, blast)
-  apply (rule conjI, blast+)
+ apply (erule star_left.induct, blast)
+ apply (rename_tac \<E> \<E>\<^sub>m \<E>')
+ apply (drule spec, erule impE, assumption)
+ apply (rule allI, rule impI, (rule allI)+, rule impI, rule impI, (rule allI)+, (rule impI)+)
+ apply ((drule spec)+, erule impE, assumption)
+ apply (erule impE, assumption)
+ apply (drule nonempty_pool, (erule exE)+, (erule conjE)+)
+ apply ((drule spec)+, erule impE, assumption)
+ apply (erule impE)
 sorry
 
 lemma isnt_traceable_sound''': "
   \<lbrakk>
-    \<E>\<^sub>m \<rightarrow> \<E>';
-    \<E>\<^sub>m \<pi>\<^sub>m = Some (\<langle>e\<^sub>m;\<rho>\<^sub>m;\<kappa>\<^sub>m\<rangle>); leaf \<E>\<^sub>m \<pi>\<^sub>m;
+    \<E> \<rightarrow> \<E>';
+    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>); leaf \<E> \<pi>;
     \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
     prefix \<pi>\<^sub>m \<pi>';
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>m, e\<^sub>m); (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>m 
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e); (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
 "
