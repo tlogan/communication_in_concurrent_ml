@@ -1094,11 +1094,9 @@ lemma nonempty_pool_star_left: "
    star_left op \<rightarrow> \<E> \<E>\<^sub>m
   \<rbrakk>\<Longrightarrow>
   (\<forall> \<E>'' . \<E>\<^sub>m \<rightarrow> \<E>'' \<longrightarrow> 
-  (\<forall> \<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-  (\<forall> \<pi>'' e'' \<rho>'' \<kappa>''. \<E>'' \<pi>'' = Some (\<langle>e'';\<rho>'';\<kappa>''\<rangle>) \<longrightarrow>
-      (\<exists> \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m . 
-        \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and> 
-        leaf \<E> \<pi> \<and>
+  (\<forall> \<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> leaf \<E> \<pi> \<longrightarrow>
+  (\<forall> \<pi>'' e'' \<rho>'' \<kappa>''. \<E>'' \<pi>'' = Some (\<langle>e'';\<rho>'';\<kappa>''\<rangle>) \<longrightarrow> prefix \<pi> \<pi>'' \<longrightarrow>
+      (\<exists> \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m .
         \<E>\<^sub>m \<pi>\<^sub>m = Some (\<langle>e\<^sub>m;\<rho>\<^sub>m;\<kappa>\<^sub>m\<rangle>) \<and>
         prefix \<pi> \<pi>\<^sub>m \<and>
         leaf \<E>\<^sub>m \<pi>\<^sub>m \<and>
@@ -1106,7 +1104,12 @@ lemma nonempty_pool_star_left: "
       )
    )))
 "
- apply (erule star_left.induct; simp)
+ apply (erule star_left.induct, simp)
+  apply (rename_tac \<E>, (rule allI, rule impI)+, (erule exE)+)
+  apply ((rule impI), rule allI, rule impI, (erule exE)+, rule impI)
+  apply (rule exI, rule conjI, (rule exI)+, assumption)
+  apply (rule conjI, blast)
+  apply (rule conjI, blast+)
 sorry
 
 lemma isnt_traceable_sound''': "
@@ -1143,19 +1146,20 @@ lemma isnt_traceable_sound'': "
  apply simp
  apply (drule spec[of _ \<pi>])
  apply (erule impE, (rule exI)+, assumption)
+ apply (erule impE, assumption)
  apply (rotate_tac 9)
  apply (drule spec[of _ \<pi>'])
  apply (erule impE, (rule exI)+, assumption)
- apply ((erule conjE), (erule exE), (erule conjE)+, (erule exE)+)
+ apply (erule impE, assumption)
+ apply ((erule exE), (erule conjE), (erule exE), (erule conjE)+, (erule exE)+)
  apply ((drule spec)+, erule impE, (rule exI)+, assumption)
  apply (erule impE, assumption)
  apply (erule accept_state_pool.cases, auto)
  apply ((drule spec)+, erule impE, assumption)
  apply (erule accept_state.cases, auto)
  apply (rename_tac \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m)
- (******)
- apply (erule concur_step.cases; (erule seq_step.cases)?; auto)
-sorry
+ apply (erule isnt_traceable_sound'''; auto)
+done
 
 lemma isnt_traceable_sound': "
   \<lbrakk>
