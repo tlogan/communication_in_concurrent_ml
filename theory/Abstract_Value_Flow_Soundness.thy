@@ -1039,8 +1039,6 @@ corollary isnt_abstract_value_sound_coro: "
 done
 
 
-
-
 lemma isnt_traceable_sound'': "
 \<E>\<^sub>m \<rightarrow> \<E>' \<Longrightarrow>
 \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
@@ -1048,6 +1046,8 @@ lemma isnt_traceable_sound'': "
 (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<Longrightarrow>
 \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e')
 "
+ apply (erule concur_step.cases, auto)
+      apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
 sorry
 
 lemma isnt_traceable_sound': "
