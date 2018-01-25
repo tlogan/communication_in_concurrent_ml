@@ -1038,133 +1038,37 @@ corollary isnt_abstract_value_sound_coro: "
   apply (drule spec[of _ x]; auto)
 done
 
-lemma nonempty_pool: "
-  \<lbrakk>
-    \<E> \<rightarrow> \<E>'
-  \<rbrakk>\<Longrightarrow>
-  (\<exists> \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>'. 
-    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and> 
-    leaf \<E> \<pi> \<and>
-    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<and>
-    prefix \<pi> \<pi>'
-  )
-"
- apply (erule concur_step.cases, auto, blast)
-done
 
-lemma trace_preservation: "
-  \<E> \<rightarrow> \<E>' \<Longrightarrow> 
-  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  \<E>' \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)
-"
- apply (erule concur_step.cases; (erule seq_step.cases)?; auto)
- apply (metis leaf_def option.distinct(1) strict_prefixI')+
-done
 
-lemma nonempty_pool_star_left: "
-  \<lbrakk>
-   star_left op \<rightarrow> \<E> \<E>\<^sub>m
-  \<rbrakk>\<Longrightarrow>
-  (\<forall> \<E>'' . \<E>\<^sub>m \<rightarrow> \<E>'' \<longrightarrow> 
-  (\<forall> \<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> leaf \<E> \<pi> \<longrightarrow>
-  (\<forall> \<pi>'' e'' \<rho>'' \<kappa>''. \<E>'' \<pi>'' = Some (\<langle>e'';\<rho>'';\<kappa>''\<rangle>) \<longrightarrow> prefix \<pi> \<pi>'' \<longrightarrow>
-      (\<exists> \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m .
-        \<E>\<^sub>m \<pi>\<^sub>m = Some (\<langle>e\<^sub>m;\<rho>\<^sub>m;\<kappa>\<^sub>m\<rangle>) \<and>
-        prefix \<pi> \<pi>\<^sub>m \<and>
-        leaf \<E>\<^sub>m \<pi>\<^sub>m \<and>
-        prefix \<pi>\<^sub>m \<pi>''
-      )
-   )))
-"
- apply (erule star_left.induct, blast)
- apply (rename_tac \<E> \<E>\<^sub>m \<E>')
- apply (drule spec, erule impE, assumption)
- apply (rule allI, rule impI, (rule allI)+, rule impI, rule impI, (rule allI)+, (rule impI)+)
- apply ((drule spec)+, erule impE, assumption)
- apply (erule impE, assumption)
- apply (drule nonempty_pool, (erule exE)+, (erule conjE)+)
- apply ((drule spec)+, erule impE, assumption)
- apply (erule impE)
-sorry
-
-lemma isnt_traceable_sound''': "
-  \<lbrakk>
-    \<E> \<rightarrow> \<E>';
-    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>); leaf \<E> \<pi>;
-    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
-    prefix \<pi>\<^sub>m \<pi>';
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e); (\<V>, \<C>) \<Turnstile>\<^sub>e e
-  \<rbrakk> \<Longrightarrow> 
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
-"
- apply (erule concur_step.cases; (erule seq_step.cases; auto)?)
-sorry
 
 lemma isnt_traceable_sound'': "
-   star_left op \<rightarrow> \<E> \<E>\<^sub>m \<Longrightarrow>
-   \<E>\<^sub>m \<rightarrow> \<E>' \<Longrightarrow>
-   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-
-   \<forall>\<pi> e. \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<longrightarrow>
-              (\<exists>\<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)) \<longrightarrow>
-              leaf \<E> \<pi> \<longrightarrow> (\<forall>\<pi>' e'. (\<exists>\<rho>' \<kappa>'. \<E>\<^sub>m \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)) \<longrightarrow> prefix \<pi> \<pi>' \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e')) \<Longrightarrow>
-
-   \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<Longrightarrow> \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> prefix \<pi> \<pi>' \<Longrightarrow> 
-   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
+\<E>\<^sub>m \<rightarrow> \<E>' \<Longrightarrow>
+\<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+\<forall>\<pi>' e' \<rho>' \<kappa>'. \<E>\<^sub>m \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e') \<Longrightarrow> 
+(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<Longrightarrow>
+\<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e')
 "
- apply (frule nonempty_pool_star_left)
- apply (drule star_left_implies_star)
- apply (drule flow_preservation_star, auto)
- apply (drule spec[of _ \<pi>])
- apply (drule spec[of _ \<E>'])
- apply (drule spec[of _ e])
- apply simp
- apply (drule spec[of _ \<pi>])
- apply (erule impE, (rule exI)+, assumption)
- apply (erule impE, assumption)
- apply (rotate_tac 9)
- apply (drule spec[of _ \<pi>'])
- apply (erule impE, (rule exI)+, assumption)
- apply (erule impE, assumption)
- apply ((erule exE), (erule conjE), (erule exE), (erule conjE)+, (erule exE)+)
- apply ((drule spec)+, erule impE, (rule exI)+, assumption)
- apply (erule impE, assumption)
- apply (erule accept_state_pool.cases, auto)
- apply ((drule spec)+, erule impE, assumption)
- apply (erule accept_state.cases, auto)
- apply (rename_tac \<pi>\<^sub>m e\<^sub>m \<rho>\<^sub>m \<kappa>\<^sub>m)
- apply (erule isnt_traceable_sound'''; auto)
-done
+sorry
 
 lemma isnt_traceable_sound': "
   \<lbrakk>
     star_left op \<rightarrow> \<E> \<E>'
   \<rbrakk> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow>
-  (\<forall> \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' .
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<longrightarrow>
-    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    leaf \<E> \<pi> \<longrightarrow>
+  \<E> = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
+  (\<forall> \<pi>' e' \<rho>' \<kappa>' .
     \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
-    prefix \<pi> \<pi>' \<longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
   )
 "
- apply (erule star_left.induct, auto)
-  apply (metis leaf_def option.distinct(1) option.sel prefix_order.dual_order.order_iff_strict state.inject)
- apply (rename_tac \<E> \<E>\<^sub>m \<E>' \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>')
- apply (insert isnt_traceable_sound''[of _ _ _ \<V> \<C> e\<^sub>0], blast)
+ apply (erule star_left.induct, simp add: Start)
+ apply (rename_tac \<E> \<E>\<^sub>m \<E>')
+ apply ((rule impI)+, (rule allI)+, rule impI)
+ apply (erule impE, assumption)+
+ apply (drule star_left_implies_star)
+ apply (drule flow_preservation_star, blast, drule flow_preservation, blast)
+ apply (simp add: isnt_traceable_sound'')
 done
-
-lemma first_step_implies_traceable: "
-  [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow> \<E> 
-  \<Longrightarrow>
-  (\<exists> \<pi> e \<rho> \<kappa> . 
-    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<and>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e)
-  ) 
-"
-by (meson Start fun_upd_same trace_preservation)
 
 lemma isnt_traceable_sound: "
   \<lbrakk>
@@ -1174,13 +1078,7 @@ lemma isnt_traceable_sound: "
   \<rbrakk> \<Longrightarrow>
   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
 "
- apply (erule star.cases, auto)
-  apply (metis Start option.sel option.simps(3) state.inject)
- apply (frule first_step_implies_traceable[of _ _ \<V>])
- apply (rename_tac \<E>, auto)
  apply (drule star_implies_star_left)
- apply (insert isnt_traceable_sound'[of _ \<E>' \<V> \<C> e\<^sub>0], auto)
- apply (smt Nil_prefix Start fun_upd_apply leaf_def lift_flow_exp_to_pool nonempty_pool star_left_step1 star_left_trans)
-done
+using isnt_traceable_sound' lift_flow_exp_to_pool by blast
 
 end
