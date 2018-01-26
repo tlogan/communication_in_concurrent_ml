@@ -1040,9 +1040,9 @@ done
 
 
 lemma isnt_traceable_sound'': "
-\<E>\<^sub>m \<rightarrow> \<E>' \<Longrightarrow>
+\<E> \<rightarrow> \<E>' \<Longrightarrow>
 \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
-\<forall>\<pi>' e' \<rho>' \<kappa>'. \<E>\<^sub>m \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e') \<Longrightarrow> 
+\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<Longrightarrow> 
 (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<Longrightarrow>
 \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e')
 "
@@ -1052,14 +1052,20 @@ sorry
 
 lemma isnt_traceable_sound': "
   \<lbrakk>
-    star_left op \<rightarrow> \<E> \<E>'
+    star_left op \<rightarrow> \<E>\<^sub>0 \<E>
   \<rbrakk> \<Longrightarrow>
-  \<E> = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
+  \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
-  (\<forall> \<pi>' e' \<rho>' \<kappa>' .
-    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
-  )
+  (\<forall> \<pi> e \<rho> \<kappa> . \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> (
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<and>
+    (\<forall> x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>' .
+      e = RESULT x\<^sub>r \<longrightarrow>
+      \<kappa> = (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>') \<longrightarrow> (\<exists> \<pi>\<^sub>1 \<pi>\<^sub>2 b .
+        \<pi> = ((\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2) \<and>
+        \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)
+      )
+    )
+  ))
 "
  apply (erule star_left.induct, simp add: Start)
  apply (rename_tac \<E> \<E>\<^sub>m \<E>')
@@ -1068,15 +1074,15 @@ lemma isnt_traceable_sound': "
  apply (drule star_left_implies_star)
  apply (drule flow_preservation_star, blast, drule flow_preservation, blast)
  apply (simp add: isnt_traceable_sound'')
-done
+sorry
 
 lemma isnt_traceable_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>0;
-    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) 
+    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>;
+    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) 
   \<rbrakk> \<Longrightarrow>
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e)
 "
  apply (drule star_implies_star_left)
 using isnt_traceable_sound' lift_flow_exp_to_pool by blast

@@ -241,8 +241,21 @@ fun is_path_balanced' :: "control_path \<Rightarrow> var list \<Rightarrow> bool
  "is_path_balanced' (\<upharpoonleft>y # \<pi>) xs = is_path_balanced' \<pi> (y # xs)" |
  "is_path_balanced' (_ # \<pi>) xs = is_path_balanced' \<pi> xs"
 
+fun local_path' :: "control_path \<Rightarrow> control_path \<Rightarrow> control_path" where
+ "local_path' [] \<pi> = rev \<pi>" |
+ "local_path' ((C _) # xs) \<pi> = local_path' xs []" |
+ "local_path' (x # xs) \<pi> = local_path' xs (x # \<pi>)"
+
+fun local_path :: "control_path \<Rightarrow> control_path" where
+  "local_path \<pi> = local_path' \<pi> []"
+
 fun is_path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
  "\<downharpoonright>\<pi>\<upharpoonleft> = is_path_balanced' \<pi> []"
+
+fun is_linear :: "control_path \<Rightarrow> bool"("``_``" [0]55)  where
+ "``[]`` = True" |
+ "``((C _ ) # _)`` = False" |
+ "``(_ # \<pi>)`` =  ``\<pi>``"
 
 inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> exp) \<Rightarrow> bool" ("_ \<turnstile> _ \<down>  _" [56,0,56]55)  where
   Start: "
@@ -250,7 +263,8 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   " |
   Result: "
     \<lbrakk>
-      \<V> \<turnstile> e \<down> ((\<pi> ;; \<upharpoonleft>x) @ \<pi>', RESULT _); \<downharpoonright>\<pi>'\<upharpoonleft>;
+      \<V> \<turnstile> e \<down> ((\<pi> ;; \<upharpoonleft>x) @ \<pi>', RESULT _); 
+      \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
       \<V> \<turnstile> e \<down> (\<pi>, LET x = _ in e')
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> ((\<pi> ;; \<upharpoonleft>x) @ (\<pi>' ;; \<downharpoonleft>x), e')
