@@ -1039,6 +1039,7 @@ corollary isnt_abstract_value_sound_coro: "
 done
 
 
+(*
 lemma isnt_traceable_sound'': "
 \<E> \<rightarrow> \<E>' \<Longrightarrow>
 \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
@@ -1048,6 +1049,57 @@ lemma isnt_traceable_sound'': "
 "
  apply (erule concur_step.cases, auto)
       apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
+sorry
+*)
+
+lemma isnt_traceable_sound_over_step_down: "
+(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>' \<Longrightarrow>
+       \<E>' \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+
+       \<forall>\<pi> e \<rho> \<kappa>.
+          \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+          \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and>
+          (\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'.
+              e = RESULT x\<^sub>r \<longrightarrow>
+              \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
+              (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = (\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e \<down>  (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))) \<Longrightarrow>
+
+       \<E> = \<E> \<Longrightarrow>
+       \<E>' = \<E> ++ [\<pi>' ;; \<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>'] \<Longrightarrow>
+
+       leaf \<E> \<pi>' \<Longrightarrow>
+       \<E> \<pi>' = Some (\<langle>RESULT x;\<rho>';\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'\<rangle>) \<Longrightarrow>
+       \<langle>RESULT x;\<rho>';\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'\<rangle> \<hookrightarrow> \<sigma>' \<Longrightarrow>
+       \<pi>' \<noteq> \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa> \<Longrightarrow>
+
+
+       \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and>
+       (\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'.
+           e = RESULT x\<^sub>r \<longrightarrow>
+           \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow> (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = (\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e \<down>  (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)))
+"
+sorry
+
+lemma isnt_traceable_sound'': "
+\<lbrakk>
+  \<E> \<rightarrow> \<E>';
+  \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>];
+  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
+  (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and>
+    (\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. e = RESULT x\<^sub>r \<longrightarrow> \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
+      (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = (\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
+    )
+  );
+  \<E>\<^sub>0 \<rightarrow>* \<E>;
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
+\<rbrakk> \<Longrightarrow>
+\<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e') \<and>
+(\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>''. e' = RESULT x\<^sub>r \<longrightarrow> \<kappa>' = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'' \<longrightarrow>
+  (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi>' = (\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
+)
+"
+ apply (erule concur_step.cases)
 sorry
 
 lemma isnt_traceable_sound': "
@@ -1062,19 +1114,21 @@ lemma isnt_traceable_sound': "
       e = RESULT x\<^sub>r \<longrightarrow>
       \<kappa> = (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>') \<longrightarrow> (\<exists> \<pi>\<^sub>1 \<pi>\<^sub>2 b .
         \<pi> = ((\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2) \<and>
-        \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)
+        \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)
       )
     )
   ))
 "
  apply (erule star_left.induct, simp add: Start)
- apply (rename_tac \<E> \<E>\<^sub>m \<E>')
+ apply (rename_tac \<E>\<^sub>0 \<E> \<E>')
  apply ((rule impI)+, (rule allI)+, rule impI)
+ apply (rename_tac \<E>\<^sub>0 \<E> \<E>' \<pi>' e' \<rho>' \<kappa>')
  apply (erule impE, assumption)+
  apply (drule star_left_implies_star)
  apply (drule flow_preservation_star, blast, drule flow_preservation, blast)
- apply (simp add: isnt_traceable_sound'')
-sorry
+ apply (drule isnt_traceable_sound'', auto)
+done
+
 
 lemma isnt_traceable_sound: "
   \<lbrakk>
