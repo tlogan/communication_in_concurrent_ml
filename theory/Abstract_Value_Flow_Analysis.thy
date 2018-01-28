@@ -272,24 +272,21 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   Let_App: "
     \<lbrakk>
       \<V> \<turnstile> e \<down> (\<pi>, LET x = APP f x\<^sub>a in _);
-      ^Abs f' x' e' \<in> \<V> f;
-      ^\<omega> \<in> \<V> x
+      ^Abs f' x' e' \<in> \<V> f
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> (\<pi>;;\<upharpoonleft>x, e')
   " |
   Let_Case_Left: "
     \<lbrakk>
       \<V> \<turnstile> e \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
-      ^Left x\<^sub>l' \<in> \<V> x\<^sub>s;
-      ^\<omega> \<in> \<V> x
+      ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>l)
   " |
   Let_Case_Right: "
     \<lbrakk>
       \<V> \<turnstile> e \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
-      ^Right x\<^sub>r' \<in> \<V> x\<^sub>s;
-      ^\<omega> \<in> \<V> x
+      ^Right x\<^sub>r' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>r)
   " |

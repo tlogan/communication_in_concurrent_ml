@@ -1063,7 +1063,7 @@ lemma traceable_exp_preservation: "
       (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
     )
   );
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
 \<rbrakk> \<Longrightarrow>
 \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
 "
@@ -1080,6 +1080,11 @@ lemma traceable_exp_preservation: "
      apply ((drule spec)+, erule impE, assumption, erule conjE)
      apply (drule flow_over_pool_precision, auto)
      apply (erule seq_step.cases, auto)
+       apply (drule abstracted_value_exists[of _ \<V>], simp+, rule Let_Case_Left; auto)
+      apply (drule abstracted_value_exists[of _ \<V>], simp+, rule Let_Case_Right; auto)
+     apply (drule abstracted_value_exists[of _ \<V>], simp+, rule Let_App; auto)
+       
+     
      (*
      apply (drule abstracted_value_exists; rule?; auto) *)
 
