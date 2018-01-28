@@ -1051,6 +1051,34 @@ corollary isnt_abstract_value_sound_coro: "
   apply (drule spec[of _ x]; auto)
 done
 
+lemma traceable_exp_preservation_over_sync_recv_evt: "
+\<lbrakk>
+  \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e);
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e';\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>'\<rangle>);
+  \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e';\<rho>\<^sub>r;\<kappa>'\<rangle>)
+\<rbrakk> \<Longrightarrow> 
+\<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>r ;; `x\<^sub>r, e')
+"
+ apply ((drule spec)+, erule impE, assumption)
+ apply (drule flow_over_pool_precision; simp?; blast?)
+ apply (drule abstracted_value_exists; simp; blast?; rule Let_Sync; auto)
+done
+
+lemma traceable_exp_preservation_over_sync_send_evt: "
+\<lbrakk>
+  \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e);
+  \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e';\<rho>\<^sub>s;\<kappa>'\<rangle>);
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>'\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>);
+  x\<^sub>s \<noteq> x\<^sub>r 
+\<rbrakk> \<Longrightarrow> 
+\<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>s ;; `x\<^sub>s, e')
+"
+ apply ((drule spec)+, erule impE, assumption)
+ apply (drule flow_over_pool_precision[of \<V> \<C> _ "\<pi>\<^sub>s ;; `x\<^sub>s" e' "\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)" \<kappa>'], auto)
+ apply (drule abstracted_value_exists; simp; blast?; rule Let_Sync; auto)
+ apply (subgoal_tac "|\<lbrace>\<rbrace>| \<in> \<V> x\<^sub>s", assumption, simp)
+done
+
 lemma traceable_exp_preservation: "
 \<lbrakk>
   \<E> \<rightarrow> \<E>';
@@ -1090,8 +1118,24 @@ lemma traceable_exp_preservation: "
       apply (drule abstracted_value_exists; auto; simp; rule Let_Prim; auto)
      apply (drule abstracted_value_exists; auto; rule Let_Fst; auto)
     apply (drule abstracted_value_exists; auto; rule Let_Snd; auto)
+   apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; `x\<^sub>r", auto)
+   apply (drule flow_preservation, auto)
+   apply (meson traceable_exp_preservation_over_sync_recv_evt)
+  apply (case_tac "\<pi>' = \<pi>\<^sub>s ;; `x\<^sub>s", auto)
+  apply (drule flow_preservation, auto)
+  apply (meson traceable_exp_preservation_over_sync_send_evt)
+ apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+ apply (drule flow_preservation, auto)
+ apply (drule flow_over_pool_precision, auto)
+ apply ((drule spec)+, erule impE, assumption, erule conjE)
+ apply (drule abstracted_value_exists; auto; simp; rule Let_Chan; auto)
 
-sorry
+apply (case_tac "\<pi>' = \<pi> ;; .x"; auto)
+ apply ((drule spec)+, erule impE, assumption, erule conjE)
+ apply (rule Let_Spawn_Child; auto)
+apply (case_tac "\<pi>' = \<pi> ;; `x"; auto; rule Let_Spawn; auto)
+
+done
 
 lemma traceable_stack_preservation: "
 \<lbrakk>

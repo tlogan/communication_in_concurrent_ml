@@ -298,7 +298,7 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   " |
   Let_Spawn: "
     \<lbrakk>
-      \<V> \<turnstile> e \<down> (\<pi>, LET x = \<lparr>\<rparr> in e')
+      \<V> \<turnstile> e \<down> (\<pi>, LET x = SPAWN _ in e')
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
   " |

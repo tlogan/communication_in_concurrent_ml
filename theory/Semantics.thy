@@ -130,7 +130,9 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
       leaf \<E> \<pi>\<^sub>r ;
       \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>);
       \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>;
-      \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>
+      \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>;
+  
+      x\<^sub>s \<noteq> x\<^sub>r
 
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [
