@@ -1083,12 +1083,6 @@ lemma traceable_exp_preservation: "
        apply (drule abstracted_value_exists[of _ \<V>], simp+, rule Let_Case_Left; auto)
       apply (drule abstracted_value_exists[of _ \<V>], simp+, rule Let_Case_Right; auto)
      apply (drule abstracted_value_exists[of _ \<V>], simp+, rule Let_App; auto)
-       
-     
-     (*
-     apply (drule abstracted_value_exists; rule?; auto) *)
-
-
 
 sorry
 
@@ -1103,7 +1097,7 @@ lemma traceable_stack_preservation: "
       (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
     )
   );
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
 \<rbrakk> \<Longrightarrow>
 (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi>' = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
 "
@@ -1119,7 +1113,7 @@ lemma traceable_preservation: "
       (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
     )
   );
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
 \<rbrakk> \<Longrightarrow>
 \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e') \<and>
 (\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>''. e' = RESULT x\<^sub>r \<longrightarrow> \<kappa>' = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'' \<longrightarrow>
@@ -1154,7 +1148,7 @@ lemma isnt_traceable_sound': "
  apply (rename_tac \<E>\<^sub>0 \<E> \<E>' \<pi>' e' \<rho>' \<kappa>')
  apply (erule impE, assumption)+
  apply (drule star_left_implies_star)
- apply (drule flow_preservation_star, blast, drule flow_preservation, blast)
+ apply (drule flow_preservation_star, blast)
  apply (drule traceable_preservation, auto)
 done
 
