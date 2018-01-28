@@ -249,7 +249,7 @@ fun local_path' :: "control_path \<Rightarrow> control_path \<Rightarrow> contro
 fun local_path :: "control_path \<Rightarrow> control_path" where
   "local_path \<pi> = local_path' \<pi> []"
 
-fun is_path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
+definition is_path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
  "\<downharpoonright>\<pi>\<upharpoonleft> = is_path_balanced' \<pi> []"
 
 fun is_linear :: "control_path \<Rightarrow> bool"("``_``" [0]55)  where
@@ -263,30 +263,33 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   " |
   Result: "
     \<lbrakk>
-      \<V> \<turnstile> e \<down> ((\<pi> ;; \<upharpoonleft>x) @ \<pi>', RESULT _); 
+      \<V> \<turnstile> e \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT _); 
       \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
       \<V> \<turnstile> e \<down> (\<pi>, LET x = _ in e')
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e \<down> ((\<pi> ;; \<upharpoonleft>x) @ (\<pi>' ;; \<downharpoonleft>x), e')
+    \<V> \<turnstile> e \<down> (\<pi> @ \<upharpoonleft>x # (\<pi>';;\<downharpoonleft>x), e')
   " |
   Let_App: "
     \<lbrakk>
       \<V> \<turnstile> e \<down> (\<pi>, LET x = APP f x\<^sub>a in _);
-      ^Abs f' x' e' \<in> \<V> f
+      ^Abs f' x' e' \<in> \<V> f;
+      ^\<omega> \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> (\<pi>;;\<upharpoonleft>x, e')
   " |
   Let_Case_Left: "
     \<lbrakk>
       \<V> \<turnstile> e \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
-      ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
+      ^Left x\<^sub>l' \<in> \<V> x\<^sub>s;
+      ^\<omega> \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>l)
   " |
   Let_Case_Right: "
     \<lbrakk>
       \<V> \<turnstile> e \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
-      ^Right x\<^sub>r' \<in> \<V> x\<^sub>s
+      ^Right x\<^sub>r' \<in> \<V> x\<^sub>s;
+      ^\<omega> \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>r)
   " |
@@ -338,7 +341,6 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   Let_Prim: "
     \<lbrakk>
       \<V> \<turnstile> e \<down> (\<pi>, LET x = Prim _ in e')
-      (*semantics does not check that prim is constructed from bound variables only*)
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
   "

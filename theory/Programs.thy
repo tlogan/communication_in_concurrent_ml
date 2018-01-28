@@ -1,7 +1,7 @@
 theory Programs
   imports Main Syntax Semantics "~~/src/HOL/Library/Sublist" "~~/src/HOL/IMP/Star" "~~/src/HOL/Eisbach/Eisbach_Tools"
     Abstract_Value_Flow_Analysis Abstract_Value_Flow_Soundness
-    Communication_Topology_Analysis
+    Communication_Analysis
 begin
     
 abbreviation a where "a \<equiv> Var ''a''"

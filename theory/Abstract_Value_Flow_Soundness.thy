@@ -1,5 +1,6 @@
 theory Abstract_Value_Flow_Soundness
   imports Main Syntax Semantics Abstract_Value_Flow_Analysis
+      "~~/src/HOL/Eisbach/Eisbach_Tools"
 begin
 
 
@@ -1023,6 +1024,18 @@ theorem isnt_abstract_value_sound : "
  apply (erule flow_over_pool_sound [of \<V> \<C> _ \<E>' \<pi> e' \<rho>' \<kappa>'], auto)
 done
 
+corollary abstracted_value_exists: "
+  \<lbrakk>
+    \<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>;
+    \<rho>' x = Some \<omega>
+  \<rbrakk> \<Longrightarrow>
+  {|\<omega>|} \<subseteq> \<V> x
+"
+  apply (unfold abstract_value_env_precision_def)
+  apply (unfold env_to_abstract_value_env_def)
+  apply (drule spec[of _ x]; auto)
+done
+
 corollary isnt_abstract_value_sound_coro: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e ;
@@ -1039,20 +1052,39 @@ corollary isnt_abstract_value_sound_coro: "
 done
 
 
-lemma traceable_preservation: "
+
+lemma traceable_exp_preservation: "
 \<lbrakk>
   \<E> \<rightarrow> \<E>';
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
   (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and>
     (\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. e = RESULT x\<^sub>r \<longrightarrow> \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
-      (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = (\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
+      (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
     )
   );
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
 \<rbrakk> \<Longrightarrow>
-\<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e')
+\<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
 "
+ apply (erule concur_step.cases, auto)
+      apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
+      apply (
+        ((drule spec)+, erule impE, assumption, erule conjE),
+        (erule impE, rule exI, simp),
+        ((drule spec)+, erule impE, (rule exI)+, simp),
+        ((erule exE)+, (erule conjE)+, auto)
+      ) 
+      apply (erule seq_step.cases; auto; rule Result; auto)
+     apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
+     apply ((drule spec)+, erule impE, assumption, erule conjE)
+     apply (drule flow_over_pool_precision, auto)
+     apply (erule seq_step.cases, auto)
+     (*
+     apply (drule abstracted_value_exists; rule?; auto) *)
+
+
+
 sorry
 
 lemma traceable_stack_preservation: "
@@ -1063,37 +1095,34 @@ lemma traceable_stack_preservation: "
   (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and>
     (\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. e = RESULT x\<^sub>r \<longrightarrow> \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
-      (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = (\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
+      (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
     )
   );
-  \<E>\<^sub>0 \<rightarrow>* \<E>;
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
 \<rbrakk> \<Longrightarrow>
-(\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi>' = (\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
+(\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi>' = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
 "
 sorry
 
-lemma isnt_traceable_sound'': "
+lemma traceable_preservation: "
 \<lbrakk>
   \<E> \<rightarrow> \<E>';
-  \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>];
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
   (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and>
     (\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. e = RESULT x\<^sub>r \<longrightarrow> \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
-      (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = (\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
+      (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
     )
   );
-  \<E>\<^sub>0 \<rightarrow>* \<E>;
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
 \<rbrakk> \<Longrightarrow>
 \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e') \<and>
 (\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>''. e' = RESULT x\<^sub>r \<longrightarrow> \<kappa>' = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'' \<longrightarrow>
-  (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi>' = (\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
+  (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi>' = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
 )
 "
  apply (rule conjI)
- apply (erule traceable_preservation, auto)
+ apply (erule traceable_exp_preservation, auto)
  apply (drule traceable_stack_preservation, auto)
 done
 
@@ -1108,7 +1137,7 @@ lemma isnt_traceable_sound': "
     (\<forall> x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>' .
       e = RESULT x\<^sub>r \<longrightarrow>
       \<kappa> = (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>') \<longrightarrow> (\<exists> \<pi>\<^sub>1 \<pi>\<^sub>2 b .
-        \<pi> = ((\<pi>\<^sub>1 ;; \<upharpoonleft>x\<^sub>\<kappa>) @ \<pi>\<^sub>2) \<and>
+        \<pi> = (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2) \<and>
         \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)
       )
     )
@@ -1121,7 +1150,7 @@ lemma isnt_traceable_sound': "
  apply (erule impE, assumption)+
  apply (drule star_left_implies_star)
  apply (drule flow_preservation_star, blast, drule flow_preservation, blast)
- apply (drule isnt_traceable_sound'', auto)
+ apply (drule traceable_preservation, auto)
 done
 
 

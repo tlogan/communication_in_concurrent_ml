@@ -6,6 +6,7 @@ datatype topo = Non | OneShot | OneToOne | FanOut | FanIn | ManyToMany
 type_synonym topo_pair = "var \<times> topo"
 type_synonym topo_env = "var \<Rightarrow> topo"
 
+
 definition var_to_topo :: "state_pool \<Rightarrow> control_path \<Rightarrow> var \<Rightarrow> topo" ("\<langle>\<langle>_ ; _ ; _\<rangle>\<rangle>" [0,0,0]61) where
   "\<langle>\<langle>\<E> ; \<pi>; x\<rangle>\<rangle> \<equiv>
     (if  one_shot \<E> (Ch \<pi> x) then OneShot
