@@ -15,8 +15,8 @@ and prim =
   Left var |
   Right var |
   Send_Evt var var |
-  Recv_Evt var |
-  Always_Evt var
+  Recv_Evt var (*|
+  Always_Evt var *)
 
 and bind = 
   Unit ("\<lparr>\<rparr>") |
@@ -35,8 +35,10 @@ abbreviation bind_send_evt :: "var => var => bind" ("SEND EVT _ _" [0, 61] 61) w
 abbreviation bind_recv_evt :: "var => bind" ("RECV EVT _" [61] 61) where
   "RECV EVT x \<equiv> Prim (Recv_Evt x)"
 
+(*
 abbreviation bind_always_evt :: "var \<Rightarrow> bind" ("ALWAYS EVT _" [61] 61) where
   "ALWAYS EVT x \<equiv> Prim (Always_Evt x)"
+*)
   
 abbreviation bind_abs :: "var => var => exp => bind" ("FN _ _ . _" [0, 0, 61] 61) where
   "FN f x . e \<equiv> Prim (Abs f x e)"
@@ -197,14 +199,14 @@ function (sequential) normalize_cont :: "nat \<Rightarrow> u_exp \<Rightarrow> (
         (LET (sym i') = RECV EVT xb in ek, i'')
       )
     )
-  " |
+  " (*|
   "normalize_cont i (.ALWAYS EVT e) k =
     normalize_cont i e (\<lambda> i' xb .
       (let (ek, i'') = (k (i'+1) (sym i')) in
         (LET (sym i') = ALWAYS EVT xb in ek, i'')
       )
     )
-  " |
+  " *) |
   "normalize_cont i (.\<lparr>\<rparr>) k =
     (let (ek, i') = k (i+1) (sym i) in
       (LET (sym i) = \<lparr>\<rparr> in ek, i')

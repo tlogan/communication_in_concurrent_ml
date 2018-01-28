@@ -183,12 +183,12 @@ where
     (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
     \<Longrightarrow>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Recv_Evt _, \<rho>\<rbrace>
-  " |
+  " (*|
   Always_Evt: "
     (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
     \<Longrightarrow>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Always_Evt _, \<rho>\<rbrace>
-  " |
+  " *)|
 
   Any : "
     \<lbrakk>
@@ -317,21 +317,21 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   Let_Sync: "
     \<lbrakk>
       \<V> \<turnstile> e \<down> (\<pi>, LET x = SYNC _ in e');
-      ^\<omega> \<in> \<V> x
+      |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
   " |
   Let_Fst: "
     \<lbrakk>
       \<V> \<turnstile> e \<down> (\<pi>, LET x = FST _ in e');
-      ^\<omega> \<in> \<V> x
+      |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
   " |
   Let_Snd: "
     \<lbrakk>
       \<V> \<turnstile> e \<down> (\<pi>, LET x = SND _ in e');
-      ^\<omega> \<in> \<V> x
+      |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e \<down> (\<pi>;;`x, e')
   " |

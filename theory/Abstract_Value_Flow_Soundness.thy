@@ -1051,8 +1051,6 @@ corollary isnt_abstract_value_sound_coro: "
   apply (drule spec[of _ x]; auto)
 done
 
-
-
 lemma traceable_exp_preservation: "
 \<lbrakk>
   \<E> \<rightarrow> \<E>';
@@ -1067,7 +1065,7 @@ lemma traceable_exp_preservation: "
 \<rbrakk> \<Longrightarrow>
 \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
 "
- apply (erule concur_step.cases, auto)
+ apply (frule concur_step.cases, auto)
       apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
       apply (
         ((drule spec)+, erule impE, assumption, erule conjE),
@@ -1080,9 +1078,18 @@ lemma traceable_exp_preservation: "
      apply ((drule spec)+, erule impE, assumption, erule conjE)
      apply (drule flow_over_pool_precision, auto)
      apply (erule seq_step.cases, auto)
-       apply (drule abstracted_value_exists[of _ \<V>], simp+, rule Let_Case_Left; auto)
-      apply (drule abstracted_value_exists[of _ \<V>], simp+, rule Let_Case_Right; auto)
-     apply (drule abstracted_value_exists[of _ \<V>], simp+, rule Let_App; auto)
+       apply (drule abstracted_value_exists, simp+, rule Let_Case_Left; auto)
+      apply (drule abstracted_value_exists, simp+, rule Let_Case_Right; auto)
+     apply (drule abstracted_value_exists, simp+, rule Let_App; auto)
+    apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+    apply ((drule spec)+, erule impE, assumption, erule conjE)
+    apply (drule flow_preservation, auto)
+    apply (drule flow_over_pool_precision, auto)
+    apply (erule seq_step.cases, auto)
+       apply (drule abstracted_value_exists; auto; simp; rule Let_Unit; auto)
+      apply (drule abstracted_value_exists; auto; simp; rule Let_Prim; auto)
+     apply (drule abstracted_value_exists; auto; rule Let_Fst; auto)
+    apply (drule abstracted_value_exists; auto; rule Let_Snd; auto)
 
 sorry
 
