@@ -1085,7 +1085,7 @@ lemma traceable_exp_preservation: "
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
   (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and>
-    (\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. e = RESULT x\<^sub>r \<longrightarrow> \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
+    (\<forall>x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
       (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
     )
   );
@@ -1097,7 +1097,6 @@ lemma traceable_exp_preservation: "
       apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
       apply (
         ((drule spec)+, erule impE, assumption, erule conjE),
-        (erule impE, rule exI, simp),
         ((drule spec)+, erule impE, (rule exI)+, simp),
         ((erule exE)+, (erule conjE)+, auto)
       ) 
@@ -1134,47 +1133,16 @@ apply (case_tac "\<pi>' = \<pi> ;; .x"; auto)
  apply ((drule spec)+, erule impE, assumption, erule conjE)
  apply (rule Let_Spawn_Child; auto)
 apply (case_tac "\<pi>' = \<pi> ;; `x"; auto; rule Let_Spawn; auto)
-
 done
-
-lemma is_balanced_preserved: " \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>(\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x))\<upharpoonleft>"
-sorry
-
-lemma is_linear_preserved: " ``\<pi>`` \<Longrightarrow> ``(\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x))`` "
-sorry
-
-
-lemma stack_top_reachable: "
-\<lbrakk>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>;
-  \<E> \<pi> = Some (\<langle>RESULT x\<^sub>r;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>);
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, RESULT x\<^sub>r)
-\<rbrakk> \<Longrightarrow>
-\<V> \<turnstile> e\<^sub>0 \<down> (\<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>, e\<^sub>\<kappa>)
-"
-sorry
-
-lemma traceable_stack_preservation': "
-\<lbrakk>
-  \<E> \<rightarrow> \<E>';
-  \<E>' \<pi>' = Some (\<langle>RESULT x\<^sub>r;\<rho>';\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>''\<rangle>);
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', RESULT x\<^sub>r);
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>' ;; \<downharpoonleft>x\<^sub>\<kappa>, e\<^sub>\<kappa>)
-\<rbrakk>
-\<Longrightarrow>
-\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2. \<pi>' = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> (\<exists>b. \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
-"
- apply (drule traceable.Result)
-sorry
 
 lemma traceable_stack_preservation: "
 \<lbrakk>
   \<E> \<rightarrow> \<E>';
   \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>];
-  \<E>' \<pi>' = Some (\<langle>RESULT x\<^sub>r;\<rho>';\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>''\<rangle>);
+  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>''\<rangle>);
   (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and>
-    (\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. e = RESULT x\<^sub>r \<longrightarrow> \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
+    (\<forall>x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
       (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
     )
   );
@@ -1182,28 +1150,22 @@ lemma traceable_stack_preservation: "
 \<rbrakk> \<Longrightarrow>
 (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi>' = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
 "
- apply (frule traceable_exp_preservation; auto)
- apply (drule flow_preservation, auto)
- apply (drule stack_top_reachable; auto?)
- apply (erule concur_step.cases; auto)
-  apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto)
- apply (drule traceable_stack_preservation'; auto)
-done
+sorry
 
 lemma traceable_preservation: "
 \<lbrakk>
   \<E> \<rightarrow> \<E>';
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
   (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and>
-    (\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. e = RESULT x\<^sub>r \<longrightarrow> \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<and>
+    (\<forall>x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
       (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
     )
   );
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
 \<rbrakk> \<Longrightarrow>
 \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e') \<and>
-(\<forall>x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>''. e' = RESULT x\<^sub>r \<longrightarrow> \<kappa>' = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'' \<longrightarrow>
+(\<forall>x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>''. \<kappa>' = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'' \<longrightarrow>
   (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi>' = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
 )
 "
@@ -1220,8 +1182,7 @@ lemma isnt_traceable_sound': "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
   (\<forall> \<pi> e \<rho> \<kappa> . \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> (
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<and>
-    (\<forall> x\<^sub>r x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>' .
-      e = RESULT x\<^sub>r \<longrightarrow>
+    (\<forall> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>' .
       \<kappa> = (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>') \<longrightarrow> (\<exists> \<pi>\<^sub>1 \<pi>\<^sub>2 b .
         \<pi> = (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2) \<and>
         \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)
