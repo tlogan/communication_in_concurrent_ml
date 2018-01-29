@@ -1071,7 +1071,7 @@ lemma traceable_exp_preservation_over_sync_send_evt: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>'\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>);
   x\<^sub>s \<noteq> x\<^sub>r 
 \<rbrakk> \<Longrightarrow> 
-\<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>s ;; `x\<^sub>s, e')
+\<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>s ;; `x\<^sub>s, e')
 "
  apply ((drule spec)+, erule impE, assumption)
  apply (drule flow_over_pool_precision[of \<V> \<C> _ "\<pi>\<^sub>s ;; `x\<^sub>s" e' "\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)" \<kappa>'], auto)
@@ -1137,6 +1137,36 @@ apply (case_tac "\<pi>' = \<pi> ;; `x"; auto; rule Let_Spawn; auto)
 
 done
 
+lemma is_balanced_preserved: " \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>(\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x))\<upharpoonleft>"
+sorry
+
+lemma is_linear_preserved: " ``\<pi>`` \<Longrightarrow> ``(\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x))`` "
+sorry
+
+
+lemma stack_top_reachable: "
+\<lbrakk>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>;
+  \<E> \<pi> = Some (\<langle>RESULT x\<^sub>r;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>);
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, RESULT x\<^sub>r)
+\<rbrakk> \<Longrightarrow>
+\<V> \<turnstile> e\<^sub>0 \<down> (\<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>, e\<^sub>\<kappa>)
+"
+sorry
+
+lemma traceable_stack_preservation': "
+\<lbrakk>
+  \<E> \<rightarrow> \<E>';
+  \<E>' \<pi>' = Some (\<langle>RESULT x\<^sub>r;\<rho>';\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>''\<rangle>);
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', RESULT x\<^sub>r);
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>' ;; \<downharpoonleft>x\<^sub>\<kappa>, e\<^sub>\<kappa>)
+\<rbrakk>
+\<Longrightarrow>
+\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2. \<pi>' = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> (\<exists>b. \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
+"
+ apply (drule traceable.Result)
+sorry
+
 lemma traceable_stack_preservation: "
 \<lbrakk>
   \<E> \<rightarrow> \<E>';
@@ -1152,7 +1182,13 @@ lemma traceable_stack_preservation: "
 \<rbrakk> \<Longrightarrow>
 (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi>' = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
 "
-sorry
+ apply (frule traceable_exp_preservation; auto)
+ apply (drule flow_preservation, auto)
+ apply (drule stack_top_reachable; auto?)
+ apply (erule concur_step.cases; auto)
+  apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto)
+ apply (drule traceable_stack_preservation'; auto)
+done
 
 lemma traceable_preservation: "
 \<lbrakk>
