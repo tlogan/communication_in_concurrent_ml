@@ -1084,10 +1084,7 @@ lemma traceable_exp_preservation: "
   \<E> \<rightarrow> \<E>';
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
   (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and>
-    (\<forall>x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
-      (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
-    )
+    \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>)
   );
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
 \<rbrakk> \<Longrightarrow>
@@ -1095,11 +1092,8 @@ lemma traceable_exp_preservation: "
 "
  apply (frule concur_step.cases, auto)
       apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
-      apply (
-        ((drule spec)+, erule impE, assumption, erule conjE),
-        ((drule spec)+, erule impE, (rule exI)+, simp),
-        ((erule exE)+, (erule conjE)+, auto)
-      ) 
+      apply (((drule spec)+, erule impE, assumption, erule conjE))
+      apply (erule stack_traceable.cases; auto)
       apply (erule seq_step.cases; auto; rule Result; auto)
      apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
      apply ((drule spec)+, erule impE, assumption, erule conjE)
@@ -1138,41 +1132,13 @@ done
 lemma traceable_stack_preservation: "
 \<lbrakk>
   \<E> \<rightarrow> \<E>';
-  \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>];
-  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>''\<rangle>);
-  (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and>
-    (\<forall>x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
-      (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
-    )
-  );
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
+  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
+  \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<and> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>);
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> 
 \<rbrakk> \<Longrightarrow>
-(\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi>' = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
+\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>', \<kappa>')
 "
 sorry
-
-lemma traceable_preservation: "
-\<lbrakk>
-  \<E> \<rightarrow> \<E>';
-  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
-  (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<and>
-    (\<forall>x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>'. \<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>' \<longrightarrow>
-      (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
-    )
-  );
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
-\<rbrakk> \<Longrightarrow>
-\<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>', e') \<and>
-(\<forall>x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>''. \<kappa>' = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'' \<longrightarrow>
-  (\<exists>\<pi>\<^sub>1 \<pi>\<^sub>2 b. \<pi>' = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<and> \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>))
-)
-"
- apply (rule conjI)
- apply (erule traceable_exp_preservation, auto)
- apply (drule traceable_stack_preservation, auto)
-done
 
 lemma isnt_traceable_sound': "
   \<lbrakk>
@@ -1181,23 +1147,20 @@ lemma isnt_traceable_sound': "
   \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
   (\<forall> \<pi> e \<rho> \<kappa> . \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> (
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<and>
-    (\<forall> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>' .
-      \<kappa> = (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>') \<longrightarrow> (\<exists> \<pi>\<^sub>1 \<pi>\<^sub>2 b .
-        \<pi> = (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2) \<and>
-        \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft> \<and> ``\<pi>\<^sub>2`` \<and> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)
-      )
-    )
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<and> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>)
   ))
 "
- apply (erule star_left.induct, simp add: Start)
- apply (rename_tac \<E>\<^sub>0 \<E> \<E>')
- apply ((rule impI)+, (rule allI)+, rule impI)
- apply (rename_tac \<E>\<^sub>0 \<E> \<E>' \<pi>' e' \<rho>' \<kappa>')
- apply (erule impE, assumption)+
+ apply (erule star_left.induct; auto)
+    apply (simp add: Start)
+   apply (metis append_self_conv stack_traceable.Empty)
+  apply (rename_tac \<E> \<E>' \<pi> e \<rho> \<kappa>)
+  apply (drule star_left_implies_star)
+  apply (drule flow_preservation_star, blast)
+  apply (drule traceable_exp_preservation, auto)
+ apply (rename_tac \<E> \<E>' \<pi> e \<rho> \<kappa>)
  apply (drule star_left_implies_star)
  apply (drule flow_preservation_star, blast)
- apply (drule traceable_preservation, auto)
+ apply (drule traceable_stack_preservation, auto)
 done
 
 
