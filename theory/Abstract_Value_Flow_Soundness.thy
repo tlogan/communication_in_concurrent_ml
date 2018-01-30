@@ -1129,6 +1129,7 @@ apply (case_tac "\<pi>' = \<pi> ;; .x"; auto)
 apply (case_tac "\<pi>' = \<pi> ;; `x"; auto; rule Let_Spawn; auto)
 done
 
+
 lemma traceable_stack_preservation: "
 \<lbrakk>
   \<E> \<rightarrow> \<E>';
@@ -1138,14 +1139,22 @@ lemma traceable_stack_preservation: "
 \<rbrakk> \<Longrightarrow>
 \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>', \<kappa>')
 "
- apply (erule concur_step.cases, auto)
+ apply (frule concur_step.cases, auto)
       apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
-      apply (((drule spec)+, erule impE, assumption, erule conjE))
-      apply (erule stack_traceable.cases; auto)    
+      apply ((drule spec)+, erule impE, assumption, erule conjE)
       apply (erule seq_step.cases; auto)
+      apply (erule stack_traceable.cases; auto)
      apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
-     apply (((drule spec)+, erule impE, assumption, erule conjE))
-sorry
+     apply ((drule spec)+, erule impE, assumption, erule conjE)
+     apply (rule stack_traceable.Nonempty; auto)
+    apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+    apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; `x\<^sub>r", auto)
+    apply (case_tac "\<pi>' = \<pi>\<^sub>s ;; `x\<^sub>s", auto)
+    apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+    apply (case_tac "\<pi>' = \<pi> ;; .x", auto)
+     apply (rule stack_traceable.Empty_Local; auto)
+    apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+done
 
 lemma isnt_traceable_sound': "
   \<lbrakk>

@@ -261,6 +261,8 @@ fun is_linear :: "control_path \<Rightarrow> bool"("``_``" [0]55)  where
  "``((C _ ) # _)`` = False" |
  "``(_ # \<pi>)`` =  ``\<pi>``"
 
+
+
 inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> exp) \<Rightarrow> bool" ("_ \<turnstile> _ \<down> _" [56,0,56]55)  where
   Start: "
     \<V> \<turnstile> e\<^sub>0 \<down> ([], e\<^sub>0)
@@ -368,5 +370,14 @@ inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
     \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2, \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
   "
 
+lemma stack_traceable_preserved_under_linear[simp]: "
+ \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> ;; `x, \<kappa>)
+"
+sorry
+
+lemma stack_traceable_preserved_under_up_down[simp]: "
+ \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ [\<upharpoonleft>x, \<downharpoonleft>x], \<kappa>)
+"
+sorry
 
 end
