@@ -1138,6 +1138,13 @@ lemma traceable_stack_preservation: "
 \<rbrakk> \<Longrightarrow>
 \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>', \<kappa>')
 "
+ apply (erule concur_step.cases, auto)
+      apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
+      apply (((drule spec)+, erule impE, assumption, erule conjE))
+      apply (erule stack_traceable.cases; auto)    
+      apply (erule seq_step.cases; auto)
+     apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
+     apply (((drule spec)+, erule impE, assumption, erule conjE))
 sorry
 
 lemma isnt_traceable_sound': "
