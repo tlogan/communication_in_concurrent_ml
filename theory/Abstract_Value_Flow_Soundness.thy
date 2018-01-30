@@ -1152,7 +1152,7 @@ lemma isnt_traceable_sound': "
 "
  apply (erule star_left.induct; auto)
     apply (simp add: Start)
-   apply (metis append_self_conv stack_traceable.Empty)
+   apply (rule stack_traceable.Empty, auto)
   apply (rename_tac \<E> \<E>' \<pi> e \<rho> \<kappa>)
   apply (drule star_left_implies_star)
   apply (drule flow_preservation_star, blast)

@@ -246,11 +246,15 @@ fun local_path' :: "control_path \<Rightarrow> control_path \<Rightarrow> contro
  "local_path' ((C _) # xs) \<pi> = local_path' xs []" |
  "local_path' (x # xs) \<pi> = local_path' xs (x # \<pi>)"
 
-fun local_path :: "control_path \<Rightarrow> control_path" where
+fun local_path :: "control_path \<Rightarrow> control_path" ("\<plusminus>_" [61]61) where
   "local_path \<pi> = local_path' \<pi> []"
 
 definition is_path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
  "\<downharpoonright>\<pi>\<upharpoonleft> = is_path_balanced' \<pi> []"
+
+lemma empty_path_balanced[simp]: "\<downharpoonright>[]\<upharpoonleft>"
+by (simp add: is_path_balanced_def)
+
 
 fun is_linear :: "control_path \<Rightarrow> bool"("``_``" [0]55)  where
  "``[]`` = True" |
@@ -344,17 +348,22 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
 
 inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> cont list) \<Rightarrow> bool" ("_ \<tturnstile> _ \<downharpoonleft>\<downharpoonright> _" [56,0,56]55)  where
   Empty: "
-    (*\<lbrakk> 
-      \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``
-    \<rbrakk> \<Longrightarrow>*)
-    \<V> \<tturnstile> e \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', [])
+    \<lbrakk> 
+      \<downharpoonright>\<pi>\<upharpoonleft>; ``\<pi>``
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> e \<downharpoonleft>\<downharpoonright> (\<pi>, [])
   " |
+  Empty_Local: "
+    \<lbrakk> 
+      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ .x # \<pi>\<^sub>2, [])
+  "|
   Nonempty: "
     \<lbrakk> 
-      (*\<exists> \<pi> \<pi>' b .*)
-        \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``;
-        \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)
-      (*)*)
+      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``;
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>);
+      \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # (\<pi>\<^sub>2 ;; \<downharpoonleft>x\<^sub>\<kappa>), \<kappa>)
     \<rbrakk> \<Longrightarrow>
     \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2, \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
   "
