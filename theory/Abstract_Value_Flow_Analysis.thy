@@ -235,11 +235,11 @@ definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abs
   "\<V> \<sqsubseteq> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
 
 
-fun is_path_balanced' :: "control_path \<Rightarrow> var list \<Rightarrow> bool"  where
- "is_path_balanced' [] xs = True" |
- "is_path_balanced' (\<downharpoonleft>y # \<pi>) (x # xs) = ((x = y) \<and> is_path_balanced' \<pi> xs)" |
- "is_path_balanced' (\<upharpoonleft>y # \<pi>) xs = is_path_balanced' \<pi> (y # xs)" |
- "is_path_balanced' (_ # \<pi>) xs = is_path_balanced' \<pi> xs"
+fun path_balanced' :: "control_path \<Rightarrow> var list \<Rightarrow> bool"  where
+ "path_balanced' [] xs = True" |
+ "path_balanced' (\<downharpoonleft>y # \<pi>) (x # xs) = ((x = y) \<and> path_balanced' \<pi> xs)" |
+ "path_balanced' (\<upharpoonleft>y # \<pi>) xs = path_balanced' \<pi> (y # xs)" |
+ "path_balanced' (_ # \<pi>) xs = path_balanced' \<pi> xs"
 
 fun local_path' :: "control_path \<Rightarrow> control_path \<Rightarrow> control_path" where
  "local_path' [] \<pi> = rev \<pi>" |
@@ -249,17 +249,55 @@ fun local_path' :: "control_path \<Rightarrow> control_path \<Rightarrow> contro
 fun local_path :: "control_path \<Rightarrow> control_path" ("\<plusminus>_" [61]61) where
   "local_path \<pi> = local_path' \<pi> []"
 
-definition is_path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
- "\<downharpoonright>\<pi>\<upharpoonleft> = is_path_balanced' \<pi> []"
 
-lemma empty_path_balanced[simp]: "\<downharpoonright>[]\<upharpoonleft>"
-by (simp add: is_path_balanced_def)
+definition path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
+ "\<downharpoonright>\<pi>\<upharpoonleft> = path_balanced' \<pi> []"
 
-
-fun is_linear :: "control_path \<Rightarrow> bool"("``_``" [0]55)  where
+fun linear :: "control_path \<Rightarrow> bool"("``_``" [0]55)  where
  "``[]`` = True" |
  "``((C _ ) # _)`` = False" |
  "``(_ # \<pi>)`` =  ``\<pi>``"
+
+
+
+lemma  path_balanced_preserved_over_balanced_extension[simp]: "
+  \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi> @ \<pi>'\<upharpoonleft>
+"
+sorry
+
+lemma  path_balanced_preserved_over_single_extension[simp]: "
+  \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi> ;; `x\<upharpoonleft>
+"
+using path_balanced_def path_balanced_preserved_over_balanced_extension by auto
+
+lemma empty_path_balanced[simp]: "\<downharpoonright>[]\<upharpoonleft>"
+by (simp add: path_balanced_def)
+
+
+lemma  linear_preserved_over_linear_extension[simp]: "
+  ``\<pi>`` \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> ``\<pi> @ \<pi>'``
+"
+sorry
+
+lemma  linear_preserved_over_single_extension[simp]: "
+  ``\<pi>`` \<Longrightarrow> ``\<pi> ;; `x``
+"
+by simp
+
+lemma up_down_balanced[simp]: "
+   \<downharpoonright>[\<upharpoonleft>x, \<downharpoonleft>x] \<upharpoonleft>
+"
+by (simp add: path_balanced_def)
+
+lemma up_down_linear[simp]: "
+   ``[\<upharpoonleft>x, \<downharpoonleft>x]``
+"
+by simp
+
+lemma xyz[simp]: "
+   ``[`x]``
+"
+by simp
 
 
 
