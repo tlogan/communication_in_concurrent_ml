@@ -464,7 +464,9 @@ lemma flow_seq_step_down_preservation: "
  apply (rule accept_state_pool.Any, auto)
   apply (erule accept_state_pool.cases, auto)
   apply ((drule spec)+, auto)
-sorry
+  apply (simp add: flow_over_state_preservation)
+  apply (simp add: accept_state_pool.simps)
+done
 
 lemma flow_seq_step_up_preservation: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
@@ -473,7 +475,9 @@ lemma flow_seq_step_up_preservation: "
  apply (rule accept_state_pool.Any, auto)
   apply (erule accept_state_pool.cases, auto)
   apply ((drule spec)+, auto)
-sorry
+  apply (simp add: flow_over_state_preservation)
+  apply (simp add: accept_state_pool.simps)
+done
 
 lemma flow_seq_step_preservation: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
@@ -916,7 +920,7 @@ theorem flow_preservation : "
    apply ((erule flow_let_sync_preservation; blast?), auto)
   apply (erule flow_let_chan_preservation, auto)
  apply (erule flow_let_spawn_preservation, auto)
-sorry
+done
 
 theorem flow_preservation_star' : "
   \<E> \<rightarrow>* \<E>' \<Longrightarrow>
