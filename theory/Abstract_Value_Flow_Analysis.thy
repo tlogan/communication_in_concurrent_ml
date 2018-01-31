@@ -265,40 +265,21 @@ lemma  path_balanced_preserved_over_balanced_extension[simp]: "
 "
 sorry
 
-lemma  path_balanced_preserved_over_single_extension[simp]: "
-  \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi> ;; `x\<upharpoonleft>
-"
-using path_balanced_def path_balanced_preserved_over_balanced_extension by auto
-
 lemma empty_path_balanced[simp]: "\<downharpoonright>[]\<upharpoonleft>"
 by (simp add: path_balanced_def)
 
+lemma linear_single_path_balanced[simp]: "\<downharpoonright>[`x]\<upharpoonleft>"
+by (simp add: path_balanced_def)
 
 lemma  linear_preserved_over_linear_extension[simp]: "
   ``\<pi>`` \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> ``\<pi> @ \<pi>'``
 "
 sorry
 
-lemma  linear_preserved_over_single_extension[simp]: "
-  ``\<pi>`` \<Longrightarrow> ``\<pi> ;; `x``
-"
-by simp
-
 lemma up_down_balanced[simp]: "
    \<downharpoonright>[\<upharpoonleft>x, \<downharpoonleft>x] \<upharpoonleft>
 "
 by (simp add: path_balanced_def)
-
-lemma up_down_linear[simp]: "
-   ``[\<upharpoonleft>x, \<downharpoonleft>x]``
-"
-by simp
-
-lemma xyz[simp]: "
-   ``[`x]``
-"
-by simp
-
 
 
 inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> exp) \<Rightarrow> bool" ("_ \<turnstile> _ \<down> _" [56,0,56]55)  where
@@ -408,14 +389,14 @@ inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
     \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2, \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
   "
 
-lemma stack_traceable_preserved_under_linear[simp]: "
- \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> ;; `x, \<kappa>)
+lemma stack_traceable_preserved_over_linear_balanced_extension[simp]: "
+ \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)
 "
-sorry
-
-lemma stack_traceable_preserved_under_up_down[simp]: "
- \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ [\<upharpoonleft>x, \<downharpoonleft>x], \<kappa>)
-"
+ apply (erule stack_traceable.cases; auto)
+   apply (simp add: stack_traceable.Empty)
+  apply (simp add: Empty_Local)
+ apply (rotate_tac 2)
+ apply (drule stack_traceable.Nonempty; auto?)
 sorry
 
 end

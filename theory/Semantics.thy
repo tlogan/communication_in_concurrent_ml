@@ -81,7 +81,6 @@ inductive_cases Result_E[elim!]: "\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<
 abbreviation control_path_append :: "control_path => control_label => control_path" (infixl ";;" 61) where
   "\<pi>;;lab \<equiv> \<pi> @ [lab]"
   
-  
 definition leaf :: "state_pool \<Rightarrow> control_path \<Rightarrow> bool" where
   "leaf \<E> \<pi> \<equiv> \<not>(\<E> \<pi> = None) \<and> (\<nexists> \<pi>' . \<not>(\<E> \<pi>' = None) \<and> strict_prefix \<pi> \<pi>')"
 
