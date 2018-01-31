@@ -1145,7 +1145,7 @@ lemma traceable_stack_preservation: "
       apply (erule seq_step.cases; auto)
       apply (erule stack_traceable.cases; auto)
      apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
-     apply ((drule spec)+, erule impE, assumption, erule conjE)
+     apply ((drule spec)+, erule impE, assumption, erule conjE) 
      apply (rule stack_traceable.Nonempty; auto)
     apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
     apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; `x\<^sub>r", auto)

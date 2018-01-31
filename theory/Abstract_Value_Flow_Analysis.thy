@@ -1,5 +1,6 @@
 theory Abstract_Value_Flow_Analysis
   imports Main Syntax Semantics
+    "~~/src/HOL/Library/List"
 begin
 
 datatype abstract_value = A_Chan var ("^Chan _" [61] 61) | A_Unit ("^\<lparr>\<rparr>") | A_Prim prim ("^_" [61] 61 )
@@ -281,6 +282,16 @@ lemma up_down_balanced[simp]: "
 "
 by (simp add: path_balanced_def)
 
+lemma up_down_surround_balanced[simp]: "
+   \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x)\<upharpoonleft>
+"
+sorry
+
+lemma up_down_surround_linear[simp]: "
+  ``\<pi>`` \<Longrightarrow> ``(\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x))``
+"
+sorry
+
 
 inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> exp) \<Rightarrow> bool" ("_ \<turnstile> _ \<down> _" [56,0,56]55)  where
   Start: "
@@ -384,19 +395,33 @@ inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
     \<lbrakk> 
       \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``;
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>);
-      \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # (\<pi>\<^sub>2 ;; \<downharpoonleft>x\<^sub>\<kappa>), \<kappa>)
+      (*\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # (\<pi>\<^sub>2 ;; \<downharpoonleft>x\<^sub>\<kappa>), \<kappa>)*)
+      \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>)
     \<rbrakk> \<Longrightarrow>
     \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2, \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
   "
 
+
+(*
+lemma stack_traceable_preserved_over_linear_balanced_extension': "
+ (\<forall> \<V> e\<^sub>0 \<pi> \<pi>'. \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<longrightarrow> ``\<pi>'`` \<longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>))
+"
+ apply (induct \<kappa>; auto)
+   apply (erule stack_traceable.cases; auto)
+   apply (simp add: stack_traceable.Empty)
+  apply (simp add: Empty_Local)
+  apply (erule stack_traceable.cases; auto)
+  apply (rule stack_traceable.Nonempty; auto)
+done
+*)
+
 lemma stack_traceable_preserved_over_linear_balanced_extension[simp]: "
  \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)
 "
- apply (erule stack_traceable.cases; auto)
+apply (erule stack_traceable.cases; auto)
    apply (simp add: stack_traceable.Empty)
   apply (simp add: Empty_Local)
- apply (rotate_tac 2)
- apply (drule stack_traceable.Nonempty; auto?)
-sorry
+ apply (simp add: stack_traceable.Nonempty)
+done
 
 end
