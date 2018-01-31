@@ -236,56 +236,55 @@ definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abs
   "\<V> \<sqsubseteq> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
 
 
-fun path_balanced' :: "control_path \<Rightarrow> var list \<Rightarrow> bool"  where
- "path_balanced' [] xs = True" |
- "path_balanced' (\<downharpoonleft>y # \<pi>) (x # xs) = ((x = y) \<and> path_balanced' \<pi> xs)" |
- "path_balanced' (\<upharpoonleft>y # \<pi>) xs = path_balanced' \<pi> (y # xs)" |
- "path_balanced' (_ # \<pi>) xs = path_balanced' \<pi> xs"
+inductive path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
+  Empty[simp]: "
+    \<downharpoonright>[]\<upharpoonleft>
+  " |
+  Linear[simp]: "
+    \<downharpoonright>[`x]\<upharpoonleft>
+  " |
+  Up_Down[simp]: "
+    \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow>
+    \<downharpoonright> (\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x)) \<upharpoonleft>
+  " |
+  Append[simp]: "
+    \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow>
+    \<downharpoonright> (\<pi> @ \<pi>') \<upharpoonleft>
+  "
+  
 
-fun local_path' :: "control_path \<Rightarrow> control_path \<Rightarrow> control_path" where
- "local_path' [] \<pi> = rev \<pi>" |
- "local_path' ((C _) # xs) \<pi> = local_path' xs []" |
- "local_path' (x # xs) \<pi> = local_path' xs (x # \<pi>)"
+inductive linear :: "control_path \<Rightarrow> bool"("``_``" [0]55) where
+  Empty[simp]: "
+    ``[]``
+  " |
+  Linear[simp]: "
+    ``\<pi>`` \<Longrightarrow>
+    `` (`x # \<pi>) ``
+  " |
+  Up[simp]: "
+    ``\<pi>`` \<Longrightarrow>
+    `` (\<upharpoonleft>x # \<pi>) ``
+  " |
+  Down[simp]: "
+    ``\<pi>`` \<Longrightarrow>
+    `` (\<downharpoonleft>x # \<pi>) ``
+  " 
 
-fun local_path :: "control_path \<Rightarrow> control_path" ("\<plusminus>_" [61]61) where
-  "local_path \<pi> = local_path' \<pi> []"
-
-
-definition path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
- "\<downharpoonright>\<pi>\<upharpoonleft> = path_balanced' \<pi> []"
-
-fun linear :: "control_path \<Rightarrow> bool"("``_``" [0]55)  where
- "``[]`` = True" |
- "``((C _ ) # _)`` = False" |
- "``(_ # \<pi>)`` =  ``\<pi>``"
-
-
-
-lemma  path_balanced_preserved_over_balanced_extension[simp]: "
-  \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi> @ \<pi>'\<upharpoonleft>
+lemma linear_preserved_over_linear_extension': "
+  ``\<pi>`` \<Longrightarrow> ``\<pi>'`` \<longrightarrow> ``\<pi> @ \<pi>'``
 "
-sorry
-
-lemma empty_path_balanced[simp]: "\<downharpoonright>[]\<upharpoonleft>"
-by (simp add: path_balanced_def)
-
-lemma linear_single_path_balanced[simp]: "\<downharpoonright>[`x]\<upharpoonleft>"
-by (simp add: path_balanced_def)
+ apply (erule linear.induct; auto)
+done
 
 lemma  linear_preserved_over_linear_extension[simp]: "
   ``\<pi>`` \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> ``\<pi> @ \<pi>'``
 "
-sorry
+by (simp add: linear_preserved_over_linear_extension')
 
 lemma up_down_balanced[simp]: "
    \<downharpoonright>[\<upharpoonleft>x, \<downharpoonleft>x] \<upharpoonleft>
 "
-by (simp add: path_balanced_def)
-
-lemma up_down_surround_balanced[simp]: "
-   \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x)\<upharpoonleft>
-"
-sorry
+using Up_Down path_balanced.Empty by fastforce
 
 
 inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> exp) \<Rightarrow> bool" ("_ \<turnstile> _ \<down> _" [56,0,56]55)  where
