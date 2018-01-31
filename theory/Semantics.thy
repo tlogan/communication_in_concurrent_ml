@@ -162,19 +162,5 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
 abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "\<E> \<rightarrow>* \<E>' \<equiv> star concur_step \<E> \<E>'"
 
-(*
-lemma result_final: "
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-  \<E>' \<pi> = Some (\<langle>LET x\<^sub>l = b in e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
-  e \<noteq> RESULT x
-"
- apply (erule star.cases; auto)
-  apply (case_tac "\<pi> = []"; auto)
- apply (erule concur_step.cases)
-  apply (metis exp.distinct(1) fun_upd_apply option.distinct(1) option.inject state.inject)
-  apply (metis fun_upd_apply option.distinct(1) option.inject state.inject)
-  apply (metis exp.simps(4) fun_upd_apply option.distinct(1) option.inject state.inject)+
-done
-*)
 
 end
