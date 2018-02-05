@@ -142,11 +142,21 @@ theorem "
     abstract_one_to_one (\<V>, \<C>, infinite_prog) (Var ''g100'')
 "
   apply (simp add: abstract_one_to_one_def single_proc_def, auto)
+  (**
+    if 
+      p_set is a finite representation of the infinite \<pi>_set \<and>
+      p1 is in p_set \<and> p2 is in p_set \<and>
+      \<pi>1 is in p_set \<and> \<pi>2 is in \<pi>_set \<and>
+      (abstract_prefix p1 p2 \<or> abstract_prefix p2 p1)
+    then
+       prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2
+      
+  **)  
 sorry        
 
-(* forall reachable path p in a program there is a finite path p' and function f s.t. p \<in> (f p') *)
 
 
+(* finite representation of paths *)
 datatype abstract_path =
   Empty |
   Atom control_label |
@@ -163,7 +173,7 @@ fun concrete_path_set_from_abstract_path :: "abstract_path \<Rightarrow> control
 
 theorem paths_are_finitely_representable: "
   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<Longrightarrow>
-  \<exists> abstract_\<pi>_set . finite (abstract_\<pi>_set) \<and> \<pi> \<in> (concrete_path_set abstract_\<pi>_set)
+  \<exists> p_set . finite (p_set) \<and> \<pi> \<in> (concrete_path_set abstract_\<pi>_set)
 "
 sorry
 
