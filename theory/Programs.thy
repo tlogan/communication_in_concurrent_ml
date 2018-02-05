@@ -1,6 +1,8 @@
 theory Programs
-  imports Main Syntax Semantics "~~/src/HOL/Library/Sublist" "~~/src/HOL/Eisbach/Eisbach_Tools"
-    Abstract_Value_Flow_Analysis Abstract_Value_Flow_Soundness
+  imports Main "~~/src/HOL/Library/Sublist" "~~/src/HOL/Eisbach/Eisbach_Tools"
+    Syntax 
+    Semantics Abstract_Value_Flow_Analysis Abstract_Value_Flow_Soundness
+    Communication_Analysis Abstract_Communication_Analysis
     Communication_Analysis
 begin
 
@@ -12,7 +14,7 @@ begin
 
 
 ****)
-value "($\<lparr>\<rparr>)"
+
 definition infinite_one_to_one_prog where
   "infinite_one_to_one_prog \<equiv> normalize (
     $LET (Var ''ch'') = $CHAN \<lparr>\<rparr> in
@@ -59,6 +61,26 @@ in
 LET Var ''g119'' = \<lparr>\<rparr> in 
 RESULT Var ''g119''
 ***)
+
+theorem "
+  start_state infinite_one_to_one_prog \<rightarrow>* \<E>' 
+  \<Longrightarrow>
+  one_to_one \<E>' (Ch [] (Var ''g100''))
+"
+
+  apply (simp add: one_to_one_def single_proc_def, auto)
+   apply (simp add: send_paths_def; auto)
+sorry
+
+theorem "
+  (\<V>, \<C>) \<Turnstile>\<^sub>e infinite_one_to_one_prog 
+"
+sorry
+
+theorem "
+  abstract_one_to_one (\<V>, \<C>, infinite_one_to_one_prog) (Var ''g100'')
+"
+sorry
 
 
 
