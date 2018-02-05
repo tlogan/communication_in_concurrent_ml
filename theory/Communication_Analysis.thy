@@ -26,7 +26,7 @@ definition single_proc :: "control_path set \<Rightarrow> bool" where
   )"
 
 definition single_path :: "control_path set \<Rightarrow> bool"  where
-  "single_path \<T> \<equiv>  (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . 
+  "single_path \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . 
     \<pi>\<^sub>1 \<in> \<T> \<longrightarrow> 
     \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
     \<pi>\<^sub>1 = \<pi>\<^sub>2

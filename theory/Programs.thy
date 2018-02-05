@@ -1,8 +1,68 @@
 theory Programs
-  imports Main Syntax Semantics "~~/src/HOL/Library/Sublist" "~~/src/HOL/IMP/Star" "~~/src/HOL/Eisbach/Eisbach_Tools"
+  imports Main Syntax Semantics "~~/src/HOL/Library/Sublist" "~~/src/HOL/Eisbach/Eisbach_Tools"
     Abstract_Value_Flow_Analysis Abstract_Value_Flow_Soundness
     Communication_Analysis
 begin
+
+
+(**** Strategy for deriving analysis of program with infinite paths on a single process ****
+
+- show  
+
+
+
+****)
+value "($\<lparr>\<rparr>)"
+definition infinite_one_to_one_prog where
+  "infinite_one_to_one_prog \<equiv> normalize (
+    $LET (Var ''ch'') = $CHAN \<lparr>\<rparr> in
+    $LET (Var ''u'') = $SPAWN (
+      $APP ($FN (Var ''f'') (Var ''x'') .
+        $LET (Var ''u'') = $SYNC ($SEND EVT ($(Var ''ch'')) ($(Var ''x''))) in  
+        ($APP ($(Var ''f'')) ($(Var ''x'')))  
+      ) $\<lparr>\<rparr>
+    ) in
+    $LET (Var ''u'') = $SPAWN (
+      $APP ($FN (Var ''f'') (Var ''x'') .
+        $LET (Var ''r'') = $SYNC ($RECV EVT ($(Var ''ch''))) in  
+        ($APP ($(Var ''f'')) ($(Var ''x'')))  
+      ) $\<lparr>\<rparr>
+    ) in
+    $\<lparr>\<rparr>
+  )"
+
+value "infinite_one_to_one_prog"
+(***
+LET Var ''g100'' = CHAN \<lparr>\<rparr> in 
+LET Var ''g101'' = SPAWN 
+        LET Var ''g102'' = FN Var ''g103'' Var ''g104'' . 
+                LET Var ''g105'' = SEND EVT Var ''g100'' Var ''g104'' in 
+                LET Var ''g106'' = SYNC Var ''g105'' in 
+                LET Var ''g107'' = APP Var ''g103'' Var ''g104'' in 
+                RESULT Var ''g107'' 
+        in 
+        LET Var ''g108'' = \<lparr>\<rparr> in 
+        LET Var ''g109'' = APP Var ''g102'' Var ''g108'' in 
+        RESULT Var ''g109'' 
+in 
+LET Var ''g110'' = SPAWN 
+        LET Var ''g111'' = FN Var ''g112'' Var ''g113'' . 
+                LET Var ''g114'' = RECV EVT Var ''g100'' in 
+                LET Var ''g115'' = SYNC Var ''g114'' in 
+                LET Var ''g116'' = APP Var ''g112'' Var ''g113'' in 
+                RESULT Var ''g116'' 
+        in 
+        LET Var ''g117'' = \<lparr>\<rparr> in 
+        LET Var ''g118'' = APP Var ''g111'' Var ''g117'' in 
+        RESULT Var ''g118'' 
+in 
+LET Var ''g119'' = \<lparr>\<rparr> in 
+RESULT Var ''g119''
+***)
+
+
+
+
     
 abbreviation a where "a \<equiv> Var ''a''"
 abbreviation b where "b \<equiv> Var ''b''"
@@ -34,6 +94,7 @@ method leaf_elim_search = (
     I: "leaf stpool lf" for stpool lf \<Rightarrow> \<open>(leaf_elim_loop stpool stpool lf I: I)\<close>
 )
 
+(*
 method topo_solve = 
   (
     (erule star.cases, auto),
@@ -114,5 +175,8 @@ definition prog_four where
     in
     .APP .a (.LEFT (.LEFT (.LEFT (.RIGHT .\<lparr>\<rparr>))))
   "
+
+
+*)
 
 end
