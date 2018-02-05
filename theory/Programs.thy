@@ -7,14 +7,6 @@ theory Programs
 begin
 
 
-(**** Strategy for deriving analysis of program with infinite paths on a single process ****
-
-- show  
-
-
-
-****)
-
 definition infinite_one_to_one_prog where
   "infinite_one_to_one_prog \<equiv> normalize (
     $LET (Var ''ch'') = $CHAN \<lparr>\<rparr> in
@@ -62,15 +54,82 @@ LET Var ''g119'' = \<lparr>\<rparr> in
 RESULT Var ''g119''
 ***)
 
+theorem infinite_prog_single_sender: "
+   \<E> \<rightarrow>* \<E>' \<Longrightarrow>
+   \<E> = [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<longrightarrow>
+   single_proc (send_paths \<E>' (Ch [] (Var ''g100'')))
+"
+  apply (drule star_implies_star_left)
+  apply (erule star_left.induct; auto)
+   apply (simp add: single_proc_def send_paths_def)
+  sorry
+(* is this provable by inducting on star_left?*)
+
+theorem infinite_prog_single_receiver: "
+  [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<longrightarrow>
+   single_proc (recv_paths \<E>' (Ch [] (Var ''g100'')))
+"
+sorry
+
 theorem "
   start_state infinite_one_to_one_prog \<rightarrow>* \<E>' 
   \<Longrightarrow>
   one_to_one \<E>' (Ch [] (Var ''g100''))
 "
+  apply (simp add: one_to_one_def, auto)
+  using infinite_prog_single_sender apply blast
+  using infinite_prog_single_receiver apply blast
+done
 
-  apply (simp add: one_to_one_def single_proc_def, auto)
-   apply (simp add: send_paths_def; auto)
-sorry
+
+definition infinite_one_to_one_abstract_values :: "abstract_value_env \<times> abstract_value_env" where 
+  "infinite_one_to_one_abstract_values \<equiv> (
+    (\<lambda> _ . {})(
+      Var ''g100'' := {^Chan (Var ''g100'')}, 
+
+      Var ''g101'' := {^\<lparr>\<rparr>},
+      Var ''g102'' := {^(Abs (Var ''g103'') (Var ''g104'') (
+        LET Var ''g105'' = SEND EVT (Var ''g100'') (Var ''g104'') in 
+        LET Var ''g106'' = SYNC Var ''g105'' in 
+        LET Var ''g107'' = APP (Var ''g103'') (Var ''g104'') in 
+        RESULT Var ''g107'' 
+      ))},
+      Var ''g103'' := {^(Abs (Var ''g103'') (Var ''g104'') (
+        LET Var ''g105'' = SEND EVT (Var ''g100'') (Var ''g104'') in 
+        LET Var ''g106'' = SYNC Var ''g105'' in 
+        LET Var ''g107'' = APP (Var ''g103'') (Var ''g104'') in 
+        RESULT Var ''g107''
+      ))}, Var ''g104'' := {^\<lparr>\<rparr>},
+      Var ''g105'' := {^(Send_Evt (Var ''g100'') (Var ''g104''))},
+      Var ''g106'' := {^\<lparr>\<rparr>}, Var ''g107'' := {},
+      Var ''g108'' := {^\<lparr>\<rparr>}, Var ''g109'' := {},
+
+      Var ''g110'' := {^\<lparr>\<rparr>},
+      Var ''g111'' := {^(Abs (Var ''g112'') (Var ''g113'') (
+                LET Var ''g114'' = RECV EVT Var ''g100'' in 
+                LET Var ''g115'' = SYNC Var ''g114'' in 
+                LET Var ''g116'' = APP (Var ''g112'') (Var ''g113'') in 
+                RESULT Var ''g116'' 
+      ))},
+      Var ''g112'' := {^(Abs (Var ''g112'') (Var ''g113'') (
+                LET Var ''g114'' = RECV EVT Var ''g100'' in 
+                LET Var ''g115'' = SYNC Var ''g114'' in 
+                LET Var ''g116'' = APP (Var ''g112'') (Var ''g113'') in 
+                RESULT Var ''g116'' 
+      ))}, Var ''g113'' := {^\<lparr>\<rparr>},
+      Var ''g114'' := {^(Recv_Evt (Var ''g100''))},
+      Var ''g115'' := {^\<lparr>\<rparr>}, Var ''g116'' := {},
+      Var ''g117'' := {^\<lparr>\<rparr>}, Var ''g118'' := {}
+    ),
+    (\<lambda> _ . {})(
+      Var ''g100'' := {^\<lparr>\<rparr>}
+    )
+  )"
+(* 
+how to determine an actual abstract value for g107 from \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x ? 
+Do I need a top abstract value as a placeholder? 
+If so, do I need to incorporate that into the analysis for infinite recursive calls?
+*)
 
 theorem "
   (\<V>, \<C>) \<Turnstile>\<^sub>e infinite_one_to_one_prog 

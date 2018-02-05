@@ -3,7 +3,7 @@ theory Communication_Analysis
 begin
 
 definition send_paths :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
-  "send_paths \<E> c \<equiv> {\<pi>\<^sub>y ;;` x\<^sub>y | \<pi>\<^sub>y x\<^sub>y x\<^sub>e e \<kappa> \<rho> x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>e. 
+  "send_paths \<E> c \<equiv> {\<pi>\<^sub>y ;; `x\<^sub>y | \<pi>\<^sub>y x\<^sub>y x\<^sub>e e \<kappa> \<rho> x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>e. 
     \<E> \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e; \<rho>; \<kappa>\<rangle>) \<and>
     \<rho> x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace> \<and> 
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace> \<and>
@@ -11,7 +11,7 @@ definition send_paths :: "state_pool \<Rightarrow> chan \<Rightarrow> control_pa
   }"
 
 definition recv_paths :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path set" where
-  "recv_paths \<E> c \<equiv> {\<pi>\<^sub>y ;;` x\<^sub>y | \<pi>\<^sub>y x\<^sub>y x\<^sub>e e \<kappa> \<rho> x\<^sub>r\<^sub>c \<rho>\<^sub>e \<omega>. 
+  "recv_paths \<E> c \<equiv> {\<pi>\<^sub>y ;; `x\<^sub>y | \<pi>\<^sub>y x\<^sub>y x\<^sub>e e \<kappa> \<rho> x\<^sub>r\<^sub>c \<rho>\<^sub>e \<omega>. 
     \<E> \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e; \<rho>; \<kappa>\<rangle>) \<and> 
     \<rho> x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>e\<rbrace> \<and> 
     \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace> \<and>
