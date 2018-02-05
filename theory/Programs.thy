@@ -7,8 +7,8 @@ theory Programs
 begin
 
 
-definition infinite_one_to_one_prog where
-  "infinite_one_to_one_prog \<equiv> normalize (
+definition infinite_prog where
+  "infinite_prog \<equiv> normalize (
     $LET (Var ''ch'') = $CHAN \<lparr>\<rparr> in
     $LET (Var ''u'') = $SPAWN (
       $APP ($FN (Var ''f'') (Var ''x'') .
@@ -25,7 +25,7 @@ definition infinite_one_to_one_prog where
     $\<lparr>\<rparr>
   )"
 
-value "infinite_one_to_one_prog"
+value "infinite_prog"
 (***
 LET Var ''g100'' = CHAN \<lparr>\<rparr> in 
 LET Var ''g101'' = SPAWN 
@@ -62,8 +62,9 @@ theorem infinite_prog_single_sender: "
   apply (drule star_implies_star_left)
   apply (erule star_left.induct; auto)
    apply (simp add: single_proc_def send_paths_def)
+  apply (rename_tac \<E> \<E>')
   sorry
-(* is this provable by inducting on star_left?*)
+(* is this provable by cases on star and then inducting on star_left once inside the infinite loop?*)
 
 theorem infinite_prog_single_receiver: "
   [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<longrightarrow>
@@ -72,7 +73,7 @@ theorem infinite_prog_single_receiver: "
 sorry
 
 theorem "
-  start_state infinite_one_to_one_prog \<rightarrow>* \<E>' 
+  start_state infinite_prog \<rightarrow>* \<E>' 
   \<Longrightarrow>
   one_to_one \<E>' (Ch [] (Var ''g100''))
 "
@@ -82,8 +83,8 @@ theorem "
 done
 
 
-definition infinite_one_to_one_abstract_values :: "abstract_value_env \<times> abstract_value_env" where 
-  "infinite_one_to_one_abstract_values \<equiv> (
+definition infinite_prog_abstract_values :: "abstract_value_env \<times> abstract_value_env" where 
+  "infinite_prog_abstract_values \<equiv> (
     (\<lambda> _ . {})(
       Var ''g100'' := {^Chan (Var ''g100'')}, 
 
@@ -132,15 +133,39 @@ If so, do I need to incorporate that into the analysis for infinite recursive ca
 *)
 
 theorem "
-  (\<V>, \<C>) \<Turnstile>\<^sub>e infinite_one_to_one_prog 
+  infinite_prog_abstract_values \<Turnstile>\<^sub>e infinite_prog 
 "
 sorry
 
 theorem "
-  abstract_one_to_one (\<V>, \<C>, infinite_one_to_one_prog) (Var ''g100'')
+  case infinite_prog_abstract_values of (\<V>, \<C>) \<Rightarrow>
+    abstract_one_to_one (\<V>, \<C>, infinite_prog) (Var ''g100'')
+"
+  apply (simp add: abstract_one_to_one_def single_proc_def, auto)
+sorry        
+
+(* forall reachable path p in a program there is a finite path p' and function f s.t. p \<in> (f p') *)
+
+
+datatype abstract_path =
+  Empty |
+  Atom control_label |
+  Concat abstract_path abstract_path |
+  Star abstract_path
+
+
+(*** TO DO ***)
+fun concrete_path_set_from_abstract_path :: "abstract_path \<Rightarrow> control_path set" where
+ "concrete_path_set_from_abstract_path Empty = {[]}" | 
+ "concrete_path_set_from_abstract_path (Atom l) = {[]}" |
+ "concrete_path_set_from_abstract_path (Concat p1 p2) = {[]}" |
+ "concrete_path_set_from_abstract_path (Star p) = {[]}"
+
+theorem paths_are_finitely_representable: "
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<Longrightarrow>
+  \<exists> abstract_\<pi>_set . finite (abstract_\<pi>_set) \<and> \<pi> \<in> (concrete_path_set abstract_\<pi>_set)
 "
 sorry
-
 
 
 
