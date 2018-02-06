@@ -59,11 +59,36 @@ theorem infinite_prog_single_sender: "
    \<E> = [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<longrightarrow>
    single_proc (send_paths \<E>' (Ch [] (Var ''g100'')))
 "
+  apply (simp add: single_proc_def, auto)
+  apply (simp add: send_paths_def)
   apply (drule star_implies_star_left)
   apply (erule star_left.induct; auto)
-   apply (simp add: single_proc_def send_paths_def)
   apply (rename_tac \<E> \<E>')
   sorry
+(*
+strategy:
+
+if 
+  prefixes hold for \<E> and \<E> \<rightarrow> \<E>', where \<E>' = \<E>[\<pi>;;`x \<mapsto> ...], 
+then 
+  prefixes hold for \<E>'.
+
+if 
+  infinite loop has no recursive call inside spawn.
+then
+  each step inside loop only appends `x label.
+
+if 
+  prefixes hold for \<E> and \<E> \<rightarrow> \<E>' where the new path is inside the infinite loop w/out recursive call inside spawn,
+then 
+  prefixes hold for \<E> and \<E> \<rightarrow> \<E>', where \<E>' = \<E>[\<pi>;;`x \<mapsto> ...]
+thus 
+  prefixes hold for \<E>' 
+
+*)
+
+
+
 (* is this provable by cases on star and then inducting on star_left once inside the infinite loop?*)
 
 theorem infinite_prog_single_receiver: "
@@ -83,79 +108,64 @@ theorem "
 done
 
 
-definition infinite_prog_abstract_values :: "abstract_value_env \<times> abstract_value_env" where 
-  "infinite_prog_abstract_values \<equiv> (
-    (\<lambda> _ . {})(
-      Var ''g100'' := {^Chan (Var ''g100'')}, 
+definition infinite_prog_\<V> :: "abstract_value_env" where 
+  "infinite_prog_\<V> \<equiv> (\<lambda> _ . {})(
+    Var ''g100'' := {^Chan (Var ''g100'')}, 
 
-      Var ''g101'' := {^\<lparr>\<rparr>},
-      Var ''g102'' := {^(Abs (Var ''g103'') (Var ''g104'') (
-        LET Var ''g105'' = SEND EVT (Var ''g100'') (Var ''g104'') in 
-        LET Var ''g106'' = SYNC Var ''g105'' in 
-        LET Var ''g107'' = APP (Var ''g103'') (Var ''g104'') in 
-        RESULT Var ''g107'' 
-      ))},
-      Var ''g103'' := {^(Abs (Var ''g103'') (Var ''g104'') (
-        LET Var ''g105'' = SEND EVT (Var ''g100'') (Var ''g104'') in 
-        LET Var ''g106'' = SYNC Var ''g105'' in 
-        LET Var ''g107'' = APP (Var ''g103'') (Var ''g104'') in 
-        RESULT Var ''g107''
-      ))}, Var ''g104'' := {^\<lparr>\<rparr>},
-      Var ''g105'' := {^(Send_Evt (Var ''g100'') (Var ''g104''))},
-      Var ''g106'' := {^\<lparr>\<rparr>}, Var ''g107'' := {},
-      Var ''g108'' := {^\<lparr>\<rparr>}, Var ''g109'' := {},
+    Var ''g101'' := {^\<lparr>\<rparr>},
+    Var ''g102'' := {^(Abs (Var ''g103'') (Var ''g104'') (
+      LET Var ''g105'' = SEND EVT (Var ''g100'') (Var ''g104'') in 
+      LET Var ''g106'' = SYNC Var ''g105'' in 
+      LET Var ''g107'' = APP (Var ''g103'') (Var ''g104'') in 
+      RESULT Var ''g107'' 
+    ))},
+    Var ''g103'' := {^(Abs (Var ''g103'') (Var ''g104'') (
+      LET Var ''g105'' = SEND EVT (Var ''g100'') (Var ''g104'') in 
+      LET Var ''g106'' = SYNC Var ''g105'' in 
+      LET Var ''g107'' = APP (Var ''g103'') (Var ''g104'') in 
+      RESULT Var ''g107''
+    ))}, Var ''g104'' := {^\<lparr>\<rparr>},
+    Var ''g105'' := {^(Send_Evt (Var ''g100'') (Var ''g104''))},
+    Var ''g106'' := {^\<lparr>\<rparr>}, Var ''g107'' := {},
+    Var ''g108'' := {^\<lparr>\<rparr>}, Var ''g109'' := {},
 
-      Var ''g110'' := {^\<lparr>\<rparr>},
-      Var ''g111'' := {^(Abs (Var ''g112'') (Var ''g113'') (
-                LET Var ''g114'' = RECV EVT Var ''g100'' in 
-                LET Var ''g115'' = SYNC Var ''g114'' in 
-                LET Var ''g116'' = APP (Var ''g112'') (Var ''g113'') in 
-                RESULT Var ''g116'' 
-      ))},
-      Var ''g112'' := {^(Abs (Var ''g112'') (Var ''g113'') (
-                LET Var ''g114'' = RECV EVT Var ''g100'' in 
-                LET Var ''g115'' = SYNC Var ''g114'' in 
-                LET Var ''g116'' = APP (Var ''g112'') (Var ''g113'') in 
-                RESULT Var ''g116'' 
-      ))}, Var ''g113'' := {^\<lparr>\<rparr>},
-      Var ''g114'' := {^(Recv_Evt (Var ''g100''))},
-      Var ''g115'' := {^\<lparr>\<rparr>}, Var ''g116'' := {},
-      Var ''g117'' := {^\<lparr>\<rparr>}, Var ''g118'' := {}
-    ),
-    (\<lambda> _ . {})(
-      Var ''g100'' := {^\<lparr>\<rparr>}
-    )
+    Var ''g110'' := {^\<lparr>\<rparr>},
+    Var ''g111'' := {^(Abs (Var ''g112'') (Var ''g113'') (
+              LET Var ''g114'' = RECV EVT Var ''g100'' in 
+              LET Var ''g115'' = SYNC Var ''g114'' in 
+              LET Var ''g116'' = APP (Var ''g112'') (Var ''g113'') in 
+              RESULT Var ''g116'' 
+    ))},
+    Var ''g112'' := {^(Abs (Var ''g112'') (Var ''g113'') (
+              LET Var ''g114'' = RECV EVT Var ''g100'' in 
+              LET Var ''g115'' = SYNC Var ''g114'' in 
+              LET Var ''g116'' = APP (Var ''g112'') (Var ''g113'') in 
+              RESULT Var ''g116'' 
+    ))}, Var ''g113'' := {^\<lparr>\<rparr>},
+    Var ''g114'' := {^(Recv_Evt (Var ''g100''))},
+    Var ''g115'' := {^\<lparr>\<rparr>}, Var ''g116'' := {},
+    Var ''g117'' := {^\<lparr>\<rparr>}, Var ''g118'' := {}
   )"
-(* 
-how to determine an actual abstract value for g107 from \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x ? 
-Do I need a top abstract value as a placeholder? 
-If so, do I need to incorporate that into the analysis for infinite recursive calls?
-*)
 
-theorem "
-  infinite_prog_abstract_values \<Turnstile>\<^sub>e infinite_prog 
+definition infinite_prog_\<C> :: "abstract_value_env" where 
+  "infinite_prog_\<C>  \<equiv> (\<lambda> _ . {})(
+    Var ''g100'' := {^\<lparr>\<rparr>}
+  )"
+
+
+theorem infinite_prog_has_intuitive_avf_analysis: "
+  (infinite_prog_\<V>, infinite_prog_\<C>) \<Turnstile>\<^sub>e infinite_prog 
 "
 sorry
 
-theorem "
-  case infinite_prog_abstract_values of (\<V>, \<C>) \<Rightarrow>
-    abstract_one_to_one (\<V>, \<C>, infinite_prog) (Var ''g100'')
+
+theorem infinite_prog_has_one_to_one_communication_analysis: "
+  abstract_one_to_one (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100'')
 "
-  apply (simp add: abstract_one_to_one_def single_proc_def, auto)
-  (**
-    if 
-      p_set is a finite representation of the infinite \<pi>_set \<and>
-      p1 is in p_set \<and> p2 is in p_set \<and>
-      \<pi>1 is in p_set \<and> \<pi>2 is in \<pi>_set \<and>
-      (abstract_prefix p1 p2 \<or> abstract_prefix p2 p1)
-    then
-       prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2
-      
-  **)  
 sorry        
 
 
-
+(**
 (* finite representation of paths *)
 datatype abstract_path =
   Empty |
@@ -171,12 +181,31 @@ fun concrete_path_set_from_abstract_path :: "abstract_path \<Rightarrow> control
  "concrete_path_set_from_abstract_path (Concat p1 p2) = {[]}" |
  "concrete_path_set_from_abstract_path (Star p) = {[]}"
 
+fun concrete_path_set :: "abstract_path set \<Rightarrow> control_path set" where
+  "concrete_path_set ps = UNION ps (\<lambda> p . concrete_path_set_from_abstract_path p)"
+
 theorem paths_are_finitely_representable: "
   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<Longrightarrow>
-  \<exists> p_set . finite (p_set) \<and> \<pi> \<in> (concrete_path_set abstract_\<pi>_set)
+  \<exists> p_set . finite (p_set) \<and> \<pi> \<in> (concrete_path_set p_set)
 "
-sorry
+  sorry
 
+fun abstract_prefix :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+  "abstract_prefix p1 p2 = True"
+
+
+lemma linear_abstract_path_implies_linear_control_path: "
+  \<lbrakk>
+    finite (p_set);
+    p1 \<in> p_set; p2 \<in> p_set;
+    (abstract_prefix p1 p2 \<or> abstract_prefix p2 p1);
+    \<pi>\<^sub>1 \<in> (concrete_path_set p_set);
+    \<pi>\<^sub>2 \<in> (concrete_path_set p_set)
+  \<rbrakk> \<Longrightarrow>
+  prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2
+"
+  sorry
+**)
 
 
     
