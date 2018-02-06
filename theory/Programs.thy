@@ -60,10 +60,6 @@ theorem infinite_prog_single_sender: "
    single_proc (send_paths \<E>' (Ch [] (Var ''g100'')))
 "
   apply (simp add: single_proc_def, auto)
-  apply (simp add: send_paths_def)
-  apply (drule star_implies_star_left)
-  apply (erule star_left.induct; auto)
-  apply (rename_tac \<E> \<E>')
   sorry
 (*
 strategy:
@@ -87,9 +83,6 @@ thus
 
 *)
 
-
-
-(* is this provable by cases on star and then inducting on star_left once inside the infinite loop?*)
 
 theorem infinite_prog_single_receiver: "
   [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<longrightarrow>
@@ -158,49 +151,62 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
 "
 sorry
 
+theorem infinite_prog_has_single_sender_communication_analysis: "
+  single_proc (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
+"
+   apply (simp add: single_proc_def, auto)
+sorry
+
+theorem infinite_prog_has_single_receiver_communication_analysis: "
+  single_proc (abstract_recv_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
+"
+sorry
 
 theorem infinite_prog_has_one_to_one_communication_analysis: "
   abstract_one_to_one (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100'')
 "
-sorry        
+ apply (simp add: abstract_one_to_one_def, auto)
+ apply (simp add: infinite_prog_has_single_sender_communication_analysis)
+ apply (simp add: infinite_prog_has_single_receiver_communication_analysis)
+done      
 
 
 (**
 (* finite representation of paths *)
-datatype abstract_path =
+datatype finite_path =
   Empty |
   Atom control_label |
-  Concat abstract_path abstract_path |
-  Star abstract_path
+  Concat finite_path finite_path |
+  Star finite_path
 
 
 (*** TO DO ***)
-fun concrete_path_set_from_abstract_path :: "abstract_path \<Rightarrow> control_path set" where
- "concrete_path_set_from_abstract_path Empty = {[]}" | 
- "concrete_path_set_from_abstract_path (Atom l) = {[]}" |
- "concrete_path_set_from_abstract_path (Concat p1 p2) = {[]}" |
- "concrete_path_set_from_abstract_path (Star p) = {[]}"
+fun control_path_set_from_finite_path :: "finite_path \<Rightarrow> control_path set" where
+ "control_path_set_from_finite_path Empty = {[]}" | 
+ "control_path_set_from_finite_path (Atom l) = {[]}" |
+ "control_path_set_from_finite_path (Concat p1 p2) = {[]}" |
+ "control_path_set_from_finite_path (Star p) = {[]}"
 
-fun concrete_path_set :: "abstract_path set \<Rightarrow> control_path set" where
-  "concrete_path_set ps = UNION ps (\<lambda> p . concrete_path_set_from_abstract_path p)"
+fun control_path_set :: "finite_path set \<Rightarrow> control_path set" where
+  "control_path_set ps = UNION ps (\<lambda> p . control_path_set_from_finite_path p)"
 
 theorem paths_are_finitely_representable: "
   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<Longrightarrow>
-  \<exists> p_set . finite (p_set) \<and> \<pi> \<in> (concrete_path_set p_set)
+  \<exists> p_set . finite (p_set) \<and> \<pi> \<in> (control_path_set p_set)
 "
   sorry
 
-fun abstract_prefix :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+fun abstract_prefix :: "finite_path \<Rightarrow> finite_path \<Rightarrow> bool" where
   "abstract_prefix p1 p2 = True"
 
 
-lemma linear_abstract_path_implies_linear_control_path: "
+lemma linear_finite_path_implies_linear_control_path: "
   \<lbrakk>
     finite (p_set);
     p1 \<in> p_set; p2 \<in> p_set;
     (abstract_prefix p1 p2 \<or> abstract_prefix p2 p1);
-    \<pi>\<^sub>1 \<in> (concrete_path_set p_set);
-    \<pi>\<^sub>2 \<in> (concrete_path_set p_set)
+    \<pi>\<^sub>1 \<in> (control_path_set p_set);
+    \<pi>\<^sub>2 \<in> (control_path_set p_set)
   \<rbrakk> \<Longrightarrow>
   prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2
 "
