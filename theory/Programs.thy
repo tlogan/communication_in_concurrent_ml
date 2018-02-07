@@ -40,15 +40,30 @@ inductive matches_finite_path :: "finite_path \<Rightarrow> control_path \<Right
  " 
 
 
-fun control_path_set :: "finite_path set \<Rightarrow> control_path set" where
+definition control_path_set :: "finite_path set \<Rightarrow> control_path set" where
   "control_path_set ps = {\<pi> | \<pi> p. p \<in> ps \<and> p \<cong> \<pi>}"
 
 theorem reachable_paths_are_finitely_representable: "
   \<lbrakk> 
-    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>;
-    \<E> \<pi> = Some \<sigma>
+    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>
   \<rbrakk> \<Longrightarrow>
-  \<exists> p_set . finite (p_set) \<and> \<pi> \<in> (control_path_set p_set)
+  \<exists> p_set . finite p_set \<and> {\<pi> | \<pi> \<sigma> . \<E> \<pi> = Some \<sigma>} = (control_path_set p_set)
+"
+sorry
+
+theorem send_paths_are_finitely_representable: "
+  \<lbrakk> 
+    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>
+  \<rbrakk> \<Longrightarrow>
+  \<exists> p_set . finite p_set \<and> (send_paths \<E> c) = (control_path_set p_set)
+"
+sorry
+
+theorem recv_paths_are_finitely_representable: "
+  \<lbrakk> 
+    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>
+  \<rbrakk> \<Longrightarrow>
+  \<exists> p_set . finite p_set \<and> (recv_paths \<E> c) = (control_path_set p_set)
 "
 sorry
 
@@ -68,9 +83,10 @@ fun finite_path_prefix :: "finite_path \<Rightarrow> finite_path \<Rightarrow> b
 
 lemma ordered_finite_path_implies_ordered_control_path: "
   \<lbrakk>
-    finite (p_set);
-    p1 \<in> p_set; p2 \<in> p_set;
-    (finite_path_prefix p1 p2 \<or> finite_path_prefix p2 p1);
+    finite p_set;
+    (\<forall> p1 p2 . p1 \<in> p_set \<longrightarrow> p2 \<in> p_set \<longrightarrow>
+      (finite_path_prefix p1 p2 \<or> finite_path_prefix p2 p1)
+    );
     \<pi>\<^sub>1 \<in> (control_path_set p_set);
     \<pi>\<^sub>2 \<in> (control_path_set p_set)
   \<rbrakk> \<Longrightarrow>
@@ -128,13 +144,33 @@ RESULT Var ''g119''
 ***)
 
 theorem infinite_prog_single_sender: "
-   \<E> \<rightarrow>* \<E>' \<Longrightarrow>
-   \<E> = [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<longrightarrow>
+   [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
    single_proc (send_paths \<E>' (Ch [] (Var ''g100'')))
 "
-  apply (simp add: single_proc_def, auto)
-  apply (simp add: send_paths_def, auto)
-  sorry
+  apply (simp add: single_proc_def, (rule allI, rule impI)+)
+  apply (frule send_paths_are_finitely_representable[of _ _ "(Ch [] (Var ''g100''))"])
+  apply (frule send_paths_are_finitely_representable[of _ _ "(Ch [] (Var ''g100''))"])
+  apply ((erule exE)+, (erule conjE)+, simp)
+
+  apply (rule_tac p_set = "p_set" in ordered_finite_path_implies_ordered_control_path; auto)
+  apply (thin_tac "finite p_seta")
+  apply (thin_tac "control_path_set p_seta = control_path_set p_set"; auto)
+  apply (thin_tac "\<pi>\<^sub>1 \<in> control_path_set p_set")
+  apply (thin_tac "\<pi>\<^sub>2 \<in> control_path_set p_set"; auto)
+  apply (simp add: control_path_set_def)
+  apply (simp add: send_paths_def)
+ 
+(* strategy:
+  step thru one iteration of loop.
+  Each step before the recursion may have a distinct p_set.
+  induct on star_left.  
+  if 
+    the ordered paths hold for (send_paths \<E> c) = p_set and
+    p_set = p_set'
+  then 
+    the ordered paths should hold for (send_paths \<E>' c) = p_set'
+*)
+sorry
 
 
 theorem infinite_prog_single_receiver: "
@@ -211,12 +247,7 @@ theorem infinite_prog_has_single_sender_communication_analysis: "
    apply (simp add: single_proc_def, auto)
    apply (simp add: abstract_send_paths_def, auto)
 sorry
-(**
-strategy:
 
-
-
-**)
 
 theorem infinite_prog_has_single_receiver_communication_analysis: "
   single_proc (abstract_recv_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
