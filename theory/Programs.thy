@@ -7,6 +7,65 @@ theory Programs
 begin
 
 
+(* finite representation of paths *)
+datatype finite_path =
+  Empty |
+  Atom control_label |
+  Concat finite_path finite_path |
+  Star finite_path
+
+
+fun control_path_set_from_finite_path :: "finite_path \<Rightarrow> control_path set" where
+ "control_path_set_from_finite_path Empty = {[]}" | 
+ "control_path_set_from_finite_path (Atom l) = {[l]}" |
+ "control_path_set_from_finite_path (Concat p1 p2) = {\<pi>1 @ \<pi>2 | \<pi>1 \<pi>2 .
+   \<pi>1 \<in> (control_path_set_from_finite_path p1) \<and>
+   \<pi>2 \<in> (control_path_set_from_finite_path p2)
+ }" |
+ "control_path_set_from_finite_path (Star p) = {\<pi> | \<pi> .
+   \<pi> \<in> (control_path_set_from_finite_path p)  (** TO DO: how to represent star as infinite set**)
+ }"
+
+fun control_path_set :: "finite_path set \<Rightarrow> control_path set" where
+  "control_path_set ps = UNION ps (\<lambda> p . control_path_set_from_finite_path p)"
+
+theorem reachable_paths_are_finitely_representable: "
+  \<lbrakk> 
+    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>;
+    \<E> \<pi> = Some \<sigma>
+  \<rbrakk> \<Longrightarrow>
+  \<exists> p_set . finite (p_set) \<and> \<pi> \<in> (control_path_set p_set)
+"
+sorry
+
+theorem abstract_reachable_paths_are_finitely_representable: "
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) 
+  \<Longrightarrow>
+  \<exists> p_set . finite (p_set) \<and> \<pi> \<in> (control_path_set p_set)
+"
+sorry
+
+fun finite_path_prefix :: "finite_path \<Rightarrow> finite_path \<Rightarrow> bool" where
+  "finite_path_prefix Empty _ = True" |
+  "finite_path_prefix _ Empty = False" |
+  "finite_path_prefix p1 (Concat p2a p2b) = (p1 = (Concat p2a p2b) \<or> finite_path_prefix p1 p2a)" |
+  "finite_path_prefix p1 p2 = (p1 = p2)"
+
+
+lemma ordered_finite_path_implies_ordered_control_path: "
+  \<lbrakk>
+    finite (p_set);
+    p1 \<in> p_set; p2 \<in> p_set;
+    (finite_path_prefix p1 p2 \<or> finite_path_prefix p2 p1);
+    \<pi>\<^sub>1 \<in> (control_path_set p_set);
+    \<pi>\<^sub>2 \<in> (control_path_set p_set)
+  \<rbrakk> \<Longrightarrow>
+  prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2
+"
+  sorry
+
+
+
 definition infinite_prog where
   "infinite_prog \<equiv> normalize (
     $LET (Var ''ch'') = $CHAN \<lparr>\<rparr> in
@@ -60,28 +119,8 @@ theorem infinite_prog_single_sender: "
    single_proc (send_paths \<E>' (Ch [] (Var ''g100'')))
 "
   apply (simp add: single_proc_def, auto)
+  apply (simp add: send_paths_def, auto)
   sorry
-(*
-strategy:
-
-if 
-  prefixes hold for \<E> and \<E> \<rightarrow> \<E>', where \<E>' = \<E>[\<pi>;;`x \<mapsto> ...], 
-then 
-  prefixes hold for \<E>'.
-
-if 
-  infinite loop has no recursive call inside spawn.
-then
-  each step inside loop only appends `x label.
-
-if 
-  prefixes hold for \<E> and \<E> \<rightarrow> \<E>' where the new path is inside the infinite loop w/out recursive call inside spawn,
-then 
-  prefixes hold for \<E> and \<E> \<rightarrow> \<E>', where \<E>' = \<E>[\<pi>;;`x \<mapsto> ...]
-thus 
-  prefixes hold for \<E>' 
-
-*)
 
 
 theorem infinite_prog_single_receiver: "
@@ -151,11 +190,19 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
 "
 sorry
 
+
 theorem infinite_prog_has_single_sender_communication_analysis: "
   single_proc (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
 "
    apply (simp add: single_proc_def, auto)
+   apply (simp add: abstract_send_paths_def, auto)
 sorry
+(**
+strategy:
+
+
+
+**)
 
 theorem infinite_prog_has_single_receiver_communication_analysis: "
   single_proc (abstract_recv_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
@@ -168,51 +215,7 @@ theorem infinite_prog_has_one_to_one_communication_analysis: "
  apply (simp add: abstract_one_to_one_def, auto)
  apply (simp add: infinite_prog_has_single_sender_communication_analysis)
  apply (simp add: infinite_prog_has_single_receiver_communication_analysis)
-done      
-
-
-(**
-(* finite representation of paths *)
-datatype finite_path =
-  Empty |
-  Atom control_label |
-  Concat finite_path finite_path |
-  Star finite_path
-
-
-(*** TO DO ***)
-fun control_path_set_from_finite_path :: "finite_path \<Rightarrow> control_path set" where
- "control_path_set_from_finite_path Empty = {[]}" | 
- "control_path_set_from_finite_path (Atom l) = {[]}" |
- "control_path_set_from_finite_path (Concat p1 p2) = {[]}" |
- "control_path_set_from_finite_path (Star p) = {[]}"
-
-fun control_path_set :: "finite_path set \<Rightarrow> control_path set" where
-  "control_path_set ps = UNION ps (\<lambda> p . control_path_set_from_finite_path p)"
-
-theorem paths_are_finitely_representable: "
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<Longrightarrow>
-  \<exists> p_set . finite (p_set) \<and> \<pi> \<in> (control_path_set p_set)
-"
-  sorry
-
-fun abstract_prefix :: "finite_path \<Rightarrow> finite_path \<Rightarrow> bool" where
-  "abstract_prefix p1 p2 = True"
-
-
-lemma linear_finite_path_implies_linear_control_path: "
-  \<lbrakk>
-    finite (p_set);
-    p1 \<in> p_set; p2 \<in> p_set;
-    (abstract_prefix p1 p2 \<or> abstract_prefix p2 p1);
-    \<pi>\<^sub>1 \<in> (control_path_set p_set);
-    \<pi>\<^sub>2 \<in> (control_path_set p_set)
-  \<rbrakk> \<Longrightarrow>
-  prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2
-"
-  sorry
-**)
-
+done
 
     
 abbreviation a where "a \<equiv> Var ''a''"
