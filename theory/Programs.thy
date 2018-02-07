@@ -14,20 +14,34 @@ datatype finite_path =
   Concat finite_path finite_path |
   Star finite_path
 
+inductive matches_finite_path :: "finite_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
+ Empty: "
+   Empty \<cong> []
+ " |
+ Atom: "
+   (Atom l) \<cong> [l]
+ " |
+ Concat: "
+   \<lbrakk>
+     p1 \<cong> \<pi>1;
+     p2 \<cong> \<pi>2
+   \<rbrakk> \<Longrightarrow>
+   (Concat p1 p2) \<cong> (\<pi>1 @ \<pi>2)
+ " | 
+ Star_Empty: "
+   (Star p) \<cong> []
+ " |
+ Star: "
+   \<lbrakk>
+     p \<cong> \<pi>1;
+     (Star p) \<cong> \<pi>2
+   \<rbrakk> \<Longrightarrow>
+   (Star p) \<cong> (\<pi>1 @ \<pi>2)
+ " 
 
-fun control_path_set_from_finite_path :: "finite_path \<Rightarrow> control_path set" where
- "control_path_set_from_finite_path Empty = {[]}" | 
- "control_path_set_from_finite_path (Atom l) = {[l]}" |
- "control_path_set_from_finite_path (Concat p1 p2) = {\<pi>1 @ \<pi>2 | \<pi>1 \<pi>2 .
-   \<pi>1 \<in> (control_path_set_from_finite_path p1) \<and>
-   \<pi>2 \<in> (control_path_set_from_finite_path p2)
- }" |
- "control_path_set_from_finite_path (Star p) = {\<pi> | \<pi> .
-   \<pi> \<in> (control_path_set_from_finite_path p)  (** TO DO: how to represent star as infinite set**)
- }"
 
 fun control_path_set :: "finite_path set \<Rightarrow> control_path set" where
-  "control_path_set ps = UNION ps (\<lambda> p . control_path_set_from_finite_path p)"
+  "control_path_set ps = {\<pi> | \<pi> p. p \<in> ps \<and> p \<cong> \<pi>}"
 
 theorem reachable_paths_are_finitely_representable: "
   \<lbrakk> 
