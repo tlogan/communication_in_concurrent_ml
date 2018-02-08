@@ -145,9 +145,9 @@ RESULT Var ''g119''
 
 theorem infinite_prog_single_sender: "
    [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-   single_proc (send_paths \<E>' (Ch [] (Var ''g100'')))
+   noncompetitive (send_paths \<E>' (Ch [] (Var ''g100'')))
 "
-  apply (simp add: single_proc_def, (rule allI, rule impI)+)
+  apply (simp add: noncompetitive_def, (rule allI, rule impI)+)
   apply (frule send_paths_are_finitely_representable[of _ _ "(Ch [] (Var ''g100''))"])
   apply (frule send_paths_are_finitely_representable[of _ _ "(Ch [] (Var ''g100''))"])
   apply ((erule exE)+, (erule conjE)+, simp)
@@ -175,7 +175,7 @@ sorry
 
 theorem infinite_prog_single_receiver: "
   [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<longrightarrow>
-   single_proc (recv_paths \<E>' (Ch [] (Var ''g100'')))
+   noncompetitive (recv_paths \<E>' (Ch [] (Var ''g100'')))
 "
 sorry
 
@@ -242,16 +242,18 @@ sorry
 
 
 theorem infinite_prog_has_single_sender_communication_analysis: "
-  single_proc (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
+  noncompetitive (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
 "
-   apply (simp add: single_proc_def, auto)
+   apply (simp add: noncompetitive_def, auto)
    apply (simp add: abstract_send_paths_def, auto)
 sorry
 
 
 theorem infinite_prog_has_single_receiver_communication_analysis: "
-  single_proc (abstract_recv_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
+  noncompetitive (abstract_recv_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
 "
+ apply (simp add: noncompetitive_def)
+ apply (simp add: abstract_recv_paths_def)
 sorry
 
 theorem infinite_prog_has_one_to_one_communication_analysis: "

@@ -40,25 +40,25 @@ definition abstract_send_paths :: "(abstract_value_env \<times> abstract_value_e
   }"
 
 definition abstract_recv_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path set" where
-  "abstract_recv_paths \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {\<pi>\<^sub>y;;`x\<^sub>y | \<pi>\<^sub>y x\<^sub>y x\<^sub>e x\<^sub>r\<^sub>c e'. 
+  "abstract_recv_paths \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {\<pi>\<^sub>y;;`x\<^sub>y | \<pi>\<^sub>y x\<^sub>y x\<^sub>e x\<^sub>r\<^sub>c e' \<omega>. 
     \<V> \<turnstile> e \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e') \<and>
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
     {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e \<and>
-    \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y
+    {|\<omega>|} \<subseteq> \<V> x\<^sub>y
   }"
 
 
 definition abstract_one_shot :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_one_shot \<A> x\<^sub>c \<equiv> single_path (abstract_send_paths \<A> x\<^sub>c) \<and> single_path (abstract_recv_paths \<A> x\<^sub>c)"
+  "abstract_one_shot \<A> x\<^sub>c \<equiv> exclusive (abstract_send_paths \<A> x\<^sub>c) \<and> exclusive (abstract_recv_paths \<A> x\<^sub>c)"
 
 definition abstract_one_to_one :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_one_to_one \<A> x\<^sub>c \<equiv> single_proc (abstract_send_paths \<A> x\<^sub>c) \<and> single_proc (abstract_recv_paths \<A> x\<^sub>c)"
+  "abstract_one_to_one \<A> x\<^sub>c \<equiv> noncompetitive (abstract_send_paths \<A> x\<^sub>c) \<and> noncompetitive (abstract_recv_paths \<A> x\<^sub>c)"
 
 definition abstract_fan_out :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_fan_out \<A> x\<^sub>c \<equiv> single_proc (abstract_send_paths \<A> x\<^sub>c)"
+  "abstract_fan_out \<A> x\<^sub>c \<equiv> noncompetitive (abstract_send_paths \<A> x\<^sub>c)"
 
 definition abstract_fan_in :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_fan_in \<A> x\<^sub>c \<equiv> single_proc (abstract_recv_paths \<A> x\<^sub>c)"
+  "abstract_fan_in \<A> x\<^sub>c \<equiv> noncompetitive (abstract_recv_paths \<A> x\<^sub>c)"
 
 
 inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where

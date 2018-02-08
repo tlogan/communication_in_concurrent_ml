@@ -18,32 +18,52 @@ definition recv_paths :: "state_pool \<Rightarrow> chan \<Rightarrow> control_pa
     \<E> (\<pi>\<^sub>y;;`x\<^sub>y) = Some (\<langle>e; \<rho>(x\<^sub>y \<mapsto> \<omega>); \<kappa>\<rangle>)
   }"
 
-definition single_proc :: "control_path set \<Rightarrow> bool" where
-  "single_proc \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
+fun proc_legacy' where 
+  "proc_legacy' [] = []" |
+  "proc_legacy' (.x # xs) = (.x # xs)" |
+  "proc_legacy' (_ # xs) = proc_legacy' xs"
+
+fun proc_legacy :: "control_path \<Rightarrow> control_path" where
+  "proc_legacy \<pi> = rev (proc_legacy' (rev \<pi>))"
+
+
+
+fun proc_spawn' :: "control_path \<Rightarrow> (control_label list) \<Rightarrow> control_path" where
+  "proc_spawn' [] r = rev r" |
+  "proc_spawn' (.x # \<pi>) r = proc_spawn' \<pi> []" |
+  "proc_spawn' (l # \<pi>) r = proc_spawn' \<pi> (l # r)"
+
+fun proc_spawn :: "control_path \<Rightarrow> control_path" where
+  "proc_spawn \<pi> = proc_spawn' \<pi> []"
+
+
+definition noncompetitive  :: "control_path set \<Rightarrow> bool" where
+  "noncompetitive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
     \<pi>\<^sub>1 \<in> \<T> \<longrightarrow>
     \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
-    (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1)
+    proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
   )"
 
-definition single_path :: "control_path set \<Rightarrow> bool"  where
-  "single_path \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . 
+definition exclusive :: "control_path set \<Rightarrow> bool"  where
+  "exclusive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . 
     \<pi>\<^sub>1 \<in> \<T> \<longrightarrow> 
     \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
-    \<pi>\<^sub>1 = \<pi>\<^sub>2
+    \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> (proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<and> \<not>(prefix (proc_spawn \<pi>\<^sub>1) (proc_spawn \<pi>\<^sub>1)))
   )"
 
+
 definition one_shot :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "one_shot \<E> c \<equiv> single_path (send_paths \<E> c) \<and> single_path (recv_paths \<E> c)"
+  "one_shot \<E> c \<equiv> exclusive (send_paths \<E> c) \<and> exclusive (recv_paths \<E> c)"
 
 
 definition one_to_one :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "one_to_one \<E> c \<equiv> single_proc (send_paths \<E> c) \<and> single_proc (recv_paths \<E> c)"
+  "one_to_one \<E> c \<equiv> noncompetitive (send_paths \<E> c) \<and> noncompetitive (recv_paths \<E> c)"
   
 definition fan_out :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "fan_out \<E> c \<equiv> single_proc (send_paths \<E> c)"
+  "fan_out \<E> c \<equiv> noncompetitive (send_paths \<E> c)"
   
 definition fan_in :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "fan_in \<E> c \<equiv> single_proc (recv_paths \<E> c)"
+  "fan_in \<E> c \<equiv> noncompetitive (recv_paths \<E> c)"
 
 
 end
