@@ -186,20 +186,26 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
 "
 sorry
 
-
+(** this may be too strong to prove: **)
 lemma "
-\<lbrakk>
-  infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e);
-  infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y', LET x\<^sub>y' = SYNC x\<^sub>e' in e');
-  (\<forall> pr .  pr \<cong> (\<pi>\<^sub>y ;; `x\<^sub>y) \<and> pr \<cong> (\<pi>\<^sub>y' ;; `x\<^sub>y') \<longrightarrow>
+  \<lbrakk>
+    {\<pi> . pr \<cong> \<pi>} = \<T>;
     path_regex_noncompetitive pr
-  )
-\<rbrakk> \<Longrightarrow>
-proc_legacy' (rev \<pi>\<^sub>y) = proc_legacy' (rev \<pi>\<^sub>y') \<or>
-\<pi>\<^sub>y = \<pi>\<^sub>y' \<and> x\<^sub>y = x\<^sub>y' \<or> 
-prefix (\<pi>\<^sub>y ;; `x\<^sub>y) \<pi>\<^sub>y' \<or>
-\<pi>\<^sub>y' = \<pi>\<^sub>y \<and> x\<^sub>y' = x\<^sub>y \<or>
-prefix (\<pi>\<^sub>y' ;; `x\<^sub>y') \<pi>\<^sub>y
+  \<rbrakk> \<Longrightarrow>
+  noncompetitive \<T>
+"
+sorry
+
+
+(** maybe this is strong enough for the induction step, but still provable: **)
+lemma "
+  \<lbrakk>
+    pr \<cong> \<pi>\<^sub>1;
+    pr \<cong> \<pi>\<^sub>2;
+    path_regex_noncompetitive pr
+  \<rbrakk> \<Longrightarrow>
+  proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<or>
+  prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
 "
 sorry
 
