@@ -8,19 +8,32 @@ begin
 
 
 (* finite representation of paths *)
-datatype finite_path =
+datatype path_regex =
   Empty |
   Atom control_label |
-  Concat finite_path finite_path |
-  Star finite_path
+  Union path_regex path_regex |
+  Concat path_regex path_regex |
+  Star path_regex
 
-inductive matches_finite_path :: "finite_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
+inductive matches_path_regex :: "path_regex \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
  Empty: "
    Empty \<cong> []
  " |
  Atom: "
    (Atom l) \<cong> [l]
  " |
+  Union_Left: "
+   \<lbrakk>
+     p1 \<cong> \<pi>1
+   \<rbrakk> \<Longrightarrow>
+   (Union p1 p2) \<cong> \<pi>1
+ " | 
+ Union_Right: "
+   \<lbrakk>
+     p2 \<cong> \<pi>2
+   \<rbrakk> \<Longrightarrow>
+   (Union p1 p2) \<cong> \<pi>2
+ " | 
  Concat: "
    \<lbrakk>
      p1 \<cong> \<pi>1;
@@ -38,62 +51,6 @@ inductive matches_finite_path :: "finite_path \<Rightarrow> control_path \<Right
    \<rbrakk> \<Longrightarrow>
    (Star p) \<cong> (\<pi>1 @ \<pi>2)
  " 
-
-
-definition control_path_set :: "finite_path set \<Rightarrow> control_path set" where
-  "control_path_set ps = {\<pi> | \<pi> p. p \<in> ps \<and> p \<cong> \<pi>}"
-
-theorem reachable_paths_are_finitely_representable: "
-  \<lbrakk> 
-    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>
-  \<rbrakk> \<Longrightarrow>
-  \<exists> p_set . finite p_set \<and> {\<pi> | \<pi> \<sigma> . \<E> \<pi> = Some \<sigma>} = (control_path_set p_set)
-"
-sorry
-
-theorem send_paths_are_finitely_representable: "
-  \<lbrakk> 
-    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>
-  \<rbrakk> \<Longrightarrow>
-  \<exists> p_set . finite p_set \<and> (send_paths \<E> c) = (control_path_set p_set)
-"
-sorry
-
-theorem recv_paths_are_finitely_representable: "
-  \<lbrakk> 
-    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>
-  \<rbrakk> \<Longrightarrow>
-  \<exists> p_set . finite p_set \<and> (recv_paths \<E> c) = (control_path_set p_set)
-"
-sorry
-
-theorem abstract_reachable_paths_are_finitely_representable: "
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) 
-  \<Longrightarrow>
-  \<exists> p_set . finite (p_set) \<and> \<pi> \<in> (control_path_set p_set)
-"
-sorry
-
-fun finite_path_prefix :: "finite_path \<Rightarrow> finite_path \<Rightarrow> bool" where
-  "finite_path_prefix Empty _ = True" |
-  "finite_path_prefix _ Empty = False" |
-  "finite_path_prefix p1 (Concat p2a p2b) = (p1 = (Concat p2a p2b) \<or> finite_path_prefix p1 p2a)" |
-  "finite_path_prefix p1 p2 = (p1 = p2)"
-
-
-lemma ordered_finite_path_implies_ordered_control_path: "
-  \<lbrakk>
-    finite p_set;
-    (\<forall> p1 p2 . p1 \<in> p_set \<longrightarrow> p2 \<in> p_set \<longrightarrow>
-      (finite_path_prefix p1 p2 \<or> finite_path_prefix p2 p1)
-    );
-    \<pi>\<^sub>1 \<in> (control_path_set p_set);
-    \<pi>\<^sub>2 \<in> (control_path_set p_set)
-  \<rbrakk> \<Longrightarrow>
-  prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2
-"
-  sorry
-
 
 
 definition infinite_prog where
@@ -148,17 +105,6 @@ theorem infinite_prog_single_sender: "
    noncompetitive (send_paths \<E>' (Ch [] (Var ''g100'')))
 "
   apply (simp add: noncompetitive_def, (rule allI, rule impI)+)
-  apply (frule send_paths_are_finitely_representable[of _ _ "(Ch [] (Var ''g100''))"])
-  apply (frule send_paths_are_finitely_representable[of _ _ "(Ch [] (Var ''g100''))"])
-  apply ((erule exE)+, (erule conjE)+, simp)
-
-  apply (rule_tac p_set = "p_set" in ordered_finite_path_implies_ordered_control_path; auto)
-  apply (thin_tac "finite p_seta")
-  apply (thin_tac "control_path_set p_seta = control_path_set p_set"; auto)
-  apply (thin_tac "\<pi>\<^sub>1 \<in> control_path_set p_set")
-  apply (thin_tac "\<pi>\<^sub>2 \<in> control_path_set p_set"; auto)
-  apply (simp add: control_path_set_def)
-  apply (simp add: send_paths_def)
  
 (* strategy:
   step thru one iteration of loop.
@@ -241,11 +187,31 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
 sorry
 
 
+lemma "
+\<lbrakk>
+  infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e);
+  infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y', LET x\<^sub>y' = SYNC x\<^sub>e' in e');
+  (\<forall> pr .  pr \<cong> (\<pi>\<^sub>y ;; `x\<^sub>y) \<and> pr \<cong> (\<pi>\<^sub>y' ;; `x\<^sub>y') \<longrightarrow>
+    path_regex_noncompetitive pr
+  )
+\<rbrakk> \<Longrightarrow>
+proc_legacy' (rev \<pi>\<^sub>y) = proc_legacy' (rev \<pi>\<^sub>y') \<or>
+\<pi>\<^sub>y = \<pi>\<^sub>y' \<and> x\<^sub>y = x\<^sub>y' \<or> 
+prefix (\<pi>\<^sub>y ;; `x\<^sub>y) \<pi>\<^sub>y' \<or>
+\<pi>\<^sub>y' = \<pi>\<^sub>y \<and> x\<^sub>y' = x\<^sub>y \<or>
+prefix (\<pi>\<^sub>y' ;; `x\<^sub>y') \<pi>\<^sub>y
+"
+sorry
+
+
 theorem infinite_prog_has_single_sender_communication_analysis: "
   noncompetitive (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
 "
-   apply (simp add: noncompetitive_def, auto)
-   apply (simp add: abstract_send_paths_def, auto)
+   apply (simp add: noncompetitive_def)
+   apply (simp add: abstract_send_paths_def)
+   apply (rule allI, rule impI)+
+   apply ((erule exE)+, (erule conjE)+)+
+   apply (simp, thin_tac "\<pi>\<^sub>1 = \<pi>\<^sub>y ;; `x\<^sub>y ", thin_tac "\<pi>\<^sub>2 = \<pi>\<^sub>y' ;; `x\<^sub>y'")
 sorry
 
 
@@ -253,7 +219,7 @@ theorem infinite_prog_has_single_receiver_communication_analysis: "
   noncompetitive (abstract_recv_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
 "
  apply (simp add: noncompetitive_def)
- apply (simp add: abstract_recv_paths_def)
+ apply (simp add: abstract_recv_paths_def, auto)
 sorry
 
 theorem infinite_prog_has_one_to_one_communication_analysis: "
@@ -263,18 +229,6 @@ theorem infinite_prog_has_one_to_one_communication_analysis: "
  apply (simp add: infinite_prog_has_single_sender_communication_analysis)
  apply (simp add: infinite_prog_has_single_receiver_communication_analysis)
 done
-
-    
-abbreviation a where "a \<equiv> Var ''a''"
-abbreviation b where "b \<equiv> Var ''b''"
-abbreviation c where "c \<equiv> Var ''c''"
-abbreviation d where "d \<equiv> Var ''d''"
-abbreviation e where "e \<equiv> Var ''e''"
-abbreviation f where "f \<equiv> Var ''f''"
-abbreviation w where "w \<equiv> Var ''w''"
-abbreviation x where "x \<equiv> Var ''x''"
-abbreviation y where "y \<equiv> Var ''y''"
-abbreviation z where "z \<equiv> Var ''z''"
 
 
 method condition_split = (
@@ -305,6 +259,18 @@ method topo_solve =
     (erule seq_step.cases),
     (condition_split | leaf_elim_search)+
   )
+
+    
+abbreviation a where "a \<equiv> Var ''a''"
+abbreviation b where "b \<equiv> Var ''b''"
+abbreviation c where "c \<equiv> Var ''c''"
+abbreviation d where "d \<equiv> Var ''d''"
+abbreviation e where "e \<equiv> Var ''e''"
+abbreviation f where "f \<equiv> Var ''f''"
+abbreviation w where "w \<equiv> Var ''w''"
+abbreviation x where "x \<equiv> Var ''x''"
+abbreviation y where "y \<equiv> Var ''y''"
+abbreviation z where "z \<equiv> Var ''z''"
 
 definition prog_one where 
   "prog_one = 
