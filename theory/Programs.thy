@@ -7,49 +7,51 @@ theory Programs
 begin
 
 
-(* finite representation of paths *)
-datatype path_regex =
+(* abstract representation of paths *)
+datatype abstract_path =
   Empty |
+  Cons consee abstract_path 
+and consee = 
   Atom control_label |
-  Union path_regex path_regex |
-  Concat path_regex path_regex |
-  Star path_regex
+  Union abstract_path abstract_path |
+  Star abstract_path
 
-inductive matches_path_regex :: "path_regex \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
+inductive matches_abstract_path :: "abstract_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
  Empty: "
    Empty \<cong> []
  " |
- Atom: "
-   (Atom l) \<cong> [l]
+ Cons_Atom: "
+   \<lbrakk>
+     pr \<cong> \<pi>
+   \<rbrakk> \<Longrightarrow>
+   Cons (Atom l) pr \<cong> (l # \<pi>)
  " |
-  Union_Left: "
-   \<lbrakk>
-     p1 \<cong> \<pi>1
-   \<rbrakk> \<Longrightarrow>
-   (Union p1 p2) \<cong> \<pi>1
- " | 
- Union_Right: "
-   \<lbrakk>
-     p2 \<cong> \<pi>2
-   \<rbrakk> \<Longrightarrow>
-   (Union p1 p2) \<cong> \<pi>2
- " | 
- Concat: "
+ Cons_Union_Left: "
    \<lbrakk>
      p1 \<cong> \<pi>1;
-     p2 \<cong> \<pi>2
+     pr \<cong> \<pi>
    \<rbrakk> \<Longrightarrow>
-   (Concat p1 p2) \<cong> (\<pi>1 @ \<pi>2)
+   Cons (Union p1 p2) pr \<cong> \<pi>1 @ \<pi>
  " | 
- Star_Empty: "
-   (Star p) \<cong> []
+ Cons_Union_Right: "
+   \<lbrakk>
+     p2 \<cong> \<pi>2;
+     pr \<cong> \<pi>
+   \<rbrakk> \<Longrightarrow>
+   Cons (Union p1 p2) pr \<cong> \<pi>2 @ \<pi>
+ " |
+ Cons_Star_Empty: "
+   \<lbrakk>
+     pr \<cong> \<pi>
+   \<rbrakk> \<Longrightarrow>
+   Cons (Star p) pr \<cong> \<pi>
  " |
  Star: "
    \<lbrakk>
      p \<cong> \<pi>1;
-     (Star p) \<cong> \<pi>2
+     Cons (Star p) pr \<cong> \<pi>
    \<rbrakk> \<Longrightarrow>
-   (Star p) \<cong> (\<pi>1 @ \<pi>2)
+   Cons (Star p) pr \<cong> (\<pi>1 @ \<pi>)
  " 
 
 
@@ -186,11 +188,18 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
 "
 sorry
 
+inductive pr_noncompetitive :: "abstract_path \<Rightarrow> bool" where
+ Empty: "
+   pr_noncompetitive Empty
+ " 
+
+fun common_prefix :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> abstract_path" where
+  "common_prefix () "
 (** this may be too strong to prove: **)
 lemma "
   \<lbrakk>
     {\<pi> . pr \<cong> \<pi>} = \<T>;
-    path_regex_noncompetitive pr
+    abstract_path_noncompetitive pr
   \<rbrakk> \<Longrightarrow>
   noncompetitive \<T>
 "
@@ -202,7 +211,7 @@ lemma "
   \<lbrakk>
     pr \<cong> \<pi>\<^sub>1;
     pr \<cong> \<pi>\<^sub>2;
-    path_regex_noncompetitive pr
+    abstract_path_noncompetitive pr
   \<rbrakk> \<Longrightarrow>
   proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<or>
   prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1

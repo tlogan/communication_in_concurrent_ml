@@ -257,15 +257,15 @@ inductive linear :: "control_path \<Rightarrow> bool"("``_``" [0]55) where
   Empty[simp]: "
     ``[]``
   " |
-  Linear[simp]: "
+  Seq_Cons[simp]: "
     ``\<pi>`` \<Longrightarrow>
     `` (`x # \<pi>) ``
   " |
-  Up[simp]: "
+  Up_Cons[simp]: "
     ``\<pi>`` \<Longrightarrow>
     `` (\<upharpoonleft>x # \<pi>) ``
   " |
-  Down[simp]: "
+  Down_Cons[simp]: "
     ``\<pi>`` \<Longrightarrow>
     `` (\<downharpoonleft>x # \<pi>) ``
   " 
