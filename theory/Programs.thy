@@ -115,10 +115,9 @@ inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
 (** this may be too strong to prove: **)
 lemma "
   \<lbrakk>
-    {\<pi> . ap |\<rhd> \<pi>} = \<T>;
-    abstract_path_noncompetitive pr
+    ap_noncompetitive ap
   \<rbrakk> \<Longrightarrow>
-  noncompetitive \<T>
+  noncompetitive {\<pi> . ap |\<rhd> \<pi>}
 "
 sorry
 
@@ -128,7 +127,7 @@ lemma "
   \<lbrakk>
     ap |\<rhd> \<pi>\<^sub>1;
     ap |\<rhd> \<pi>\<^sub>2;
-    abstract_path_noncompetitive pr
+    ap_noncompetitive ap
   \<rbrakk> \<Longrightarrow>
   proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<or>
   prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
