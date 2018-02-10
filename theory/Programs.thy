@@ -16,44 +16,124 @@ and consee =
   Union abstract_path abstract_path |
   Star abstract_path
 
-inductive matches_abstract_path :: "abstract_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
+inductive matches_abstract_path :: "abstract_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "|\<rhd>" 55) where
  Empty: "
-   Empty \<cong> []
+   Empty |\<rhd> []
  " |
  Cons_Atom: "
    \<lbrakk>
-     pr \<cong> \<pi>
+     ap |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
-   Cons (Atom l) pr \<cong> (l # \<pi>)
+   Cons (Atom l) ap |\<rhd> (l # \<pi>)
  " |
  Cons_Union_Left: "
    \<lbrakk>
-     p1 \<cong> \<pi>1;
-     pr \<cong> \<pi>
+     p1 |\<rhd> \<pi>1;
+     ap |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
-   Cons (Union p1 p2) pr \<cong> \<pi>1 @ \<pi>
+   Cons (Union p1 p2) ap |\<rhd> \<pi>1 @ \<pi>
  " | 
  Cons_Union_Right: "
    \<lbrakk>
-     p2 \<cong> \<pi>2;
-     pr \<cong> \<pi>
+     p2 |\<rhd> \<pi>2;
+     ap |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
-   Cons (Union p1 p2) pr \<cong> \<pi>2 @ \<pi>
+   Cons (Union p1 p2) ap |\<rhd> \<pi>2 @ \<pi>
  " |
  Cons_Star_Empty: "
    \<lbrakk>
-     pr \<cong> \<pi>
+     ap |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
-   Cons (Star p) pr \<cong> \<pi>
+   Cons (Star p) ap |\<rhd> \<pi>
  " |
  Star: "
    \<lbrakk>
-     p \<cong> \<pi>1;
-     Cons (Star p) pr \<cong> \<pi>
+     p |\<rhd> \<pi>1;
+     Cons (Star p) ap |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
-   Cons (Star p) pr \<cong> (\<pi>1 @ \<pi>)
+   Cons (Star p) ap |\<rhd> (\<pi>1 @ \<pi>)
  " 
 
+
+inductive ap_linear :: "abstract_path \<Rightarrow> bool" where
+ Empty: "
+   ap_linear Empty
+ " |
+ Cons_Atom_Seq: "
+   \<lbrakk>
+     ap_linear ap
+   \<rbrakk> \<Longrightarrow> 
+   ap_linear (Cons (Atom (`x)) ap)
+ " |
+ Cons_Atom_Up: "
+   \<lbrakk>
+     ap_linear ap
+   \<rbrakk> \<Longrightarrow> 
+   ap_linear (Cons (Atom (\<upharpoonleft>x)) ap)
+ " |
+ Cons_Atom_Down: "
+   \<lbrakk>
+     ap_linear ap
+   \<rbrakk> \<Longrightarrow> 
+   ap_linear (Cons (Atom (\<downharpoonleft>x)) ap)
+ " |
+ Cons_Union: "
+   \<lbrakk>
+     ap_linear p1;
+     ap_linear p2;
+     ap_linear ap
+   \<rbrakk> \<Longrightarrow> 
+   ap_linear (Cons (Union p1 p2) ap)
+ "
+
+inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
+ Empty: "
+   ap_noncompetitive Empty
+ " |
+ Cons_Atom: "
+   \<lbrakk>
+     ap_noncompetitive ap
+   \<rbrakk> \<Longrightarrow>
+   ap_noncompetitive (Cons (Atom l) ap)
+ " |
+ Cons_Union: "
+   \<lbrakk>
+     p1 = p2 \<or> (ap_linear p1 \<and> ap_linear p2);
+     ap_noncompetitive ap
+   \<rbrakk> \<Longrightarrow>
+   ap_noncompetitive (Cons (Union p1 p2) ap)
+ " |
+ Cons_Star: "
+   \<lbrakk>
+     ap_noncompetitive p;
+     ap_noncompetitive ap
+   \<rbrakk> \<Longrightarrow>
+   ap_noncompetitive (Cons (Star p) ap)
+ "
+
+
+(** this may be too strong to prove: **)
+lemma "
+  \<lbrakk>
+    {\<pi> . ap |\<rhd> \<pi>} = \<T>;
+    abstract_path_noncompetitive pr
+  \<rbrakk> \<Longrightarrow>
+  noncompetitive \<T>
+"
+sorry
+
+
+(** maybe this is strong enough for the induction step, but still provable: **)
+lemma "
+  \<lbrakk>
+    ap |\<rhd> \<pi>\<^sub>1;
+    ap |\<rhd> \<pi>\<^sub>2;
+    abstract_path_noncompetitive pr
+  \<rbrakk> \<Longrightarrow>
+  proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<or>
+  prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+"
+sorry
 
 definition infinite_prog where
   "infinite_prog \<equiv> normalize (
@@ -187,37 +267,6 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
   (infinite_prog_\<V>, infinite_prog_\<C>) \<Turnstile>\<^sub>e infinite_prog 
 "
 sorry
-
-inductive pr_noncompetitive :: "abstract_path \<Rightarrow> bool" where
- Empty: "
-   pr_noncompetitive Empty
- " 
-
-fun common_prefix :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> abstract_path" where
-  "common_prefix () "
-(** this may be too strong to prove: **)
-lemma "
-  \<lbrakk>
-    {\<pi> . pr \<cong> \<pi>} = \<T>;
-    abstract_path_noncompetitive pr
-  \<rbrakk> \<Longrightarrow>
-  noncompetitive \<T>
-"
-sorry
-
-
-(** maybe this is strong enough for the induction step, but still provable: **)
-lemma "
-  \<lbrakk>
-    pr \<cong> \<pi>\<^sub>1;
-    pr \<cong> \<pi>\<^sub>2;
-    abstract_path_noncompetitive pr
-  \<rbrakk> \<Longrightarrow>
-  proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<or>
-  prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
-"
-sorry
-
 
 theorem infinite_prog_has_single_sender_communication_analysis: "
   noncompetitive (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
