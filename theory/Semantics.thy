@@ -166,4 +166,58 @@ abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> 
 fun start_state :: "exp \<Rightarrow> state_pool" where
  "start_state e = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]"
 
+
+
+
+inductive path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
+  Empty[simp]: "
+    \<downharpoonright>[]\<upharpoonleft>
+  " |
+  Linear[simp]: "
+    \<downharpoonright>[`x]\<upharpoonleft>
+  " |
+  Up_Down[simp]: "
+    \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow>
+    \<downharpoonright> (\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x)) \<upharpoonleft>
+  " |
+  Append[simp]: "
+    \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow>
+    \<downharpoonright> (\<pi> @ \<pi>') \<upharpoonleft>
+  "
+  
+
+inductive linear :: "control_path \<Rightarrow> bool"("``_``" [0]55) where
+  Empty[simp]: "
+    ``[]``
+  " |
+  Seq_Cons[simp]: "
+    ``\<pi>`` \<Longrightarrow>
+    `` (`x # \<pi>) ``
+  " |
+  Up_Cons[simp]: "
+    ``\<pi>`` \<Longrightarrow>
+    `` (\<upharpoonleft>x # \<pi>) ``
+  " |
+  Down_Cons[simp]: "
+    ``\<pi>`` \<Longrightarrow>
+    `` (\<downharpoonleft>x # \<pi>) ``
+  " 
+
+lemma linear_preserved_over_linear_extension': "
+  ``\<pi>`` \<Longrightarrow> ``\<pi>'`` \<longrightarrow> ``\<pi> @ \<pi>'``
+"
+ apply (erule linear.induct; auto)
+done
+
+lemma  linear_preserved_over_linear_extension[simp]: "
+  ``\<pi>`` \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> ``\<pi> @ \<pi>'``
+"
+by (simp add: linear_preserved_over_linear_extension')
+
+lemma up_down_balanced[simp]: "
+   \<downharpoonright>[\<upharpoonleft>x, \<downharpoonleft>x] \<upharpoonleft>
+"
+using Up_Down path_balanced.Empty by fastforce
+
+
 end

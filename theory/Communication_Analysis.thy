@@ -18,6 +18,8 @@ definition recv_paths :: "state_pool \<Rightarrow> chan \<Rightarrow> control_pa
     \<E> (\<pi>\<^sub>y;;`x\<^sub>y) = Some (\<langle>e; \<rho>(x\<^sub>y \<mapsto> \<omega>); \<kappa>\<rangle>)
   }"
 
+
+(*
 fun proc_legacy' where 
   "proc_legacy' [] = []" |
   "proc_legacy' (.x # xs) = (.x # xs)" |
@@ -25,8 +27,22 @@ fun proc_legacy' where
 
 fun proc_legacy :: "control_path \<Rightarrow> control_path" where
   "proc_legacy \<pi> = rev (proc_legacy' (rev \<pi>))"
+*)
 
 
+inductive same_proc :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
+  Lin[simp]: "
+    \<lbrakk>
+      ``\<pi>\<^sub>1``; ``\<pi>\<^sub>2``
+    \<rbrakk> \<Longrightarrow>
+    \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
+  " |
+  Cons[simp]: "
+    \<lbrakk>
+      \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
+    \<rbrakk> \<Longrightarrow>
+    l # \<pi>\<^sub>1 \<cong> l # \<pi>\<^sub>2 
+  "
 
 fun proc_spawn' :: "control_path \<Rightarrow> (control_label list) \<Rightarrow> control_path" where
   "proc_spawn' [] r = rev r" |
@@ -41,14 +57,14 @@ definition noncompetitive  :: "control_path set \<Rightarrow> bool" where
   "noncompetitive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
     \<pi>\<^sub>1 \<in> \<T> \<longrightarrow>
     \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
-    proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+    \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
   )"
 
 definition exclusive :: "control_path set \<Rightarrow> bool"  where
   "exclusive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . 
     \<pi>\<^sub>1 \<in> \<T> \<longrightarrow> 
     \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
-    \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> (proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<and> \<not>(prefix (proc_spawn \<pi>\<^sub>1) (proc_spawn \<pi>\<^sub>1)))
+    \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> (\<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<and> \<not>(prefix (proc_spawn \<pi>\<^sub>1) (proc_spawn \<pi>\<^sub>1)))
   )"
 
 

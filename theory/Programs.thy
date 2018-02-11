@@ -16,37 +16,37 @@ and consee =
   Union abstract_path abstract_path |
   Star abstract_path
 
-inductive matches_abstract_path :: "abstract_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "|\<rhd>" 55) where
- Empty: "
+inductive ap_matches :: "abstract_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "|\<rhd>" 55) where
+ Empty[simp]: "
    Empty |\<rhd> []
  " |
- Cons_Atom: "
+ Cons_Atom[simp]: "
    \<lbrakk>
      ap |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
    Cons (Atom l) ap |\<rhd> (l # \<pi>)
  " |
- Cons_Union_Left: "
+ Cons_Union_Left[simp]: "
    \<lbrakk>
      p1 |\<rhd> \<pi>1;
      ap |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
    Cons (Union p1 p2) ap |\<rhd> \<pi>1 @ \<pi>
  " | 
- Cons_Union_Right: "
+ Cons_Union_Right[simp]: "
    \<lbrakk>
      p2 |\<rhd> \<pi>2;
      ap |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
    Cons (Union p1 p2) ap |\<rhd> \<pi>2 @ \<pi>
  " |
- Cons_Star_Empty: "
+ Cons_Star_Empty[simp]: "
    \<lbrakk>
      ap |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
    Cons (Star p) ap |\<rhd> \<pi>
  " |
- Star: "
+ Star[simp]: "
    \<lbrakk>
      p |\<rhd> \<pi>1;
      Cons (Star p) ap |\<rhd> \<pi>
@@ -113,6 +113,7 @@ inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
 
 
 (** this may be too strong to prove: **)
+(*
 lemma "
   \<lbrakk>
     ap_noncompetitive ap
@@ -120,19 +121,44 @@ lemma "
   noncompetitive {\<pi> . ap |\<rhd> \<pi>}
 "
 sorry
+*)
+
+
+lemma abstract_noncompetitve_implies': "
+  \<lbrakk>
+    ap_noncompetitive ap
+  \<rbrakk> \<Longrightarrow>
+  (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
+    ap |\<rhd> \<pi>\<^sub>1 \<longrightarrow>
+    ap |\<rhd> \<pi>\<^sub>2 \<longrightarrow>
+    \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or>
+    prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+ )
+"
+ apply (erule ap_noncompetitive.induct)
+    apply ((rule allI)+; (rule impI)+; erule ap_matches.cases; blast)
+   apply ((rule allI)+; (rule impI)+)
+   apply (
+     erule ap_matches.cases; erule ap_matches.cases; auto; rename_tac ap \<pi>\<^sub>1 l \<pi>\<^sub>2
+   )
+   apply (drule_tac x = "\<pi>\<^sub>1" in spec, simp)
+   apply (drule_tac x = "\<pi>\<^sub>2" in spec, simp)
+   using same_proc.Cons apply blast
+sorry
 
 
 (** maybe this is strong enough for the induction step, but still provable: **)
-lemma "
+lemma abstract_noncompetitve_implies: "
   \<lbrakk>
     ap |\<rhd> \<pi>\<^sub>1;
     ap |\<rhd> \<pi>\<^sub>2;
     ap_noncompetitive ap
   \<rbrakk> \<Longrightarrow>
-  proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<or>
+  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or>
   prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
 "
-sorry
+  apply (drule abstract_noncompetitve_implies'; blast)
+done
 
 definition infinite_prog where
   "infinite_prog \<equiv> normalize (
