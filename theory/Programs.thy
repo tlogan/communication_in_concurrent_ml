@@ -131,6 +131,29 @@ lemma ap_linear_implies_linear : "
 "
 sorry
 
+lemma noncomp_star_linear_implies_same_proc:"
+  \<lbrakk>
+    ap_noncompetitive p;
+    ap_linear p;
+    Star p |\<rhd> \<pi>\<^sub>1; 
+    Star p |\<rhd> \<pi>\<^sub>2
+  \<rbrakk> \<Longrightarrow> 
+  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
+"
+sorry
+
+lemma noncomp_star_nonlinear_implies_same_proc:"
+  \<lbrakk>
+    ap_noncompetitive p;
+    \<not> (ap_linear p);
+    Star p |\<rhd> \<pi>\<^sub>1; 
+    Star p |\<rhd> \<pi>\<^sub>2
+  \<rbrakk> \<Longrightarrow> 
+  prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+"
+sorry
+
+
 lemma abstract_noncompetitve_implies': "
   \<lbrakk>
     ap_noncompetitive ap
@@ -151,8 +174,7 @@ lemma abstract_noncompetitve_implies': "
      using Lin ap_linear_implies_linear apply blast
     using Lin ap_linear_implies_linear apply blast
    using Lin ap_linear_implies_linear apply blast
-  apply (erule ap_matches.cases; erule ap_matches.cases; clarsimp)
-  apply (rename_tac p \<pi>\<^sub>1 \<pi>\<^sub>1' \<pi>\<^sub>2 \<pi>\<^sub>2')
+  using noncomp_star_linear_implies_same_proc noncomp_star_nonlinear_implies_same_proc apply blast
 sorry
 
 
