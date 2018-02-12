@@ -94,13 +94,12 @@ inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
  Atom: "
    ap_noncompetitive (Atom l)
  " |
- Union_Concat: "
+ Union: "
    \<lbrakk>
-     ap_noncompetitive p;
      ap_linear p\<^sub>a;
      ap_linear p\<^sub>b
    \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (Union (Concat p p\<^sub>a) (Concat p p\<^sub>b))
+   ap_noncompetitive (Union p\<^sub>a p\<^sub>b)
  " |
  Star: "
    \<lbrakk>
