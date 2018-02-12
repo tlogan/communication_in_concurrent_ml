@@ -107,13 +107,27 @@ inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
    \<rbrakk> \<Longrightarrow>
    ap_noncompetitive (Star p)
  " |
- Concat: "
+ Concat_Lin: "
    \<lbrakk>
-     ap_noncompetitive p\<^sub>a;
-     ap_noncompetitive p\<^sub>b
+     ap_linear p\<^sub>a;
+     ap_linear p\<^sub>b
    \<rbrakk> \<Longrightarrow>
    ap_noncompetitive (Concat p\<^sub>a p\<^sub>b)
- "
+ " | 
+ Concat_Split: "
+   \<lbrakk>
+     ap_noncompetitive p\<^sub>a; \<not> (ap_linear p\<^sub>a);
+     ap_linear p\<^sub>b
+   \<rbrakk> \<Longrightarrow>
+   ap_noncompetitive (Concat p\<^sub>a p\<^sub>b)
+ " | 
+ Concat_Nonlin: "
+   \<lbrakk>
+     ap_noncompetitive p\<^sub>a; \<not> (ap_linear p\<^sub>a);
+     ap_noncompetitive p\<^sub>b; \<not> (ap_linear p\<^sub>b)
+   \<rbrakk> \<Longrightarrow>
+   ap_noncompetitive (Concat p\<^sub>a p\<^sub>b)
+ " 
 
 
 (** this may be too strong to prove: **)
@@ -153,28 +167,37 @@ lemma noncomp_star_nonlinear_implies_same_proc:"
 "
 sorry
 
-
-lemma abstract_noncompetitve_implies': "
-  \<lbrakk>
-    ap_noncompetitive ap
-  \<rbrakk> \<Longrightarrow>
-  (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
-    ap |\<rhd> \<pi>\<^sub>1 \<longrightarrow>
-    ap |\<rhd> \<pi>\<^sub>2 \<longrightarrow>
-    \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or>
-    prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
- )
+lemma concat_lin: "
+  \<lbrakk> 
+    ap_linear p\<^sub>a;
+    ap_linear p\<^sub>b;
+    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>1;
+    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>2 
+  \<rbrakk> \<Longrightarrow> 
+  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
 "
+sorry
 
- apply (erule ap_noncompetitive.induct; (rule allI)+; (rule impI)+)
-    apply (erule ap_matches.cases; blast)
-   apply (erule ap_matches.cases; erule ap_matches.cases; clarify)
-  apply (erule ap_matches.cases; erule ap_matches.cases; auto; rename_tac p\<^sub>a \<pi>\<^sub>1 p\<^sub>b \<pi>\<^sub>2; erule_tac P = "\<pi>\<^sub>1 \<cong> \<pi>\<^sub>2" in notE)
-      using Lin ap_linear_implies_linear apply blast
-     using Lin ap_linear_implies_linear apply blast
-    using Lin ap_linear_implies_linear apply blast
-   using Lin ap_linear_implies_linear apply blast
-  using noncomp_star_linear_implies_same_proc noncomp_star_nonlinear_implies_same_proc apply blast
+lemma concat_split: "
+  \<lbrakk> 
+    ap_noncompetitive p\<^sub>a; \<not> (ap_linear p\<^sub>a);
+    ap_linear p\<^sub>b;
+    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>1;
+    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>2 
+  \<rbrakk> \<Longrightarrow> 
+  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
+"
+sorry
+
+lemma concat_nonlin: "
+  \<lbrakk> 
+    ap_noncompetitive p\<^sub>a; \<not> (ap_linear p\<^sub>a);
+    ap_noncompetitive p\<^sub>a; \<not> (ap_linear p\<^sub>b);
+    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>1;
+    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>2 
+  \<rbrakk> \<Longrightarrow> 
+    prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+"
 sorry
 
 
@@ -188,7 +211,14 @@ lemma abstract_noncompetitve_implies: "
   \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or>
   prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
 "
-  apply (drule abstract_noncompetitve_implies'; blast)
+ apply (erule ap_noncompetitive.cases; auto)
+  apply (erule ap_matches.cases; blast)
+  apply (erule ap_matches.cases; erule ap_matches.cases; blast)
+  using Lin ap_linear.Union ap_linear_implies_linear apply blast
+  using noncomp_star_linear_implies_same_proc noncomp_star_nonlinear_implies_same_proc apply blast
+  using concat_lin apply blast
+  using concat_split apply blast
+  using concat_nonlin apply blast
 done
 
 definition infinite_prog where
