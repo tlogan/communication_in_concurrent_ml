@@ -126,7 +126,10 @@ lemma "
 "
 sorry
 *)
-
+lemma ap_linear_implies_linear : "
+  ap_linear p \<Longrightarrow> p |\<rhd> \<pi> \<Longrightarrow> ``\<pi>``
+"
+sorry
 
 lemma abstract_noncompetitve_implies': "
   \<lbrakk>
@@ -143,6 +146,13 @@ lemma abstract_noncompetitve_implies': "
  apply (erule ap_noncompetitive.induct; (rule allI)+; (rule impI)+)
     apply (erule ap_matches.cases; blast)
    apply (erule ap_matches.cases; erule ap_matches.cases; clarify)
+  apply (erule ap_matches.cases; erule ap_matches.cases; auto; rename_tac p\<^sub>a \<pi>\<^sub>1 p\<^sub>b \<pi>\<^sub>2; erule_tac P = "\<pi>\<^sub>1 \<cong> \<pi>\<^sub>2" in notE)
+      using Lin ap_linear_implies_linear apply blast
+     using Lin ap_linear_implies_linear apply blast
+    using Lin ap_linear_implies_linear apply blast
+   using Lin ap_linear_implies_linear apply blast
+  apply (erule ap_matches.cases; erule ap_matches.cases; clarsimp)
+  apply (rename_tac p \<pi>\<^sub>1 \<pi>\<^sub>1' \<pi>\<^sub>2 \<pi>\<^sub>2')
 sorry
 
 
