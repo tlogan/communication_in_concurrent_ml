@@ -157,6 +157,20 @@ lemma abstract_noncompetitve_implies': "
     apply (rename_tac \<pi>\<^sub>1 \<pi>\<^sub>1' \<pi>\<^sub>2 ap \<pi>\<^sub>2' p)
     apply (drule_tac x = "\<pi>\<^sub>2" in spec)
     apply (drule_tac x = "\<pi>\<^sub>2'" in spec; auto)
+   apply (erule ap_matches.cases; auto)
+  apply (erule ap_matches.cases; clarsimp)
+   apply (rename_tac \<pi>\<^sub>2 \<pi>\<^sub>2' \<pi>\<^sub>1 ap \<pi>\<^sub>1' p)
+   apply (drule_tac x = "\<pi>\<^sub>1" in spec)
+   apply (drule_tac x = "\<pi>\<^sub>1'" in spec, clarsimp)
+   apply (drule_tac x = "\<pi>\<^sub>2" in spec)
+   apply (drule_tac x = "\<pi>\<^sub>2'" in spec, clarsimp)
+  apply (rename_tac \<pi>\<^sub>2 \<pi>\<^sub>2' p \<pi>\<^sub>1 ap \<pi>\<^sub>1')
+   apply (drule_tac x = "\<pi>\<^sub>1" in spec)
+   apply (drule_tac x = "\<pi>\<^sub>1'" in spec, clarsimp)
+   apply (drule_tac x = "\<pi>\<^sub>2" in spec)
+   apply (drule_tac x = "\<pi>\<^sub>2'" in spec, clarsimp)
+   
+   
 
 sorry
 

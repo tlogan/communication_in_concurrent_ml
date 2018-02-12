@@ -49,6 +49,11 @@ theorem same_proc_preserved_under_concat[simp]: "
 "
 by (induct \<pi>; auto)
 
+theorem same_proc_commutative[simp]: "
+  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>2 \<cong> \<pi>\<^sub>1
+"
+by (erule same_proc.induct; auto)
+
 fun proc_spawn' :: "control_path \<Rightarrow> (control_label list) \<Rightarrow> control_path" where
   "proc_spawn' [] r = rev r" |
   "proc_spawn' (.x # \<pi>) r = proc_spawn' \<pi> []" |
