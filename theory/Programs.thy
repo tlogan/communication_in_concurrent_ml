@@ -17,43 +17,42 @@ and consee =
   Star abstract_path
 
 inductive ap_matches :: "abstract_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "|\<rhd>" 55) where
- Empty[simp]: "
+ Empty: "
    Empty |\<rhd> []
  " |
- Cons_Atom[simp]: "
+ Cons_Atom: "
    \<lbrakk>
      ap |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
    Cons (Atom l) ap |\<rhd> (l # \<pi>)
  " |
- Cons_Union_Left[simp]: "
+ Cons_Union_Left: "
    \<lbrakk>
-     p1 |\<rhd> \<pi>1;
-     ap |\<rhd> \<pi>
+     p\<^sub>1 |\<rhd> \<pi>;
+     ap |\<rhd> \<pi>'
    \<rbrakk> \<Longrightarrow>
-   Cons (Union p1 p2) ap |\<rhd> \<pi>1 @ \<pi>
+   Cons (Union p\<^sub>1 p\<^sub>2) ap |\<rhd> \<pi> @ \<pi>'
  " | 
- Cons_Union_Right[simp]: "
+  Cons_Union_Right: "
    \<lbrakk>
-     p2 |\<rhd> \<pi>2;
-     ap |\<rhd> \<pi>
+     p\<^sub>2 |\<rhd> \<pi>;
+     ap |\<rhd> \<pi>'
    \<rbrakk> \<Longrightarrow>
-   Cons (Union p1 p2) ap |\<rhd> \<pi>2 @ \<pi>
- " |
+   Cons (Union p\<^sub>1 p\<^sub>2) ap |\<rhd> \<pi> @ \<pi>'
+ " | 
  Cons_Star_Empty[simp]: "
    \<lbrakk>
-     ap |\<rhd> \<pi>
+     ap |\<rhd> \<pi>'
    \<rbrakk> \<Longrightarrow>
-   Cons (Star p) ap |\<rhd> \<pi>
+   Cons (Star p) ap |\<rhd> \<pi>'
  " |
- Star[simp]: "
+ Star: "
    \<lbrakk>
-     p |\<rhd> \<pi>1;
-     Cons (Star p) ap |\<rhd> \<pi>
+     p |\<rhd> \<pi>;
+     Cons (Star p) ap |\<rhd> \<pi>'
    \<rbrakk> \<Longrightarrow>
-   Cons (Star p) ap |\<rhd> (\<pi>1 @ \<pi>)
+   Cons (Star p) ap |\<rhd> (\<pi> @ \<pi>')
  " 
-
 
 inductive ap_linear :: "abstract_path \<Rightarrow> bool" where
  Empty: "
@@ -79,11 +78,11 @@ inductive ap_linear :: "abstract_path \<Rightarrow> bool" where
  " |
  Cons_Union: "
    \<lbrakk>
-     ap_linear p1;
-     ap_linear p2;
+     ap_linear p\<^sub>1;
+     ap_linear p\<^sub>2;
      ap_linear ap
    \<rbrakk> \<Longrightarrow> 
-   ap_linear (Cons (Union p1 p2) ap)
+   ap_linear (Cons (Union p\<^sub>1 p\<^sub>2) ap)
  "
 
 inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
@@ -96,12 +95,21 @@ inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
    \<rbrakk> \<Longrightarrow>
    ap_noncompetitive (Cons (Atom l) ap)
  " |
- Cons_Union: "
+ Cons_Union_Refl: "
    \<lbrakk>
-     p1 = p2 \<or> (ap_linear p1 \<and> ap_linear p2);
+     (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . p |\<rhd> \<pi>\<^sub>1 \<longrightarrow> p |\<rhd> \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2);
      ap_noncompetitive ap
    \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (Cons (Union p1 p2) ap)
+   ap_noncompetitive (Cons (Union p p) ap)
+ " |
+ Cons_Union_Lin: "
+   \<lbrakk>
+     p\<^sub>1 \<noteq> p\<^sub>2;
+     ap_linear p\<^sub>1; 
+     ap_linear p\<^sub>2;
+     ap_noncompetitive ap
+   \<rbrakk> \<Longrightarrow>
+   ap_noncompetitive (Cons (Union p\<^sub>1 p\<^sub>2) ap)
  " |
  Cons_Star: "
    \<lbrakk>
@@ -135,15 +143,29 @@ lemma abstract_noncompetitve_implies': "
     prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
  )
 "
- apply (erule ap_noncompetitive.induct)
-    apply ((rule allI)+; (rule impI)+; erule ap_matches.cases; blast)
-   apply ((rule allI)+; (rule impI)+)
-   apply (
-     erule ap_matches.cases; erule ap_matches.cases; auto; rename_tac ap \<pi>\<^sub>1 l \<pi>\<^sub>2
-   )
+
+ apply (erule ap_noncompetitive.induct; (rule allI)+; (rule impI)+)
+    apply (erule ap_matches.cases; blast)
+   apply (erule ap_matches.cases; auto; rename_tac \<pi>\<^sub>2 ap \<pi>\<^sub>1' l)
+   apply (drule_tac x = "\<pi>\<^sub>1'" in spec, simp)
+   apply (erule ap_matches.cases; fastforce)
+  apply (erule ap_matches.cases; clarify; simp)
+   apply (rename_tac \<pi>\<^sub>2 \<pi>\<^sub>1 ap \<pi>\<^sub>1' p)
+   apply (drule_tac x = "\<pi>\<^sub>1" in spec)
+   apply (drule_tac x = "\<pi>\<^sub>1'" in spec; clarify)
+    apply (erule ap_matches.cases; clarify; simp)
+    apply (rename_tac \<pi>\<^sub>1 \<pi>\<^sub>1' \<pi>\<^sub>2 ap \<pi>\<^sub>2' p)
+    apply (drule_tac x = "\<pi>\<^sub>2" in spec)
+    apply (drule_tac x = "\<pi>\<^sub>2'" in spec; clarify; auto)
+(*
+   apply (rename_tac \<pi>\<^sub>2 p\<^sub>1 \<pi>\<^sub>1 p\<^sub>2 ap \<pi>\<^sub>1')
+   apply (drule_tac x = "\<pi>\<^sub>1'" in spec, simp)
    apply (drule_tac x = "\<pi>\<^sub>1" in spec, simp)
-   apply (drule_tac x = "\<pi>\<^sub>2" in spec, simp)
-   using same_proc.Cons apply blast
+   apply (erule ap_matches.cases; auto)
+   apply (rename_tac \<pi>\<^sub>1 \<pi>\<^sub>1' p\<^sub>1 \<pi>\<^sub>2 p\<^sub>2 ap \<pi>\<^sub>2')
+   apply (drule_tac x = "\<pi>\<^sub>2'" in spec, simp)
+   apply (thin_tac "\<forall>\<pi>\<^sub>2. p\<^sub>2 |\<rhd> \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2")
+*)
 sorry
 
 
