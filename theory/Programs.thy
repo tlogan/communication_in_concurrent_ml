@@ -10,113 +10,110 @@ begin
 (* abstract representation of paths *)
 datatype abstract_path =
   Empty |
-  Cons consee abstract_path 
-and consee = 
   Atom control_label |
   Union abstract_path abstract_path |
-  Star abstract_path
+  Star abstract_path |
+  Concat abstract_path abstract_path 
+
 
 inductive ap_matches :: "abstract_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "|\<rhd>" 55) where
  Empty: "
    Empty |\<rhd> []
  " |
- Cons_Atom: "
-   \<lbrakk>
-     ap |\<rhd> \<pi>
-   \<rbrakk> \<Longrightarrow>
-   Cons (Atom l) ap |\<rhd> (l # \<pi>)
+ Atom: "
+   Atom l |\<rhd> [l]
  " |
- Cons_Union_Left: "
+ Union_Left: "
    \<lbrakk>
-     p\<^sub>1 |\<rhd> \<pi>;
-     ap |\<rhd> \<pi>'
+     p\<^sub>a |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
-   Cons (Union p\<^sub>1 p\<^sub>2) ap |\<rhd> \<pi> @ \<pi>'
+   Union p\<^sub>a p\<^sub>b |\<rhd> \<pi>
  " | 
-  Cons_Union_Right: "
+ Union_Right: "
    \<lbrakk>
-     p\<^sub>2 |\<rhd> \<pi>;
-     ap |\<rhd> \<pi>'
+     p\<^sub>b |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
-   Cons (Union p\<^sub>1 p\<^sub>2) ap |\<rhd> \<pi> @ \<pi>'
+   Union p\<^sub>a p\<^sub>b |\<rhd> \<pi>
  " | 
- Cons_Star_Empty[simp]: "
-   \<lbrakk>
-     ap |\<rhd> \<pi>'
-   \<rbrakk> \<Longrightarrow>
-   Cons (Star p) ap |\<rhd> \<pi>'
+ Star_Empty[simp]: "
+   Star p |\<rhd> []
  " |
  Star: "
    \<lbrakk>
-     p |\<rhd> \<pi>;
-     Cons (Star p) ap |\<rhd> \<pi>'
+     Star p |\<rhd> \<pi>;
+     p |\<rhd> \<pi>'
    \<rbrakk> \<Longrightarrow>
-   Cons (Star p) ap |\<rhd> (\<pi> @ \<pi>')
+   Star p |\<rhd> \<pi> @ \<pi>'
+ " |
+ Concat: "
+   \<lbrakk>
+     p\<^sub>a |\<rhd> \<pi>\<^sub>a;
+     p\<^sub>b |\<rhd> \<pi>\<^sub>b
+   \<rbrakk> \<Longrightarrow>
+   Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>a @ \<pi>\<^sub>b
  " 
 
 inductive ap_linear :: "abstract_path \<Rightarrow> bool" where
  Empty: "
    ap_linear Empty
  " |
- Cons_Atom_Seq: "
-   \<lbrakk>
-     ap_linear ap
-   \<rbrakk> \<Longrightarrow> 
-   ap_linear (Cons (Atom (`x)) ap)
+ Atom_Seq: "
+   ap_linear (Atom (`x))
  " |
- Cons_Atom_Up: "
-   \<lbrakk>
-     ap_linear ap
-   \<rbrakk> \<Longrightarrow> 
-   ap_linear (Cons (Atom (\<upharpoonleft>x)) ap)
+ Atom_Up: "
+   ap_linear (Atom (\<upharpoonleft>x))
  " |
- Cons_Atom_Down: "
-   \<lbrakk>
-     ap_linear ap
-   \<rbrakk> \<Longrightarrow> 
-   ap_linear (Cons (Atom (\<downharpoonleft>x)) ap)
+ Atom_Down: "
+   ap_linear (Atom (\<downharpoonleft>x))
  " |
- Cons_Union: "
+ Union: "
    \<lbrakk>
-     ap_linear p\<^sub>1;
-     ap_linear p\<^sub>2;
-     ap_linear ap
+     ap_linear p\<^sub>a;
+     ap_linear p\<^sub>b
    \<rbrakk> \<Longrightarrow> 
-   ap_linear (Cons (Union p\<^sub>1 p\<^sub>2) ap)
+   ap_linear (Union p\<^sub>a p\<^sub>b)
+ " |
+ Star: "
+   \<lbrakk>
+     ap_linear p
+   \<rbrakk> \<Longrightarrow> 
+   ap_linear (Star p)
+ " |
+ Concat: "
+   \<lbrakk>
+     ap_linear p\<^sub>a;
+     ap_linear p\<^sub>b
+   \<rbrakk> \<Longrightarrow> 
+   ap_linear (Concat p\<^sub>a p\<^sub>b)
  "
 
 inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
  Empty: "
    ap_noncompetitive Empty
  " |
- Cons_Atom: "
-   \<lbrakk>
-     ap_noncompetitive ap
-   \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (Cons (Atom l) ap)
+ Atom: "
+   ap_noncompetitive (Atom l)
  " |
- Cons_Union_Refl: "
-   \<lbrakk>
-     (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . p |\<rhd> \<pi>\<^sub>1 \<longrightarrow> p |\<rhd> \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2);
-     ap_noncompetitive ap
-   \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (Cons (Union p p) ap)
- " |
- Cons_Union_Lin: "
-   \<lbrakk>
-     p\<^sub>1 \<noteq> p\<^sub>2;
-     ap_linear p\<^sub>1; 
-     ap_linear p\<^sub>2;
-     ap_noncompetitive ap
-   \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (Cons (Union p\<^sub>1 p\<^sub>2) ap)
- " |
- Cons_Star: "
+ Union_Concat: "
    \<lbrakk>
      ap_noncompetitive p;
-     ap_noncompetitive ap
+     ap_linear p\<^sub>a;
+     ap_linear p\<^sub>b
    \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (Cons (Star p) ap)
+   ap_noncompetitive (Union (Concat p p\<^sub>a) (Concat p p\<^sub>b))
+ " |
+ Star: "
+   \<lbrakk>
+     ap_noncompetitive p
+   \<rbrakk> \<Longrightarrow>
+   ap_noncompetitive (Star p)
+ " |
+ Concat: "
+   \<lbrakk>
+     ap_noncompetitive p\<^sub>a;
+     ap_noncompetitive p\<^sub>b
+   \<rbrakk> \<Longrightarrow>
+   ap_noncompetitive (Concat p\<^sub>a p\<^sub>b)
  "
 
 
@@ -146,32 +143,7 @@ lemma abstract_noncompetitve_implies': "
 
  apply (erule ap_noncompetitive.induct; (rule allI)+; (rule impI)+)
     apply (erule ap_matches.cases; blast)
-   apply (erule ap_matches.cases; auto; rename_tac \<pi>\<^sub>2 ap \<pi>\<^sub>1' l)
-   apply (drule_tac x = "\<pi>\<^sub>1'" in spec, simp)
-   apply (erule ap_matches.cases; fastforce)
-  apply (erule ap_matches.cases; clarify; simp)
-   apply (rename_tac \<pi>\<^sub>2 \<pi>\<^sub>1 ap \<pi>\<^sub>1' p)
-   apply (drule_tac x = "\<pi>\<^sub>1" in spec)
-   apply (drule_tac x = "\<pi>\<^sub>1'" in spec; clarify)
-    apply (erule ap_matches.cases; clarify; simp)
-    apply (rename_tac \<pi>\<^sub>1 \<pi>\<^sub>1' \<pi>\<^sub>2 ap \<pi>\<^sub>2' p)
-    apply (drule_tac x = "\<pi>\<^sub>2" in spec)
-    apply (drule_tac x = "\<pi>\<^sub>2'" in spec; auto)
-   apply (erule ap_matches.cases; auto)
-  apply (erule ap_matches.cases; clarsimp)
-   apply (rename_tac \<pi>\<^sub>2 \<pi>\<^sub>2' \<pi>\<^sub>1 ap \<pi>\<^sub>1' p)
-   apply (drule_tac x = "\<pi>\<^sub>1" in spec)
-   apply (drule_tac x = "\<pi>\<^sub>1'" in spec, clarsimp)
-   apply (drule_tac x = "\<pi>\<^sub>2" in spec)
-   apply (drule_tac x = "\<pi>\<^sub>2'" in spec, clarsimp)
-  apply (rename_tac \<pi>\<^sub>2 \<pi>\<^sub>2' p \<pi>\<^sub>1 ap \<pi>\<^sub>1')
-   apply (drule_tac x = "\<pi>\<^sub>1" in spec)
-   apply (drule_tac x = "\<pi>\<^sub>1'" in spec, clarsimp)
-   apply (drule_tac x = "\<pi>\<^sub>2" in spec)
-   apply (drule_tac x = "\<pi>\<^sub>2'" in spec, clarsimp)
-   
-   
-
+   apply (erule ap_matches.cases; erule ap_matches.cases; clarify)
 sorry
 
 
