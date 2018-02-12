@@ -44,6 +44,11 @@ inductive same_proc :: "control_path \<Rightarrow> control_path \<Rightarrow> bo
     l # \<pi>\<^sub>1 \<cong> l # \<pi>\<^sub>2 
   "
 
+theorem same_proc_preserved_under_concat[simp]: "
+  \<pi>\<^sub>1' \<cong> \<pi>\<^sub>2' \<Longrightarrow> \<pi> @ \<pi>\<^sub>1' \<cong> \<pi> @ \<pi>\<^sub>2'
+"
+by (induct \<pi>; auto)
+
 fun proc_spawn' :: "control_path \<Rightarrow> (control_label list) \<Rightarrow> control_path" where
   "proc_spawn' [] r = rev r" |
   "proc_spawn' (.x # \<pi>) r = proc_spawn' \<pi> []" |
