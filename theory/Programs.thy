@@ -348,6 +348,16 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
  apply (rule; simp?)+
 done
 
+method condition_split = (
+  match premises in 
+    I: "(if P then _ else _) = Some _" for P \<Rightarrow> \<open>cases P\<close>
+, auto)
+
+method set_condition_split = (
+  match premises in 
+    I: "_ \<in> (if P then _ else _)" for P \<Rightarrow> \<open>cases P\<close>
+, auto)
+
 lemma abc': "
   \<V> \<turnstile> e\<^sub>0 \<down> p \<Longrightarrow> 
   (\<forall> \<pi>\<^sub>y x\<^sub>y x\<^sub>e e\<^sub>n x\<^sub>s\<^sub>c x\<^sub>m.
@@ -360,8 +370,10 @@ lemma abc': "
   )
 "
  apply (erule traceable.induct; auto)
- apply (unfold infinite_prog_\<V>_def infinite_prog_\<C>_def infinite_prog_def infinite_prog_send_g100_abstract_path_def)
+ apply (unfold infinite_prog_\<V>_def infinite_prog_def infinite_prog_\<C>_def infinite_prog_send_g100_abstract_path_def)
  apply auto
+ apply (drule spec, erule impE)+
+ apply (set_condition_split)+
 sorry
 
 lemma abc: "
@@ -406,10 +418,7 @@ theorem infinite_prog_has_one_to_one_communication_analysis: "
 done
 
 
-method condition_split = (
-  match premises in 
-    I: "(if P then _ else _) = Some _" for P \<Rightarrow> \<open>cases P\<close>
-, auto)
+
 
 
 method leaf_elim_loop for m :: state_pool and stpool :: state_pool and l :: control_path uses I = (
