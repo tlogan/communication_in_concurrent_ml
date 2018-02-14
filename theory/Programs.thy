@@ -348,11 +348,29 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
  apply (rule; simp?)+
 done
 
+lemma abc': "
+  \<V> \<turnstile> e\<^sub>0 \<down> p \<Longrightarrow> 
+  (\<forall> \<pi>\<^sub>y x\<^sub>y x\<^sub>e e\<^sub>n x\<^sub>s\<^sub>c x\<^sub>m.
+    \<V> = infinite_prog_\<V> \<longrightarrow> e\<^sub>0 = infinite_prog \<longrightarrow> p = (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<longrightarrow>
+    ^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c \<longrightarrow>
+    ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e \<longrightarrow>
+    ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y \<longrightarrow>
+    infinite_prog_\<V> x\<^sub>m \<subseteq> infinite_prog_\<C> g100 \<longrightarrow> 
+    infinite_prog_send_g100_abstract_path |\<rhd> \<pi>\<^sub>y ;; `x\<^sub>y
+  )
+"
+ apply (erule traceable.induct; auto)
+ apply (unfold infinite_prog_\<V>_def infinite_prog_\<C>_def infinite_prog_def infinite_prog_send_g100_abstract_path_def)
+ apply auto
+sorry
+
 lemma abc: "
   \<pi> \<in> abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100 \<Longrightarrow> 
-  infinite_prog_abstract_path |\<rhd> \<pi>
+  infinite_prog_send_g100_abstract_path |\<rhd> \<pi>
 "
-sorry
+ apply (simp add: abstract_send_paths_def; clarsimp)
+ apply (insert abc', blast)
+done
 
 lemma xyz: "
   ap_noncompetitive infinite_prog_send_g100_abstract_path
