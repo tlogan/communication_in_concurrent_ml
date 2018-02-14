@@ -242,9 +242,9 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT _); 
       \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = _ in e')
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = _ in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # (\<pi>';;\<downharpoonleft>x), e')
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
   " |
   Let_App: "
     \<lbrakk>
@@ -275,48 +275,48 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   " |
   Let_Spawn: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SPAWN _ in e')
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SPAWN _ in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e')
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
   Let_Unit: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = \<lparr>\<rparr> in e')
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = \<lparr>\<rparr> in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e')
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
   Let_Chan: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CHAN \<lparr>\<rparr> in e')
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CHAN \<lparr>\<rparr> in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e')
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
   Let_Sync: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SYNC _ in e');
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SYNC _ in e\<^sub>n);
       |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e')
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
   Let_Fst: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = FST _ in e');
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = FST _ in e\<^sub>n);
       |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e')
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
   Let_Snd: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SND _ in e');
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SND _ in e\<^sub>n);
       |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e')
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
   Let_Prim: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = Prim _ in e')
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = Prim _ in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e')
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   "
 
 inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> cont list) \<Rightarrow> bool" ("_ \<tturnstile> _ \<downharpoonleft>\<downharpoonright> _" [56,0,56]55)  where

@@ -107,27 +107,13 @@ inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
    \<rbrakk> \<Longrightarrow>
    ap_noncompetitive (Star p)
  " |
- Concat_Lin: "
+ Concat: "
    \<lbrakk>
-     ap_linear p\<^sub>a;
-     ap_linear p\<^sub>b
+     ap_noncompetitive p\<^sub>a;
+     ap_noncompetitive p\<^sub>b
    \<rbrakk> \<Longrightarrow>
    ap_noncompetitive (Concat p\<^sub>a p\<^sub>b)
- " | 
- Concat_Split: "
-   \<lbrakk>
-     ap_noncompetitive p\<^sub>a; \<not> (ap_linear p\<^sub>a);
-     ap_linear p\<^sub>b
-   \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (Concat p\<^sub>a p\<^sub>b)
- " | 
- Concat_Nonlin: "
-   \<lbrakk>
-     ap_noncompetitive p\<^sub>a; \<not> (ap_linear p\<^sub>a);
-     ap_noncompetitive p\<^sub>b; \<not> (ap_linear p\<^sub>b)
-   \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (Concat p\<^sub>a p\<^sub>b)
- " 
+ "
 
 
 (** this may be too strong to prove: **)
@@ -167,44 +153,12 @@ lemma noncomp_star_nonlinear_implies_same_proc:"
 "
 sorry
 
-lemma concat_lin: "
-  \<lbrakk> 
-    ap_linear p\<^sub>a;
-    ap_linear p\<^sub>b;
-    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>1;
-    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>2 
-  \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
-"
-sorry
-
-lemma concat_split: "
-  \<lbrakk> 
-    ap_noncompetitive p\<^sub>a; \<not> (ap_linear p\<^sub>a);
-    ap_linear p\<^sub>b;
-    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>1;
-    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>2 
-  \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
-"
-sorry
-
-lemma concat_nonlin: "
-  \<lbrakk> 
-    ap_noncompetitive p\<^sub>a; \<not> (ap_linear p\<^sub>a);
-    ap_noncompetitive p\<^sub>a; \<not> (ap_linear p\<^sub>b);
-    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>1;
-    Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>2 
-  \<rbrakk> \<Longrightarrow> 
-    prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
-"
-sorry
-
 
 (** maybe this is strong enough for the induction step, but still provable: **)
 lemma abstract_noncompetitve_implies: "
   \<lbrakk>
-    ap |\<rhd> \<pi>\<^sub>1 \<and> ap |\<rhd> \<pi>\<^sub>2 \<and>
+    ap |\<rhd> \<pi>\<^sub>1;
+    ap |\<rhd> \<pi>\<^sub>2;
     ap_noncompetitive ap
   \<rbrakk> \<Longrightarrow>
   \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or>
@@ -216,9 +170,7 @@ lemma abstract_noncompetitve_implies: "
   apply (erule ap_matches.cases; erule ap_matches.cases; blast)
   using Lin ap_linear.Union ap_linear_implies_linear apply blast
   using noncomp_star_linear_implies_same_proc noncomp_star_nonlinear_implies_same_proc apply blast
-  using concat_lin apply blast
-  using concat_split apply blast
-  using concat_nonlin apply blast
+  apply (metis Star_Empty ap_matches.Star ap_noncompetitive.simps append_Nil noncomp_star_linear_implies_same_proc noncomp_star_nonlinear_implies_same_proc)
 done
 
 
@@ -292,19 +244,18 @@ definition infinite_prog where
     RESULT g119
   )"
 
-definition infinite_prog_abstract_path :: abstract_path where
-  "infinite_prog_abstract_path \<equiv> 
-    &`g100 :@: (
-      &`g101 :@: (
-        &`g110 :@: &`g119
-      :|:
-        &.g110 :@: &`g111 :@: &`g117 :@: 
-        &\<upharpoonleft>g118 :@: {&`g114 :@: &`g115 :@: &\<upharpoonleft>g116}*
-      )
-    :|:
-      &.g101 :@: &`g102 :@: &`g108 :@:
-      &\<upharpoonleft>g109 :@: {&`g105 :@: &`g106 :@: &\<upharpoonleft>g107}*
-    )
+definition infinite_prog_send_g100_abstract_path :: abstract_path where
+  "infinite_prog_send_g100_abstract_path \<equiv> 
+    &`g100 :@:
+    &.g101 :@: &`g102 :@: &`g108 :@:
+    &\<upharpoonleft>g109 :@: &`g105 :@: &`g106 :@: {&\<upharpoonleft>g107 :@: &`g105 :@: &`g106}*
+  "
+
+definition infinite_prog_recv_g100_abstract_path :: abstract_path where
+  "infinite_prog_recv_g100_abstract_path \<equiv> 
+    &`g100 :@: &`g101 :@:
+    &.g110 :@: &`g111 :@: &`g117 :@: 
+    &\<upharpoonleft>g118 :@: &`g114 :@: &`g115 :@: {&\<upharpoonleft>g116 :@: &`g114 :@: &`g115}*
   "
 
 theorem infinite_prog_single_sender: "
@@ -397,35 +348,28 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
  apply (rule; simp?)+
 done
 
-theorem infinite_prog_has_single_sender_communication_analysis': "
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>y, e) \<Longrightarrow>
-  e = LET x\<^sub>y = SYNC x\<^sub>e in e' \<longrightarrow> \<V> = infinite_prog_\<V> \<longrightarrow> e\<^sub>0 = infinite_prog \<longrightarrow>
-  infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y', LET x\<^sub>y' = SYNC x\<^sub>e' in e'a) \<longrightarrow>
-  ^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c \<longrightarrow>
-  ^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c' \<longrightarrow>
-  ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e \<longrightarrow>
-  ^Send_Evt x\<^sub>s\<^sub>c' x\<^sub>m' \<in> infinite_prog_\<V> x\<^sub>e' \<longrightarrow>
-  ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y \<longrightarrow>
-  infinite_prog_\<V> x\<^sub>m \<subseteq> infinite_prog_\<C> g100 \<longrightarrow>
-  ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y' \<longrightarrow>
-  infinite_prog_\<V> x\<^sub>m' \<subseteq> infinite_prog_\<C> g100 \<longrightarrow>
-
-  infinite_prog_abstract_path |\<rhd> \<pi>\<^sub>y ;; `x\<^sub>y \<and>
-  infinite_prog_abstract_path |\<rhd> \<pi>\<^sub>y' ;; `x\<^sub>y' \<and> ap_noncompetitive infinite_prog_abstract_path
+lemma abc: "
+  \<pi> \<in> abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100 \<Longrightarrow> 
+  infinite_prog_abstract_path |\<rhd> \<pi>
 "
- apply (erule traceable.induct; auto; erule traceable.cases; auto)
- apply (unfold infinite_prog_\<V>_def infinite_prog_\<C>_def infinite_prog_def infinite_prog_abstract_path_def)
 sorry
+
+lemma xyz: "
+  ap_noncompetitive infinite_prog_send_g100_abstract_path
+"
+ apply (simp add: infinite_prog_send_g100_abstract_path_def)
+ apply (rule; simp?)+
+done
 
 theorem infinite_prog_has_single_sender_communication_analysis: "
   noncompetitive (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100)
 "
    apply (simp add: noncompetitive_def, (rule allI, rule impI)+)
-   apply (rule abstract_noncompetitve_implies[of infinite_prog_abstract_path])
-   apply (simp add: abstract_send_paths_def)
-   apply ((erule exE)+, (erule conjE)+)+
-   apply (simp, thin_tac "\<pi>\<^sub>1 = \<pi>\<^sub>y ;; `x\<^sub>y ", thin_tac "\<pi>\<^sub>2 = \<pi>\<^sub>y' ;; `x\<^sub>y'")
-sorry
+   apply (rule abstract_noncompetitve_implies[of infinite_prog_send_g100_abstract_path])
+   apply (simp add: abc)
+   apply (simp add: abc)
+   apply (simp add: xyz)
+done
 
 
 theorem infinite_prog_has_single_receiver_communication_analysis: "
