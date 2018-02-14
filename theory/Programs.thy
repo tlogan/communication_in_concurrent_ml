@@ -10,10 +10,10 @@ begin
 (* abstract representation of paths *)
 datatype abstract_path =
   Empty |
-  Atom control_label |
-  Union abstract_path abstract_path |
-  Star abstract_path |
-  Concat abstract_path abstract_path 
+  Atom control_label ("&_" [66]66) |
+  Union abstract_path abstract_path (infixr ":|:" 64) |
+  Star abstract_path ("{_}*" [0]66) |
+  Concat abstract_path abstract_path (infixr ":@:" 65)
 
 
 inductive ap_matches :: "abstract_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "|\<rhd>" 55) where
@@ -204,16 +204,12 @@ sorry
 (** maybe this is strong enough for the induction step, but still provable: **)
 lemma abstract_noncompetitve_implies: "
   \<lbrakk>
-    (\<exists> ap .
-      ap |\<rhd> \<pi>\<^sub>1 \<and>
-      ap |\<rhd> \<pi>\<^sub>2 \<and>
-      ap_noncompetitive ap
-    )
+    ap |\<rhd> \<pi>\<^sub>1; ap |\<rhd> \<pi>\<^sub>2;
+    ap_noncompetitive ap
   \<rbrakk> \<Longrightarrow>
   \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or>
   prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
 "
- apply (auto)
  apply (erule ap_noncompetitive.cases; auto)
   apply (erule ap_matches.cases; blast)
   apply (erule ap_matches.cases; erule ap_matches.cases; blast)
@@ -224,59 +220,84 @@ lemma abstract_noncompetitve_implies: "
   using concat_nonlin apply blast
 done
 
+
+abbreviation g100 where "g100 \<equiv> Var ''g100''"
+abbreviation g101 where "g101 \<equiv> Var ''g101''"
+abbreviation g102 where "g102 \<equiv> Var ''g102''"
+abbreviation g103 where "g103 \<equiv> Var ''g103''"
+abbreviation g104 where "g104 \<equiv> Var ''g104''"
+abbreviation g105 where "g105 \<equiv> Var ''g105''"
+abbreviation g106 where "g106 \<equiv> Var ''g106''"
+abbreviation g107 where "g107 \<equiv> Var ''g107''"
+abbreviation g108 where "g108 \<equiv> Var ''g108''"
+abbreviation g109 where "g109 \<equiv> Var ''g109''"
+abbreviation g110 where "g110 \<equiv> Var ''g110''"
+abbreviation g111 where "g111 \<equiv> Var ''g111''"
+abbreviation g112 where "g112 \<equiv> Var ''g112''"
+abbreviation g113 where "g113 \<equiv> Var ''g113''"
+abbreviation g114 where "g114 \<equiv> Var ''g114''"
+abbreviation g115 where "g115 \<equiv> Var ''g115''"
+abbreviation g116 where "g116 \<equiv> Var ''g116''"
+abbreviation g117 where "g117 \<equiv> Var ''g117''"
+abbreviation g118 where "g118 \<equiv> Var ''g118''"
+abbreviation g119 where "g119 \<equiv> Var ''g119''"
+abbreviation g120 where "g120 \<equiv> Var ''g120''"
+
 (*
 normalize (
-  $LET (Var ''ch'') = $CHAN \<lparr>\<rparr> in
-  $LET (Var ''u'') = $SPAWN (
-    $APP ($FN (Var ''f'') (Var ''x'') .
-      $LET (Var ''u'') = $SYNC ($SEND EVT ($(Var ''ch'')) ($(Var ''x''))) in  
-      ($APP ($(Var ''f'')) ($(Var ''x'')))  
+  $LET ch = $CHAN \<lparr>\<rparr> in
+  $LET u = $SPAWN (
+    $APP ($FN f x .
+      $LET u = $SYNC ($SEND EVT ($ch) ($x)) in  
+      ($APP ($f) ($x))  
     ) $\<lparr>\<rparr>
   ) in
-  $LET (Var ''u'') = $SPAWN (
-    $APP ($FN (Var ''f'') (Var ''x'') .
-      $LET (Var ''r'') = $SYNC ($RECV EVT ($(Var ''ch''))) in  
-      ($APP ($(Var ''f'')) ($(Var ''x'')))  
+  $LET u = $SPAWN (
+    $APP ($FN f x .
+      $LET r = $SYNC ($RECV EVT ($ch)) in  
+      ($APP ($f) ($x))  
     ) $\<lparr>\<rparr>
   ) in
   $\<lparr>\<rparr>
 )"
 *)
 
-
 definition infinite_prog where
   "infinite_prog \<equiv> (
-    LET Var ''g100'' = CHAN \<lparr>\<rparr> in 
-    LET Var ''g101'' = SPAWN 
-      LET Var ''g102'' = FN (Var ''g103'') (Var ''g104'') . 
-        LET Var ''g105'' = SEND EVT (Var ''g100'') (Var ''g104'') in 
-        LET Var ''g106'' = SYNC (Var ''g105'') in 
-        LET Var ''g107'' = APP (Var ''g103'') (Var ''g104'') in 
+    LET g100 = CHAN \<lparr>\<rparr> in 
+    LET g101 = SPAWN 
+      LET g102 = FN g103 g104 . 
+        LET g105 = SEND EVT g100 g104 in 
+        LET g106 = SYNC g105 in 
+        LET g107 = APP g103 g104 in 
         RESULT Var (''g107'') 
       in 
-      LET Var ''g108'' = \<lparr>\<rparr> in 
-      LET Var ''g109'' = APP (Var ''g102'') (Var ''g108'') in 
-      RESULT Var ''g109'' 
+      LET g108 = \<lparr>\<rparr> in 
+      LET g109 = APP g102 g108 in 
+      RESULT g109 
     in 
-    LET Var ''g110'' = SPAWN 
-      LET Var ''g111'' = FN (Var ''g112'') (Var ''g113'') . 
-        LET Var ''g114'' = RECV EVT (Var ''g100'') in 
-        LET Var ''g115'' = SYNC (Var ''g114'') in 
-        LET Var ''g116'' = APP (Var ''g112'') (Var ''g113'') in 
-        RESULT Var ''g116'' 
+    LET g110 = SPAWN 
+      LET g111 = FN g112 g113 . 
+        LET g114 = RECV EVT g100 in 
+        LET g115 = SYNC g114 in 
+        LET g116 = APP g112 g113 in 
+        RESULT g116 
       in 
-      LET Var ''g117'' = \<lparr>\<rparr> in 
-      LET Var ''g118'' = APP (Var ''g111'') (Var ''g117'') in 
-      RESULT Var ''g118'' 
+      LET g117 = \<lparr>\<rparr> in 
+      LET g118 = APP g111 g117 in 
+      RESULT g118 
     in 
-    LET Var ''g119'' = \<lparr>\<rparr> in 
-    RESULT Var ''g119''
+    LET g119 = \<lparr>\<rparr> in 
+    RESULT g119
   )"
+
+
+value "&`g100 :@: &`g100 :@: { &`g100 :|: {&`g100}* }*"
 
 
 theorem infinite_prog_single_sender: "
    [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-   noncompetitive (send_paths \<E>' (Ch [] (Var ''g100'')))
+   noncompetitive (send_paths \<E>' (Ch [] g100))
 "
   apply (simp add: noncompetitive_def, (rule allI, rule impI)+)
  
@@ -295,14 +316,14 @@ sorry
 
 theorem infinite_prog_single_receiver: "
   [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<longrightarrow>
-   noncompetitive (recv_paths \<E>' (Ch [] (Var ''g100'')))
+   noncompetitive (recv_paths \<E>' (Ch [] g100))
 "
 sorry
 
 theorem "
   start_state infinite_prog \<rightarrow>* \<E>' 
   \<Longrightarrow>
-  one_to_one \<E>' (Ch [] (Var ''g100''))
+  one_to_one \<E>' (Ch [] g100)
 "
   apply (simp add: one_to_one_def, auto)
   using infinite_prog_single_sender apply blast
@@ -312,48 +333,48 @@ done
 
 definition infinite_prog_\<V> :: "abstract_value_env" where 
   "infinite_prog_\<V> \<equiv> (\<lambda> _ . {})(
-    Var ''g100'' := {^Chan (Var ''g100'')}, 
+    g100 := {^Chan g100}, 
 
-    Var ''g101'' := {^\<lparr>\<rparr>},
-    Var ''g102'' := {^(Abs (Var ''g103'') (Var ''g104'') (
-      LET Var ''g105'' = SEND EVT (Var ''g100'') (Var ''g104'') in 
-      LET Var ''g106'' = SYNC Var ''g105'' in 
-      LET Var ''g107'' = APP (Var ''g103'') (Var ''g104'') in 
-      RESULT Var ''g107'' 
+    g101 := {^\<lparr>\<rparr>},
+    g102 := {^(Abs g103 g104 (
+      LET g105 = SEND EVT g100 g104 in 
+      LET g106 = SYNC g105 in 
+      LET g107 = APP g103 g104 in 
+      RESULT g107 
     ))},
-    Var ''g103'' := {^(Abs (Var ''g103'') (Var ''g104'') (
-      LET Var ''g105'' = SEND EVT (Var ''g100'') (Var ''g104'') in 
-      LET Var ''g106'' = SYNC Var ''g105'' in 
-      LET Var ''g107'' = APP (Var ''g103'') (Var ''g104'') in 
-      RESULT Var ''g107''
-    ))}, Var ''g104'' := {^\<lparr>\<rparr>},
-    Var ''g105'' := {^(Send_Evt (Var ''g100'') (Var ''g104''))},
-    Var ''g106'' := {^\<lparr>\<rparr>}, Var ''g107'' := {},
-    Var ''g108'' := {^\<lparr>\<rparr>}, Var ''g109'' := {},
+    g103 := {^(Abs g103 g104 (
+      LET g105 = SEND EVT g100 g104 in 
+      LET g106 = SYNC g105 in 
+      LET g107 = APP g103 g104 in 
+      RESULT g107
+    ))}, g104 := {^\<lparr>\<rparr>},
+    g105 := {^(Send_Evt g100 g104)},
+    g106 := {^\<lparr>\<rparr>}, g107 := {},
+    g108 := {^\<lparr>\<rparr>}, g109 := {},
 
-    Var ''g110'' := {^\<lparr>\<rparr>},
-    Var ''g111'' := {^(Abs (Var ''g112'') (Var ''g113'') (
-              LET Var ''g114'' = RECV EVT Var ''g100'' in 
-              LET Var ''g115'' = SYNC Var ''g114'' in 
-              LET Var ''g116'' = APP (Var ''g112'') (Var ''g113'') in 
-              RESULT Var ''g116'' 
+    g110 := {^\<lparr>\<rparr>},
+    g111 := {^(Abs g112 g113 (
+              LET g114 = RECV EVT g100 in 
+              LET g115 = SYNC g114 in 
+              LET g116 = APP g112 g113 in 
+              RESULT g116 
     ))},
-    Var ''g112'' := {^(Abs (Var ''g112'') (Var ''g113'') (
-              LET Var ''g114'' = RECV EVT Var ''g100'' in 
-              LET Var ''g115'' = SYNC Var ''g114'' in 
-              LET Var ''g116'' = APP (Var ''g112'') (Var ''g113'') in 
-              RESULT Var ''g116'' 
-    ))}, Var ''g113'' := {^\<lparr>\<rparr>},
-    Var ''g114'' := {^(Recv_Evt (Var ''g100''))},
-    Var ''g115'' := {^\<lparr>\<rparr>}, Var ''g116'' := {},
-    Var ''g117'' := {^\<lparr>\<rparr>}, Var ''g118'' := {},
+    g112 := {^(Abs g112 g113 (
+              LET g114 = RECV EVT g100 in 
+              LET g115 = SYNC g114 in 
+              LET g116 = APP g112 g113 in 
+              RESULT g116 
+    ))}, g113 := {^\<lparr>\<rparr>},
+    g114 := {^(Recv_Evt g100)},
+    g115 := {^\<lparr>\<rparr>}, g116 := {},
+    g117 := {^\<lparr>\<rparr>}, g118 := {},
 
-    Var ''g119'' := {^\<lparr>\<rparr>}
+    g119 := {^\<lparr>\<rparr>}
   )"
 
 definition infinite_prog_\<C> :: "abstract_value_env" where 
   "infinite_prog_\<C>  \<equiv> (\<lambda> _ . {})(
-    Var ''g100'' := {^\<lparr>\<rparr>}
+    g100 := {^\<lparr>\<rparr>}
   )"
 
 
@@ -365,7 +386,7 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
 done
 
 theorem infinite_prog_has_single_sender_communication_analysis: "
-  noncompetitive (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
+  noncompetitive (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100)
 "
    apply (simp add: noncompetitive_def, (rule allI, rule impI)+)
    apply (rule abstract_noncompetitve_implies)
@@ -376,14 +397,14 @@ sorry
 
 
 theorem infinite_prog_has_single_receiver_communication_analysis: "
-  noncompetitive (abstract_recv_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100''))
+  noncompetitive (abstract_recv_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100)
 "
  apply (simp add: noncompetitive_def)
  apply (simp add: abstract_recv_paths_def, auto)
 sorry
 
 theorem infinite_prog_has_one_to_one_communication_analysis: "
-  abstract_one_to_one (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) (Var ''g100'')
+  abstract_one_to_one (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100
 "
  apply (simp add: abstract_one_to_one_def, auto)
  apply (simp add: infinite_prog_has_single_sender_communication_analysis)
