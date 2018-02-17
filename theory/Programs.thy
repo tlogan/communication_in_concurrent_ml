@@ -383,7 +383,7 @@ lemma step_down_length_two_implies_empty_lists: "
 "
 by simp
 
-
+(*
 lemma abc_base_cases: "
   n = length (\<pi>\<^sub>y ;; `x\<^sub>y) \<Longrightarrow>
   infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow>
@@ -405,28 +405,10 @@ lemma abc_base_cases: "
   apply (simp, erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
  apply (case_tac "n = 4")
   apply (simp, erule traceable.cases; auto)
-
-(*
- apply (case_tac "n = 5")
-  apply (simp, erule traceable.cases; clarsimp; (sinfinite_prog_def, erule traceable.cases; clarsimp;
-    (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
-  ))
- apply (case_tac "n = 6")
-  apply (simp, erule traceable.cases; clarsimp; 
-    (infinite_prog_def, erule traceable.cases; clarsimp; (infinite_prog_def, erule traceable.cases; clarsimp;
-      (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
-    ))
-  )
-  apply (case_tac "n = 7")
-  apply (simp, erule traceable.cases; clarsimp; (infinite_prog_def, erule traceable.cases; clarsimp;
-    (infinite_prog_def, erule traceable.cases; clarsimp; (infinite_prog_def, erule traceable.cases; clarsimp;
-      (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
-    ))
-  ))
-*)
+   apply (case_tac "\<pi>"; case_tac "\<pi>'"; auto?)
+    apply (erule traceable.cases; auto; erule traceable.cases; auto)
 sorry
-
-
+*)
 
 lemma abc': "
   (\<forall> \<pi>\<^sub>y x\<^sub>y x\<^sub>e e\<^sub>n x\<^sub>s\<^sub>c x\<^sub>m.
@@ -440,24 +422,17 @@ lemma abc': "
   )
 "
 
+ (*
+ there are 3 cases:
+    case \<pi>\<^sub>y ;; `x\<^sub>y = [g100, ..., `g106], exactly everything before the recursive call \<Rightarrow> premises have the required conditions for regex match
+    case \<pi>\<^sub>y ;; `x\<^sub>y = \<pi> @ [\<upharpoonleft>g107, `g105, `g106] and all IH's premises hold for \<pi> \<Rightarrow> g100_path |\<rhd> \<pi> so,  g100_path |\<rhd> \<pi> @ [\<upharpoonleft>g107, `g105, `g106]
+    otherwise \<Rightarrow> the traceable premise should be false
+ *)
  apply (unfold infinite_prog_\<C>_def infinite_prog_send_g100_abstract_path_def)
  apply (rule nat_less_induct[of _ n], (rule allI)+, (rule impI)+)
- apply (case_tac "n > 7")
- 
+ apply (case_tac "x\<^sub>y \<noteq> g106"; simp)
  
 
-(*
- apply (unfold infinite_prog_\<C>_def infinite_prog_send_g100_abstract_path_def)
- apply (rule nat_less_induct[of _ n], (rule allI)+, (rule impI)+, clarify)
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100]")
-  apply(simp add: infinite_prog_def, erule traceable.cases; blast?)
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101]")
-  apply (simp)
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102]")
-  apply (simp add: infinite_prog_def, erule traceable.cases; clarsimp; erule traceable.cases; clarsimp; erule traceable.cases; clarsimp)
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108]")
-  apply (simp add: infinite_prog_def, erule traceable.cases; simp; erule traceable.cases; clarsimp)
-*)
 sorry
 
 lemma abc: "
