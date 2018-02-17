@@ -1148,16 +1148,22 @@ lemma traceable_stack_preservation: "
       apply ((drule spec)+, erule impE, assumption, erule conjE)
       apply (erule seq_step.cases; auto)
       apply (erule stack_traceable.cases; auto)
+      apply (simp add: stack_traceable_preserved_over_linear_balanced_extension)
      apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
      apply ((drule spec)+, erule impE, assumption, erule conjE) 
-     apply (rule stack_traceable.Nonempty; auto)
+     using linear.Empty path_balanced.Empty stack_traceable.Nonempty apply blast
     apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+    using stack_traceable_preserved_over_seq_extension apply blast
     apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; `x\<^sub>r", auto)
+    using stack_traceable_preserved_over_seq_extension apply blast
     apply (case_tac "\<pi>' = \<pi>\<^sub>s ;; `x\<^sub>s", auto)
+    using stack_traceable_preserved_over_seq_extension apply blast
     apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+    using stack_traceable_preserved_over_seq_extension apply blast
     apply (case_tac "\<pi>' = \<pi> ;; .x", auto)
      apply (rule stack_traceable.Empty_Local; auto)
     apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+    using stack_traceable_preserved_over_seq_extension apply blast
 done
 
 lemma isnt_traceable_sound': "

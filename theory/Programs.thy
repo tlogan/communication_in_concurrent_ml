@@ -11,9 +11,9 @@ begin
 datatype abstract_path =
   Empty |
   Atom control_label ("&_" [66]66) |
-  Union abstract_path abstract_path (infixr ":|:" 64) |
+  Union abstract_path abstract_path (infixl ":|:" 64) |
   Star abstract_path ("{_}*" [0]66) |
-  Concat abstract_path abstract_path (infixr ":@:" 65)
+  Concat abstract_path abstract_path (infixl ":@:" 65)
 
 
 inductive ap_matches :: "abstract_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "|\<rhd>" 55) where
@@ -103,7 +103,7 @@ inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
  " |
  Star: "
    \<lbrakk>
-     ap_noncompetitive p
+     ap_linear p
    \<rbrakk> \<Longrightarrow>
    ap_noncompetitive (Star p)
  " |
@@ -142,7 +142,7 @@ lemma noncomp_star_linear_implies_same_proc:"
 "
 sorry
 
-lemma noncomp_star_nonlinear_implies_same_proc:"
+lemma noncomp_star_nonlinear_implies_ordered:"
   \<lbrakk>
     ap_noncompetitive p;
     \<not> (ap_linear p);
@@ -154,7 +154,6 @@ lemma noncomp_star_nonlinear_implies_same_proc:"
 sorry
 
 
-(** maybe this is strong enough for the induction step, but still provable: **)
 lemma abstract_noncompetitve_implies: "
   \<lbrakk>
     ap |\<rhd> \<pi>\<^sub>1;
@@ -169,8 +168,8 @@ lemma abstract_noncompetitve_implies: "
   apply (erule ap_matches.cases; blast)
   apply (erule ap_matches.cases; erule ap_matches.cases; blast)
   using Lin ap_linear.Union ap_linear_implies_linear apply blast
-  using noncomp_star_linear_implies_same_proc noncomp_star_nonlinear_implies_same_proc apply blast
-  apply (metis Star_Empty ap_matches.Star ap_noncompetitive.simps append_Nil noncomp_star_linear_implies_same_proc noncomp_star_nonlinear_implies_same_proc)
+  using Lin ap_linear.Star ap_linear_implies_linear apply blast
+  apply (metis Star_Empty ap_matches.Star ap_noncompetitive.simps append_Nil noncomp_star_linear_implies_same_proc noncomp_star_nonlinear_implies_ordered)
 done
 
 
@@ -348,32 +347,62 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
  apply (rule; simp?)+
 done
 
-method condition_split = (
-  match premises in 
-    I: "(if P then _ else _) = Some _" for P \<Rightarrow> \<open>cases P\<close>
-, auto)
+ (*
+  lemmas needed for proof  ... |\<rhd> \<pi>\<^sub>y ;; `x\<^sub>y : 
 
-method set_condition_split = (
+  &`g100 :@: ... :@: &`g106 :@: {&\<upharpoonleft>g107 :@: &`g105 :@: &`g106}* |\<rhd> [`g100, ..., `g106];
+
+  if
+    &`g100 :@: ... :@: &`g106 :@: {&\<upharpoonleft>g107 :@: &`g105 :@: &`g106}* |\<rhd> [`g100, ..., `g106] @ \<pi>
+  then
+    &`g100 :@: ... :@: &`g106 :@: {&\<upharpoonleft>g107 :@: &`g105 :@: &`g106}* |\<rhd> [`g100, ..., `g106] @ \<pi> @ [\<upharpoonleft>g107, `g105, `g106] 
+ *)
+
+method set_elem_condition_split = (
   match premises in 
     I: "_ \<in> (if P then _ else _)" for P \<Rightarrow> \<open>cases P\<close>
-, auto)
+, clarsimp)
+
+method subset_condition_split = (
+  match premises in 
+    I: "(if P then _ else _) \<subseteq> _" for P \<Rightarrow> \<open>cases P\<close>
+, clarsimp)
+
+lemma step_down_length_one_implies_false: "
+  Suc 0 = length (\<pi> @ \<upharpoonleft>x # (\<pi>' ;; \<downharpoonleft>x)) \<Longrightarrow> False
+"
+by simp
+
+lemma snoc_length_one_implies_empty_prefix: "
+  Suc 0 = length (\<pi> ;; l) \<Longrightarrow> \<pi> = []
+"
+by simp
 
 lemma abc': "
-  \<V> \<turnstile> e\<^sub>0 \<down> p \<Longrightarrow> 
   (\<forall> \<pi>\<^sub>y x\<^sub>y x\<^sub>e e\<^sub>n x\<^sub>s\<^sub>c x\<^sub>m.
-    \<V> = infinite_prog_\<V> \<longrightarrow> e\<^sub>0 = infinite_prog \<longrightarrow> p = (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<longrightarrow>
+    (n :: nat) = length (\<pi>\<^sub>y ;; `x\<^sub>y) \<longrightarrow>
+    infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<longrightarrow>
     ^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c \<longrightarrow>
     ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e \<longrightarrow>
     ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y \<longrightarrow>
-    infinite_prog_\<V> x\<^sub>m \<subseteq> infinite_prog_\<C> g100 \<longrightarrow> 
-    infinite_prog_send_g100_abstract_path |\<rhd> \<pi>\<^sub>y ;; `x\<^sub>y
+    infinite_prog_\<V> x\<^sub>m \<subseteq> infinite_prog_\<C> g100 \<longrightarrow>
+    infinite_prog_send_g100_abstract_path |\<rhd> (\<pi>\<^sub>y ;; `x\<^sub>y)
   )
 "
- apply (erule traceable.induct; auto)
- apply (unfold infinite_prog_\<V>_def infinite_prog_def infinite_prog_\<C>_def infinite_prog_send_g100_abstract_path_def)
- apply auto
- apply (drule spec, erule impE)+
- apply (set_condition_split)+
+ apply (unfold infinite_prog_\<C>_def infinite_prog_send_g100_abstract_path_def)
+ apply (rule nat_less_induct[of _ n], (rule allI)+, (rule impI)+)
+ apply (case_tac "n = 0")
+  apply (simp)
+ apply (case_tac "n = 1")
+  apply (simp add: infinite_prog_def, erule traceable.cases; blast?)
+ apply (case_tac "n = 2")
+  apply (simp add: infinite_prog_def, erule traceable.cases; clarify; (
+    (drule step_down_length_one_implies_false, simp) |
+    (drule snoc_length_one_implies_empty_prefix, simp, erule traceable.cases; blast)
+  ))
+ apply (case_tac "n = 3")
+  apply (simp add: infinite_prog_def, erule traceable.cases; clarify)
+
 sorry
 
 lemma abc: "
@@ -418,7 +447,10 @@ theorem infinite_prog_has_one_to_one_communication_analysis: "
 done
 
 
-
+method condition_split = (
+  match premises in 
+    I: "(if P then _ else _) = Some _" for P \<Rightarrow> \<open>cases P\<close>
+, auto)
 
 
 method leaf_elim_loop for m :: state_pool and stpool :: state_pool and l :: control_path uses I = (

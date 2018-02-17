@@ -341,7 +341,7 @@ inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
     \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2, \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
   "
 
-lemma stack_traceable_preserved_over_linear_balanced_extension[simp]: "
+lemma stack_traceable_preserved_over_linear_balanced_extension: "
  \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)
 "
 apply (erule stack_traceable.cases; auto)
@@ -349,5 +349,12 @@ apply (erule stack_traceable.cases; auto)
   apply (simp add: Empty_Local)
  apply (simp add: stack_traceable.Nonempty)
 done
+
+lemma stack_traceable_preserved_over_seq_extension:"
+  \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> ;; `x, \<kappa>)
+"
+by (simp add: stack_traceable_preserved_over_linear_balanced_extension)
+
+
 
 end

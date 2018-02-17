@@ -31,28 +31,33 @@ fun proc_legacy :: "control_path \<Rightarrow> control_path" where
 
 
 inductive same_proc :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
-  Lin[simp]: "
+  Lin: "
     \<lbrakk>
       ``\<pi>\<^sub>1``; ``\<pi>\<^sub>2``
     \<rbrakk> \<Longrightarrow>
     \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
   " |
-  Cons[simp]: "
+  Cons: "
     \<lbrakk>
       \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
     \<rbrakk> \<Longrightarrow>
     l # \<pi>\<^sub>1 \<cong> l # \<pi>\<^sub>2 
   "
 
-theorem same_proc_preserved_under_concat[simp]: "
+theorem same_proc_preserved_under_concat: "
   \<pi>\<^sub>1' \<cong> \<pi>\<^sub>2' \<Longrightarrow> \<pi> @ \<pi>\<^sub>1' \<cong> \<pi> @ \<pi>\<^sub>2'
 "
-by (induct \<pi>; auto)
+ apply (induct \<pi>, simp)
+ apply (simp add: same_proc.Cons)
+done
 
 theorem same_proc_commutative[simp]: "
   \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>2 \<cong> \<pi>\<^sub>1
 "
-by (erule same_proc.induct; auto)
+ apply (erule same_proc.induct)
+  apply (simp add: Lin)
+ apply (simp add: same_proc.Cons)
+done
 
 fun proc_spawn' :: "control_path \<Rightarrow> (control_label list) \<Rightarrow> control_path" where
   "proc_spawn' [] r = rev r" |
