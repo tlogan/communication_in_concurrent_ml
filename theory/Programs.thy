@@ -404,9 +404,9 @@ lemma abc_base_cases: "
  apply (case_tac "n = 3")
   apply (simp, erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
  apply (case_tac "n = 4")
-  apply (simp, erule traceable.cases; clarsimp; 
-    (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
-  )
+  apply (simp, erule traceable.cases; auto)
+
+(*
  apply (case_tac "n = 5")
   apply (simp, erule traceable.cases; clarsimp; (sinfinite_prog_def, erule traceable.cases; clarsimp;
     (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
@@ -423,7 +423,7 @@ lemma abc_base_cases: "
       (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
     ))
   ))
-
+*)
 sorry
 
 
