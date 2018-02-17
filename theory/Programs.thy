@@ -378,6 +378,56 @@ lemma snoc_length_one_implies_empty_prefix: "
 "
 by simp
 
+lemma step_down_length_two_implies_empty_lists: "
+  length (\<pi> @ \<upharpoonleft>x # (\<pi>' ;; \<downharpoonleft>x)) = 2 \<Longrightarrow> \<pi> = [] \<and> \<pi>' = []
+"
+by simp
+
+
+lemma abc_base_cases: "
+  n = length (\<pi>\<^sub>y ;; `x\<^sub>y) \<Longrightarrow>
+  infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow>
+  ^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c \<Longrightarrow>
+  ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e \<Longrightarrow>
+  ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y \<Longrightarrow>
+  infinite_prog_\<V> x\<^sub>m \<subseteq> ((\<lambda>_. {})(g100 := {^\<lparr>\<rparr>})) g100 \<Longrightarrow>
+  \<not> 7 < n \<Longrightarrow> 
+  &`g100 :@: &.g101 :@: &`g102 :@: &`g108 :@: &\<upharpoonleft>g109 :@: &`g105 :@: &`g106 :@: {&\<upharpoonleft>g107 :@: &`g105 :@: &`g106}* |\<rhd> \<pi>\<^sub>y ;; `x\<^sub>y
+"
+ apply (unfold infinite_prog_def)
+ apply (case_tac "n = 0")
+  apply (simp)
+ apply (case_tac "n = 1")
+  apply (simp, erule traceable.cases; blast)
+ apply (case_tac "n = 2")
+  apply (simp, erule traceable.cases; clarsimp; (erule traceable.cases; blast))
+ apply (case_tac "n = 3")
+  apply (simp, erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
+ apply (case_tac "n = 4")
+  apply (simp, erule traceable.cases; clarsimp; 
+    (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
+  )
+ apply (case_tac "n = 5")
+  apply (simp, erule traceable.cases; clarsimp; (sinfinite_prog_def, erule traceable.cases; clarsimp;
+    (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
+  ))
+ apply (case_tac "n = 6")
+  apply (simp, erule traceable.cases; clarsimp; 
+    (infinite_prog_def, erule traceable.cases; clarsimp; (infinite_prog_def, erule traceable.cases; clarsimp;
+      (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
+    ))
+  )
+  apply (case_tac "n = 7")
+  apply (simp, erule traceable.cases; clarsimp; (infinite_prog_def, erule traceable.cases; clarsimp;
+    (infinite_prog_def, erule traceable.cases; clarsimp; (infinite_prog_def, erule traceable.cases; clarsimp;
+      (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
+    ))
+  ))
+
+sorry
+
+
+
 lemma abc': "
   (\<forall> \<pi>\<^sub>y x\<^sub>y x\<^sub>e e\<^sub>n x\<^sub>s\<^sub>c x\<^sub>m.
     (n :: nat) = length (\<pi>\<^sub>y ;; `x\<^sub>y) \<longrightarrow>
@@ -389,20 +439,25 @@ lemma abc': "
     infinite_prog_send_g100_abstract_path |\<rhd> (\<pi>\<^sub>y ;; `x\<^sub>y)
   )
 "
+
  apply (unfold infinite_prog_\<C>_def infinite_prog_send_g100_abstract_path_def)
  apply (rule nat_less_induct[of _ n], (rule allI)+, (rule impI)+)
- apply (case_tac "n = 0")
-  apply (simp)
- apply (case_tac "n = 1")
-  apply (simp add: infinite_prog_def, erule traceable.cases; blast?)
- apply (case_tac "n = 2")
-  apply (simp add: infinite_prog_def, erule traceable.cases; clarify; (
-    (drule step_down_length_one_implies_false, simp) |
-    (drule snoc_length_one_implies_empty_prefix, simp, erule traceable.cases; blast)
-  ))
- apply (case_tac "n = 3")
-  apply (simp add: infinite_prog_def, erule traceable.cases; clarify)
+ apply (case_tac "n > 7")
+ 
+ 
 
+(*
+ apply (unfold infinite_prog_\<C>_def infinite_prog_send_g100_abstract_path_def)
+ apply (rule nat_less_induct[of _ n], (rule allI)+, (rule impI)+, clarify)
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100]")
+  apply(simp add: infinite_prog_def, erule traceable.cases; blast?)
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101]")
+  apply (simp)
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102]")
+  apply (simp add: infinite_prog_def, erule traceable.cases; clarsimp; erule traceable.cases; clarsimp; erule traceable.cases; clarsimp)
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108]")
+  apply (simp add: infinite_prog_def, erule traceable.cases; simp; erule traceable.cases; clarsimp)
+*)
 sorry
 
 lemma abc: "
