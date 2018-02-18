@@ -417,6 +417,7 @@ lemma cons_eq_append: "
 "
 by simp
 
+
 lemma abc': "
   (\<forall> \<pi>\<^sub>y x\<^sub>y x\<^sub>e e\<^sub>n x\<^sub>s\<^sub>c x\<^sub>m.
     (n :: nat) = length (\<pi>\<^sub>y ;; `x\<^sub>y) \<longrightarrow>
@@ -430,15 +431,25 @@ lemma abc': "
 "
  apply (unfold infinite_prog_\<C>_def infinite_prog_send_g100_abstract_path_def)
  apply (rule nat_less_induct[of _ n], (rule allI)+, (rule impI)+)
+  (* base case *)
  apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106]", clarsimp)
- apply (subst cons_eq_append[of "`g100"], rule ap_matches.Concat, rule ap_matches.Atom)
- apply (subst cons_eq_append[of ".g101"], rule ap_matches.Concat, rule ap_matches.Atom)
- apply (subst cons_eq_append[of "`g102"], rule ap_matches.Concat, rule ap_matches.Atom)
- apply (subst cons_eq_append[of "`g108"], rule ap_matches.Concat, rule ap_matches.Atom)
- apply (subst cons_eq_append[of "\<upharpoonleft>g109"], rule ap_matches.Concat, rule ap_matches.Atom)
- apply (subst cons_eq_append[of "`g105"], rule ap_matches.Concat, rule ap_matches.Atom)
- apply (subst cons_eq_append[of "`g106"], rule ap_matches.Concat, rule ap_matches.Atom)
- apply (rule ap_matches.Star_Empty)
+  apply (match conclusion in 
+    "(&x) :@: _  |\<rhd> x # _" for x \<Rightarrow> \<open>(subst cons_eq_append[of x], rule ap_matches.Concat, rule ap_matches.Atom)\<close>
+  )+
+  apply (rule ap_matches.Star_Empty)
+ (* Inductive case *)
+ apply (case_tac "
+    \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `g106) @ [\<upharpoonleft>g107, `g105, `g106] \<and> 
+    infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n)
+ ", clarsimp)
+  apply (drule spec[of _ "(length (\<pi> ;; `g106))"], clarsimp)
+  apply (drule spec[of _ "\<pi>"], clarsimp)
+  apply (drule spec[of _ "g106"])
+  apply (drule_tac x = "x\<^sub>e" in spec, erule impE, rule_tac x = "e\<^sub>n" in exI, assumption)
+  apply (drule_tac x = "x\<^sub>s\<^sub>c" in spec, erule impE, assumption)
+  apply (drule_tac x = "x\<^sub>m" in spec, (erule impE, assumption)+)
+
+ (* vacuous cases *)
   
  (*
  there are 3 cases:
