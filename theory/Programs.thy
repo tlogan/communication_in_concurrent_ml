@@ -11,9 +11,9 @@ begin
 datatype abstract_path =
   Empty |
   Atom control_label ("&_" [66]66) |
-  Union abstract_path abstract_path (infixl ":|:" 64) |
+  Union abstract_path abstract_path (infix ":|:" 64) |
   Star abstract_path ("{_}*" [0]66) |
-  Concat abstract_path abstract_path (infixl ":@:" 65)
+  Concat abstract_path abstract_path (infixr ":@:" 65)
 
 
 inductive ap_matches :: "abstract_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "|\<rhd>" 55) where
@@ -410,6 +410,13 @@ lemma abc_base_cases: "
 sorry
 *)
 
+value "(abstract_path.Concat (abstract_path.Concat x y) z)"
+
+lemma cons_eq_append: "
+  x # xs = [x] @ xs
+"
+by simp
+
 lemma abc': "
   (\<forall> \<pi>\<^sub>y x\<^sub>y x\<^sub>e e\<^sub>n x\<^sub>s\<^sub>c x\<^sub>m.
     (n :: nat) = length (\<pi>\<^sub>y ;; `x\<^sub>y) \<longrightarrow>
@@ -421,15 +428,25 @@ lemma abc': "
     infinite_prog_send_g100_abstract_path |\<rhd> (\<pi>\<^sub>y ;; `x\<^sub>y)
   )
 "
-
+ apply (unfold infinite_prog_\<C>_def infinite_prog_send_g100_abstract_path_def)
+ apply (rule nat_less_induct[of _ n], (rule allI)+, (rule impI)+)
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106]", clarsimp)
+ apply (subst cons_eq_append[of "`g100"], rule ap_matches.Concat, rule ap_matches.Atom)
+ apply (subst cons_eq_append[of ".g101"], rule ap_matches.Concat, rule ap_matches.Atom)
+ apply (subst cons_eq_append[of "`g102"], rule ap_matches.Concat, rule ap_matches.Atom)
+ apply (subst cons_eq_append[of "`g108"], rule ap_matches.Concat, rule ap_matches.Atom)
+ apply (subst cons_eq_append[of "\<upharpoonleft>g109"], rule ap_matches.Concat, rule ap_matches.Atom)
+ apply (subst cons_eq_append[of "`g105"], rule ap_matches.Concat, rule ap_matches.Atom)
+ apply (subst cons_eq_append[of "`g106"], rule ap_matches.Concat, rule ap_matches.Atom)
+ apply (rule ap_matches.Star_Empty)
+  
  (*
  there are 3 cases:
     case \<pi>\<^sub>y ;; `x\<^sub>y = [g100, ..., `g106], exactly everything before the recursive call \<Rightarrow> premises have the required conditions for regex match
     case \<pi>\<^sub>y ;; `x\<^sub>y = \<pi> @ [\<upharpoonleft>g107, `g105, `g106] and all IH's premises hold for \<pi> \<Rightarrow> g100_path |\<rhd> \<pi> so,  g100_path |\<rhd> \<pi> @ [\<upharpoonleft>g107, `g105, `g106]
     otherwise \<Rightarrow> the traceable premise should be false
  *)
- apply (unfold infinite_prog_\<C>_def infinite_prog_send_g100_abstract_path_def)
- apply (rule nat_less_induct[of _ n], (rule allI)+, (rule impI)+)
+
  apply (case_tac "x\<^sub>y \<noteq> g106"; simp)
  
 
