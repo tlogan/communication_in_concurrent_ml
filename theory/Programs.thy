@@ -436,7 +436,10 @@ lemma abc_vacuous: "
   \<not> (\<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `g106) @ [\<upharpoonleft>g107, `g105, `g106] \<and> infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n)) \<Longrightarrow>
   False
 "
-  apply (unfold infinite_prog_def, auto)
+  apply auto
+  apply (unfold infinite_prog_def)
+  apply (erule traceable.cases; clarsimp)
+
 sorry
 
 
