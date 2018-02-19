@@ -473,9 +473,7 @@ lemma abc': "
   apply (subgoal_tac "&\<upharpoonleft>g107 :@: &`g105 :@: &`g106 |\<rhd> [\<upharpoonleft>g107, `g105, `g106]")
   apply (drule ap_matches.Concat; simp)
   apply (thin_tac "&\<upharpoonleft>g107 :@: &`g105 :@: &`g106 |\<rhd> [\<upharpoonleft>g107, `g105, `g106]")
-  apply (match premises in 
-    I: "(&x) :@: _  |\<rhd> _" for x \<Rightarrow> \<open>(subgoal_tac "&x |\<rhd> [x]"); (rule ap_matches.Atom)?\<close>
-  , (erule ap_matches.cases; auto), erule ap_matches.Concat)+
+  apply ((erule ap_matches.cases; auto), erule ap_matches.Concat)+
   apply (erule concat_star_implies_star)
   apply (match conclusion in 
     "(&x) :@: _  |\<rhd> x # _" for x \<Rightarrow> \<open>(subst cons_eq_append[of x], rule ap_matches.Concat, rule ap_matches.Atom)\<close>
