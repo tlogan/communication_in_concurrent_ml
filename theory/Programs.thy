@@ -406,21 +406,18 @@ lemma cons_eq_append: "
 "
 by simp
 
-lemma concat_assoc_lr: "
-  (x :@: y) :@: z |\<rhd> \<pi> \<Longrightarrow>  x :@: (y :@: z) |\<rhd> \<pi>
+lemma concat_assoc[simp]: "
+  (x :@: y) :@: z |\<rhd> \<pi> \<longleftrightarrow> x :@: (y :@: z) |\<rhd> \<pi>
 "
-  apply (erule ap_matches.cases; auto; erule ap_matches.cases; auto)
-  apply (drule ap_matches.Concat[of y _ z], simp)
-  apply (erule ap_matches.Concat, simp)
-done
-
-lemma concat_assoc_rl: "
-  x :@: (y :@: z) |\<rhd> \<pi> \<Longrightarrow>  (x :@: y) :@: z |\<rhd> \<pi>
-"
+  apply auto
+   apply (erule ap_matches.cases; auto; erule ap_matches.cases; auto)
+   apply (drule ap_matches.Concat[of y _ z], simp)
+   apply (erule ap_matches.Concat, simp)
   apply (erule ap_matches.cases; auto; erule ap_matches.cases[of "y :@: z"]; auto)
   apply (drule ap_matches.Concat, simp)
   apply (drule ap_matches.Concat[of "x :@: y" _ "z"], auto)
 done
+
 
 lemma concat_star_implies_star: "
  {p}* :@: p |\<rhd> \<pi> \<Longrightarrow> {p}* |\<rhd> \<pi>
@@ -460,6 +457,16 @@ lemma abc': "
   apply (drule_tac x = "x\<^sub>s\<^sub>c" in spec, erule impE, assumption)
   apply (drule_tac x = "x\<^sub>m" in spec, (erule impE, assumption)+)
   apply (subgoal_tac "&\<upharpoonleft>g107 :@: &`g105 :@: &`g106 |\<rhd> [\<upharpoonleft>g107, `g105, `g106]")
+  apply (drule ap_matches.Concat; simp)
+  apply (thin_tac "&\<upharpoonleft>g107 :@: &`g105 :@: &`g106 |\<rhd> [\<upharpoonleft>g107, `g105, `g106]")
+  apply (match premises in 
+    I: "(&x) :@: _  |\<rhd> _" for x \<Rightarrow> \<open>(subgoal_tac "&x |\<rhd> [x]"); (rule ap_matches.Atom)?\<close>
+  , (erule ap_matches.cases; auto), erule ap_matches.Concat)+
+  apply (erule concat_star_implies_star)
+  apply (match conclusion in 
+    "(&x) :@: _  |\<rhd> x # _" for x \<Rightarrow> \<open>(subst cons_eq_append[of x], rule ap_matches.Concat, rule ap_matches.Atom)\<close>
+  )+
+  apply (rule ap_matches.Atom)
  (* vacuous cases *)
   
  (*
