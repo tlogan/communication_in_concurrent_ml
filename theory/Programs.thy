@@ -426,6 +426,20 @@ lemma concat_star_implies_star: "
  apply (erule ap_matches.Star; simp)
 done
 
+lemma abc_vacuous: "
+  infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow>
+  ^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c \<Longrightarrow>
+  ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e \<Longrightarrow>
+  ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y \<Longrightarrow>
+  infinite_prog_\<V> x\<^sub>m \<subseteq> ((\<lambda>_. {})(g100 := {^\<lparr>\<rparr>})) g100 \<Longrightarrow>
+  \<pi>\<^sub>y ;; `x\<^sub>y \<noteq> [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106] \<Longrightarrow>
+  \<not> (\<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `g106) @ [\<upharpoonleft>g107, `g105, `g106] \<and> infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n)) \<Longrightarrow>
+  False
+"
+  apply (unfold infinite_prog_def, auto)
+sorry
+
+
 lemma abc': "
   (\<forall> \<pi>\<^sub>y x\<^sub>y x\<^sub>e e\<^sub>n x\<^sub>s\<^sub>c x\<^sub>m.
     (n :: nat) = length (\<pi>\<^sub>y ;; `x\<^sub>y) \<longrightarrow>
@@ -468,16 +482,8 @@ lemma abc': "
   )+
   apply (rule ap_matches.Atom)
  (* vacuous cases *)
-  
- (*
- there are 3 cases:
-    case \<pi>\<^sub>y ;; `x\<^sub>y = [g100, ..., `g106], exactly everything before the recursive call \<Rightarrow> premises have the required conditions for regex match
-    case \<pi>\<^sub>y ;; `x\<^sub>y = \<pi> @ [\<upharpoonleft>g107, `g105, `g106] and all IH's premises hold for \<pi> \<Rightarrow> g100_path |\<rhd> \<pi> so,  g100_path |\<rhd> \<pi> @ [\<upharpoonleft>g107, `g105, `g106]
-    otherwise \<Rightarrow> the traceable premise should be false
- *)
- 
-
-sorry
+ apply (drule abc_vacuous; auto)
+done
 
 lemma abc: "
   \<pi> \<in> abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100 \<Longrightarrow> 
