@@ -35,7 +35,7 @@ inductive ap_matches :: "abstract_path \<Rightarrow> control_path \<Rightarrow> 
    \<rbrakk> \<Longrightarrow>
    Union p\<^sub>a p\<^sub>b |\<rhd> \<pi>
  " | 
- Star_Empty[simp]: "
+ Star_Empty: "
    Star p |\<rhd> []
  " |
  Star: "
@@ -347,17 +347,6 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
  apply (rule; simp?)+
 done
 
- (*
-  lemmas needed for proof  ... |\<rhd> \<pi>\<^sub>y ;; `x\<^sub>y : 
-
-  &`g100 :@: ... :@: &`g106 :@: {&\<upharpoonleft>g107 :@: &`g105 :@: &`g106}* |\<rhd> [`g100, ..., `g106];
-
-  if
-    &`g100 :@: ... :@: &`g106 :@: {&\<upharpoonleft>g107 :@: &`g105 :@: &`g106}* |\<rhd> [`g100, ..., `g106] @ \<pi>
-  then
-    &`g100 :@: ... :@: &`g106 :@: {&\<upharpoonleft>g107 :@: &`g105 :@: &`g106}* |\<rhd> [`g100, ..., `g106] @ \<pi> @ [\<upharpoonleft>g107, `g105, `g106] 
- *)
-
 method set_elem_condition_split = (
   match premises in 
     I: "_ \<in> (if P then _ else _)" for P \<Rightarrow> \<open>cases P\<close>
@@ -417,6 +406,28 @@ lemma cons_eq_append: "
 "
 by simp
 
+lemma concat_assoc_lr: "
+  (x :@: y) :@: z |\<rhd> \<pi> \<Longrightarrow>  x :@: (y :@: z) |\<rhd> \<pi>
+"
+  apply (erule ap_matches.cases; auto; erule ap_matches.cases; auto)
+  apply (drule ap_matches.Concat[of y _ z], simp)
+  apply (erule ap_matches.Concat, simp)
+done
+
+lemma concat_assoc_rl: "
+  x :@: (y :@: z) |\<rhd> \<pi> \<Longrightarrow>  (x :@: y) :@: z |\<rhd> \<pi>
+"
+  apply (erule ap_matches.cases; auto; erule ap_matches.cases[of "y :@: z"]; auto)
+  apply (drule ap_matches.Concat, simp)
+  apply (drule ap_matches.Concat[of "x :@: y" _ "z"], auto)
+done
+
+lemma concat_star_implies_star: "
+ {p}* :@: p |\<rhd> \<pi> \<Longrightarrow> {p}* |\<rhd> \<pi>
+"
+ apply (erule ap_matches.cases; auto)
+ apply (erule ap_matches.Star; simp)
+done
 
 lemma abc': "
   (\<forall> \<pi>\<^sub>y x\<^sub>y x\<^sub>e e\<^sub>n x\<^sub>s\<^sub>c x\<^sub>m.
@@ -448,7 +459,7 @@ lemma abc': "
   apply (drule_tac x = "x\<^sub>e" in spec, erule impE, rule_tac x = "e\<^sub>n" in exI, assumption)
   apply (drule_tac x = "x\<^sub>s\<^sub>c" in spec, erule impE, assumption)
   apply (drule_tac x = "x\<^sub>m" in spec, (erule impE, assumption)+)
-
+  apply (subgoal_tac "&\<upharpoonleft>g107 :@: &`g105 :@: &`g106 |\<rhd> [\<upharpoonleft>g107, `g105, `g106]")
  (* vacuous cases *)
   
  (*
@@ -457,8 +468,6 @@ lemma abc': "
     case \<pi>\<^sub>y ;; `x\<^sub>y = \<pi> @ [\<upharpoonleft>g107, `g105, `g106] and all IH's premises hold for \<pi> \<Rightarrow> g100_path |\<rhd> \<pi> so,  g100_path |\<rhd> \<pi> @ [\<upharpoonleft>g107, `g105, `g106]
     otherwise \<Rightarrow> the traceable premise should be false
  *)
-
- apply (case_tac "x\<^sub>y \<noteq> g106"; simp)
  
 
 sorry
