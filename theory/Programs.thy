@@ -426,15 +426,26 @@ lemma concat_star_implies_star: "
  apply (erule ap_matches.Star; simp)
 done
 
+lemma "
+infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow>
+    \<forall>\<pi>. \<pi>\<^sub>y = \<pi> @ [`g106, \<upharpoonleft>g107, `g105] \<longrightarrow> \<not> infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow> False
+"
+apply (drule spec, auto)
+sorry
+
+(*
+^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c \<Longrightarrow>
+^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e \<Longrightarrow>
+^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y \<Longrightarrow>
+infinite_prog_\<V> x\<^sub>m \<subseteq> ((\<lambda>_. {})(g100 := {^\<lparr>\<rparr>})) g100 \<Longrightarrow>
+\<pi>\<^sub>y ;; `x\<^sub>y \<noteq> [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106] \<Longrightarrow>
+*)
+ (*&`g100 :@: &.g101 :@: &`g102 :@: &`g108 :@: &\<upharpoonleft>g109 :@: &`g105 :@: &`g106 :@: {&\<upharpoonleft>g107 :@: &`g105 :@: &`g106}* |\<rhd> \<pi>\<^sub>y ;; `x\<^sub>y *)
+
 lemma abc_vacuous: "
-  infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow>
-  ^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c \<Longrightarrow>
-  ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e \<Longrightarrow>
-  ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y \<Longrightarrow>
-  infinite_prog_\<V> x\<^sub>m \<subseteq> ((\<lambda>_. {})(g100 := {^\<lparr>\<rparr>})) g100 \<Longrightarrow>
-  \<pi>\<^sub>y ;; `x\<^sub>y \<noteq> [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106] \<Longrightarrow>
-  \<not> (\<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `g106) @ [\<upharpoonleft>g107, `g105, `g106] \<and> infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n)) \<Longrightarrow>
-  False
+infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow>
+\<nexists>\<pi>. \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `g106) @ [\<upharpoonleft>g107, `g105, `g106] \<and> infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow>
+False
 "
   apply auto
   apply (unfold infinite_prog_def)
@@ -463,12 +474,12 @@ lemma abc': "
   )+
   apply (rule ap_matches.Star_Empty)
  (* Inductive case *)
- apply (case_tac "
+ apply (case_tac "(\<exists> \<pi> .
     \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `g106) @ [\<upharpoonleft>g107, `g105, `g106] \<and> 
     infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n)
- ", clarsimp)
-  apply (drule spec[of _ "(length (\<pi> ;; `g106))"], clarsimp)
-  apply (drule spec[of _ "\<pi>"], clarsimp)
+ )", clarsimp)
+  apply (drule_tac x = "(length (\<pi> ;; `g106))" in spec, clarsimp)
+  apply (drule_tac x = "\<pi>" in spec, clarsimp)
   apply (drule spec[of _ "g106"])
   apply (drule_tac x = "x\<^sub>e" in spec, erule impE, rule_tac x = "e\<^sub>n" in exI, assumption)
   apply (drule_tac x = "x\<^sub>s\<^sub>c" in spec, erule impE, assumption)
