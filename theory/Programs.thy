@@ -426,35 +426,22 @@ lemma concat_star_implies_star: "
  apply (erule ap_matches.Star; simp)
 done
 
-lemma "
-infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow>
-    \<forall>\<pi>. \<pi>\<^sub>y = \<pi> @ [`g106, \<upharpoonleft>g107, `g105] \<longrightarrow> \<not> infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow> False
+lemma infinite_prog_vacuous: "
+  \<lbrakk>
+    infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n);
+    \<pi>\<^sub>y ;; `x\<^sub>y \<noteq> [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106];
+    \<nexists>\<pi>. \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `g106) @ [\<upharpoonleft>g107, `g105, `g106] \<and> infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n)
+  \<rbrakk> \<Longrightarrow>
+  False
 "
-apply (drule spec, auto)
-sorry
-
-(*
-^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c \<Longrightarrow>
-^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e \<Longrightarrow>
-^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y \<Longrightarrow>
-infinite_prog_\<V> x\<^sub>m \<subseteq> ((\<lambda>_. {})(g100 := {^\<lparr>\<rparr>})) g100 \<Longrightarrow>
-\<pi>\<^sub>y ;; `x\<^sub>y \<noteq> [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106] \<Longrightarrow>
-*)
- (*&`g100 :@: &.g101 :@: &`g102 :@: &`g108 :@: &\<upharpoonleft>g109 :@: &`g105 :@: &`g106 :@: {&\<upharpoonleft>g107 :@: &`g105 :@: &`g106}* |\<rhd> \<pi>\<^sub>y ;; `x\<^sub>y *)
-
-lemma abc_vacuous: "
-infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow>
-\<nexists>\<pi>. \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `g106) @ [\<upharpoonleft>g107, `g105, `g106] \<and> infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow>
-False
-"
-  apply auto
-  apply (unfold infinite_prog_def)
-  apply (erule traceable.cases; clarsimp)
-
-sorry
+ apply (drule traceable_implies_traceable_right)
+ apply ((auto; (drule spec; auto)?); (drule traceable_implies_traceable_right)?)
+ apply (unfold infinite_prog_def)
+ apply (erule traceable_right.cases; auto)+
+done
 
 
-lemma abc': "
+lemma infinite_prog_matches': "
   (\<forall> \<pi>\<^sub>y x\<^sub>y x\<^sub>e e\<^sub>n x\<^sub>s\<^sub>c x\<^sub>m.
     (n :: nat) = length (\<pi>\<^sub>y ;; `x\<^sub>y) \<longrightarrow>
     infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<longrightarrow>
@@ -494,32 +481,25 @@ lemma abc': "
   )+
   apply (rule ap_matches.Atom)
  (* vacuous cases *)
- apply (drule abc_vacuous; auto)
+ apply (drule infinite_prog_vacuous; auto)
 done
 
-lemma abc: "
+lemma infinite_prog_matches: "
   \<pi> \<in> abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100 \<Longrightarrow> 
   infinite_prog_send_g100_abstract_path |\<rhd> \<pi>
 "
  apply (simp add: abstract_send_paths_def; clarsimp)
- apply (insert abc', blast)
-done
-
-lemma xyz: "
-  ap_noncompetitive infinite_prog_send_g100_abstract_path
-"
- apply (simp add: infinite_prog_send_g100_abstract_path_def)
- apply (rule; simp?)+
+ apply (insert infinite_prog_matches', blast)
 done
 
 theorem infinite_prog_has_single_sender_communication_analysis: "
   noncompetitive (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100)
 "
-   apply (simp add: noncompetitive_def, (rule allI, rule impI)+)
-   apply (rule abstract_noncompetitve_implies[of infinite_prog_send_g100_abstract_path])
-   apply (simp add: abc)
-   apply (simp add: abc)
-   apply (simp add: xyz)
+ apply (simp add: noncompetitive_def, (rule allI, rule impI)+)
+  apply (rule abstract_noncompetitve_implies[of infinite_prog_send_g100_abstract_path])
+   apply (simp add: infinite_prog_matches)
+  apply (simp add: infinite_prog_matches)
+ apply (simp add: infinite_prog_send_g100_abstract_path_def, (rule; simp?)+)
 done
 
 

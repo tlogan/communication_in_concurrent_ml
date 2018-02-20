@@ -234,48 +234,134 @@ inductive accept_state_pool :: "abstract_value_env \<times> abstract_value_env \
 definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abstract_value_env \<Rightarrow> bool" (infix "\<sqsubseteq>" 55) where
   "\<V> \<sqsubseteq> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
 
+
+inductive traceable_right :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55) where
+  End : "
+    \<V> \<tturnstile> e\<^sub>f \<down> [] \<mapsto> e\<^sub>f
+  " |
+  Let_Prim: "
+    \<V> \<tturnstile> e \<down> \<pi> \<mapsto> e\<^sub>f \<Longrightarrow>
+    \<V> \<tturnstile> (LET x = Prim p in e) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+  " | 
+  Let_Spawn_Child: "
+    \<lbrakk>
+      \<V> \<tturnstile> e\<^sub>c \<down> \<pi> \<mapsto> e\<^sub>f
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> (LET x = SPAWN e\<^sub>c in e\<^sub>m) \<down> (.x # \<pi>) \<mapsto> e\<^sub>f
+  " | 
+  Let_Spawn: "
+    \<lbrakk>
+      \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> (LET x = SPAWN e\<^sub>c in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+  " |
+  Let_Unit: "
+    \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
+    \<Longrightarrow>
+    \<V> \<tturnstile> (LET x = \<lparr>\<rparr> in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+  " |
+  Let_Chan: "
+    \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
+    \<Longrightarrow>
+    \<V> \<tturnstile> (LET x = CHAN \<lparr>\<rparr> in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+  " |
+  Let_Fst: "
+    \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
+    \<Longrightarrow>
+    \<V> \<tturnstile> (LET x = FST p in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+  " |
+  Let_Snd: "
+    \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
+    \<Longrightarrow>
+    \<V> \<tturnstile> (LET x = SND p in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+  " |
+  Let_Sync: "
+    \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
+    \<Longrightarrow>
+    \<V> \<tturnstile> (LET x = SYNC x\<^sub>v in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+  " |
+  Let_App: "
+    \<lbrakk>
+      ^Abs f\<^sub>p x\<^sub>p e\<^sub>b \<in> \<V> f; (* circular if infinite loop *)
+      \<downharpoonright>\<pi>\<upharpoonleft>; ``\<pi>``;
+      \<V> \<tturnstile> e\<^sub>b \<down> \<pi> \<mapsto> (RESULT y) ;
+      \<V> \<tturnstile> e\<^sub>m \<down> \<pi>' \<mapsto> e\<^sub>f 
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> (LET x = APP f x\<^sub>a in e\<^sub>m) \<down> (\<upharpoonleft>x # \<pi> @ \<downharpoonleft>x # \<pi>') \<mapsto> e\<^sub>f
+  " | 
+  Let_Case_Left: "
+    \<lbrakk>
+      \<downharpoonright>\<pi>\<upharpoonleft>; ``\<pi>``;
+      \<V> \<tturnstile> e\<^sub>l \<down> \<pi> \<mapsto> (RESULT y) ;
+      \<V> \<tturnstile> e\<^sub>m \<down> \<pi>' \<mapsto> e\<^sub>f 
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>m) \<down> (\<upharpoonleft>x # \<pi> @ \<downharpoonleft>x # \<pi>') \<mapsto> e\<^sub>f
+  " | 
+  Let_Case_Right: "
+    \<lbrakk>
+      \<downharpoonright>\<pi>\<upharpoonleft>; ``\<pi>``;
+      \<V> \<tturnstile> e\<^sub>r \<down> \<pi> \<mapsto> (RESULT y) ;
+      \<V> \<tturnstile> e\<^sub>m \<down> \<pi>' \<mapsto> e\<^sub>f 
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>m) \<down> (\<upharpoonleft>x # \<pi> @ \<downharpoonleft>x # \<pi>') \<mapsto> e\<^sub>f
+  "
+
+
+lemma traceable_right_trans': "
+  \<V> \<tturnstile> x \<down> \<pi>\<^sub>1 \<mapsto> y \<Longrightarrow> \<forall> \<pi>\<^sub>2 z . \<V> \<tturnstile> y \<down> \<pi>\<^sub>2 \<mapsto> z \<longrightarrow> \<V> \<tturnstile> x \<down> (\<pi>\<^sub>1 @ \<pi>\<^sub>2) \<mapsto> z 
+"
+ apply (erule traceable_right.induct; auto)
+  apply ((drule spec; drule spec; auto), (rule Let_Prim; auto))
+  apply ((drule spec; drule spec; auto))
+sorry
+
+lemma traceable_right_trans: "
+  \<V> \<tturnstile> x \<down> \<pi>\<^sub>1 \<mapsto> y \<Longrightarrow> \<V> \<tturnstile> y \<down> \<pi>\<^sub>2 \<mapsto> z \<Longrightarrow> \<V> \<tturnstile> x \<down> (\<pi>\<^sub>1 @ \<pi>\<^sub>2) \<mapsto> z 
+"
+using traceable_right_trans' by blast
+
 inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> exp) \<Rightarrow> bool" ("_ \<turnstile> _ \<down> _" [56,0,56]55)  where
   Start: "
     \<V> \<turnstile> e\<^sub>0 \<down> ([], e\<^sub>0)
   " |
   Result: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT _); 
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT x\<^sub>r); 
       \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = _ in e\<^sub>n)
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
   " |
   Let_App: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = APP f x\<^sub>a in _);
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = APP f x\<^sub>a in e\<^sub>n);
       ^Abs f' x' e' \<in> \<V> f
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e')
   " |
   Let_Case_Left: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n);
       ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>l)
   " |
   Let_Case_Right: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in _);
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n);
       ^Right x\<^sub>r' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>r)
   " |
   Let_Spawn_Child: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SPAWN e\<^sub>c in _)
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SPAWN e\<^sub>c in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;.x, e\<^sub>c)
   " |
   Let_Spawn: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SPAWN _ in e\<^sub>n)
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SPAWN e\<^sub>c in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
@@ -293,28 +379,28 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   " |
   Let_Sync: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SYNC _ in e\<^sub>n);
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SYNC x\<^sub>v in e\<^sub>n);
       |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
   Let_Fst: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = FST _ in e\<^sub>n);
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = FST p in e\<^sub>n);
       |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
   Let_Snd: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SND _ in e\<^sub>n);
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SND p in e\<^sub>n);
       |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
   Let_Prim: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = Prim _ in e\<^sub>n)
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = Prim p in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   "
@@ -341,6 +427,19 @@ inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
     \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2, \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
   "
 
+lemma traceable_implies_traceable_right': "
+    \<V> \<turnstile> e\<^sub>0 \<down> p  \<Longrightarrow> (\<forall> \<pi> e\<^sub>f . p = (\<pi>, e\<^sub>f) \<longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e\<^sub>f)
+"
+  apply (erule traceable.induct; auto)
+  apply rule
+  apply (rule_tac y = "LET x = b in e\<^sub>n" and \<pi>\<^sub>2 = "\<upharpoonleft>x # (\<pi>' ;; \<downharpoonleft>x)" in traceable_right_trans, assumption)
+sorry
+
+lemma traceable_implies_traceable_right: "
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>f)  \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e\<^sub>f
+"
+by (simp add: traceable_implies_traceable_right')
+
 lemma stack_traceable_preserved_over_linear_balanced_extension: "
  \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)
 "
@@ -354,7 +453,5 @@ lemma stack_traceable_preserved_over_seq_extension:"
   \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> ;; `x, \<kappa>)
 "
 by (simp add: stack_traceable_preserved_over_linear_balanced_extension)
-
-
 
 end
