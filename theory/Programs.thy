@@ -353,10 +353,7 @@ done
 lemma infinite_prog_vacuous: "
   \<lbrakk>
     infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n);
-    ^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c;
-    ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e;
     ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y;
-    infinite_prog_\<V> x\<^sub>m \<subseteq> ((\<lambda>_. {})(g100 := {^\<lparr>\<rparr>})) g100;
     \<pi>\<^sub>y ;; `x\<^sub>y \<noteq> [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106];
     (
       \<nexists>\<pi> x. \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `x) @ [\<upharpoonleft>g107, `g105, `g106] \<and>
@@ -366,10 +363,27 @@ lemma infinite_prog_vacuous: "
   \<rbrakk> \<Longrightarrow>
   False
 "
- apply ((auto; (drule spec; drule spec; auto)?))
- apply (erule traceable.cases; auto)
+ apply (rotate_tac -1)
+ apply (erule notE)
+ apply (unfold infinite_prog_def)
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100]", erule traceable.cases; clarsimp)
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101]", clarsimp)
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102]", (erule traceable.cases; clarsimp), 
+   (erule traceable.cases; clarsimp; erule traceable.cases; clarsimp)
+ )
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108]", (erule traceable.cases; clarsimp;
+    (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp)))
+ ))
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108, \<upharpoonleft>g109]", clarsimp)
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105]", 
+    (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp);
+      (erule traceable.cases; clarsimp)
+    ))
+  )
 
-sorry
+
+
+done
 
 
 lemma infinite_prog_matches': "

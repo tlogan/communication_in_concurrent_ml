@@ -359,7 +359,9 @@ lemma stack_traceable_preserved_over_seq_extension:"
 by (simp add: stack_traceable_preserved_over_linear_balanced_extension)
 
 
-(*
+
+
+(* TO DO:  find a way to make definition without circular APP case*)
 inductive traceable_right :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55) where
   End : "
     \<V> \<tturnstile> e\<^sub>f \<down> [] \<mapsto> e\<^sub>f
@@ -433,7 +435,7 @@ inductive traceable_right :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
     \<V> \<tturnstile> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>m) \<down> (\<upharpoonleft>x # \<pi>) \<mapsto> e\<^sub>f
   "
 
-
+(*
 lemma traceable_right_trans': "
   \<V> \<tturnstile> x \<down> \<pi>\<^sub>1 \<mapsto> y \<Longrightarrow> \<forall> \<pi>\<^sub>2 z . \<V> \<tturnstile> y \<down> \<pi>\<^sub>2 \<mapsto> z \<longrightarrow> \<V> \<tturnstile> x \<down> (\<pi>\<^sub>1 @ \<pi>\<^sub>2) \<mapsto> z 
 "
