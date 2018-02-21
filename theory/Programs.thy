@@ -376,14 +376,12 @@ lemma infinite_prog_vacuous: "
  ))
  apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108, \<upharpoonleft>g109]", clarsimp)
  apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105]", 
-    (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp);
-      (erule traceable.cases; clarsimp)
-    ))
-  )
+   ((erule traceable.cases; clarsimp); (simp add: infinite_prog_\<V>_def))
+ )
 
 
 
-done
+sorry
 
 
 lemma infinite_prog_matches': "

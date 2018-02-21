@@ -361,7 +361,7 @@ by (simp add: stack_traceable_preserved_over_linear_balanced_extension)
 
 
 
-(* TO DO:  find a way to make definition without circular APP case*)
+(*
 inductive traceable_right :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55) where
   End : "
     \<V> \<tturnstile> e\<^sub>f \<down> [] \<mapsto> e\<^sub>f
