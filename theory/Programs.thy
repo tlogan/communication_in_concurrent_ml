@@ -397,11 +397,6 @@ lemma infinite_prog_vacuous: "
  )
 
 
-
-(*
- apply (match premises in I: "_ \<in> (if P then _ else _)" for P \<Rightarrow> \<open>cases P\<close>, clarsimp) 
-*)
-
 (*
  apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102]", (erule traceable.cases; clarsimp), 
    (erule traceable.cases; clarsimp; erule traceable.cases; clarsimp)
