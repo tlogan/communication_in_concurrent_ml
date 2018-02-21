@@ -365,9 +365,44 @@ lemma infinite_prog_vacuous: "
 "
  apply (rotate_tac -1)
  apply (erule notE)
- apply (unfold infinite_prog_def)
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100]", erule traceable.cases; clarsimp)
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101]", clarsimp)
+ apply (unfold infinite_prog_def infinite_prog_\<V>_def)
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a]", erule traceable.cases; clarsimp)
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b]", 
+   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp))
+ )
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b, c]", simp add: infinite_prog_\<V>_def,
+   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp)))
+ )
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b, c, d]", simp add: infinite_prog_\<V>_def,
+   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp;
+     (erule traceable.cases; clarsimp)
+   )))
+ )
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b, c, d, aa]", simp add: infinite_prog_\<V>_def,
+   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp;
+     (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp))
+   )))
+ )
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b, c, d, aa, bb]", simp add: infinite_prog_\<V>_def,
+   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp;
+     (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp)))
+   )))
+ )
+ apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b, c, d, aa, bb, cc]", simp add: infinite_prog_\<V>_def,
+   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp;
+     (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp;
+       (erule traceable.cases; clarsimp)
+     )))
+   )))
+ )
+
+
+
+(*
+ apply (match premises in I: "_ \<in> (if P then _ else _)" for P \<Rightarrow> \<open>cases P\<close>, clarsimp) 
+*)
+
+(*
  apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102]", (erule traceable.cases; clarsimp), 
    (erule traceable.cases; clarsimp; erule traceable.cases; clarsimp)
  )
@@ -378,8 +413,9 @@ lemma infinite_prog_vacuous: "
  apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105]", 
    ((erule traceable.cases; clarsimp); (simp add: infinite_prog_\<V>_def))
  )
-
-
+ apply (fold infinite_prog_def, clarsimp)
+ apply (case_tac "prefix [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106] \<pi>\<^sub>y")
+*)
 
 sorry
 
