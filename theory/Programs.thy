@@ -115,17 +115,6 @@ inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
    ap_noncompetitive (Concat p\<^sub>a p\<^sub>b)
  "
 
-
-(** this may be too strong to prove: **)
-(*
-lemma "
-  \<lbrakk>
-    ap_noncompetitive ap
-  \<rbrakk> \<Longrightarrow>
-  noncompetitive {\<pi> . ap |\<rhd> \<pi>}
-"
-sorry
-*)
 lemma ap_linear_implies_linear : "
   ap_linear p \<Longrightarrow> p |\<rhd> \<pi> \<Longrightarrow> ``\<pi>``
 "
@@ -262,17 +251,6 @@ theorem infinite_prog_single_sender: "
    noncompetitive (send_paths \<E>' (Ch [] g100))
 "
   apply (simp add: noncompetitive_def, (rule allI, rule impI)+)
- 
-(* strategy:
-  step thru one iteration of loop.
-  Each step before the recursion may have a distinct p_set.
-  induct on star_left.  
-  if 
-    the ordered paths hold for (send_paths \<E> c) = p_set and
-    p_set = p_set'
-  then 
-    the ordered paths should hold for (send_paths \<E>' c) = p_set'
-*)
 sorry
 
 
@@ -347,60 +325,6 @@ theorem infinite_prog_has_intuitive_avf_analysis: "
  apply (rule; simp?)+
 done
 
-method set_elem_condition_split = (
-  match premises in 
-    I: "_ \<in> (if P then _ else _)" for P \<Rightarrow> \<open>cases P\<close>
-, clarsimp)
-
-method subset_condition_split = (
-  match premises in 
-    I: "(if P then _ else _) \<subseteq> _" for P \<Rightarrow> \<open>cases P\<close>
-, clarsimp)
-
-lemma step_down_length_one_implies_false: "
-  Suc 0 = length (\<pi> @ \<upharpoonleft>x # (\<pi>' ;; \<downharpoonleft>x)) \<Longrightarrow> False
-"
-by simp
-
-lemma snoc_length_one_implies_empty_prefix: "
-  Suc 0 = length (\<pi> ;; l) \<Longrightarrow> \<pi> = []
-"
-by simp
-
-lemma step_down_length_two_implies_empty_lists: "
-  length (\<pi> @ \<upharpoonleft>x # (\<pi>' ;; \<downharpoonleft>x)) = 2 \<Longrightarrow> \<pi> = [] \<and> \<pi>' = []
-"
-by simp
-
-(*
-lemma abc_base_cases: "
-  n = length (\<pi>\<^sub>y ;; `x\<^sub>y) \<Longrightarrow>
-  infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<Longrightarrow>
-  ^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c \<Longrightarrow>
-  ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e \<Longrightarrow>
-  ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y \<Longrightarrow>
-  infinite_prog_\<V> x\<^sub>m \<subseteq> ((\<lambda>_. {})(g100 := {^\<lparr>\<rparr>})) g100 \<Longrightarrow>
-  \<not> 7 < n \<Longrightarrow> 
-  &`g100 :@: &.g101 :@: &`g102 :@: &`g108 :@: &\<upharpoonleft>g109 :@: &`g105 :@: &`g106 :@: {&\<upharpoonleft>g107 :@: &`g105 :@: &`g106}* |\<rhd> \<pi>\<^sub>y ;; `x\<^sub>y
-"
- apply (unfold infinite_prog_def)
- apply (case_tac "n = 0")
-  apply (simp)
- apply (case_tac "n = 1")
-  apply (simp, erule traceable.cases; blast)
- apply (case_tac "n = 2")
-  apply (simp, erule traceable.cases; clarsimp; (erule traceable.cases; blast))
- apply (case_tac "n = 3")
-  apply (simp, erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; blast)))
- apply (case_tac "n = 4")
-  apply (simp, erule traceable.cases; auto)
-   apply (case_tac "\<pi>"; case_tac "\<pi>'"; auto?)
-    apply (erule traceable.cases; auto; erule traceable.cases; auto)
-sorry
-*)
-
-value "(abstract_path.Concat (abstract_path.Concat x y) z)"
-
 lemma cons_eq_append: "
   x # xs = [x] @ xs
 "
@@ -429,16 +353,23 @@ done
 lemma infinite_prog_vacuous: "
   \<lbrakk>
     infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n);
+    ^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c;
+    ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e;
+    ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y;
+    infinite_prog_\<V> x\<^sub>m \<subseteq> ((\<lambda>_. {})(g100 := {^\<lparr>\<rparr>})) g100;
     \<pi>\<^sub>y ;; `x\<^sub>y \<noteq> [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106];
-    \<nexists>\<pi>. \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `g106) @ [\<upharpoonleft>g107, `g105, `g106] \<and> infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n)
+    (
+      \<nexists>\<pi> x. \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `x) @ [\<upharpoonleft>g107, `g105, `g106] \<and>
+      infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET x = SYNC x\<^sub>e in e\<^sub>n) \<and> 
+      ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x
+    )
   \<rbrakk> \<Longrightarrow>
   False
 "
- apply (drule traceable_implies_traceable_right)
- apply ((auto; (drule spec; auto)?); (drule traceable_implies_traceable_right)?)
- apply (unfold infinite_prog_def)
- apply (erule traceable_right.cases; auto)+
-done
+ apply ((auto; (drule spec; drule spec; auto)?))
+ apply (erule traceable.cases; auto)
+
+sorry
 
 
 lemma infinite_prog_matches': "
@@ -461,13 +392,14 @@ lemma infinite_prog_matches': "
   )+
   apply (rule ap_matches.Star_Empty)
  (* Inductive case *)
- apply (case_tac "(\<exists> \<pi> .
-    \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `g106) @ [\<upharpoonleft>g107, `g105, `g106] \<and> 
-    infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET g106 = SYNC x\<^sub>e in e\<^sub>n)
+ apply (case_tac "(\<exists> \<pi> x.
+    \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `x) @ [\<upharpoonleft>g107, `g105, `g106] \<and> 
+    infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET x = SYNC x\<^sub>e in e\<^sub>n) \<and>
+    ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x
  )", clarsimp)
-  apply (drule_tac x = "(length (\<pi> ;; `g106))" in spec, clarsimp)
+  apply (drule_tac x = "(length (\<pi> ;; `x))" in spec, clarsimp)
   apply (drule_tac x = "\<pi>" in spec, clarsimp)
-  apply (drule spec[of _ "g106"])
+  apply (drule_tac x = "x" in spec)
   apply (drule_tac x = "x\<^sub>e" in spec, erule impE, rule_tac x = "e\<^sub>n" in exI, assumption)
   apply (drule_tac x = "x\<^sub>s\<^sub>c" in spec, erule impE, assumption)
   apply (drule_tac x = "x\<^sub>m" in spec, (erule impE, assumption)+)
@@ -518,6 +450,7 @@ theorem infinite_prog_has_one_to_one_communication_analysis: "
  apply (simp add: infinite_prog_has_single_receiver_communication_analysis)
 done
 
+(*
 
 method condition_split = (
   match premises in 
@@ -537,7 +470,7 @@ method leaf_elim_search = (
     I: "leaf stpool lf" for stpool lf \<Rightarrow> \<open>(leaf_elim_loop stpool stpool lf I: I)\<close>
 )
 
-(*
+
 method topo_solve = 
   (
     (erule star.cases, auto),
