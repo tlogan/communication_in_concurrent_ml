@@ -435,7 +435,7 @@ inductive traceable_right :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
     \<V> \<tturnstile> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>m) \<down> (\<upharpoonleft>x # \<pi>) \<mapsto> e\<^sub>f
   "
 
-(*
+
 lemma traceable_right_trans': "
   \<V> \<tturnstile> x \<down> \<pi>\<^sub>1 \<mapsto> y \<Longrightarrow> \<forall> \<pi>\<^sub>2 z . \<V> \<tturnstile> y \<down> \<pi>\<^sub>2 \<mapsto> z \<longrightarrow> \<V> \<tturnstile> x \<down> (\<pi>\<^sub>1 @ \<pi>\<^sub>2) \<mapsto> z 
 "
