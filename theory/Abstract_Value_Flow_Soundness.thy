@@ -1059,13 +1059,13 @@ lemma traceable_exp_preservation_over_sync_recv_evt: "
 \<lbrakk>
   \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e);
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e';\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>'\<rangle>);
-  \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e';\<rho>\<^sub>r;\<kappa>'\<rangle>)
+  \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>n;\<rho>\<^sub>r;\<kappa>'\<rangle>)
 \<rbrakk> \<Longrightarrow> 
-\<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>r ;; `x\<^sub>r, e')
+\<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>r ;; `x\<^sub>r, e\<^sub>n)
 "
  apply ((drule spec)+, erule impE, assumption)
  apply (drule flow_over_pool_precision; simp?; blast?)
- apply (drule abstracted_value_exists; simp; blast?; rule Let_Sync; auto)
+ apply (drule abstracted_value_exists; simp; blast?; rule; auto)
 done
 
 lemma traceable_exp_preservation_over_sync_send_evt: "
@@ -1079,7 +1079,7 @@ lemma traceable_exp_preservation_over_sync_send_evt: "
 "
  apply ((drule spec)+, erule impE, assumption)
  apply (drule flow_over_pool_precision[of \<V> \<C> _ "\<pi>\<^sub>s ;; `x\<^sub>s" e' "\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)" \<kappa>'], auto)
- apply (drule abstracted_value_exists; simp; blast?; rule Let_Sync; auto)
+ apply (drule abstracted_value_exists; simp; blast?; rule traceable.Let_Sync; auto)
  apply (subgoal_tac "|\<lbrace>\<rbrace>| \<in> \<V> x\<^sub>s", assumption, simp)
 done
 
@@ -1098,23 +1098,23 @@ lemma traceable_exp_preservation: "
       apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
       apply (((drule spec)+, erule impE, assumption, erule conjE))
       apply (erule stack_traceable.cases; auto)
-      apply (erule seq_step.cases; auto; rule Result; auto)
+      apply (erule seq_step.cases; auto; rule traceable.Result; auto)
      apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
      apply ((drule spec)+, erule impE, assumption, erule conjE)
      apply (drule flow_over_pool_precision, auto)
      apply (erule seq_step.cases, auto)
-       apply (drule abstracted_value_exists, simp+, rule Let_Case_Left; auto)
-      apply (drule abstracted_value_exists, simp+, rule Let_Case_Right; auto)
-     apply (drule abstracted_value_exists, simp+, rule Let_App; auto)
+       apply (drule abstracted_value_exists, simp+, rule traceable.Let_Case_Left; auto)
+      apply (drule abstracted_value_exists, simp+, rule traceable.Let_Case_Right; auto)
+     apply (drule abstracted_value_exists, simp+, rule traceable.Let_App; auto)
     apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
     apply ((drule spec)+, erule impE, assumption, erule conjE)
     apply (drule flow_preservation, auto)
     apply (drule flow_over_pool_precision, auto)
     apply (erule seq_step.cases, auto)
-       apply (drule abstracted_value_exists; auto; simp; rule Let_Unit; auto)
-      apply (drule abstracted_value_exists; auto; simp; rule Let_Prim; auto)
-     apply (drule abstracted_value_exists; auto; rule Let_Fst; auto)
-    apply (drule abstracted_value_exists; auto; rule Let_Snd; auto)
+       apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Unit; auto)
+      apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Prim; auto)
+     apply (drule abstracted_value_exists; auto; rule traceable.Let_Fst; auto)
+    apply (drule abstracted_value_exists; auto; rule traceable.Let_Snd; auto)
    apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; `x\<^sub>r", auto)
    apply (drule flow_preservation, auto)
    apply (meson traceable_exp_preservation_over_sync_recv_evt)
@@ -1125,12 +1125,12 @@ lemma traceable_exp_preservation: "
  apply (drule flow_preservation, auto)
  apply (drule flow_over_pool_precision, auto)
  apply ((drule spec)+, erule impE, assumption, erule conjE)
- apply (drule abstracted_value_exists; auto; simp; rule Let_Chan; auto)
+ apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Chan; auto)
 
 apply (case_tac "\<pi>' = \<pi> ;; .x"; auto)
  apply ((drule spec)+, erule impE, assumption, erule conjE)
- apply (rule Let_Spawn_Child; auto)
-apply (case_tac "\<pi>' = \<pi> ;; `x"; auto; rule Let_Spawn; auto)
+ apply (rule traceable.Let_Spawn_Child; auto)
+apply (case_tac "\<pi>' = \<pi> ;; `x"; auto; rule traceable.Let_Spawn; auto)
 done
 
 

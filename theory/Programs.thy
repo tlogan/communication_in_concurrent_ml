@@ -162,6 +162,32 @@ lemma abstract_noncompetitve_implies: "
 done
 
 
+lemma cons_eq_append: "
+  x # xs = [x] @ xs
+"
+by simp
+
+lemma concat_assoc[simp]: "
+  (x :@: y) :@: z |\<rhd> \<pi> \<longleftrightarrow> x :@: (y :@: z) |\<rhd> \<pi>
+"
+  apply auto
+   apply (erule ap_matches.cases; auto; erule ap_matches.cases; auto)
+   apply (drule ap_matches.Concat[of y _ z], simp)
+   apply (erule ap_matches.Concat, simp)
+  apply (erule ap_matches.cases; auto; erule ap_matches.cases[of "y :@: z"]; auto)
+  apply (drule ap_matches.Concat, simp)
+  apply (drule ap_matches.Concat[of "x :@: y" _ "z"], auto)
+done
+
+
+lemma concat_star_implies_star: "
+ {p}* :@: p |\<rhd> \<pi> \<Longrightarrow> {p}* |\<rhd> \<pi>
+"
+ apply (erule ap_matches.cases; auto)
+ apply (erule ap_matches.Star; simp)
+done
+
+
 abbreviation g100 where "g100 \<equiv> Var ''g100''"
 abbreviation g101 where "g101 \<equiv> Var ''g101''"
 abbreviation g102 where "g102 \<equiv> Var ''g102''"
@@ -317,101 +343,29 @@ definition infinite_prog_\<C> :: "abstract_value_env" where
     g100 := {^\<lparr>\<rparr>}
   )"
 
-
+(*
 theorem infinite_prog_has_intuitive_avf_analysis: "
   (infinite_prog_\<V>, infinite_prog_\<C>) \<Turnstile>\<^sub>e infinite_prog 
 "
  apply (simp add: infinite_prog_\<V>_def infinite_prog_\<C>_def infinite_prog_def)
  apply (rule; simp?)+
 done
+*)
 
-lemma cons_eq_append: "
-  x # xs = [x] @ xs
-"
-by simp
-
-lemma concat_assoc[simp]: "
-  (x :@: y) :@: z |\<rhd> \<pi> \<longleftrightarrow> x :@: (y :@: z) |\<rhd> \<pi>
-"
-  apply auto
-   apply (erule ap_matches.cases; auto; erule ap_matches.cases; auto)
-   apply (drule ap_matches.Concat[of y _ z], simp)
-   apply (erule ap_matches.Concat, simp)
-  apply (erule ap_matches.cases; auto; erule ap_matches.cases[of "y :@: z"]; auto)
-  apply (drule ap_matches.Concat, simp)
-  apply (drule ap_matches.Concat[of "x :@: y" _ "z"], auto)
-done
-
-
-lemma concat_star_implies_star: "
- {p}* :@: p |\<rhd> \<pi> \<Longrightarrow> {p}* |\<rhd> \<pi>
-"
- apply (erule ap_matches.cases; auto)
- apply (erule ap_matches.Star; simp)
-done
-
-lemma infinite_prog_vacuous: "
+lemma infinite_prog_has_earlier_sync: "
   \<lbrakk>
     infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n);
     ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y;
-    \<pi>\<^sub>y ;; `x\<^sub>y \<noteq> [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106];
-    (
-      \<nexists>\<pi> x. \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `x) @ [\<upharpoonleft>g107, `g105, `g106] \<and>
-      infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET x = SYNC x\<^sub>e in e\<^sub>n) \<and> 
-      ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x
-    )
+    \<pi>\<^sub>y ;; `x\<^sub>y \<noteq> [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106]
   \<rbrakk> \<Longrightarrow>
-  False
+  (\<exists>\<pi> x. 
+    \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `x) @ [\<upharpoonleft>g107, `g105, `g106] \<and>
+    infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET x = SYNC x\<^sub>e in e\<^sub>n) \<and> 
+    ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x
+  )
 "
- apply (rotate_tac -1)
- apply (erule notE)
- apply (unfold infinite_prog_def infinite_prog_\<V>_def)
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a]", erule traceable.cases; clarsimp)
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b]", 
-   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp))
- )
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b, c]", simp add: infinite_prog_\<V>_def,
-   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp)))
- )
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b, c, d]", simp add: infinite_prog_\<V>_def,
-   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp;
-     (erule traceable.cases; clarsimp)
-   )))
- )
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b, c, d, aa]", simp add: infinite_prog_\<V>_def,
-   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp;
-     (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp))
-   )))
- )
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b, c, d, aa, bb]", simp add: infinite_prog_\<V>_def,
-   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp;
-     (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp)))
-   )))
- )
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [a, b, c, d, aa, bb, cc]", simp add: infinite_prog_\<V>_def,
-   (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp;
-     (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp;
-       (erule traceable.cases; clarsimp)
-     )))
-   )))
- )
-
-
-(*
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102]", (erule traceable.cases; clarsimp), 
-   (erule traceable.cases; clarsimp; erule traceable.cases; clarsimp)
- )
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108]", (erule traceable.cases; clarsimp;
-    (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp; (erule traceable.cases; clarsimp)))
- ))
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108, \<upharpoonleft>g109]", clarsimp)
- apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105]", 
-   ((erule traceable.cases; clarsimp); (simp add: infinite_prog_\<V>_def))
- )
- apply (fold infinite_prog_def, clarsimp)
- apply (case_tac "prefix [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106] \<pi>\<^sub>y")
-*)
-
+ apply (unfold infinite_prog_def)
+ apply (erule traceable.cases; clarsimp)
 sorry
 
 
@@ -435,11 +389,7 @@ lemma infinite_prog_matches': "
   )+
   apply (rule ap_matches.Star_Empty)
  (* Inductive case *)
- apply (case_tac "(\<exists> \<pi> x.
-    \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `x) @ [\<upharpoonleft>g107, `g105, `g106] \<and> 
-    infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET x = SYNC x\<^sub>e in e\<^sub>n) \<and>
-    ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x
- )", clarsimp)
+ apply ((drule infinite_prog_has_earlier_sync; simp), (erule exE)+)
   apply (drule_tac x = "(length (\<pi> ;; `x))" in spec, clarsimp)
   apply (drule_tac x = "\<pi>" in spec, clarsimp)
   apply (drule_tac x = "x" in spec)
@@ -455,8 +405,6 @@ lemma infinite_prog_matches': "
     "(&x) :@: _  |\<rhd> x # _" for x \<Rightarrow> \<open>(subst cons_eq_append[of x], rule ap_matches.Concat, rule ap_matches.Atom)\<close>
   )+
   apply (rule ap_matches.Atom)
- (* vacuous cases *)
- apply (drule infinite_prog_vacuous; auto)
 done
 
 lemma infinite_prog_matches: "

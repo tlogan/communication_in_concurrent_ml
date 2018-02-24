@@ -18,7 +18,11 @@ datatype val =
   V_Closure prim "var \<rightharpoonup> val" ("\<lbrace>_, _\<rbrace>") |
   V_Unit ("\<lbrace>\<rbrace>")
 
- 
+fun val_to_bind :: "val \<Rightarrow> bind" where
+  "val_to_bind \<lbrace> _ \<rbrace> = CHAN \<lparr>\<rparr>" |
+  "val_to_bind \<lbrace>p, _ \<rbrace> = Prim p" |
+  "val_to_bind \<lbrace>\<rbrace> = \<lparr>\<rparr>"
+
 type_synonym val_env = "var \<rightharpoonup> val"
 
 datatype cont = Cont var exp val_env ("\<langle>_,_,_\<rangle>" [0, 0, 0] 70) 

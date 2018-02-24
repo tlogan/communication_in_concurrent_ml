@@ -247,7 +247,7 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
   " |
-  Let_App: "
+  Let_App: " 
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = APP f x\<^sub>a in e\<^sub>n);
       ^Abs f' x' e' \<in> \<V> f
@@ -343,7 +343,6 @@ inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
   "
 
 
-
 lemma stack_traceable_preserved_over_linear_balanced_extension: "
  \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)
 "
@@ -359,109 +358,186 @@ lemma stack_traceable_preserved_over_seq_extension:"
 by (simp add: stack_traceable_preserved_over_linear_balanced_extension)
 
 
-
-
-(*
-inductive traceable_right :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55) where
-  End : "
-    \<V> \<tturnstile> e\<^sub>f \<down> [] \<mapsto> e\<^sub>f
+inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^sub>e _" [56,56]55) where
+  Refl : "
+    e \<preceq>\<^sub>e e
   " |
-  Let_Prim: "
-    \<V> \<tturnstile> e \<down> \<pi> \<mapsto> e\<^sub>f \<Longrightarrow>
-    \<V> \<tturnstile> (LET x = Prim p in e) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+  Let_Abs_Body: "
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>b 
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)
   " | 
+  Let_Abs: "
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>n
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)
+  " | 
+  Let_Pair: "
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>n
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e\<^sub>n)
+  " | 
+  Let_Left: "
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>n
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = LEFT x\<^sub>p in e\<^sub>n)
+  " | 
+  Let_Right: "
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>n
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = RIGHT x\<^sub>p in e\<^sub>n)
+  " | 
+  Let_Send_Evt: "
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>n
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e\<^sub>n)
+  " |
+  Let_Recv_Evt: "
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>n
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = RECV EVT x\<^sub>r\<^sub>c in e\<^sub>n)
+  " |
   Let_Spawn_Child: "
     \<lbrakk>
-      \<V> \<tturnstile> e\<^sub>c \<down> \<pi> \<mapsto> e\<^sub>f
+      e \<preceq>\<^sub>e e\<^sub>c
     \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> (LET x = SPAWN e\<^sub>c in e\<^sub>m) \<down> (.x # \<pi>) \<mapsto> e\<^sub>f
+    e \<preceq>\<^sub>e (LET x = SPAWN e\<^sub>c in e\<^sub>n)
   " | 
   Let_Spawn: "
     \<lbrakk>
-      \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
+      e \<preceq>\<^sub>e e\<^sub>n
     \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> (LET x = SPAWN e\<^sub>c in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+    e \<preceq>\<^sub>e (LET x = SPAWN e\<^sub>c in e\<^sub>n)
   " |
   Let_Unit: "
-    \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
-    \<Longrightarrow>
-    \<V> \<tturnstile> (LET x = \<lparr>\<rparr> in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>n
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = \<lparr>\<rparr> in e\<^sub>n)
   " |
   Let_Chan: "
-    \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
-    \<Longrightarrow>
-    \<V> \<tturnstile> (LET x = CHAN \<lparr>\<rparr> in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>n
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = CHAN \<lparr>\<rparr> in e\<^sub>n)
   " |
   Let_Fst: "
-    \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
-    \<Longrightarrow>
-    \<V> \<tturnstile> (LET x = FST p in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>n
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = FST p in e\<^sub>n)
   " |
   Let_Snd: "
-    \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
-    \<Longrightarrow>
-    \<V> \<tturnstile> (LET x = SND p in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>n
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = SND p in e\<^sub>n)
   " |
   Let_Sync: "
-    \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f
-    \<Longrightarrow>
-    \<V> \<tturnstile> (LET x = SYNC x\<^sub>v in e\<^sub>m) \<down> (`x # \<pi>) \<mapsto> e\<^sub>f
-  " |
-  Result: "
     \<lbrakk>
-      \<downharpoonright>\<pi>\<^sub>m\<upharpoonleft>; ``\<pi>\<^sub>m``;
-      \<V> \<turnstile> (LET x = b in e\<^sub>m) \<down> (\<upharpoonleft>x # \<pi>\<^sub>m @ \<downharpoonleft>x # \<pi>, e\<^sub>f);
-      \<V> \<tturnstile> e\<^sub>m \<down> \<pi> \<mapsto> e\<^sub>f 
+      e \<preceq>\<^sub>e e\<^sub>n
     \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> (RESULT y) \<down> (\<downharpoonleft>x # \<pi>) \<mapsto> e\<^sub>f
+    e \<preceq>\<^sub>e (LET x = SYNC x\<^sub>v in e\<^sub>n)
   " |
   Let_App: "
     \<lbrakk>
-      ^Abs f\<^sub>p x\<^sub>p e\<^sub>b \<in> \<V> f;
-      \<V> \<turnstile> e\<^sub>b \<down> (\<pi>, e\<^sub>f)  (* avoid circular definition by using traceable *)
+      e \<preceq>\<^sub>e e\<^sub>n
     \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> (LET x = APP f x\<^sub>a in e\<^sub>m) \<down> (\<upharpoonleft>x # \<pi>) \<mapsto> e\<^sub>f
+    e \<preceq>\<^sub>e (LET x = APP f x\<^sub>a in e\<^sub>n)
   " | 
   Let_Case_Left: "
     \<lbrakk>
-      \<V> \<tturnstile> e\<^sub>l \<down> \<pi> \<mapsto> e\<^sub>f 
+      e \<preceq>\<^sub>e e\<^sub>l
     \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>m) \<down> (\<upharpoonleft>x # \<pi>) \<mapsto> e\<^sub>f
+    e \<preceq>\<^sub>e (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
   " | 
   Let_Case_Right: "
     \<lbrakk>
-      \<V> \<tturnstile> e\<^sub>r \<down> \<pi> \<mapsto> e\<^sub>f 
+      e \<preceq>\<^sub>e e\<^sub>r
     \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>m) \<down> (\<upharpoonleft>x # \<pi>) \<mapsto> e\<^sub>f
+    e \<preceq>\<^sub>e (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
+  " | 
+  Let_Case: "
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>n
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
   "
-
-
-lemma traceable_right_trans': "
-  \<V> \<tturnstile> x \<down> \<pi>\<^sub>1 \<mapsto> y \<Longrightarrow> \<forall> \<pi>\<^sub>2 z . \<V> \<tturnstile> y \<down> \<pi>\<^sub>2 \<mapsto> z \<longrightarrow> \<V> \<tturnstile> x \<down> (\<pi>\<^sub>1 @ \<pi>\<^sub>2) \<mapsto> z 
+lemma subexp_trans': "
+  e\<^sub>y \<preceq>\<^sub>e e\<^sub>z \<Longrightarrow> (\<forall> e\<^sub>x . e\<^sub>x \<preceq>\<^sub>e e\<^sub>y \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>z)
 "
- apply (erule traceable_right.induct; auto)
-  apply ((drule spec; drule spec; auto), (rule Let_Prim; auto))
-  apply ((drule spec; drule spec; auto))
-sorry
+  apply (erule subexp.induct; auto)
+   apply (drule spec; auto, rule subexp.Let_Abs_Body, assumption)
+   apply (drule spec; auto, rule subexp.Let_Abs, assumption)
+   apply (drule spec; auto, rule subexp.Let_Pair, assumption)
+   apply (drule spec; auto, rule subexp.Let_Left, assumption)
+   apply (drule spec; auto, rule subexp.Let_Right, assumption)
+   apply (drule spec; auto, rule subexp.Let_Send_Evt, assumption)
+   apply (drule spec; auto, rule subexp.Let_Recv_Evt, assumption)
+   apply (drule spec; auto, rule subexp.Let_Spawn_Child, assumption)
+   apply (drule spec; auto, rule subexp.Let_Spawn, assumption)
+   apply (drule spec; auto, rule subexp.Let_Unit, assumption)
+   apply (drule spec; auto, rule subexp.Let_Chan, assumption)
+   apply (drule spec; auto, rule subexp.Let_Fst, assumption)
+   apply (drule spec; auto, rule subexp.Let_Snd, assumption)
+   apply (drule spec; auto, rule subexp.Let_Sync, assumption)
+   apply (drule spec; auto, rule subexp.Let_App, assumption)
+   apply (drule spec; auto, rule subexp.Let_Case_Left, assumption)
+   apply (drule spec; auto, rule subexp.Let_Case_Right, assumption)
+   apply (drule spec; auto, rule subexp.Let_Case, assumption)
+done
 
-lemma traceable_right_trans: "
-  \<V> \<tturnstile> x \<down> \<pi>\<^sub>1 \<mapsto> y \<Longrightarrow> \<V> \<tturnstile> y \<down> \<pi>\<^sub>2 \<mapsto> z \<Longrightarrow> \<V> \<tturnstile> x \<down> (\<pi>\<^sub>1 @ \<pi>\<^sub>2) \<mapsto> z 
+lemma subexp_trans: "
+  e\<^sub>x \<preceq>\<^sub>e e\<^sub>y \<Longrightarrow> e\<^sub>y \<preceq>\<^sub>e e\<^sub>z \<Longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>z
 "
-using traceable_right_trans' by blast
+using subexp_trans' by blast
 
-lemma traceable_implies_traceable_right': "
-    \<V> \<turnstile> e\<^sub>0 \<down> p  \<Longrightarrow> (\<forall> \<pi> e\<^sub>f . p = (\<pi>, e\<^sub>f) \<longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e\<^sub>f)
+lemma subexp1: "
+  e\<^sub>n \<preceq>\<^sub>e LET x = b in e\<^sub>n
 "
-  apply (erule traceable.induct; auto)
-  apply rule
-  apply (rule_tac y = "LET x = b in e\<^sub>n" and \<pi>\<^sub>2 = "\<upharpoonleft>x # (\<pi>' ;; \<downharpoonleft>x)" in traceable_right_trans, assumption)
-sorry
+ apply (cases b; simp; rule?; rule?)
+ apply (rename_tac p)
+ apply (case_tac "p"; simp; rule?; rule?)
+done
 
-lemma traceable_implies_traceable_right: "
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>f)  \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e\<^sub>f
+
+lemma traceable_implies_subexp': "
+  \<V> \<turnstile> e\<^sub>0 \<down> p \<Longrightarrow>
+  (\<forall> \<pi> e .
+    p = (\<pi>, e) \<longrightarrow>
+    (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0)) \<longrightarrow>
+    e \<preceq>\<^sub>e e\<^sub>0
+  )
 "
-by (simp add: traceable_implies_traceable_right')
+ apply (erule traceable.induct; auto)
+            apply (rule subexp.Refl)
+            apply (rotate_tac -1, rule subexp_trans; auto?; rule subexp1)
+           apply (drule_tac x = f in spec)
+           apply (drule_tac x = "\<lbrace> Abs f' x' e' , _\<rbrace>" in spec)
+           apply (erule impE; simp)
+           apply (erule exE)+
+           apply (rotate_tac -1, rule subexp_trans; auto?; rule subexp.Let_Abs_Body; rule subexp.Refl)
+          apply (rule subexp_trans; auto?; rule subexp.Let_Case_Left; rule subexp.Refl)
+         apply (rule subexp_trans; auto?; rule subexp.Let_Case_Right; rule subexp.Refl)
+       apply (rule subexp_trans; auto?; rule subexp.Let_Spawn_Child; rule subexp.Refl)
+      apply (rule subexp_trans; auto?; rule subexp1)+  
+done
 
-*)
+theorem traceable_implies_subexp: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e);
+    (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0))
+  \<rbrakk> \<Longrightarrow>
+  e \<preceq>\<^sub>e e\<^sub>0
+"
+by (simp add: traceable_implies_subexp')
+
 
 end
