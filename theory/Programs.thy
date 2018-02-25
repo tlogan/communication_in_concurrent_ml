@@ -115,10 +115,18 @@ inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
    ap_noncompetitive (Concat p\<^sub>a p\<^sub>b)
  "
 
+lemma ap_linear_implies_linear' : "
+  p |\<rhd> \<pi> \<Longrightarrow> ap_linear p \<longrightarrow> ``\<pi>``
+"
+  apply (erule ap_matches.induct; auto; (erule ap_linear.cases; auto))
+done
+
 lemma ap_linear_implies_linear : "
   ap_linear p \<Longrightarrow> p |\<rhd> \<pi> \<Longrightarrow> ``\<pi>``
 "
-sorry
+ apply (simp add: ap_linear_implies_linear')
+done
+
 
 lemma noncomp_star_linear_implies_same_proc:"
   \<lbrakk>
@@ -129,7 +137,11 @@ lemma noncomp_star_linear_implies_same_proc:"
   \<rbrakk> \<Longrightarrow> 
   \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
 "
-sorry
+  apply (frule ap_linear.Star)
+  apply (rotate_tac -1, frule ap_linear_implies_linear; auto?)
+  apply (rotate_tac -2, frule ap_linear_implies_linear; auto?)
+  apply (rule same_proc.Lin; assumption)
+done
 
 lemma noncomp_star_nonlinear_implies_ordered:"
   \<lbrakk>
