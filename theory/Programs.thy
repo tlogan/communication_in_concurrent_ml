@@ -21,36 +21,36 @@ inductive ap_matches :: "abstract_path \<Rightarrow> control_path \<Rightarrow> 
    Empty |\<rhd> []
  " |
  Atom: "
-   Atom l |\<rhd> [l]
+   &l |\<rhd> [l]
  " |
  Union_Left: "
    \<lbrakk>
      p\<^sub>a |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
-   Union p\<^sub>a p\<^sub>b |\<rhd> \<pi>
+   p\<^sub>a :|: p\<^sub>b |\<rhd> \<pi>
  " | 
  Union_Right: "
    \<lbrakk>
      p\<^sub>b |\<rhd> \<pi>
    \<rbrakk> \<Longrightarrow>
-   Union p\<^sub>a p\<^sub>b |\<rhd> \<pi>
+   p\<^sub>a :|: p\<^sub>b |\<rhd> \<pi>
  " | 
  Star_Empty: "
-   Star p |\<rhd> []
+   {p}* |\<rhd> []
  " |
  Star: "
    \<lbrakk>
-     Star p |\<rhd> \<pi>;
-     p |\<rhd> \<pi>'
+     p |\<rhd> \<pi>;
+     {p}* |\<rhd> \<pi>'
    \<rbrakk> \<Longrightarrow>
-   Star p |\<rhd> \<pi> @ \<pi>'
+   {p}* |\<rhd> \<pi> @ \<pi>'
  " |
  Concat: "
    \<lbrakk>
      p\<^sub>a |\<rhd> \<pi>\<^sub>a;
      p\<^sub>b |\<rhd> \<pi>\<^sub>b
    \<rbrakk> \<Longrightarrow>
-   Concat p\<^sub>a p\<^sub>b |\<rhd> \<pi>\<^sub>a @ \<pi>\<^sub>b
+   p\<^sub>a :@: p\<^sub>b |\<rhd> \<pi>\<^sub>a @ \<pi>\<^sub>b
  " 
 
 inductive ap_linear :: "abstract_path \<Rightarrow> bool" where
@@ -58,33 +58,33 @@ inductive ap_linear :: "abstract_path \<Rightarrow> bool" where
    ap_linear Empty
  " |
  Atom_Seq: "
-   ap_linear (Atom (`x))
+   ap_linear (&(`x))
  " |
  Atom_Up: "
-   ap_linear (Atom (\<upharpoonleft>x))
+   ap_linear (&(\<upharpoonleft>x))
  " |
  Atom_Down: "
-   ap_linear (Atom (\<downharpoonleft>x))
+   ap_linear (&(\<downharpoonleft>x))
  " |
  Union: "
    \<lbrakk>
      ap_linear p\<^sub>a;
      ap_linear p\<^sub>b
    \<rbrakk> \<Longrightarrow> 
-   ap_linear (Union p\<^sub>a p\<^sub>b)
+   ap_linear (p\<^sub>a :|: p\<^sub>b)
  " |
  Star: "
    \<lbrakk>
      ap_linear p
    \<rbrakk> \<Longrightarrow> 
-   ap_linear (Star p)
+   ap_linear ({p}*)
  " |
  Concat: "
    \<lbrakk>
      ap_linear p\<^sub>a;
      ap_linear p\<^sub>b
    \<rbrakk> \<Longrightarrow> 
-   ap_linear (Concat p\<^sub>a p\<^sub>b)
+   ap_linear (p\<^sub>a :@: p\<^sub>b)
  "
 
 inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
@@ -92,27 +92,27 @@ inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
    ap_noncompetitive Empty
  " |
  Atom: "
-   ap_noncompetitive (Atom l)
+   ap_noncompetitive (&l)
  " |
  Union: "
    \<lbrakk>
      ap_linear p\<^sub>a;
      ap_linear p\<^sub>b
    \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (Union p\<^sub>a p\<^sub>b)
+   ap_noncompetitive (p\<^sub>a :|: p\<^sub>b)
  " |
  Star: "
    \<lbrakk>
      ap_linear p
    \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (Star p)
+   ap_noncompetitive ({p}*)
  " |
  Concat: "
    \<lbrakk>
      ap_noncompetitive p\<^sub>a;
      ap_noncompetitive p\<^sub>b
    \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (Concat p\<^sub>a p\<^sub>b)
+   ap_noncompetitive (p\<^sub>a :@: p\<^sub>b)
  "
 
 lemma ap_linear_implies_linear' : "
@@ -132,8 +132,8 @@ lemma noncomp_star_linear_implies_same_proc:"
   \<lbrakk>
     ap_noncompetitive p;
     ap_linear p;
-    Star p |\<rhd> \<pi>\<^sub>1; 
-    Star p |\<rhd> \<pi>\<^sub>2
+    {p}* |\<rhd> \<pi>\<^sub>1; 
+    {p}* |\<rhd> \<pi>\<^sub>2
   \<rbrakk> \<Longrightarrow> 
   \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
 "
@@ -143,17 +143,56 @@ lemma noncomp_star_linear_implies_same_proc:"
   apply (rule same_proc.Lin; assumption)
 done
 
+lemma atom_matches_implies: "
+ &l |\<rhd> \<pi> \<Longrightarrow> [l] = \<pi>
+"
+ apply (erule ap_matches.cases; auto)
+done
+
+lemma union_matches_implies: "
+  p\<^sub>a :|: p\<^sub>b |\<rhd> \<pi> \<Longrightarrow> p\<^sub>a |\<rhd> \<pi> \<or> p\<^sub>b |\<rhd> \<pi>
+"
+ apply (erule ap_matches.cases; auto)
+done
+
+
+lemma noncomp_star_nonlinear_implies_ordered':"
+  p |\<rhd> \<pi>\<^sub>1 
+  \<Longrightarrow>
+  (\<forall> p' \<pi>\<^sub>2 .
+    p = {p'}* \<longrightarrow>
+    ap_noncompetitive p' \<longrightarrow>
+    {p'}* |\<rhd> \<pi>\<^sub>2 \<longrightarrow>
+    (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> ap_linear p')
+  )
+"
+ apply (erule ap_matches.induct; auto) 
+ apply (erule ap_noncompetitive.cases; auto)
+     apply (simp add: ap_linear.Empty)
+    apply (case_tac "l"; auto)
+       apply (simp add: ap_linear.Atom_Seq)
+      apply (rotate_tac -3)
+      apply (erule ap_matches.cases; clarsimp)
+      apply (drule atom_matches_implies)+
+      apply (drule_tac x = \<pi>''' in spec; auto)
+     apply (simp add: ap_linear.Atom_Up)
+    apply (simp add: ap_linear.Atom_Down)
+   apply (simp add: ap_linear.Union)
+  apply (simp add: ap_linear.Star)
+ apply (rotate_tac 3)
+ apply (erule ap_matches.cases; clarsimp)
+sorry
+
 lemma noncomp_star_nonlinear_implies_ordered:"
   \<lbrakk>
     ap_noncompetitive p;
     \<not> (ap_linear p);
-    Star p |\<rhd> \<pi>\<^sub>1; 
-    Star p |\<rhd> \<pi>\<^sub>2
+    {p}* |\<rhd> \<pi>\<^sub>1; 
+    {p}* |\<rhd> \<pi>\<^sub>2
   \<rbrakk> \<Longrightarrow> 
   prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
 "
-sorry
-
+using noncomp_star_nonlinear_implies_ordered' by blast
 
 lemma abstract_noncompetitve_implies: "
   \<lbrakk>
