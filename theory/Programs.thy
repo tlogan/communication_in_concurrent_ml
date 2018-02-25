@@ -155,6 +155,19 @@ lemma union_matches_implies: "
  apply (erule ap_matches.cases; auto)
 done
 
+lemma concat_matches_implies: "
+  p\<^sub>a :@: p\<^sub>b |\<rhd> \<pi> \<Longrightarrow> \<exists> \<pi>\<^sub>a \<pi>\<^sub>b . \<pi> = \<pi>\<^sub>a @ \<pi>\<^sub>b \<and> p\<^sub>a |\<rhd> \<pi>\<^sub>a \<and> p\<^sub>b |\<rhd> \<pi>\<^sub>b
+"
+ apply (erule ap_matches.cases; auto)
+done
+
+
+(*
+
+lemma non_linear_implies_ordered: "
+  ap_noncompetitive p \<Longrightarrow> \<not> ap_linear p \<Longrightarrow> p |\<rhd> \<pi> \<Longrightarrow> p |\<rhd> \<pi>' \<Longrightarrow> prefix \<pi> \<pi>' \<or> prefix \<pi>' \<pi> 
+"
+sorry
 
 lemma noncomp_star_nonlinear_implies_ordered':"
   p |\<rhd> \<pi>\<^sub>1 
@@ -180,7 +193,11 @@ lemma noncomp_star_nonlinear_implies_ordered':"
    apply (simp add: ap_linear.Union)
   apply (simp add: ap_linear.Star)
  apply (rotate_tac 3)
- apply (erule ap_matches.cases; clarsimp)
+ apply (case_tac "ap_linear p\<^sub>a"; case_tac "ap_linear p\<^sub>b")
+    apply (simp add: ap_linear.Concat)
+   apply (erule ap_matches.cases; clarsimp)
+   apply (drule concat_matches_implies)+
+   apply auto
 sorry
 
 lemma noncomp_star_nonlinear_implies_ordered:"
@@ -193,6 +210,30 @@ lemma noncomp_star_nonlinear_implies_ordered:"
   prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
 "
 using noncomp_star_nonlinear_implies_ordered' by blast
+*)
+
+
+lemma abstract_noncompetitve_implies': "
+  ap_noncompetitive ap \<Longrightarrow>
+  (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .  
+    ap |\<rhd> \<pi>\<^sub>1 \<longrightarrow>
+    ap |\<rhd> \<pi>\<^sub>2 \<longrightarrow>
+    \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+  )
+"
+ apply (erule ap_noncompetitive.induct; auto)
+  apply (erule ap_matches.cases; blast)
+  apply (erule ap_matches.cases; erule ap_matches.cases; blast)
+  using Lin ap_linear.Union ap_linear_implies_linear apply blast
+  using Lin ap_linear.Star ap_linear_implies_linear apply blast
+  apply (drule concat_matches_implies)+
+  apply auto
+  apply (drule_tac x = \<pi>\<^sub>a in spec, erule impE, assumption)
+  apply (drule_tac x = \<pi>\<^sub>b in spec, erule impE, assumption)
+  apply (drule_tac x = \<pi>\<^sub>a' in spec, erule impE, assumption)
+  apply (drule_tac x = \<pi>\<^sub>b' in spec, erule impE, assumption)
+  apply auto
+sorry
 
 lemma abstract_noncompetitve_implies: "
   \<lbrakk>
@@ -209,8 +250,7 @@ lemma abstract_noncompetitve_implies: "
   apply (erule ap_matches.cases; erule ap_matches.cases; blast)
   using Lin ap_linear.Union ap_linear_implies_linear apply blast
   using Lin ap_linear.Star ap_linear_implies_linear apply blast
-  apply (metis Star_Empty ap_matches.Star ap_noncompetitive.simps append_Nil noncomp_star_linear_implies_same_proc noncomp_star_nonlinear_implies_ordered)
-done
+sorry
 
 
 lemma cons_eq_append: "
