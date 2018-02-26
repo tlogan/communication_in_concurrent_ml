@@ -56,34 +56,50 @@ fun proc_spawn' :: "control_path \<Rightarrow> (control_label list) \<Rightarrow
 fun proc_spawn :: "control_path \<Rightarrow> control_path" where
   "proc_spawn \<pi> = proc_spawn' \<pi> []"
 
+fun proc_legacy' where 
+  "proc_legacy' [] = []" |
+  "proc_legacy' (.x # xs) = (.x # xs)" |
+  "proc_legacy' (_ # xs) = proc_legacy' xs"
 
-definition noncompetitive  :: "control_path set \<Rightarrow> bool" where
-  "noncompetitive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
+fun proc_legacy :: "control_path \<Rightarrow> control_path" where
+  "proc_legacy \<pi> = rev (proc_legacy' (rev \<pi>))"
+
+
+definition two_paths_ordered :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where "two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2  = (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1)"
+
+definition two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where 
+ "two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 = (\<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> (\<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<and> \<not>(two_paths_ordered (proc_spawn \<pi>\<^sub>1) (proc_spawn \<pi>\<^sub>2))))"
+
+definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
+  "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (\<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or> two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive (proc_legacy \<pi>\<^sub>1) (proc_legacy \<pi>\<^sub>2))"
+
+definition set_noncompetitive  :: "control_path set \<Rightarrow> bool" where
+  "set_noncompetitive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
     \<pi>\<^sub>1 \<in> \<T> \<longrightarrow>
     \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
-    \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+    two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   )"
 
-definition exclusive :: "control_path set \<Rightarrow> bool"  where
-  "exclusive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . 
+definition set_exclusive :: "control_path set \<Rightarrow> bool"  where
+  "set_exclusive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . 
     \<pi>\<^sub>1 \<in> \<T> \<longrightarrow> 
     \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
-    \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> (\<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<and> \<not>(prefix (proc_spawn \<pi>\<^sub>1) (proc_spawn \<pi>\<^sub>1)))
+    two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   )"
 
 
 definition one_shot :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "one_shot \<E> c \<equiv> exclusive (send_paths \<E> c) \<and> exclusive (recv_paths \<E> c)"
+  "one_shot \<E> c \<equiv> set_exclusive (send_paths \<E> c) \<and> set_exclusive (recv_paths \<E> c)"
 
 
 definition one_to_one :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "one_to_one \<E> c \<equiv> noncompetitive (send_paths \<E> c) \<and> noncompetitive (recv_paths \<E> c)"
+  "one_to_one \<E> c \<equiv> set_noncompetitive (send_paths \<E> c) \<and> set_noncompetitive (recv_paths \<E> c)"
   
 definition fan_out :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "fan_out \<E> c \<equiv> noncompetitive (send_paths \<E> c)"
+  "fan_out \<E> c \<equiv> set_noncompetitive (send_paths \<E> c)"
   
 definition fan_in :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "fan_in \<E> c \<equiv> noncompetitive (recv_paths \<E> c)"
+  "fan_in \<E> c \<equiv> set_noncompetitive (recv_paths \<E> c)"
 
 
 end

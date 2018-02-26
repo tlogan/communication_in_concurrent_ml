@@ -49,16 +49,16 @@ definition abstract_recv_paths :: "(abstract_value_env \<times> abstract_value_e
 
 
 definition abstract_one_shot :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_one_shot \<A> x\<^sub>c \<equiv> exclusive (abstract_send_paths \<A> x\<^sub>c) \<and> exclusive (abstract_recv_paths \<A> x\<^sub>c)"
+  "abstract_one_shot \<A> x\<^sub>c \<equiv> set_exclusive (abstract_send_paths \<A> x\<^sub>c) \<and> set_exclusive (abstract_recv_paths \<A> x\<^sub>c)"
 
 definition abstract_one_to_one :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_one_to_one \<A> x\<^sub>c \<equiv> noncompetitive (abstract_send_paths \<A> x\<^sub>c) \<and> noncompetitive (abstract_recv_paths \<A> x\<^sub>c)"
+  "abstract_one_to_one \<A> x\<^sub>c \<equiv> set_noncompetitive (abstract_send_paths \<A> x\<^sub>c) \<and> set_noncompetitive (abstract_recv_paths \<A> x\<^sub>c)"
 
 definition abstract_fan_out :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_fan_out \<A> x\<^sub>c \<equiv> noncompetitive (abstract_send_paths \<A> x\<^sub>c)"
+  "abstract_fan_out \<A> x\<^sub>c \<equiv> set_noncompetitive (abstract_send_paths \<A> x\<^sub>c)"
 
 definition abstract_fan_in :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_fan_in \<A> x\<^sub>c \<equiv> noncompetitive (abstract_recv_paths \<A> x\<^sub>c)"
+  "abstract_fan_in \<A> x\<^sub>c \<equiv> set_noncompetitive (abstract_recv_paths \<A> x\<^sub>c)"
 
 
 inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where

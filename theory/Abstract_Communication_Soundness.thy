@@ -116,21 +116,21 @@ lemma isnt_send_path_sound: "
 done
 
 
-theorem topology_exclusive_send_sound: "
+theorem topology_set_exclusive_send_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    exclusive (abstract_send_paths (\<V>, \<C>, e) x\<^sub>c)
+    set_exclusive (abstract_send_paths (\<V>, \<C>, e) x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
-  exclusive (send_paths \<E>' (Ch \<pi> x\<^sub>c))
+  set_exclusive (send_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
- apply (simp add: exclusive_def; auto; erule allE; erule impE)
+ apply (simp add: set_exclusive_def two_paths_ordered_def; auto; erule allE; erule impE)
   apply (drule isnt_send_path_sound; auto)
  apply (erule allE; frule impE; auto)
   apply (drule isnt_send_path_sound; auto)
  apply (drule isnt_send_path_sound; auto)
-done
+sorry
 
 
 lemma abstract_recv_chan_doesnt_exist_sound: "
@@ -215,21 +215,20 @@ lemma isnt_recv_path_sound: "
   apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
 done
 
-theorem topology_exclusive_recv_sound: "
+theorem topology_set_exclusive_recv_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
 
-    exclusive (abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c)
+    set_exclusive (abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
-  exclusive (recv_paths \<E>' (Ch \<pi> x\<^sub>c))
+  set_exclusive (recv_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
- apply (simp add: exclusive_def; auto; erule allE; erule impE)
+ apply (simp add: set_exclusive_def two_paths_ordered_def; auto; erule allE; erule impE)
   apply (drule isnt_recv_path_sound; auto)
  apply (erule allE; frule impE; auto)
   apply (drule isnt_recv_path_sound; auto)
- apply (drule isnt_recv_path_sound; auto)
-done
+sorry
 
 
 theorem topology_one_shot_sound: "
@@ -243,37 +242,37 @@ theorem topology_one_shot_sound: "
 "
  apply (unfold abstract_one_shot_def, auto)
  apply (unfold one_shot_def, auto)
- apply (erule topology_exclusive_send_sound; auto)
- apply (erule topology_exclusive_recv_sound; auto)
+ apply (erule topology_set_exclusive_send_sound; auto)
+ apply (erule topology_set_exclusive_recv_sound; auto)
 done
 
 
-theorem topology_noncompetitive_send_sound: "
+theorem topology_set_noncompetitive_send_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    noncompetitive (abstract_send_paths (\<V>, \<C>, e) x\<^sub>c)
+    set_noncompetitive (abstract_send_paths (\<V>, \<C>, e) x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
-  noncompetitive (send_paths \<E>' (Ch \<pi> x\<^sub>c))
+  set_noncompetitive (send_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
- apply (simp add: noncompetitive_def; auto; erule allE; erule impE)
+ apply (simp add: set_noncompetitive_def; auto; erule allE; erule impE)
   apply (drule isnt_send_path_sound; auto)
  apply (erule allE; frule impE; auto)
   apply (drule isnt_send_path_sound; auto)
  apply (drule isnt_send_path_sound; auto)
 done
 
-theorem topology_noncompetitive_recv_sound: "
+theorem topology_set_noncompetitive_recv_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    noncompetitive (abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c);
+    set_noncompetitive (abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c);
   
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  noncompetitive (recv_paths \<E>' (Ch \<pi> x\<^sub>c))
+  set_noncompetitive (recv_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
- apply (simp add: noncompetitive_def; auto; erule allE; erule impE)
+ apply (simp add: set_noncompetitive_def; auto; erule allE; erule impE)
   apply (drule isnt_recv_path_sound; auto)
  apply (erule allE; frule impE; auto)
   apply (drule isnt_recv_path_sound; auto)
@@ -291,8 +290,8 @@ theorem topology_one_to_one_sound: "
 "
  apply (unfold abstract_one_to_one_def, auto)
  apply (unfold one_to_one_def, auto)
-  apply (erule topology_noncompetitive_send_sound; auto)
-  apply (erule topology_noncompetitive_recv_sound; auto)
+  apply (erule topology_set_noncompetitive_send_sound; auto)
+  apply (erule topology_set_noncompetitive_recv_sound; auto)
 done
 
 theorem topology_fan_out_sound: "
@@ -306,7 +305,7 @@ theorem topology_fan_out_sound: "
 "
  apply (unfold abstract_fan_out_def)
  apply (unfold fan_out_def)
-  apply (erule topology_noncompetitive_send_sound; auto)
+  apply (erule topology_set_noncompetitive_send_sound; auto)
 done
 
 theorem topology_fan_in_sound: "
@@ -320,7 +319,7 @@ theorem topology_fan_in_sound: "
 "
  apply (unfold abstract_fan_in_def)
  apply (unfold fan_in_def)
-  apply (erule topology_noncompetitive_recv_sound; auto)
+  apply (erule topology_set_noncompetitive_recv_sound; auto)
 done
 
 lemma one_shot_precise: "

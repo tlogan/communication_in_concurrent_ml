@@ -201,6 +201,13 @@ lemma abstract_noncompetitve_linear_implies_same_proc: "
 "
 using Lin ap_linear_implies_linear by blast
 
+
+lemma nonlinear_concat_implies: "
+\<not> ap_linear (p\<^sub>a :@: p\<^sub>b) \<Longrightarrow> \<not> ap_linear (p\<^sub>a) \<or> \<not> ap_linear (p\<^sub>b)
+"
+using ap_linear.Concat by blast
+
+
 lemma abstract_noncompetitve_nonlinear_implies_ordered':"
   ap |\<rhd> \<pi>\<^sub>1 
   \<Longrightarrow>
@@ -208,14 +215,20 @@ lemma abstract_noncompetitve_nonlinear_implies_ordered':"
     ap |\<rhd> \<pi>\<^sub>2 \<longrightarrow>
     ap_noncompetitive ap \<longrightarrow>
     \<not> ap_linear ap \<longrightarrow>
-    prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+    two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive (proc_legacy \<pi>\<^sub>1) (proc_legacy \<pi>\<^sub>2)
   )
 "
+ apply (unfold two_paths_ordered_def)
  apply (erule ap_matches.induct; auto)
     using atom_matches_implies apply blast
     using abstract_path.distinct(3) ap_linear.Union ap_noncompetitive.simps apply blast
     using ap_linear.Union ap_noncompetitive.simps apply blast
     using ap_linear.Star ap_noncompetitive.simps apply blast
+    apply (rotate_tac 4)
+    apply (erule ap_noncompetitive.cases; auto)
+    apply (erule ap_matches.cases; auto)
+    apply (drule nonlinear_concat_implies, erule disjE)
+     
 sorry
 
 lemma abstract_noncompetitve_nonlinear_implies_ordered: "
@@ -225,22 +238,21 @@ lemma abstract_noncompetitve_nonlinear_implies_ordered: "
     ap_noncompetitive ap;
     \<not> ap_linear ap
   \<rbrakk> \<Longrightarrow>
-  prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+  two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive (proc_legacy \<pi>\<^sub>1) (proc_legacy \<pi>\<^sub>2)
 "
-by (simp add: abstract_noncompetitve_nonlinear_implies_ordered')
+using abstract_noncompetitve_nonlinear_implies_ordered' by blast
 
-lemma abstract_noncompetitve_implies: "
+lemma ap_noncompetitive_implies: "
   \<lbrakk>
     ap |\<rhd> \<pi>\<^sub>1;
     ap |\<rhd> \<pi>\<^sub>2;
     ap_noncompetitive ap
   \<rbrakk> \<Longrightarrow>
-  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or>
-  prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+  two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
 "
  apply (case_tac "ap_linear ap")
-  using abstract_noncompetitve_linear_implies_same_proc apply blast
-  using abstract_noncompetitve_nonlinear_implies_ordered apply blast
+  using abstract_noncompetitve_linear_implies_same_proc two_paths_noncompetitive_def apply blast
+  using abstract_noncompetitve_nonlinear_implies_ordered two_paths_noncompetitive_def apply blast
 done
 
 
@@ -363,15 +375,15 @@ definition infinite_prog_recv_g100_abstract_path :: abstract_path where
 
 theorem infinite_prog_single_sender: "
    [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-   noncompetitive (send_paths \<E>' (Ch [] g100))
+   set_noncompetitive (send_paths \<E>' (Ch [] g100))
 "
-  apply (simp add: noncompetitive_def, (rule allI, rule impI)+)
+  apply (simp add: set_noncompetitive_def, (rule allI, rule impI)+)
 sorry
 
 
 theorem infinite_prog_single_receiver: "
   [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<longrightarrow>
-   noncompetitive (recv_paths \<E>' (Ch [] g100))
+   set_noncompetitive (recv_paths \<E>' (Ch [] g100))
 "
 sorry
 
@@ -504,9 +516,9 @@ lemma infinite_prog_matches: "
 done
 
 theorem infinite_prog_has_single_sender_communication_analysis: "
-  noncompetitive (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100)
+  set_noncompetitive (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100)
 "
- apply (simp add: noncompetitive_def, (rule allI, rule impI)+)
+ apply (simp add: set_noncompetitive_def, (rule allI, rule impI)+)
   apply (rule abstract_noncompetitve_implies[of infinite_prog_send_g100_abstract_path])
    apply (simp add: infinite_prog_matches)
   apply (simp add: infinite_prog_matches)
@@ -515,9 +527,9 @@ done
 
 
 theorem infinite_prog_has_single_receiver_communication_analysis: "
-  noncompetitive (abstract_recv_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100)
+  set_noncompetitive (abstract_recv_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100)
 "
- apply (simp add: noncompetitive_def)
+ apply (simp add: set_noncompetitive_def)
  apply (simp add: abstract_recv_paths_def, auto)
 sorry
 
