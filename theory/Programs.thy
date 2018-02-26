@@ -519,7 +519,7 @@ theorem infinite_prog_has_single_sender_communication_analysis: "
   set_noncompetitive (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100)
 "
  apply (simp add: set_noncompetitive_def, (rule allI, rule impI)+)
-  apply (rule abstract_noncompetitve_implies[of infinite_prog_send_g100_abstract_path])
+  apply (rule ap_noncompetitive_implies[of infinite_prog_send_g100_abstract_path])
    apply (simp add: infinite_prog_matches)
   apply (simp add: infinite_prog_matches)
  apply (simp add: infinite_prog_send_g100_abstract_path_def, (rule; simp?)+)
