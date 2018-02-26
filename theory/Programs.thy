@@ -128,20 +128,6 @@ lemma ap_linear_implies_linear : "
 done
 
 
-lemma noncomp_star_linear_implies_same_proc:"
-  \<lbrakk>
-    ap_noncompetitive p;
-    ap_linear p;
-    {p}* |\<rhd> \<pi>\<^sub>1; 
-    {p}* |\<rhd> \<pi>\<^sub>2
-  \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
-"
-  apply (frule ap_linear.Star)
-  apply (rotate_tac -1, frule ap_linear_implies_linear; auto?)
-  apply (rotate_tac -2, frule ap_linear_implies_linear; auto?)
-  apply (rule same_proc.Lin; assumption)
-done
 
 lemma atom_matches_implies: "
  &l |\<rhd> \<pi> \<Longrightarrow> [l] = \<pi>
@@ -161,15 +147,15 @@ lemma concat_matches_implies: "
  apply (erule ap_matches.cases; auto)
 done
 
-
+(*
 lemma noncomp_star_nonlinear_implies_ordered':"
-  p |\<rhd> \<pi>\<^sub>1 
+  ps |\<rhd> \<pi>\<^sub>1 
   \<Longrightarrow>
-  (\<forall> p' \<pi>\<^sub>2 .
-    p = {p'}* \<longrightarrow>
-    ap_noncompetitive p' \<longrightarrow>
-    {p'}* |\<rhd> \<pi>\<^sub>2 \<longrightarrow>
-    (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> ap_linear p')
+  (\<forall> p \<pi>\<^sub>2 .
+    ps = {p}* \<longrightarrow>
+    ap_noncompetitive p \<longrightarrow>
+    {p}* |\<rhd> \<pi>\<^sub>2 \<longrightarrow>
+    (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> ap_linear p)
   )
 "
  apply (erule ap_matches.induct; auto) 
@@ -186,23 +172,62 @@ lemma noncomp_star_nonlinear_implies_ordered':"
    apply (simp add: ap_linear.Union)
   apply (simp add: ap_linear.Star)
  apply (rotate_tac 3)
+
+
+ apply (erule ap_matches.cases; clarsimp)
+ apply (drule concat_matches_implies)+
+ apply (drule_tac x = \<pi>''' in spec; auto)
+ apply (erule notE)
+
+
+(**other strategy**)
  apply (case_tac "ap_linear p\<^sub>a"; case_tac "ap_linear p\<^sub>b")
     apply (simp add: ap_linear.Concat)
    apply (erule ap_matches.cases; clarsimp)
    apply (drule concat_matches_implies)+
    apply auto
+   apply (drule_tac x = \<pi>''' in spec; auto)
+sorry
+*)
+
+lemma abstract_noncompetitve_linear_implies_same_proc: "
+  \<lbrakk>
+    ap |\<rhd> \<pi>\<^sub>1;
+    ap |\<rhd> \<pi>\<^sub>2;
+    ap_noncompetitive ap;
+    ap_linear ap
+  \<rbrakk> \<Longrightarrow>
+  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
+"
+using Lin ap_linear_implies_linear by blast
+
+lemma abstract_noncompetitve_nonlinear_implies_ordered':"
+  ap |\<rhd> \<pi>\<^sub>1 
+  \<Longrightarrow>
+  (\<forall> \<pi>\<^sub>2 .
+    ap |\<rhd> \<pi>\<^sub>2 \<longrightarrow>
+    ap_noncompetitive ap \<longrightarrow>
+    \<not> ap_linear ap \<longrightarrow>
+    prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+  )
+"
+ apply (erule ap_matches.induct; auto)
+    using atom_matches_implies apply blast
+    using abstract_path.distinct(3) ap_linear.Union ap_noncompetitive.simps apply blast
+    using ap_linear.Union ap_noncompetitive.simps apply blast
+    using ap_linear.Star ap_noncompetitive.simps apply blast
 sorry
 
-lemma noncomp_star_nonlinear_implies_ordered:"
+lemma abstract_noncompetitve_nonlinear_implies_ordered: "
   \<lbrakk>
-    ap_noncompetitive p;
-    \<not> (ap_linear p);
-    {p}* |\<rhd> \<pi>\<^sub>1; 
-    {p}* |\<rhd> \<pi>\<^sub>2
-  \<rbrakk> \<Longrightarrow> 
+    ap |\<rhd> \<pi>\<^sub>1;
+    ap |\<rhd> \<pi>\<^sub>2;
+    ap_noncompetitive ap;
+    \<not> ap_linear ap
+  \<rbrakk> \<Longrightarrow>
   prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
 "
-using noncomp_star_nonlinear_implies_ordered' by blast
+by (simp add: abstract_noncompetitve_nonlinear_implies_ordered')
 
 lemma abstract_noncompetitve_implies: "
   \<lbrakk>
@@ -213,13 +238,9 @@ lemma abstract_noncompetitve_implies: "
   \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or>
   prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
 "
- apply auto
- apply (erule ap_noncompetitive.cases; auto)
-  apply (erule ap_matches.cases; blast)
-  apply (erule ap_matches.cases; erule ap_matches.cases; blast)
-  using Lin ap_linear.Union ap_linear_implies_linear apply blast
-  using Lin ap_linear.Star ap_linear_implies_linear apply blast
-  apply (metis Star_Empty ap_matches.Star ap_noncompetitive.simps append_Nil2 noncomp_star_linear_implies_same_proc noncomp_star_nonlinear_implies_ordered)
+ apply (case_tac "ap_linear ap")
+  using abstract_noncompetitve_linear_implies_same_proc apply blast
+  using abstract_noncompetitve_nonlinear_implies_ordered apply blast
 done
 
 
@@ -411,14 +432,13 @@ definition infinite_prog_\<C> :: "abstract_value_env" where
     g100 := {^\<lparr>\<rparr>}
   )"
 
-(*
+
 theorem infinite_prog_has_intuitive_avf_analysis: "
   (infinite_prog_\<V>, infinite_prog_\<C>) \<Turnstile>\<^sub>e infinite_prog 
 "
  apply (simp add: infinite_prog_\<V>_def infinite_prog_\<C>_def infinite_prog_def)
  apply (rule; simp?)+
 done
-*)
 
 lemma infinite_prog_has_earlier_sync: "
   \<lbrakk>
