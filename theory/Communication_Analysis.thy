@@ -18,38 +18,6 @@ definition recv_paths :: "state_pool \<Rightarrow> chan \<Rightarrow> control_pa
     \<E> (\<pi>\<^sub>y;;`x\<^sub>y) = Some (\<langle>e\<^sub>n; \<rho>(x\<^sub>y \<mapsto> \<omega>); \<kappa>\<rangle>)
   }"
 
-
-(*
-inductive same_proc :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
-  Lin: "
-    \<lbrakk>
-      ``\<pi>\<^sub>1``; ``\<pi>\<^sub>2``
-    \<rbrakk> \<Longrightarrow>
-    \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
-  " |
-  Cons: "
-    \<lbrakk>
-      \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2
-    \<rbrakk> \<Longrightarrow>
-    l # \<pi>\<^sub>1 \<cong> l # \<pi>\<^sub>2 
-  "
-theorem same_proc_preserved_under_concat: "
-  \<pi>\<^sub>1' \<cong> \<pi>\<^sub>2' \<Longrightarrow> \<pi> @ \<pi>\<^sub>1' \<cong> \<pi> @ \<pi>\<^sub>2'
-"
- apply (induct \<pi>, simp)
- apply (simp add: same_proc.Cons)
-done
-
-theorem same_proc_commutative[simp]: "
-  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>2 \<cong> \<pi>\<^sub>1
-"
- apply (erule same_proc.induct)
-  apply (simp add: Lin)
- apply (simp add: same_proc.Cons)
-done
-
-*)
-
 definition two_paths_ordered :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where 
   "two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2  = (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1)"
 
@@ -81,6 +49,23 @@ inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Righ
     \<rbrakk> \<Longrightarrow>
     two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
+
+(*
+theorem two_paths_exclusive_preserved_under_concat: "
+  two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' \<Longrightarrow> two_paths_exclusive (\<pi> @ \<pi>\<^sub>1') (\<pi> @ \<pi>\<^sub>2')
+"
+sorry
+
+theorem two_paths_ordered_commutative: "
+  two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_ordered \<pi>\<^sub>2 \<pi>\<^sub>1
+"
+using two_paths_ordered_def by blast
+
+theorem two_paths_exclusive_commutative: "
+  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_exclusive \<pi>\<^sub>2 \<pi>\<^sub>1
+"
+sorry
+*)
 
 definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)"
