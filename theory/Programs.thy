@@ -245,6 +245,18 @@ lemma ap_linear_implies_ap_noncompetitive: "
   apply (simp add: ap_noncompetitive.Concat)
 done
 
+
+lemma linear_implies_exclusive': "
+  ``\<pi>\<^sub>a`` \<Longrightarrow> \<forall> \<pi>\<^sub>b . \<not> prefix \<pi>\<^sub>a \<pi>\<^sub>b \<longrightarrow> \<not> prefix \<pi>\<^sub>b \<pi>\<^sub>a \<longrightarrow> ``\<pi>\<^sub>b`` \<longrightarrow> two_paths_exclusive \<pi>\<^sub>a \<pi>\<^sub>b
+"
+sorry
+
+lemma linear_implies_exclusive: "
+  \<not> prefix \<pi>\<^sub>a \<pi>\<^sub>b \<Longrightarrow> \<not> prefix \<pi>\<^sub>b \<pi>\<^sub>a \<Longrightarrow> ``\<pi>\<^sub>a`` \<Longrightarrow> ``\<pi>\<^sub>b`` \<Longrightarrow> two_paths_exclusive \<pi>\<^sub>a \<pi>\<^sub>b
+"
+by (simp add: linear_implies_exclusive')
+
+
 lemma ap_noncompetitive_implies': "
   \<lbrakk>
     ap |\<rhd> \<pi>\<^sub>1
@@ -257,8 +269,17 @@ lemma ap_noncompetitive_implies': "
 "
  apply (unfold two_paths_noncompetitive_def two_paths_ordered_def)
  apply (erule ap_matches.induct; auto)
-  apply (drule atom_matches_implies; auto)
-  apply (erule ap_noncompetitive.cases; auto)
+     apply (drule atom_matches_implies; auto)
+    apply (erule ap_noncompetitive.cases; auto)
+    apply (drule union_matches_implies; auto)
+     apply (drule ap_linear_implies_ap_noncompetitive; auto)
+    apply (rename_tac \<pi>\<^sub>a \<pi>\<^sub>b p\<^sub>a p\<^sub>b)
+    apply (case_tac "prefix \<pi>\<^sub>b \<pi>\<^sub>a"; auto)
+    apply (rule notE; auto)
+    apply (rotate_tac 3, erule notE)
+    apply (drule ap_linear_implies_linear; auto?)
+    apply (drule ap_linear_implies_linear; auto?)
+    apply (erule linear_implies_exclusive; auto)
 sorry
 
 lemma ap_noncompetitive_implies: "
