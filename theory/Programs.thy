@@ -162,13 +162,6 @@ lemma concat_matches_implies: "
 done
 
 
-(*
-
-lemma non_linear_implies_ordered: "
-  ap_noncompetitive p \<Longrightarrow> \<not> ap_linear p \<Longrightarrow> p |\<rhd> \<pi> \<Longrightarrow> p |\<rhd> \<pi>' \<Longrightarrow> prefix \<pi> \<pi>' \<or> prefix \<pi>' \<pi> 
-"
-sorry
-
 lemma noncomp_star_nonlinear_implies_ordered':"
   p |\<rhd> \<pi>\<^sub>1 
   \<Longrightarrow>
@@ -210,30 +203,6 @@ lemma noncomp_star_nonlinear_implies_ordered:"
   prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
 "
 using noncomp_star_nonlinear_implies_ordered' by blast
-*)
-
-
-lemma abstract_noncompetitve_implies': "
-  ap_noncompetitive ap \<Longrightarrow>
-  (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .  
-    ap |\<rhd> \<pi>\<^sub>1 \<longrightarrow>
-    ap |\<rhd> \<pi>\<^sub>2 \<longrightarrow>
-    \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
-  )
-"
- apply (erule ap_noncompetitive.induct; auto)
-  apply (erule ap_matches.cases; blast)
-  apply (erule ap_matches.cases; erule ap_matches.cases; blast)
-  using Lin ap_linear.Union ap_linear_implies_linear apply blast
-  using Lin ap_linear.Star ap_linear_implies_linear apply blast
-  apply (drule concat_matches_implies)+
-  apply auto
-  apply (drule_tac x = \<pi>\<^sub>a in spec, erule impE, assumption)
-  apply (drule_tac x = \<pi>\<^sub>b in spec, erule impE, assumption)
-  apply (drule_tac x = \<pi>\<^sub>a' in spec, erule impE, assumption)
-  apply (drule_tac x = \<pi>\<^sub>b' in spec, erule impE, assumption)
-  apply auto
-sorry
 
 lemma abstract_noncompetitve_implies: "
   \<lbrakk>
@@ -250,7 +219,8 @@ lemma abstract_noncompetitve_implies: "
   apply (erule ap_matches.cases; erule ap_matches.cases; blast)
   using Lin ap_linear.Union ap_linear_implies_linear apply blast
   using Lin ap_linear.Star ap_linear_implies_linear apply blast
-sorry
+  apply (metis Star_Empty ap_matches.Star ap_noncompetitive.simps append_Nil2 noncomp_star_linear_implies_same_proc noncomp_star_nonlinear_implies_ordered)
+done
 
 
 lemma cons_eq_append: "
@@ -270,13 +240,20 @@ lemma concat_assoc[simp]: "
   apply (drule ap_matches.Concat[of "x :@: y" _ "z"], auto)
 done
 
+lemma concat_star_implies_star': "
+  ps |\<rhd> \<pi>\<^sub>a \<Longrightarrow> \<forall> p . ps = {p}* \<longrightarrow> p |\<rhd> \<pi>\<^sub>b \<longrightarrow> {p}* |\<rhd> \<pi>\<^sub>a @ \<pi>\<^sub>b
+"
+ apply (erule ap_matches.induct; auto)
+  using Star_Empty ap_matches.Star apply fastforce
+  apply (thin_tac "\<forall>pa. p = {pa}* \<longrightarrow> pa |\<rhd> \<pi>\<^sub>b \<longrightarrow> {pa}* |\<rhd> \<pi> @ \<pi>\<^sub>b")
+  apply (drule ap_matches.Star; auto)
+done
 
 lemma concat_star_implies_star: "
  {p}* :@: p |\<rhd> \<pi> \<Longrightarrow> {p}* |\<rhd> \<pi>
 "
  apply (erule ap_matches.cases; auto)
- apply (erule ap_matches.Star; simp)
-done
+by (simp add: concat_star_implies_star')
 
 
 abbreviation g100 where "g100 \<equiv> Var ''g100''"
