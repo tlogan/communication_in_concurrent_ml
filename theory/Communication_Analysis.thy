@@ -19,6 +19,7 @@ definition recv_paths :: "state_pool \<Rightarrow> chan \<Rightarrow> control_pa
   }"
 
 
+(*
 inductive same_proc :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
   Lin: "
     \<lbrakk>
@@ -32,7 +33,6 @@ inductive same_proc :: "control_path \<Rightarrow> control_path \<Rightarrow> bo
     \<rbrakk> \<Longrightarrow>
     l # \<pi>\<^sub>1 \<cong> l # \<pi>\<^sub>2 
   "
-
 theorem same_proc_preserved_under_concat: "
   \<pi>\<^sub>1' \<cong> \<pi>\<^sub>2' \<Longrightarrow> \<pi> @ \<pi>\<^sub>1' \<cong> \<pi> @ \<pi>\<^sub>2'
 "
@@ -48,30 +48,42 @@ theorem same_proc_commutative[simp]: "
  apply (simp add: same_proc.Cons)
 done
 
-fun proc_spawn' :: "control_path \<Rightarrow> (control_label list) \<Rightarrow> control_path" where
-  "proc_spawn' [] r = rev r" |
-  "proc_spawn' (.x # \<pi>) r = proc_spawn' \<pi> []" |
-  "proc_spawn' (l # \<pi>) r = proc_spawn' \<pi> (l # r)"
+*)
 
-fun proc_spawn :: "control_path \<Rightarrow> control_path" where
-  "proc_spawn \<pi> = proc_spawn' \<pi> []"
-
-fun proc_legacy' where 
-  "proc_legacy' [] = []" |
-  "proc_legacy' (.x # xs) = (.x # xs)" |
-  "proc_legacy' (_ # xs) = proc_legacy' xs"
+definition two_paths_ordered :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where 
+  "two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2  = (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1)"
 
 fun proc_legacy :: "control_path \<Rightarrow> control_path" where
-  "proc_legacy \<pi> = rev (proc_legacy' (rev \<pi>))"
+  "proc_legacy [] = []" |
+  "proc_legacy (.l # \<pi>) = []" |
+  "proc_legacy (`l # \<pi>) = `l # (proc_legacy \<pi>)" |
+  "proc_legacy (\<upharpoonleft>l # \<pi>) = \<upharpoonleft>l # (proc_legacy \<pi>)" |
+  "proc_legacy (\<downharpoonleft>l # \<pi>) = \<downharpoonleft>l # (proc_legacy \<pi>)"
 
+fun proc_spawn :: "control_path \<Rightarrow> control_path" where
+  "proc_spawn [] = []" |
+  "proc_spawn (.l # \<pi>) = (.l # \<pi>)" |
+  "proc_spawn (`l # \<pi>) = (proc_spawn \<pi>)" |
+  "proc_spawn (\<upharpoonleft>l # \<pi>) = (proc_spawn \<pi>)" |
+  "proc_spawn (\<downharpoonleft>l # \<pi>) = (proc_spawn \<pi>)"
 
-definition two_paths_ordered :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where "two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2  = (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1)"
-
-definition two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where 
- "two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 = (\<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> (\<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<and> \<not>(two_paths_ordered (proc_spawn \<pi>\<^sub>1) (proc_spawn \<pi>\<^sub>2))))"
+inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
+  Base: "
+    \<lbrakk>
+      \<not> (two_paths_ordered (proc_legacy \<pi>\<^sub>1) (proc_legacy \<pi>\<^sub>2))
+    \<rbrakk> \<Longrightarrow>
+    two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
+  " |
+  Induc: "
+    \<lbrakk>
+      (proc_legacy \<pi>\<^sub>1) = (proc_legacy \<pi>\<^sub>2);
+      two_paths_exclusive (proc_spawn \<pi>\<^sub>1) (proc_spawn \<pi>\<^sub>1)
+    \<rbrakk> \<Longrightarrow>
+    two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
+  "
 
 definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
-  "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (\<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<or> two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive (proc_legacy \<pi>\<^sub>1) (proc_legacy \<pi>\<^sub>2))"
+  "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)"
 
 definition set_noncompetitive  :: "control_path set \<Rightarrow> bool" where
   "set_noncompetitive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .

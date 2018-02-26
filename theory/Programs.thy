@@ -207,6 +207,14 @@ lemma nonlinear_concat_implies: "
 "
 using ap_linear.Concat by blast
 
+lemma "
+  p |\<rhd> \<pi> \<Longrightarrow>
+  p |\<rhd> \<pi>' \<Longrightarrow>
+  ap_noncompetitive p \<Longrightarrow>
+  \<not> ap_linear p \<Longrightarrow>
+  \<pi> = \<pi>'
+"
+sorry
 
 lemma abstract_noncompetitve_nonlinear_implies_ordered':"
   ap |\<rhd> \<pi>\<^sub>1 
@@ -227,7 +235,9 @@ lemma abstract_noncompetitve_nonlinear_implies_ordered':"
     apply (rotate_tac 4)
     apply (erule ap_noncompetitive.cases; auto)
     apply (erule ap_matches.cases; auto)
-    apply (drule nonlinear_concat_implies, erule disjE)
+    apply (drule nonlinear_concat_implies; auto)
+    apply (case_tac "\<not> ap_linear p\<^sub>b"; auto; (case_tac "\<not> ap_linear p\<^sub>a"; auto))
+    apply (drule_tac x = \<pi>\<^sub>a' in spec; auto; (drule_tac x = \<pi>\<^sub>b' in spec; auto))
      
 sorry
 
