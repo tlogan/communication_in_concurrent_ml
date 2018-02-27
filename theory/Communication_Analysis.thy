@@ -100,9 +100,13 @@ sorry
 definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)"
 
+lemma ordered_prefixes_implies_noncompetitive': "
+ \<forall> \<pi>\<^sub>a' \<pi>\<^sub>b \<pi>\<^sub>b'. two_paths_ordered \<pi>\<^sub>a \<pi>\<^sub>a' \<longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
+"
+sorry
 
 lemma ordered_prefixes_implies_noncompetitive: "
- two_paths_ordered \<pi>\<^sub>a \<pi>\<^sub>a' \<Longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
+ two_paths_ordered \<pi>\<^sub>a \<pi>\<^sub>a' \<Longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<Longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
 "
 sorry
 
