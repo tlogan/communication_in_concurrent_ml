@@ -23,14 +23,14 @@ definition two_paths_ordered :: "control_path \<Rightarrow> control_path \<Right
 
 fun proc_legacy :: "control_path \<Rightarrow> control_path" where
   "proc_legacy [] = []" |
-  "proc_legacy (.l # \<pi>) = []" |
+  "proc_legacy (.l # \<pi>) = `l # []" |
   "proc_legacy (`l # \<pi>) = `l # (proc_legacy \<pi>)" |
   "proc_legacy (\<upharpoonleft>l # \<pi>) = \<upharpoonleft>l # (proc_legacy \<pi>)" |
   "proc_legacy (\<downharpoonleft>l # \<pi>) = \<downharpoonleft>l # (proc_legacy \<pi>)"
 
 fun proc_spawn :: "control_path \<Rightarrow> control_path" where
   "proc_spawn [] = []" |
-  "proc_spawn (.l # \<pi>) = (.l # \<pi>)" |
+  "proc_spawn (.l # \<pi>) = \<pi>" |
   "proc_spawn (`l # \<pi>) = (proc_spawn \<pi>)" |
   "proc_spawn (\<upharpoonleft>l # \<pi>) = (proc_spawn \<pi>)" |
   "proc_spawn (\<downharpoonleft>l # \<pi>) = (proc_spawn \<pi>)"
@@ -66,20 +66,6 @@ lemma two_paths_exclusive_preserved_under_down_cons: "
 by (metis (mono_tags, lifting) Cons_prefix_Cons proc_legacy.simps(5) proc_spawn.simps(5) two_paths_exclusive.simps two_paths_ordered_def)
 
 
-
-lemma two_paths_exclusive_preserved_under_append': "
-  \<forall> \<pi>\<^sub>a' \<pi>\<^sub>b \<pi>\<^sub>b' . two_paths_exclusive \<pi>\<^sub>a \<pi>\<^sub>a' \<longrightarrow> two_paths_exclusive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
-"
- apply (induct \<pi>\<^sub>a; auto)
-sorry
-
-lemma two_paths_exclusive_preserved_under_append: "
-  two_paths_exclusive \<pi>\<^sub>a \<pi>\<^sub>a' \<Longrightarrow> two_paths_exclusive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
-"
- apply (erule two_paths_exclusive.cases; auto)
-sorry
-
-
 (*
 theorem two_paths_exclusive_preserved_under_concat: "
   two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' \<Longrightarrow> two_paths_exclusive (\<pi> @ \<pi>\<^sub>1') (\<pi> @ \<pi>\<^sub>2')
@@ -100,13 +86,61 @@ sorry
 definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)"
 
-lemma ordered_prefixes_implies_noncompetitive': "
- \<forall> \<pi>\<^sub>a' \<pi>\<^sub>b \<pi>\<^sub>b'. two_paths_ordered \<pi>\<^sub>a \<pi>\<^sub>a' \<longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
+
+
+theorem noncompetitive_preserved_under_single_cons': "
+  \<forall> \<pi> l . two_paths_noncompetitive \<pi> \<pi>' \<longrightarrow> two_paths_noncompetitive (l # \<pi>) (\<pi>')
 "
+ apply (induct \<pi>'; auto)
+  apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def)
+  apply (rename_tac l' \<pi>' \<pi> l)
+  apply (drule_tac x = \<pi> in spec; auto)
+  apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def; auto)
 sorry
 
-lemma ordered_prefixes_implies_noncompetitive: "
- two_paths_ordered \<pi>\<^sub>a \<pi>\<^sub>a' \<Longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<Longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
+theorem noncompetitive_preserved_under_single_cons: "
+  two_paths_noncompetitive \<pi> \<pi>' \<Longrightarrow> two_paths_noncompetitive (l # \<pi>) (\<pi>')
+"
+by (simp add: noncompetitive_preserved_under_single_cons')
+
+
+
+theorem noncompetitive_preserved_under_single_prepend': "
+  \<forall> \<pi>\<^sub>b \<pi>\<^sub>b' . two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<longrightarrow> two_paths_noncompetitive (\<pi> @ \<pi>\<^sub>b) (\<pi>\<^sub>b')
+"
+ apply (induct \<pi>; auto)
+ apply ((drule spec)+; auto)
+ apply (simp add: noncompetitive_preserved_under_single_cons)
+done
+
+theorem noncompetitive_preserved_under_single_prepend: "
+  two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<Longrightarrow> two_paths_noncompetitive (\<pi> @ \<pi>\<^sub>b) (\<pi>\<^sub>b')
+"
+by (simp add: noncompetitive_preserved_under_single_prepend')
+
+theorem noncompetitive_preserved_under_single_pop: "
+  two_paths_noncompetitive (l # \<pi>\<^sub>a) \<pi>\<^sub>a' \<Longrightarrow> two_paths_noncompetitive \<pi>\<^sub>a \<pi>\<^sub>a' 
+"
+by (metis Nil_prefix append_Nil2 noncompetitive_preserved_under_single_prepend two_paths_noncompetitive_def two_paths_ordered_def)
+
+theorem two_paths_noncompetitive_commut: "
+ two_paths_noncompetitive \<pi> \<pi>' \<Longrightarrow> two_paths_noncompetitive \<pi>' \<pi>
+"
+by (metis Nil_prefix append_Nil2 noncompetitive_preserved_under_single_prepend two_paths_noncompetitive_def two_paths_ordered_def)
+
+theorem noncompetitive_preserved_under_double_append': "
+ \<forall> \<pi>\<^sub>a' . two_paths_noncompetitive  \<pi>\<^sub>a \<pi>\<^sub>a' \<longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
+"
+ apply (induct \<pi>\<^sub>a; auto)
+  apply (simp add: two_paths_noncompetitive_commut noncompetitive_preserved_under_single_prepend)
+  apply (drule noncompetitive_preserved_under_single_pop)
+  apply (drule spec; auto)
+  apply (metis noncompetitive_preserved_under_single_prepend rev_append rev_eq_Cons_iff rev_rev_ident)
+done
+
+
+theorem noncompetitive_preserved_under_double_append: "
+ two_paths_noncompetitive  \<pi>\<^sub>a \<pi>\<^sub>a' \<Longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<Longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
 "
 sorry
 

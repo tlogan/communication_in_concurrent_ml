@@ -248,10 +248,7 @@ lemma ap_noncompetitive_implies_noncompetitive': "
   apply (erule ap_matches.cases; auto)
   apply (drule_tac x = \<pi>\<^sub>a' in spec; auto)
   apply (drule_tac x = \<pi>\<^sub>b' in spec; auto)
-  apply (unfold two_paths_noncompetitive_def, erule disjE)
-  apply (fold two_paths_noncompetitive_def)
-  apply (simp add: ordered_prefixes_implies_noncompetitive)
-  apply (simp add: two_paths_exclusive_preserved_under_append two_paths_noncompetitive_def; auto)
+  apply (erule noncompetitive_preserved_under_double_append; auto)
 done
 
 lemma ap_noncompetitive_implies_noncompetitive: "
