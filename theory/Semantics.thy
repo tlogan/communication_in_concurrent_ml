@@ -191,18 +191,18 @@ inductive path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonrigh
   
 
 inductive linear :: "control_path \<Rightarrow> bool"("``_``" [0]55) where
-  Empty[simp]: "
+  Empty: "
     ``[]``
   " |
-  Seq_Cons[simp]: "
+  Seq_Cons: "
     ``\<pi>`` \<Longrightarrow>
     `` (`x # \<pi>) ``
   " |
-  Up_Cons[simp]: "
+  Up_Cons: "
     ``\<pi>`` \<Longrightarrow>
     `` (\<upharpoonleft>x # \<pi>) ``
   " |
-  Down_Cons[simp]: "
+  Down_Cons: "
     ``\<pi>`` \<Longrightarrow>
     `` (\<downharpoonleft>x # \<pi>) ``
   " 
@@ -211,6 +211,9 @@ lemma linear_preserved_over_linear_extension': "
   ``\<pi>`` \<Longrightarrow> ``\<pi>'`` \<longrightarrow> ``\<pi> @ \<pi>'``
 "
  apply (erule linear.induct; auto)
+ apply (erule Seq_Cons)
+ apply (erule Up_Cons)
+ apply (erule Down_Cons)
 done
 
 lemma  linear_preserved_over_linear_extension[simp]: "

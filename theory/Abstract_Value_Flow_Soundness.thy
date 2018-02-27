@@ -1148,7 +1148,7 @@ lemma traceable_stack_preservation: "
       apply ((drule spec)+, erule impE, assumption, erule conjE)
       apply (erule seq_step.cases; auto)
       apply (erule stack_traceable.cases; auto)
-      apply (simp add: stack_traceable_preserved_over_linear_balanced_extension)
+      apply (simp add: Down_Cons Up_Cons linear.Empty stack_traceable_preserved_over_linear_balanced_extension)
      apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
      apply ((drule spec)+, erule impE, assumption, erule conjE) 
      using linear.Empty path_balanced.Empty stack_traceable.Nonempty apply blast
@@ -1161,7 +1161,7 @@ lemma traceable_stack_preservation: "
     apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
     using stack_traceable_preserved_over_seq_extension apply blast
     apply (case_tac "\<pi>' = \<pi> ;; .x", auto)
-     apply (rule stack_traceable.Empty_Local; auto)
+     apply (rule stack_traceable.Empty_Local; (rule linear.Empty)?; auto)
     apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
     using stack_traceable_preserved_over_seq_extension apply blast
 done
@@ -1178,7 +1178,7 @@ lemma isnt_traceable_sound': "
 "
  apply (erule star_left.induct; auto)
     apply (simp add: Start)
-   apply (rule stack_traceable.Empty, auto)
+   apply (rule stack_traceable.Empty; (rule linear.Empty)?; auto)
   apply (rename_tac \<E> \<E>' \<pi> e \<rho> \<kappa>)
   apply (drule star_left_implies_star)
   apply (drule flow_preservation_star, blast)

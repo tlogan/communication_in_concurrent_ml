@@ -50,6 +50,36 @@ inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Righ
     two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
+lemma two_paths_exclusive_preserved_under_seq_cons: "
+  two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (`x # \<pi>) (`x # \<pi>')
+"
+by (metis (mono_tags, lifting) Cons_prefix_Cons proc_legacy.simps(3) proc_spawn.simps(3) two_paths_exclusive.simps two_paths_ordered_def)
+
+lemma two_paths_exclusive_preserved_under_up_cons: "
+  two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (\<upharpoonleft>x # \<pi>) (\<upharpoonleft>x # \<pi>')
+"
+by (metis (mono_tags, lifting) Cons_prefix_Cons proc_legacy.simps(4) proc_spawn.simps(4) two_paths_exclusive.simps two_paths_ordered_def)
+
+lemma two_paths_exclusive_preserved_under_down_cons: "
+  two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (\<downharpoonleft>x # \<pi>) (\<downharpoonleft>x # \<pi>')
+"
+by (metis (mono_tags, lifting) Cons_prefix_Cons proc_legacy.simps(5) proc_spawn.simps(5) two_paths_exclusive.simps two_paths_ordered_def)
+
+
+
+lemma two_paths_exclusive_preserved_under_append': "
+  \<forall> \<pi>\<^sub>a' \<pi>\<^sub>b \<pi>\<^sub>b' . two_paths_exclusive \<pi>\<^sub>a \<pi>\<^sub>a' \<longrightarrow> two_paths_exclusive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
+"
+ apply (induct \<pi>\<^sub>a; auto)
+sorry
+
+lemma two_paths_exclusive_preserved_under_append: "
+  two_paths_exclusive \<pi>\<^sub>a \<pi>\<^sub>a' \<Longrightarrow> two_paths_exclusive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
+"
+ apply (erule two_paths_exclusive.cases; auto)
+sorry
+
+
 (*
 theorem two_paths_exclusive_preserved_under_concat: "
   two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' \<Longrightarrow> two_paths_exclusive (\<pi> @ \<pi>\<^sub>1') (\<pi> @ \<pi>\<^sub>2')
@@ -69,6 +99,12 @@ sorry
 
 definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)"
+
+
+lemma ordered_prefixes_implies_noncompetitive: "
+ two_paths_ordered \<pi>\<^sub>a \<pi>\<^sub>a' \<Longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
+"
+sorry
 
 definition set_noncompetitive  :: "control_path set \<Rightarrow> bool" where
   "set_noncompetitive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .

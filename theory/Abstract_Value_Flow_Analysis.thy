@@ -355,7 +355,7 @@ done
 lemma stack_traceable_preserved_over_seq_extension:"
   \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> ;; `x, \<kappa>)
 "
-by (simp add: stack_traceable_preserved_over_linear_balanced_extension)
+by (simp add: Seq_Cons linear.Empty stack_traceable_preserved_over_linear_balanced_extension)
 
 
 inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^sub>e _" [56,56]55) where
