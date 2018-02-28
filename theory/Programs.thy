@@ -87,33 +87,73 @@ inductive ap_linear :: "abstract_path \<Rightarrow> bool" where
    ap_linear (p\<^sub>a :@: p\<^sub>b)
  "
 
-inductive ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where
+inductive ap_single :: "abstract_path \<Rightarrow> bool" where
  Empty: "
-   ap_noncompetitive Empty
+   ap_single Empty
  " |
  Atom: "
-   ap_noncompetitive (&l)
- " |
- Union: "
-   \<lbrakk>
-     ap_linear p\<^sub>a;
-     ap_linear p\<^sub>b
-   \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (p\<^sub>a :|: p\<^sub>b)
- " |
- Star: "
-   \<lbrakk>
-     ap_linear p
-   \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive ({p}*)
+   ap_single (&l)
  " |
  Concat: "
    \<lbrakk>
-     ap_noncompetitive p\<^sub>a;
-     ap_noncompetitive p\<^sub>b
+     ap_single p\<^sub>a;
+     ap_single p\<^sub>b
    \<rbrakk> \<Longrightarrow>
-   ap_noncompetitive (p\<^sub>a :@: p\<^sub>b)
+   ap_single (p\<^sub>a :@: p\<^sub>b)
  "
+
+inductive ap_ordered :: "abstract_path \<Rightarrow> bool" where
+ Empty: "
+   ap_ordered Empty
+ " |
+ Atom: "
+   ap_ordered (&l)
+ " |
+ Star: "
+   \<lbrakk>
+     ap_single p
+   \<rbrakk> \<Longrightarrow>
+   ap_ordered ({p}*)
+ " |
+ Concat: "
+   \<lbrakk>
+     ap_single p\<^sub>a;
+     ap_ordered p\<^sub>b
+   \<rbrakk> \<Longrightarrow>
+   ap_ordered (p\<^sub>a :@: p\<^sub>b)
+ "
+
+
+(* 
+
+  unsure how to define exclusive
+  Is there a way to get proc regex and spawn regex
+
+*)
+inductive ap_exclusive :: "abstract_path \<Rightarrow> bool" where
+ Empty: "
+   ap_exclusive Empty
+ " |
+ Atom: "
+   ap_exclusive (&l)
+ " |
+ Union: "
+   \<lbrakk>
+     ap_linear p\<^sub>a; ap_exclusive p\<^sub>a;
+     ap_linear p\<^sub>b; ap_exclusive p\<^sub>b
+   \<rbrakk> \<Longrightarrow>
+   ap_exclusive (p\<^sub>a :|: p\<^sub>b)
+ " |
+ Concat: "
+   \<lbrakk>
+     ap_exclusive p\<^sub>a;
+     ap_exclusive p\<^sub>b
+   \<rbrakk> \<Longrightarrow>
+   ap_exclusive (p\<^sub>a :@: p\<^sub>b)
+ "
+
+definition ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where 
+  "ap_noncompetitive ap = (ap_ordered ap \<or> ap_exclusive ap)"
 
 lemma ap_linear_implies_linear' : "
   p |\<rhd> \<pi> \<Longrightarrow> ap_linear p \<longrightarrow> ``\<pi>``
@@ -147,20 +187,6 @@ lemma concat_matches_implies: "
 "
  apply (erule ap_matches.cases; auto)
 done
-
-lemma ap_linear_implies_ap_noncompetitive: "
-  ap_linear p \<Longrightarrow>  ap_noncompetitive p
-"
- apply (erule ap_linear.induct; auto?)
-  apply (simp add: ap_noncompetitive.Empty)
-  apply (simp add: ap_noncompetitive.Atom)
-  apply (simp add: ap_noncompetitive.Atom)
-  apply (simp add: ap_noncompetitive.Atom)
-  apply (simp add: ap_noncompetitive.Union)
-  apply (simp add: ap_noncompetitive.Star)
-  apply (simp add: ap_noncompetitive.Concat)
-done
-
 
 lemma linear_implies_noncompetitive': "
   ``\<pi>\<^sub>a`` \<Longrightarrow> \<forall> \<pi>\<^sub>b . ``\<pi>\<^sub>b`` \<longrightarrow> two_paths_noncompetitive \<pi>\<^sub>a \<pi>\<^sub>b
@@ -223,6 +249,7 @@ lemma ap_noncompetitive_implies_noncompetitive': "
     two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   )
 "
+(*
  apply (erule ap_matches.induct; auto)
      apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def)
     apply (drule atom_matches_implies; (simp add: two_paths_noncompetitive_def two_paths_ordered_def))
@@ -248,8 +275,8 @@ lemma ap_noncompetitive_implies_noncompetitive': "
   apply (erule ap_matches.cases; auto)
   apply (drule_tac x = \<pi>\<^sub>a' in spec; auto)
   apply (drule_tac x = \<pi>\<^sub>b' in spec; auto)
-  apply (erule noncompetitive_preserved_under_double_append; auto)
-done
+*)
+sorry
 
 lemma ap_noncompetitive_implies_noncompetitive: "
   \<lbrakk>
@@ -475,12 +502,19 @@ lemma infinite_prog_has_earlier_sync: "
     ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x
   )
 "
-(*
+
  apply (erule traceable.cases; clarsimp)
   apply (simp add: infinite_prog_def)
-  
+  apply (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
+  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+      apply (rotate_tac 3)
+      apply (frule traceable_implies_subexp, fold infinite_prog_def, rule infinite_prog_\<V>_restricted)
+      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+      apply (fold infinite_prog_def)
+      apply (drule traceable.Result; auto?)
+      apply (rotate_tac -1)
   defer
-
+(*
   apply (thin_tac "^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y")
   apply (thin_tac "infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET x = APP f x\<^sub>a in e\<^sub>n') ")
   apply (simp add: infinite_prog_\<V>_def; (match premises in I: "_ \<in> (if P then _ else _) " for P \<Rightarrow> \<open>cases P\<close>, auto)+)
@@ -576,8 +610,10 @@ theorem infinite_prog_has_single_sender_communication_analysis: "
   apply (rule ap_noncompetitive_implies_noncompetitive[of infinite_prog_send_g100_abstract_path])
    apply (simp add: infinite_prog_matches)
   apply (simp add: infinite_prog_matches)
+(*
  apply (simp add: infinite_prog_send_g100_abstract_path_def, (rule; simp?)+)
-done
+*)
+sorry
 
 
 theorem infinite_prog_has_single_receiver_communication_analysis: "

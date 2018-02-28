@@ -539,5 +539,80 @@ theorem traceable_implies_subexp: "
 "
 by (simp add: traceable_implies_subexp')
 
+inductive abstract_step :: "abstract_value_env \<times> exp \<Rightarrow> exp \<Rightarrow> control_label \<Rightarrow> exp \<Rightarrow> bool" ("_ \<turnstile> _ \<midarrow>_\<rightarrow> _" [56,0,0,56]55)  where
+  Let_Spawn_Child: "
+    \<lbrakk>
+      (LET x = SPAWN e\<^sub>c in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (LET x = SPAWN e\<^sub>c in e) \<midarrow>.x\<rightarrow> e\<^sub>c
+  " |
+  Let_Spawn: "
+    \<lbrakk>
+      (LET x = SPAWN e\<^sub>c in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (LET x = SPAWN e\<^sub>c in e) \<midarrow>`x\<rightarrow> e
+  " |
+  Let_Unit: "
+    \<lbrakk>
+      (LET x = \<lparr>\<rparr> in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (LET x = \<lparr>\<rparr> in e) \<midarrow>`x\<rightarrow> e
+  " |
+  Let_Chan: "
+    \<lbrakk>
+      (LET x = CHAN \<lparr>\<rparr> in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (LET x = CHAN \<lparr>\<rparr> in e) \<midarrow>`x\<rightarrow> e
+  " |
+  Let_Sync: "
+    \<lbrakk>
+      (LET x = SYNC x\<^sub>v in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (LET x = SYNC p in e) \<midarrow>`x\<rightarrow> e
+  " |
+  Let_Fst: "
+    \<lbrakk>
+      (LET x = FST x\<^sub>p in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (LET x = FST p in e) \<midarrow>`x\<rightarrow> e
+  " |
+  Let_Snd: "
+    \<lbrakk>
+      (LET x = SND x\<^sub>p in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (LET x = SND p in e) \<midarrow>`x\<rightarrow> e
+  " |
+  Let_Prim: "
+    \<lbrakk>
+      (LET x = Prim p in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (LET x = Prim p in e) \<midarrow>`x\<rightarrow> e
+  " |
+  App: "
+    \<lbrakk>
+      ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f; 
+      (LET x = APP f x\<^sub>a in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (LET x = APP f x\<^sub>a in e) \<midarrow>\<upharpoonleft>x\<rightarrow> e\<^sub>b
+  " |
+  Case_Left: "
+    \<lbrakk>
+      (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e) \<midarrow>\<upharpoonleft>x\<rightarrow> e\<^sub>l
+  " |
+  Case_Right: "
+    \<lbrakk>
+      (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e) \<midarrow>\<upharpoonleft>x\<rightarrow> e\<^sub>r
+  " |
+  Result: "
+    \<lbrakk>
+      (RESULT y) \<preceq>\<^sub>e e\<^sub>0;
+      (\<V>, e\<^sub>0) \<turnstile> (LET x = b in e) \<midarrow>\<upharpoonleft>x\<rightarrow> e'
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (RESULT y) \<midarrow>\<downharpoonleft>x\<rightarrow> e
+  "
 
 end

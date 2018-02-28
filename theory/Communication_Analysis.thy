@@ -38,6 +38,7 @@ fun proc_spawn :: "control_path \<Rightarrow> control_path" where
 inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   Base: "
     \<lbrakk>
+      (proc_legacy \<pi>\<^sub>1) \<noteq> (proc_legacy \<pi>\<^sub>2);
       \<not> (two_paths_ordered (proc_legacy \<pi>\<^sub>1) (proc_legacy \<pi>\<^sub>2))
     \<rbrakk> \<Longrightarrow>
     two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
@@ -54,18 +55,17 @@ inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Righ
 lemma two_paths_exclusive_preserved_under_seq_cons: "
   two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (`x # \<pi>) (`x # \<pi>')
 "
-by (metis (mono_tags, lifting) Cons_prefix_Cons proc_legacy.simps(3) proc_spawn.simps(3) two_paths_exclusive.simps two_paths_ordered_def)
+by (smt Cons_prefix_Cons list.inject proc_legacy.simps(3) proc_spawn.simps(3) two_paths_exclusive.simps two_paths_ordered_def)
 
 lemma two_paths_exclusive_preserved_under_up_cons: "
   two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (\<upharpoonleft>x # \<pi>) (\<upharpoonleft>x # \<pi>')
 "
-by (metis (mono_tags, lifting) Cons_prefix_Cons proc_legacy.simps(4) proc_spawn.simps(4) two_paths_exclusive.simps two_paths_ordered_def)
+by (smt Cons_prefix_Cons list.inject proc_legacy.simps(4) proc_spawn.simps(4) two_paths_exclusive.simps two_paths_ordered_def)
 
 lemma two_paths_exclusive_preserved_under_down_cons: "
   two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (\<downharpoonleft>x # \<pi>) (\<downharpoonleft>x # \<pi>')
 "
-by (metis (mono_tags, lifting) Cons_prefix_Cons proc_legacy.simps(5) proc_spawn.simps(5) two_paths_exclusive.simps two_paths_ordered_def)
-
+by (smt Cons_prefix_Cons list.inject proc_legacy.simps(5) proc_spawn.simps(5) two_paths_exclusive.simps two_paths_ordered_def)
 
 (*
 theorem two_paths_exclusive_preserved_under_concat: "
@@ -87,11 +87,41 @@ sorry
 definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)"
 
+lemma "
+  \<forall> \<pi>\<^sub>b \<pi>\<^sub>b' . two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<longrightarrow>
+  \<not> prefix \<pi>\<^sub>b (\<pi> @ \<pi>\<^sub>b') \<longrightarrow> \<not> prefix (\<pi> @ \<pi>\<^sub>b') \<pi>\<^sub>b \<longrightarrow>
+  two_paths_exclusive \<pi>\<^sub>b (\<pi> @ \<pi>\<^sub>b')
+"
+ apply (induct \<pi>; auto)
+  apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def)
+  apply (drule_tac x = \<pi>\<^sub>b in spec; auto?)
+  apply (drule_tac x = \<pi>\<^sub>b' in spec; auto?)
+  apply (case_tac \<pi>\<^sub>b; auto)
+sorry
+
+theorem double_append_exclusive: "
+  (\<forall> \<pi>\<^sub>a' \<pi>\<^sub>b \<pi>\<^sub>b'.
+    two_paths_noncompetitive  \<pi>\<^sub>a \<pi>\<^sub>a' \<longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<longrightarrow>
+    \<not> prefix (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b') \<longrightarrow> \<not> prefix (\<pi>\<^sub>a' @ \<pi>\<^sub>b') (\<pi>\<^sub>a @ \<pi>\<^sub>b) \<longrightarrow>
+    two_paths_exclusive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
+  )
+"
+ apply (induct \<pi>\<^sub>a; auto; simp?)
+  apply (case_tac \<pi>\<^sub>a'; auto)
+   apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def; auto)
+  apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def; auto)
+    
+sorry
 
 theorem noncompetitive_preserved_under_double_append: "
  two_paths_noncompetitive  \<pi>\<^sub>a \<pi>\<^sub>a' \<Longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<Longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
 "
-sorry
+ apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def; blast?)
+ apply (case_tac "prefix (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')"; blast?) 
+ apply (case_tac" prefix (\<pi>\<^sub>a' @ \<pi>\<^sub>b') (\<pi>\<^sub>a @ \<pi>\<^sub>b)"; blast?)
+ apply (rule disjI2, rule disjI2) 
+ apply (simp add: double_append_exclusive two_paths_noncompetitive_def two_paths_ordered_def)
+done
 
 definition set_noncompetitive  :: "control_path set \<Rightarrow> bool" where
   "set_noncompetitive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
