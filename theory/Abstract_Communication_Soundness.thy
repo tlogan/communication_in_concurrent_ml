@@ -130,7 +130,7 @@ theorem topology_set_exclusive_send_sound: "
  apply (erule allE; frule impE; auto)
   apply (drule isnt_send_path_sound; auto)
  apply (drule isnt_send_path_sound; auto)
-sorry
+done
 
 
 lemma abstract_recv_chan_doesnt_exist_sound: "
@@ -227,8 +227,8 @@ theorem topology_set_exclusive_recv_sound: "
  apply (simp add: set_exclusive_def two_paths_ordered_def; auto; erule allE; erule impE)
   apply (drule isnt_recv_path_sound; auto)
  apply (erule allE; frule impE; auto)
-  apply (drule isnt_recv_path_sound; auto)
-sorry
+  apply (drule isnt_recv_path_sound; auto)+
+done
 
 
 theorem topology_one_shot_sound: "
