@@ -615,4 +615,17 @@ inductive abstract_step :: "abstract_value_env \<times> exp \<Rightarrow> exp \<
     (\<V>, e\<^sub>0) \<turnstile> (RESULT y) \<midarrow>\<downharpoonleft>x\<rightarrow> e
   "
 
+
+theorem traceable_implies_abstract_step: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e');
+    \<pi>' = \<pi> ;; l;
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e);
+    (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0))
+  \<rbrakk> \<Longrightarrow>
+  (\<V>, e\<^sub>0) \<turnstile> e \<midarrow>l\<rightarrow> e'
+"
+sorry
+
+
 end
