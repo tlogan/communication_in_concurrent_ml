@@ -239,16 +239,27 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   Start: "
     \<V> \<turnstile> e\<^sub>0 \<down> ([], e\<^sub>0)
   " |
-  Result: "
+  Result_Case_Left: "
+    \<lbrakk>
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>\<bar>x # \<pi>', RESULT x\<^sub>r); 
+      \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n) 
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>\<bar>x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
+  " |
+  Result_Case_Right: "
+    \<lbrakk>
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>:x # \<pi>', RESULT x\<^sub>r); 
+      \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n) 
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>:x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
+  " |
+  Result_App: "
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT x\<^sub>r); 
       \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n) 
-      (* 
-        Is there certainty that this is the calling expression?
-        What if there is a case and left and right options use the same paths?
-        Does case need a special control_label to distinguish paths?
-      *)
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
   " |
@@ -337,15 +348,31 @@ inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
       \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``
     \<rbrakk> \<Longrightarrow>
     \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ .x # \<pi>\<^sub>2, [])
-  "|
-  Nonempty: "
+  " |
+  Nonempty_App: "
     \<lbrakk> 
       \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``;
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>);
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = APP f x\<^sub>a in e\<^sub>\<kappa>);
       \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>)
     \<rbrakk> \<Longrightarrow>
     \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2, \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
-  "
+  " |
+  Nonempty_Case_Left: "
+    \<lbrakk> 
+      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``;
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>\<kappa>);
+      \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>)
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>\<bar>x\<^sub>\<kappa> # \<pi>\<^sub>2, \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
+  " |
+  Nonempty_Case_Right: "
+    \<lbrakk> 
+      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``;
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>\<kappa>);
+      \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>)
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>:x\<^sub>\<kappa> # \<pi>\<^sub>2, \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
+  " 
 
 
 lemma stack_traceable_preserved_over_linear_balanced_extension: "
@@ -354,7 +381,9 @@ lemma stack_traceable_preserved_over_linear_balanced_extension: "
 apply (erule stack_traceable.cases; auto)
    apply (simp add: stack_traceable.Empty)
   apply (simp add: Empty_Local)
- apply (simp add: stack_traceable.Nonempty)
+ apply (simp add: stack_traceable.Nonempty_App)
+ apply (simp add: stack_traceable.Nonempty_Case_Left)
+ apply (simp add: stack_traceable.Nonempty_Case_Right)
 done
 
 lemma stack_traceable_preserved_over_seq_extension:"
@@ -373,90 +402,18 @@ inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^s
     \<rbrakk> \<Longrightarrow>
     e \<preceq>\<^sub>e (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)
   " | 
-  Let_Abs: "
+  Let: "
     \<lbrakk>
       e \<preceq>\<^sub>e e\<^sub>n
     \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)
+    e \<preceq>\<^sub>e (LET x = b in e\<^sub>n)
   " | 
-  Let_Pair: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e\<^sub>n)
-  " | 
-  Let_Left: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = LEFT x\<^sub>p in e\<^sub>n)
-  " | 
-  Let_Right: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = RIGHT x\<^sub>p in e\<^sub>n)
-  " | 
-  Let_Send_Evt: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e\<^sub>n)
-  " |
-  Let_Recv_Evt: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = RECV EVT x\<^sub>r\<^sub>c in e\<^sub>n)
-  " |
   Let_Spawn_Child: "
     \<lbrakk>
       e \<preceq>\<^sub>e e\<^sub>c
     \<rbrakk> \<Longrightarrow>
     e \<preceq>\<^sub>e (LET x = SPAWN e\<^sub>c in e\<^sub>n)
-  " | 
-  Let_Spawn: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = SPAWN e\<^sub>c in e\<^sub>n)
   " |
-  Let_Unit: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = \<lparr>\<rparr> in e\<^sub>n)
-  " |
-  Let_Chan: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = CHAN \<lparr>\<rparr> in e\<^sub>n)
-  " |
-  Let_Fst: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = FST p in e\<^sub>n)
-  " |
-  Let_Snd: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = SND p in e\<^sub>n)
-  " |
-  Let_Sync: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = SYNC x\<^sub>v in e\<^sub>n)
-  " |
-  Let_App: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = APP f x\<^sub>a in e\<^sub>n)
-  " | 
   Let_Case_Left: "
     \<lbrakk>
       e \<preceq>\<^sub>e e\<^sub>l
@@ -468,12 +425,6 @@ inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^s
       e \<preceq>\<^sub>e e\<^sub>r
     \<rbrakk> \<Longrightarrow>
     e \<preceq>\<^sub>e (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
-  " | 
-  Let_Case: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
   "
 
 lemma subexp_trans': "
@@ -481,23 +432,10 @@ lemma subexp_trans': "
 "
   apply (erule subexp.induct; auto)
    apply (drule spec; auto, rule subexp.Let_Abs_Body, assumption)
-   apply (drule spec; auto, rule subexp.Let_Abs, assumption)
-   apply (drule spec; auto, rule subexp.Let_Pair, assumption)
-   apply (drule spec; auto, rule subexp.Let_Left, assumption)
-   apply (drule spec; auto, rule subexp.Let_Right, assumption)
-   apply (drule spec; auto, rule subexp.Let_Send_Evt, assumption)
-   apply (drule spec; auto, rule subexp.Let_Recv_Evt, assumption)
+   apply (drule spec; auto, rule subexp.Let, assumption)
    apply (drule spec; auto, rule subexp.Let_Spawn_Child, assumption)
-   apply (drule spec; auto, rule subexp.Let_Spawn, assumption)
-   apply (drule spec; auto, rule subexp.Let_Unit, assumption)
-   apply (drule spec; auto, rule subexp.Let_Chan, assumption)
-   apply (drule spec; auto, rule subexp.Let_Fst, assumption)
-   apply (drule spec; auto, rule subexp.Let_Snd, assumption)
-   apply (drule spec; auto, rule subexp.Let_Sync, assumption)
-   apply (drule spec; auto, rule subexp.Let_App, assumption)
    apply (drule spec; auto, rule subexp.Let_Case_Left, assumption)
    apply (drule spec; auto, rule subexp.Let_Case_Right, assumption)
-   apply (drule spec; auto, rule subexp.Let_Case, assumption)
 done
 
 lemma subexp_trans: "
@@ -508,11 +446,7 @@ using subexp_trans' by blast
 lemma subexp1: "
   e\<^sub>n \<preceq>\<^sub>e LET x = b in e\<^sub>n
 "
- apply (cases b; simp; rule?; rule?)
- apply (rename_tac p)
- apply (case_tac "p"; simp; rule?; rule?)
-done
-
+by (simp add: Let Refl)
 
 lemma traceable_implies_subexp': "
   \<V> \<turnstile> e\<^sub>0 \<down> p \<Longrightarrow>
@@ -524,16 +458,15 @@ lemma traceable_implies_subexp': "
 "
  apply (erule traceable.induct; auto)
             apply (rule subexp.Refl)
-            apply (rotate_tac -1, rule subexp_trans; auto?; rule subexp1)
+            apply (rotate_tac -1, rule subexp_trans; auto?; rule subexp1)+
            apply (drule_tac x = f in spec)
            apply (drule_tac x = "\<lbrace> Abs f' x' e' , _\<rbrace>" in spec)
            apply (erule impE; simp)
-           apply (erule exE)+
-           apply (rotate_tac -1, rule subexp_trans; auto?; rule subexp.Let_Abs_Body; rule subexp.Refl)
+           apply (blast intro:  Let_Abs_Body Refl subexp_trans)
           apply (rule subexp_trans; auto?; rule subexp.Let_Case_Left; rule subexp.Refl)
          apply (rule subexp_trans; auto?; rule subexp.Let_Case_Right; rule subexp.Refl)
        apply (rule subexp_trans; auto?; rule subexp.Let_Spawn_Child; rule subexp.Refl)
-      apply (rule subexp_trans; auto?; rule subexp1)+  
+      apply (rule subexp_trans; auto?; rule subexp1)+
 done
 
 theorem traceable_implies_subexp: "
