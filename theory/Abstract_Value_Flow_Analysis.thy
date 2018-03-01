@@ -243,7 +243,12 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT x\<^sub>r); 
       \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n) 
+      (* 
+        Is there certainty that this is the calling expression?
+        What if there is a case and left and right options use the same paths?
+        Does case need a special control_label to distinguish paths?
+      *)
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
   " |
@@ -625,28 +630,51 @@ inductive abstract_step :: "abstract_value_env \<times> exp \<Rightarrow> exp \<
       (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e) \<preceq>\<^sub>e e\<^sub>0
     \<rbrakk> \<Longrightarrow>
     (\<V>, e\<^sub>0) \<turnstile> (RESULT \<lfloor>e\<^sub>r\<rfloor>) \<midarrow>\<downharpoonleft>x\<rightarrow> e
-  "
-
+  " 
+(*
 lemma traceable_functional: "
   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>1) \<Longrightarrow>
   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>2) \<Longrightarrow>
   e\<^sub>1 = e\<^sub>2
 "
+(* this could be true if CASE steps created distinct control_labels for left and right *)
 sorry
-
+*)
 
 theorem traceable_implies_abstract_step: "
   \<lbrakk>
-
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y); 
     \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n);
-  
+
+    (* y = \<lfloor>e\<^sub>b\<rfloor>; more precise, but needs change in traceable definition *)
     (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0))
   \<rbrakk> \<Longrightarrow>
-  (\<V>, e\<^sub>0) \<turnstile> RESULT y \<midarrow>\<downharpoonleft>x\<rightarrow> e\<^sub>n
+  (\<V>, e\<^sub>0) \<turnstile> RESULT y \<midarrow>\<downharpoonleft>x\<rightarrow> e\<^sub>b  
+  (* 
+    This is used to imply concretize the b as APP or CASE.
+    Is this necessary, or could traceable itself be used to concretize the b as APP or CASE?
+  *)
 "
 sorry
 
+(*
+theorem traceable_result_implies_subexp: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y); 
+    \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n);
+
+    (* y = \<lfloor>e\<^sub>b\<rfloor>; more precise, but needs change in traceable definition *)
+    (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0))
+  \<rbrakk> \<Longrightarrow>
+  (
+    (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>b RIGHT x\<^sub>r |> e\<^sub>r in e) \<preceq>\<^sub>e e\<^sub>0 \<or>
+    (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>b in e) \<preceq>\<^sub>e e\<^sub>0 \<or>
+    (^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<and> (LET x = APP f x\<^sub>a in e) \<preceq>\<^sub>e e\<^sub>0)
+  )
+"
+sorry
+*)
 
 end
