@@ -45,20 +45,6 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
   Let_Prim: "
     \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e; \<rho> ++ [x \<mapsto> \<lbrace>p, \<rho>\<rbrace>]; \<kappa>\<rangle>
   " |
-  Let_Case_Left: "
-    \<lbrakk>
-      \<rho> x\<^sub>s = Some \<lbrace>Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>; 
-      \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l 
-    \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e\<^sub>l; \<rho> ++ [x\<^sub>l \<mapsto> \<omega>\<^sub>l]; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
-  " |
-  Let_Case_Right: "
-    \<lbrakk>
-      \<rho> x\<^sub>s = Some \<lbrace>Right x\<^sub>r', \<rho>\<^sub>r\<rbrace>; 
-      \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r 
-    \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e\<^sub>r; \<rho> ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>r]; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
-  " |
   Fst: "
     \<lbrakk> 
       \<rho> x\<^sub>p = Some \<lbrace>Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>; 
@@ -109,18 +95,20 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
   Seq_Step_Left: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e' in e; \<rho>; \<kappa>\<rangle>) ;
-      \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e' in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
+      \<rho> x\<^sub>s = Some \<lbrace>Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>; 
+      \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l ;
+      \<E> \<pi> = Some (\<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>)
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;\<upharpoonleft>\<bar>x \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;\<upharpoonleft>\<bar>x \<mapsto> \<langle>e\<^sub>l; \<rho> ++ [x\<^sub>l \<mapsto> \<omega>\<^sub>l]; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
   " |
   Seq_Step_Right: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e' RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>) ;
-      \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e' RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
+      \<rho> x\<^sub>s = Some \<lbrace>Right x\<^sub>r', \<rho>\<^sub>r\<rbrace>; 
+      \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r ;
+      \<E> \<pi> = Some (\<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>)
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;\<upharpoonleft>:x \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;\<upharpoonleft>:x \<mapsto> \<langle>e\<^sub>r; \<rho> ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>r]; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
   " |
   Seq_Step_Up: "
     \<lbrakk> 
@@ -198,6 +186,14 @@ inductive path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonrigh
   Linear[simp]: "
     \<downharpoonright>[`x]\<upharpoonleft>
   " |
+  Left_Down[simp]: "
+    \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow>
+    \<downharpoonright> (\<upharpoonleft>\<bar>x # (\<pi> ;; \<downharpoonleft>x)) \<upharpoonleft>
+  " |
+  Right_Down[simp]: "
+    \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow>
+    \<downharpoonright> (\<upharpoonleft>:x # (\<pi> ;; \<downharpoonleft>x)) \<upharpoonleft>
+  " |
   Up_Down[simp]: "
     \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow>
     \<downharpoonright> (\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x)) \<upharpoonleft>
@@ -253,6 +249,17 @@ lemma up_down_balanced[simp]: "
    \<downharpoonright>[\<upharpoonleft>x, \<downharpoonleft>x] \<upharpoonleft>
 "
 using Up_Down path_balanced.Empty by fastforce
+
+lemma left_down_balanced[simp]: "
+   \<downharpoonright>[\<upharpoonleft>\<bar>x, \<downharpoonleft>x] \<upharpoonleft>
+"
+using Left_Down path_balanced.Empty by fastforce
+
+lemma right_down_balanced[simp]: "
+   \<downharpoonright>[\<upharpoonleft>:x, \<downharpoonleft>x] \<upharpoonleft>
+"
+using Right_Down path_balanced.Empty by fastforce
+
 
 
 end

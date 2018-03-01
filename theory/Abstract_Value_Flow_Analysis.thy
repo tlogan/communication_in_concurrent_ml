@@ -275,14 +275,14 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n);
       ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>l)
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>\<bar>x, e\<^sub>l)
   " |
   Let_Case_Right: "
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n);
       ^Right x\<^sub>r' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>r)
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>:x, e\<^sub>r)
   " |
   Let_Spawn_Child: "
     \<lbrakk>
