@@ -3,10 +3,12 @@ theory Semantics
 begin
 
 datatype control_label = 
-  M var ("`_" [71] 70) | 
-  C var ("._" [71] 70) | 
-  Up var ("\<upharpoonleft>_" [71] 70) |
-  Down var ("\<downharpoonleft>_" [71] 70)
+  L_Seq var ("`_" [71] 70) | 
+  L_Spawn var ("._" [71] 70) |
+  L_Left var ("\<upharpoonleft>\<bar>_" [71] 70) |
+  L_Right var ("\<upharpoonleft>:_" [71] 70) | 
+  L_Up var ("\<upharpoonleft>_" [71] 70) |
+  L_Down var ("\<downharpoonleft>_" [71] 70)
 
 type_synonym control_path = "control_label list"
 
@@ -104,11 +106,27 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [\<pi>;;\<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>']
   " |
+  Seq_Step_Left: "
+    \<lbrakk> 
+      leaf \<E> \<pi> ;
+      \<E> \<pi> = Some (\<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e' in e; \<rho>; \<kappa>\<rangle>) ;
+      \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e' in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
+    \<rbrakk> \<Longrightarrow>
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;\<upharpoonleft>\<bar>x \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
+  " |
+  Seq_Step_Right: "
+    \<lbrakk> 
+      leaf \<E> \<pi> ;
+      \<E> \<pi> = Some (\<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e' RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>) ;
+      \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e' RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
+    \<rbrakk> \<Longrightarrow>
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;\<upharpoonleft>:x \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
+  " |
   Seq_Step_Up: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
-      \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
+      \<E> \<pi> = Some (\<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle>) ;
+      \<langle>LET x = APP f x\<^sub>a  in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [\<pi>;;\<upharpoonleft>x \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
   " |
@@ -198,6 +216,14 @@ inductive linear :: "control_path \<Rightarrow> bool"("``_``" [0]55) where
     ``\<pi>`` \<Longrightarrow>
     `` (`x # \<pi>) ``
   " |
+  Left_Cons: "
+    ``\<pi>`` \<Longrightarrow>
+    `` (\<upharpoonleft>\<bar>x # \<pi>) ``
+  " |
+  Right_Cons: "
+    ``\<pi>`` \<Longrightarrow>
+    `` (\<upharpoonleft>:x # \<pi>) ``
+  " |
   Up_Cons: "
     ``\<pi>`` \<Longrightarrow>
     `` (\<upharpoonleft>x # \<pi>) ``
@@ -212,6 +238,8 @@ lemma linear_preserved_over_linear_extension': "
 "
  apply (erule linear.induct; auto)
  apply (erule Seq_Cons)
+ apply (erule Left_Cons)
+ apply (erule Right_Cons)
  apply (erule Up_Cons)
  apply (erule Down_Cons)
 done

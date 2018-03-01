@@ -408,15 +408,15 @@ definition infinite_prog_recv_g100_abstract_path :: abstract_path where
 
 theorem infinite_prog_single_sender: "
    [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-   set_noncompetitive (send_paths \<E>' (Ch [] g100))
+   set_ordered (send_paths \<E>' (Ch [] g100))
 "
-  apply (simp add: set_noncompetitive_def, (rule allI, rule impI)+)
+  apply (simp add: set_ordered_def, (rule allI, rule impI)+)
 sorry
 
 
 theorem infinite_prog_single_receiver: "
   [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<longrightarrow>
-   set_noncompetitive (recv_paths \<E>' (Ch [] g100))
+   set_ordered(recv_paths \<E>' (Ch [] g100))
 "
 sorry
 
