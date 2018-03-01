@@ -607,23 +607,44 @@ inductive abstract_step :: "abstract_value_env \<times> exp \<Rightarrow> exp \<
     \<rbrakk> \<Longrightarrow>
     (\<V>, e\<^sub>0) \<turnstile> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e) \<midarrow>\<upharpoonleft>x\<rightarrow> e\<^sub>r
   " |
-  Result: "
+  Result_App: "
     \<lbrakk>
-      (RESULT y) \<preceq>\<^sub>e e\<^sub>0;
-      (\<V>, e\<^sub>0) \<turnstile> (LET x = b in e) \<midarrow>\<upharpoonleft>x\<rightarrow> e'
+      ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f; 
+      (LET x = APP f x\<^sub>a in e) \<preceq>\<^sub>e e\<^sub>0
     \<rbrakk> \<Longrightarrow>
-    (\<V>, e\<^sub>0) \<turnstile> (RESULT y) \<midarrow>\<downharpoonleft>x\<rightarrow> e
+    (\<V>, e\<^sub>0) \<turnstile> (RESULT \<lfloor>e\<^sub>b\<rfloor>) \<midarrow>\<downharpoonleft>x\<rightarrow> e
+  " |
+  Result_Case_Left: "
+    \<lbrakk>
+      (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (RESULT \<lfloor>e\<^sub>l\<rfloor>) \<midarrow>\<downharpoonleft>x\<rightarrow> e
+  " |
+  Result_Case_Right: "
+    \<lbrakk>
+      (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e) \<preceq>\<^sub>e e\<^sub>0
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, e\<^sub>0) \<turnstile> (RESULT \<lfloor>e\<^sub>r\<rfloor>) \<midarrow>\<downharpoonleft>x\<rightarrow> e
   "
+
+lemma traceable_functional: "
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>1) \<Longrightarrow>
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>2) \<Longrightarrow>
+  e\<^sub>1 = e\<^sub>2
+"
+sorry
 
 
 theorem traceable_implies_abstract_step: "
   \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e');
-    \<pi>' = \<pi> ;; l;
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e);
+
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y); 
+    \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n);
+  
     (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0))
   \<rbrakk> \<Longrightarrow>
-  (\<V>, e\<^sub>0) \<turnstile> e \<midarrow>l\<rightarrow> e'
+  (\<V>, e\<^sub>0) \<turnstile> RESULT y \<midarrow>\<downharpoonleft>x\<rightarrow> e\<^sub>n
 "
 sorry
 
