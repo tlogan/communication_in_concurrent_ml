@@ -7,6 +7,108 @@ theory Programs
 begin
 
 
+
+
+
+(*
+lemma two_paths_exclusive_preserved_under_seq_cons: "
+  two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (`x # \<pi>) (`x # \<pi>')
+"
+sorry
+
+lemma two_paths_exclusive_preserved_under_up_cons: "
+  two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (\<upharpoonleft>x # \<pi>) (\<upharpoonleft>x # \<pi>')
+"
+sorry
+
+lemma two_paths_exclusive_preserved_under_down_cons: "
+  two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (\<downharpoonleft>x # \<pi>) (\<downharpoonleft>x # \<pi>')
+"
+sorry
+*)
+(*
+lemma "
+  \<forall> \<pi>\<^sub>b \<pi>\<^sub>b' . two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<longrightarrow>
+  \<not> prefix \<pi>\<^sub>b (\<pi> @ \<pi>\<^sub>b') \<longrightarrow> \<not> prefix (\<pi> @ \<pi>\<^sub>b') \<pi>\<^sub>b \<longrightarrow>
+  two_paths_exclusive \<pi>\<^sub>b (\<pi> @ \<pi>\<^sub>b')
+"
+ apply (induct \<pi>; auto)
+  apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def)
+  apply (drule_tac x = \<pi>\<^sub>b in spec; auto?)
+  apply (drule_tac x = \<pi>\<^sub>b' in spec; auto?)
+  apply (case_tac \<pi>\<^sub>b; auto)
+sorry
+
+theorem double_append_exclusive: "
+  (\<forall> \<pi>\<^sub>a' \<pi>\<^sub>b \<pi>\<^sub>b'.
+    two_paths_noncompetitive  \<pi>\<^sub>a \<pi>\<^sub>a' \<longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<longrightarrow>
+    \<not> prefix (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b') \<longrightarrow> \<not> prefix (\<pi>\<^sub>a' @ \<pi>\<^sub>b') (\<pi>\<^sub>a @ \<pi>\<^sub>b) \<longrightarrow>
+    two_paths_exclusive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
+  )
+"
+ apply (induct \<pi>\<^sub>a; auto; simp?)
+  apply (case_tac \<pi>\<^sub>a'; auto)
+   apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def; auto)
+  apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def; auto)
+    
+sorry
+
+
+theorem noncompetitive_preserved_under_double_append: "
+ two_paths_noncompetitive  \<pi>\<^sub>a \<pi>\<^sub>a' \<Longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<Longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
+"
+ apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def; blast?)
+ apply (case_tac "prefix (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')"; blast?) 
+ apply (case_tac" prefix (\<pi>\<^sub>a' @ \<pi>\<^sub>b') (\<pi>\<^sub>a @ \<pi>\<^sub>b)"; blast?)
+ apply (rule disjI2, rule disjI2) 
+ apply (simp add: double_append_exclusive two_paths_noncompetitive_def two_paths_ordered_def)
+done
+*)
+
+
+
+
+(*
+lemma traceable_functional: "
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>1) \<Longrightarrow>
+  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>2) \<Longrightarrow>
+  e\<^sub>1 = e\<^sub>2
+"
+(* this could be true if CASE steps created distinct control_labels for left and right *)
+sorry
+*)
+
+
+
+theorem traceable_result_implies_traceable_case_left: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>\<bar>x # \<pi>', RESULT y);
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+  \<rbrakk> \<Longrightarrow>
+  b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> y = \<lfloor>e\<^sub>l\<rfloor>
+"
+sorry
+
+theorem traceable_result_implies_traceable_case_right: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>:x # \<pi>', RESULT y);
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+  \<rbrakk> \<Longrightarrow>
+  b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> y = \<lfloor>e\<^sub>r\<rfloor>
+"
+sorry
+
+
+theorem traceable_result_implies_traceable_app: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y);
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+  \<rbrakk> \<Longrightarrow>
+  b = APP f x\<^sub>a \<and> ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f  \<and> y = \<lfloor>e\<^sub>b\<rfloor>
+"
+sorry
+
+
 (* abstract representation of paths *)
 datatype abstract_path =
   Empty |
