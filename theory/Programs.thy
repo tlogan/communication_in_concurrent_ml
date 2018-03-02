@@ -491,6 +491,32 @@ lemma infinite_prog_\<V>_restricted: "
 "
 sorry
 
+method elim_traceable_result uses dest = (
+  (
+    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
+    (rotate_tac -2),
+    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
+    (
+      (rotate_tac 3),
+      (drule dest; simp?; auto),
+      ((erule subexp.cases; auto)+)
+    )+
+  )+
+)
+
+method elim_traceable_app = (
+  (thin_tac "^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y"),
+  (thin_tac "infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET x = APP f x\<^sub>a in e\<^sub>n') "),
+  (simp add: infinite_prog_\<V>_def; (match premises in I: "_ \<in> (if P then _ else _) " for P \<Rightarrow> \<open>cases P\<close>, auto)+)
+)
+
+method elim_traceable = (
+  (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+  (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+)
+
 lemma infinite_prog_has_earlier_sync: "
   \<lbrakk>
     infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n);
@@ -506,219 +532,22 @@ lemma infinite_prog_has_earlier_sync: "
  apply (erule traceable.cases; clarsimp)
 
   apply (simp add: infinite_prog_def)
+  apply (elim_traceable_result dest: traceable_result_implies_traceable_case_left)
+  apply (elim_traceable_result dest: traceable_result_implies_traceable_case_right)
+  apply (elim_traceable_result dest: traceable_result_implies_traceable_app)
+  apply (elim_traceable_app)
+  apply (elim_traceable)
+  apply (elim_traceable)
+  apply (elim_traceable)
+  apply (elim_traceable)
+  apply (elim_traceable)
+  apply (elim_traceable)
+  apply (elim_traceable)
+  apply (elim_traceable)
+  apply (elim_traceable)
 
-  apply (
-    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
-    (rotate_tac -2),
-    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
-    (
-      (rotate_tac 3),
-      (drule traceable_result_implies_traceable_case_left; simp?; auto),
-      ((erule subexp.cases; auto)+)
-    )+
-  )+
-
-  apply (
-    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
-    (rotate_tac -2),
-    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
-    (
-      (rotate_tac 3),
-      (drule traceable_result_implies_traceable_case_right; simp?; auto),
-      ((erule subexp.cases; auto)+)
-    )+
-  )+
-
-  apply (
-    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
-    (rotate_tac -2),
-    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
-    (
-      (rotate_tac 3),
-      (drule traceable_result_implies_traceable_app; simp?; auto),
-      ((erule subexp.cases; auto)+)
-    )+
-  )+
-
-  apply (thin_tac "^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y")
-  apply (thin_tac "infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET x = APP f x\<^sub>a in e\<^sub>n') ")
-  apply (simp add: infinite_prog_\<V>_def; (match premises in I: "_ \<in> (if P then _ else _) " for P \<Rightarrow> \<open>cases P\<close>, auto)+)
-
-
-  apply (
-    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-  )
-  apply (
-    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-  )
-  apply (
-    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-  )
-  apply (
-    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-  )
-  apply (
-    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-  )
-
-  apply (
-    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-  )
-
-  apply (
-    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-  )
-
-  apply (
-    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-  )
-
-  apply (
-    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
-    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-  )
-
-
-
-
-(*
-
-
-  apply (frule traceable_result_implies_taceable_case_left; simp?; auto, rotate_tac -2)
-  apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def)
-      apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-  apply (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-  apply (erule subexp.cases; auto)+
-
-
-      apply (rotate_tac 3)
-      apply (frule traceable_implies_subexp, fold infinite_prog_def, rule infinite_prog_\<V>_restricted)
-
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (fold infinite_prog_def)
-
-      apply (drule traceable_implies_abstract_step, simp+)
-      apply (rule infinite_prog_\<V>_restricted)
-      apply (erule abstract_step.cases; auto)+
-
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-      apply (fold infinite_prog_def)
-      apply (drule traceable_implies_abstract_step, simp+)
-      apply (rule infinite_prog_\<V>_restricted)
-      apply (erule abstract_step.cases; auto)+
-
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-      apply (fold infinite_prog_def)
-      apply (drule traceable_implies_abstract_step, simp+)
-      apply (rule infinite_prog_\<V>_restricted)
-      apply (erule abstract_step.cases; auto)+
-
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-      apply (fold infinite_prog_def)
-      apply (drule traceable_implies_abstract_step, simp+)
-      apply (rule infinite_prog_\<V>_restricted)
-      apply (erule abstract_step.cases; auto)+
-
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-      apply (fold infinite_prog_def)
-      apply (drule traceable_implies_abstract_step, simp+)
-      apply (rule infinite_prog_\<V>_restricted)
-      apply (erule abstract_step.cases; auto)+
-
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-      apply (fold infinite_prog_def)
-      apply (drule traceable_implies_abstract_step, simp+)
-      apply (rule infinite_prog_\<V>_restricted)
-      apply (erule abstract_step.cases; auto)+
-
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-  apply (thin_tac "^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y")
-  apply (thin_tac "infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET x = APP f x\<^sub>a in e\<^sub>n') ")
-  apply (simp add: infinite_prog_\<V>_def; (match premises in I: "_ \<in> (if P then _ else _) " for P \<Rightarrow> \<open>cases P\<close>, auto)+)
-
-
-  apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-  apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-  apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-  apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-
-  apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-  apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-  apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-  apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-  apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
-  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
-
-  apply auto
-  apply ((drule spec)+, auto)
-  apply (erule notE)
-  apply (erule traceable.Let_Prim)
-
-  apply (simp add: infinite_prog_def)
-*)
+  apply (erule traceable.cases; clarsimp)
+    apply (simp add: infinite_prog_def; auto)
 sorry
 
 
