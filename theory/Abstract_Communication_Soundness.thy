@@ -116,12 +116,42 @@ lemma isnt_send_path_sound: "
 done
 
 
-lemma set_send_paths_exclusive_implies_equal: "
+lemma send_paths_set_exclusive_preceded: "
+  \<E> \<rightarrow>* \<E>' \<Longrightarrow> set_exclusive (send_paths \<E>' c) \<Longrightarrow> set_exclusive (send_paths \<E> c)
+"
+sorry
+
+
+lemma set_paths_equal_preserved: "
+  \<E> \<rightarrow> \<E>' \<Longrightarrow> 
+  set_paths_equal (send_paths \<E> c) \<Longrightarrow> 
+  set_exclusive (send_paths \<E>' c) \<Longrightarrow>  
+  set_paths_equal (send_paths \<E>' c)
+"
+sorry
+
+lemma send_paths_set_exclusive_implies_equal': "
+  \<E> \<rightarrow>* \<E>' \<Longrightarrow> 
+  set_paths_equal (send_paths \<E> c) \<longrightarrow>
+  set_exclusive (send_paths \<E>' c) \<longrightarrow> 
+  set_paths_equal (send_paths \<E>' c)
+"
+ apply ((erule star.induct; auto), erule notE)
+ apply (simp add: send_paths_set_exclusive_preceded set_paths_equal_preserved)
+done
+
+lemma empty_send_paths_set_equal: "
+  set_paths_equal (send_paths [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] c)
+"
+ apply (unfold set_paths_equal_def send_paths_def; auto)
+done
+
+lemma send_paths_set_exclusive_implies_equal: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   set_exclusive (send_paths \<E>' c) \<Longrightarrow> 
   set_paths_equal (send_paths \<E>' c)
 "
-sorry
+by (simp add: empty_send_paths_set_equal send_paths_set_exclusive_implies_equal')
 
 theorem topology_set_exclusive_send_sound: "
   \<lbrakk>
@@ -132,7 +162,7 @@ theorem topology_set_exclusive_send_sound: "
   \<rbrakk> \<Longrightarrow>
   set_paths_equal (send_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
- apply (rule set_send_paths_exclusive_implies_equal; auto?)
+ apply (rule send_paths_set_exclusive_implies_equal; auto?)
  apply (simp add: set_exclusive_def two_paths_ordered_def; auto; erule allE; erule impE)
   apply (drule isnt_send_path_sound; auto)
  apply (erule allE; frule impE; auto)
