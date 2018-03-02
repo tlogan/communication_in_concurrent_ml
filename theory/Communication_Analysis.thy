@@ -30,17 +30,17 @@ definition set_ordered :: "control_path set \<Rightarrow> bool" where
     two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2
   )"
 
-(*
+
 definition set_paths_equal :: "control_path set \<Rightarrow> bool" where
   "set_paths_equal \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
     \<pi>\<^sub>1 \<in> \<T> \<longrightarrow>
     \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
     \<pi>\<^sub>1 = \<pi>\<^sub>2
   )"
-*)
+
 
 definition one_shot :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "one_shot \<E> c \<equiv> card (send_paths \<E> c) \<le> 1 \<and> card (recv_paths \<E> c) \<le> 1"
+  "one_shot \<E> c \<equiv> set_paths_equal (send_paths \<E> c) \<and> set_paths_equal (recv_paths \<E> c)"
 
 
 definition one_to_one :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where

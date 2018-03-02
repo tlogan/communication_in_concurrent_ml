@@ -575,6 +575,37 @@ lemma traceable_functional: "
 sorry
 *)
 
+
+
+theorem traceable_result_implies_traceable_case_left: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>\<bar>x # \<pi>', RESULT y);
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+  \<rbrakk> \<Longrightarrow>
+  b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> y = \<lfloor>e\<^sub>l\<rfloor>
+"
+sorry
+
+theorem traceable_result_implies_traceable_case_right: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>:x # \<pi>', RESULT y);
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+  \<rbrakk> \<Longrightarrow>
+  b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> y = \<lfloor>e\<^sub>r\<rfloor>
+"
+sorry
+
+
+theorem traceable_result_implies_traceable_app: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y);
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+  \<rbrakk> \<Longrightarrow>
+  b = APP f x\<^sub>a \<and> ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f  \<and> y = \<lfloor>e\<^sub>b\<rfloor>
+"
+sorry
+
+(*
 theorem traceable_implies_abstract_step: "
   \<lbrakk>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y); 
@@ -591,26 +622,6 @@ theorem traceable_implies_abstract_step: "
   *)
 "
 sorry
-
-(*
-
-theorem traceable_result_implies_subexp: "
-  \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y); 
-    \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n);
-
-    y = \<lfloor>e\<^sub>b\<rfloor>; (* more precise, but needs change in traceable definition *)
-    (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0))
-  \<rbrakk> \<Longrightarrow>
-  (
-    (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>b RIGHT x\<^sub>r |> e\<^sub>r in e) \<preceq>\<^sub>e e\<^sub>0 \<or>
-    (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>b in e) \<preceq>\<^sub>e e\<^sub>0 \<or>
-    (^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<and> (LET x = APP f x\<^sub>a in e) \<preceq>\<^sub>e e\<^sub>0)
-  )
-"
-sorry
-
 *)
 
 end

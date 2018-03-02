@@ -115,10 +115,11 @@ lemma isnt_send_path_sound: "
   apply (frule isnt_send_path_sound'; assumption?; blast)
 done
 
+
 lemma set_send_paths_exclusive_implies_equal: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   set_exclusive (send_paths \<E>' c) \<Longrightarrow> 
-  card (send_paths \<E>' c) \<le> 1
+  set_paths_equal (send_paths \<E>' c)
 "
 sorry
 
@@ -129,7 +130,7 @@ theorem topology_set_exclusive_send_sound: "
   
     set_exclusive (abstract_send_paths (\<V>, \<C>, e) x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
-  card (send_paths \<E>' (Ch \<pi> x\<^sub>c)) \<le> 1
+  set_paths_equal (send_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
  apply (rule set_send_paths_exclusive_implies_equal; auto?)
  apply (simp add: set_exclusive_def two_paths_ordered_def; auto; erule allE; erule impE)
@@ -225,8 +226,9 @@ done
 lemma set_recv_paths_exclusive_implies_equal: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   set_exclusive (recv_paths \<E>' c) \<Longrightarrow> 
-  card (recv_paths \<E>' c) \<le> 1
+  set_paths_equal (recv_paths \<E>' c)
 "
+ apply (unfold set_exclusive_def recv_paths_def; auto)
 sorry
 
 
@@ -237,7 +239,7 @@ theorem topology_set_exclusive_recv_sound: "
 
     set_exclusive (abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
-  card (recv_paths \<E>' (Ch \<pi> x\<^sub>c)) \<le> 1
+  set_paths_equal (recv_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
  apply (rule set_recv_paths_exclusive_implies_equal; auto?)
  apply (simp add: set_exclusive_def two_paths_ordered_def; auto; erule allE; erule impE)
@@ -245,16 +247,6 @@ theorem topology_set_exclusive_recv_sound: "
  apply (erule allE; frule impE; auto)
   apply (drule isnt_recv_path_sound; auto)+
 done
-
-(*
-lemma "
-  card \<T> \<le> Suc 0 \<longrightarrow> \<pi>\<^sub>1 \<in> \<T> \<Longrightarrow> \<forall> \<pi>\<^sub>2 . \<pi>\<^sub>2 \<in> \<T> \<longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
-"
-  apply (induct \<pi>\<^sub>1; auto; (case_tac \<pi>\<^sub>2; auto))
-   apply (rule two_paths_exclusive.Base; auto)
-*)
-
-
 
 
 theorem topology_one_shot_sound: "

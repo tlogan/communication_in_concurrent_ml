@@ -8,6 +8,8 @@ fun proc_legacy :: "control_path \<Rightarrow> control_path" where
   "proc_legacy [] = []" |
   "proc_legacy (.l # \<pi>) = `l # []" |
   "proc_legacy (`l # \<pi>) = `l # (proc_legacy \<pi>)" |
+  "proc_legacy (\<upharpoonleft>\<bar>l # \<pi>) = \<upharpoonleft>\<bar>l # (proc_legacy \<pi>)" |
+  "proc_legacy (\<upharpoonleft>:l # \<pi>) = \<upharpoonleft>:l # (proc_legacy \<pi>)" |
   "proc_legacy (\<upharpoonleft>l # \<pi>) = \<upharpoonleft>l # (proc_legacy \<pi>)" |
   "proc_legacy (\<downharpoonleft>l # \<pi>) = \<downharpoonleft>l # (proc_legacy \<pi>)"
 
@@ -15,13 +17,14 @@ fun proc_spawn :: "control_path \<Rightarrow> control_path" where
   "proc_spawn [] = []" |
   "proc_spawn (.l # \<pi>) = \<pi>" |
   "proc_spawn (`l # \<pi>) = (proc_spawn \<pi>)" |
+  "proc_spawn (\<upharpoonleft>\<bar>l # \<pi>) = (proc_spawn \<pi>)" |
+  "proc_spawn (\<upharpoonleft>:l # \<pi>) = (proc_spawn \<pi>)" |
   "proc_spawn (\<upharpoonleft>l # \<pi>) = (proc_spawn \<pi>)" |
   "proc_spawn (\<downharpoonleft>l # \<pi>) = (proc_spawn \<pi>)"
 
 inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   Base: "
     \<lbrakk>
-      (proc_legacy \<pi>\<^sub>1) \<noteq> (proc_legacy \<pi>\<^sub>2);
       \<not> (two_paths_ordered (proc_legacy \<pi>\<^sub>1) (proc_legacy \<pi>\<^sub>2))
     \<rbrakk> \<Longrightarrow>
     two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
@@ -35,34 +38,19 @@ inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Righ
   "
 
 
+(*
 lemma two_paths_exclusive_preserved_under_seq_cons: "
   two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (`x # \<pi>) (`x # \<pi>')
 "
-by (smt Cons_prefix_Cons list.inject proc_legacy.simps(3) proc_spawn.simps(3) two_paths_exclusive.simps two_paths_ordered_def)
+sorry
 
 lemma two_paths_exclusive_preserved_under_up_cons: "
   two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (\<upharpoonleft>x # \<pi>) (\<upharpoonleft>x # \<pi>')
 "
-by (smt Cons_prefix_Cons list.inject proc_legacy.simps(4) proc_spawn.simps(4) two_paths_exclusive.simps two_paths_ordered_def)
+sorry
 
 lemma two_paths_exclusive_preserved_under_down_cons: "
   two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (\<downharpoonleft>x # \<pi>) (\<downharpoonleft>x # \<pi>')
-"
-by (smt Cons_prefix_Cons list.inject proc_legacy.simps(5) proc_spawn.simps(5) two_paths_exclusive.simps two_paths_ordered_def)
-
-(*
-theorem two_paths_exclusive_preserved_under_concat: "
-  two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' \<Longrightarrow> two_paths_exclusive (\<pi> @ \<pi>\<^sub>1') (\<pi> @ \<pi>\<^sub>2')
-"
-sorry
-
-theorem two_paths_ordered_commutative: "
-  two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_ordered \<pi>\<^sub>2 \<pi>\<^sub>1
-"
-using two_paths_ordered_def by blast
-
-theorem two_paths_exclusive_commutative: "
-  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_exclusive \<pi>\<^sub>2 \<pi>\<^sub>1
 "
 sorry
 *)
@@ -70,6 +58,7 @@ sorry
 definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)"
 
+(*
 lemma "
   \<forall> \<pi>\<^sub>b \<pi>\<^sub>b' . two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<longrightarrow>
   \<not> prefix \<pi>\<^sub>b (\<pi> @ \<pi>\<^sub>b') \<longrightarrow> \<not> prefix (\<pi> @ \<pi>\<^sub>b') \<pi>\<^sub>b \<longrightarrow>
@@ -96,6 +85,7 @@ theorem double_append_exclusive: "
     
 sorry
 
+
 theorem noncompetitive_preserved_under_double_append: "
  two_paths_noncompetitive  \<pi>\<^sub>a \<pi>\<^sub>a' \<Longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<Longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
 "
@@ -105,6 +95,7 @@ theorem noncompetitive_preserved_under_double_append: "
  apply (rule disjI2, rule disjI2) 
  apply (simp add: double_append_exclusive two_paths_noncompetitive_def two_paths_ordered_def)
 done
+*)
 
 definition set_noncompetitive  :: "control_path set \<Rightarrow> bool" where
   "set_noncompetitive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .

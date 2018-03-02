@@ -188,6 +188,7 @@ lemma concat_matches_implies: "
  apply (erule ap_matches.cases; auto)
 done
 
+(*
 lemma linear_implies_noncompetitive': "
   ``\<pi>\<^sub>a`` \<Longrightarrow> \<forall> \<pi>\<^sub>b . ``\<pi>\<^sub>b`` \<longrightarrow> two_paths_noncompetitive \<pi>\<^sub>a \<pi>\<^sub>b
 "
@@ -237,7 +238,7 @@ lemma linear_implies_noncompetitive: "
   ``\<pi>\<^sub>a`` \<Longrightarrow> ``\<pi>\<^sub>b`` \<Longrightarrow> two_paths_noncompetitive \<pi>\<^sub>a \<pi>\<^sub>b
 "
 by (simp add: linear_implies_noncompetitive')
-
+*)
 
 lemma ap_noncompetitive_implies_noncompetitive': "
   \<lbrakk>
@@ -503,9 +504,111 @@ lemma infinite_prog_has_earlier_sync: "
   )
 "
  apply (erule traceable.cases; clarsimp)
+
   apply (simp add: infinite_prog_def)
+
+  apply (
+    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
+    (rotate_tac -2),
+    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
+    (
+      (rotate_tac 3),
+      (drule traceable_result_implies_traceable_case_left; simp?; auto),
+      ((erule subexp.cases; auto)+)
+    )+
+  )+
+
+  apply (
+    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
+    (rotate_tac -2),
+    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
+    (
+      (rotate_tac 3),
+      (drule traceable_result_implies_traceable_case_right; simp?; auto),
+      ((erule subexp.cases; auto)+)
+    )+
+  )+
+
+  apply (
+    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
+    (rotate_tac -2),
+    (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def),
+    (
+      (rotate_tac 3),
+      (drule traceable_result_implies_traceable_app; simp?; auto),
+      ((erule subexp.cases; auto)+)
+    )+
+  )+
+
+  apply (thin_tac "^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y")
+  apply (thin_tac "infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET x = APP f x\<^sub>a in e\<^sub>n') ")
+  apply (simp add: infinite_prog_\<V>_def; (match premises in I: "_ \<in> (if P then _ else _) " for P \<Rightarrow> \<open>cases P\<close>, auto)+)
+
+
+  apply (
+    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+  )
+  apply (
+    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+  )
+  apply (
+    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+  )
+  apply (
+    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+  )
+  apply (
+    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+  )
+
+  apply (
+    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+  )
+
+  apply (
+    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+  )
+
+  apply (
+    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+  )
+
+  apply (
+    (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
+    (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+  )
+
+
+
+
+(*
+
+
+  apply (frule traceable_result_implies_taceable_case_left; simp?; auto, rotate_tac -2)
+  apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
+  apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+, fold infinite_prog_def)
+      apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
+      apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+
   apply (frule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
   apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
+  apply (erule subexp.cases; auto)+
+
+
       apply (rotate_tac 3)
       apply (frule traceable_implies_subexp, fold infinite_prog_def, rule infinite_prog_\<V>_restricted)
 
@@ -609,7 +712,6 @@ lemma infinite_prog_has_earlier_sync: "
   apply (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted)
   apply (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
 
-(*
   apply auto
   apply ((drule spec)+, auto)
   apply (erule notE)
