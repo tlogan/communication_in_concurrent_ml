@@ -146,13 +146,91 @@ lemma send_paths_set_exclusive_preceded_star: "
  apply (simp add: send_paths_set_exclusive_preceded_star')
 done
 
+lemma send_path_preceded: "
+  \<pi> \<in> (send_paths (\<E>(\<pi>\<^sub>p \<mapsto> \<sigma>)) c) \<Longrightarrow>
+  \<E> \<rightarrow> \<E>(\<pi>\<^sub>p \<mapsto> \<sigma>) \<Longrightarrow>
+  \<pi> \<noteq> \<pi>\<^sub>p \<Longrightarrow>
+  \<pi> \<in> (send_paths \<E> c)
+"
+ apply (unfold send_paths_def; auto)
+ apply (case_tac "\<pi>\<^sub>y = \<pi>\<^sub>p"; auto)
+ apply (rule_tac x = x\<^sub>e in exI)
+ apply (rule_tac x = e\<^sub>n in exI)
+ apply (rule_tac x = \<kappa> in exI)
+ apply (rule_tac x = \<rho> in exI)
+ apply auto
+ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
+  apply (metis (mono_tags, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (no_types, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (no_types, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (no_types, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (no_types, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (no_types, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (no_types, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (no_types, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (smt append1_eq_conv control_label.inject(1) fun_upd_other fun_upd_same fun_upd_twist leaf_elim option.distinct(1) strict_prefixI')
+  apply (metis (mono_tags, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (smt append1_eq_conv control_label.distinct(1) fun_upd_other fun_upd_same fun_upd_twist leaf_elim option.distinct(1) strict_prefixI')
+done
+
 
 lemma set_paths_equal_preserved: "
-  \<E> \<rightarrow> \<E>' \<Longrightarrow> 
   set_paths_equal (send_paths \<E> c) \<Longrightarrow> 
+  \<E> \<rightarrow> \<E>' \<Longrightarrow>
   set_exclusive (send_paths \<E>' c) \<Longrightarrow>  
   set_paths_equal (send_paths \<E>' c)
 "
+ apply (simp add: set_paths_equal_def; auto)
+ apply (rename_tac \<pi>\<^sub>1' \<pi>\<^sub>2')
+ apply (simp add: set_exclusive_def; auto?)
+ apply (rotate_tac 2, drule_tac x = \<pi>\<^sub>1' in spec; auto)
+ apply (rotate_tac -1, drule_tac x = \<pi>\<^sub>2' in spec; auto)
+ apply (subgoal_tac "\<E> \<rightarrow> \<E>'"; blast?)
+ apply (erule concur_step.cases; clarify; (erule seq_step.cases; clarify)?, auto)
+   apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; simp?))
+   apply ((unfold send_paths_def)[1]; blast)
+   apply ((unfold send_paths_def)[1]; blast)
+   apply (blast dest: send_path_preceded)
+
+   apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; \<upharpoonleft>\<bar>x"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi> ;; \<upharpoonleft>\<bar>x"; simp?))
+   apply ((unfold send_paths_def)[1]; blast)
+   apply ((unfold send_paths_def)[1]; blast)
+   apply (blast dest: send_path_preceded)
+
+   apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; \<upharpoonleft>:x"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi> ;; \<upharpoonleft>:x"; simp?))
+   apply ((unfold send_paths_def)[1]; blast)
+   apply ((unfold send_paths_def)[1]; blast)
+   apply (blast dest: send_path_preceded)
+
+   apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; \<upharpoonleft>xa"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi> ;; \<upharpoonleft>xa"; simp?))
+   apply ((unfold send_paths_def)[1]; blast)
+   apply ((unfold send_paths_def)[1]; blast)
+   apply (blast dest: send_path_preceded)
+
+   apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; `xa"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi> ;; `xa"; simp?))
+   apply ((unfold send_paths_def)[1], (smt append_self_conv bind.distinct(5) butlast_snoc exp.inject(1) map_upd_Some_unfold mem_Collect_eq not_Cons_self2 state.inject))
+   apply ((unfold send_paths_def)[1], (smt append_self_conv bind.distinct(5) butlast_snoc exp.inject(1) map_upd_Some_unfold mem_Collect_eq not_Cons_self2 state.inject))
+   apply (blast dest: send_path_preceded)
+
+   apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; `xa"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi> ;; `xa"; simp?))
+   apply ((unfold send_paths_def)[1], (smt append1_eq_conv control_label.inject(1) fun_upd_triv map_upd_eqD1 mem_Collect_eq state.inject val.distinct(5)))
+   apply ((unfold send_paths_def)[1], (smt append1_eq_conv control_label.inject(1) fun_upd_triv map_upd_eqD1 mem_Collect_eq state.inject val.distinct(5)))
+   apply (blast dest: send_path_preceded)
+
+   apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; `xa"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi> ;; `xa"; simp?))
+   apply ((unfold send_paths_def)[1], (smt append_self_conv bind.distinct(43) butlast_snoc exp.inject(1) map_upd_Some_unfold mem_Collect_eq not_Cons_self2 option.inject state.inject))
+   apply ((unfold send_paths_def)[1], (smt append_self_conv bind.distinct(43) butlast_snoc exp.inject(1) map_upd_Some_unfold mem_Collect_eq not_Cons_self2 option.inject state.inject))
+   apply (blast dest: send_path_preceded)
+
+   apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; `xa"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi> ;; `xa"; simp?))
+   apply ((unfold send_paths_def)[1], (smt append_self_conv bind.distinct(45) butlast_snoc exp.inject(1) map_upd_Some_unfold mem_Collect_eq not_Cons_self2 state.inject))
+   apply ((unfold send_paths_def)[1], (smt append_self_conv bind.distinct(45) butlast_snoc exp.inject(1) map_upd_Some_unfold mem_Collect_eq not_Cons_self2 option.inject state.inject))
+   apply (blast dest: send_path_preceded)
+
+   
+   apply (case_tac "\<pi>\<^sub>1' = \<pi>\<^sub>s ;; `x\<^sub>s"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>s ;; `x\<^sub>s"; simp?); auto?)
+
+
 sorry
 
 lemma send_paths_set_exclusive_implies_equal': "
@@ -172,8 +250,8 @@ lemma empty_send_paths_set_equal: "
 done
 
 lemma send_paths_set_exclusive_implies_equal: "
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   set_exclusive (send_paths \<E>' c) \<Longrightarrow> 
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   set_paths_equal (send_paths \<E>' c)
 "
 by (simp add: empty_send_paths_set_equal send_paths_set_exclusive_implies_equal')
