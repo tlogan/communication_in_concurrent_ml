@@ -116,10 +116,35 @@ lemma isnt_send_path_sound: "
 done
 
 
+lemma send_path_preserved: "
+  \<pi> \<in> send_paths \<E> c \<Longrightarrow> 
+  \<E> \<rightarrow> \<E>' \<Longrightarrow> 
+  \<pi> \<in> send_paths \<E>' c         
+"
+ apply (simp add: send_paths_def; auto)
+ apply (erule concur_step.cases; clarsimp)
+  apply (metis leaf_def option.simps(3) strict_prefixI')+
+done
+
 lemma send_paths_set_exclusive_preceded: "
+  \<E> \<rightarrow> \<E>' \<Longrightarrow> set_exclusive (send_paths \<E>' c) \<Longrightarrow> set_exclusive (send_paths \<E> c)
+"
+ apply (simp add: set_exclusive_def; auto)
+ apply (drule send_path_preserved; auto?)+
+done
+
+lemma send_paths_set_exclusive_preceded_star': "
+  \<E> \<rightarrow>* \<E>' \<Longrightarrow> set_exclusive (send_paths \<E>' c) \<longrightarrow> set_exclusive (send_paths \<E> c)
+"
+ apply (erule star.induct; auto)
+ apply (simp add: send_paths_set_exclusive_preceded)
+done
+
+lemma send_paths_set_exclusive_preceded_star: "
   \<E> \<rightarrow>* \<E>' \<Longrightarrow> set_exclusive (send_paths \<E>' c) \<Longrightarrow> set_exclusive (send_paths \<E> c)
 "
-sorry
+ apply (simp add: send_paths_set_exclusive_preceded_star')
+done
 
 
 lemma set_paths_equal_preserved: "
@@ -137,7 +162,7 @@ lemma send_paths_set_exclusive_implies_equal': "
   set_paths_equal (send_paths \<E>' c)
 "
  apply ((erule star.induct; auto), erule notE)
- apply (simp add: send_paths_set_exclusive_preceded set_paths_equal_preserved)
+ apply (simp add: send_paths_set_exclusive_preceded_star set_paths_equal_preserved)
 done
 
 lemma empty_send_paths_set_equal: "
