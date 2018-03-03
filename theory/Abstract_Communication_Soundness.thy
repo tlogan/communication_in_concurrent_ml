@@ -173,13 +173,13 @@ lemma send_path_preceded: "
   apply (smt append1_eq_conv control_label.distinct(1) fun_upd_other fun_upd_same fun_upd_twist leaf_elim option.distinct(1) strict_prefixI')
 done
 
-
-lemma set_paths_equal_preserved: "
+lemma send_path_set_equal_preserved: "
   set_paths_equal (send_paths \<E> c) \<Longrightarrow> 
   \<E> \<rightarrow> \<E>' \<Longrightarrow>
   set_exclusive (send_paths \<E>' c) \<Longrightarrow>  
   set_paths_equal (send_paths \<E>' c)
 "
+
  apply (simp add: set_paths_equal_def; auto)
  apply (rename_tac \<pi>\<^sub>1' \<pi>\<^sub>2')
  apply (simp add: set_exclusive_def; auto?)
@@ -227,11 +227,9 @@ lemma set_paths_equal_preserved: "
    apply ((unfold send_paths_def)[1], (smt append_self_conv bind.distinct(45) butlast_snoc exp.inject(1) map_upd_Some_unfold mem_Collect_eq not_Cons_self2 option.inject state.inject))
    apply (blast dest: send_path_preceded)
 
-   
-   apply (case_tac "\<pi>\<^sub>1' = \<pi>\<^sub>s ;; `x\<^sub>s"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>s ;; `x\<^sub>s"; simp?); auto?)
-
-
 sorry
+
+
 
 lemma send_paths_set_exclusive_implies_equal': "
   \<E> \<rightarrow>* \<E>' \<Longrightarrow> 
@@ -240,7 +238,7 @@ lemma send_paths_set_exclusive_implies_equal': "
   set_paths_equal (send_paths \<E>' c)
 "
  apply ((erule star.induct; auto), erule notE)
- apply (simp add: send_paths_set_exclusive_preceded_star set_paths_equal_preserved)
+ apply (blast dest: send_path_set_equal_preserved send_paths_set_exclusive_preceded_star)
 done
 
 lemma empty_send_paths_set_equal: "
