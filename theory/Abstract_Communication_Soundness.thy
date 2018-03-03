@@ -173,6 +173,14 @@ lemma send_path_preceded: "
   apply (smt append1_eq_conv control_label.distinct(1) fun_upd_other fun_upd_same fun_upd_twist leaf_elim option.distinct(1) strict_prefixI')
 done
 
+lemma send_path_preceded_by_two: "
+  \<pi> \<in> (send_paths (\<E>(\<pi>' \<mapsto> \<sigma>', \<pi>'' \<mapsto> \<sigma>'')) c) \<Longrightarrow>
+  \<E> \<rightarrow> \<E>(\<pi>' \<mapsto> \<sigma>'', \<pi>'' \<mapsto> \<sigma>'') \<Longrightarrow>
+  \<pi> \<noteq> \<pi>' \<Longrightarrow>  \<pi> \<noteq> \<pi>'' \<Longrightarrow>
+  \<pi> \<in> (send_paths \<E> c)
+"
+sorry
+
 lemma send_path_set_equal_preserved: "
   set_paths_equal (send_paths \<E> c) \<Longrightarrow> 
   \<E> \<rightarrow> \<E>' \<Longrightarrow>
@@ -226,6 +234,14 @@ lemma send_path_set_equal_preserved: "
    apply ((unfold send_paths_def)[1], (smt append_self_conv bind.distinct(45) butlast_snoc exp.inject(1) map_upd_Some_unfold mem_Collect_eq not_Cons_self2 state.inject))
    apply ((unfold send_paths_def)[1], (smt append_self_conv bind.distinct(45) butlast_snoc exp.inject(1) map_upd_Some_unfold mem_Collect_eq not_Cons_self2 option.inject state.inject))
    apply (blast dest: send_path_preceded)
+
+   apply (case_tac "\<pi>\<^sub>1' = \<pi>\<^sub>s ;; `x\<^sub>s"; simp?; 
+     (case_tac "\<pi>\<^sub>1' = \<pi>\<^sub>r ;; `x\<^sub>r"; simp?); (case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>s ;; `x\<^sub>s"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>r ;; `x\<^sub>r"; simp?))
+   )
+   apply ((unfold send_paths_def)[1]; clarify, fold send_paths_def)
+   apply (smt bind.inject(2) exp.inject(1) leaf_def map_upd_Some_unfold option.inject prim.distinct(29) state.inject strict_prefixI' val.inject(2))
+
+   apply (case_tac "c = ca"; simp?)
 
 sorry
 
