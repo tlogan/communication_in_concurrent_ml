@@ -181,30 +181,37 @@ lemma send_path_preceded_by_two: "
 "
 sorry
 
+
+lemma send_path_set_equal_preserved_under_send_extension: "
+  \<lbrakk>
+    \<pi>\<^sub>s ;; `x\<^sub>s \<in> send_paths (\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) c;
+    \<pi>\<^sub>2' \<in> send_paths (\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) c;
+    \<forall>\<pi>\<^sub>1. \<pi>\<^sub>1 \<in> send_paths \<E> c \<longrightarrow> (\<forall>\<pi>\<^sub>2. \<pi>\<^sub>2 \<in> send_paths \<E> c \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2);
+    two_paths_exclusive (\<pi>\<^sub>s ;; `x\<^sub>s) \<pi>\<^sub>2';
+    \<E> \<rightarrow> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>);
+    leaf \<E> \<pi>\<^sub>s;
+
+    \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>);
+    \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>;
+    \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace>;
+    \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m;
+
 (*
-lemma send_path_set_equal_preserved_under_sync_step: "
+    leaf \<E> \<pi>\<^sub>r;
+    \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>);  
+    \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>;
+    \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>;
+*)
 
-  \<E> \<pi>\<^sub>y1 = Some (\<langle>LET x\<^sub>y1 = SYNC x\<^sub>e1 in e\<^sub>n1; \<rho>1; \<kappa>1\<rangle>) \<and>
-  \<rho> x\<^sub>e1 = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c1 x\<^sub>m1, \<rho>\<^sub>e1\<rbrace> \<and> 
-  \<rho>\<^sub>e x\<^sub>s\<^sub>c1 = Some \<lbrace>c\<rbrace> \<and>
-  \<E> (\<pi>\<^sub>y1;;`x\<^sub>y1) = Some (\<langle>e\<^sub>n1; \<rho>1(x\<^sub>y1 \<mapsto> \<lbrace>\<rbrace>); \<kappa>1\<rangle>)
-
-  \<Longrightarrow>
-
-
-  \<Longrightarrow>
-  \<E> \<rightarrow> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)
-
-  \<Longrightarrow> 
-  
+    x\<^sub>s \<noteq> x\<^sub>r; \<pi>\<^sub>2' \<noteq> \<pi>\<^sub>r ;; `x\<^sub>r 
+  \<rbrakk> \<Longrightarrow>
+  \<pi>\<^sub>2' = \<pi>\<^sub>s ;; `x\<^sub>s 
 "
 sorry
-*)
-lemma "
-  set_paths_equal (send_paths \<E> c) 
+
+theorem two_paths_exclusive_commutative: "
+  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_exclusive \<pi>\<^sub>2 \<pi>\<^sub>1 
 "
-  apply (unfold _set_paths_equal_def, auto)
-  apply (unfold send_paths_def; clarify)
 sorry
 
 lemma send_path_set_equal_preserved: "
@@ -272,10 +279,36 @@ lemma send_path_set_equal_preserved: "
    apply (blast dest: send_path_preceded_by_two)
    apply ((unfold send_paths_def)[1]; clarify, fold send_paths_def)
    apply (smt bind.inject(2) exp.inject(1) leaf_def map_upd_Some_unfold option.inject prim.inject(5) state.inject strict_prefixI' val.inject(1) val.inject(2))
-   
 
+  apply (blast dest: send_path_set_equal_preserved_under_send_extension two_paths_exclusive_commutative)
+  apply ((unfold send_paths_def)[1]; clarify, fold send_paths_def)
+  apply (smt bind.inject(2) exp.inject(1) leaf_def map_upd_Some_unfold option.inject prim.inject(5) state.inject strict_prefixI' val.inject(1) val.inject(2)) 
+  apply (blast dest: send_path_set_equal_preserved_under_send_extension)
 
-sorry
+   apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; `x"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi> ;; `x"; simp?))
+   apply ((unfold send_paths_def)[1])
+   apply (smt append1_eq_conv control_label.inject(1) fun_upd_triv map_upd_eqD1 mem_Collect_eq state.inject val.distinct(3))
+   apply ((unfold send_paths_def)[1])
+   apply (smt append1_eq_conv control_label.inject(1) fun_upd_triv map_upd_eqD1 mem_Collect_eq state.inject val.distinct(3))
+   apply (blast dest: send_path_preceded)
+
+   apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; `x"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi> ;; `x"; simp?);
+      (case_tac "\<pi>\<^sub>1' = \<pi> ;; .x"; simp?; (case_tac "\<pi>\<^sub>2' = \<pi> ;; .x"; simp?))
+   )
+   apply ((unfold send_paths_def)[1])
+   apply blast
+   apply ((unfold send_paths_def)[1])
+   apply (smt append_self_conv bind.distinct(31) butlast_snoc exp.inject(1) fun_upd_same fun_upd_triv fun_upd_twist mem_Collect_eq not_Cons_self2 option.inject state.inject)
+   apply ((unfold send_paths_def)[1])
+   apply blast
+   apply ((unfold send_paths_def)[1])
+   apply (smt append_self_conv bind.distinct(31) butlast_snoc exp.inject(1) fun_upd_same fun_upd_triv fun_upd_twist mem_Collect_eq not_Cons_self2 option.inject state.inject)
+   apply ((unfold send_paths_def)[1])
+   apply blast
+   apply ((unfold send_paths_def)[1])
+   apply blast
+   apply (blast dest: send_path_preceded_by_two)
+done
 
 
 
