@@ -173,13 +173,126 @@ lemma send_path_preceded: "
   apply (smt append1_eq_conv control_label.distinct(1) fun_upd_other fun_upd_same fun_upd_twist leaf_elim option.distinct(1) strict_prefixI')
 done
 
+lemma send_path_preceded_by_two_for_sync: "
+       \<pi>'' ;; `x\<^sub>y \<noteq> \<pi>' \<Longrightarrow>
+       \<pi> = \<pi>'' ;; `x\<^sub>y \<Longrightarrow>
+       \<sigma>'' = \<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle> \<Longrightarrow>
+       \<rho> x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace> \<Longrightarrow>
+       \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow>
+       \<E> (\<pi>'' ;; `x\<^sub>y) = Some (\<langle>e\<^sub>n;\<rho>(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<rangle>) \<Longrightarrow>
+       \<E>(\<pi>' \<mapsto> \<sigma>', \<pi>'' \<mapsto> \<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) = \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
+       leaf \<E> \<pi>\<^sub>s \<Longrightarrow>
+       \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
+       \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c' x\<^sub>m', \<rho>\<^sub>s\<^sub>e\<rbrace> \<Longrightarrow>
+       \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c' = Some \<lbrace>ca\<rbrace> \<Longrightarrow>
+       \<rho>\<^sub>s\<^sub>e x\<^sub>m' = Some \<omega>\<^sub>m \<Longrightarrow>
+       leaf \<E> \<pi>\<^sub>r \<Longrightarrow>
+       \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
+       \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow> \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>ca\<rbrace> \<Longrightarrow> x\<^sub>s \<noteq> x\<^sub>r \<Longrightarrow> \<E> \<pi>'' = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>)
+"
+proof -
+  fix x\<^sub>y :: Syntax.var and x\<^sub>e :: Syntax.var and e\<^sub>n :: exp and \<kappa> :: "cont list" and \<rho> :: "Syntax.var \<Rightarrow> val option" and x\<^sub>s\<^sub>c :: Syntax.var and x\<^sub>m :: Syntax.var and \<rho>\<^sub>e :: "Syntax.var \<Rightarrow> val option" and \<pi>\<^sub>s :: "control_label list" and x\<^sub>s :: Syntax.var and x\<^sub>s\<^sub>e :: Syntax.var and e\<^sub>s :: exp and \<rho>\<^sub>s :: "Syntax.var \<Rightarrow> val option" and \<kappa>\<^sub>s :: "cont list" and x\<^sub>s\<^sub>c' :: Syntax.var and x\<^sub>m' :: Syntax.var and \<rho>\<^sub>s\<^sub>e :: "Syntax.var \<Rightarrow> val option" and ca :: chan and \<omega>\<^sub>m :: val and \<pi>\<^sub>r :: "control_label list" and x\<^sub>r :: Syntax.var and x\<^sub>r\<^sub>e :: Syntax.var and e\<^sub>r :: exp and \<rho>\<^sub>r :: "Syntax.var \<Rightarrow> val option" and \<kappa>\<^sub>r :: "cont list" and x\<^sub>r\<^sub>c :: Syntax.var and \<rho>\<^sub>r\<^sub>e :: "Syntax.var \<Rightarrow> val option"
+  assume a1: "leaf \<E> \<pi>\<^sub>r"
+  assume a2: "\<E> (\<pi>'' ;; `x\<^sub>y) = Some (\<langle>e\<^sub>n;\<rho>(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<rangle>)"
+  assume a3: "leaf \<E> \<pi>\<^sub>s"
+  assume a4: "\<E>(\<pi>' \<mapsto> \<sigma>', \<pi>'' \<mapsto> \<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) = \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s (x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r (x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)"
+  have f5: "\<forall>cs csa c csb. cs \<noteq> csa @ (c::control_label) # csb \<or> strict_prefix csa cs"
+    by (meson strict_prefixI')
+  have "\<not> strict_prefix \<pi>\<^sub>s (\<pi>'' ;; `x\<^sub>y)"
+    using a3 a2 by (metis (no_types) leaf_def option.simps(3))
+  then have f6: "(\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>)) \<pi>'' = \<E> \<pi>''"
+    using f5 by auto
+    have "\<pi>'' \<noteq> \<pi>\<^sub>r ;; `x\<^sub>r"
+      using f5 a2 a1 by (metis (no_types) append.assoc append_Cons leaf_def option.simps(3))
+    then show "\<E> \<pi>'' = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>)"
+    using f6 a4 by (metis (no_types) fun_upd_other fun_upd_same)
+qed
+
+lemma send_path_preceded_by_two_for_spawn: "
+  \<pi>'' ;; `x\<^sub>y \<noteq> \<pi>' \<Longrightarrow>
+  \<pi> = \<pi>'' ;; `x\<^sub>y \<Longrightarrow>
+  \<sigma>'' = \<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle> \<Longrightarrow>
+  \<rho> x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow>
+  \<E> (\<pi>'' ;; `x\<^sub>y) = Some (\<langle>e\<^sub>n;\<rho>(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<rangle>) \<Longrightarrow>
+  \<E>(\<pi>' \<mapsto> \<sigma>', \<pi>'' \<mapsto> \<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) = \<E>(\<pi>''' ;; `x \<mapsto> \<langle>e;\<rho>'(x \<mapsto> \<lbrace>\<rbrace>);\<kappa>'\<rangle>, \<pi>''' ;; .x \<mapsto> \<langle>e\<^sub>c;\<rho>';[]\<rangle>) \<Longrightarrow>
+  leaf \<E> \<pi>''' \<Longrightarrow> \<E> \<pi>''' = Some (\<langle>LET x = SPAWN e\<^sub>c in e;\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> \<E> \<pi>'' = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>)
+"
+proof -
+  assume a1: "\<pi> = \<pi>'' ;; `x\<^sub>y"
+  assume "\<sigma>'' = \<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>"
+  assume a2: "\<E> (\<pi>'' ;; `x\<^sub>y) = Some (\<langle>e\<^sub>n;\<rho>(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<rangle>)"
+  assume a3: "\<E>(\<pi>' \<mapsto> \<sigma>', \<pi>'' \<mapsto> \<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) = \<E>(\<pi>''' ;; `x \<mapsto> \<langle>e;\<rho>'(x \<mapsto> \<lbrace>\<rbrace>);\<kappa>'\<rangle>, \<pi>''' ;; .x \<mapsto> \<langle>e\<^sub>c;\<rho>';[]\<rangle>)"
+  assume "leaf \<E> \<pi>'''"
+  then have "\<not> strict_prefix \<pi>''' \<pi>"
+    using a2 a1 by (metis (no_types) leaf_def option.distinct(1))
+  then show ?thesis
+    using a3 a1 by (metis (no_types) fun_upd_other fun_upd_same prefixI prefix_snocD)
+qed
+
+lemma send_path_preceded_by_two_for_sync_b: "
+  \<pi>' ;; `x\<^sub>y \<noteq> \<pi>'' \<Longrightarrow>
+  \<pi> = \<pi>' ;; `x\<^sub>y \<Longrightarrow>
+  \<sigma>' = \<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle> \<Longrightarrow>
+  \<rho> x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow>
+  \<E> (\<pi>' ;; `x\<^sub>y) = Some (\<langle>e\<^sub>n;\<rho>(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<rangle>) \<Longrightarrow>
+  \<pi>' \<noteq> \<pi>'' \<Longrightarrow>
+  \<E>(\<pi>' \<mapsto> \<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>, \<pi>'' \<mapsto> \<sigma>'') = \<E>(\<pi>''' ;; \<downharpoonleft>x\<^sub>\<kappa>' \<mapsto> \<langle>e\<^sub>\<kappa>';\<rho>\<^sub>\<kappa>'(x\<^sub>\<kappa>' \<mapsto> \<omega>);\<kappa>''\<rangle>) \<Longrightarrow>
+  leaf \<E> \<pi>''' \<Longrightarrow> \<E> \<pi>''' = Some (\<langle>RESULT xa;\<rho>'';\<langle>x\<^sub>\<kappa>',e\<^sub>\<kappa>',\<rho>\<^sub>\<kappa>'\<rangle> # \<kappa>''\<rangle>) \<Longrightarrow> \<rho>'' xa = Some \<omega> \<Longrightarrow> \<E> \<pi>' = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>)
+"
+proof -
+  fix x\<^sub>y :: Syntax.var and x\<^sub>e :: Syntax.var and e\<^sub>n :: exp and \<kappa> :: "cont list" and \<rho> :: "Syntax.var \<Rightarrow> val option" and x\<^sub>s\<^sub>c :: Syntax.var and x\<^sub>m :: Syntax.var and \<rho>\<^sub>e :: "Syntax.var \<Rightarrow> val option" and \<pi>''' :: "control_label list" and \<rho>'' :: "Syntax.var \<Rightarrow> val option" and xa :: Syntax.var and \<omega> :: val and x\<^sub>\<kappa>' :: Syntax.var and e\<^sub>\<kappa>' :: exp and \<rho>\<^sub>\<kappa>' :: "Syntax.var \<Rightarrow> val option" and \<kappa>'' :: "cont list"
+  assume "\<pi> = \<pi>' ;; `x\<^sub>y"
+  assume "\<sigma>' = \<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>"
+  assume a1: "\<E> (\<pi>' ;; `x\<^sub>y) = Some (\<langle>e\<^sub>n;\<rho>(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<rangle>)"
+  assume a2: "\<pi>' \<noteq> \<pi>''"
+  assume a3: "\<E>(\<pi>' \<mapsto> \<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>, \<pi>'' \<mapsto> \<sigma>'') = \<E> (\<pi>''' ;; \<downharpoonleft>x\<^sub>\<kappa>' \<mapsto> \<langle>e\<^sub>\<kappa>';\<rho>\<^sub>\<kappa>'(x\<^sub>\<kappa>' \<mapsto> \<omega>);\<kappa>''\<rangle>)"
+  assume "leaf \<E> \<pi>'''"
+  then have "\<And>cs. \<E> cs = None \<or> \<not> strict_prefix \<pi>''' cs"
+    by (simp add: leaf_def)
+  then show "\<E> \<pi>' = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>)"
+  using a3 a2 a1 by (metis (no_types) append.assoc append_Cons fun_upd_other fun_upd_same option.distinct(1) strict_prefixI')
+qed
+
 lemma send_path_preceded_by_two: "
   \<pi> \<in> (send_paths (\<E>(\<pi>' \<mapsto> \<sigma>', \<pi>'' \<mapsto> \<sigma>'')) c) \<Longrightarrow>
   \<E> \<rightarrow> \<E>(\<pi>' \<mapsto> \<sigma>', \<pi>'' \<mapsto> \<sigma>'') \<Longrightarrow>
   \<pi> \<noteq> \<pi>' \<Longrightarrow>  \<pi> \<noteq> \<pi>'' \<Longrightarrow>
   \<pi> \<in> (send_paths \<E> c)
 "
+ apply (unfold send_paths_def; auto)
+ apply (case_tac "\<pi>\<^sub>y = \<pi>''", simp)
+ apply (rule_tac x = x\<^sub>e in exI)
+ apply (rule_tac x = e\<^sub>n in exI)
+ apply (rule_tac x = \<kappa> in exI)
+ apply (rule_tac x = \<rho> in exI)
+ apply auto
+ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?; auto?)
+  apply (metis (mono_tags, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (mono_tags, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (mono_tags, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (mono_tags, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (mono_tags, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (mono_tags, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (mono_tags, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (metis (mono_tags, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (blast dest: send_path_preceded_by_two_for_sync)
+  apply (metis (no_types, lifting) leaf_def map_upd_Some_unfold option.distinct(1) prefixI prefix_snocD)
+  apply (blast dest: send_path_preceded_by_two_for_spawn)
+
+   apply (case_tac "\<pi>\<^sub>y = \<pi>'", auto)
+    apply (rule_tac x = x\<^sub>e in exI)
+    apply (rule_tac x = e\<^sub>n in exI)
+    apply (rule_tac x = \<kappa> in exI)
+    apply (rule_tac x = \<rho> in exI)
+    apply auto
+   apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?; auto?)
+    apply (blast dest: send_path_preceded_by_two_for_sync_b)
+   (* this is definitely provable but I need to find an efficient strategy*)
 sorry
+
+
 
 
 lemma send_path_set_equal_preserved_under_send_extension: "
@@ -195,24 +308,35 @@ lemma send_path_set_equal_preserved_under_send_extension: "
     \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>;
     \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace>;
     \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m;
-
 (*
-    leaf \<E> \<pi>\<^sub>r;
-    \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>);  
-    \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>;
-    \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>;
+  leaf \<E> \<pi>\<^sub>r;
+  \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>);  
+  \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>;
+  \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>;
 *)
-
     x\<^sub>s \<noteq> x\<^sub>r; \<pi>\<^sub>2' \<noteq> \<pi>\<^sub>r ;; `x\<^sub>r 
   \<rbrakk> \<Longrightarrow>
   \<pi>\<^sub>2' = \<pi>\<^sub>s ;; `x\<^sub>s 
 "
+apply ((unfold send_paths_def); clarify, fold send_paths_def)
+(* proof may require some induction related to two_paths_exlusive*)
+sorry
+
+theorem two_paths_exclusive_commutative': "
+  \<forall> \<pi>\<^sub>2 . two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> two_paths_exclusive \<pi>\<^sub>2 \<pi>\<^sub>1 
+"
+ apply (induct \<pi>\<^sub>1; auto)
+  apply (erule two_paths_exclusive.cases; auto)
+   apply (simp add: two_paths_ordered_def)
+   apply (case_tac \<pi>\<^sub>2'; auto)
+   apply (case_tac a; auto)
+   (* should be provable, but sledgehammer can't find an answer*)
 sorry
 
 theorem two_paths_exclusive_commutative: "
   two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_exclusive \<pi>\<^sub>2 \<pi>\<^sub>1 
 "
-sorry
+using two_paths_exclusive_commutative' by blast
 
 lemma send_path_set_equal_preserved: "
   set_paths_equal (send_paths \<E> c) \<Longrightarrow> 
