@@ -81,6 +81,28 @@ lemma two_paths_exclusive_commut: "
  apply (erule two_paths_exclusive.induct; auto?)
 sorry
 
+lemma not_exclusive_with_process_split: "
+  \<not> two_paths_exclusive (\<pi> ;; .x) (\<pi> ;; `x)
+"
+sorry
+
+lemma "
+\<And>\<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e c \<omega>\<^sub>m \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e.
+    (*   \<forall>\<pi>\<^sub>1'. (\<exists>\<sigma>\<^sub>1'. \<E> \<pi>\<^sub>1' = Some \<sigma>\<^sub>1') \<longrightarrow>
+              (\<forall>\<pi>\<^sub>2'. (\<exists>\<sigma>\<^sub>2'. \<E> \<pi>\<^sub>2' = Some \<sigma>\<^sub>2') \<longrightarrow> prefix \<pi>\<^sub>1' \<pi>\<^sub>2' \<or> prefix \<pi>\<^sub>2' \<pi>\<^sub>1' \<or> \<not> two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2') \<Longrightarrow> *)
+       two_paths_exclusive (\<pi>\<^sub>s ;; `x\<^sub>s) (\<pi>\<^sub>r ;; `x\<^sub>r) \<Longrightarrow>
+       leaf \<E> \<pi>\<^sub>s \<Longrightarrow>
+       \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
+
+       leaf \<E> \<pi>\<^sub>r \<Longrightarrow>
+       \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
+
+       x\<^sub>s \<noteq> x\<^sub>r \<Longrightarrow>
+       \<not> prefix (\<pi>\<^sub>s ;; `x\<^sub>s) \<pi>\<^sub>r \<Longrightarrow>
+        \<not> prefix (\<pi>\<^sub>r ;; `x\<^sub>r) \<pi>\<^sub>s  \<Longrightarrow> False
+"
+sorry
+
 definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)"
 

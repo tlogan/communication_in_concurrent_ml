@@ -468,10 +468,16 @@ done
 
 method solve_case_of_paths_ordered_or_nonexclusive_preserved = (
   (metis 
-    leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict two_paths_exclusive_commut
-    two_paths_exclusive_and_ordered_implies_equal two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack 
+    leaf_def option.distinct(1)
+    prefix_order.dual_order.order_iff_strict 
+    two_paths_exclusive_commut
+    two_paths_exclusive_and_ordered_implies_equal 
+    two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack 
+    prefix_order.dual_order.order_iff_strict prefix_snoc 
+    two_paths_exclusive.simps 
   )
 )
+
 
 lemma paths_ordered_or_nonexclusive_preserved: "
   \<lbrakk>
@@ -510,8 +516,40 @@ lemma paths_ordered_or_nonexclusive_preserved: "
   apply (drule_tac x = \<pi>\<^sub>r in spec, erule impE, rule exI, assumption; auto)
   apply (metis exp.inject(1) leaf_def option.inject prefix_order.le_less state.inject)
   apply (metis exp.inject(1) leaf_def option.inject prefix_order.le_less state.inject)
-  (* provable but needs work to make efficient*)
-sorry
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+
+
+  apply ((case_tac "\<pi>\<^sub>1' = \<pi>\<^sub>s ;; `x\<^sub>s"; auto))
+  apply ((case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>r ;; `x\<^sub>r"; auto))
+  apply (drule_tac x = \<pi>\<^sub>s in spec, erule impE, rule exI, assumption)
+  apply (drule_tac x = \<pi>\<^sub>r in spec, erule impE, rule exI, assumption; auto)
+  apply (metis exp.inject(1) leaf_def option.inject prefix_order.le_less state.inject)
+  apply (metis exp.inject(1) leaf_def option.inject prefix_order.le_less state.inject)
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+
+  apply ((case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>r ;; `x\<^sub>r"; auto))
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+
+  apply ((case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>s ;; `x\<^sub>s "; auto))
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+
+  apply ((case_tac "\<pi>\<^sub>1' = \<pi> ;; `x"; auto), solve_case_of_paths_ordered_or_nonexclusive_preserved)
+  apply ((case_tac "\<pi>\<^sub>2' = \<pi> ;; `x"; auto), solve_case_of_paths_ordered_or_nonexclusive_preserved)
+
+  apply ((case_tac "\<pi>\<^sub>1' = \<pi> ;; .x"; auto))
+  apply ((case_tac "\<pi>\<^sub>2' = \<pi> ;; `x"; auto))
+  apply (simp add: not_exclusive_with_process_split)
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+  apply ((case_tac "\<pi>\<^sub>1' = \<pi> ;; `x"; auto))
+  apply ((case_tac "\<pi>\<^sub>2' = \<pi> ;; .x"; auto)) 
+  using not_exclusive_with_process_split two_paths_exclusive_commut apply blast
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+  apply ((case_tac "\<pi>\<^sub>2' = \<pi> ;; .x"; auto)) 
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+  apply ((case_tac "\<pi>\<^sub>2' = \<pi> ;; `x"; auto)) 
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+done
 
 lemma paths_ordered_or_nonexclusive_preserved_star': "
   \<lbrakk>
