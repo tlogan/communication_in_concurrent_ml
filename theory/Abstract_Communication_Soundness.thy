@@ -138,7 +138,7 @@ lemma two_paths_exclusive_commut: "
 done
 
 
-lemma paths_exclusive_implies_equal_in_sync_case: "
+lemma paths_exclusive_implies_equal_in_sync_case_1: "
   \<lbrakk>
     \<forall>\<pi>\<^sub>1. \<pi>\<^sub>1 \<in> send_paths \<E> c \<longrightarrow> (\<forall>\<pi>\<^sub>2. \<pi>\<^sub>2 \<in> send_paths \<E> c \<longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2);
     \<pi>\<^sub>s ;; `x\<^sub>s \<in> send_paths (\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) c;
@@ -159,6 +159,80 @@ lemma paths_exclusive_implies_equal_in_sync_case: "
   \<pi>\<^sub>s ;; `x\<^sub>s = \<pi>\<^sub>2'
 "
 sorry
+
+lemma paths_exclusive_implies_equal_in_sync_case_2: "
+  \<pi>\<^sub>1' \<in> send_paths (\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) c \<Longrightarrow>
+  two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' \<Longrightarrow>
+  \<E>' = \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
+  leaf \<E> \<pi>\<^sub>s \<Longrightarrow>
+  \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
+  \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>ca\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m \<Longrightarrow>
+  leaf \<E> \<pi>\<^sub>r \<Longrightarrow>
+  \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
+  \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>ca\<rbrace> \<Longrightarrow>
+  x\<^sub>s \<noteq> x\<^sub>r \<Longrightarrow> \<pi>\<^sub>1' \<noteq> \<pi>\<^sub>r ;; `x\<^sub>r \<Longrightarrow> \<pi>\<^sub>2' \<noteq> \<pi>\<^sub>r ;; `x\<^sub>r \<Longrightarrow> \<pi>\<^sub>1' \<noteq> \<pi>\<^sub>s ;; `x\<^sub>s \<Longrightarrow> \<pi>\<^sub>2' \<noteq> \<pi>\<^sub>s ;; `x\<^sub>s \<Longrightarrow> \<pi>\<^sub>1' \<notin> send_paths \<E> c \<Longrightarrow> \<pi>\<^sub>1' = \<pi>\<^sub>2'
+"
+  apply ((unfold send_paths_def)[1]; auto)
+  apply ((case_tac "\<pi>\<^sub>y = \<pi>\<^sub>r ;; `x\<^sub>r"; auto))
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD)
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD)
+  apply (case_tac "\<pi>\<^sub>y = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD)
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD) 
+  apply (case_tac "\<pi>\<^sub>y = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD)
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD)
+  apply (case_tac "\<pi>\<^sub>y = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD)
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD)
+done
+
+lemma paths_exclusive_implies_equal_in_sync_case_3: "
+  \<forall>\<pi>\<^sub>1. \<pi>\<^sub>1 \<in> send_paths \<E> c \<longrightarrow> (\<forall>\<pi>\<^sub>2. \<pi>\<^sub>2 \<in> send_paths \<E> c \<longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2) \<Longrightarrow>
+  \<pi>\<^sub>1' \<in> send_paths (\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) c \<Longrightarrow>
+  \<pi>\<^sub>2' \<in> send_paths (\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) c \<Longrightarrow>
+  two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' \<Longrightarrow>
+  \<E>' = \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
+  leaf \<E> \<pi>\<^sub>s \<Longrightarrow>
+  \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
+  \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>ca\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m \<Longrightarrow>
+  leaf \<E> \<pi>\<^sub>r \<Longrightarrow>
+  \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
+  \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>ca\<rbrace> \<Longrightarrow>
+  x\<^sub>s \<noteq> x\<^sub>r \<Longrightarrow>
+  ca \<noteq> c \<Longrightarrow> \<pi>\<^sub>1' = \<pi>\<^sub>s ;; `x\<^sub>s \<or> \<pi>\<^sub>2' = \<pi>\<^sub>s ;; `x\<^sub>s \<Longrightarrow> \<pi>\<^sub>1' = \<pi>\<^sub>2'
+"
+sorry
+
+lemma paths_exclusive_implies_equal_in_spawn_case_1: "
+  \<pi>\<^sub>1' \<in> send_paths (\<E>(\<pi> ;; `x \<mapsto> \<langle>e;\<rho>(x \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<rangle>, \<pi> ;; .x \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)) c \<Longrightarrow>
+  two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' \<Longrightarrow>
+  \<E>' = \<E>(\<pi> ;; `x \<mapsto> \<langle>e;\<rho>(x \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<rangle>, \<pi> ;; .x \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>) \<Longrightarrow>
+  leaf \<E> \<pi> \<Longrightarrow>
+  \<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<pi>\<^sub>1' \<noteq> \<pi> ;; `x \<Longrightarrow> \<pi>\<^sub>1' \<noteq> \<pi> ;; .x \<Longrightarrow> \<pi>\<^sub>2' \<noteq> \<pi> ;; `x \<Longrightarrow> \<pi>\<^sub>2' \<noteq> \<pi> ;; .x \<Longrightarrow> \<pi>\<^sub>1' \<notin> send_paths \<E> c \<Longrightarrow> 
+  \<pi>\<^sub>1' = \<pi>\<^sub>2'
+"
+  apply ((unfold send_paths_def)[1]; auto)
+  apply (case_tac "\<pi>\<^sub>y = \<pi> ;; .x"; auto)
+  apply (metis leaf_def option.simps(3) strict_prefixI')
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD)
+  apply (case_tac "\<pi>\<^sub>y = \<pi> ;; .x"; auto)
+  apply (metis leaf_def option.distinct(1) strict_prefixI')
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD)
+  apply (case_tac "\<pi>\<^sub>y = \<pi> ;; .x"; auto)
+  apply (metis leaf_def option.distinct(1) strict_prefixI')
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD)
+  apply (case_tac "\<pi>\<^sub>y = \<pi> ;; .x"; auto)
+  apply (metis leaf_def option.distinct(1) strict_prefixI')
+  apply (metis leaf_def option.distinct(1) prefixI prefix_snocD)
+done
 
 lemma paths_exclusive_implies_equal: "
   \<lbrakk>
@@ -335,11 +409,66 @@ lemma paths_exclusive_implies_equal: "
   apply (metis bind.inject(2) exp.inject(1) leaf_def option.inject prim.distinct(29) state.inject strict_prefixI' val.inject(2))
 
   apply (case_tac "(\<pi>\<^sub>1' = \<pi>\<^sub>s;;`x\<^sub>s) \<and> (\<pi>\<^sub>2' \<noteq> \<pi>\<^sub>s;;`x\<^sub>s) \<and> ca = c", simp)
-  apply (blast dest: paths_exclusive_implies_equal_in_sync_case)
+  apply (blast dest: paths_exclusive_implies_equal_in_sync_case_1)
   apply (case_tac "(\<pi>\<^sub>1' \<noteq> \<pi>\<^sub>s;;`x\<^sub>s) \<and> (\<pi>\<^sub>2' = \<pi>\<^sub>s;;`x\<^sub>s) \<and> ca = c", simp)
-  apply (blast dest: two_paths_exclusive_commut paths_exclusive_implies_equal_in_sync_case)
+  apply (blast dest: two_paths_exclusive_commut paths_exclusive_implies_equal_in_sync_case_1)
+  apply (case_tac "(\<pi>\<^sub>1' = \<pi>\<^sub>s;;`x\<^sub>s) \<and> (\<pi>\<^sub>2' = \<pi>\<^sub>s;;`x\<^sub>s) \<and> ca = c", simp)
+  apply (case_tac "(\<pi>\<^sub>1' \<noteq> \<pi>\<^sub>s;;`x\<^sub>s) \<and> (\<pi>\<^sub>2' \<noteq> \<pi>\<^sub>s;;`x\<^sub>s)", simp)
+  apply (
+    (case_tac "\<pi>\<^sub>1' \<notin> send_paths \<E> c"),
+    (thin_tac "\<forall>\<pi>\<^sub>1. \<pi>\<^sub>1 \<in> send_paths \<E> c \<longrightarrow> (\<forall>\<pi>\<^sub>2. \<pi>\<^sub>2 \<in> send_paths \<E> c \<longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2)"),
+    (thin_tac "\<pi>\<^sub>2' \<in> send_paths _ c")
+  )
+  apply (blast dest: paths_exclusive_implies_equal_in_sync_case_2)
+  apply (
+    (case_tac "\<pi>\<^sub>2' \<notin> send_paths \<E> c"),
+    (thin_tac "\<forall>\<pi>\<^sub>1. \<pi>\<^sub>1 \<in> send_paths \<E> c \<longrightarrow> (\<forall>\<pi>\<^sub>2. \<pi>\<^sub>2 \<in> send_paths \<E> c \<longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2)"),
+    (thin_tac "\<pi>\<^sub>1' \<in> send_paths _ c")
+  )
+  apply (blast dest: two_paths_exclusive_commut paths_exclusive_implies_equal_in_sync_case_2)
+  apply blast
+  apply clarsimp
+  apply (blast dest: paths_exclusive_implies_equal_in_sync_case_3)
 
-sorry
+  apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; `x", simp, (unfold send_paths_def)[1])
+  apply (smt append1_eq_conv control_label.inject(1) fun_upd_triv map_upd_eqD1 mem_Collect_eq state.inject val.distinct(3))
+  apply (case_tac "\<pi>\<^sub>2' = \<pi> ;; `x", simp, (unfold send_paths_def)[1])
+  apply (smt append1_eq_conv control_label.inject(1) fun_upd_triv map_upd_eqD1 mem_Collect_eq state.inject val.distinct(3))
+  apply (
+    (case_tac "\<pi>\<^sub>1' \<notin> send_paths \<E> c"),
+    (thin_tac "\<forall>\<pi>\<^sub>1. \<pi>\<^sub>1 \<in> send_paths \<E> c \<longrightarrow> (\<forall>\<pi>\<^sub>2. \<pi>\<^sub>2 \<in> send_paths \<E> c \<longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2)"),
+    (thin_tac "\<pi>\<^sub>2' \<in> send_paths _ c"),
+    ((unfold send_paths_def)[1]; auto),
+    (metis leaf_def option.distinct(1) prefixI prefix_snocD)+
+  )
+  apply (
+    (case_tac "\<pi>\<^sub>2' \<notin> send_paths \<E> c"),
+    (thin_tac "\<forall>\<pi>\<^sub>1. \<pi>\<^sub>1 \<in> send_paths \<E> c \<longrightarrow> (\<forall>\<pi>\<^sub>2. \<pi>\<^sub>2 \<in> send_paths \<E> c \<longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2)"),
+    (thin_tac "\<pi>\<^sub>1' \<in> send_paths _ c"),
+    ((unfold send_paths_def)[1]; auto),
+    (metis leaf_def option.distinct(1) prefixI prefix_snocD)+
+  )
+
+
+  apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; `x", simp, ((unfold send_paths_def)[1]; auto))
+  apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; .x", simp, ((unfold send_paths_def)[1]; auto))
+  apply (case_tac "\<pi>\<^sub>2' = \<pi> ;; `x", simp, ((unfold send_paths_def)[1]; auto))
+  apply (case_tac "\<pi>\<^sub>2' = \<pi> ;; .x", simp, ((unfold send_paths_def)[1]; auto))
+  apply (
+    (case_tac "\<pi>\<^sub>1' \<notin> send_paths \<E> c"),
+    (thin_tac "\<forall>\<pi>\<^sub>1. \<pi>\<^sub>1 \<in> send_paths \<E> c \<longrightarrow> (\<forall>\<pi>\<^sub>2. \<pi>\<^sub>2 \<in> send_paths \<E> c \<longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2)"),
+    (thin_tac "\<pi>\<^sub>2' \<in> send_paths _ c")
+  )
+  apply (blast dest: paths_exclusive_implies_equal_in_spawn_case_1)
+  apply (
+    (case_tac "\<pi>\<^sub>2' \<notin> send_paths \<E> c"),
+    (thin_tac "\<forall>\<pi>\<^sub>1. \<pi>\<^sub>1 \<in> send_paths \<E> c \<longrightarrow> (\<forall>\<pi>\<^sub>2. \<pi>\<^sub>2 \<in> send_paths \<E> c \<longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2)"),
+    (thin_tac "\<pi>\<^sub>1' \<in> send_paths _ c")
+  )
+  apply (blast dest: two_paths_exclusive_commut paths_exclusive_implies_equal_in_spawn_case_1)
+  apply blast
+done
+
 
 
 lemma send_paths_exclusive_implies_equal_star'': "
