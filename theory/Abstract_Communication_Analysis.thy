@@ -32,7 +32,7 @@ inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Righ
   Induc: "
     \<lbrakk>
       (proc_legacy \<pi>\<^sub>1) = (proc_legacy \<pi>\<^sub>2);
-      two_paths_exclusive (proc_spawn \<pi>\<^sub>1) (proc_spawn \<pi>\<^sub>1)
+      two_paths_exclusive (proc_spawn \<pi>\<^sub>1) (proc_spawn \<pi>\<^sub>2)
     \<rbrakk> \<Longrightarrow>
     two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
