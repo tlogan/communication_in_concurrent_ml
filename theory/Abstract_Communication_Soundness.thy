@@ -115,19 +115,6 @@ lemma isnt_send_path_sound: "
   apply (frule isnt_send_path_sound'; assumption?; blast)
 done
 
-(*
-lemma "
-\<pi> \<in> send_paths (\<E>(\<pi>';;l \<mapsto> \<sigma>'')) c \<Longrightarrow>
-\<E> \<pi>' = Some \<sigma>' \<Longrightarrow>
-\<pi> \<noteq> \<pi>';;l \<Longrightarrow>
-\<pi> \<in> send_paths \<E> c
-"
-apply (unfold send_paths_def; auto)
-apply (case_tac "\<pi>\<^sub>y = \<pi>' ;; l"; meson?)
-apply clarsimp
-apply (drule_tac x =
-
-*)
 
 lemma two_paths_exclusive_commut: "
   two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>two_paths_exclusive \<pi>\<^sub>2 \<pi>\<^sub>1  
@@ -191,9 +178,9 @@ lemma paths_exclusive_implies_equal_in_sync_case_2: "
 done
 
 lemma paths_exclusive_implies_equal_in_sync_case_3: "
-  \<forall>\<pi>\<^sub>1. \<pi>\<^sub>1 \<in> send_paths \<E> c \<longrightarrow> (\<forall>\<pi>\<^sub>2. \<pi>\<^sub>2 \<in> send_paths \<E> c \<longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2) \<Longrightarrow>
+  (*\<forall>\<pi>\<^sub>1. \<pi>\<^sub>1 \<in> send_paths \<E> c \<longrightarrow> (\<forall>\<pi>\<^sub>2. \<pi>\<^sub>2 \<in> send_paths \<E> c \<longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2) \<Longrightarrow>*)
   \<pi>\<^sub>1' \<in> send_paths (\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) c \<Longrightarrow>
-  \<pi>\<^sub>2' \<in> send_paths (\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) c \<Longrightarrow>
+  (*\<pi>\<^sub>2' \<in> send_paths (\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) c \<Longrightarrow>*)
   two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' \<Longrightarrow>
   \<E>' = \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
   leaf \<E> \<pi>\<^sub>s \<Longrightarrow>
@@ -206,9 +193,14 @@ lemma paths_exclusive_implies_equal_in_sync_case_3: "
   \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow>
   \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>ca\<rbrace> \<Longrightarrow>
   x\<^sub>s \<noteq> x\<^sub>r \<Longrightarrow>
-  ca \<noteq> c \<Longrightarrow> \<pi>\<^sub>1' = \<pi>\<^sub>s ;; `x\<^sub>s \<or> \<pi>\<^sub>2' = \<pi>\<^sub>s ;; `x\<^sub>s \<Longrightarrow> \<pi>\<^sub>1' = \<pi>\<^sub>2'
+  ca \<noteq> c \<Longrightarrow> \<pi>\<^sub>1' = \<pi>\<^sub>s ;; `x\<^sub>s \<Longrightarrow> \<pi>\<^sub>1' = \<pi>\<^sub>2'
 "
-sorry
+ apply (auto)
+ apply ((unfold send_paths_def)[1]; auto)
+ apply (case_tac "\<pi>\<^sub>s = \<pi>\<^sub>r ;; `x\<^sub>r")
+ apply (meson leaf_def prefix_order.dual_order.refl prefix_snocD)
+ apply simp
+done
 
 lemma paths_exclusive_implies_equal_in_spawn_case_1: "
   \<pi>\<^sub>1' \<in> send_paths (\<E>(\<pi> ;; `x \<mapsto> \<langle>e;\<rho>(x \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<rangle>, \<pi> ;; .x \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)) c \<Longrightarrow>
@@ -428,8 +420,9 @@ lemma paths_exclusive_implies_equal: "
   apply (blast dest: two_paths_exclusive_commut paths_exclusive_implies_equal_in_sync_case_2)
   apply blast
   apply clarsimp
+  apply (erule disjE)
   apply (blast dest: paths_exclusive_implies_equal_in_sync_case_3)
-
+  apply (blast dest: two_paths_exclusive_commut paths_exclusive_implies_equal_in_sync_case_3)
   apply (case_tac "\<pi>\<^sub>1' = \<pi> ;; `x", simp, (unfold send_paths_def)[1])
   apply (smt append1_eq_conv control_label.inject(1) fun_upd_triv map_upd_eqD1 mem_Collect_eq state.inject val.distinct(3))
   apply (case_tac "\<pi>\<^sub>2' = \<pi> ;; `x", simp, (unfold send_paths_def)[1])
