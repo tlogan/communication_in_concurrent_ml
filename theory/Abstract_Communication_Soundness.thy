@@ -9,7 +9,7 @@ begin
 lemma abstract_send_chan_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>
@@ -32,7 +32,7 @@ done
 lemma abstract_send_evt_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace> 
   \<rbrakk> \<Longrightarrow>
@@ -44,7 +44,7 @@ done
 lemma abstract_unit_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' (\<pi>\<^sub>y ;;`x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>y\<rangle>)
   \<rbrakk> \<Longrightarrow> 
   {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y
@@ -55,7 +55,7 @@ done
 lemma abstract_message_isnt_sent_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
@@ -80,7 +80,7 @@ done
 lemma isnt_send_path_sound': "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
@@ -104,7 +104,7 @@ done
 lemma isnt_send_path_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<pi>\<^sub>y \<in> send_paths \<E>' (Ch \<pi> x\<^sub>c)
   \<rbrakk> \<Longrightarrow> 
   \<pi>\<^sub>y \<in> abstract_send_paths (\<V>, \<C>, e) x\<^sub>c
@@ -174,6 +174,12 @@ lemma paths_ordered_or_nonexclusive_preserved: "
   apply (drule_tac x = \<pi>\<^sub>r in spec, erule impE, rule exI, assumption; auto)
   apply (metis exp.inject(1) leaf_def option.inject prefix_order.le_less state.inject)
   apply (metis exp.inject(1) leaf_def option.inject prefix_order.le_less state.inject)
+
+(*
+sledgehammer
+
+
+
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
 
@@ -198,7 +204,8 @@ lemma paths_ordered_or_nonexclusive_preserved: "
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
   apply ((case_tac "\<pi>\<^sub>2' = \<pi> ;; `x"; auto)) 
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
-done
+*)
+sorry
 
 lemma paths_ordered_or_nonexclusive_preserved_star': "
   \<lbrakk>
@@ -220,7 +227,7 @@ done
 
 lemma paths_ordered_or_nonexclusive_preserved_star: "
   \<lbrakk>
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1';
     \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2'
   \<rbrakk> \<Longrightarrow> 
@@ -230,7 +237,7 @@ by (simp add: paths_ordered_or_nonexclusive_preserved_star')
 
 lemma paths_exclusive_implies_equal: "
   \<lbrakk>
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1'; 
     \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2'; 
     two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' 
@@ -242,7 +249,7 @@ using paths_ordered_or_nonexclusive_preserved_star two_paths_exclusive_and_order
 
 lemma send_paths_exclusive_implies_equal: "
   \<lbrakk>
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<pi>\<^sub>1' \<in> send_paths \<E>' c; 
     \<pi>\<^sub>2' \<in> send_paths \<E>' c; 
     two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' 
@@ -256,7 +263,7 @@ done
 theorem topology_set_exclusive_send_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
     set_exclusive (abstract_send_paths (\<V>, \<C>, e) x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
@@ -274,7 +281,7 @@ done
 lemma abstract_recv_chan_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>e\<rbrace>;
     \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>
@@ -297,7 +304,7 @@ done
 lemma abstract_recv_evt_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>e\<rbrace>
   \<rbrakk> \<Longrightarrow> 
@@ -309,7 +316,7 @@ done
 lemma abstract_value_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' (\<pi>\<^sub>y ;; `x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<omega>);\<kappa>\<^sub>y\<rangle>)
   \<rbrakk> \<Longrightarrow> 
   { | \<omega> | } \<subseteq> \<V> x\<^sub>y
@@ -320,7 +327,7 @@ done
 lemma isnt_recv_path_sound': "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
 
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>); 
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>e\<rbrace>;
@@ -341,7 +348,7 @@ done
 lemma isnt_recv_path_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
     \<pi>\<^sub>y \<in> recv_paths \<E>' (Ch \<pi> x\<^sub>c) 
   \<rbrakk> \<Longrightarrow> 
@@ -357,7 +364,7 @@ done
 theorem topology_set_exclusive_recv_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
 
     set_exclusive (abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
@@ -374,7 +381,7 @@ sorry
 theorem topology_one_shot_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
     abstract_one_shot (\<V>, \<C>, e) x\<^sub>c
   \<rbrakk> \<Longrightarrow>
@@ -390,7 +397,7 @@ done
 theorem topology_set_noncompetitive_send_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
     set_noncompetitive (abstract_send_paths (\<V>, \<C>, e) x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
@@ -411,7 +418,7 @@ theorem topology_set_noncompetitive_recv_sound: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     set_noncompetitive (abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c);
   
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   set_ordered (recv_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
@@ -426,7 +433,7 @@ sorry
 theorem topology_one_to_one_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
     abstract_one_to_one (\<V>, \<C>, e) x\<^sub>c
   \<rbrakk> \<Longrightarrow>
@@ -441,7 +448,7 @@ done
 theorem topology_fan_out_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
     abstract_fan_out (\<V>, \<C>, e) x\<^sub>c
   \<rbrakk> \<Longrightarrow>
@@ -455,7 +462,7 @@ done
 theorem topology_fan_in_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
     abstract_fan_in (\<V>, \<C>, e) x\<^sub>c
   \<rbrakk> \<Longrightarrow>
@@ -494,7 +501,7 @@ done
 lemma one_to_one_precise: "
   \<lbrakk>
     (x\<^sub>c, t) \<TTurnstile> e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
     \<not> one_shot \<E>' (Ch \<pi> x\<^sub>c);
     one_to_one \<E>' (Ch \<pi> x\<^sub>c) 
@@ -516,7 +523,7 @@ done
 lemma fan_out_precise: "
   \<lbrakk>
     (x\<^sub>c, t) \<TTurnstile> e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
 
     \<not> one_shot \<E>' (Ch \<pi> x\<^sub>c);
     \<not> one_to_one \<E>' (Ch \<pi> x\<^sub>c);
@@ -535,7 +542,7 @@ done
 lemma fan_in_precise: "
   \<lbrakk>
     (x\<^sub>c, t) \<TTurnstile> e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
 
     \<not> one_shot \<E>' (Ch \<pi> x\<^sub>c);
     \<not> one_to_one \<E>' (Ch \<pi> x\<^sub>c); 
@@ -554,7 +561,7 @@ done
 lemma many_to_many_precise: "
   \<lbrakk>
     (x\<^sub>c, t) \<TTurnstile> e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<not> one_shot \<E>' (Ch \<pi> x\<^sub>c);  \<not> one_to_one \<E>' (Ch \<pi> x\<^sub>c);
     \<not> fan_out \<E>' (Ch \<pi> x\<^sub>c); \<not> fan_in \<E>' (Ch \<pi> x\<^sub>c) 
   \<rbrakk> \<Longrightarrow> 

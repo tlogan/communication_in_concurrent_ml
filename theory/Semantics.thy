@@ -173,8 +173,8 @@ abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> 
   "\<E> \<rightarrow>* \<E>' \<equiv> star concur_step \<E> \<E>'"
 
 
-fun start_state :: "exp \<Rightarrow> state_pool" where
- "start_state e = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]"
+fun start_state :: "exp \<Rightarrow> var \<Rightarrow> state_pool" where
+ "start_state e x\<^sub>0 = [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]"
 
 
 

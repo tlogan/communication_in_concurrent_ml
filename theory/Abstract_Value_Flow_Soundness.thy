@@ -993,12 +993,12 @@ theorem lift_flow_exp_to_state: "(\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longright
  apply (rule+, auto, rule)
 done
 
-theorem  lift_flow_state_to_pool: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<sigma> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<sigma>]"
+theorem  lift_flow_state_to_pool: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<sigma> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[.x\<^sub>0] \<mapsto> \<sigma>]"
   apply (rule accept_state_pool.Any)
   apply (case_tac "\<pi> = []", auto)
 done
 
-theorem lift_flow_exp_to_pool: "(\<V>, \<C>) \<Turnstile>\<^sub>e  e \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]"
+theorem lift_flow_exp_to_pool: "(\<V>, \<C>) \<Turnstile>\<^sub>e  e \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[.x\<^sub>0] \<mapsto> \<langle>e; empty; []\<rangle>]"
   apply (drule lift_flow_exp_to_state)
   apply (erule lift_flow_state_to_pool)
 done
@@ -1019,7 +1019,7 @@ done
 theorem isnt_abstract_value_sound : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e; 
-    [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)
   \<rbrakk> \<Longrightarrow>
   \<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>
@@ -1043,7 +1043,7 @@ done
 corollary isnt_abstract_value_sound_coro: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e ;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
     \<rho>' x = Some \<omega>
   \<rbrakk> \<Longrightarrow>
@@ -1052,7 +1052,7 @@ corollary isnt_abstract_value_sound_coro: "
   apply (drule isnt_abstract_value_sound; assumption?)
   apply (unfold abstract_value_env_precision_def)
   apply (unfold env_to_abstract_value_env_def)
-  apply (drule spec[of _ x]; auto)
+  apply fastforce
 done
 
 lemma traceable_exp_preservation_over_sync_recv_evt: "
@@ -1189,15 +1189,18 @@ lemma isnt_traceable_sound': "
   \<lbrakk>
     star_left op \<rightarrow> \<E>\<^sub>0 \<E>
   \<rbrakk> \<Longrightarrow>
-  \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
+  \<E>\<^sub>0 = [[.x\<^sub>0] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[.x\<^sub>0] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
   (\<forall> \<pi> e \<rho> \<kappa> . \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> (
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<and> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>)
   ))
 "
  apply (erule star_left.induct; auto)
     apply (simp add: Start)
-   apply (rule stack_traceable.Empty; (rule linear.Empty)?; auto)
+   apply (subst singleton_eq_empty_surround)
+   apply (rule Empty_Local)
+  apply simp
+  apply (rule linear.Empty)
   apply (rename_tac \<E> \<E>' \<pi> e \<rho> \<kappa>)
   apply (drule star_left_implies_star)
   apply (drule flow_preservation_star, blast)
@@ -1212,7 +1215,7 @@ done
 lemma isnt_traceable_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>0;
-    [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>;
+    [[.x\<^sub>0] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>;
     \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) 
   \<rbrakk> \<Longrightarrow>
   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e)
