@@ -23,6 +23,9 @@ fun proc_spawn :: "control_path \<Rightarrow> control_path" where
   "proc_spawn (\<downharpoonleft>l # \<pi>) = (proc_spawn \<pi>)"
 
 inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
+  Refl: "
+    two_paths_exclusive \<pi> \<pi>
+  " |
   Base: "
     \<lbrakk>
       \<not> (two_paths_ordered (proc_legacy \<pi>\<^sub>1) (proc_legacy \<pi>\<^sub>2))
@@ -37,7 +40,46 @@ inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Righ
     two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
+lemma two_paths_ordered_commut: "
+  two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_ordered \<pi>\<^sub>2 \<pi>\<^sub>1
+"
+using two_paths_ordered_def by auto
 
+
+lemma two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack: "
+  two_paths_exclusive (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 \<Longrightarrow>
+  \<not> two_paths_ordered (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 \<Longrightarrow> 
+  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2
+"
+sorry
+
+lemma two_paths_exclusive_and_ordered_implies_equal: "
+  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2
+"
+sorry
+
+lemma two_paths_exclusive_preserverd_under_pop: "
+  two_paths_exclusive (\<pi> # \<pi>\<^sub>1) (\<pi> # \<pi>\<^sub>2) \<Longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
+"
+sorry
+
+lemma not_two_paths_exclusive_with_extension: "
+  \<not> (two_paths_exclusive (\<pi> ;; l) \<pi>)
+"
+ apply (induct \<pi>; auto)
+ apply (erule two_paths_exclusive.cases; auto)
+ apply (case_tac l; auto; (simp add: two_paths_ordered_def))
+ apply (blast dest: proc_legacy.elims)
+ apply (blast dest: two_paths_exclusive_preserverd_under_pop)
+done
+
+
+
+lemma two_paths_exclusive_commut: "
+  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>two_paths_exclusive \<pi>\<^sub>2 \<pi>\<^sub>1  
+"
+ apply (erule two_paths_exclusive.induct; auto?)
+sorry
 
 definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)"
