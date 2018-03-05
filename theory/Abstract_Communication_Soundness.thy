@@ -116,9 +116,10 @@ lemma isnt_send_path_sound: "
 done
 
 method solve_case_of_paths_ordered_or_nonexclusive_preserved = (
-  (metis 
+  (metis (mono_tags, hide_lams) 
     leaf_def option.distinct(1)
     prefix_order.dual_order.order_iff_strict 
+    two_paths_exclusive.Refl
     two_paths_exclusive_commut
     two_paths_exclusive_and_ordered_implies_equal 
     two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack 
@@ -126,6 +127,7 @@ method solve_case_of_paths_ordered_or_nonexclusive_preserved = (
     two_paths_exclusive.simps 
   )
 )
+
 
 
 lemma paths_ordered_or_nonexclusive_preserved: "
@@ -174,12 +176,6 @@ lemma paths_ordered_or_nonexclusive_preserved: "
   apply (drule_tac x = \<pi>\<^sub>r in spec, erule impE, rule exI, assumption; auto)
   apply (metis exp.inject(1) leaf_def option.inject prefix_order.le_less state.inject)
   apply (metis exp.inject(1) leaf_def option.inject prefix_order.le_less state.inject)
-
-(*
-sledgehammer
-
-
-
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
 
@@ -204,14 +200,13 @@ sledgehammer
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
   apply ((case_tac "\<pi>\<^sub>2' = \<pi> ;; `x"; auto)) 
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
-*)
-sorry
+done
 
 lemma paths_ordered_or_nonexclusive_preserved_star': "
   \<lbrakk>
     \<E>\<^sub>0 \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow> 
-  \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
+  \<E>\<^sub>0 = [[.x\<^sub>0] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
   (\<forall> \<pi>\<^sub>1' \<pi>\<^sub>2' \<sigma>\<^sub>1' \<sigma>\<^sub>2'.
     \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1' \<longrightarrow>
     \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2' \<longrightarrow>
@@ -244,7 +239,7 @@ lemma paths_exclusive_implies_equal: "
   \<rbrakk> \<Longrightarrow> 
   \<pi>\<^sub>1' = \<pi>\<^sub>2'
 "
-using paths_ordered_or_nonexclusive_preserved_star two_paths_exclusive_and_ordered_implies_equal by blast
+using paths_ordered_or_nonexclusive_preserved_star two_paths_exclusive_and_ordered_implies_equal' by blast
 
 
 lemma send_paths_exclusive_implies_equal: "
@@ -361,6 +356,19 @@ lemma isnt_recv_path_sound: "
 done
 
 
+lemma recv_paths_exclusive_implies_equal: "
+  \<lbrakk>
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    \<pi>\<^sub>1' \<in> recv_paths \<E>' c; 
+    \<pi>\<^sub>2' \<in> recv_paths \<E>' c; 
+    two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' 
+  \<rbrakk> \<Longrightarrow> 
+  \<pi>\<^sub>1' = \<pi>\<^sub>2'
+"
+ apply (unfold recv_paths_def)[1]
+ apply (blast dest: paths_exclusive_implies_equal)
+done
+
 theorem topology_set_exclusive_recv_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
@@ -370,12 +378,8 @@ theorem topology_set_exclusive_recv_sound: "
   \<rbrakk> \<Longrightarrow>
   set_paths_equal (recv_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
- apply (rule set_recv_paths_exclusive_implies_equal; auto?)
- apply (simp add: set_exclusive_def two_paths_ordered_def; auto; erule allE; erule impE)
-  apply (drule isnt_recv_path_sound; auto)
- apply (erule allE; frule impE; auto)
-  apply (drule isnt_recv_path_sound; auto)+
-sorry
+by (simp add: isnt_recv_path_sound recv_paths_exclusive_implies_equal set_exclusive_def set_paths_equal_def)
+
 
 
 theorem topology_one_shot_sound: "
@@ -393,6 +397,33 @@ theorem topology_one_shot_sound: "
  apply (auto dest: topology_set_exclusive_recv_sound)
 done
 
+(*
+lemma send_paths_noncompetitive_implies_ordered: "
+  \<lbrakk>
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    \<pi>\<^sub>1' \<in> send_paths \<E>' c; 
+    \<pi>\<^sub>2' \<in> send_paths \<E>' c; 
+    two_paths_noncompetitive \<pi>\<^sub>1' \<pi>\<^sub>2' 
+  \<rbrakk> \<Longrightarrow> 
+  two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2'
+"
+ apply (unfold send_paths_def)[1]
+sorry
+*)
+
+lemma send_paths_noncompetitive_implies_ordered: "
+  \<lbrakk>
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    \<pi>\<^sub>1' \<in> send_paths \<E>' c; 
+    \<pi>\<^sub>2' \<in> send_paths \<E>' c; 
+    two_paths_noncompetitive \<pi>\<^sub>1' \<pi>\<^sub>2' 
+  \<rbrakk> \<Longrightarrow> 
+  two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2'
+"
+ apply (unfold send_paths_def)[1]
+ using paths_ordered_or_nonexclusive_preserved_star' two_paths_noncompetitive_def apply fastforce
+done
+
 
 theorem topology_set_noncompetitive_send_sound: "
   \<lbrakk>
@@ -403,15 +434,21 @@ theorem topology_set_noncompetitive_send_sound: "
   \<rbrakk> \<Longrightarrow>
   set_ordered (send_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
- apply (rule set_send_paths_noncompetitive_implies_ordered; auto?)
- apply (simp add: set_noncompetitive_def; auto; erule allE; erule impE)
-  apply (drule isnt_send_path_sound; auto)
- apply (erule allE; frule impE; auto)
-  apply (drule isnt_send_path_sound; auto)
- apply (drule isnt_send_path_sound; auto)
-sorry
+by (simp add: isnt_send_path_sound send_paths_noncompetitive_implies_ordered set_noncompetitive_def set_ordered_def)
 
 
+lemma recv_paths_noncompetitive_implies_ordered: "
+  \<lbrakk>
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    \<pi>\<^sub>1' \<in> recv_paths \<E>' c; 
+    \<pi>\<^sub>2' \<in> recv_paths \<E>' c; 
+    two_paths_noncompetitive \<pi>\<^sub>1' \<pi>\<^sub>2' 
+  \<rbrakk> \<Longrightarrow> 
+  two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2'
+"
+ apply (unfold recv_paths_def)[1]
+ using paths_ordered_or_nonexclusive_preserved_star' two_paths_noncompetitive_def apply fastforce
+done
 
 theorem topology_set_noncompetitive_recv_sound: "
   \<lbrakk>
@@ -422,13 +459,7 @@ theorem topology_set_noncompetitive_recv_sound: "
   \<rbrakk> \<Longrightarrow>
   set_ordered (recv_paths \<E>' (Ch \<pi> x\<^sub>c))
 "
- apply (rule set_recv_paths_noncompetitive_implies_ordered; auto?)
- apply (simp add: set_noncompetitive_def; auto; erule allE; erule impE)
-  apply (drule isnt_recv_path_sound; auto)
- apply (erule allE; frule impE; auto)
-  apply (drule isnt_recv_path_sound; auto)
- apply (drule isnt_recv_path_sound; auto)
-sorry
+by (simp add: isnt_recv_path_sound recv_paths_noncompetitive_implies_ordered set_noncompetitive_def set_ordered_def)
 
 theorem topology_one_to_one_sound: "
   \<lbrakk>
@@ -578,7 +609,7 @@ done
 theorem is_abstract_topo_sound' : "
   \<lbrakk>
     (x\<^sub>c, t) \<TTurnstile> e;
-    [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
+    [[.x\<^sub>0] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   \<langle>\<langle>\<E>'; \<pi>; x\<^sub>c\<rangle>\<rangle> \<preceq> t
 "
@@ -603,7 +634,7 @@ done
 theorem is_abstract_topo_sound: "
   \<lbrakk>
     \<A> \<bind> e;
-    [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
+    [[.x\<^sub>0] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   \<langle>\<langle>\<E>'; \<pi>\<rangle>\<rangle> \<sqsubseteq>\<^sub>t \<A> 
 "
