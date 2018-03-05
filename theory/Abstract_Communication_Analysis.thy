@@ -104,52 +104,14 @@ lemma not_two_paths_exclusive_with_extension: "
  apply blast
 done
 
-(*
-lemma two_paths_exclusive_preserved_under_cons': "
-  \<forall> l \<pi>\<^sub>2 . two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> two_paths_exclusive (l # \<pi>\<^sub>1) (l # \<pi>\<^sub>2)
-"
- apply (induct \<pi>\<^sub>1)
-  using two_paths_exclusive.Refl two_paths_exclusive_and_ordered_implies_equal two_paths_ordered_def 
- apply blast
-  
-sorry
-
-lemma two_paths_exclusive_preserved_under_cons: "
-  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_exclusive (l # \<pi>\<^sub>1) (l # \<pi>\<^sub>2)
-"
-sorry
-
-*)
-(*
-lemma "
-  two_paths_exclusive \<pi> \<pi>\<^sub>1 \<Longrightarrow> 
-  two_paths_exclusive \<pi> \<pi>\<^sub>2 \<Longrightarrow> 
-  two_paths_exclusive \<pi> (\<pi>\<^sub>1 @ \<pi>\<^sub>2)
-"
-*)
-
-(*
-lemma "
-  two_paths_exclusive \<pi> \<pi>\<^sub>1 \<Longrightarrow> 
-  two_paths_exclusive \<pi> \<pi>\<^sub>2 \<Longrightarrow> 
-  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
-"
-*)
-
-lemma two_paths_exclusive_commut': "
-  \<forall> \<pi>\<^sub>2 . two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> two_paths_exclusive \<pi>\<^sub>2 \<pi>\<^sub>1  
-"
- apply (induct \<pi>\<^sub>1; auto; case_tac \<pi>\<^sub>2; auto)
- apply (erule two_paths_exclusive.cases; auto)
-  using two_paths_exclusive_and_ordered_implies_equal two_paths_ordered_def apply blast
- apply (rename_tac l\<^sub>1 \<pi>\<^sub>1 l\<^sub>2 \<pi>\<^sub>2)
-sorry
-
 lemma two_paths_exclusive_commut: "
   two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_exclusive \<pi>\<^sub>2 \<pi>\<^sub>1  
 "
-using two_paths_exclusive_commut' by blast
-
+ apply (erule two_paths_exclusive.induct; auto?)
+  apply (simp add: two_paths_exclusive.Refl)
+  using Base two_paths_ordered_commut apply blast
+  apply (simp add: Induc)
+done
 
 lemma two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack: "
   two_paths_exclusive (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 \<Longrightarrow>
