@@ -113,12 +113,37 @@ lemma two_paths_exclusive_commut: "
   apply (simp add: Induc)
 done
 
+
+lemma two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack': "
+ two_paths_exclusive \<pi> \<pi>\<^sub>2 \<Longrightarrow>
+ (\<forall> \<pi>\<^sub>1 l .
+    \<pi> = (\<pi>\<^sub>1 ;; l) \<longrightarrow>
+    \<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow>
+    two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
+  )
+"
+  apply (erule two_paths_exclusive.induct; auto)
+  apply (case_tac \<pi>\<^sub>1''; auto; case_tac \<pi>\<^sub>2; auto; case_tac a; auto)
+  apply (simp add: Base)
+  apply (simp add: Base)
+  apply (drule_tac x = \<pi>\<^sub>1''' in spec)
+  apply (case_tac \<pi>\<^sub>1'', simp)
+    apply (case_tac \<pi>\<^sub>2''; simp)
+      apply (case_tac "\<pi>\<^sub>1''' ;; l" rule: proc_legacy.cases; auto)
+    apply (erule two_paths_exclusive.cases; auto)
+
+    apply (case_tac \<pi>\<^sub>2''; simp)
+      apply (erule two_paths_exclusive.cases; auto)
+      apply (auto)
+      apply (drule_tac x = l in spec; auto?)
+sorry
+
 lemma two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack: "
   two_paths_exclusive (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 \<Longrightarrow>
-  \<not> two_paths_ordered (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 \<Longrightarrow> 
-  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>1 \<pi>\<^sub>2
+  \<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>
+  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
 "
-sorry
+using two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack' by blast
 
 
 lemma not_exclusive_with_process_split': "
