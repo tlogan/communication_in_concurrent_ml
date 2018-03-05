@@ -1,5 +1,5 @@
-theory Abstract_Communication_Analysis
-  imports Main Syntax Semantics Abstract_Value_Flow_Analysis Communication_Analysis
+theory Static_Communication_Analysis
+  imports Main Syntax Runtime_Semantics Static_Semantics Runtime_Communication_Analysis
 begin
 
 fun proc_legacy_unsafe :: "control_path \<Rightarrow> control_path" where
@@ -56,10 +56,6 @@ inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Righ
     two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
-lemma two_paths_ordered_commut: "
-  two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_ordered \<pi>\<^sub>2 \<pi>\<^sub>1
-"
-using two_paths_ordered_def by auto
 
 lemma two_paths_exclusive_preserverd_under_pop: "
   two_paths_exclusive (l # \<pi>\<^sub>1) (l # \<pi>\<^sub>2) \<Longrightarrow> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
@@ -163,17 +159,17 @@ definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path 
   "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)"
 
 
-definition set_noncompetitive  :: "control_path set \<Rightarrow> bool" where
-  "set_noncompetitive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
-    \<pi>\<^sub>1 \<in> \<T> \<longrightarrow>
-    \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
+definition all_noncompetitive  :: "(control_path \<Rightarrow> bool) \<Rightarrow> bool" where
+  "all_noncompetitive P \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
+    P \<pi>\<^sub>1 \<longrightarrow>
+    P \<pi>\<^sub>2 \<longrightarrow>
     two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   )"
 
-definition set_exclusive :: "control_path set \<Rightarrow> bool"  where
-  "set_exclusive \<T> \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . 
-    \<pi>\<^sub>1 \<in> \<T> \<longrightarrow> 
-    \<pi>\<^sub>2 \<in> \<T> \<longrightarrow>
+definition all_exclusive :: "(control_path \<Rightarrow> bool) \<Rightarrow> bool"  where
+  "all_exclusive P\<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 . 
+    P \<pi>\<^sub>1 \<longrightarrow> 
+    P \<pi>\<^sub>2 \<longrightarrow>
     two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   )"
 
@@ -206,48 +202,51 @@ inductive precision_order :: "topo \<Rightarrow> topo \<Rightarrow> bool" (infix
 definition topo_env_precision :: "topo_env \<Rightarrow> topo_env \<Rightarrow> bool" (infix "\<sqsubseteq>\<^sub>t" 55) where
   "\<A> \<sqsubseteq>\<^sub>t \<A>' \<equiv> (\<forall> x . \<A> x \<preceq> \<A>' x)"
 
-definition abstract_send_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path set" where
-  "abstract_send_paths \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {\<pi>\<^sub>y;;`x\<^sub>y | \<pi>\<^sub>y x\<^sub>y x\<^sub>e x\<^sub>s\<^sub>c x\<^sub>m e\<^sub>n. 
+
+definition is_static_send_path :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
+  "is_static_send_path \<A> x\<^sub>c \<pi>' \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> (\<exists> \<pi>\<^sub>y x\<^sub>y x\<^sub>e x\<^sub>s\<^sub>c x\<^sub>m e\<^sub>n . 
+    \<pi>' = \<pi>\<^sub>y;;`x\<^sub>y \<and>
     \<V> \<turnstile> e \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<and>
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
     {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
     {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
-  }"
+  )"
 
-definition abstract_recv_paths :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path set" where
-  "abstract_recv_paths \<A> x\<^sub>c \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> {\<pi>\<^sub>y;;`x\<^sub>y | \<pi>\<^sub>y x\<^sub>y x\<^sub>e x\<^sub>r\<^sub>c e\<^sub>n \<omega>. 
+definition is_static_recv_path :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
+  "is_static_recv_path \<A> x\<^sub>c \<pi>' \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> (\<exists> \<pi>\<^sub>y x\<^sub>y x\<^sub>e x\<^sub>r\<^sub>c e\<^sub>n \<omega>. 
+    \<pi>' = \<pi>\<^sub>y;;`x\<^sub>y \<and>
     \<V> \<turnstile> e \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<and>
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
     {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e \<and>
     {|\<omega>|} \<subseteq> \<V> x\<^sub>y
-  }"
+  )"
 
 
-definition abstract_one_shot :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_one_shot \<A> x\<^sub>c \<equiv> set_exclusive (abstract_send_paths \<A> x\<^sub>c) \<and> set_exclusive (abstract_recv_paths \<A> x\<^sub>c)"
+definition static_one_shot :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
+  "static_one_shot \<A> x\<^sub>c \<equiv> all_exclusive (is_static_send_path \<A> x\<^sub>c) \<and> all_exclusive (is_static_recv_path \<A> x\<^sub>c)"
 
-definition abstract_one_to_one :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_one_to_one \<A> x\<^sub>c \<equiv> set_noncompetitive (abstract_send_paths \<A> x\<^sub>c) \<and> set_noncompetitive (abstract_recv_paths \<A> x\<^sub>c)"
+definition static_one_to_one :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
+  "static_one_to_one \<A> x\<^sub>c \<equiv> all_noncompetitive (is_static_send_path \<A> x\<^sub>c) \<and> all_noncompetitive (is_static_recv_path \<A> x\<^sub>c)"
 
-definition abstract_fan_out :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_fan_out \<A> x\<^sub>c \<equiv> set_noncompetitive (abstract_send_paths \<A> x\<^sub>c)"
+definition static_fan_out :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
+  "static_fan_out \<A> x\<^sub>c \<equiv> all_noncompetitive (is_static_send_path \<A> x\<^sub>c)"
 
-definition abstract_fan_in :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "abstract_fan_in \<A> x\<^sub>c \<equiv> set_noncompetitive (abstract_recv_paths \<A> x\<^sub>c)"
+definition static_fan_in :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
+  "static_fan_in \<A> x\<^sub>c \<equiv> all_noncompetitive (is_static_recv_path \<A> x\<^sub>c)"
 
 
 inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
   OneShot: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-      abstract_one_shot (\<V>, \<C>, e) x\<^sub>c
+      static_one_shot (\<V>, \<C>, e) x\<^sub>c
     \<rbrakk> \<Longrightarrow> 
     (x\<^sub>c, OneShot) \<TTurnstile> e
   " | 
   OneToOne: "
     \<lbrakk> 
       (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-      abstract_one_to_one (\<V>, \<C>, e) x\<^sub>c
+      static_one_to_one (\<V>, \<C>, e) x\<^sub>c
     \<rbrakk> \<Longrightarrow> 
     (x\<^sub>c, OneToOne) \<TTurnstile> e
   " | 
@@ -255,7 +254,7 @@ inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (
   FanOut: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-      abstract_fan_out (\<V>, \<C>, e) x\<^sub>c
+      static_fan_out (\<V>, \<C>, e) x\<^sub>c
     \<rbrakk> \<Longrightarrow> 
     (x\<^sub>c, FanOut) \<TTurnstile> e
   " | 
@@ -263,7 +262,7 @@ inductive topo_pair_accept :: "topo_pair \<Rightarrow> exp \<Rightarrow> bool" (
   FanIn: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-      abstract_fan_in (\<V>, \<C>, e) x\<^sub>c
+      static_fan_in (\<V>, \<C>, e) x\<^sub>c
     \<rbrakk> \<Longrightarrow> 
     (x\<^sub>c, FanIn) \<TTurnstile> e
   " | 

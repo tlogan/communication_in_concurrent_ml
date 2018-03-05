@@ -1,5 +1,5 @@
-theory Abstract_Value_Flow_Analysis
-  imports Main Syntax Semantics
+theory Static_Semantics
+  imports Main Syntax Runtime_Semantics
     "~~/src/HOL/Library/List"
 begin
 

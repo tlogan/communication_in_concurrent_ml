@@ -1,5 +1,5 @@
-theory Abstract_Value_Flow_Soundness
-  imports Main Syntax Semantics Abstract_Value_Flow_Analysis
+theory Static_Semantics_Soundness
+  imports Main Syntax Runtime_Semantics Static_Semantics
       "~~/src/HOL/Eisbach/Eisbach_Tools"
 begin
 

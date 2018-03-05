@@ -1,12 +1,12 @@
-theory Abstract_Communication_Soundness
+theory Static_Communication_Analysis_Soundness
   imports 
-    Main 
-    Syntax Semantics 
-    Abstract_Value_Flow_Analysis Abstract_Value_Flow_Soundness
-    Communication_Analysis Abstract_Communication_Analysis
+    Main
+    Syntax 
+    Runtime_Semantics Runtime_Semantics Static_Semantics Static_Semantics_Soundness
+    Runtime_Communication_Analysis Static_Communication_Analysis
 begin
 
-lemma abstract_send_chan_doesnt_exist_sound: "
+lemma static_send_chan_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -29,7 +29,7 @@ lemma abstract_send_chan_doesnt_exist_sound: "
  apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "\<lbrace>Ch \<pi> x\<^sub>c\<rbrace>"]; simp)
 done
 
-lemma abstract_send_evt_doesnt_exist_sound: "
+lemma static_send_evt_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -41,7 +41,7 @@ lemma abstract_send_evt_doesnt_exist_sound: "
   apply (drule isnt_abstract_value_sound_coro; assumption?; auto)
 done
 
-lemma abstract_unit_doesnt_exist_sound: "
+lemma static_unit_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -52,7 +52,7 @@ lemma abstract_unit_doesnt_exist_sound: "
  apply (drule isnt_abstract_value_sound_coro; assumption?; auto; simp)
 done
 
-lemma abstract_message_isnt_sent_sound: "
+lemma static_message_isnt_sent_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -71,10 +71,10 @@ lemma abstract_message_isnt_sent_sound: "
   apply (erule accept_exp.cases[of _ "LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y"]; auto)
   apply (thin_tac "\<forall>x\<^sub>r\<^sub>c. ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<longrightarrow> (\<forall>x\<^sub>c. ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow> \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y)")
   apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ x\<^sub>m])
-  apply (frule abstract_send_evt_doesnt_exist_sound; assumption?)
+  apply (frule static_send_evt_doesnt_exist_sound; assumption?)
   apply (erule impE; simp)
   apply (drule spec[of _ x\<^sub>c])
-  apply (drule abstract_send_chan_doesnt_exist_sound; assumption?; auto)
+  apply (drule static_send_chan_doesnt_exist_sound; assumption?; auto)
 done
 
 lemma isnt_send_path_sound': "
@@ -95,21 +95,21 @@ lemma isnt_send_path_sound': "
 "
  apply (rule conjI)
  apply (insert isnt_traceable_sound, blast)
- apply (rule conjI, (erule abstract_send_chan_doesnt_exist_sound; assumption))
- apply (rule conjI, (erule abstract_send_evt_doesnt_exist_sound; assumption))
- apply (rule conjI, (erule abstract_unit_doesnt_exist_sound; assumption))
- apply (drule abstract_message_isnt_sent_sound; assumption)
+ apply (rule conjI, (erule static_send_chan_doesnt_exist_sound; assumption))
+ apply (rule conjI, (erule static_send_evt_doesnt_exist_sound; assumption))
+ apply (rule conjI, (erule static_unit_doesnt_exist_sound; assumption))
+ apply (drule static_message_isnt_sent_sound; assumption)
 done
 
 lemma isnt_send_path_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<pi>\<^sub>y \<in> send_paths \<E>' (Ch \<pi> x\<^sub>c)
+    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>y
   \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>y \<in> abstract_send_paths (\<V>, \<C>, e) x\<^sub>c
+  is_static_send_path (\<V>, \<C>, e) x\<^sub>c \<pi>\<^sub>y
 "
- apply (unfold send_paths_def abstract_send_paths_def; auto)
+ apply (unfold is_send_path_def is_static_send_path_def; auto)
   apply (rule exI, rule conjI)
    apply (frule isnt_send_path_sound'; assumption?; auto; blast)
   apply (frule isnt_send_path_sound'; assumption?; blast)
@@ -217,6 +217,7 @@ lemma paths_ordered_or_nonexclusive_preserved: "
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
 done
 
+
 lemma paths_ordered_or_nonexclusive_preserved_star': "
   \<lbrakk>
     \<E>\<^sub>0 \<rightarrow>* \<E>'
@@ -260,27 +261,28 @@ using paths_ordered_or_nonexclusive_preserved_star two_paths_exclusive_and_order
 lemma send_paths_exclusive_implies_equal: "
   \<lbrakk>
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<pi>\<^sub>1' \<in> send_paths \<E>' c; 
-    \<pi>\<^sub>2' \<in> send_paths \<E>' c; 
+    is_send_path \<E>' c \<pi>\<^sub>1'; 
+    is_send_path \<E>' c \<pi>\<^sub>2'; 
     two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' 
   \<rbrakk> \<Longrightarrow> 
   \<pi>\<^sub>1' = \<pi>\<^sub>2'
 "
- apply (unfold send_paths_def)[1]
+ apply (unfold is_send_path_def)[1]
  apply (blast dest: paths_exclusive_implies_equal)
 done
 
-theorem topology_set_exclusive_send_sound: "
+
+theorem topology_all_exclusive_send_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    set_exclusive (abstract_send_paths (\<V>, \<C>, e) x\<^sub>c)
+    all_exclusive (is_static_send_path (\<V>, \<C>, e) x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
-  set_paths_equal (send_paths \<E>' (Ch \<pi> x\<^sub>c))
+  all_paths_equal (is_send_path \<E>' (Ch \<pi> x\<^sub>c))
 "
- apply (unfold set_paths_equal_def; auto)
- apply (unfold set_exclusive_def; auto)
+ apply (unfold all_paths_equal_def; auto)
+ apply (unfold all_exclusive_def; auto)
  apply (drule_tac x = \<pi>\<^sub>1 in spec; auto; (drule_tac x = \<pi>\<^sub>2 in spec; auto)?)
  apply (blast dest: isnt_send_path_sound)
  apply (blast dest: isnt_send_path_sound)
@@ -288,7 +290,7 @@ theorem topology_set_exclusive_send_sound: "
 done
 
 
-lemma abstract_recv_chan_doesnt_exist_sound: "
+lemma static_recv_chan_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -311,7 +313,7 @@ lemma abstract_recv_chan_doesnt_exist_sound: "
  apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "\<lbrace>Ch \<pi> x\<^sub>c\<rbrace>"]; simp)
 done
 
-lemma abstract_recv_evt_doesnt_exist_sound: "
+lemma static_recv_evt_doesnt_exist_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -350,8 +352,8 @@ lemma isnt_recv_path_sound': "
   {|\<omega>|} \<subseteq> \<V> x\<^sub>y
 "
  apply (rule conjI, erule isnt_traceable_sound; assumption?)
- apply (rule conjI, (erule abstract_recv_chan_doesnt_exist_sound; assumption))
- apply (rule conjI, (erule abstract_recv_evt_doesnt_exist_sound; assumption))
+ apply (rule conjI, (erule static_recv_chan_doesnt_exist_sound; assumption))
+ apply (rule conjI, (erule static_recv_evt_doesnt_exist_sound; assumption))
  apply (drule abstract_value_doesnt_exist_sound; assumption)
 done
 
@@ -360,11 +362,11 @@ lemma isnt_recv_path_sound: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    \<pi>\<^sub>y \<in> recv_paths \<E>' (Ch \<pi> x\<^sub>c) 
+    is_recv_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>y
   \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>y \<in> abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c
+  is_static_recv_path (\<V>, \<C>, e) x\<^sub>c \<pi>\<^sub>y
 "
- apply (unfold recv_paths_def abstract_recv_paths_def; auto)
+ apply (unfold is_recv_path_def is_static_recv_path_def; auto)
   apply (rule exI, rule conjI)
    apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
   apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
@@ -374,27 +376,27 @@ done
 lemma recv_paths_exclusive_implies_equal: "
   \<lbrakk>
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<pi>\<^sub>1' \<in> recv_paths \<E>' c; 
-    \<pi>\<^sub>2' \<in> recv_paths \<E>' c; 
+    is_recv_path \<E>' c \<pi>\<^sub>1'; 
+    is_recv_path \<E>' c \<pi>\<^sub>2'; 
     two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' 
   \<rbrakk> \<Longrightarrow> 
   \<pi>\<^sub>1' = \<pi>\<^sub>2'
 "
- apply (unfold recv_paths_def)[1]
+ apply (unfold is_recv_path_def)[1]
  apply (blast dest: paths_exclusive_implies_equal)
 done
 
-theorem topology_set_exclusive_recv_sound: "
+
+theorem topology_all_exclusive_recv_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
 
-    set_exclusive (abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c)
+    all_exclusive (is_static_recv_path (\<V>, \<C>, e) x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
-  set_paths_equal (recv_paths \<E>' (Ch \<pi> x\<^sub>c))
+  all_paths_equal (is_recv_path \<E>' (Ch \<pi> x\<^sub>c))
 "
-by (simp add: isnt_recv_path_sound recv_paths_exclusive_implies_equal set_exclusive_def set_paths_equal_def)
-
+by (simp add: isnt_recv_path_sound recv_paths_exclusive_implies_equal all_exclusive_def all_paths_equal_def)
 
 
 theorem topology_one_shot_sound: "
@@ -402,79 +404,82 @@ theorem topology_one_shot_sound: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    abstract_one_shot (\<V>, \<C>, e) x\<^sub>c
+    static_one_shot (\<V>, \<C>, e) x\<^sub>c
   \<rbrakk> \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> x\<^sub>c)
 "
- apply (unfold abstract_one_shot_def, auto)
+ apply (unfold static_one_shot_def, auto)
  apply (unfold one_shot_def; auto)
- apply (auto dest: topology_set_exclusive_send_sound)
- apply (auto dest: topology_set_exclusive_recv_sound)
+ apply (auto dest: topology_all_exclusive_send_sound)
+ apply (auto dest: topology_all_exclusive_recv_sound)
 done
 
 lemma send_paths_noncompetitive_implies_ordered: "
   \<lbrakk>
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<pi>\<^sub>1' \<in> send_paths \<E>' c; 
-    \<pi>\<^sub>2' \<in> send_paths \<E>' c; 
+    is_send_path \<E>' c \<pi>\<^sub>1'; 
+    is_send_path \<E>' c \<pi>\<^sub>2'; 
     two_paths_noncompetitive \<pi>\<^sub>1' \<pi>\<^sub>2' 
   \<rbrakk> \<Longrightarrow> 
   two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2'
 "
- apply (unfold send_paths_def)[1]
+ apply (unfold is_send_path_def)[1]
  using paths_ordered_or_nonexclusive_preserved_star' two_paths_noncompetitive_def apply fastforce
 done
 
 
-theorem topology_set_noncompetitive_send_sound: "
+theorem topology_all_noncompetitive_send_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    set_noncompetitive (abstract_send_paths (\<V>, \<C>, e) x\<^sub>c)
+    all_noncompetitive (is_static_send_path (\<V>, \<C>, e) x\<^sub>c)
   \<rbrakk> \<Longrightarrow>
-  set_ordered (send_paths \<E>' (Ch \<pi> x\<^sub>c))
+  all_ordered (is_send_path \<E>' (Ch \<pi> x\<^sub>c))
 "
-by (simp add: isnt_send_path_sound send_paths_noncompetitive_implies_ordered set_noncompetitive_def set_ordered_def)
+by (simp add: isnt_send_path_sound send_paths_noncompetitive_implies_ordered all_noncompetitive_def all_ordered_def)
+
 
 
 lemma recv_paths_noncompetitive_implies_ordered: "
   \<lbrakk>
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<pi>\<^sub>1' \<in> recv_paths \<E>' c; 
-    \<pi>\<^sub>2' \<in> recv_paths \<E>' c; 
+    is_recv_path \<E>' c \<pi>\<^sub>1'; 
+    is_recv_path \<E>' c \<pi>\<^sub>2'; 
     two_paths_noncompetitive \<pi>\<^sub>1' \<pi>\<^sub>2' 
   \<rbrakk> \<Longrightarrow> 
   two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2'
 "
- apply (unfold recv_paths_def)[1]
+ apply (unfold is_recv_path_def)[1]
  using paths_ordered_or_nonexclusive_preserved_star' two_paths_noncompetitive_def apply fastforce
 done
 
-theorem topology_set_noncompetitive_recv_sound: "
+
+theorem topology_all_noncompetitive_recv_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    set_noncompetitive (abstract_recv_paths (\<V>, \<C>, e) x\<^sub>c);
+    all_noncompetitive (is_static_recv_path (\<V>, \<C>, e) x\<^sub>c);
   
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  set_ordered (recv_paths \<E>' (Ch \<pi> x\<^sub>c))
+  all_ordered (is_recv_path \<E>' (Ch \<pi> x\<^sub>c))
 "
-by (simp add: isnt_recv_path_sound recv_paths_noncompetitive_implies_ordered set_noncompetitive_def set_ordered_def)
+by (simp add: isnt_recv_path_sound recv_paths_noncompetitive_implies_ordered all_noncompetitive_def all_ordered_def)
+
 
 theorem topology_one_to_one_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    abstract_one_to_one (\<V>, \<C>, e) x\<^sub>c
+    static_one_to_one (\<V>, \<C>, e) x\<^sub>c
   \<rbrakk> \<Longrightarrow>
   one_to_one \<E>' (Ch \<pi> x\<^sub>c)
 "
- apply (unfold abstract_one_to_one_def, auto)
+ apply (unfold static_one_to_one_def, auto)
  apply (unfold one_to_one_def, auto)
-  apply (erule topology_set_noncompetitive_send_sound; auto)
-  apply (erule topology_set_noncompetitive_recv_sound; auto)
+  apply (erule topology_all_noncompetitive_send_sound; auto)
+  apply (erule topology_all_noncompetitive_recv_sound; auto)
 done
 
 theorem topology_fan_out_sound: "
@@ -482,13 +487,13 @@ theorem topology_fan_out_sound: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    abstract_fan_out (\<V>, \<C>, e) x\<^sub>c
+    static_fan_out (\<V>, \<C>, e) x\<^sub>c
   \<rbrakk> \<Longrightarrow>
   fan_out \<E>' (Ch \<pi> x\<^sub>c)
 "
- apply (unfold abstract_fan_out_def)
+ apply (unfold static_fan_out_def)
  apply (unfold fan_out_def)
-  apply (erule topology_set_noncompetitive_send_sound; auto)
+  apply (erule topology_all_noncompetitive_send_sound; auto)
 done
 
 theorem topology_fan_in_sound: "
@@ -496,13 +501,13 @@ theorem topology_fan_in_sound: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    abstract_fan_in (\<V>, \<C>, e) x\<^sub>c
+    static_fan_in (\<V>, \<C>, e) x\<^sub>c
   \<rbrakk> \<Longrightarrow>
   fan_in \<E>' (Ch \<pi> x\<^sub>c)
 "
- apply (unfold abstract_fan_in_def)
+ apply (unfold static_fan_in_def)
  apply (unfold fan_in_def)
-  apply (erule topology_set_noncompetitive_recv_sound; auto)
+  apply (erule topology_all_noncompetitive_recv_sound; auto)
 done
 
 lemma one_shot_precise: "
@@ -607,7 +612,7 @@ lemma many_to_many_precise: "
  apply (rule precision_order.Refl)
 done
 
-theorem is_abstract_topo_sound' : "
+theorem is_static_topo_sound' : "
   \<lbrakk>
     (x\<^sub>c, t) \<TTurnstile> e;
     [[.x\<^sub>0] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
@@ -632,7 +637,7 @@ theorem is_abstract_topo_sound' : "
 done
 
 
-theorem is_abstract_topo_sound: "
+theorem is_static_topo_sound: "
   \<lbrakk>
     \<A> \<bind> e;
     [[.x\<^sub>0] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'
@@ -642,7 +647,7 @@ theorem is_abstract_topo_sound: "
  apply (unfold topo_accept_def)
  apply (unfold topo_env_precision_def)
  apply (intro allI, drule spec)
- apply (drule is_abstract_topo_sound', simp)
+ apply (drule is_static_topo_sound', simp)
  apply (unfold state_pool_to_topo_env_def, auto)
 done
 
