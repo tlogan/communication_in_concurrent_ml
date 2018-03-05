@@ -397,20 +397,6 @@ theorem topology_one_shot_sound: "
  apply (auto dest: topology_set_exclusive_recv_sound)
 done
 
-(*
-lemma send_paths_noncompetitive_implies_ordered: "
-  \<lbrakk>
-    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<pi>\<^sub>1' \<in> send_paths \<E>' c; 
-    \<pi>\<^sub>2' \<in> send_paths \<E>' c; 
-    two_paths_noncompetitive \<pi>\<^sub>1' \<pi>\<^sub>2' 
-  \<rbrakk> \<Longrightarrow> 
-  two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2'
-"
- apply (unfold send_paths_def)[1]
-sorry
-*)
-
 lemma send_paths_noncompetitive_implies_ordered: "
   \<lbrakk>
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
