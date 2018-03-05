@@ -170,8 +170,8 @@ lemma paths_ordered_or_nonexclusive_preserved: "
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
 
 
-  apply ((case_tac "\<pi>\<^sub>1' = \<pi>\<^sub>s ;; `x\<^sub>s"; auto))
-  apply ((case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>r ;; `x\<^sub>r"; auto))
+
+  apply ((case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>s ;; `x\<^sub>s"; auto))
   apply (drule_tac x = \<pi>\<^sub>s in spec, erule impE, rule exI, assumption)
   apply (drule_tac x = \<pi>\<^sub>r in spec, erule impE, rule exI, assumption; auto)
   apply (metis exp.inject(1) leaf_def option.inject prefix_order.le_less state.inject)
@@ -179,10 +179,25 @@ lemma paths_ordered_or_nonexclusive_preserved: "
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
 
+
+  apply ((case_tac "\<pi>\<^sub>1' = \<pi>\<^sub>s ;; `x\<^sub>s"; auto))
+  apply ((case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>r ;; `x\<^sub>r"; auto), (solve_case_of_paths_ordered_or_nonexclusive_preserved))
+  apply (drule_tac x = \<pi>\<^sub>2' in spec, erule impE, rule exI, assumption)
+  apply (drule_tac x = \<pi>\<^sub>s in spec, erule impE, rule exI, assumption; auto)
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+  apply ((case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>r ;; `x\<^sub>r"; auto))
+  apply (drule_tac x = \<pi>\<^sub>s in spec, erule impE, rule exI, assumption)
+  apply (drule_tac x = \<pi>\<^sub>r in spec, erule impE, rule exI, assumption; auto)
+  apply (metis exp.inject(1) leaf_def option.inject prefix_order.le_less state.inject)
+  apply (metis exp.inject(1) leaf_def option.inject prefix_order.le_less state.inject)
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
   apply ((case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>r ;; `x\<^sub>r"; auto))
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
 
   apply ((case_tac "\<pi>\<^sub>2' = \<pi>\<^sub>s ;; `x\<^sub>s "; auto))
+  apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
 
   apply ((case_tac "\<pi>\<^sub>1' = \<pi> ;; `x"; auto), solve_case_of_paths_ordered_or_nonexclusive_preserved)

@@ -12,6 +12,7 @@ datatype control_label =
 
 type_synonym control_path = "control_label list"
 
+
 datatype chan = Ch control_path var
 
 
@@ -33,7 +34,7 @@ datatype state = State exp val_env "cont list" ("\<langle>_;_;_\<rangle>" [0, 0,
   
 type_synonym state_pool = "control_path \<rightharpoonup> state"
 
-  
+
 inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<hookrightarrow>" 55) where 
   Result: "
     \<rho> x = Some \<omega> \<Longrightarrow>
@@ -139,9 +140,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
       leaf \<E> \<pi>\<^sub>r ;
       \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>);
       \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>;
-      \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>;
-  
-      x\<^sub>s \<noteq> x\<^sub>r
+      \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>
 
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [

@@ -1073,7 +1073,7 @@ lemma traceable_exp_preservation_over_sync_send_evt: "
   \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e);
   \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e';\<rho>\<^sub>s;\<kappa>'\<rangle>);
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>'\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>);
-  x\<^sub>s \<noteq> x\<^sub>r 
+  \<pi>\<^sub>s \<noteq> \<pi>\<^sub>r
 \<rbrakk> \<Longrightarrow> 
 \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>s ;; `x\<^sub>s, e')
 "
@@ -1132,12 +1132,12 @@ lemma traceable_exp_preservation: "
   apply (case_tac "\<pi>' = \<pi>\<^sub>s ;; `x\<^sub>s", auto)
   apply (drule flow_preservation, auto)
   apply (meson traceable_exp_preservation_over_sync_send_evt)
+  apply (smt exp.inject(1) flow_preservation option.inject state.inject traceable_exp_preservation_over_sync_send_evt)
  apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
  apply (drule flow_preservation, auto)
  apply (drule flow_over_pool_precision, auto)
  apply ((drule spec)+, erule impE, assumption, erule conjE)
  apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Chan; auto)
-
 apply (case_tac "\<pi>' = \<pi> ;; .x"; auto)
  apply ((drule spec)+, erule impE, assumption, erule conjE)
  apply (rule traceable.Let_Spawn_Child; auto)
@@ -1177,6 +1177,7 @@ lemma traceable_stack_preservation: "
     using stack_traceable_preserved_over_seq_extension apply blast
     apply (case_tac "\<pi>' = \<pi>\<^sub>s ;; `x\<^sub>s", auto)
     using stack_traceable_preserved_over_seq_extension apply blast
+  using stack_traceable_preserved_over_seq_extension apply blast
     apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
     using stack_traceable_preserved_over_seq_extension apply blast
     apply (case_tac "\<pi>' = \<pi> ;; .x", auto)
