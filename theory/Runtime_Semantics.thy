@@ -203,6 +203,7 @@ inductive path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonrigh
   "
   
 
+(*
 inductive linear :: "control_path \<Rightarrow> bool"("``_``" [0]55) where
   Empty: "
     ``[]``
@@ -243,6 +244,9 @@ lemma  linear_preserved_over_linear_extension[simp]: "
   ``\<pi>`` \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> ``\<pi> @ \<pi>'``
 "
 by (simp add: linear_preserved_over_linear_extension')
+
+*)
+
 
 lemma up_down_balanced[simp]: "
    \<downharpoonright>[\<upharpoonleft>x, \<downharpoonleft>x] \<upharpoonleft>

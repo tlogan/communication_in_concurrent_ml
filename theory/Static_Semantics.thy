@@ -151,7 +151,9 @@ inductive accept_value :: "abstract_value_env \<times> abstract_value_env \<Righ
 and  accept_val_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
 where
   Unit: "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>" |
-  Chan: "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>c\<rbrace>" |
+  Chan: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>c\<rbrace>
+  " |
   Abs: "
     \<lbrakk>
       {^Abs f x e} \<subseteq> \<V> f;
@@ -242,7 +244,7 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   Result_Case_Left: "
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>\<bar>x # \<pi>', RESULT x\<^sub>r); 
-      \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
+      \<downharpoonright>\<pi>'\<upharpoonleft>;
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n) 
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>\<bar>x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
@@ -250,7 +252,7 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   Result_Case_Right: "
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>:x # \<pi>', RESULT x\<^sub>r); 
-      \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
+      \<downharpoonright>\<pi>'\<upharpoonleft>;
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n) 
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>:x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
@@ -258,7 +260,7 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   Result_App: "
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT x\<^sub>r); 
-      \<downharpoonright>\<pi>'\<upharpoonleft>; ``\<pi>'``;
+      \<downharpoonright>\<pi>'\<upharpoonleft>;
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n) 
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
@@ -273,6 +275,7 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   Let_Case_Left: "
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n);
+      (* constraint below not necessary for our purposes*)
       ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>\<bar>x, e\<^sub>l)
@@ -325,6 +328,7 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   Let_Snd: "
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SND p in e\<^sub>n);
+      (* constraint below not necessary for our purposes*)
       |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
@@ -339,19 +343,19 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
 inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> cont list) \<Rightarrow> bool" ("_ \<tturnstile> _ \<downharpoonleft>\<downharpoonright> _" [56,0,56]55)  where
   Empty: "
     \<lbrakk> 
-      \<downharpoonright>\<pi>\<upharpoonleft>; ``\<pi>``
+      \<downharpoonright>\<pi>\<upharpoonleft>
     \<rbrakk> \<Longrightarrow>
     \<V> \<tturnstile> e \<downharpoonleft>\<downharpoonright> (\<pi>, [])
   " |
   Empty_Local: "
     \<lbrakk> 
-      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``
+      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>
     \<rbrakk> \<Longrightarrow>
     \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ .x # \<pi>\<^sub>2, [])
   " |
   Nonempty_App: "
     \<lbrakk> 
-      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``;
+      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>;
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = APP f x\<^sub>a in e\<^sub>\<kappa>);
       \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>)
     \<rbrakk> \<Longrightarrow>
@@ -359,7 +363,7 @@ inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
   " |
   Nonempty_Case_Left: "
     \<lbrakk> 
-      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``;
+      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>;
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>\<kappa>);
       \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>)
     \<rbrakk> \<Longrightarrow>
@@ -367,7 +371,7 @@ inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
   " |
   Nonempty_Case_Right: "
     \<lbrakk> 
-      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>; ``\<pi>\<^sub>2``;
+      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>;
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>\<kappa>);
       \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>)
     \<rbrakk> \<Longrightarrow>
@@ -381,8 +385,8 @@ lemma singleton_eq_empty_surround: "
 by simp
 
 
-lemma stack_traceable_preserved_over_linear_balanced_extension: "
- \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)
+lemma stack_traceable_preserved_over_balanced_extension: "
+ \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)
 "
 apply (erule stack_traceable.cases; auto)
    apply (simp add: stack_traceable.Empty)
@@ -395,8 +399,7 @@ done
 lemma stack_traceable_preserved_over_seq_extension:"
   \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> ;; `x, \<kappa>)
 "
-by (simp add: Seq_Cons linear.Empty stack_traceable_preserved_over_linear_balanced_extension)
-
+by (simp add: stack_traceable_preserved_over_balanced_extension)
 
 inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^sub>e _" [56,56]55) where
   Refl : "
