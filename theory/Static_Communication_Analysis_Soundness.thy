@@ -117,16 +117,24 @@ done
 
 method solve_case_of_paths_ordered_or_nonexclusive_preserved = (
   (metis (mono_tags, hide_lams) 
-    leaf_def option.distinct(1)
+    leaf_def option.distinct(1) Base 
     prefix_order.dual_order.order_iff_strict 
+    prefix_order.dual_order.not_eq_order_implies_strict
+    option.simps(3) 
     two_paths_exclusive.Refl
     two_paths_exclusive_commut
     two_paths_exclusive_and_ordered_implies_equal 
-    two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack 
+    (* two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack *)
     prefix_order.dual_order.order_iff_strict prefix_snoc 
     two_paths_exclusive.simps 
   )
 )
+(*
+  apply (erule two_paths_exclusive.cases; auto)
+prefix_order.dual_order.order_iff_strict  two_paths_exclusive_commut)
+  apply (metis leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict  two_paths_exclusive_commut)
+
+*)
 
 
 
@@ -143,6 +151,15 @@ lemma paths_ordered_or_nonexclusive_preserved: "
 "
 
  apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?; (simp add: two_paths_ordered_def))
+  apply ((case_tac "\<pi>\<^sub>1' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto))
+  apply (drule_tac x = \<pi>\<^sub>2' in spec, erule impE, rule exI, assumption)
+  apply (drule_tac x = \<pi> in spec, erule impE, rule exI, assumption; auto)
+  apply (erule two_paths_exclusive.cases; auto)
+  apply (metis leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict)
+  apply (metis leaf_def option.simps(3) prefix_order.dual_order.not_eq_order_implies_strict)
+  apply (erule two_paths_exclusive.cases; auto)
+sledgehammer
+(*
   apply ((case_tac "\<pi>\<^sub>1' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto), solve_case_of_paths_ordered_or_nonexclusive_preserved)
   apply ((case_tac "\<pi>\<^sub>2' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto), solve_case_of_paths_ordered_or_nonexclusive_preserved)
   apply ((case_tac "\<pi>\<^sub>1' = \<pi> ;; \<upharpoonleft>\<bar>x"; auto), solve_case_of_paths_ordered_or_nonexclusive_preserved)
@@ -215,6 +232,7 @@ lemma paths_ordered_or_nonexclusive_preserved: "
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
   apply ((case_tac "\<pi>\<^sub>2' = \<pi> ;; `x"; auto)) 
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
+*)
 done
 
 

@@ -6,7 +6,7 @@ begin
 datatype abstract_value = A_Chan var ("^Chan _" [61] 61) | A_Unit ("^\<lparr>\<rparr>") | A_Prim prim ("^_" [61] 61 )
 
 type_synonym abstract_value_env = "var \<Rightarrow> abstract_value set"
-type_synonym bind_env = "var \<Rightarrow> bind set" 
+
 fun result_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
   "\<lfloor>RESULT x\<rfloor> = x" |
   "\<lfloor>LET _ = _ in e\<rfloor> = \<lfloor>e\<rfloor>"
@@ -142,7 +142,7 @@ fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) 
   "|\<lbrace>\<rbrace>| = ^\<lparr>\<rparr>"
 
 definition env_to_abstract_value_env :: "(var \<rightharpoonup> val) \<Rightarrow> abstract_value_env" ("\<parallel>_\<parallel>" [0]61) where
-  "\<parallel>\<rho>\<parallel>= (\<lambda> x . (case (\<rho> x) of 
+  "\<parallel>\<rho>\<parallel> = (\<lambda> x . (case (\<rho> x) of 
     Some \<omega> \<Rightarrow> {|\<omega>|} |
     None \<Rightarrow> {}
   ))"
