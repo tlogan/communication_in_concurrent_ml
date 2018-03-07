@@ -201,51 +201,6 @@ inductive path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonrigh
     \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow>
     \<downharpoonright> (\<pi> @ \<pi>') \<upharpoonleft>
   "
-  
-
-(*
-inductive linear :: "control_path \<Rightarrow> bool"("``_``" [0]55) where
-  Empty: "
-    ``[]``
-  " |
-  Seq_Cons: "
-    ``\<pi>`` \<Longrightarrow>
-    `` (`x # \<pi>) ``
-  " |
-  Left_Cons: "
-    ``\<pi>`` \<Longrightarrow>
-    `` (\<upharpoonleft>\<bar>x # \<pi>) ``
-  " |
-  Right_Cons: "
-    ``\<pi>`` \<Longrightarrow>
-    `` (\<upharpoonleft>:x # \<pi>) ``
-  " |
-  Up_Cons: "
-    ``\<pi>`` \<Longrightarrow>
-    `` (\<upharpoonleft>x # \<pi>) ``
-  " |
-  Down_Cons: "
-    ``\<pi>`` \<Longrightarrow>
-    `` (\<downharpoonleft>x # \<pi>) ``
-  " 
-
-lemma linear_preserved_over_linear_extension': "
-  ``\<pi>`` \<Longrightarrow> ``\<pi>'`` \<longrightarrow> ``\<pi> @ \<pi>'``
-"
- apply (erule linear.induct; auto)
- apply (erule Seq_Cons)
- apply (erule Left_Cons)
- apply (erule Right_Cons)
- apply (erule Up_Cons)
- apply (erule Down_Cons)
-done
-
-lemma  linear_preserved_over_linear_extension[simp]: "
-  ``\<pi>`` \<Longrightarrow> ``\<pi>'`` \<Longrightarrow> ``\<pi> @ \<pi>'``
-"
-by (simp add: linear_preserved_over_linear_extension')
-
-*)
 
 
 lemma up_down_balanced[simp]: "

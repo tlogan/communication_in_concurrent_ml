@@ -151,14 +151,18 @@ lemma paths_ordered_or_nonexclusive_preserved: "
 "
 
  apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?; (simp add: two_paths_ordered_def))
-  apply ((case_tac "\<pi>\<^sub>1' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto))
 (*
+  apply ((case_tac "\<pi>\<^sub>1' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto))
+  apply (drule_tac x = \<pi> in spec, erule impE, rule exI, assumption)
   apply (drule_tac x = \<pi>\<^sub>2' in spec, erule impE, rule exI, assumption)
-  apply (drule_tac x = \<pi> in spec, erule impE, rule exI, assumption; auto)
+  apply auto
+  apply (metis leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict)
+
+
   apply (erule two_paths_exclusive.cases; auto)
   apply (metis leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict)
   apply (metis leaf_def option.simps(3) prefix_order.dual_order.not_eq_order_implies_strict)
-  apply (erule two_paths_exclusive.cases; auto)
+
 *)
   apply ((case_tac "\<pi>\<^sub>1' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto), solve_case_of_paths_ordered_or_nonexclusive_preserved)
   apply ((case_tac "\<pi>\<^sub>2' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto), solve_case_of_paths_ordered_or_nonexclusive_preserved)
@@ -234,16 +238,15 @@ lemma paths_ordered_or_nonexclusive_preserved: "
   apply (solve_case_of_paths_ordered_or_nonexclusive_preserved)
 done
 
-
-lemma paths_ordered_or_nonexclusive_preserved_star': "
+lemma paths_ordered_or_nonexclusive': "
   \<lbrakk>
-    \<E>\<^sub>0 \<rightarrow>* \<E>'
+    \<E>\<^sub>0 \<rightarrow>* \<E>
   \<rbrakk> \<Longrightarrow> 
   \<E>\<^sub>0 = [[.x\<^sub>0] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
-  (\<forall> \<pi>\<^sub>1' \<pi>\<^sub>2' \<sigma>\<^sub>1' \<sigma>\<^sub>2'.
-    \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1' \<longrightarrow>
-    \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2' \<longrightarrow>
-    two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2' \<or> \<not>(two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2')
+  (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 \<sigma>\<^sub>1 \<sigma>\<^sub>2.
+    \<E> \<pi>\<^sub>1 = Some \<sigma>\<^sub>1 \<longrightarrow>
+    \<E> \<pi>\<^sub>2 = Some \<sigma>\<^sub>2 \<longrightarrow>
+    two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> \<not>(two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)
   )
 "
  apply (drule star_implies_star_left)
@@ -253,7 +256,7 @@ lemma paths_ordered_or_nonexclusive_preserved_star': "
  using paths_ordered_or_nonexclusive_preserved apply blast
 done
 
-lemma paths_ordered_or_nonexclusive_preserved_star: "
+lemma paths_ordered_or_nonexclusive: "
   \<lbrakk>
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1';
@@ -261,7 +264,7 @@ lemma paths_ordered_or_nonexclusive_preserved_star: "
   \<rbrakk> \<Longrightarrow> 
   two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2' \<or> \<not>(two_paths_exclusive \<pi>\<^sub>1' \<pi>\<^sub>2')
 "
-by (simp add: paths_ordered_or_nonexclusive_preserved_star')
+by (simp add: paths_ordered_or_nonexclusive')
 
 lemma paths_exclusive_implies_equal: "
   \<lbrakk>
@@ -272,7 +275,7 @@ lemma paths_exclusive_implies_equal: "
   \<rbrakk> \<Longrightarrow> 
   \<pi>\<^sub>1' = \<pi>\<^sub>2'
 "
-using paths_ordered_or_nonexclusive_preserved_star two_paths_exclusive_and_ordered_implies_equal' by blast
+using paths_ordered_or_nonexclusive two_paths_exclusive_and_ordered_implies_equal' by blast
 
 
 lemma send_paths_exclusive_implies_equal: "
@@ -374,6 +377,7 @@ lemma isnt_recv_path_sound': "
  apply (drule abstract_value_doesnt_exist_sound; assumption)
 done
 
+
 lemma isnt_recv_path_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
@@ -388,7 +392,6 @@ lemma isnt_recv_path_sound: "
    apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
   apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
 done
-
 
 lemma recv_paths_exclusive_implies_equal: "
   \<lbrakk>
@@ -441,7 +444,7 @@ lemma send_paths_noncompetitive_implies_ordered: "
   two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2'
 "
  apply (unfold is_send_path_def)[1]
- using paths_ordered_or_nonexclusive_preserved_star' two_paths_noncompetitive_def apply fastforce
+ using paths_ordered_or_nonexclusive' two_paths_noncompetitive_def apply fastforce
 done
 
 
@@ -468,7 +471,7 @@ lemma recv_paths_noncompetitive_implies_ordered: "
   two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2'
 "
  apply (unfold is_recv_path_def)[1]
- using paths_ordered_or_nonexclusive_preserved_star' two_paths_noncompetitive_def apply fastforce
+ using paths_ordered_or_nonexclusive' two_paths_noncompetitive_def apply fastforce
 done
 
 
@@ -527,6 +530,7 @@ theorem topology_fan_in_sound: "
   apply (erule topology_all_noncompetitive_recv_sound; auto)
 done
 
+(*
 lemma one_shot_precise: "
   \<lbrakk>
     (x\<^sub>c, t) \<TTurnstile> e;
@@ -667,5 +671,6 @@ theorem is_static_topo_sound: "
  apply (drule is_static_topo_sound', simp)
  apply (unfold state_pool_to_topo_env_def, auto)
 done
+*)
 
 end

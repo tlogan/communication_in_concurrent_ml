@@ -2,51 +2,15 @@ theory Static_Communication_Analysis
   imports Main Syntax Runtime_Semantics Static_Semantics Runtime_Communication_Analysis
 begin
 
-fun proc_legacy_unsafe :: "control_path \<Rightarrow> control_path" where
-  "proc_legacy_unsafe [] = []" |
-  "proc_legacy_unsafe (.l # \<pi>) = (*maybe just [] instead?  *) `l # []" |
-  "proc_legacy_unsafe (`l # \<pi>) = `l # (proc_legacy_unsafe \<pi>)" |
-  "proc_legacy_unsafe (\<upharpoonleft>\<bar>l # \<pi>) = \<upharpoonleft>\<bar>l # (proc_legacy_unsafe \<pi>)" |
-  "proc_legacy_unsafe (\<upharpoonleft>:l # \<pi>) = \<upharpoonleft>:l # (proc_legacy_unsafe \<pi>)" |
-  "proc_legacy_unsafe (\<upharpoonleft>l # \<pi>) = \<upharpoonleft>l # (proc_legacy_unsafe \<pi>)" |
-  "proc_legacy_unsafe (\<downharpoonleft>l # \<pi>) = \<downharpoonleft>l # (proc_legacy_unsafe \<pi>)"
-
-fun proc_legacy :: "control_path \<Rightarrow> control_path option" where
-  "proc_legacy (.l # \<pi>) = Some (proc_legacy_unsafe (.l # \<pi>))" |
-  "proc_legacy _ = None "
-
-
-fun proc_spawn_unsafe :: "control_path \<Rightarrow> control_path" where
-  "proc_spawn_unsafe [] = []" |
-  "proc_spawn_unsafe (.l # \<pi>) = \<pi>" |
-  "proc_spawn_unsafe (`l # \<pi>) = (proc_spawn_unsafe \<pi>)" |
-  "proc_spawn_unsafe (\<upharpoonleft>\<bar>l # \<pi>) = (proc_spawn_unsafe \<pi>)" |
-  "proc_spawn_unsafe (\<upharpoonleft>:l # \<pi>) = (proc_spawn_unsafe \<pi>)" |
-  "proc_spawn_unsafe (\<upharpoonleft>l # \<pi>) = (proc_spawn_unsafe \<pi>)" |
-  "proc_spawn_unsafe (\<downharpoonleft>l # \<pi>) = (proc_spawn_unsafe \<pi>)"
-
+fun proc_legacy :: "control_path \<Rightarrow> control_path" where
+  "proc_legacy [] = []" |
+  "proc_legacy (.x # \<pi>) = [`x]" |
+  "proc_legacy (l # \<pi>) = l # (proc_legacy \<pi>)"
 
 fun proc_spawn :: "control_path \<Rightarrow> control_path option" where
-  "proc_spawn (.l # \<pi>) = Some (proc_spawn_unsafe (.l # \<pi>))" |
-  "proc_spawn _ = None"
-
-
-function two_paths_exclusive' :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
-  "two_paths_exclusive' \<pi>\<^sub>1 \<pi>\<^sub>2 = (
-    \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or>
-    (case ((proc_legacy \<pi>\<^sub>1), (proc_legacy \<pi>\<^sub>2)) of 
-      (Some \<pi>\<^sub>1l, Some \<pi>\<^sub>2l) \<Rightarrow> \<not> (two_paths_ordered \<pi>\<^sub>1l \<pi>\<^sub>2l) |
-      _ \<Rightarrow> False
-    ) \<or>
-    (case ((proc_legacy \<pi>\<^sub>1), (proc_legacy \<pi>\<^sub>2), (proc_spawn \<pi>\<^sub>1), (proc_spawn \<pi>\<^sub>2)) of 
-      (Some \<pi>\<^sub>1l, Some \<pi>\<^sub>2l, Some \<pi>\<^sub>1w, Some \<pi>\<^sub>2w) \<Rightarrow> 
-          \<pi>\<^sub>1l = \<pi>\<^sub>2l \<and> (two_paths_exclusive' \<pi>\<^sub>1w \<pi>\<^sub>2w) |
-      _ \<Rightarrow> False
-    )
-  )" 
-apply auto[1]
-by auto
-
+  "proc_spawn [] = None" |
+  "proc_spawn (.x # \<pi>) = Some \<pi>" |
+  "proc_spawn (l # \<pi>) = (proc_spawn \<pi>)"
 
 inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   Refl: "
@@ -54,32 +18,133 @@ inductive two_paths_exclusive :: "control_path \<Rightarrow> control_path \<Righ
   " |
   Base: "
     \<lbrakk>
-      (proc_legacy \<pi>\<^sub>1) = Some \<pi>\<^sub>1l;
-      (proc_legacy \<pi>\<^sub>2) = Some \<pi>\<^sub>2l;
-
-      \<not> (two_paths_ordered \<pi>\<^sub>1l \<pi>\<^sub>2l)
+      \<not> (two_paths_ordered (proc_legacy \<pi>\<^sub>1) (proc_legacy \<pi>\<^sub>2))
     \<rbrakk> \<Longrightarrow>
     two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   Induc: "
     \<lbrakk>
-      (proc_legacy \<pi>\<^sub>1) = Some \<pi>\<^sub>1l;
-      (proc_legacy \<pi>\<^sub>2) = Some \<pi>\<^sub>2l;
-      \<pi>\<^sub>1l = \<pi>\<^sub>2l;
+
+      (proc_legacy \<pi>\<^sub>1) = (proc_legacy \<pi>\<^sub>2);
 
       (proc_spawn \<pi>\<^sub>1) = Some \<pi>\<^sub>1w;
       (proc_spawn \<pi>\<^sub>2) = Some \<pi>\<^sub>2w;
       two_paths_exclusive \<pi>\<^sub>1w \<pi>\<^sub>2w
-
-(*
-      exclusive (
-  .x .z
-  .x .y
-)
-*)
     \<rbrakk> \<Longrightarrow>
     two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
+
+abbreviation g100 where "g100 \<equiv> Var ''g100''"
+abbreviation g101 where "g101 \<equiv> Var ''g101''"
+abbreviation g102 where "g102 \<equiv> Var ''g102''"
+abbreviation g103 where "g103 \<equiv> Var ''g103''"
+
+
+lemma "
+  (two_paths_exclusive [] [])
+"
+by rule
+
+lemma "
+  (two_paths_exclusive [`g100, .g101, `g102] [`g100, .g101, `g102])
+"
+by rule
+
+lemma "
+  \<not> (two_paths_exclusive [] [`g100, .g101])
+"
+ apply (rule notI)
+  apply (erule two_paths_exclusive.cases; auto)
+  apply (erule notE)
+  apply (simp add: two_paths_ordered_def)
+done
+
+lemma "
+  \<not> (two_paths_exclusive [`g100, `g101] [`g100, .g101])
+"
+ apply (rule notI)
+  apply (erule two_paths_exclusive.cases; auto)
+  apply (erule notE)
+  apply (simp add: two_paths_ordered_def)
+done
+
+lemma "
+  \<not> (two_paths_exclusive [`g100, `g101, `g102] [`g100, .g101])
+"
+ apply (rule notI)
+  apply (erule two_paths_exclusive.cases; auto)
+  apply (erule notE)
+  apply (simp add: two_paths_ordered_def)
+done
+
+
+lemma "
+  (two_paths_exclusive [`g100] [.g101])
+"
+ apply (rule Base; auto)
+ apply (simp add: two_paths_ordered_def)
+done
+
+lemma "
+  \<not> (two_paths_exclusive 
+    [`g100, .g101, `g100, .g101, `g103, `g101, `g100, `g102] 
+    [`g100, .g101, `g100, .g101, `g103, .g101, `g102, `g103]
+  )
+"
+apply (rule notI)
+  apply (erule two_paths_exclusive.cases; auto)
+  apply (erule notE)
+  apply (simp add: two_paths_ordered_def)
+    apply (erule two_paths_exclusive.cases; auto)
+  apply (erule notE)
+  apply (simp add: two_paths_ordered_def)
+  apply (erule two_paths_exclusive.cases; auto)
+  apply (erule notE)
+apply (simp add: two_paths_ordered_def)
+done
+
+lemma "
+  (two_paths_exclusive 
+    [`g100, .g101, `g100, `g101, `g102, .g101, `g102, `g103] 
+    [`g100, .g101, `g100, `g101, `g103, .g101, `g102, `g103]
+  )
+"
+ apply (rule Induc)
+ apply simp
+ apply simp
+ apply simp
+ apply (rule Base; auto)
+ apply (simp add: two_paths_ordered_def)
+done
+
+lemma "
+  \<not> (two_paths_exclusive [`g100] [.g100])
+"
+  apply (rule notI)
+  apply (erule two_paths_exclusive.cases; auto)
+  apply (erule notE)
+  apply (simp add: two_paths_ordered_def)
+done
+
+lemma "
+  \<not> (two_paths_exclusive [`g100, `g101, `g102, `g103] [`g100, `g101, .g102, `g101])
+"
+  apply (rule notI)
+  apply (erule two_paths_exclusive.cases; auto)
+  apply (erule notE)
+  apply (simp add: two_paths_ordered_def)
+done
+
+lemma "
+  \<not> (two_paths_exclusive [`g100, `g101, `g102] [`g100, `g101, .g102, `g101])
+"
+  apply (rule notI)
+  apply (erule two_paths_exclusive.cases; auto)
+  apply (erule notE)
+  apply (simp add: two_paths_ordered_def)
+done
+
+
 
 
 lemma two_paths_exclusive_preserved_under_pop: "
@@ -87,25 +152,81 @@ lemma two_paths_exclusive_preserved_under_pop: "
 "
  apply (erule two_paths_exclusive.cases; auto)
   apply (simp add: two_paths_exclusive.Refl)
-  apply (cases l; auto)
-   apply (simp add: two_paths_ordered_def)
-  apply (cases l; auto)
+  apply (case_tac l; auto; (simp add: Base two_paths_ordered_def))
+  apply (case_tac l; auto; (simp add: Induc))
 done
 
-lemma two_paths_exclusive_and_ordered_implies_equal': "
-  \<forall> \<pi>\<^sub>2 .two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2
+lemma prefix_preserved_under_proc_legacy: "
+  \<forall> \<pi>\<^sub>2 . prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow>  prefix (proc_legacy \<pi>\<^sub>1) (proc_legacy \<pi>\<^sub>2)
 "
- apply (simp add: two_paths_ordered_def)
- apply (induct \<pi>\<^sub>1; auto; case_tac \<pi>\<^sub>2; auto)
- apply (erule two_paths_exclusive.cases; auto)
-  using two_paths_exclusive_preserved_under_pop apply blast
- apply (erule two_paths_exclusive.cases; auto)
-  using two_paths_exclusive_preserved_under_pop apply blast
+apply (induct \<pi>\<^sub>1 rule: proc_legacy.induct; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+done
+
+lemma equality_preserved_under_spawn_legacy_inverse: "
+\<forall> \<pi>\<^sub>2 .
+  proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<longrightarrow>
+  proc_spawn \<pi>\<^sub>1 = Some \<pi>\<^sub>w \<longrightarrow>
+  proc_spawn \<pi>\<^sub>2 = Some \<pi>\<^sub>w \<longrightarrow>
+  \<pi>\<^sub>1 = \<pi>\<^sub>2
+"
+apply (induct \<pi>\<^sub>1 rule: proc_legacy.induct; auto)
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+   apply (case_tac \<pi> rule: proc_spawn.cases; auto)
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+   apply (case_tac \<pi> rule: proc_spawn.cases; auto)
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+done
+
+lemma two_paths_ordered_preserved_under_spawn_legacy_inverse: "
+\<forall> \<pi>\<^sub>2 \<pi>\<^sub>1w \<pi>\<^sub>2w . 
+  two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow>
+  proc_legacy \<pi>\<^sub>1 = proc_legacy \<pi>\<^sub>2 \<longrightarrow>
+  proc_spawn \<pi>\<^sub>1 = Some \<pi>\<^sub>1w \<longrightarrow>
+  proc_spawn \<pi>\<^sub>2 = Some \<pi>\<^sub>2w \<longrightarrow>
+  two_paths_exclusive \<pi>\<^sub>1w \<pi>\<^sub>2w \<longrightarrow>
+  two_paths_ordered \<pi>\<^sub>1w \<pi>\<^sub>2w
+"
+apply (induct \<pi>\<^sub>1 rule: proc_legacy.induct; auto)
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  apply (simp add: two_paths_ordered_def)
+  apply (simp add: two_paths_ordered_def)
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+   apply (case_tac \<pi> rule: proc_spawn.cases; auto)
+  using two_paths_ordered_def apply auto[1]
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  using two_paths_ordered_def apply auto[1]
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  using two_paths_ordered_def apply auto[1]
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  using two_paths_ordered_def apply auto[1]
+   apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  using two_paths_ordered_def apply auto[1]
+done
+
+
+lemma two_paths_exclusive_and_ordered_implies_equal': "
+  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2
+"
+ apply (erule two_paths_exclusive.induct)
+ apply simp
+ using prefix_preserved_under_proc_legacy two_paths_ordered_def apply auto[1]
+ apply auto
+  using two_paths_ordered_preserved_under_spawn_legacy_inverse apply blast
+  using equality_preserved_under_spawn_legacy_inverse apply blast
 done
 
 
 lemma two_paths_exclusive_and_ordered_implies_equal: "
-  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2
+  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>1 = \<pi>\<^sub>2
 "
 by (simp add: two_paths_exclusive_and_ordered_implies_equal')
 
@@ -113,17 +234,13 @@ by (simp add: two_paths_exclusive_and_ordered_implies_equal')
 lemma empty_not_two_paths_exclusive: "
   two_paths_exclusive [] (l # \<pi>) \<Longrightarrow> False
 "
- apply (erule two_paths_exclusive.cases; auto)
-done
+using two_paths_exclusive_and_ordered_implies_equal two_paths_ordered_def by fastforce
 
 lemma not_two_paths_exclusive_with_extension: "
   \<not> (two_paths_exclusive (\<pi> ;; l) \<pi>)
 "
- apply (induct \<pi>; auto)
- apply (erule two_paths_exclusive.cases; auto)
-  using two_paths_exclusive_preserved_under_pop
- apply blast
-done
+using two_paths_exclusive_and_ordered_implies_equal two_paths_ordered_def by fastforce
+
 
 lemma two_paths_exclusive_commut: "
   two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_exclusive \<pi>\<^sub>2 \<pi>\<^sub>1  
@@ -135,27 +252,69 @@ lemma two_paths_exclusive_commut: "
 done
 
 
-lemma two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack: "
-  two_paths_exclusive (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 \<Longrightarrow>
-  \<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>  \<not> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<Longrightarrow>
-  two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
+lemma abc: "
+two_paths_exclusive (a # (\<pi>\<^sub>1 ;; l)) \<pi>\<^sub>2 \<Longrightarrow> 
+\<not> prefix (a # (\<pi>\<^sub>1 ;; l)) \<pi>\<^sub>2 \<Longrightarrow> 
+\<not> prefix (a # \<pi>\<^sub>1) \<pi>\<^sub>2 \<Longrightarrow>
+two_paths_exclusive (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2
 "
- apply (erule two_paths_exclusive.cases; auto)
- apply ((case_tac \<pi>\<^sub>1; auto; case_tac a; auto), (simp add: Base))
 sorry
+
+
+(*
+\<not> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow> \<not> two_paths_exclusive (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 
+\<not> prefix (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 \<longrightarrow>
+\<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow>
+*)
+
+lemma two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack': "
+
+\<forall> l \<pi>\<^sub>2 .
+two_paths_exclusive (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 \<longrightarrow>
+\<not> prefix (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 \<longrightarrow>
+\<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow>
+two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
+"
+apply (induct \<pi>\<^sub>1; auto)
+apply (drule_tac x = l in spec)
+apply (drule_tac x = \<pi>\<^sub>2 in spec; auto)
+  apply (simp add: abc)
+sorry
+(*
+apply (induct \<pi>\<^sub>1; auto)
+apply (induct \<pi>\<^sub>1 rule: proc_legacy.induct; auto)
+
+apply (induct \<pi>\<^sub>1 rule: proc_legacy.induct; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+  apply (case_tac \<pi>\<^sub>2 rule: proc_legacy.cases; auto)
+*)
+
+lemma two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack: "
+two_paths_exclusive (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 \<Longrightarrow>
+\<not> prefix (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2 \<Longrightarrow> 
+\<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> 
+two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2
+"
+using two_paths_exclusive_and_unordered_implies_exclusive_or_prefix_under_backtrack' by blast
 
 lemma not_exclusive_with_process_split': "
   \<forall> x . two_paths_exclusive (\<pi> ;; .x) (\<pi> ;; `x) \<longrightarrow> False
 "
  apply (induct \<pi>; auto)
  apply (erule two_paths_exclusive.cases; auto)
- using two_paths_exclusive_preserved_under_pop apply blast
-done
+  apply (simp add: two_paths_ordered_def)
+  using two_paths_exclusive_preserved_under_pop by blast
+
 
 lemma not_exclusive_with_process_split: "
   \<not> two_paths_exclusive (\<pi> ;; .x) (\<pi> ;; `x)
 "
-using not_exclusive_with_process_split' by auto
+using not_exclusive_with_process_split' by auto 
+
 
 definition two_paths_noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   "two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 = (two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2)"
