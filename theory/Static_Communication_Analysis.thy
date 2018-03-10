@@ -61,7 +61,7 @@ inductive nonexclusive :: "control_path \<Rightarrow> control_path \<Rightarrow>
       (proc_legacy \<pi>\<^sub>1) = (proc_legacy \<pi>\<^sub>2);
       (proc_spawn \<pi>\<^sub>1) = Some \<pi>\<^sub>1w;
       (proc_spawn \<pi>\<^sub>2) = Some \<pi>\<^sub>2w;
-      two_paths_exclusive \<pi>\<^sub>1w \<pi>\<^sub>2w
+      nonexclusive \<pi>\<^sub>1w \<pi>\<^sub>2w
     \<rbrakk> \<Longrightarrow>
     nonexclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
@@ -326,6 +326,17 @@ lemma not_exclusive_implies_nonexclusive: "
    \<not> two_paths_exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> nonexclusive \<pi>\<^sub>1 \<pi>\<^sub>2 
 "
  (* try inducting on \<pi>\<^sub>1*)
+sorry
+
+lemma nonexclusive_preserved_under_extension': "
+nonexclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> \<forall> l .
+\<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<longrightarrow>
+\<not> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<longrightarrow> 
+nonexclusive (\<pi>\<^sub>1 ;; l) \<pi>\<^sub>2
+"
+ apply (erule nonexclusive.induct)
+  using prefix_order.dual_order.strict_implies_order apply blast
+  apply auto
 sorry
 
 lemma nonexclusive_preserved_under_extension: "
