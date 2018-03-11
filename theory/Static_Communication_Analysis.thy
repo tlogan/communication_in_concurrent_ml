@@ -76,12 +76,38 @@ occur in the same run from those that occur in the same subprogram.
 Reppy/Xiao consider paths with the same process path to be noncompetitive statically.
 
 *)
+(*
+  L_Left var ("\<upharpoonleft>\<bar>_" [71] 70) |
+  L_Right var ("\<upharpoonleft>:_" [71] 70) | 
+  L_Up var ("\<upharpoonleft>_" [71] 70) |
+  L_Down var ("\<downharpoonleft>_" [71] 70)
+*)
+
+inductive linear :: "control_path \<Rightarrow> bool" where
+ Seq: "linear \<pi> \<Longrightarrow> linear (`x # \<pi>)" | 
+ Left: "linear \<pi> \<Longrightarrow> linear (\<upharpoonleft>\<bar>x # \<pi>)" |
+ Right: "linear \<pi> \<Longrightarrow> linear (\<upharpoonleft>:x # \<pi>)" |
+ UP: "linear \<pi> \<Longrightarrow> linear (\<upharpoonleft>x # \<pi>)" |
+ Down: "linear \<pi> \<Longrightarrow> linear (\<downharpoonleft>x # \<pi>)" |
+ Empty: "linear []"
+
+
+
+inductive same_process :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
+ Lin: "linear \<pi>\<^sub>1 \<Longrightarrow> linear \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2" |
+ Spawn: "linear \<pi>\<^sub>1 \<Longrightarrow> linear \<pi>\<^sub>2 \<Longrightarrow> \<pi> @ (.x # \<pi>\<^sub>1) \<cong> \<pi> @ (.x # \<pi>\<^sub>2)"
+
+
+lemma same_process_commut: "
+  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>2 \<cong> \<pi>\<^sub>1
+"
+by (metis Lin Spawn same_process.cases)
 
 definition exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
  "exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> \<pi>\<^sub>1 = \<pi>\<^sub>2"
 
 definition noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
- "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1"
+ "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2"
 
 definition static_one_shot :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
   "static_one_shot \<A> x\<^sub>c \<equiv> all (is_static_send_path \<A> x\<^sub>c) exclusive \<and> all (is_static_recv_path \<A> x\<^sub>c) exclusive"

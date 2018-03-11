@@ -101,6 +101,17 @@ lemma isnt_send_path_sound': "
  apply (drule static_message_isnt_sent_sound; assumption)
 done
 
+lemma runtime_paths_noncompetitive_implies_ordered: "
+  \<lbrakk>
+    [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1';
+    \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2';
+    noncompetitive \<pi>\<^sub>1' \<pi>\<^sub>2'
+  \<rbrakk> \<Longrightarrow> 
+  prefix  \<pi>\<^sub>1' \<pi>\<^sub>2' \<or>  prefix  \<pi>\<^sub>2' \<pi>\<^sub>1'
+"
+sorry
+
 lemma isnt_send_path_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
@@ -116,17 +127,16 @@ lemma isnt_send_path_sound: "
 done
 
 
-
-lemma paths_noncompetitive_or_nonexclusive: "
+lemma runtime_paths_exclusive_implies_equal: "
   \<lbrakk>
     [[.x\<^sub>0] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1';
     \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2';
-    \<pi>\<^sub>1' \<noteq> \<pi>\<^sub>2'
+   exclusive \<pi>\<^sub>1' \<pi>\<^sub>2'
   \<rbrakk> \<Longrightarrow> 
-  \<not>(exclusive \<pi>\<^sub>1' \<pi>\<^sub>2')
+  \<pi>\<^sub>1' = \<pi>\<^sub>2'
 "
-using exclusive_def by blast
+by (simp add: exclusive_def)
 
 lemma paths_exclusive_implies_equal: "
   \<lbrakk>
@@ -297,8 +307,7 @@ lemma send_paths_noncompetitive_implies_ordered: "
   \<rbrakk> \<Longrightarrow> 
   two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2'
 "
-by (simp add: noncompetitive_def two_paths_ordered_def)
-
+sorry
 
 theorem topology_all_noncompetitive_send_sound: "
   \<lbrakk>
