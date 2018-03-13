@@ -1,13 +1,10 @@
 theory Programs
   imports Main "~~/src/HOL/Library/Sublist" "~~/src/HOL/Eisbach/Eisbach_Tools"
     Syntax 
-    Semantics Abstract_Value_Flow_Analysis Abstract_Value_Flow_Soundness
-    Communication_Analysis Abstract_Communication_Analysis
-    Communication_Analysis
+    Runtime_Semantics Static_Semantics Static_Semantics_Soundness
+    Runtime_Communication_Analysis Static_Communication_Analysis
+    Static_Communication_Analysis_Soundness
 begin
-
-
-
 
 
 (*
@@ -66,47 +63,56 @@ done
 *)
 
 
-
-
 (*
 lemma traceable_functional: "
   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>1) \<Longrightarrow>
   \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>2) \<Longrightarrow>
   e\<^sub>1 = e\<^sub>2
 "
-(* this could be true if CASE steps created distinct control_labels for left and right *)
+(* 
+  this could be true if CASE steps created distinct control_labels for left and right 
+  and functions had unique names and control labels with the names
+*)
 sorry
 *)
 
 
+(*
+inductive ap_linear :: "abstract_path \<Rightarrow> bool" where
+ Empty: "
+   ap_linear Empty
+ " |
+ Atom_Seq: "
+   ap_linear (&(`x))
+ " |
+ Atom_Up: "
+   ap_linear (&(\<upharpoonleft>x))
+ " |
+ Atom_Down: "
+   ap_linear (&(\<downharpoonleft>x))
+ " |
+ Union: "
+   \<lbrakk>
+     ap_linear p\<^sub>a;
+     ap_linear p\<^sub>b
+   \<rbrakk> \<Longrightarrow> 
+   ap_linear (p\<^sub>a :|: p\<^sub>b)
+ " |
+ Star: "
+   \<lbrakk>
+     ap_linear p
+   \<rbrakk> \<Longrightarrow> 
+   ap_linear ({p}* )
+ " |
+ Concat: "
+   \<lbrakk>
+     ap_linear p\<^sub>a;
+     ap_linear p\<^sub>b
+   \<rbrakk> \<Longrightarrow> 
+   ap_linear (p\<^sub>a :@: p\<^sub>b)
+ "
+*)
 
-theorem traceable_result_implies_traceable_case_left: "
-  \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>\<bar>x # \<pi>', RESULT y);
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
-  \<rbrakk> \<Longrightarrow>
-  b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> y = \<lfloor>e\<^sub>l\<rfloor>
-"
-sorry
-
-theorem traceable_result_implies_traceable_case_right: "
-  \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>:x # \<pi>', RESULT y);
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
-  \<rbrakk> \<Longrightarrow>
-  b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> y = \<lfloor>e\<^sub>r\<rfloor>
-"
-sorry
-
-
-theorem traceable_result_implies_traceable_app: "
-  \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y);
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
-  \<rbrakk> \<Longrightarrow>
-  b = APP f x\<^sub>a \<and> ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f  \<and> y = \<lfloor>e\<^sub>b\<rfloor>
-"
-sorry
 
 
 (* abstract representation of paths *)
@@ -155,40 +161,6 @@ inductive ap_matches :: "abstract_path \<Rightarrow> control_path \<Rightarrow> 
    p\<^sub>a :@: p\<^sub>b |\<rhd> \<pi>\<^sub>a @ \<pi>\<^sub>b
  " 
 
-inductive ap_linear :: "abstract_path \<Rightarrow> bool" where
- Empty: "
-   ap_linear Empty
- " |
- Atom_Seq: "
-   ap_linear (&(`x))
- " |
- Atom_Up: "
-   ap_linear (&(\<upharpoonleft>x))
- " |
- Atom_Down: "
-   ap_linear (&(\<downharpoonleft>x))
- " |
- Union: "
-   \<lbrakk>
-     ap_linear p\<^sub>a;
-     ap_linear p\<^sub>b
-   \<rbrakk> \<Longrightarrow> 
-   ap_linear (p\<^sub>a :|: p\<^sub>b)
- " |
- Star: "
-   \<lbrakk>
-     ap_linear p
-   \<rbrakk> \<Longrightarrow> 
-   ap_linear ({p}*)
- " |
- Concat: "
-   \<lbrakk>
-     ap_linear p\<^sub>a;
-     ap_linear p\<^sub>b
-   \<rbrakk> \<Longrightarrow> 
-   ap_linear (p\<^sub>a :@: p\<^sub>b)
- "
-
 inductive ap_single :: "abstract_path \<Rightarrow> bool" where
  Empty: "
    ap_single Empty
@@ -205,11 +177,8 @@ inductive ap_single :: "abstract_path \<Rightarrow> bool" where
  "
 
 inductive ap_ordered :: "abstract_path \<Rightarrow> bool" where
- Empty: "
-   ap_ordered Empty
- " |
- Atom: "
-   ap_ordered (&l)
+ Single: "
+   ap_single ap \<Longrightarrow> ap_ordered ap
  " |
  Star: "
    \<lbrakk>
@@ -223,54 +192,25 @@ inductive ap_ordered :: "abstract_path \<Rightarrow> bool" where
      ap_ordered p\<^sub>b
    \<rbrakk> \<Longrightarrow>
    ap_ordered (p\<^sub>a :@: p\<^sub>b)
+ " |
+ Union_Right: "
+   \<lbrakk>
+     ap_single p\<^sub>a;
+     ap_ordered p\<^sub>b
+   \<rbrakk> \<Longrightarrow>
+   ap_ordered (p\<^sub>a :@: (Empty :|: p\<^sub>b))
+ " |
+ Union_Left: "
+   \<lbrakk>
+     ap_single p\<^sub>a;
+     ap_ordered p\<^sub>b
+   \<rbrakk> \<Longrightarrow>
+   ap_ordered (p\<^sub>a :@: (p\<^sub>b :|: Empty))
  "
 
-
-(* 
-
-  unsure how to define exclusive
-  Is there a way to get proc regex and spawn regex
-
-*)
-inductive ap_exclusive :: "abstract_path \<Rightarrow> bool" where
- Empty: "
-   ap_exclusive Empty
- " |
- Atom: "
-   ap_exclusive (&l)
- " |
- Union: "
-   \<lbrakk>
-     ap_linear p\<^sub>a; ap_exclusive p\<^sub>a;
-     ap_linear p\<^sub>b; ap_exclusive p\<^sub>b
-   \<rbrakk> \<Longrightarrow>
-   ap_exclusive (p\<^sub>a :|: p\<^sub>b)
- " |
- Concat: "
-   \<lbrakk>
-     ap_exclusive p\<^sub>a;
-     ap_exclusive p\<^sub>b
-   \<rbrakk> \<Longrightarrow>
-   ap_exclusive (p\<^sub>a :@: p\<^sub>b)
- "
 
 definition ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where 
-  "ap_noncompetitive ap = (ap_ordered ap \<or> ap_exclusive ap)"
-
-lemma ap_linear_implies_linear' : "
-  p |\<rhd> \<pi> \<Longrightarrow> ap_linear p \<longrightarrow> ``\<pi>``
-"
-  apply (erule ap_matches.induct; auto; (erule ap_linear.cases; auto))
-  apply (rule)+
-done
-
-lemma ap_linear_implies_linear : "
-  ap_linear p \<Longrightarrow> p |\<rhd> \<pi> \<Longrightarrow> ``\<pi>``
-"
- apply (simp add: ap_linear_implies_linear')
-done
-
-
+  "ap_noncompetitive ap = ap_ordered ap"
 
 lemma atom_matches_implies: "
  &l |\<rhd> \<pi> \<Longrightarrow> [l] = \<pi>
@@ -342,6 +282,7 @@ lemma linear_implies_noncompetitive: "
 by (simp add: linear_implies_noncompetitive')
 *)
 
+(*
 lemma ap_noncompetitive_implies_noncompetitive': "
   \<lbrakk>
     ap |\<rhd> \<pi>\<^sub>1
@@ -349,10 +290,10 @@ lemma ap_noncompetitive_implies_noncompetitive': "
   (\<forall> \<pi>\<^sub>2 .
     ap |\<rhd> \<pi>\<^sub>2 \<longrightarrow>
     ap_noncompetitive ap \<longrightarrow>
-    two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
+    noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   )
 "
-(*
+
  apply (erule ap_matches.induct; auto)
      apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def)
     apply (drule atom_matches_implies; (simp add: two_paths_noncompetitive_def two_paths_ordered_def))
@@ -378,8 +319,9 @@ lemma ap_noncompetitive_implies_noncompetitive': "
   apply (erule ap_matches.cases; auto)
   apply (drule_tac x = \<pi>\<^sub>a' in spec; auto)
   apply (drule_tac x = \<pi>\<^sub>b' in spec; auto)
-*)
 sorry
+*)
+
 
 lemma ap_noncompetitive_implies_noncompetitive: "
   \<lbrakk>
@@ -387,13 +329,14 @@ lemma ap_noncompetitive_implies_noncompetitive: "
     ap |\<rhd> \<pi>\<^sub>2;
     ap_noncompetitive ap
   \<rbrakk> \<Longrightarrow>
-  two_paths_noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
+  noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
 "
-by (simp add: ap_noncompetitive_implies_noncompetitive')
+sorry
+
 
 
 lemma cons_eq_append: "
-  x # xs = [x] @ xs
+  [x] @ xs = x # xs
 "
 by simp
 
@@ -510,21 +453,20 @@ definition infinite_prog_recv_g100_abstract_path :: abstract_path where
   "
 
 theorem infinite_prog_single_sender: "
-   [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-   set_ordered (send_paths \<E>' (Ch [] g100))
+   [[] \<mapsto> \<langle>infinite_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+   all_ordered (is_send_path \<E>' (Ch [] g100))
 "
-  apply (simp add: set_ordered_def, (rule allI, rule impI)+)
 sorry
 
 
 theorem infinite_prog_single_receiver: "
-  [[] \<mapsto> \<langle>infinite_one_to_one_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<longrightarrow>
-   set_ordered(recv_paths \<E>' (Ch [] g100))
+  [[] \<mapsto> \<langle>infinite_prog;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<longrightarrow>
+   all_ordered (is_recv_path \<E>' (Ch [] g100))
 "
 sorry
 
 theorem "
-  start_state infinite_prog \<rightarrow>* \<E>' 
+  [[] \<mapsto> \<langle>infinite_prog; Map.empty;[]\<rangle>] \<rightarrow>* \<E>' 
   \<Longrightarrow>
   one_to_one \<E>' (Ch [] g100)
 "
@@ -669,7 +611,7 @@ lemma infinite_prog_matches': "
   (* base case *)
  apply (case_tac "\<pi>\<^sub>y ;; `x\<^sub>y = [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106]", clarsimp)
   apply (match conclusion in 
-    "(&x) :@: _  |\<rhd> x # _" for x \<Rightarrow> \<open>(subst cons_eq_append[of x], rule ap_matches.Concat, rule ap_matches.Atom)\<close>
+    "(&x) :@: _  |\<rhd> x # _" for x \<Rightarrow> \<open>(rule cons_eq_append[THEN subst], rule ap_matches.Concat, rule ap_matches.Atom)\<close>
   )+
   apply (rule ap_matches.Star_Empty)
  (* Inductive case *)
@@ -686,46 +628,35 @@ lemma infinite_prog_matches': "
   apply ((erule ap_matches.cases; auto), erule ap_matches.Concat)+
   apply (erule concat_star_implies_star)
   apply (match conclusion in 
-    "(&x) :@: _  |\<rhd> x # _" for x \<Rightarrow> \<open>(subst cons_eq_append[of x], rule ap_matches.Concat, rule ap_matches.Atom)\<close>
+    "(&x) :@: _  |\<rhd> x # _" for x \<Rightarrow> \<open>(rule cons_eq_append[THEN subst], rule ap_matches.Concat, rule ap_matches.Atom)\<close>
   )+
   apply (rule ap_matches.Atom)
 done
 
 lemma infinite_prog_matches: "
-  \<pi> \<in> abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100 \<Longrightarrow> 
+  is_static_send_path (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100 \<pi> \<Longrightarrow> 
   infinite_prog_send_g100_abstract_path |\<rhd> \<pi>
 "
- apply (simp add: abstract_send_paths_def; clarsimp)
+ apply (simp add: is_static_send_path_def; clarsimp)
  apply (insert infinite_prog_matches', blast)
 done
 
 theorem infinite_prog_has_single_sender_communication_analysis: "
-  set_noncompetitive (abstract_send_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100)
+  all (is_static_send_path (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100) noncompetitive 
 "
- apply (simp add: set_noncompetitive_def, (rule allI, rule impI)+)
-  apply (rule ap_noncompetitive_implies_noncompetitive[of infinite_prog_send_g100_abstract_path])
-   apply (simp add: infinite_prog_matches)
-  apply (simp add: infinite_prog_matches)
-(*
- apply (simp add: infinite_prog_send_g100_abstract_path_def, (rule; simp?)+)
-*)
+
 sorry
 
 
 theorem infinite_prog_has_single_receiver_communication_analysis: "
-  set_noncompetitive (abstract_recv_paths (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100)
+  all (is_static_recv_path (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100) noncompetitive
 "
- apply (simp add: set_noncompetitive_def)
- apply (simp add: abstract_recv_paths_def, auto)
 sorry
 
 theorem infinite_prog_has_one_to_one_communication_analysis: "
-  abstract_one_to_one (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100
+  static_one_to_one (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100
 "
- apply (simp add: abstract_one_to_one_def, auto)
- apply (simp add: infinite_prog_has_single_sender_communication_analysis)
- apply (simp add: infinite_prog_has_single_receiver_communication_analysis)
-done
+sorry
 
 (*
 

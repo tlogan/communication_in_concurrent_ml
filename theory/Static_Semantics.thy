@@ -239,7 +239,7 @@ definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abs
 
 inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> exp) \<Rightarrow> bool" ("_ \<turnstile> _ \<down> _" [56,0,56]55)  where
   Start: "
-    \<V> \<turnstile> e\<^sub>0 \<down> ([.x\<^sub>0], e\<^sub>0)
+    \<V> \<turnstile> e\<^sub>0 \<down> ([], e\<^sub>0)
   " |
   Result_Case_Left: "
     \<lbrakk>

@@ -97,6 +97,26 @@ inductive same_process :: "control_path \<Rightarrow> control_path \<Rightarrow>
  Lin: "linear \<pi>\<^sub>1 \<Longrightarrow> linear \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2" |
  Spawn: "linear \<pi>\<^sub>1 \<Longrightarrow> linear \<pi>\<^sub>2 \<Longrightarrow> \<pi> @ (.x # \<pi>\<^sub>1) \<cong> \<pi> @ (.x # \<pi>\<^sub>2)"
 
+(*
+
+this seems like a correct simple definition of exclusive
+
+inductive exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<triangleq>" 55) where
+ Same_Proc: "
+   \<lbrakk>
+     \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2;
+     \<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2;
+     \<not> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+   \<rbrakk> \<Longrightarrow> 
+   \<pi>\<^sub>1 \<triangleq> \<pi>\<^sub>2
+ " |    
+ Cons_Spawn: "
+   \<lbrakk>
+     \<pi>\<^sub>1 \<triangleq> \<pi>\<^sub>2
+   \<rbrakk> \<Longrightarrow> 
+   \<pi>\<^sub>1 @ (.x # \<pi>\<^sub>1') \<triangleq> \<pi>\<^sub>2 @ (.x # \<pi>\<^sub>2')
+ "
+*)
 
 lemma same_process_commut: "
   \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>2 \<cong> \<pi>\<^sub>1
@@ -107,7 +127,7 @@ definition exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> b
  "exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> \<pi>\<^sub>1 = \<pi>\<^sub>2"
 
 definition noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
- "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2"
+ "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1"
 
 definition static_one_shot :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
   "static_one_shot \<A> x\<^sub>c \<equiv> all (is_static_send_path \<A> x\<^sub>c) exclusive \<and> all (is_static_recv_path \<A> x\<^sub>c) exclusive"
