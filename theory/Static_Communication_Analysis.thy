@@ -2,12 +2,6 @@ theory Static_Communication_Analysis
   imports Main Syntax Runtime_Semantics Static_Semantics Runtime_Communication_Analysis
 begin
 
-abbreviation g100 where "g100 \<equiv> Var ''g100''"
-abbreviation g101 where "g101 \<equiv> Var ''g101''"
-abbreviation g102 where "g102 \<equiv> Var ''g102''"
-abbreviation g103 where "g103 \<equiv> Var ''g103''"
-
-
 definition all  :: "(control_path \<Rightarrow> bool) \<Rightarrow> (control_path \<Rightarrow> control_path \<Rightarrow> bool) \<Rightarrow> bool" where
   "all P R \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
     P \<pi>\<^sub>1 \<longrightarrow>

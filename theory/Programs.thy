@@ -7,61 +7,32 @@ theory Programs
 begin
 
 
-(*
-lemma two_paths_exclusive_preserved_under_seq_cons: "
-  two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (`x # \<pi>) (`x # \<pi>')
+lemma traceable_result_implies_traceable_case_left: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>\<bar>x # \<pi>', RESULT y); \<downharpoonright>\<pi>'\<upharpoonleft>;
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+  \<rbrakk> \<Longrightarrow>
+  b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> y = \<lfloor>e\<^sub>l\<rfloor>
 "
 sorry
 
-lemma two_paths_exclusive_preserved_under_up_cons: "
-  two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (\<upharpoonleft>x # \<pi>) (\<upharpoonleft>x # \<pi>')
+lemma traceable_result_implies_traceable_case_right: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>:x # \<pi>', RESULT y); \<downharpoonright>\<pi>'\<upharpoonleft>;
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+  \<rbrakk> \<Longrightarrow>
+  b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> y = \<lfloor>e\<^sub>r\<rfloor>
 "
 sorry
 
-lemma two_paths_exclusive_preserved_under_down_cons: "
-  two_paths_exclusive \<pi> \<pi>' \<Longrightarrow> two_paths_exclusive (\<downharpoonleft>x # \<pi>) (\<downharpoonleft>x # \<pi>')
+lemma traceable_result_implies_traceable_app: "
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y); \<downharpoonright>\<pi>'\<upharpoonleft>;
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+  \<rbrakk> \<Longrightarrow>
+  b = APP f x\<^sub>a \<and> y \<in> {\<lfloor>e\<^sub>b\<rfloor> |  f' x\<^sub>p . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f} (*not sure which function is bound to f; do I need unique names for f in labels?*)
 "
 sorry
-*)
-(*
-lemma "
-  \<forall> \<pi>\<^sub>b \<pi>\<^sub>b' . two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<longrightarrow>
-  \<not> prefix \<pi>\<^sub>b (\<pi> @ \<pi>\<^sub>b') \<longrightarrow> \<not> prefix (\<pi> @ \<pi>\<^sub>b') \<pi>\<^sub>b \<longrightarrow>
-  two_paths_exclusive \<pi>\<^sub>b (\<pi> @ \<pi>\<^sub>b')
-"
- apply (induct \<pi>; auto)
-  apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def)
-  apply (drule_tac x = \<pi>\<^sub>b in spec; auto?)
-  apply (drule_tac x = \<pi>\<^sub>b' in spec; auto?)
-  apply (case_tac \<pi>\<^sub>b; auto)
-sorry
-
-theorem double_append_exclusive: "
-  (\<forall> \<pi>\<^sub>a' \<pi>\<^sub>b \<pi>\<^sub>b'.
-    two_paths_noncompetitive  \<pi>\<^sub>a \<pi>\<^sub>a' \<longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<longrightarrow>
-    \<not> prefix (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b') \<longrightarrow> \<not> prefix (\<pi>\<^sub>a' @ \<pi>\<^sub>b') (\<pi>\<^sub>a @ \<pi>\<^sub>b) \<longrightarrow>
-    two_paths_exclusive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
-  )
-"
- apply (induct \<pi>\<^sub>a; auto; simp?)
-  apply (case_tac \<pi>\<^sub>a'; auto)
-   apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def; auto)
-  apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def; auto)
-    
-sorry
-
-
-theorem noncompetitive_preserved_under_double_append: "
- two_paths_noncompetitive  \<pi>\<^sub>a \<pi>\<^sub>a' \<Longrightarrow> two_paths_noncompetitive \<pi>\<^sub>b \<pi>\<^sub>b' \<Longrightarrow> two_paths_noncompetitive (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')
-"
- apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def; blast?)
- apply (case_tac "prefix (\<pi>\<^sub>a @ \<pi>\<^sub>b) (\<pi>\<^sub>a' @ \<pi>\<^sub>b')"; blast?) 
- apply (case_tac" prefix (\<pi>\<^sub>a' @ \<pi>\<^sub>b') (\<pi>\<^sub>a @ \<pi>\<^sub>b)"; blast?)
- apply (rule disjI2, rule disjI2) 
- apply (simp add: double_append_exclusive two_paths_noncompetitive_def two_paths_ordered_def)
-done
-*)
-
 
 (*
 lemma traceable_functional: "
@@ -230,97 +201,32 @@ lemma concat_matches_implies: "
  apply (erule ap_matches.cases; auto)
 done
 
-(*
-lemma linear_implies_noncompetitive': "
-  ``\<pi>\<^sub>a`` \<Longrightarrow> \<forall> \<pi>\<^sub>b . ``\<pi>\<^sub>b`` \<longrightarrow> two_paths_noncompetitive \<pi>\<^sub>a \<pi>\<^sub>b
-"
- apply (unfold two_paths_noncompetitive_def two_paths_ordered_def)
- apply (erule linear.induct; auto)
-   apply (rotate_tac 2) apply (erule linear.cases; auto; rename_tac \<pi> x \<pi>' x')
-   apply (erule notE, (simp add: Base two_paths_ordered_def))
-   apply (erule notE, (simp add: Base two_paths_ordered_def))
-   apply (case_tac "x' = x", auto, erule notE, (simp add: Base two_paths_ordered_def))
-   apply (case_tac "x' = x", auto)
-   apply (drule_tac x = \<pi>' in spec, erule impE, assumption)
-   apply (erule disjE; (erule disjE)?, simp)
-   apply (erule notE)
-   apply (simp add: two_paths_exclusive_preserved_under_seq_cons)
-      apply (erule notE, (simp add: Base two_paths_ordered_def))
-   apply (erule notE, (simp add: Base two_paths_ordered_def))
-   apply (erule notE, (simp add: Base two_paths_ordered_def))
 
-  apply (rotate_tac 2) apply (erule linear.cases; auto; rename_tac \<pi> x \<pi>' x')
-  apply (erule notE, (simp add: Base two_paths_ordered_def))
-  apply (erule notE, (simp add: Base two_paths_ordered_def))
-  apply (erule notE, (simp add: Base two_paths_ordered_def))
-  apply (case_tac "x' = x", auto, erule notE, (simp add: Base two_paths_ordered_def))
-  apply (case_tac "x' = x", auto)
-  apply (drule_tac x = \<pi>' in spec, erule impE, assumption)
-  apply (erule disjE; (erule disjE)?; auto?)
-  apply (erule notE)
-  apply (simp add: two_paths_exclusive_preserved_under_up_cons)
-  apply (erule notE, (simp add: Base two_paths_ordered_def))
-  apply (erule notE, (simp add: Base two_paths_ordered_def))
-
- apply (rotate_tac 2) apply (erule linear.cases; auto; rename_tac \<pi> x \<pi>' x')
- apply (erule notE, (simp add: Base two_paths_ordered_def))
- apply (erule notE, (simp add: Base two_paths_ordered_def))
- apply (erule notE, (simp add: Base two_paths_ordered_def))
- apply (erule notE, (simp add: Base two_paths_ordered_def))
- apply (case_tac "x' = x", auto, erule notE, (simp add: Base two_paths_ordered_def))
- apply (case_tac "x' = x", auto)
- apply (drule_tac x = \<pi>' in spec, erule impE, assumption)
- apply (erule disjE; (erule disjE)?, simp)
- apply (erule notE)
- apply (simp add: two_paths_exclusive_preserved_under_down_cons)
- apply (erule notE, (simp add: Base two_paths_ordered_def))
-done
-
-lemma linear_implies_noncompetitive: "
-  ``\<pi>\<^sub>a`` \<Longrightarrow> ``\<pi>\<^sub>b`` \<Longrightarrow> two_paths_noncompetitive \<pi>\<^sub>a \<pi>\<^sub>b
-"
-by (simp add: linear_implies_noncompetitive')
-*)
-
-(*
 lemma ap_noncompetitive_implies_noncompetitive': "
-  \<lbrakk>
-    ap |\<rhd> \<pi>\<^sub>1
-  \<rbrakk> \<Longrightarrow>
+  ap |\<rhd> \<pi>\<^sub>1 \<Longrightarrow>
   (\<forall> \<pi>\<^sub>2 .
     ap |\<rhd> \<pi>\<^sub>2 \<longrightarrow>
     ap_noncompetitive ap \<longrightarrow>
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
-  )
+ )
 "
-
+ apply (simp add: ap_noncompetitive_def noncompetitive_def)
  apply (erule ap_matches.induct; auto)
-     apply (simp add: two_paths_noncompetitive_def two_paths_ordered_def)
-    apply (drule atom_matches_implies; (simp add: two_paths_noncompetitive_def two_paths_ordered_def))
-    apply (erule ap_noncompetitive.cases; auto)
-    apply (drule union_matches_implies; auto)
-      using ap_linear_implies_ap_noncompetitive apply blast
-      using ap_linear_implies_linear' linear_implies_noncompetitive apply auto[1]
-    apply (erule ap_noncompetitive.cases; auto)
-    apply (drule union_matches_implies; auto)
-      apply (simp add: ap_linear_implies_linear linear_implies_noncompetitive)
-      using ap_linear_implies_ap_noncompetitive apply blast
-    apply (erule ap_matches.cases; auto)
-      apply (simp add: linear.Empty linear_implies_noncompetitive)
-      apply (erule ap_noncompetitive.cases; auto)
-      apply (simp add: ap_linear.Star ap_linear_implies_linear' linear.Empty linear_implies_noncompetitive)
-    apply (erule ap_noncompetitive.cases; auto)
-    apply (rotate_tac 4)
-    apply (erule ap_matches.cases; auto)
-      apply (simp add: ap_linear.Star ap_linear_implies_linear' linear.Empty linear_implies_noncompetitive)
-      apply (simp add: ap_linear.Star ap_linear_implies_linear' linear_implies_noncompetitive)
-  apply (erule ap_noncompetitive.cases; auto)
+  apply (simp add: atom_matches_implies)
+  using ap_ordered.simps ap_single.simps apply blast
+  using ap_ordered.simps ap_single.simps apply blast
+
+  apply (frule ap_ordered.cases; auto)
+  using ap_single.simps apply blast
+  apply (drule ap_ordered.Single)
   apply (rotate_tac 4)
   apply (erule ap_matches.cases; auto)
-  apply (drule_tac x = \<pi>\<^sub>a' in spec; auto)
-  apply (drule_tac x = \<pi>\<^sub>b' in spec; auto)
+  apply (drule_tac x = \<pi>'' in spec)
+  apply (drule_tac x = \<pi>''' in spec)
+  apply auto
+
 sorry
-*)
+
 
 
 lemma ap_noncompetitive_implies_noncompetitive: "
@@ -331,8 +237,7 @@ lemma ap_noncompetitive_implies_noncompetitive: "
   \<rbrakk> \<Longrightarrow>
   noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
 "
-sorry
-
+by (simp add: ap_noncompetitive_implies_noncompetitive')
 
 
 lemma cons_eq_append: "
@@ -573,8 +478,17 @@ lemma infinite_prog_has_earlier_sync: "
     ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x
   )
 "
- apply (erule traceable.cases; clarsimp)
+(*
 
+these proof procedures take way too long.
+There is quite a bit of eliminating false premises, by looking at cases of cases of cases ... at multiple depths.
+
+Perhaps, the correct behavior of a computable function would be much faster to prove.
+Since it's deterministic, there would be no need to waste time eliminating false premises.
+*)
+(*
+
+ apply (erule traceable.cases; clarsimp)
   apply (simp add: infinite_prog_def)
   apply (elim_traceable_result dest: traceable_result_implies_traceable_case_left)
   apply (elim_traceable_result dest: traceable_result_implies_traceable_case_right)
@@ -592,6 +506,7 @@ lemma infinite_prog_has_earlier_sync: "
 
   apply (erule traceable.cases; clarsimp)
     apply (simp add: infinite_prog_def; auto)
+*)
 sorry
 
 
