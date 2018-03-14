@@ -2,12 +2,6 @@ theory Static_Communication_Analysis
   imports Main Syntax Runtime_Semantics Static_Semantics Runtime_Communication_Analysis
 begin
 
-definition all  :: "(control_path \<Rightarrow> bool) \<Rightarrow> (control_path \<Rightarrow> control_path \<Rightarrow> bool) \<Rightarrow> bool" where
-  "all P R \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
-    P \<pi>\<^sub>1 \<longrightarrow>
-    P \<pi>\<^sub>2 \<longrightarrow>
-    R \<pi>\<^sub>1 \<pi>\<^sub>2
-  )"
 
 
 datatype topo = Non | OneShot | OneToOne | FanOut | FanIn | ManyToMany
@@ -70,61 +64,51 @@ occur in the same run from those that occur in the same subprogram.
 Reppy/Xiao consider paths with the same process path to be noncompetitive statically.
 
 *)
-(*
-  L_Left var ("\<upharpoonleft>\<bar>_" [71] 70) |
-  L_Right var ("\<upharpoonleft>:_" [71] 70) | 
-  L_Up var ("\<upharpoonleft>_" [71] 70) |
-  L_Down var ("\<downharpoonleft>_" [71] 70)
-*)
 
-inductive linear :: "control_path \<Rightarrow> bool" where
- Seq: "linear \<pi> \<Longrightarrow> linear (`x # \<pi>)" | 
- Left: "linear \<pi> \<Longrightarrow> linear (\<upharpoonleft>\<bar>x # \<pi>)" |
- Right: "linear \<pi> \<Longrightarrow> linear (\<upharpoonleft>:x # \<pi>)" |
- UP: "linear \<pi> \<Longrightarrow> linear (\<upharpoonleft>x # \<pi>)" |
- Down: "linear \<pi> \<Longrightarrow> linear (\<downharpoonleft>x # \<pi>)" |
- Empty: "linear []"
-
-
-
-inductive same_process :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<cong>" 55) where
- Lin: "linear \<pi>\<^sub>1 \<Longrightarrow> linear \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2" |
- Spawn: "linear \<pi>\<^sub>1 \<Longrightarrow> linear \<pi>\<^sub>2 \<Longrightarrow> \<pi> @ (.x # \<pi>\<^sub>1) \<cong> \<pi> @ (.x # \<pi>\<^sub>2)"
-
-(*
-
-this seems like a correct simple definition of exclusive
-
-inductive exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<triangleq>" 55) where
- Same_Proc: "
-   \<lbrakk>
-     \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2;
-     \<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2;
-     \<not> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
-   \<rbrakk> \<Longrightarrow> 
-   \<pi>\<^sub>1 \<triangleq> \<pi>\<^sub>2
- " |    
- Cons_Spawn: "
-   \<lbrakk>
-     \<pi>\<^sub>1 \<triangleq> \<pi>\<^sub>2
-   \<rbrakk> \<Longrightarrow> 
-   \<pi>\<^sub>1 @ (.x # \<pi>\<^sub>1') \<triangleq> \<pi>\<^sub>2 @ (.x # \<pi>\<^sub>2')
+inductive inclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
+  Ordered: "
+    \<lbrakk>
+      prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
+    \<rbrakk> \<Longrightarrow>
+    \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
+  " |
+ Spawn_Left: "
+    \<pi> @ .x # \<pi>\<^sub>1 \<asymp> \<pi> @ `x # \<pi>\<^sub>2
+ " |
+ Spawn_Right: "
+    \<pi> @ `x # \<pi>\<^sub>1 \<asymp> \<pi> @ .x # \<pi>\<^sub>2
  "
-*)
 
-lemma same_process_commut: "
-  \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>2 \<cong> \<pi>\<^sub>1
+lemma inclusive_commut: "
+  \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>2 \<asymp> \<pi>\<^sub>1
 "
-by (metis Lin Spawn same_process.cases)
+ apply (erule inclusive.cases; auto)
+  apply (simp add: Ordered)
+  apply (simp add: Ordered)
+  apply (simp add: Spawn_Right)
+  apply (simp add: Spawn_Left)
+done
 
-definition exclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
- "exclusive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> \<pi>\<^sub>1 = \<pi>\<^sub>2"
+
+
+lemma inclusive_preserved_under_unordered_extension: "
+  \<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> \<not> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<Longrightarrow> \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>1 ;; l \<asymp> \<pi>\<^sub>2
+"
+ apply (erule inclusive.cases; auto)
+  apply (simp add: Spawn_Left)
+  apply (simp add: Spawn_Right)
+done
+
+
+
+definition singular :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
+ "singular \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
 
 definition noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
- "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1"
+ "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
 
 definition static_one_shot :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "static_one_shot \<A> x\<^sub>c \<equiv> all (is_static_send_path \<A> x\<^sub>c) exclusive \<and> all (is_static_recv_path \<A> x\<^sub>c) exclusive"
+  "static_one_shot \<A> x\<^sub>c \<equiv> all (is_static_send_path \<A> x\<^sub>c) singular \<and> all (is_static_recv_path \<A> x\<^sub>c) singular"
 
 definition static_one_to_one :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
   "static_one_to_one \<A> x\<^sub>c \<equiv> all (is_static_send_path \<A> x\<^sub>c) noncompetitive \<and> all (is_static_recv_path \<A> x\<^sub>c) noncompetitive"

@@ -21,45 +21,30 @@ definition is_recv_path :: "state_pool \<Rightarrow> chan \<Rightarrow> control_
   )"
 
 
-definition two_paths_ordered :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where 
-  "two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2  = (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1)"
-
-
-lemma two_paths_ordered_commut: "
-  two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> two_paths_ordered \<pi>\<^sub>2 \<pi>\<^sub>1
-"
-using two_paths_ordered_def by auto
-
-definition all_ordered :: "(control_path \<Rightarrow> bool) \<Rightarrow> bool" where
-  "all_ordered P \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
+definition all  :: "(control_path \<Rightarrow> bool) \<Rightarrow> (control_path \<Rightarrow> control_path \<Rightarrow> bool) \<Rightarrow> bool" where
+  "all P R \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
     P \<pi>\<^sub>1 \<longrightarrow>
     P \<pi>\<^sub>2 \<longrightarrow>
-    two_paths_ordered \<pi>\<^sub>1 \<pi>\<^sub>2
+    R \<pi>\<^sub>1 \<pi>\<^sub>2
   )"
 
-
-definition all_paths_equal :: "(control_path \<Rightarrow> bool) \<Rightarrow> bool" where
-  "all_paths_equal P \<equiv> (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
-    P \<pi>\<^sub>1 \<longrightarrow>
-    P \<pi>\<^sub>2 \<longrightarrow>
-    \<pi>\<^sub>1 = \<pi>\<^sub>2
-  )"
-
+fun ordered where
+  "ordered \<pi>\<^sub>1 \<pi>\<^sub>2 = (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1)"
 
 definition one_shot :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "one_shot \<E> c \<equiv> all_paths_equal (is_send_path \<E> c) \<and> all_paths_equal (is_recv_path \<E> c)"
+  "one_shot \<E> c \<equiv> all (is_send_path \<E> c) op= \<and> all (is_recv_path \<E> c) op="
 
 
 definition one_to_one :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "one_to_one \<E> c \<equiv> all_ordered (is_send_path \<E> c) \<and> all_ordered (is_recv_path \<E> c)"
+  "one_to_one \<E> c \<equiv> all (is_send_path \<E> c) ordered \<and> all (is_recv_path \<E> c) ordered"
   
 
 definition fan_out :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "fan_out \<E> c \<equiv> all_ordered (is_send_path \<E> c)"
+  "fan_out \<E> c \<equiv> all (is_send_path \<E> c) ordered"
   
 
 definition fan_in :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "fan_in \<E> c \<equiv> all_ordered (is_recv_path \<E> c)"
+  "fan_in \<E> c \<equiv> all (is_recv_path \<E> c) ordered"
 
 
 end

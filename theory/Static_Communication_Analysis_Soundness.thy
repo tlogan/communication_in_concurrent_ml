@@ -101,16 +101,141 @@ lemma isnt_send_path_sound': "
  apply (drule static_message_isnt_sent_sound; assumption)
 done
 
-lemma runtime_paths_noncompetitive_implies_ordered: "
+
+lemma inclusive_preserved: "
+  \<E> \<rightarrow> \<E>' \<Longrightarrow>
+  \<forall>\<pi>\<^sub>1. (\<exists>\<sigma>\<^sub>1. \<E> \<pi>\<^sub>1 = Some \<sigma>\<^sub>1) \<longrightarrow> (\<forall>\<pi>\<^sub>2. (\<exists>\<sigma>\<^sub>2. \<E> \<pi>\<^sub>2 = Some \<sigma>\<^sub>2) \<longrightarrow> \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow>
+  \<E>' \<pi>\<^sub>1 = Some \<sigma>\<^sub>1 \<Longrightarrow> \<E>' \<pi>\<^sub>2 = Some \<sigma>\<^sub>2 \<Longrightarrow> 
+  \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
+"
+ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+   
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; \<upharpoonleft>\<bar>x"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; \<upharpoonleft>\<bar>x"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; \<upharpoonleft>:x"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; \<upharpoonleft>:x"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; \<upharpoonleft>xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; \<upharpoonleft>xa"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `xa"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `xa"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `xa"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `xa"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+   apply (simp add: Ordered)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; `x\<^sub>s"; auto)
+   apply (metis inclusive.simps inclusive_preserved_under_unordered_extension leaf_def prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
+   apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
+   apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
+   apply (smt Ordered exp.inject(1) inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.inject prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc state.inject)
+   apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
+   apply (drule_tac x = \<pi>\<^sub>2 in spec; auto)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.simps(3) prefix_order.le_less prefix_snoc)
+   apply (case_tac "\<pi>\<^sub>1 = \<pi>\<^sub>s ;; `x\<^sub>s"; auto)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+   apply (metis inclusive.simps inclusive_preserved_under_unordered_extension leaf_def prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; `x\<^sub>s"; auto)
+   apply (simp add: Ordered)
+   apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
+   apply (drule_tac x = \<pi>\<^sub>2 in spec; auto)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+   apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
+   apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
+   apply (smt Ordered exp.inject(1) inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.inject prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc state.inject)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; `x\<^sub>s"; auto)
+   apply (simp add: Ordered)
+   apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
+   apply (drule_tac x = \<pi>\<^sub>2 in spec; auto)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.simps(3) prefix_order.le_less prefix_snoc)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+   apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
+   apply (drule_tac x = \<pi>\<^sub>1 in spec; auto)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; `x\<^sub>s"; auto)
+   apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
+   apply (drule_tac x = \<pi>\<^sub>1 in spec; auto)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
+   apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
+   apply (drule_tac x = \<pi>\<^sub>1 in spec; auto)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
+ 
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `x"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `x"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; .x"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; .x"; auto))
+   apply (simp add: Ordered)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi> ;; `x"; auto)
+  apply (simp add: Spawn_Left)
+  apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+  apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `x"; auto)
+  apply (simp add: Spawn_Right)
+  apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict) 
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `x"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `x"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+done
+
+lemma runtime_paths_are_inclusive: "
+  \<E>\<^sub>0 \<rightarrow>* \<E> \<Longrightarrow>
+  (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 \<sigma>\<^sub>1 \<sigma>\<^sub>2.
+    \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
+    \<E> \<pi>\<^sub>1 = Some \<sigma>\<^sub>1 \<longrightarrow>
+    \<E> \<pi>\<^sub>2 = Some \<sigma>\<^sub>2 \<longrightarrow>
+    \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
+  )
+"
+ apply (drule star_implies_star_left)
+ apply (erule star_left.induct; auto)
+  apply (simp add: Ordered)
+ apply (rename_tac \<E> \<E>' \<pi>\<^sub>1 \<sigma>\<^sub>1 \<pi>\<^sub>2 \<sigma>\<^sub>2)
+ apply (blast dest: inclusive_preserved)
+done
+
+lemma runtime_paths_inclusive: "
   \<lbrakk>
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1';
-    \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2';
-    noncompetitive \<pi>\<^sub>1' \<pi>\<^sub>2'
+    \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2'
   \<rbrakk> \<Longrightarrow> 
-  prefix  \<pi>\<^sub>1' \<pi>\<^sub>2' \<or>  prefix  \<pi>\<^sub>2' \<pi>\<^sub>1'
+  \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
 "
-using noncompetitive_def by blast
+sorry
 
 lemma isnt_send_path_sound: "
   \<lbrakk>
@@ -127,52 +252,28 @@ lemma isnt_send_path_sound: "
 done
 
 
-lemma runtime_paths_exclusive_implies_equal: "
+lemma runtime_send_paths_inclusive: "
   \<lbrakk>
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1';
-    \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2';
-   exclusive \<pi>\<^sub>1' \<pi>\<^sub>2'
+    is_send_path \<E>' c \<pi>\<^sub>1';
+    is_send_path \<E>' c \<pi>\<^sub>2'
   \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>1' = \<pi>\<^sub>2'
+  \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
 "
-by (simp add: exclusive_def)
+apply (unfold is_send_path_def; auto)
+using runtime_paths_inclusive by auto
 
-lemma paths_exclusive_implies_equal: "
-  \<lbrakk>
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1'; 
-    \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2'; 
-    exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' 
-  \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>1' = \<pi>\<^sub>2'
-"
-using exclusive_def by blast
-
-lemma send_paths_exclusive_implies_equal: "
-  \<lbrakk>
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    is_send_path \<E>' c \<pi>\<^sub>1'; 
-    is_send_path \<E>' c \<pi>\<^sub>2'; 
-    exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' 
-  \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>1' = \<pi>\<^sub>2'
-"
- apply (unfold is_send_path_def)[1]
- apply (blast dest: paths_exclusive_implies_equal)
-done
-
-
-theorem topology_all_exclusive_send_sound: "
+theorem topology_all_singular_send_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
   
-    all (is_static_send_path (\<V>, \<C>, e) x\<^sub>c) exclusive
+    all (is_static_send_path (\<V>, \<C>, e) x\<^sub>c) singular
   \<rbrakk> \<Longrightarrow>
-  all_paths_equal (is_send_path \<E>' (Ch \<pi> x\<^sub>c))
+  all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) op=
 "
-by (simp add: all_def all_paths_equal_def isnt_send_path_sound send_paths_exclusive_implies_equal)
+ apply (simp add: all_def singular_def; auto)
+by (simp add: isnt_send_path_sound runtime_send_paths_inclusive)
 
 
 lemma static_recv_chan_doesnt_exist_sound: "
@@ -258,30 +359,28 @@ lemma isnt_recv_path_sound: "
   apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
 done
 
-lemma recv_paths_exclusive_implies_equal: "
+lemma runtime_recv_paths_inclusive: "
   \<lbrakk>
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    is_recv_path \<E>' c \<pi>\<^sub>1'; 
-    is_recv_path \<E>' c \<pi>\<^sub>2'; 
-    exclusive \<pi>\<^sub>1' \<pi>\<^sub>2' 
+    is_recv_path \<E>' c \<pi>\<^sub>1';
+    is_recv_path \<E>' c \<pi>\<^sub>2'
   \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>1' = \<pi>\<^sub>2'
+  \<pi>\<^sub>1' \<asymp> \<pi>\<^sub>2'
 "
- apply (unfold is_recv_path_def)[1]
- apply (blast dest: paths_exclusive_implies_equal)
-done
+apply (unfold is_recv_path_def; auto)
+using runtime_paths_inclusive by auto
 
-
-theorem topology_all_exclusive_recv_sound: "
+theorem topology_all_singular_recv_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
 
-    all (is_static_recv_path (\<V>, \<C>, e) x\<^sub>c) exclusive
+    all (is_static_recv_path (\<V>, \<C>, e) x\<^sub>c) singular
   \<rbrakk> \<Longrightarrow>
-  all_paths_equal (is_recv_path \<E>' (Ch \<pi> x\<^sub>c))
+  all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) op=
 "
-by (simp add: all_def all_paths_equal_def isnt_recv_path_sound recv_paths_exclusive_implies_equal)
+ apply (simp add: all_def singular_def; auto)
+ using isnt_recv_path_sound runtime_recv_paths_inclusive by blast
 
 theorem topology_one_shot_sound: "
   \<lbrakk>
@@ -294,20 +393,11 @@ theorem topology_one_shot_sound: "
 "
  apply (unfold static_one_shot_def, auto)
  apply (unfold one_shot_def; auto)
- apply (auto dest: topology_all_exclusive_send_sound)
- apply (auto dest: topology_all_exclusive_recv_sound)
+ apply (auto dest: topology_all_singular_send_sound)
+ apply (auto dest: topology_all_singular_recv_sound)
 done
 
-lemma send_paths_noncompetitive_implies_ordered: "
-  \<lbrakk>
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    is_send_path \<E>' c \<pi>\<^sub>1'; 
-    is_send_path \<E>' c \<pi>\<^sub>2'; 
-    noncompetitive \<pi>\<^sub>1' \<pi>\<^sub>2' 
-  \<rbrakk> \<Longrightarrow> 
-  prefix \<pi>\<^sub>1' \<pi>\<^sub>2' \<or> prefix \<pi>\<^sub>2' \<pi>\<^sub>1'
-"
-using noncompetitive_def by blast
+
 
 theorem topology_all_noncompetitive_send_sound: "
   \<lbrakk>
@@ -316,22 +406,12 @@ theorem topology_all_noncompetitive_send_sound: "
   
     all (is_static_send_path (\<V>, \<C>, e) x\<^sub>c) noncompetitive
   \<rbrakk> \<Longrightarrow>
-  all_ordered (is_send_path \<E>' (Ch \<pi> x\<^sub>c))
+  all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
 "
-by (simp add: all_def all_ordered_def isnt_send_path_sound send_paths_noncompetitive_implies_ordered two_paths_ordered_def)
+apply (simp add: all_def noncompetitive_def; auto)
+using isnt_send_path_sound runtime_send_paths_inclusive by blast
 
 
-
-lemma recv_paths_noncompetitive_implies_ordered: "
-  \<lbrakk>
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    is_recv_path \<E>' c \<pi>\<^sub>1'; 
-    is_recv_path \<E>' c \<pi>\<^sub>2'; 
-    noncompetitive \<pi>\<^sub>1' \<pi>\<^sub>2' 
-  \<rbrakk> \<Longrightarrow> 
-  two_paths_ordered \<pi>\<^sub>1' \<pi>\<^sub>2'
-"
-using noncompetitive_def two_paths_ordered_def by blast
 
 
 theorem topology_all_noncompetitive_recv_sound: "
@@ -341,9 +421,10 @@ theorem topology_all_noncompetitive_recv_sound: "
   
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  all_ordered (is_recv_path \<E>' (Ch \<pi> x\<^sub>c))
+  all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
 "
-by (simp add: all_def all_ordered_def isnt_recv_path_sound recv_paths_noncompetitive_implies_ordered)
+apply (simp add: all_def noncompetitive_def; auto)
+using isnt_recv_path_sound runtime_recv_paths_inclusive by blast
 
 
 theorem topology_one_to_one_sound: "
