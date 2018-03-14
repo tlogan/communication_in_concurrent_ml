@@ -211,7 +211,7 @@ lemma inclusive_preserved: "
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 done
 
-lemma runtime_paths_are_inclusive: "
+lemma runtime_paths_are_inclusive': "
   \<E>\<^sub>0 \<rightarrow>* \<E> \<Longrightarrow>
   (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 \<sigma>\<^sub>1 \<sigma>\<^sub>2.
     \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
@@ -227,15 +227,16 @@ lemma runtime_paths_are_inclusive: "
  apply (blast dest: inclusive_preserved)
 done
 
-lemma runtime_paths_inclusive: "
+lemma runtime_paths_are_inclusive: "
   \<lbrakk>
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1';
     \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2'
   \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
+  \<pi>\<^sub>1' \<asymp> \<pi>\<^sub>2'
 "
-sorry
+by (blast dest: runtime_paths_are_inclusive')
+
 
 lemma isnt_send_path_sound: "
   \<lbrakk>
@@ -252,16 +253,16 @@ lemma isnt_send_path_sound: "
 done
 
 
-lemma runtime_send_paths_inclusive: "
+lemma runtime_send_paths_are_inclusive: "
   \<lbrakk>
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     is_send_path \<E>' c \<pi>\<^sub>1';
     is_send_path \<E>' c \<pi>\<^sub>2'
   \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
+  \<pi>\<^sub>1' \<asymp> \<pi>\<^sub>2'
 "
 apply (unfold is_send_path_def; auto)
-using runtime_paths_inclusive by auto
+using runtime_paths_are_inclusive by blast
 
 theorem topology_all_singular_send_sound: "
   \<lbrakk>
@@ -273,7 +274,7 @@ theorem topology_all_singular_send_sound: "
   all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) op=
 "
  apply (simp add: all_def singular_def; auto)
-by (simp add: isnt_send_path_sound runtime_send_paths_inclusive)
+using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
 
 lemma static_recv_chan_doesnt_exist_sound: "
@@ -359,7 +360,7 @@ lemma isnt_recv_path_sound: "
   apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
 done
 
-lemma runtime_recv_paths_inclusive: "
+lemma runtime_recv_paths_are_inclusive: "
   \<lbrakk>
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     is_recv_path \<E>' c \<pi>\<^sub>1';
@@ -368,7 +369,7 @@ lemma runtime_recv_paths_inclusive: "
   \<pi>\<^sub>1' \<asymp> \<pi>\<^sub>2'
 "
 apply (unfold is_recv_path_def; auto)
-using runtime_paths_inclusive by auto
+using runtime_paths_are_inclusive by auto
 
 theorem topology_all_singular_recv_sound: "
   \<lbrakk>
@@ -380,7 +381,7 @@ theorem topology_all_singular_recv_sound: "
   all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) op=
 "
  apply (simp add: all_def singular_def; auto)
- using isnt_recv_path_sound runtime_recv_paths_inclusive by blast
+ using isnt_recv_path_sound runtime_recv_paths_are_inclusive by blast
 
 theorem topology_one_shot_sound: "
   \<lbrakk>
@@ -409,7 +410,7 @@ theorem topology_all_noncompetitive_send_sound: "
   all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
 "
 apply (simp add: all_def noncompetitive_def; auto)
-using isnt_send_path_sound runtime_send_paths_inclusive by blast
+using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
 
 
@@ -424,7 +425,7 @@ theorem topology_all_noncompetitive_recv_sound: "
   all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
 "
 apply (simp add: all_def noncompetitive_def; auto)
-using isnt_recv_path_sound runtime_recv_paths_inclusive by blast
+using isnt_recv_path_sound runtime_recv_paths_are_inclusive by blast
 
 
 theorem topology_one_to_one_sound: "
