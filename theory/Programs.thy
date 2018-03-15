@@ -7,21 +7,13 @@ theory Programs
 begin
 
 
-lemma traceable_result_implies_traceable_case_left: "
-  \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>\<bar>x # \<pi>', RESULT y); \<downharpoonright>\<pi>'\<upharpoonleft>;
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
-  \<rbrakk> \<Longrightarrow>
-  b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> y = \<lfloor>e\<^sub>l\<rfloor>
-"
-sorry
 
-lemma traceable_result_implies_traceable_case_right: "
+lemma traceable_result_implies_traceable_case: "
   \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>:x # \<pi>', RESULT y); \<downharpoonright>\<pi>'\<upharpoonleft>;
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y); \<downharpoonright>\<pi>'\<upharpoonleft>;
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
   \<rbrakk> \<Longrightarrow>
-  b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> y = \<lfloor>e\<^sub>r\<rfloor>
+  b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> (y = \<lfloor>e\<^sub>l\<rfloor> \<or> y = \<lfloor>e\<^sub>r\<rfloor>)
 "
 sorry
 
@@ -490,8 +482,8 @@ Since it's deterministic, there would be no need to waste time eliminating false
 
  apply (erule traceable.cases; clarsimp)
   apply (simp add: infinite_prog_def)
-  apply (elim_traceable_result dest: traceable_result_implies_traceable_case_left)
-  apply (elim_traceable_result dest: traceable_result_implies_traceable_case_right)
+  apply (elim_traceable_result dest: traceable_result_implies_traceable_case)
+  apply (elim_traceable_result dest: traceable_result_implies_traceable_case)
   apply (elim_traceable_result dest: traceable_result_implies_traceable_app)
   apply (elim_traceable_app)
   apply (elim_traceable)

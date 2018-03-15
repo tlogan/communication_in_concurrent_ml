@@ -447,12 +447,14 @@ theorem flow_over_state_preservation : "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'
 "
  apply (erule seq_step.cases, auto)
-        apply (erule flow_over_state_1, auto)
-       apply (erule flow_over_state_2)
-      apply (erule flow_over_state_3)
-   apply (erule flow_over_state_6, simp, auto)
-  apply (erule flow_over_state_7, simp, auto)
- apply (erule flow_over_state_8, auto)
+  apply (simp add: flow_over_state_1)
+  apply (simp add: flow_over_state_2)
+  apply (simp add: flow_over_state_3)
+  apply (simp add: flow_over_state_6)
+  apply (simp add: flow_over_state_7)
+  apply (simp add: flow_over_state_4)
+  apply (simp add: flow_over_state_5)
+  apply (simp add: flow_over_state_8)
 done
 
 lemma flow_seq_step_down_preservation: "
@@ -913,8 +915,6 @@ theorem flow_preservation : "
 "
  apply (erule concur_step.cases, auto)
        apply (erule flow_seq_step_down_preservation, auto)
-  apply (smt accept_state_pool.simps flow_over_state_4 map_upd_Some_unfold)
-  using accept_state_pool.simps flow_over_state_5 apply fastforce
      apply (erule flow_seq_step_up_preservation, auto)
     apply (erule flow_seq_step_preservation, auto)
    apply ((erule flow_let_sync_preservation; blast?), auto)
@@ -1098,24 +1098,15 @@ lemma traceable_exp_preservation: "
       apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
       apply (((drule spec)+, erule impE, assumption, erule conjE))
       apply (erule stack_traceable.cases; auto)
-         apply (erule seq_step.cases; auto; rule traceable.Result_App; auto)
-         apply (erule seq_step.cases; auto; rule traceable.Result_Case_Left; auto)
-         apply (erule seq_step.cases; auto; rule traceable.Result_Case_Right; auto)
+         apply (erule seq_step.cases; auto; rule traceable.Result; auto)
 
-     apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>\<bar>x", auto)
-     apply ((drule spec)+, erule impE, assumption, erule conjE)
-     apply (drule flow_over_pool_precision, auto)
-      apply (drule abstracted_value_exists, simp+, rule traceable.Let_Case_Left; auto)
-
-     apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>:x", auto)
-     apply ((drule spec)+, erule impE, assumption, erule conjE)
-     apply (drule flow_over_pool_precision, auto)
-      apply (drule abstracted_value_exists, simp+, rule traceable.Let_Case_Right; auto)
 
      apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
      apply ((drule spec)+, erule impE, assumption, erule conjE)
      apply (drule flow_over_pool_precision, auto)
      apply (erule seq_step.cases, auto)
++     apply (drule abstracted_value_exists, simp+, rule traceable.Let_Case_Left; auto)
++     apply (drule abstracted_value_exists, simp+, rule traceable.Let_Case_Right; auto)
      apply (drule abstracted_value_exists, simp+, rule traceable.Let_App; auto)
     apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
     apply ((drule spec)+, erule impE, assumption, erule conjE)
@@ -1160,13 +1151,9 @@ lemma traceable_stack_preservation: "
       apply (erule seq_step.cases; auto)
       apply (erule stack_traceable.cases; auto)
   using Up_Down stack_traceable_preserved_over_balanced_extension apply blast
-  using Left_Down stack_traceable_preserved_over_balanced_extension apply blast
-  using Right_Down stack_traceable_preserved_over_balanced_extension apply blast
-  apply (metis Nonempty_Case_Left option.inject path_balanced.Empty state.inject)
-  apply (metis Nonempty_Case_Right option.inject path_balanced.Empty state.inject)
      apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
      apply ((drule spec)+, erule impE, assumption, erule conjE) 
-  apply (simp add: Nonempty_App)
+  apply (simp add: Nonempty)
     apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
     using stack_traceable_preserved_over_seq_extension apply blast
     apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; `x\<^sub>r", auto)
