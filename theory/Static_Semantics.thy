@@ -456,66 +456,66 @@ by (simp add: traceable_implies_subexp')
 
 type_synonym flow_set = "(exp \<times> control_label \<times> exp) set"
 
-inductive flow :: "(abstract_value_env \<times> abstract_value_env \<times> flow_set) \<Rightarrow> exp \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
+inductive flow :: "(abstract_value_env \<times> flow_set) \<Rightarrow> exp \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
   Result: "
-    (\<V>, \<C>, \<F>) \<TTurnstile> RESULT x
+    (\<V>, \<F>) \<TTurnstile> RESULT x
   " |
   Let_Unit: "
     \<lbrakk>
       {(LET x = \<lparr>\<rparr> in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = \<lparr>\<rparr> in e
+    (\<V>, \<F>) \<TTurnstile> LET x = \<lparr>\<rparr> in e
   " |
   Let_Chan: "
     \<lbrakk>
       {(LET x = CHAN \<lparr>\<rparr> in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = CHAN \<lparr>\<rparr> in e
+    (\<V>, \<F>) \<TTurnstile> LET x = CHAN \<lparr>\<rparr> in e
   " |
   Let_Send_Evt: "
     \<lbrakk>
       {(LET x = SEND EVT x\<^sub>c x\<^sub>m  in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = SEND EVT x\<^sub>c x\<^sub>m in e
+    (\<V>, \<F>) \<TTurnstile> LET x = SEND EVT x\<^sub>c x\<^sub>m in e
   " |
   Let_Recv_Evt: "
     \<lbrakk>
       {(LET x = RECV EVT x\<^sub>c  in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = RECV EVT x\<^sub>c in e
+    (\<V>, \<F>) \<TTurnstile> LET x = RECV EVT x\<^sub>c in e
   " |
   Let_Pair: "
     \<lbrakk>
       {(LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e
+    (\<V>, \<F>) \<TTurnstile> LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e
   " |
   Let_Left: "
     \<lbrakk>
       {(LET x = LEFT x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = LEFT x\<^sub>p in e
+    (\<V>, \<F>) \<TTurnstile> LET x = LEFT x\<^sub>p in e
   " |
   Let_Right: "
     \<lbrakk>
       {(LET x = RIGHT x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = RIGHT x\<^sub>p in e
+    (\<V>, \<F>) \<TTurnstile> LET x = RIGHT x\<^sub>p in e
   " |
   Let_Abs: "
     \<lbrakk>
       {(LET x = FN f x\<^sub>p . e\<^sub>b  in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e\<^sub>b;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e\<^sub>b;
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = FN f x\<^sub>p . e\<^sub>b  in e
+    (\<V>, \<F>) \<TTurnstile> LET x = FN f x\<^sub>p . e\<^sub>b  in e
   " |
   Let_Spawn: "
     \<lbrakk>
@@ -523,31 +523,31 @@ inductive flow :: "(abstract_value_env \<times> abstract_value_env \<times> flow
         (LET x = SPAWN e\<^sub>c  in e, `x, e),
         (LET x = SPAWN e\<^sub>c  in e, .x, e\<^sub>c)
       } \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e\<^sub>c;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e\<^sub>c;
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = SPAWN e\<^sub>c in e
+    (\<V>, \<F>) \<TTurnstile> LET x = SPAWN e\<^sub>c in e
   " |
   Let_Sync: "
     \<lbrakk>
       {(LET x = SYNC x\<^sub>e in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = SYNC x\<^sub>e in e
+    (\<V>, \<F>) \<TTurnstile> LET x = SYNC x\<^sub>e in e
   " |
   Let_Fst: "
     \<lbrakk>
       {(LET x = FST x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = FST x\<^sub>p in e
+    (\<V>, \<F>) \<TTurnstile> LET x = FST x\<^sub>p in e
   " |
   Let_Snd: "
     \<lbrakk>
       {(LET x = FST x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = SND x\<^sub>p in e
+    (\<V>, \<F>) \<TTurnstile> LET x = SND x\<^sub>p in e
   " |
   Let_Case: "
     \<lbrakk>
@@ -557,11 +557,11 @@ inductive flow :: "(abstract_value_env \<times> abstract_value_env \<times> flow
         (RESULT \<lfloor>e\<^sub>l\<rfloor>, \<downharpoonleft>x, e),
         (RESULT \<lfloor>e\<^sub>r\<rfloor>, \<downharpoonleft>x, e)
       } \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e\<^sub>l;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e\<^sub>r;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e\<^sub>l;
+      (\<V>, \<F>) \<TTurnstile> e\<^sub>r;
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e
+    (\<V>, \<F>) \<TTurnstile>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e
   "|
   Let_App: "
     \<lbrakk>
@@ -571,25 +571,12 @@ inductive flow :: "(abstract_value_env \<times> abstract_value_env \<times> flow
         (LET x = APP f x\<^sub>a in e, \<upharpoonleft>x, e\<^sub>b),
         (RESULT \<lfloor>e\<^sub>b\<rfloor>, \<downharpoonleft>x, e)
       } \<subseteq> \<F>;
-      (\<V>, \<C>, \<F>) \<TTurnstile> e
+      (\<V>, \<F>) \<TTurnstile> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>) \<TTurnstile> LET x = APP f x\<^sub>a in e
+    (\<V>, \<F>) \<TTurnstile> LET x = APP f x\<^sub>a in e
   "
   
-(*
 
-identify edges that channels can flow along (messages, sequences, calls, spawns).
-
-identify variables that after which channels are live
-identify variables that before which channels are live
-
-liveness trimming:
-
-if channels is not live after self application, 
-then if recursive call continuation does not contain any receives or creation of same channel
-then replace recursive call continuation with a Result
-
-*)
 
 
 end

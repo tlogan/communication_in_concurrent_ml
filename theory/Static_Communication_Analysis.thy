@@ -2,6 +2,155 @@ theory Static_Communication_Analysis
   imports Main Syntax Runtime_Semantics Static_Semantics Runtime_Communication_Analysis
 begin
 
+
+
+
+type_synonym exp_map = "exp \<Rightarrow> var set"
+inductive channel_live :: "(abstract_value_env \<times> abstract_value_env \<times> flow_set \<times> exp_map \<times> exp_map) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [55,0,55]55) where
+  "
+    \<lbrakk>
+      ^Chan x\<^sub>c \<in> \<V> x \<longrightarrow> {x} \<subseteq> \<L>n (RESULT x)
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<C>, \<F>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> RESULT x
+  "
+(*
+
+  Let_Unit: "
+    \<lbrakk>
+      {(LET x = \<lparr>\<rparr> in e, `x, e)} \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = \<lparr>\<rparr> in e
+  " |
+  Let_Chan: "
+    \<lbrakk>
+      {(LET x = CHAN \<lparr>\<rparr> in e, `x, e)} \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = CHAN \<lparr>\<rparr> in e
+  " |
+  Let_Send_Evt: "
+    \<lbrakk>
+      {(LET x = SEND EVT x\<^sub>c x\<^sub>m  in e, `x, e)} \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = SEND EVT x\<^sub>c x\<^sub>m in e
+  " |
+  Let_Recv_Evt: "
+    \<lbrakk>
+      {(LET x = RECV EVT x\<^sub>c  in e, `x, e)} \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = RECV EVT x\<^sub>c in e
+  " |
+  Let_Pair: "
+    \<lbrakk>
+      {(LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e, `x, e)} \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e
+  " |
+  Let_Left: "
+    \<lbrakk>
+      {(LET x = LEFT x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = LEFT x\<^sub>p in e
+  " |
+  Let_Right: "
+    \<lbrakk>
+      {(LET x = RIGHT x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = RIGHT x\<^sub>p in e
+  " |
+  Let_Abs: "
+    \<lbrakk>
+      {(LET x = FN f x\<^sub>p . e\<^sub>b  in e, `x, e)} \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e\<^sub>b;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = FN f x\<^sub>p . e\<^sub>b  in e
+  " |
+  Let_Spawn: "
+    \<lbrakk>
+      {
+        (LET x = SPAWN e\<^sub>c  in e, `x, e),
+        (LET x = SPAWN e\<^sub>c  in e, .x, e\<^sub>c)
+      } \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e\<^sub>c;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = SPAWN e\<^sub>c in e
+  " |
+  Let_Sync: "
+    \<lbrakk>
+      {(LET x = SYNC x\<^sub>e in e, `x, e)} \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = SYNC x\<^sub>e in e
+  " |
+  Let_Fst: "
+    \<lbrakk>
+      {(LET x = FST x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = FST x\<^sub>p in e
+  " |
+  Let_Snd: "
+    \<lbrakk>
+      {(LET x = FST x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = SND x\<^sub>p in e
+  " |
+  Let_Case: "
+    \<lbrakk>
+      {
+        (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e, \<upharpoonleft>x, e\<^sub>l),
+        (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e, \<upharpoonleft>x, e\<^sub>r),
+        (RESULT \<lfloor>e\<^sub>l\<rfloor>, \<downharpoonleft>x, e),
+        (RESULT \<lfloor>e\<^sub>r\<rfloor>, \<downharpoonleft>x, e)
+      } \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e\<^sub>l;
+      (\<V>, \<F>) \<TTurnstile> e\<^sub>r;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e
+  "|
+  Let_App: "
+    \<lbrakk>
+
+      \<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<longrightarrow>
+      {
+        (LET x = APP f x\<^sub>a in e, \<upharpoonleft>x, e\<^sub>b),
+        (RESULT \<lfloor>e\<^sub>b\<rfloor>, \<downharpoonleft>x, e)
+      } \<subseteq> \<F>;
+      (\<V>, \<F>) \<TTurnstile> e
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<F>) \<TTurnstile> LET x = APP f x\<^sub>a in e
+  "
+  
+*)
+
+(*
+
+identify edges that channels can flow along (messages, sequences, calls, spawns).
+
+identify variables that after which channels are live
+identify variables that before which channels are live
+
+liveness trimming:
+
+if channels is not live after self application, 
+then if recursive call continuation does not contain any receives or creation of same channel
+then replace recursive call continuation with a Result
+
+*)
+
+
+
+
 definition is_static_send_path :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
   "is_static_send_path \<A> x\<^sub>c \<pi>' \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> (\<exists> \<pi>\<^sub>y x\<^sub>y x\<^sub>e x\<^sub>s\<^sub>c x\<^sub>m e\<^sub>n . 
     \<pi>' = \<pi>\<^sub>y;;`x\<^sub>y \<and>
