@@ -22,34 +22,37 @@ inductive built_on_channel :: "abstract_value_env \<Rightarrow> var \<Rightarrow
 (* to be continued *)
 
 type_synonym exp_map = "exp \<Rightarrow> var set"
-inductive channel_live :: "(abstract_value_env \<times> abstract_value_env \<times> exp_map \<times> exp_map) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [55,0,55]55) where
+inductive channel_live :: "(abstract_value_env \<times> exp_map \<times> exp_map) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [55,0,55]55) where
   Result: "
     \<lbrakk>
       ^Chan x\<^sub>c \<in> \<V> x \<longrightarrow> {y} \<subseteq> \<L>n (RESULT y)
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> RESULT y
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> RESULT y
   " |
   Let_Unit: "
     \<lbrakk>
       \<L>n e \<subseteq> \<L>x (LET x = \<lparr>\<rparr> in e);
-      \<L>x (LET x = \<lparr>\<rparr> in e) \<subseteq> \<L>n (LET x = \<lparr>\<rparr> in e)
+      \<L>x (LET x = \<lparr>\<rparr> in e) \<subseteq> \<L>n (LET x = \<lparr>\<rparr> in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = \<lparr>\<rparr> in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = \<lparr>\<rparr> in e
   " |
   Let_Chan_Pass: "
     \<lbrakk>
       x\<^sub>c \<noteq> x;
       \<L>n e \<subseteq> \<L>x (LET x = CHAN \<lparr>\<rparr> in e);
-      \<L>x (LET x = CHAN \<lparr>\<rparr> in e) \<subseteq> \<L>n (LET x = CHAN \<lparr>\<rparr> in e)
+      \<L>x (LET x = CHAN \<lparr>\<rparr> in e) \<subseteq> \<L>n (LET x = CHAN \<lparr>\<rparr> in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = CHAN \<lparr>\<rparr> in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = CHAN \<lparr>\<rparr> in e
   " |
   Let_Chan_Kill: "
     \<lbrakk>
       \<L>n e \<subseteq> \<L>x (LET x = CHAN \<lparr>\<rparr> in e);
-      \<L>x (LET x = CHAN \<lparr>\<rparr> in e) - {x\<^sub>c} \<subseteq> \<L>n (LET x = CHAN \<lparr>\<rparr> in e)
+      \<L>x (LET x = CHAN \<lparr>\<rparr> in e) - {x\<^sub>c} \<subseteq> \<L>n (LET x = CHAN \<lparr>\<rparr> in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x\<^sub>c = CHAN \<lparr>\<rparr> in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x\<^sub>c = CHAN \<lparr>\<rparr> in e
   " |
   Let_Send_Evt: "
     \<lbrakk>
@@ -59,9 +62,10 @@ inductive channel_live :: "(abstract_value_env \<times> abstract_value_env \<tim
           {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union> 
         {x\<^sub>s\<^sub>c | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>s\<^sub>c} \<union> 
         {x\<^sub>m | x\<^sub>c .  built_on_channel \<V> x\<^sub>c x\<^sub>m} 
-      ) \<subseteq> \<L>n (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e)
+      ) \<subseteq> \<L>n (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e)
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e
   " |
   Let_Recv_Evt: "
     \<lbrakk>
@@ -69,104 +73,147 @@ inductive channel_live :: "(abstract_value_env \<times> abstract_value_env \<tim
       (
         (\<L>x (LET x = RECV EVT x\<^sub>r\<^sub>c in e) - 
           {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union> 
-        {x\<^sub>r\<^sub>c | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>s\<^sub>c}
-      ) \<subseteq> \<L>n (LET x = RECV EVT x\<^sub>r\<^sub>c in e)
+        {x\<^sub>r\<^sub>c | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>r\<^sub>c}
+      ) \<subseteq> \<L>n (LET x = RECV EVT x\<^sub>r\<^sub>c in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> (LET x = RECV EVT x\<^sub>r\<^sub>c in e)
-  "
-(*
-
-  to be continued
-
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = RECV EVT x\<^sub>r\<^sub>c in e
+  " |
   Let_Pair: "
     \<lbrakk>
-      {(LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e \<subseteq> \<L>x (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e);
+      (
+        (\<L>x (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union> 
+        {x\<^sub>1 | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>1} \<union> 
+        {x\<^sub>2 | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>2}
+      ) \<subseteq> \<L>n (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e
   " |
   Let_Left: "
     \<lbrakk>
-      {(LET x = LEFT x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e \<subseteq> \<L>x (LET x = LEFT x\<^sub>a in e);
+      (
+        (\<L>x (LET x = LEFT x\<^sub>a in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union> 
+        {x\<^sub>a | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>a}
+      ) \<subseteq> \<L>n (LET x = LEFT x\<^sub>a in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = LEFT x\<^sub>p in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = LEFT x\<^sub>a in e
   " |
   Let_Right: "
     \<lbrakk>
-      {(LET x = RIGHT x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e \<subseteq> \<L>x (LET x = RIGHT x\<^sub>a in e);
+      (
+        (\<L>x (LET x = RIGHT x\<^sub>a in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union> 
+        {x\<^sub>a | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>a}
+      ) \<subseteq> \<L>n (LET x = RIGHT x\<^sub>a in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = RIGHT x\<^sub>p in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = RIGHT x\<^sub>a in e
   " |
   Let_Abs: "
     \<lbrakk>
-      {(LET x = FN f x\<^sub>p . e\<^sub>b  in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e\<^sub>b;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e \<subseteq> \<L>x (LET x = FN f x\<^sub>p . e\<^sub>b  in e);
+      (
+        (\<L>x (LET x = FN f x\<^sub>p . e\<^sub>b  in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x})
+      ) \<subseteq> \<L>n (LET x = FN f x\<^sub>p . e\<^sub>b  in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e\<^sub>b;
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = FN f x\<^sub>p . e\<^sub>b  in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = FN f x\<^sub>p . e\<^sub>b  in e
   " |
   Let_Spawn: "
     \<lbrakk>
-      {
-        (LET x = SPAWN e\<^sub>c  in e, `x, e),
-        (LET x = SPAWN e\<^sub>c  in e, .x, e\<^sub>c)
-      } \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e\<^sub>c;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e \<subseteq> \<L>x (LET x = SPAWN e\<^sub>c in e);
+      (
+        (\<L>x (LET x = SPAWN e\<^sub>c in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x})
+      ) \<subseteq> \<L>n (LET x = SPAWN e\<^sub>c in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e\<^sub>c;
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = SPAWN e\<^sub>c in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = SPAWN e\<^sub>c in e
   " |
   Let_Sync: "
     \<lbrakk>
-      {(LET x = SYNC x\<^sub>e in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e \<subseteq> \<L>x (LET x = SYNC x\<^sub>e in e);
+      (
+        (\<L>x (LET x = SYNC x\<^sub>e in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union>
+        {x\<^sub>e | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>e}
+      ) \<subseteq> \<L>n (LET x = SYNC x\<^sub>e in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = SYNC x\<^sub>e in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = SYNC x\<^sub>e in e
   " |
   Let_Fst: "
     \<lbrakk>
-      {(LET x = FST x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e \<subseteq> \<L>x (LET x = FST x\<^sub>a in e);
+      (
+        (\<L>x (LET x = FST x\<^sub>a in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union> 
+        {x\<^sub>a | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>a}
+      ) \<subseteq> \<L>n (LET x = FST x\<^sub>a in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = FST x\<^sub>p in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = FST x\<^sub>a in e
   " |
   Let_Snd: "
     \<lbrakk>
-      {(LET x = FST x\<^sub>p in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e \<subseteq> \<L>x (LET x = SND x\<^sub>a in e);
+      (
+        (\<L>x (LET x = SND x\<^sub>a in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union> 
+        {x\<^sub>a | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>a}
+      ) \<subseteq> \<L>n (LET x = SND x\<^sub>a in e);
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = SND x\<^sub>p in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = SND x\<^sub>a in e
   " |
   Let_Case: "
     \<lbrakk>
-      {
-        (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e, \<upharpoonleft>x, e\<^sub>l),
-        (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e, \<upharpoonleft>x, e\<^sub>r),
-        (RESULT \<lfloor>e\<^sub>l\<rfloor>, \<downharpoonleft>x, e),
-        (RESULT \<lfloor>e\<^sub>r\<rfloor>, \<downharpoonleft>x, e)
-      } \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e\<^sub>l;
-      (\<V>, \<F>) \<TTurnstile> e\<^sub>r;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e\<^sub>l \<union> \<L>n e\<^sub>r \<subseteq> \<L>x (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e);
+      (
+        (\<L>x (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union> 
+        {x\<^sub>s | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>s}
+      ) \<subseteq> \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e);
+
+      \<L>n e \<subseteq> \<L>x (RESULT \<lfloor>e\<^sub>l\<rfloor>);
+      \<L>x (RESULT \<lfloor>e\<^sub>l\<rfloor>) \<union> {\<lfloor>e\<^sub>l\<rfloor> | x\<^sub>c . built_on_channel \<V> x\<^sub>c (\<lfloor>e\<^sub>l\<rfloor>)} \<subseteq> \<L>n (RESULT \<lfloor>e\<^sub>l\<rfloor>);
+
+      \<L>n e \<subseteq> \<L>x (RESULT \<lfloor>e\<^sub>r\<rfloor>);
+      \<L>x (RESULT \<lfloor>e\<^sub>r\<rfloor>) \<union> {\<lfloor>e\<^sub>r\<rfloor> | x\<^sub>c . built_on_channel \<V> x\<^sub>c (\<lfloor>e\<^sub>r\<rfloor>)} \<subseteq> \<L>n (RESULT \<lfloor>e\<^sub>r\<rfloor>);
+
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e\<^sub>l;
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e\<^sub>r;
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e
-  "|
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e
+  " |
   Let_App: "
     \<lbrakk>
 
-      \<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<longrightarrow>
-      {
-        (LET x = APP f x\<^sub>a in e, \<upharpoonleft>x, e\<^sub>b),
-        (RESULT \<lfloor>e\<^sub>b\<rfloor>, \<downharpoonleft>x, e)
-      } \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<longrightarrow> \<L>n e\<^sub>b \<subseteq> \<L>x (LET x = APP f x\<^sub>a in e);
+      (
+        (\<L>x (LET x = APP f x\<^sub>a in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union>
+        {x\<^sub>a | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>a}
+      ) \<subseteq> \<L>n (LET x = APP f x\<^sub>a in e);
+
+      \<L>n e \<subseteq> \<L>x (RESULT \<lfloor>e\<^sub>b\<rfloor>);
+      \<L>x (RESULT \<lfloor>e\<^sub>b\<rfloor>) \<union> {\<lfloor>e\<^sub>b\<rfloor> | x\<^sub>c . built_on_channel \<V> x\<^sub>c (\<lfloor>e\<^sub>b\<rfloor>)} \<subseteq> \<L>n (RESULT \<lfloor>e\<^sub>b\<rfloor>);
+
+      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = APP f x\<^sub>a in e
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = APP f x\<^sub>a in e
   "
-  
-*)
 
 (*
 
