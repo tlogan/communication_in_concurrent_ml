@@ -455,7 +455,7 @@ by (simp add: traceable_implies_subexp')
 
 
 type_synonym flow_set = "(exp \<times> control_label \<times> exp) set"
-
+(* this a nice order for the rules; update other definitions to use same order*)
 inductive flow :: "(abstract_value_env \<times> flow_set) \<Rightarrow> exp \<Rightarrow> bool" (infix "\<TTurnstile>" 55) where
   Result: "
     (\<V>, \<F>) \<TTurnstile> RESULT x

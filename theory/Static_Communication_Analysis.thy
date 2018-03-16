@@ -2,47 +2,82 @@ theory Static_Communication_Analysis
   imports Main Syntax Runtime_Semantics Static_Semantics Runtime_Communication_Analysis
 begin
 
+value "{x, y} - {x}"
 
 
+inductive built_on_channel :: "abstract_value_env \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"  where
+  Chan: "
+    \<lbrakk>
+      ^Chan x\<^sub>c \<in> \<V> x 
+    \<rbrakk> \<Longrightarrow> 
+    built_on_channel \<V> x\<^sub>c x
+  " |
+  Send_Evt: "
+    \<lbrakk>
+      ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> \<V> x;
+      built_on_channel \<V> x\<^sub>c x\<^sub>s\<^sub>c \<or> built_on_channel \<V> x\<^sub>c x\<^sub>m 
+    \<rbrakk> \<Longrightarrow> 
+    built_on_channel \<V> x\<^sub>c x
+  "
+(* to be continued *)
 
 type_synonym exp_map = "exp \<Rightarrow> var set"
-inductive channel_live :: "(abstract_value_env \<times> abstract_value_env \<times> flow_set \<times> exp_map \<times> exp_map) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [55,0,55]55) where
-  "
+inductive channel_live :: "(abstract_value_env \<times> abstract_value_env \<times> exp_map \<times> exp_map) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [55,0,55]55) where
+  Result: "
     \<lbrakk>
-      ^Chan x\<^sub>c \<in> \<V> x \<longrightarrow> {x} \<subseteq> \<L>n (RESULT x)
+      ^Chan x\<^sub>c \<in> \<V> x \<longrightarrow> {y} \<subseteq> \<L>n (RESULT y)
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>, \<F>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> RESULT x
-  "
-(*
-
+    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> RESULT y
+  " |
   Let_Unit: "
     \<lbrakk>
-      {(LET x = \<lparr>\<rparr> in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e \<subseteq> \<L>x (LET x = \<lparr>\<rparr> in e);
+      \<L>x (LET x = \<lparr>\<rparr> in e) \<subseteq> \<L>n (LET x = \<lparr>\<rparr> in e)
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = \<lparr>\<rparr> in e
+    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = \<lparr>\<rparr> in e
   " |
-  Let_Chan: "
+  Let_Chan_Pass: "
     \<lbrakk>
-      {(LET x = CHAN \<lparr>\<rparr> in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e
+      x\<^sub>c \<noteq> x;
+      \<L>n e \<subseteq> \<L>x (LET x = CHAN \<lparr>\<rparr> in e);
+      \<L>x (LET x = CHAN \<lparr>\<rparr> in e) \<subseteq> \<L>n (LET x = CHAN \<lparr>\<rparr> in e)
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = CHAN \<lparr>\<rparr> in e
+    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = CHAN \<lparr>\<rparr> in e
+  " |
+  Let_Chan_Kill: "
+    \<lbrakk>
+      \<L>n e \<subseteq> \<L>x (LET x = CHAN \<lparr>\<rparr> in e);
+      \<L>x (LET x = CHAN \<lparr>\<rparr> in e) - {x\<^sub>c} \<subseteq> \<L>n (LET x = CHAN \<lparr>\<rparr> in e)
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x\<^sub>c = CHAN \<lparr>\<rparr> in e
   " |
   Let_Send_Evt: "
     \<lbrakk>
-      {(LET x = SEND EVT x\<^sub>c x\<^sub>m  in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e \<subseteq> \<L>x (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e);
+      (
+        (\<L>x (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union> 
+        {x\<^sub>s\<^sub>c | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>s\<^sub>c} \<union> 
+        {x\<^sub>m | x\<^sub>c .  built_on_channel \<V> x\<^sub>c x\<^sub>m} 
+      ) \<subseteq> \<L>n (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e)
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = SEND EVT x\<^sub>c x\<^sub>m in e
+    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
-      {(LET x = RECV EVT x\<^sub>c  in e, `x, e)} \<subseteq> \<F>;
-      (\<V>, \<F>) \<TTurnstile> e
+      \<L>n e \<subseteq> \<L>x (LET x = RECV EVT x\<^sub>r\<^sub>c in e);
+      (
+        (\<L>x (LET x = RECV EVT x\<^sub>r\<^sub>c in e) - 
+          {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union> 
+        {x\<^sub>r\<^sub>c | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>s\<^sub>c}
+      ) \<subseteq> \<L>n (LET x = RECV EVT x\<^sub>r\<^sub>c in e)
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<F>) \<TTurnstile> LET x = RECV EVT x\<^sub>c in e
-  " |
+    (\<V>, \<C>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> (LET x = RECV EVT x\<^sub>r\<^sub>c in e)
+  "
+(*
+
+  to be continued
+
   Let_Pair: "
     \<lbrakk>
       {(LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e, `x, e)} \<subseteq> \<F>;
