@@ -7,7 +7,6 @@ theory Programs
 begin
 
 
-
 lemma traceable_result_implies_traceable_case: "
   \<lbrakk>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y); \<downharpoonright>\<pi>'\<upharpoonleft>;
@@ -25,57 +24,6 @@ lemma traceable_result_implies_traceable_app: "
   b = APP f x\<^sub>a \<and> y \<in> {\<lfloor>e\<^sub>b\<rfloor> |  f' x\<^sub>p . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f} (*not sure which function is bound to f; do I need unique names for f in labels?*)
 "
 sorry
-
-(*
-lemma traceable_functional: "
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>1) \<Longrightarrow>
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e\<^sub>2) \<Longrightarrow>
-  e\<^sub>1 = e\<^sub>2
-"
-(* 
-  this could be true if CASE steps created distinct control_labels for left and right 
-  and functions had unique names and control labels with the names
-*)
-sorry
-*)
-
-
-(*
-inductive ap_linear :: "abstract_path \<Rightarrow> bool" where
- Empty: "
-   ap_linear Empty
- " |
- Atom_Seq: "
-   ap_linear (&(`x))
- " |
- Atom_Up: "
-   ap_linear (&(\<upharpoonleft>x))
- " |
- Atom_Down: "
-   ap_linear (&(\<downharpoonleft>x))
- " |
- Union: "
-   \<lbrakk>
-     ap_linear p\<^sub>a;
-     ap_linear p\<^sub>b
-   \<rbrakk> \<Longrightarrow> 
-   ap_linear (p\<^sub>a :|: p\<^sub>b)
- " |
- Star: "
-   \<lbrakk>
-     ap_linear p
-   \<rbrakk> \<Longrightarrow> 
-   ap_linear ({p}* )
- " |
- Concat: "
-   \<lbrakk>
-     ap_linear p\<^sub>a;
-     ap_linear p\<^sub>b
-   \<rbrakk> \<Longrightarrow> 
-   ap_linear (p\<^sub>a :@: p\<^sub>b)
- "
-*)
-
 
 
 (* abstract representation of paths *)
@@ -171,9 +119,28 @@ inductive ap_ordered :: "abstract_path \<Rightarrow> bool" where
    ap_ordered (p\<^sub>a :@: (p\<^sub>b :|: Empty))
  "
 
+inductive ap_inclusive :: "abstract_path \<Rightarrow> bool" where
+ Ordered: "
+   \<lbrakk>
+     ap_ordered ap 
+   \<rbrakk> \<Longrightarrow> 
+   ap_inclusive ap
+ " | 
+ Spawn_Left: "
+   \<lbrakk>
+     ap_single ap 
+   \<rbrakk> \<Longrightarrow> 
+   ap_inclusive (ap :@: (&.x :@: ap\<^sub>1) :|: (&`x :@: ap\<^sub>2))
+ " | 
+ Spawn_Right: "
+   \<lbrakk>
+     ap_single ap 
+   \<rbrakk> \<Longrightarrow> 
+   ap_inclusive (ap :@: (&`x :@: ap\<^sub>1) :|: (&.x :@: ap\<^sub>2))
+ "
 
 definition ap_noncompetitive :: "abstract_path \<Rightarrow> bool" where 
-  "ap_noncompetitive ap = ap_ordered ap"
+  "ap_noncompetitive ap = (ap_ordered ap \<or> \<not> ap_inclusive ap)"
 
 lemma atom_matches_implies: "
  &l |\<rhd> \<pi> \<Longrightarrow> [l] = \<pi>
@@ -205,17 +172,8 @@ lemma ap_noncompetitive_implies_noncompetitive': "
  apply (simp add: ap_noncompetitive_def noncompetitive_def)
  apply (erule ap_matches.induct; auto)
   apply (simp add: atom_matches_implies)
+  apply (simp add: atom_matches_implies)
   using ap_ordered.simps ap_single.simps apply blast
-  using ap_ordered.simps ap_single.simps apply blast
-
-  apply (frule ap_ordered.cases; auto)
-  using ap_single.simps apply blast
-  apply (drule ap_ordered.Single)
-  apply (rotate_tac 4)
-  apply (erule ap_matches.cases; auto)
-  apply (drule_tac x = \<pi>'' in spec)
-  apply (drule_tac x = \<pi>''' in spec)
-  apply auto
 
 sorry
 
@@ -457,7 +415,13 @@ method elim_traceable = (
   (drule traceable_implies_subexp, rule infinite_prog_\<V>_restricted),
   (simp add: infinite_prog_def; (erule subexp.cases; auto)+)
 )
-
+(*
+  \<lbrakk>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> ;; l, e');
+    (\<V>, \<F>) \<TTurnstile> e\<^sub>0
+  \<rbrakk> \<Longrightarrow>
+  \<exists> e . {(e, l, e')} \<subseteq> \<F>
+*)
 lemma infinite_prog_has_earlier_sync: "
   \<lbrakk>
     infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n);

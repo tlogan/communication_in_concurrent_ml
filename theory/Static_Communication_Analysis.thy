@@ -2,9 +2,6 @@ theory Static_Communication_Analysis
   imports Main Syntax Runtime_Semantics Static_Semantics Runtime_Communication_Analysis
 begin
 
-value "{x, y} - {x}"
-
-
 inductive built_on_channel :: "abstract_value_env \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"  where
   Chan: "
     \<lbrakk>
@@ -18,8 +15,35 @@ inductive built_on_channel :: "abstract_value_env \<Rightarrow> var \<Rightarrow
       built_on_channel \<V> x\<^sub>c x\<^sub>s\<^sub>c \<or> built_on_channel \<V> x\<^sub>c x\<^sub>m 
     \<rbrakk> \<Longrightarrow> 
     built_on_channel \<V> x\<^sub>c x
+  " |
+  Recv_Evt: "
+    \<lbrakk>
+      ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x;
+      built_on_channel \<V> x\<^sub>c x\<^sub>r\<^sub>c
+    \<rbrakk> \<Longrightarrow> 
+    built_on_channel \<V> x\<^sub>c x
+  " |
+  Pair: "
+    \<lbrakk>
+      ^(Pair x\<^sub>1 x\<^sub>2) \<in> \<V> x;
+      built_on_channel \<V> x\<^sub>c x\<^sub>1 \<or> built_on_channel \<V> x\<^sub>c x\<^sub>2
+    \<rbrakk> \<Longrightarrow> 
+    built_on_channel \<V> x\<^sub>c x
+  " |
+  Left: "
+    \<lbrakk>
+      ^(Left x\<^sub>a) \<in> \<V> x;
+      built_on_channel \<V> x\<^sub>c x\<^sub>a
+    \<rbrakk> \<Longrightarrow> 
+    built_on_channel \<V> x\<^sub>c x
+  " |
+  Right: "
+    \<lbrakk>
+      ^(Right x\<^sub>a) \<in> \<V> x;
+      built_on_channel \<V> x\<^sub>c x\<^sub>a
+    \<rbrakk> \<Longrightarrow> 
+    built_on_channel \<V> x\<^sub>c x
   "
-(* to be continued *)
 
 type_synonym exp_map = "exp \<Rightarrow> var set"
 inductive channel_live :: "(abstract_value_env \<times> exp_map \<times> exp_map) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [55,0,55]55) where
