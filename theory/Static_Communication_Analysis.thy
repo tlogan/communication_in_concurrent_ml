@@ -239,45 +239,73 @@ inductive channel_live :: "(abstract_value_env \<times> exp_map \<times> exp_map
     (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = APP f x\<^sub>a in e
   "
 
+
+inductive life_in_exp :: "exp_map \<Rightarrow> exp => bool" where
+  Base: "
+    \<lbrakk>
+      \<L>n e \<noteq> Set.empty
+    \<rbrakk> \<Longrightarrow> 
+    life_in_exp \<L>n e
+  " |
+  Abs: "
+    \<lbrakk>
+      life_in_exp \<L>n e\<^sub>b \<or>
+      life_in_exp \<L>n e\<^sub>n
+    \<rbrakk> \<Longrightarrow> 
+    life_in_exp \<L>n (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)
+  " |
+  Case: "
+    \<lbrakk>
+      life_in_exp \<L>n e\<^sub>l \<or>
+      life_in_exp \<L>n e\<^sub>r \<or>
+      life_in_exp \<L>n e\<^sub>n
+    \<rbrakk> \<Longrightarrow> 
+    life_in_exp \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
+  " |
+  Spawn: "
+    \<lbrakk>
+      life_in_exp \<L>n e\<^sub>c \<or>
+      life_in_exp \<L>n e\<^sub>n
+    \<rbrakk> \<Longrightarrow> 
+    life_in_exp \<L>n (LET x = SPAWN e\<^sub>c in e\<^sub>n)
+  " |
+  Let: "
+    \<lbrakk>
+      life_in_exp \<L>n e\<^sub>n
+    \<rbrakk> \<Longrightarrow> 
+    life_in_exp \<L>n (LET x = b in e\<^sub>n)
+  "
+  
 fun trim :: "exp_map \<Rightarrow> exp \<Rightarrow> exp" where
   "trim \<L>n (RESULT y) = (RESULT y)" |
 
-  "trim \<L>n (LET x = FN f x\<^sub>p . e\<^sub>b  in RESULT y) = 
-    (if \<L>n (LET x = FN f x\<^sub>p . e\<^sub>b in RESULT y) = Set.empty then
-      (RESULT y)
-    else
-      (LET x = FN f x\<^sub>p . (trim \<L>n e\<^sub>b) in RESULT y))
-   " |
+  "trim \<L>n (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n) =
+     (if (life_in_exp \<L>n (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)) then
+       (LET x = FN f x\<^sub>p . trim \<L>n e\<^sub>b in trim \<L>n e\<^sub>n)
+     else
+       RESULT (Var ''trimmed''))
+  " |
 
-  "trim \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in RESULT y) = 
-    (if \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in RESULT y) = Set.empty then
-      (RESULT y)
-    else
-      (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> (trim \<L>n e\<^sub>l) RIGHT x\<^sub>r |> (trim \<L>n e\<^sub>r) in RESULT y))
-   " |
+  "trim \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n) =
+     (if (life_in_exp \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)) then
+       (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> trim \<L>n e\<^sub>l RIGHT x\<^sub>r |> trim \<L>n e\<^sub>r in trim \<L>n e\<^sub>n)
+     else
+       RESULT (Var ''trimmed''))
+  " |
 
-  "trim \<L>n (LET x = SPAWN e\<^sub>c in RESULT y) = 
-    (if \<L>n (LET x = SPAWN e\<^sub>c in RESULT y) = Set.empty then
-      (RESULT y)
-    else
-      (LET x = SPAWN (trim \<L>n e\<^sub>c) in RESULT y))
-   " |
+  "trim \<L>n (LET x = SPAWN e\<^sub>c in e\<^sub>n) =
+     (if (life_in_exp \<L>n (LET x = SPAWN e\<^sub>c in e\<^sub>n)) then
+       (LET x = SPAWN trim \<L>n e\<^sub>c in trim \<L>n e\<^sub>n)
+     else
+       RESULT (Var ''trimmed''))
+  " |
 
-  "trim \<L>n (LET x = b in RESULT y) = 
-    (if \<L>n (LET x = b in RESULT y) = Set.empty then
-      (RESULT y)
-    else
-      (LET x = b in RESULT y))
-   " |
-
-  "trim \<L>n (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n) = (LET x = FN f x\<^sub>p . (trim \<L>n e\<^sub>b) in (trim \<L>n e\<^sub>n))" |
-
-  "trim \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r  in e\<^sub>n) = 
-     (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> (trim \<L>n e\<^sub>l) RIGHT x\<^sub>r |> (trim \<L>n e\<^sub>r)  in (trim \<L>n e\<^sub>n))" |
-
-  "trim \<L>n (LET x = SPAWN e\<^sub>c in e\<^sub>n) = (LET x = SPAWN (trim \<L>n e\<^sub>c) in (trim \<L>n e\<^sub>n))" |
-
-  "trim \<L>n (LET x = b in e\<^sub>n) = (LET x = b in (trim \<L>n e\<^sub>n))"
+  "trim \<L>n (LET x = b in e\<^sub>n) =
+     (if (life_in_exp \<L>n (LET x = b in e\<^sub>n)) then
+       (LET x = b in trim \<L>n e\<^sub>n)
+     else
+       RESULT (Var ''trimmed''))
+  " 
 
 (*
 
