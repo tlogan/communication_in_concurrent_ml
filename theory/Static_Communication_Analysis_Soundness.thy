@@ -344,17 +344,37 @@ lemma runtime_recv_paths_are_inclusive: "
 apply (unfold is_recv_path_def; auto)
 using runtime_paths_are_inclusive by auto
 
-theorem topology_all_singular_recv_sound: "
+lemma topology_trim_equal_sound: "
+  \<lbrakk>
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e;
+    \<V> (trim \<L>n e) \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2;
+
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1;
+    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2
+  \<rbrakk> \<Longrightarrow>
+  \<pi>\<^sub>1 = \<pi>\<^sub>2
+"
+sorry
+
+theorem topology_one_shot_strong_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e;
 
-    all (is_static_recv_path (\<V>, \<C>, e) x\<^sub>c) singular
+    static_one_shot_strong (\<V>, \<C>, e) (trim \<L>n e) x\<^sub>c
   \<rbrakk> \<Longrightarrow>
-  all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) op=
+  one_shot \<E>' (Ch \<pi> x\<^sub>c)
 "
- apply (simp add: all_def singular_def; auto)
- using isnt_recv_path_sound runtime_recv_paths_are_inclusive by blast
+
+ apply (unfold static_one_shot_strong_def)
+ apply (unfold one_shot_def, auto)
+ apply (unfold all_def; auto)
+ apply (unfold singular_strong_def)
+by (metis isnt_send_path_sound runtime_send_paths_are_inclusive topology_trim_equal_sound)
+
 
 theorem topology_one_shot_sound: "
   \<lbrakk>

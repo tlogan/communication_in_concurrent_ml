@@ -388,13 +388,36 @@ lemma inclusive_preserved_under_unordered_extension: "
   apply (simp add: Spawn_Right)
 done
 
+
+inductive trim_equal :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" ("_ _ \<tturnstile> _ \<cong> _" [56, 0, 56]55) where
+  Refl: "
+    \<V> e\<^sub>t \<tturnstile> \<pi> \<cong> \<pi>
+  " |
+  Induct_Left: "
+    \<lbrakk>
+      \<not> (\<V> \<turnstile> e\<^sub>t \<down> (\<pi>, e'));
+      \<V> e\<^sub>t \<tturnstile> \<pi> \<cong> \<pi>\<^sub>2
+    \<rbrakk> \<Longrightarrow>
+    \<V> e\<^sub>t \<tturnstile> \<pi> ;; l \<cong> \<pi>\<^sub>2
+  " |
+  Induct_Right: "
+    \<lbrakk>
+      \<not> (\<V> \<turnstile> e\<^sub>t \<down> (\<pi>, e'));
+      \<V> e\<^sub>t \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi>
+    \<rbrakk> \<Longrightarrow>
+    \<V> e\<^sub>t \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi> ;; l
+  "
+
+definition singular_strong :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" where
+ "singular_strong \<V> e\<^sub>t \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> (\<V> e\<^sub>t \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2) \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
+
+definition static_one_shot_strong :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+  "static_one_shot_strong \<A> e\<^sub>t x\<^sub>c \<equiv> 
+    case \<A> of (\<V>, _, _) \<Rightarrow>
+    all (is_static_send_path \<A> x\<^sub>c) (singular_strong \<V> e\<^sub>t)"
+
 definition singular :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
  "singular \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
-(* 
-     For greater precision replace \<pi>\<^sub>1 = \<pi>\<^sub>2 with (trim e\<^sub>t \<pi>\<^sub>1) = (trim e\<^sub>t \<pi>\<^sub>2)
-     where trim returns the longest reachable prefix for e\<^sub>t and
-     e\<^sub>t is a smaller program based on the live channel analysis.
-*)
 
 definition noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
  "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
