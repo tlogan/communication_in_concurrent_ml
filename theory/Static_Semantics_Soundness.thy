@@ -914,12 +914,12 @@ theorem flow_preservation : "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
 "
  apply (erule concur_step.cases, auto)
-       apply (erule flow_seq_step_down_preservation, auto)
-     apply (erule flow_seq_step_up_preservation, auto)
-    apply (erule flow_seq_step_preservation, auto)
+   apply (erule flow_seq_step_down_preservation, auto)
+   apply (erule flow_seq_step_preservation, auto)
+   apply (erule flow_seq_step_up_preservation, auto)
+   apply (erule flow_let_chan_preservation, auto)
+   apply (erule flow_let_spawn_preservation, auto)
    apply ((erule flow_let_sync_preservation; blast?), auto)
-  apply (erule flow_let_chan_preservation, auto)
- apply (erule flow_let_spawn_preservation, auto)
 done
 
 theorem flow_preservation_star' : "
@@ -1094,45 +1094,51 @@ lemma traceable_exp_preservation: "
 \<rbrakk> \<Longrightarrow>
 \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
 "
- apply (frule concur_step.cases, auto)
-      apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
-      apply (((drule spec)+, erule impE, assumption, erule conjE))
-      apply (erule stack_traceable.cases; auto)
-         apply (erule seq_step.cases; auto; rule traceable.Result; auto)
-
-
-     apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
-     apply ((drule spec)+, erule impE, assumption, erule conjE)
-     apply (drule flow_over_pool_precision, auto)
-     apply (erule seq_step.cases, auto)
-+     apply (drule abstracted_value_exists, simp+, rule traceable.Let_Case_Left; auto)
-+     apply (drule abstracted_value_exists, simp+, rule traceable.Let_Case_Right; auto)
-     apply (drule abstracted_value_exists, simp+, rule traceable.Let_App; auto)
-    apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
-    apply ((drule spec)+, erule impE, assumption, erule conjE)
-    apply (drule flow_preservation, auto)
-    apply (drule flow_over_pool_precision, auto)
-    apply (erule seq_step.cases, auto)
-       apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Unit; auto)
-      apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Prim; auto)
-     apply (drule abstracted_value_exists; auto; rule traceable.Let_Fst; auto)
-    apply (drule abstracted_value_exists; auto; rule traceable.Let_Snd; auto)
-   apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; `x\<^sub>r", auto)
-   apply (drule flow_preservation, auto)
-   apply (meson traceable_exp_preservation_over_sync_recv_evt)
+apply (frule concur_step.cases, auto)
+  
+  apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
+  apply (((drule spec)+, erule impE, assumption, erule conjE))
+  apply (erule stack_traceable.cases; auto)
+  apply (erule seq_step.cases; auto; rule traceable.Result; auto)
+  
+  apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+  apply ((drule spec)+, erule impE, assumption, erule conjE)
+  apply (drule flow_preservation, auto)
+  apply (drule flow_over_pool_precision, auto)
+  apply (erule seq_step.cases, auto)
+  apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Unit; auto)
+  apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Prim; auto)
+  apply (drule abstracted_value_exists; auto; rule traceable.Let_Fst; auto)
+  apply (drule abstracted_value_exists; auto; rule traceable.Let_Snd; auto)
+  
+  apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
+  apply ((drule spec)+, erule impE, assumption, erule conjE)
+  apply (drule flow_over_pool_precision, auto)
+  apply (erule seq_step.cases, auto)
+  apply (drule abstracted_value_exists, simp+, rule traceable.Let_Case_Left; auto)
+  apply (drule abstracted_value_exists, simp+, rule traceable.Let_Case_Right; auto)
+  apply (drule abstracted_value_exists, simp+, rule traceable.Let_App; auto)
+  
+  apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+  apply (drule flow_preservation, auto)
+  apply (drule flow_over_pool_precision, auto)
+  apply ((drule spec)+, erule impE, assumption, erule conjE)
+  apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Chan; auto)
+  
+  apply (case_tac "\<pi>' = \<pi> ;; .x"; auto)
+  apply ((drule spec)+, erule impE, assumption, erule conjE)
+  apply (rule traceable.Let_Spawn_Child; auto)
+  apply (case_tac "\<pi>' = \<pi> ;; `x"; auto; rule traceable.Let_Spawn; auto)
+  
+  
+  apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; `x\<^sub>r", auto)
+  apply (drule flow_preservation, auto)
+  apply (meson traceable_exp_preservation_over_sync_recv_evt)
   apply (case_tac "\<pi>' = \<pi>\<^sub>s ;; `x\<^sub>s", auto)
   apply (drule flow_preservation, auto)
   apply (meson traceable_exp_preservation_over_sync_send_evt)
   apply (smt exp.inject(1) flow_preservation option.inject state.inject traceable_exp_preservation_over_sync_send_evt)
- apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
- apply (drule flow_preservation, auto)
- apply (drule flow_over_pool_precision, auto)
- apply ((drule spec)+, erule impE, assumption, erule conjE)
- apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Chan; auto)
-apply (case_tac "\<pi>' = \<pi> ;; .x"; auto)
- apply ((drule spec)+, erule impE, assumption, erule conjE)
- apply (rule traceable.Let_Spawn_Child; auto)
-apply (case_tac "\<pi>' = \<pi> ;; `x"; auto; rule traceable.Let_Spawn; auto)
+
 done
 
 
@@ -1145,28 +1151,35 @@ lemma traceable_stack_preservation: "
 \<rbrakk> \<Longrightarrow>
 \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>', \<kappa>')
 "
- apply (frule concur_step.cases, auto)
-      apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
-      apply ((drule spec)+, erule impE, assumption, erule conjE)
-      apply (erule seq_step.cases; auto)
-      apply (erule stack_traceable.cases; auto)
-  using Up_Down stack_traceable_preserved_over_balanced_extension apply blast
-     apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
-     apply ((drule spec)+, erule impE, assumption, erule conjE) 
-  apply (simp add: Nonempty)
-    apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
-    using stack_traceable_preserved_over_seq_extension apply blast
-    apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; `x\<^sub>r", auto)
-    using stack_traceable_preserved_over_seq_extension apply blast
-    apply (case_tac "\<pi>' = \<pi>\<^sub>s ;; `x\<^sub>s", auto)
-    using stack_traceable_preserved_over_seq_extension apply blast
-  using stack_traceable_preserved_over_seq_extension apply blast
-    apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
-    using stack_traceable_preserved_over_seq_extension apply blast
-    apply (case_tac "\<pi>' = \<pi> ;; .x", auto)
-     apply (rule stack_traceable.Empty_Local; auto)
-    apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
-    using stack_traceable_preserved_over_seq_extension apply blast
+apply (frule concur_step.cases, auto)
+
+apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
+apply ((drule spec)+, erule impE, assumption, erule conjE)
+apply (erule seq_step.cases; auto)
+apply (erule stack_traceable.cases; auto)
+using Up_Down stack_traceable_preserved_over_balanced_extension apply blast
+
+apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+using stack_traceable_preserved_over_seq_extension apply blast
+
+apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
+apply ((drule spec)+, erule impE, assumption, erule conjE) 
+apply (simp add: Nonempty)
+
+apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+using stack_traceable_preserved_over_seq_extension apply blast
+apply (case_tac "\<pi>' = \<pi> ;; .x", auto)
+apply (rule stack_traceable.Empty_Local; auto)
+apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
+using stack_traceable_preserved_over_seq_extension apply blast
+
+
+apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; `x\<^sub>r", auto)
+using stack_traceable_preserved_over_seq_extension apply blast
+apply (case_tac "\<pi>' = \<pi>\<^sub>s ;; `x\<^sub>s", auto)
+using stack_traceable_preserved_over_seq_extension apply blast
+using stack_traceable_preserved_over_seq_extension apply blast
+
 done
 
 lemma isnt_traceable_sound': "

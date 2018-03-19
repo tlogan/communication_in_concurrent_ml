@@ -61,22 +61,15 @@ inductive channel_live :: "(abstract_value_env \<times> exp_map \<times> exp_map
     \<rbrakk> \<Longrightarrow>
     (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = \<lparr>\<rparr> in e
   " |
-  Let_Chan_Pass: "
+  Let_Chan: "
     \<lbrakk>
-      x\<^sub>c \<noteq> x;
       \<L>n e \<subseteq> \<L>x (LET x = CHAN \<lparr>\<rparr> in e);
-      \<L>x (LET x = CHAN \<lparr>\<rparr> in e) \<subseteq> \<L>n (LET x = CHAN \<lparr>\<rparr> in e);
+      (\<L>x (LET x = CHAN \<lparr>\<rparr> in e) - 
+        {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}
+      ) \<subseteq> \<L>n (LET x = CHAN \<lparr>\<rparr> in e);
       (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x = CHAN \<lparr>\<rparr> in e
-  " |
-  Let_Chan_Kill: "
-    \<lbrakk>
-      \<L>n e \<subseteq> \<L>x (LET x = CHAN \<lparr>\<rparr> in e);
-      \<L>x (LET x = CHAN \<lparr>\<rparr> in e) - {x\<^sub>c} \<subseteq> \<L>n (LET x = CHAN \<lparr>\<rparr> in e);
-      (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
-    \<rbrakk> \<Longrightarrow>
-    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> LET x\<^sub>c = CHAN \<lparr>\<rparr> in e
   " |
   Let_Send_Evt: "
     \<lbrakk>
@@ -254,6 +247,13 @@ inductive life_in_exp :: "exp_map \<Rightarrow> exp => bool" where
     \<rbrakk> \<Longrightarrow> 
     life_in_exp \<L>n (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)
   " |
+  Spawn: "
+    \<lbrakk>
+      life_in_exp \<L>n e\<^sub>c \<or>
+      life_in_exp \<L>n e\<^sub>n
+    \<rbrakk> \<Longrightarrow> 
+    life_in_exp \<L>n (LET x = SPAWN e\<^sub>c in e\<^sub>n)
+  " |
   Case: "
     \<lbrakk>
       life_in_exp \<L>n e\<^sub>l \<or>
@@ -261,13 +261,6 @@ inductive life_in_exp :: "exp_map \<Rightarrow> exp => bool" where
       life_in_exp \<L>n e\<^sub>n
     \<rbrakk> \<Longrightarrow> 
     life_in_exp \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
-  " |
-  Spawn: "
-    \<lbrakk>
-      life_in_exp \<L>n e\<^sub>c \<or>
-      life_in_exp \<L>n e\<^sub>n
-    \<rbrakk> \<Longrightarrow> 
-    life_in_exp \<L>n (LET x = SPAWN e\<^sub>c in e\<^sub>n)
   " |
   Let: "
     \<lbrakk>
@@ -286,16 +279,16 @@ fun trim :: "exp_map \<Rightarrow> exp \<Rightarrow> exp" where
        RESULT (Var ''trimmed''))
   " |
 
-  "trim \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n) =
-     (if (life_in_exp \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)) then
-       (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> trim \<L>n e\<^sub>l RIGHT x\<^sub>r |> trim \<L>n e\<^sub>r in trim \<L>n e\<^sub>n)
+  "trim \<L>n (LET x = SPAWN e\<^sub>c in e\<^sub>n) =
+     (if (life_in_exp \<L>n (LET x = SPAWN e\<^sub>c in e\<^sub>n)) then
+       (LET x = SPAWN trim \<L>n e\<^sub>c in trim \<L>n e\<^sub>n)
      else
        RESULT (Var ''trimmed''))
   " |
 
-  "trim \<L>n (LET x = SPAWN e\<^sub>c in e\<^sub>n) =
-     (if (life_in_exp \<L>n (LET x = SPAWN e\<^sub>c in e\<^sub>n)) then
-       (LET x = SPAWN trim \<L>n e\<^sub>c in trim \<L>n e\<^sub>n)
+  "trim \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n) =
+     (if (life_in_exp \<L>n (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)) then
+       (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> trim \<L>n e\<^sub>l RIGHT x\<^sub>r |> trim \<L>n e\<^sub>r in trim \<L>n e\<^sub>n)
      else
        RESULT (Var ''trimmed''))
   " |
@@ -306,24 +299,6 @@ fun trim :: "exp_map \<Rightarrow> exp \<Rightarrow> exp" where
      else
        RESULT (Var ''trimmed''))
   " 
-
-(*
-
-identify edges that channels can flow along (messages, sequences, calls, spawns).
-
-identify variables that after which channels are live
-identify variables that before which channels are live
-
-liveness trimming:
-
-if channels is not live after self application, 
-then if recursive call continuation does not contain any receives or creation of same channel
-then replace recursive call continuation with a Result
-
-*)
-
-
-
 
 definition is_static_send_path :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
   "is_static_send_path \<A> x\<^sub>c \<pi>' \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> (\<exists> \<pi>\<^sub>y x\<^sub>y x\<^sub>e x\<^sub>s\<^sub>c x\<^sub>m e\<^sub>n . 
@@ -340,19 +315,6 @@ definition is_static_recv_path :: "(abstract_value_env \<times> abstract_value_e
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
     {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e
   )"
-
-(*  
-
-Reppy/Xiao analyze the subprogram within which a channel is live, 
-thus avoiding conflating different instances of a channel with one name, 
-such as one created in a loop.
-
-Reppy/Xiao do not distinguish between paths that 
-occur in the same run from those that occur in the same subprogram.
-
-Reppy/Xiao consider paths with the same process path to be noncompetitive statically.
-
-*)
 
 inductive inclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
   Ordered: "

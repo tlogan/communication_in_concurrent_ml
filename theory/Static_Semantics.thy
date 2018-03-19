@@ -23,15 +23,30 @@ inductive accept_exp :: "abstract_value_env \<times> abstract_value_env \<Righta
     \<rbrakk> \<Longrightarrow> 
     (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e
   " |
-  Let_Abs : "
+
+  Let_Chan: "
     \<lbrakk>
-      {^Abs f' x' e'} \<subseteq> \<V> f';
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e';
-      {^Abs f' x' e'} \<subseteq> \<V> x;
+      {^Chan x} \<subseteq> \<V> x;
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+    \<rbrakk> \<Longrightarrow>  
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CHAN \<lparr>\<rparr> in e
+  " |
+
+  Let_Send_Evt : "
+    \<lbrakk>
+      {^Send_Evt x\<^sub>c x\<^sub>m} \<subseteq> \<V> x;
       (\<V>, \<C>) \<Turnstile>\<^sub>e e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FN f' x' . e' in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SEND EVT x\<^sub>c x\<^sub>m in e
   " |
+  Let_Recv_Evt : "
+    \<lbrakk>
+      {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x;
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+    \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = RECV EVT x\<^sub>c in e
+  " |
+
   Let_Pair : "
     \<lbrakk>
       {^Pair x\<^sub>1 x\<^sub>2} \<subseteq> \<V> x;
@@ -53,56 +68,26 @@ inductive accept_exp :: "abstract_value_env \<times> abstract_value_env \<Righta
     \<rbrakk> \<Longrightarrow> 
     (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = RIGHT x\<^sub>p in e
   " |
-  Let_Send_Evt : "
+
+  Let_Abs : "
     \<lbrakk>
-      {^Send_Evt x\<^sub>c x\<^sub>m} \<subseteq> \<V> x;
+      {^Abs f' x' e'} \<subseteq> \<V> f';
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e';
+      {^Abs f' x' e'} \<subseteq> \<V> x;
       (\<V>, \<C>) \<Turnstile>\<^sub>e e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SEND EVT x\<^sub>c x\<^sub>m in e
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FN f' x' . e' in e
   " |
-  Let_Recv_Evt : "
+
+  Let_Spawn: "
     \<lbrakk>
-      {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
-    \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = RECV EVT x\<^sub>c in e
-  " |
-  Let_Case: "
-    \<lbrakk>
-      \<forall> x\<^sub>l' . ^Left x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow>
-        \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l
-      ;
-      \<forall> x\<^sub>r' . ^Right x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow>
-        \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r
-      ;
+      {^\<lparr>\<rparr>} \<subseteq> \<V> x;
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>c;
       (\<V>, \<C>) \<Turnstile>\<^sub>e e
-    \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e
+    \<rbrakk> \<Longrightarrow>  
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SPAWN e\<^sub>c in e
   " |
-  Let_Fst: "
-    \<lbrakk>
-      \<forall> x\<^sub>1 x\<^sub>2. ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>1 \<subseteq> \<V> x; 
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
-    \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FST x\<^sub>p in e
-  " |
-  Let_Snd: "
-    \<lbrakk>
-      \<forall> x\<^sub>1 x\<^sub>2 . ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>2 \<subseteq> \<V> x; 
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
-    \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SND x\<^sub>p in e
-  " |
-  Let_App: "
-    \<lbrakk>
-      \<forall> f' x' e' . ^Abs f' x' e' \<in> \<V> f \<longrightarrow>
-        \<V> x\<^sub>a \<subseteq> \<V> x' \<and>
-        \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x
-      ;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
-    \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e
-  " |
+
   Let_Sync  : "
     \<lbrakk>
       \<forall> x\<^sub>s\<^sub>c x\<^sub>m x\<^sub>c . 
@@ -119,27 +104,50 @@ inductive accept_exp :: "abstract_value_env \<times> abstract_value_env \<Righta
     \<rbrakk> \<Longrightarrow>  
     (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SYNC x\<^sub>e in e
   " |
-  Let_Chan: "
+
+  Let_Fst: "
     \<lbrakk>
-      {^Chan x} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
-    \<rbrakk> \<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CHAN \<lparr>\<rparr> in e
+      \<forall> x\<^sub>1 x\<^sub>2. ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>1 \<subseteq> \<V> x; 
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+    \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FST x\<^sub>p in e
   " |
-  Let_Spawn: "
+  Let_Snd: "
     \<lbrakk>
-      {^\<lparr>\<rparr>} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>c;
+      \<forall> x\<^sub>1 x\<^sub>2 . ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>2 \<subseteq> \<V> x; 
       (\<V>, \<C>) \<Turnstile>\<^sub>e e
-    \<rbrakk> \<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SPAWN e\<^sub>c in e
+    \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SND x\<^sub>p in e
+  " |
+  Let_Case: "
+    \<lbrakk>
+      \<forall> x\<^sub>l' . ^Left x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow>
+        \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l
+      ;
+      \<forall> x\<^sub>r' . ^Right x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow>
+        \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r
+      ;
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+    \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e
+  " |
+  Let_App: "
+    \<lbrakk>
+      \<forall> f' x' e' . ^Abs f' x' e' \<in> \<V> f \<longrightarrow>
+        \<V> x\<^sub>a \<subseteq> \<V> x' \<and>
+        \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x
+      ;
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+    \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e
   "
 
 
 fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) where
+  "|\<lbrace>\<rbrace>| = ^\<lparr>\<rparr>" |
   "|\<lbrace>Ch \<pi> x\<rbrace>| = ^Chan x" |
-  "|\<lbrace>p, \<rho>\<rbrace>| = ^p" |
-  "|\<lbrace>\<rbrace>| = ^\<lparr>\<rparr>"
+  "|\<lbrace>p, \<rho>\<rbrace>| = ^p"
+
 
 definition env_to_abstract_value_env :: "(var \<rightharpoonup> val) \<Rightarrow> abstract_value_env" ("\<parallel>_\<parallel>" [0]61) where
   "\<parallel>\<rho>\<parallel> = (\<lambda> x . (case (\<rho> x) of 
@@ -150,10 +158,38 @@ definition env_to_abstract_value_env :: "(var \<rightharpoonup> val) \<Rightarro
 inductive accept_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55)
 and  accept_val_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
 where
-  Unit: "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>" |
+  Unit: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>
+  " |
+
   Chan: "
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>c\<rbrace>
   " |
+
+  Send_Evt: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
+    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Send_Evt _ _, \<rho>\<rbrace>
+  " |
+
+  Recv_Evt: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
+    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Recv_Evt _, \<rho>\<rbrace>
+  " |
+
+  Left: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
+    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Left _, \<rho>\<rbrace>
+  " |
+
+  Right: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
+    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Right _, \<rho>\<rbrace>
+  " |
+
   Abs: "
     \<lbrakk>
       {^Abs f x e} \<subseteq> \<V> f;
@@ -162,36 +198,12 @@ where
     \<rbrakk> \<Longrightarrow> 
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Abs f x e, \<rho>\<rbrace>
   " |
+
   Pair: "
     (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
     \<Longrightarrow>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Pair _ _, \<rho>\<rbrace>
   " |
-  Left: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-    \<Longrightarrow>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Left _, \<rho>\<rbrace>
-  " |
-  Right: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-    \<Longrightarrow>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Right _, \<rho>\<rbrace>
-  " |
-  Send_Evt: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-    \<Longrightarrow>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Send_Evt _ _, \<rho>\<rbrace>
-  " |
-  Recv_Evt: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-    \<Longrightarrow>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Recv_Evt _, \<rho>\<rbrace>
-  " (*|
-  Always_Evt: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-    \<Longrightarrow>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Always_Evt _, \<rho>\<rbrace>
-  " *)|
 
   Any : "
     \<lbrakk>
@@ -249,27 +261,23 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
   " |
-  Let_App: " 
+  Let_Unit: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = APP f x\<^sub>a in e\<^sub>n);
-      ^Abs f' x' e' \<in> \<V> f
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = \<lparr>\<rparr> in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e')
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
-  Let_Case_Left: "
+  Let_Chan: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n);
-      (* constraint below not necessary for our purposes*)
-      ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CHAN \<lparr>\<rparr> in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>l)
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
-  Let_Case_Right: "
+  Let_Prim: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n);
-      ^Right x\<^sub>r' \<in> \<V> x\<^sub>s
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = Prim p in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>r)
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
   Let_Spawn_Child: "
     \<lbrakk>
@@ -280,18 +288,6 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
   Let_Spawn: "
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SPAWN e\<^sub>c in e\<^sub>n)
-    \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
-  " |
-  Let_Unit: "
-    \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = \<lparr>\<rparr> in e\<^sub>n)
-    \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
-  " |
-  Let_Chan: "
-    \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CHAN \<lparr>\<rparr> in e\<^sub>n)
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
@@ -317,11 +313,27 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (cont
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
   " |
-  Let_Prim: "
+  Let_Case_Left: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = Prim p in e\<^sub>n)
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n);
+      (* constraint below not necessary for our purposes*)
+      ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>l)
+  " |
+  Let_Case_Right: "
+    \<lbrakk>
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n);
+      ^Right x\<^sub>r' \<in> \<V> x\<^sub>s
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>r)
+  " |
+  Let_App: " 
+    \<lbrakk>
+      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = APP f x\<^sub>a in e\<^sub>n);
+      ^Abs f' x' e' \<in> \<V> f
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e')
   "
 
 inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> cont list) \<Rightarrow> bool" ("_ \<tturnstile> _ \<downharpoonleft>\<downharpoonright> _" [56,0,56]55)  where
@@ -370,12 +382,6 @@ by (simp add: stack_traceable_preserved_over_balanced_extension)
 inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^sub>e _" [56,56]55) where
   Refl : "
     e \<preceq>\<^sub>e e
-  " |
-  Let_Abs_Body: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>b 
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)
   " | 
   Let: "
     \<lbrakk>
@@ -400,17 +406,23 @@ inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^s
       e \<preceq>\<^sub>e e\<^sub>r
     \<rbrakk> \<Longrightarrow>
     e \<preceq>\<^sub>e (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
+  " |
+  Let_Abs_Body: "
+    \<lbrakk>
+      e \<preceq>\<^sub>e e\<^sub>b 
+    \<rbrakk> \<Longrightarrow>
+    e \<preceq>\<^sub>e (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)
   "
 
 lemma subexp_trans': "
   e\<^sub>y \<preceq>\<^sub>e e\<^sub>z \<Longrightarrow> (\<forall> e\<^sub>x . e\<^sub>x \<preceq>\<^sub>e e\<^sub>y \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>z)
 "
   apply (erule subexp.induct; auto)
-   apply (drule spec; auto, rule subexp.Let_Abs_Body, assumption)
    apply (drule spec; auto, rule subexp.Let, assumption)
    apply (drule spec; auto, rule subexp.Let_Spawn_Child, assumption)
    apply (drule spec; auto, rule subexp.Let_Case_Left, assumption)
    apply (drule spec; auto, rule subexp.Let_Case_Right, assumption)
+   apply (drule spec; auto, rule subexp.Let_Abs_Body, assumption)
 done
 
 lemma subexp_trans: "
@@ -432,16 +444,23 @@ lemma traceable_implies_subexp': "
   )
 "
  apply (erule traceable.induct; auto)
-            apply (rule subexp.Refl)
-            apply (rotate_tac -1, rule subexp_trans; auto?; rule subexp1)+
-           apply (drule_tac x = f in spec)
-           apply (drule_tac x = "\<lbrace> Abs f' x' e' , _\<rbrace>" in spec)
-           apply (erule impE; simp)
-           apply (blast intro:  Let_Abs_Body Refl subexp_trans)
-          apply (rule subexp_trans; auto?; rule subexp.Let_Case_Left; rule subexp.Refl)
-         apply (rule subexp_trans; auto?; rule subexp.Let_Case_Right; rule subexp.Refl)
-       apply (rule subexp_trans; auto?; rule subexp.Let_Spawn_Child; rule subexp.Refl)
-      apply (rule subexp_trans; auto?; rule subexp1)+
+    apply (rule subexp.Refl)
+
+   apply (rotate_tac -1, rule subexp_trans; auto?; rule subexp1)+
+
+   apply (rule subexp_trans; auto?; rule subexp.Let_Spawn_Child; rule subexp.Refl)
+         
+   apply (rotate_tac -1, rule subexp_trans; auto?; rule subexp1)+
+      
+   apply (rule subexp_trans; auto?; rule subexp.Let_Case_Left; rule subexp.Refl)
+   
+   apply (rule subexp_trans; auto?; rule subexp.Let_Case_Right; rule subexp.Refl)
+
+   apply (drule_tac x = f in spec)
+   apply (drule_tac x = "\<lbrace> Abs f' x' e' , _\<rbrace>" in spec)
+   apply (erule impE; simp)
+   apply (blast intro:  Let_Abs_Body Refl subexp_trans)
+
 done
 
 theorem traceable_implies_subexp: "
