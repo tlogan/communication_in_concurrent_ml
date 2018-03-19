@@ -388,15 +388,13 @@ lemma inclusive_preserved_under_unordered_extension: "
   apply (simp add: Spawn_Right)
 done
 
-
-
 definition singular :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
- "singular \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)" (* 
-     \<or> paths are ordered but refer to distinct channels.
-     perhaps with exp and \<L>n we can compare trimmed paths, e.g. (trim \<pi>\<^sub>1) = (trim \<pi>\<^sub>2),
-     or develop new relation paths_congruent \<cong> .
-     paths are congruent with respect to static channel and liveness analysis.
-   *)
+ "singular \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
+(* 
+     For greater precision replace \<pi>\<^sub>1 = \<pi>\<^sub>2 with (trim e\<^sub>t \<pi>\<^sub>1) = (trim e\<^sub>t \<pi>\<^sub>2)
+     where trim returns the longest reachable prefix for e\<^sub>t and
+     e\<^sub>t is a smaller program based on the live channel analysis.
+*)
 
 definition noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
  "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
