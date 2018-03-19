@@ -41,17 +41,6 @@ lemma static_send_evt_doesnt_exist_sound: "
   apply (drule isnt_abstract_value_sound_coro; assumption?; auto)
 done
 
-lemma static_unit_doesnt_exist_sound: "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' (\<pi>\<^sub>y ;;`x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>y\<rangle>)
-  \<rbrakk> \<Longrightarrow> 
-  {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y
-"
- apply (drule isnt_abstract_value_sound_coro; assumption?; auto; simp)
-done
-
 lemma static_message_isnt_sent_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
@@ -89,16 +78,13 @@ lemma isnt_send_path_sound': "
   \<rbrakk> \<Longrightarrow> 
   \<V> \<turnstile> e \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
-  {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e \<and>
-  {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>y \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
+  {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
 
 "
  apply (rule conjI)
  apply (insert isnt_traceable_sound, blast)
  apply (rule conjI, (erule static_send_chan_doesnt_exist_sound; assumption))
- apply (rule conjI, (erule static_send_evt_doesnt_exist_sound; assumption))
- apply (rule conjI, (erule static_unit_doesnt_exist_sound; assumption))
- apply (drule static_message_isnt_sent_sound; assumption)
+ apply (erule static_send_evt_doesnt_exist_sound; assumption)
 done
 
 
@@ -312,17 +298,6 @@ lemma static_recv_evt_doesnt_exist_sound: "
   apply (drule isnt_abstract_value_sound_coro; assumption?; auto)
 done
 
-lemma abstract_value_doesnt_exist_sound: "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' (\<pi>\<^sub>y ;; `x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<omega>);\<kappa>\<^sub>y\<rangle>)
-  \<rbrakk> \<Longrightarrow> 
-  { | \<omega> | } \<subseteq> \<V> x\<^sub>y
-"
-  apply (drule isnt_abstract_value_sound_coro; assumption?; auto?)
-done
-
 lemma isnt_recv_path_sound': "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
@@ -335,13 +310,11 @@ lemma isnt_recv_path_sound': "
   \<rbrakk> \<Longrightarrow>
   \<V> \<turnstile> e \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y) \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
-  {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e \<and>
-  {|\<omega>|} \<subseteq> \<V> x\<^sub>y
+  {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e
 "
  apply (rule conjI, erule isnt_traceable_sound; assumption?)
  apply (rule conjI, (erule static_recv_chan_doesnt_exist_sound; assumption))
- apply (rule conjI, (erule static_recv_evt_doesnt_exist_sound; assumption))
- apply (drule abstract_value_doesnt_exist_sound; assumption)
+ apply (erule static_recv_evt_doesnt_exist_sound; assumption)
 done
 
 
@@ -392,10 +365,9 @@ theorem topology_one_shot_sound: "
   \<rbrakk> \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> x\<^sub>c)
 "
- apply (unfold static_one_shot_def, auto)
- apply (unfold one_shot_def; auto)
+ apply (unfold static_one_shot_def)
+ apply (unfold one_shot_def)
  apply (auto dest: topology_all_singular_send_sound)
- apply (auto dest: topology_all_singular_recv_sound)
 done
 
 

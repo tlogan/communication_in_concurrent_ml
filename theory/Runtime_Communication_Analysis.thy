@@ -32,7 +32,7 @@ fun ordered where
   "ordered \<pi>\<^sub>1 \<pi>\<^sub>2 = (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1)"
 
 definition one_shot :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "one_shot \<E> c \<equiv> all (is_send_path \<E> c) op= \<and> all (is_recv_path \<E> c) op="
+  "one_shot \<E> c \<equiv> all (is_send_path \<E> c) op="
 
 
 definition one_to_one :: "state_pool \<Rightarrow> chan \<Rightarrow> bool" where
