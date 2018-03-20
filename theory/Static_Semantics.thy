@@ -371,24 +371,21 @@ proof -
   then show "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)"
   proof cases
     case Empty
-    assume 
-      "\<kappa> = []" "\<downharpoonright>\<pi>\<upharpoonleft>"
-    thus "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" 
-      using \<open>\<downharpoonright>\<pi>'\<upharpoonleft>\<close> stack_traceable.Empty by simp
+    assume "\<kappa> = []" "\<downharpoonright>\<pi>\<upharpoonleft>" with `\<downharpoonright>\<pi>'\<upharpoonleft>`
+    have "\<downharpoonright>(\<pi> @ \<pi>')\<upharpoonleft>" by (simp add: Append) with `\<kappa> = []`
+    show "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" by (simp add: stack_traceable.Empty)
   next
     case (Empty_Local \<pi>\<^sub>2 \<pi>\<^sub>1 x)
-    assume 
-      "\<pi> = \<pi>\<^sub>1 @ .x # \<pi>\<^sub>2" "\<kappa> = []" "\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>"
-    thus "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" 
-      using \<open>\<downharpoonright>\<pi>'\<upharpoonleft>\<close> stack_traceable.Empty_Local by simp
+    assume "\<pi> = \<pi>\<^sub>1 @ .x # \<pi>\<^sub>2" "\<kappa> = []" "\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>" with `\<downharpoonright>\<pi>'\<upharpoonleft>` 
+    have "\<downharpoonright>(\<pi>\<^sub>2 @ \<pi>')\<upharpoonleft>" by (simp add: Append) with `\<pi> = \<pi>\<^sub>1 @ .x # \<pi>\<^sub>2` `\<kappa> = []` 
+    show "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" by (simp add: stack_traceable.Empty_Local)
   next
-    case (Nonempty \<pi>\<^sub>2 \<pi>\<^sub>1 x\<^sub>\<kappa> b e\<^sub>\<kappa> \<kappa>' \<rho>\<^sub>\<kappa>)
-    assume 
-      "\<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2" "\<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'"
-      "\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>" "\<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)"
-      "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>')"
-    thus "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)"
-      using \<open>\<downharpoonright>\<pi>'\<upharpoonleft>\<close> stack_traceable.Nonempty by auto
+    case (Nonempty \<pi>\<^sub>2 \<pi>\<^sub>1 x\<^sub>\<kappa> b e\<^sub>\<kappa> \<kappa>' \<rho>\<^sub>\<kappa>) then
+    have "\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>" by simp  with `\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>` `\<downharpoonright>\<pi>'\<upharpoonleft>`
+    have "\<downharpoonright>(\<pi>\<^sub>2 @ \<pi>')\<upharpoonleft>" by (simp add: Append) with
+      `\<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2` `\<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'`
+      `\<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)` `\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>')`
+    show "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" by (auto simp: stack_traceable.Nonempty)
   qed
 qed
 (*
@@ -402,7 +399,7 @@ done
 lemma stack_traceable_preserved_over_seq_extension:"
   \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> ;; `x, \<kappa>)
 "
-by (simp add: stack_traceable_preserved_over_balanced_extension)
+by (simp add: Linear stack_traceable_preserved_over_balanced_extension)
 
 inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^sub>e _" [56,56]55) where
   Refl : "
@@ -620,7 +617,5 @@ inductive flow :: "(abstract_value_env \<times> flow_set) \<Rightarrow> exp \<Ri
     (\<V>, \<F>) \<TTurnstile> LET x = APP f x\<^sub>a in e
   "
   
-
-
 
 end

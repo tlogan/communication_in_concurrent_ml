@@ -171,23 +171,23 @@ abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> 
   "\<E> \<rightarrow>* \<E>' \<equiv> star concur_step \<E> \<E>'"
 
 inductive path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
-  Empty[simp]: "
+  Empty: "
     \<downharpoonright>[]\<upharpoonleft>
   " |
-  Linear[simp]: "
+  Linear: "
     \<downharpoonright>[`x]\<upharpoonleft>
   " |
-  Up_Down[simp]: "
+  Up_Down: "
     \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow>
-    \<downharpoonright> (\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x)) \<upharpoonleft>
+    \<downharpoonright>(\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x))\<upharpoonleft>
   " |
-  Append[simp]: "
+  Append: "
     \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow>
     \<downharpoonright> (\<pi> @ \<pi>') \<upharpoonleft>
   "
 
 
-lemma up_down_balanced[simp]: "
+lemma up_down_balanced: "
    \<downharpoonright>[\<upharpoonleft>x, \<downharpoonleft>x] \<upharpoonleft>
 "
 using Up_Down path_balanced.Empty by fastforce

@@ -1164,12 +1164,12 @@ using stack_traceable_preserved_over_seq_extension apply blast
 
 apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
 apply ((drule spec)+, erule impE, assumption, erule conjE) 
-apply (simp add: Nonempty)
+apply (simp add: path_balanced.Empty stack_traceable.Nonempty)
 
 apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
 using stack_traceable_preserved_over_seq_extension apply blast
 apply (case_tac "\<pi>' = \<pi> ;; .x", auto)
-apply (rule stack_traceable.Empty_Local; auto)
+using Empty_Local path_balanced.Empty apply blast
 apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
 using stack_traceable_preserved_over_seq_extension apply blast
 
