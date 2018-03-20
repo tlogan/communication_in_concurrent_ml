@@ -445,6 +445,7 @@ lemma subexp_trans: "
   e\<^sub>x \<preceq>\<^sub>e e\<^sub>y \<Longrightarrow> e\<^sub>y \<preceq>\<^sub>e e\<^sub>z \<Longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>z
 "
 proof -
+  assume "e\<^sub>x \<preceq>\<^sub>e e\<^sub>y"
   assume "e\<^sub>y \<preceq>\<^sub>e e\<^sub>z" then
   have "(\<forall> e\<^sub>x . e\<^sub>x \<preceq>\<^sub>e e\<^sub>y \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>z)"
   proof (induction rule: subexp.induct)
@@ -475,8 +476,9 @@ proof -
     have "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e\<^sub>b \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n" by (simp add: subexp.Let_Abs_Body)
     with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>b` (* IH *)
     show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n" by blast
-  qed then
-  show "e\<^sub>x \<preceq>\<^sub>e e\<^sub>y \<Longrightarrow> e\<^sub>y \<preceq>\<^sub>e e\<^sub>z \<Longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>z" by blast
+  qed 
+  with `e\<^sub>x \<preceq>\<^sub>e e\<^sub>y`
+  show "e\<^sub>x \<preceq>\<^sub>e e\<^sub>z" by blast
 qed
 (*
   apply (erule subexp.induct; auto)
@@ -492,6 +494,7 @@ lemma subexp1: "
 "
 by (simp add: Let Refl)
 
+(*
 lemma traceable_implies_subexp': "
   \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<Longrightarrow>
     (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0)) \<longrightarrow>
@@ -516,6 +519,7 @@ lemma traceable_implies_subexp': "
    apply (blast intro:  Let_Abs_Body Refl subexp_trans)
 
 done
+*)
 
 theorem traceable_implies_subexp: "
   \<lbrakk>
@@ -524,7 +528,67 @@ theorem traceable_implies_subexp: "
   \<rbrakk> \<Longrightarrow>
   e \<preceq>\<^sub>e e\<^sub>0
 "
-using traceable_implies_subexp' by blast
+proof -
+  assume "\<forall>x \<omega>. |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists>x e\<^sub>n. LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0)"
+  assume "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e" then
+  have "(\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0)) \<longrightarrow> e \<preceq>\<^sub>e e\<^sub>0"
+  proof (induction rule: traceable.induct)
+    case (Start \<V> e\<^sub>0)
+    then show ?case
+    by (simp add: Refl)
+  next
+    case (Result \<V> e\<^sub>0 \<pi> x \<pi>' x\<^sub>r b e\<^sub>n)
+    then show ?case
+    using subexp1 subexp_trans by blast
+  next
+    case (Let_Unit \<V> e\<^sub>0 \<pi> x e\<^sub>n)
+    then show ?case
+    using subexp1 subexp_trans by blast
+  next
+    case (Let_Chan \<V> e\<^sub>0 \<pi> x e\<^sub>n)
+    then show ?case
+    using subexp1 subexp_trans by blast
+  next
+    case (Let_Prim \<V> e\<^sub>0 \<pi> x p e\<^sub>n)
+    then show ?case
+    using subexp1 subexp_trans by blast
+    next
+    case (Let_Spawn_Child \<V> e\<^sub>0 \<pi> x e\<^sub>c e\<^sub>n)
+    then show ?case
+    using Refl subexp.Let_Spawn_Child subexp_trans by blast
+  next
+    case (Let_Spawn \<V> e\<^sub>0 \<pi> x e\<^sub>c e\<^sub>n)
+    then show ?case
+    using subexp1 subexp_trans by blast
+  next
+      case (Let_Sync \<V> e\<^sub>0 \<pi> x x\<^sub>v e\<^sub>n \<omega>)
+    then show ?case
+    using subexp1 subexp_trans by blast
+  next
+    case (Let_Fst \<V> e\<^sub>0 \<pi> x p e\<^sub>n \<omega>)
+    then show ?case
+    using subexp1 subexp_trans by blast
+  next
+    case (Let_Snd \<V> e\<^sub>0 \<pi> x p e\<^sub>n \<omega>)
+      then show ?case
+        using subexp1 subexp_trans by blast
+  next
+    case (Let_Case_Left \<V> e\<^sub>0 \<pi> x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n x\<^sub>l')
+    then show ?case
+      using Refl subexp.Let_Case_Left subexp_trans by blast
+  next
+    case (Let_Case_Right \<V> e\<^sub>0 \<pi> x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n x\<^sub>r')
+    then show ?case
+    using Refl subexp.Let_Case_Right subexp_trans by blast
+    next
+    case (Let_App \<V> e\<^sub>0 \<pi> x f x\<^sub>a e\<^sub>n f' x' e')
+    then show ?case
+    by (metis (no_types, hide_lams) Let_Abs_Body Refl subexp_trans val_to_bind.simps(3) value_to_abstract_value.simps(3))
+  qed
+  with `\<forall>x \<omega>. |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists>x e\<^sub>n. LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0)`
+  show "e \<preceq>\<^sub>e e\<^sub>0"
+  by blast
+qed
 
 
 type_synonym flow_set = "(exp \<times> control_label \<times> exp) set"
@@ -649,5 +713,4 @@ inductive flow :: "(abstract_value_env \<times> flow_set) \<Rightarrow> exp \<Ri
     (\<V>, \<F>) \<TTurnstile> LET x = APP f x\<^sub>a in e
   "
   
-
 end
