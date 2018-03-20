@@ -364,15 +364,40 @@ lemma singleton_eq_empty_surround: "
 "
 by simp
 
-
-lemma stack_traceable_preserved_over_balanced_extension: "
- \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)
-"
+lemma stack_traceable_preserved_over_balanced_extension:
+  "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" 
+proof -
+  assume "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>)" "\<downharpoonright>\<pi>'\<upharpoonleft>"
+  then show "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)"
+  proof cases
+    case Empty
+    assume 
+      "\<kappa> = []" "\<downharpoonright>\<pi>\<upharpoonleft>"
+    thus "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" 
+      using \<open>\<downharpoonright>\<pi>'\<upharpoonleft>\<close> stack_traceable.Empty by simp
+  next
+    case (Empty_Local \<pi>\<^sub>2 \<pi>\<^sub>1 x)
+    assume 
+      "\<pi> = \<pi>\<^sub>1 @ .x # \<pi>\<^sub>2" "\<kappa> = []" "\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>"
+    thus "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" 
+      using \<open>\<downharpoonright>\<pi>'\<upharpoonleft>\<close> stack_traceable.Empty_Local by simp
+  next
+    case (Nonempty \<pi>\<^sub>2 \<pi>\<^sub>1 x\<^sub>\<kappa> b e\<^sub>\<kappa> \<kappa>' \<rho>\<^sub>\<kappa>)
+    assume 
+      "\<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2" "\<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'"
+      "\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>" "\<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)"
+      "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>')"
+    thus "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)"
+      using \<open>\<downharpoonright>\<pi>'\<upharpoonleft>\<close> stack_traceable.Nonempty by auto
+  qed
+qed
+(*
 apply (erule stack_traceable.cases; auto)
    apply (simp add: stack_traceable.Empty)
   apply (simp add: Empty_Local)
  apply (simp add: stack_traceable.Nonempty)
 done
+*)
 
 lemma stack_traceable_preserved_over_seq_extension:"
   \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> ;; `x, \<kappa>)
