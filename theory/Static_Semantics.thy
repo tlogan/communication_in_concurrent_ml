@@ -249,113 +249,113 @@ definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abs
   "\<V> \<sqsubseteq> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
 
 
-inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> exp) \<Rightarrow> bool" ("_ \<turnstile> _ \<down> _" [56,0,56]55)  where
+inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<turnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55)  where
   Start: "
-    \<V> \<turnstile> e\<^sub>0 \<down> ([], e\<^sub>0)
+    \<V> \<turnstile> e\<^sub>0 \<down> [] \<mapsto> e\<^sub>0
   " |
   Result: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT x\<^sub>r); 
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> @ \<upharpoonleft>x # \<pi>' \<mapsto> RESULT x\<^sub>r; 
       \<downharpoonright>\<pi>'\<upharpoonleft>;
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n) 
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e\<^sub>n 
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # (\<pi>';;\<downharpoonleft>x), e\<^sub>n)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi> @ \<upharpoonleft>x # (\<pi>';;\<downharpoonleft>x) \<mapsto> e\<^sub>n
   " |
   Let_Unit: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = \<lparr>\<rparr> in e\<^sub>n)
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = \<lparr>\<rparr> in e\<^sub>n
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;`x \<mapsto> e\<^sub>n
   " |
   Let_Chan: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CHAN \<lparr>\<rparr> in e\<^sub>n)
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = CHAN \<lparr>\<rparr> in e\<^sub>n
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;`x \<mapsto> e\<^sub>n
   " |
   Let_Prim: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = Prim p in e\<^sub>n)
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = Prim p in e\<^sub>n
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;`x \<mapsto> e\<^sub>n
   " |
   Let_Spawn_Child: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SPAWN e\<^sub>c in e\<^sub>n)
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = SPAWN e\<^sub>c in e\<^sub>n
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;.x, e\<^sub>c)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;.x \<mapsto> e\<^sub>c
   " |
   Let_Spawn: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SPAWN e\<^sub>c in e\<^sub>n)
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = SPAWN e\<^sub>c in e\<^sub>n
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;`x \<mapsto> e\<^sub>n
   " |
   Let_Sync: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SYNC x\<^sub>v in e\<^sub>n);
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = SYNC x\<^sub>v in e\<^sub>n;
       |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;`x \<mapsto> e\<^sub>n
   " |
   Let_Fst: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = FST p in e\<^sub>n);
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = FST p in e\<^sub>n;
       |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;`x \<mapsto> e\<^sub>n
   " |
   Let_Snd: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = SND p in e\<^sub>n);
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = SND p in e\<^sub>n;
       (* constraint below not necessary for our purposes*)
       |\<omega>| \<in> \<V> x
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;`x, e\<^sub>n)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;`x \<mapsto> e\<^sub>n
   " |
   Let_Case_Left: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n);
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n;
       (* constraint below not necessary for our purposes*)
       ^Left x\<^sub>l' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>l)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;\<upharpoonleft>x \<mapsto> e\<^sub>l
   " |
   Let_Case_Right: "
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n);
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n;
       ^Right x\<^sub>r' \<in> \<V> x\<^sub>s
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e\<^sub>r)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;\<upharpoonleft>x \<mapsto> e\<^sub>r
   " |
   Let_App: " 
     \<lbrakk>
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = APP f x\<^sub>a in e\<^sub>n);
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = APP f x\<^sub>a in e\<^sub>n;
       ^Abs f' x' e' \<in> \<V> f
     \<rbrakk> \<Longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>;;\<upharpoonleft>x, e')
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;\<upharpoonleft>x \<mapsto> e'
   "
 
-inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> (control_path \<times> cont list) \<Rightarrow> bool" ("_ \<tturnstile> _ \<downharpoonleft>\<downharpoonright> _" [56,0,56]55)  where
+inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<tturnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55)  where
   Empty: "
     \<lbrakk> 
       \<downharpoonright>\<pi>\<upharpoonleft>
     \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> e \<downharpoonleft>\<downharpoonright> (\<pi>, [])
+    \<V> \<tturnstile> e \<down> \<pi> \<mapsto> []
   " |
   Empty_Local: "
     \<lbrakk> 
       \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>
     \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ .x # \<pi>\<^sub>2, [])
+    \<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ .x # \<pi>\<^sub>2 \<mapsto> []
   " |
   Nonempty: "
     \<lbrakk> 
       \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>;
-      \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>);
-      \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>)
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>;
+      \<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> \<kappa>
     \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2, \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
+    \<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<mapsto> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>
   "
 
 
@@ -365,32 +365,32 @@ lemma singleton_eq_empty_surround: "
 by simp
 
 lemma stack_traceable_preserved_over_balanced_extension:
-  "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" 
+  "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa> \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> \<kappa>" 
 proof -
-  assume "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>)" "\<downharpoonright>\<pi>'\<upharpoonleft>" then 
-  show "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)"
+  assume "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>" "\<downharpoonright>\<pi>'\<upharpoonleft>" then 
+  show "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> \<kappa>"
   proof cases
     case Empty 
     from `\<downharpoonright>\<pi>\<upharpoonleft>` `\<downharpoonright>\<pi>'\<upharpoonleft>`
     have "\<downharpoonright>(\<pi> @ \<pi>')\<upharpoonleft>" by (simp add: Append) then
-    have "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', [])" by (simp add: stack_traceable.Empty)
+    have "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> []" by (simp add: stack_traceable.Empty)
     with `\<kappa> = []`
-    show "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" by blast
+    show "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> \<kappa>" by blast
   next
     case (Empty_Local \<pi>\<^sub>2 \<pi>\<^sub>1 x)
     from `\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>` `\<downharpoonright>\<pi>'\<upharpoonleft>` 
     have "\<downharpoonright>(\<pi>\<^sub>2 @ \<pi>')\<upharpoonleft>" by (simp add: Append) then
-    have "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ .x # \<pi>\<^sub>2 @ \<pi>', [])" by (simp add: stack_traceable.Empty_Local)
+    have "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ .x # \<pi>\<^sub>2 @ \<pi>' \<mapsto> []" by (simp add: stack_traceable.Empty_Local)
     with `\<pi> = \<pi>\<^sub>1 @ .x # \<pi>\<^sub>2` `\<kappa> = []` 
-    show "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" by simp
+    show "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> \<kappa>" by simp
   next
     case (Nonempty \<pi>\<^sub>2 \<pi>\<^sub>1 x\<^sub>\<kappa> b e\<^sub>\<kappa> \<kappa>' \<rho>\<^sub>\<kappa>) 
     from `\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>` `\<downharpoonright>\<pi>'\<upharpoonleft>`
     have "\<downharpoonright>(\<pi>\<^sub>2 @ \<pi>')\<upharpoonleft>" by (simp add: Append)
-    with `\<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>1, LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>)` `\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1, \<kappa>')`
-    have "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 @ \<pi>', \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>')" by (auto simp: stack_traceable.Nonempty)
+    with `\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>` `\<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> \<kappa>'`
+    have "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 @ \<pi>' \<mapsto> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'" by (auto simp: stack_traceable.Nonempty)
     with `\<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2` `\<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'`
-    show "\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> @ \<pi>', \<kappa>)" by simp
+    show "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> \<kappa>" by simp
   qed
 qed
 (*
@@ -402,7 +402,7 @@ done
 *)
 
 lemma stack_traceable_preserved_over_seq_extension:"
-  \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>) \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi> ;; `x, \<kappa>)
+  \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa> \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> \<kappa>
 "
 by (simp add: Linear stack_traceable_preserved_over_balanced_extension)
 
@@ -493,12 +493,9 @@ lemma subexp1: "
 by (simp add: Let Refl)
 
 lemma traceable_implies_subexp': "
-  \<V> \<turnstile> e\<^sub>0 \<down> p \<Longrightarrow>
-  (\<forall> \<pi> e .
-    p = (\<pi>, e) \<longrightarrow>
+  \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<Longrightarrow>
     (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0)) \<longrightarrow>
     e \<preceq>\<^sub>e e\<^sub>0
-  )
 "
  apply (erule traceable.induct; auto)
     apply (rule subexp.Refl)
@@ -522,12 +519,12 @@ done
 
 theorem traceable_implies_subexp: "
   \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e);
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e;
     (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0))
   \<rbrakk> \<Longrightarrow>
   e \<preceq>\<^sub>e e\<^sub>0
 "
-by (simp add: traceable_implies_subexp')
+using traceable_implies_subexp' by blast
 
 
 type_synonym flow_set = "(exp \<times> control_label \<times> exp) set"

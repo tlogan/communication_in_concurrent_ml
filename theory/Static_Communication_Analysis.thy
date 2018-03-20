@@ -303,7 +303,7 @@ fun trim :: "exp_map \<Rightarrow> exp \<Rightarrow> exp" where
 definition is_static_send_path :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
   "is_static_send_path \<A> x\<^sub>c \<pi>' \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> (\<exists> \<pi>\<^sub>y x\<^sub>y x\<^sub>e x\<^sub>s\<^sub>c x\<^sub>m e\<^sub>n . 
     \<pi>' = \<pi>\<^sub>y;;`x\<^sub>y \<and>
-    \<V> \<turnstile> e \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<and>
+    \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n \<and>
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
     {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
   )"
@@ -311,7 +311,7 @@ definition is_static_send_path :: "(abstract_value_env \<times> abstract_value_e
 definition is_static_recv_path :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
   "is_static_recv_path \<A> x\<^sub>c \<pi>' \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> (\<exists> \<pi>\<^sub>y x\<^sub>y x\<^sub>e x\<^sub>r\<^sub>c e\<^sub>n. 
     \<pi>' = \<pi>\<^sub>y;;`x\<^sub>y \<and>
-    \<V> \<turnstile> e \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<and>
+    \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n \<and>
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
     {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e
   )"
@@ -357,14 +357,14 @@ inductive trim_equal :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> cont
   " |
   Induct_Left: "
     \<lbrakk>
-      \<not> (\<V> \<turnstile> e\<^sub>t \<down> (\<pi>, e'));
+      \<not> (\<V> \<turnstile> e\<^sub>t \<down> \<pi> \<mapsto> e');
       \<V> e\<^sub>t \<tturnstile> \<pi> \<cong> \<pi>\<^sub>2
     \<rbrakk> \<Longrightarrow>
     \<V> e\<^sub>t \<tturnstile> \<pi> ;; l \<cong> \<pi>\<^sub>2
   " |
   Induct_Right: "
     \<lbrakk>
-      \<not> (\<V> \<turnstile> e\<^sub>t \<down> (\<pi>, e'));
+      \<not> (\<V> \<turnstile> e\<^sub>t \<down> \<pi> \<mapsto> e');
       \<V> e\<^sub>t \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi>
     \<rbrakk> \<Longrightarrow>
     \<V> e\<^sub>t \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi> ;; l

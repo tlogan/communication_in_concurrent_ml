@@ -1057,11 +1057,11 @@ done
 
 lemma traceable_exp_preservation_over_sync_recv_evt: "
 \<lbrakk>
-  \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e);
+  \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e;
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e';\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>'\<rangle>);
   \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>n;\<rho>\<^sub>r;\<kappa>'\<rangle>)
 \<rbrakk> \<Longrightarrow> 
-\<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>\<^sub>r ;; `x\<^sub>r, e\<^sub>n)
+\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> e\<^sub>n
 "
  apply ((drule spec)+, erule impE, assumption)
  apply (drule flow_over_pool_precision; simp?; blast?)
@@ -1070,12 +1070,12 @@ done
 
 lemma traceable_exp_preservation_over_sync_send_evt: "
 \<lbrakk>
-  \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e);
+  \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e;
   \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e';\<rho>\<^sub>s;\<kappa>'\<rangle>);
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>'\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>);
   \<pi>\<^sub>s \<noteq> \<pi>\<^sub>r
 \<rbrakk> \<Longrightarrow> 
-\<V> \<turnstile> e\<^sub>0 \<down> (\<pi>\<^sub>s ;; `x\<^sub>s, e')
+\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> e'
 "
  apply ((drule spec)+, erule impE, assumption)
  apply (drule flow_over_pool_precision[of \<V> \<C> _ "\<pi>\<^sub>s ;; `x\<^sub>s" e' "\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)" \<kappa>'], auto)
@@ -1088,11 +1088,11 @@ lemma traceable_exp_preservation: "
   \<E> \<rightarrow> \<E>';
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
   (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    \<V> \<turnstile> e\<^sub>0 \<down>  (\<pi>, e) \<and> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>
   );
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
 \<rbrakk> \<Longrightarrow>
-\<V> \<turnstile> e\<^sub>0 \<down> (\<pi>', e')
+\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'
 "
 apply (frule concur_step.cases, auto)
   
@@ -1146,10 +1146,10 @@ lemma traceable_stack_preservation: "
 \<lbrakk>
   \<E> \<rightarrow> \<E>';
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
-  \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<and> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>);
+  \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>;
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> 
 \<rbrakk> \<Longrightarrow>
-\<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>', \<kappa>')
+\<V> \<tturnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> \<kappa>'
 "
 apply (frule concur_step.cases, auto)
 
@@ -1189,7 +1189,7 @@ lemma isnt_traceable_sound': "
   \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
   (\<forall> \<pi> e \<rho> \<kappa> . \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> (
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e) \<and> \<V> \<tturnstile> e\<^sub>0 \<downharpoonleft>\<downharpoonright> (\<pi>, \<kappa>)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>
   ))
 "
  apply (erule star_left.induct; auto)
@@ -1212,7 +1212,7 @@ lemma isnt_traceable_sound: "
     [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>;
     \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) 
   \<rbrakk> \<Longrightarrow>
-  \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, e)
+  \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e
 "
  apply (drule star_implies_star_left)
 using isnt_traceable_sound' lift_flow_exp_to_pool by blast

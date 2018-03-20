@@ -9,8 +9,8 @@ begin
 
 lemma traceable_result_implies_traceable_case: "
   \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y); \<downharpoonright>\<pi>'\<upharpoonleft>;
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi> @ \<upharpoonleft>x # \<pi>' \<mapsto> RESULT y; \<downharpoonright>\<pi>'\<upharpoonleft>;
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e\<^sub>n
   \<rbrakk> \<Longrightarrow>
   b = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r \<and> (y = \<lfloor>e\<^sub>l\<rfloor> \<or> y = \<lfloor>e\<^sub>r\<rfloor>)
 "
@@ -18,8 +18,8 @@ sorry
 
 lemma traceable_result_implies_traceable_app: "
   \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> @ \<upharpoonleft>x # \<pi>', RESULT y); \<downharpoonright>\<pi>'\<upharpoonleft>;
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi>, LET x = b in e\<^sub>n)
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi> @ \<upharpoonleft>x # \<pi>' \<mapsto> RESULT y; \<downharpoonright>\<pi>'\<upharpoonleft>;
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e\<^sub>n
   \<rbrakk> \<Longrightarrow>
   b = APP f x\<^sub>a \<and> y \<in> {\<lfloor>e\<^sub>b\<rfloor> |  f' x\<^sub>p . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f} (*not sure which function is bound to f; do I need unique names for f in labels?*)
 "
@@ -417,20 +417,20 @@ method elim_traceable = (
 )
 (*
   \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> (\<pi> ;; l, e');
+    \<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; l \<mapsto> e';
     (\<V>, \<F>) \<TTurnstile> e\<^sub>0
   \<rbrakk> \<Longrightarrow>
   \<exists> e . {(e, l, e')} \<subseteq> \<F>
 *)
 lemma infinite_prog_has_earlier_sync: "
   \<lbrakk>
-    infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n);
+    infinite_prog_\<V> \<turnstile> infinite_prog \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;
     ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y;
     \<pi>\<^sub>y ;; `x\<^sub>y \<noteq> [`g100, .g101, `g102, `g108, \<upharpoonleft>g109, `g105, `g106]
   \<rbrakk> \<Longrightarrow>
   (\<exists>\<pi> x. 
     \<pi>\<^sub>y ;; `x\<^sub>y = (\<pi> ;; `x) @ [\<upharpoonleft>g107, `g105, `g106] \<and>
-    infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>, LET x = SYNC x\<^sub>e in e\<^sub>n) \<and> 
+    infinite_prog_\<V> \<turnstile> infinite_prog \<down> \<pi> \<mapsto> LET x = SYNC x\<^sub>e in e\<^sub>n \<and> 
     ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x
   )
 "
@@ -469,7 +469,7 @@ sorry
 lemma infinite_prog_matches': "
   (\<forall> \<pi>\<^sub>y x\<^sub>y x\<^sub>e e\<^sub>n x\<^sub>s\<^sub>c x\<^sub>m.
     (n :: nat) = length (\<pi>\<^sub>y ;; `x\<^sub>y) \<longrightarrow>
-    infinite_prog_\<V> \<turnstile> infinite_prog \<down> (\<pi>\<^sub>y, LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n) \<longrightarrow>
+    infinite_prog_\<V> \<turnstile> infinite_prog \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n \<longrightarrow>
     ^Chan g100 \<in> infinite_prog_\<V> x\<^sub>s\<^sub>c \<longrightarrow>
     ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> infinite_prog_\<V> x\<^sub>e \<longrightarrow>
     ^\<lparr>\<rparr> \<in> infinite_prog_\<V> x\<^sub>y \<longrightarrow>
@@ -508,9 +508,11 @@ lemma infinite_prog_matches: "
   is_static_send_path (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100 \<pi> \<Longrightarrow> 
   infinite_prog_send_g100_abstract_path |\<rhd> \<pi>
 "
+(*
  apply (simp add: is_static_send_path_def; clarsimp)
  apply (insert infinite_prog_matches', blast)
-done
+*)
+sorry
 
 theorem infinite_prog_has_single_sender_communication_analysis: "
   all (is_static_send_path (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100) noncompetitive 
