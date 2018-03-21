@@ -182,16 +182,34 @@ qed
 lemma accept_state_to_env_let_unit: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<lbrace>\<rbrace>)
 "
- apply (rule accept_value_accept_val_env.Any, auto)
-     apply (erule accept_state.cases, auto)
-     apply (erule accept_exp.cases, auto)
-    apply (rule accept_value_accept_val_env.Unit)
-   apply (rename_tac x' \<omega>')
-   apply (erule accept_state.cases, auto)
-   apply (erule accept_val_env.cases, auto)
-  apply (erule accept_state.cases, auto)
- apply (erule accept_val_env.cases, auto)
-done
+proof
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>" then 
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps)+ 
+  {
+    fix x' \<omega>'
+    assume "(\<rho>(x \<mapsto> \<lbrace>\<rbrace>)) x' = Some \<omega>'" "x' = x" then
+    have "\<omega>' = \<lbrace>\<rbrace>" by simp
+
+    from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e`
+    have "{^\<lparr>\<rparr>} \<subseteq> \<V> x" by (rule accept_exp.cases; auto)+
+    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>" by (simp add: Unit)
+ 
+    from `x' = x` `\<omega>' = \<lbrace>\<rbrace>` `{^\<lparr>\<rparr>} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>`
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by simp
+    
+  } moreover 
+  {
+    fix x' \<omega>'
+    assume "(\<rho>(x \<mapsto> \<lbrace>\<rbrace>)) x' = Some \<omega>'" "x' \<noteq> x" then
+    have "\<rho> x' = Some \<omega>'" by simp
+
+    from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x' = Some \<omega>'`
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: accept_val_env.simps)
+
+  } then
+  show "\<forall>x' \<omega>'. (\<rho>(x \<mapsto> \<lbrace>\<rbrace>)) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" using calculation by auto
+qed
+
 
 lemma accept_state_to_stack_let: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
