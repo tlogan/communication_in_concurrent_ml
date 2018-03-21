@@ -83,14 +83,16 @@ lemma accept_state_to_exp_let_app: "
  \<rho> f = Some \<lbrace>Abs f' x\<^sub>p e\<^sub>b, \<rho>'\<rbrace> \<Longrightarrow>
  (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>b
 "
- apply (erule accept_state.cases, auto)
- apply (erule accept_exp.cases, auto)
- apply (erule accept_val_env.cases, auto)
- apply (drule spec[of _ f]; auto)
- apply (erule accept_value.cases, auto)
-done
 
-(******)
+proof -
+  assume "\<rho> f = Some \<lbrace>Abs f' x\<^sub>p e\<^sub>b, \<rho>'\<rbrace>"
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle>" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps) then
+  have "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (simp add: accept_val_env.simps)
+  with `\<rho> f = Some \<lbrace>Abs f' x\<^sub>p e\<^sub>b, \<rho>'\<rbrace>`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Abs f' x\<^sub>p e\<^sub>b, \<rho>'\<rbrace>" by simp then
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>b" by (rule accept_value.cases; auto)
+qed
 
 
 lemma accept_state_to_env_result: "
