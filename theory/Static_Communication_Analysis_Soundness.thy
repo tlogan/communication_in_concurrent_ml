@@ -16,8 +16,8 @@ lemma static_send_chan_doesnt_exist_sound: "
   \<rbrakk> \<Longrightarrow> 
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c
 "
- apply (frule lift_flow_exp_to_pool)
- apply (drule flow_preservation_star[of _ _ _ \<E>']; assumption?)
+ apply (frule lift_accept_exp_to_pool)
+ apply (drule accept_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
  apply (erule accept_state_pool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
  apply (erule accept_state.cases; auto)
@@ -52,8 +52,8 @@ lemma static_message_isnt_sent_sound: "
   \<rbrakk> \<Longrightarrow> 
   \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 "
-  apply (frule lift_flow_exp_to_pool)
-  apply (drule flow_preservation_star[of _ _ _ \<E>']; assumption?)
+  apply (frule lift_accept_exp_to_pool)
+  apply (drule accept_preserved_under_concur_step_star [of _ _ _ \<E>']; assumption?)
   apply (erule accept_state_pool.cases; auto)
   apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
   apply (erule accept_state.cases; auto)
@@ -275,8 +275,8 @@ lemma static_recv_chan_doesnt_exist_sound: "
   \<rbrakk> \<Longrightarrow> 
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c
 "
- apply (frule lift_flow_exp_to_pool)
- apply (drule flow_preservation_star[of _ _ _ \<E>']; assumption?)
+ apply (frule lift_accept_exp_to_pool)
+ apply (drule accept_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
  apply (erule accept_state_pool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
  apply (erule accept_state.cases; auto)

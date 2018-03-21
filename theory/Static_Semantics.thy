@@ -580,7 +580,7 @@ proof -
     case (Let_Case_Right \<V> e\<^sub>0 \<pi> x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n x\<^sub>r')
     then show ?case
     using Refl subexp.Let_Case_Right subexp_trans by blast
-    next
+  next
     case (Let_App \<V> e\<^sub>0 \<pi> x f x\<^sub>a e\<^sub>n f' x' e')
     then show ?case
     by (metis (no_types, hide_lams) Let_Abs_Body Refl subexp_trans val_to_bind.simps(3) value_to_abstract_value.simps(3))

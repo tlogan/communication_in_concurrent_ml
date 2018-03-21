@@ -19,7 +19,6 @@ datatype val =
   V_Chan chan ("\<lbrace>_\<rbrace>") |
   V_Closure prim "var \<rightharpoonup> val" ("\<lbrace>_, _\<rbrace>")
 
-
 fun val_to_bind :: "val \<Rightarrow> bind" where
   "val_to_bind \<lbrace>\<rbrace> = \<lparr>\<rparr>" |
   "val_to_bind \<lbrace> _ \<rbrace> = CHAN \<lparr>\<rparr>" |
