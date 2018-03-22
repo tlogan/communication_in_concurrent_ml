@@ -126,28 +126,6 @@ proof
  qed
 qed
 
-(*
- apply (rule accept_value_accept_val_env.Any, auto)
-      apply (erule accept_state.cases, auto)
-      apply (erule accept_val_env.cases, auto)
-      apply (erule accept_stack.cases, auto)
-     apply (erule accept_state.cases, auto)
-     apply (erule accept_val_env.cases, auto)
-    apply (rename_tac x' \<omega>')
-    apply (erule accept_state.cases, auto)
-    apply (erule accept_val_env.cases, auto)
-    apply (drule spec[of _ x]; auto)
-     apply (erule accept_stack.cases; auto)+
-    apply (erule accept_val_env.cases; auto)+
-   apply (rename_tac x' \<omega>')
-   apply (erule accept_state.cases, auto)
-   apply (erule accept_val_env.cases, auto)
-   apply (drule spec[of _ x]; auto)
-    apply (erule accept_stack.cases; auto)+
-   apply (erule accept_val_env.cases; auto)+
-done
-*)
-
 
 lemma accept_state_to_stack_result: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> 
@@ -169,13 +147,13 @@ lemma accept_state_to_state_result: "
 "
 proof
   assume "\<rho> x = Some \<omega>" "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" then
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)" by (blast dest: accept_state_to_env_result)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)" by (blast intro: accept_state_to_env_result)
 
   with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>" by (blast dest: accept_state_to_exp_result)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>" by (blast intro: accept_state_to_exp_result)
 
   with `\<rho> x = Some \<omega>` `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>" by (blast dest: accept_state_to_stack_result)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: accept_state_to_stack_result)
 qed
 
 
@@ -185,6 +163,7 @@ lemma accept_state_to_env_let_unit: "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>" then 
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps)+ 
+
   {
     fix x' \<omega>'
     assume "(\<rho>(x \<mapsto> \<lbrace>\<rbrace>)) x' = Some \<omega>'" "x' = x" then
@@ -214,84 +193,167 @@ qed
 lemma accept_state_to_stack_let: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
 "
- apply (erule accept_state.cases, auto)
-done
+by (erule accept_state.cases; auto)
 
 lemma accept_state_to_state_let_unit: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<lbrace>\<rbrace>); \<kappa>\<rangle>
 "
- apply (rule accept_state.Any)
-    apply (erule accept_state_to_exp_let)
-   apply (erule accept_state_to_env_let_unit)
-  apply (erule accept_state_to_stack_let)
-done
+proof
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>" then
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (auto simp: accept_state_to_exp_let)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>` 
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<lbrace>\<rbrace>)" by (auto simp: accept_state_to_env_let_unit)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>` 
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (auto simp: accept_state_to_stack_let)
+
+qed
+
+lemma accept_exp_to_value_let_prim: "
+  (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = Prim p in e \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>p, \<rho>\<rbrace>
+"
+by (erule accept_exp.cases; auto; rule; auto)
 
 lemma accept_state_to_env_let_prim: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>)
 "
- apply (rule accept_value_accept_val_env.Any, auto)
-     apply (erule accept_state.cases, auto)
-     apply (erule accept_exp.cases, auto)
-    apply (erule accept_state.cases, auto)
-    apply ((erule accept_exp.cases, auto); rule, auto)
-   apply (rename_tac x' \<omega>')
-   apply (erule accept_state.cases, auto)
-   apply (erule accept_val_env.cases, auto)
-   apply (erule accept_state.cases, auto)
-  apply (erule accept_val_env.cases, auto)
-done
+proof
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle> " then 
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = Prim p in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps)+ then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>p, \<rho>\<rbrace>" by (simp add: accept_exp_to_value_let_prim)
+
+  {
+    fix x' \<omega>'
+    assume "(\<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>)) x' = Some \<omega>'" "x' = x" then
+    have "\<omega>' = \<lbrace>p, \<rho>\<rbrace>" by simp
+
+    from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = Prim p in e`
+    have "{^p} \<subseteq> \<V> x" by (rule accept_exp.cases; auto)+
+ 
+    from `x' = x` `\<omega>' = \<lbrace>p, \<rho>\<rbrace>` `{^p} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>p, \<rho>\<rbrace>`
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by simp
+    
+  } moreover 
+  {
+    fix x' \<omega>'
+    assume "(\<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>)) x' = Some \<omega>'" "x' \<noteq> x" then
+    have "\<rho> x' = Some \<omega>'" by simp
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` 
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: accept_val_env.simps)
+   
+  } then
+  show "\<forall>x' \<omega>'. (\<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>)) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" using calculation by auto
+qed
 
 lemma accept_state_to_state_let_prim: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>); \<kappa>\<rangle>
 "
- apply (rule accept_state.Any)
-    apply (erule accept_state_to_exp_let)
-   apply (erule accept_state_to_env_let_prim)
-  apply (erule accept_state_to_stack_let)
-done
+proof
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle>" then
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (auto simp: accept_state_to_exp_let)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle>` 
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (auto simp: accept_state_to_stack_let)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle>` 
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>)" by (auto simp: accept_state_to_env_let_prim)
+
+qed
 
 
 lemma accept_state_to_env_let_case_left: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace> \<Longrightarrow> \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)
 "
- apply (rule accept_value_accept_val_env.Any, auto)
-      apply (erule accept_state.cases, auto)
-      apply (erule accept_val_env.cases, auto)
-      apply (drule spec[of _ x\<^sub>s]; auto)
-      apply (erule accept_value.cases, auto)
-      apply (erule accept_val_env.cases, auto)
-      apply (drule spec[of _ x\<^sub>l']; auto)
-      apply (erule accept_exp.cases, auto)
-     apply (erule accept_state.cases, auto)
-     apply (erule accept_val_env.cases, auto)
-     apply (drule spec[of _ x\<^sub>s]; auto)
-     apply (erule accept_value.cases, auto)
-     apply (erule accept_val_env.cases, auto)
-    apply (rename_tac x' \<omega>')
-    apply (erule accept_state.cases, auto)
-    apply (erule accept_val_env.cases, auto)
-   apply (rename_tac x' \<omega>')
-   apply (erule accept_state.cases, auto)
-   apply (erule accept_val_env.cases, auto)
-done
+
+proof
+  assume "\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>" "\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l"
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>" then 
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps)+
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>" by (blast intro: accept_val_env.cases) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l" by (blast intro: accept_value.cases)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l` `\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l`
+  have "{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l'" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>l" by (blast intro: accept_val_env.cases)+
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>`
+  have " | \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace> | \<in> \<V> x\<^sub>s" by (blast intro: accept_val_env.cases) then
+  have "^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s" by simp
+
+  from  `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e`
+  have "\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l"
+  proof cases
+    case Let_Case
+    from `\<forall>x\<^sub>l'. ^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l`
+    and `^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s`
+    show "\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l" by simp
+  qed
+
+  {
+    fix x' \<omega>'
+    assume "(\<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)) x' = Some \<omega>'" "x' = x\<^sub>l" then
+    have "\<omega>' = \<omega>\<^sub>l" by simp 
+
+    from `{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l'` `\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l` 
+    have "{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l" by blast
+
+    from `{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>l` `\<omega>' = \<omega>\<^sub>l` `x' = x\<^sub>l`  
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by blast
+    
+  } moreover 
+  {
+    fix x' \<omega>'
+    assume "(\<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)) x' = Some \<omega>'" "x' \<noteq> x\<^sub>l" then
+    have "\<rho> x' = Some \<omega>'" by simp
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` 
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: accept_val_env.simps)
+   
+  } then
+  show "\<forall>x' \<omega>'. (\<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" using calculation by auto
+qed
+
 
 lemma accept_state_to_stack_let_case_left: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace> \<Longrightarrow> \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
 "
- apply (rule accept_stack.Nonempty)
-    apply (erule accept_state.cases, auto, rename_tac \<omega>)
-    apply (erule accept_val_env.cases, auto)
-    apply (drule spec[of _ x\<^sub>s]; auto)
-    apply (erule accept_exp.cases, auto)
-   apply (erule accept_state.cases, auto)
-   apply (erule accept_exp.cases, auto)
-  apply (erule accept_state.cases, auto)
- apply (erule accept_state.cases, auto)
-done
+proof
+
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>"
+  assume "\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>" "\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l"
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: accept_state.cases)+
+  
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>`
+  have " | \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace> | \<in> \<V> x\<^sub>s" by (blast intro: accept_val_env.cases) then
+  have "^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s" by simp
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e`
+  show "\<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x" 
+  proof cases
+    case Let_Case
+    assume "\<forall>x\<^sub>l'. ^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l"
+    with `^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s`
+    show "\<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x" by blast
+  qed
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: accept_state_to_exp_let)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: accept_state.cases)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: accept_state_to_stack_let)
+  
+qed
+
 
 lemma accept_state_to_state_let_case_left: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
@@ -299,11 +361,20 @@ lemma accept_state_to_state_let_case_left: "
   \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>l; \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l); \<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>
 "
- apply (rule accept_state.Any)
-    apply (erule accept_state_to_exp_let_case_left, simp)
-   apply (erule accept_state_to_env_let_case_left, simp, auto)
-  apply (erule accept_state_to_stack_let_case_left, simp, auto)
-done
+proof
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>" and "\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>" then
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l" by (simp add: accept_state_to_exp_let_case_left)
+
+  assume "\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l"
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>` and `\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>` 
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)" by (simp add: accept_state_to_env_let_case_left)
+
+  from `\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l`  
+  and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>` 
+  and `\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>` 
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>" by (simp add: accept_state_to_stack_let_case_left)
+qed
+
 
 lemma accept_state_to_env_let_case_right: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 

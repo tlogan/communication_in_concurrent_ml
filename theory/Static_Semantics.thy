@@ -369,7 +369,7 @@ lemma stack_traceable_preserved_over_balanced_extension:
 proof -
   assume "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>" "\<downharpoonright>\<pi>'\<upharpoonleft>" then 
   show "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> \<kappa>"
-  proof cases
+  proof (cases rule: stack_traceable.cases)
     case Empty 
     from `\<downharpoonright>\<pi>\<upharpoonleft>` `\<downharpoonright>\<pi>'\<upharpoonleft>`
     have "\<downharpoonright>(\<pi> @ \<pi>')\<upharpoonleft>" by (simp add: Append) then
