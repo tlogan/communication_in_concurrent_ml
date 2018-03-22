@@ -92,7 +92,6 @@ proof -
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>b" by (rule accept_value.cases; auto)
 qed
 
-
 lemma accept_state_to_env_result: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x = Some \<omega> \<Longrightarrow> 
@@ -100,8 +99,14 @@ lemma accept_state_to_env_result: "
 "
 proof
  assume "\<rho> x = Some \<omega> "
+
  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" then
- have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (rule accept_state.cases; auto)+ then
+ have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (rule accept_state.cases; auto)+
+
+ from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> x = Some \<omega>`
+ have "{|\<omega>|} \<subseteq> \<V> x" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (simp add: accept_val_env.simps)+
+
+ from `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>`
  show "\<forall>x \<omega>'. (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)) x = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'"
  proof cases
    case Nonempty
@@ -110,10 +115,9 @@ proof
      assume "(\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)) x' = Some \<omega>'" and "x' = x\<^sub>\<kappa>" then
      have "\<omega>' = \<omega>" by simp
 
-     from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> x = Some \<omega>`
-     have "{|\<omega>|} \<subseteq> \<V> x" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (simp add: accept_val_env.simps)+
-     with `\<V> x \<subseteq> \<V> x\<^sub>\<kappa>` `x' = x\<^sub>\<kappa>` `\<omega>' = \<omega>`
+     from `{|\<omega>|} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>` `\<V> x \<subseteq> \<V> x\<^sub>\<kappa>` `x' = x\<^sub>\<kappa>` `\<omega>' = \<omega>`
      have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by blast
+
    } moreover
    {
      fix x' \<omega>'
@@ -164,15 +168,15 @@ proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>" then 
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps)+ 
 
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e`
+  have "{^\<lparr>\<rparr>} \<subseteq> \<V> x" by (rule accept_exp.cases; auto)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>" by (simp add: Unit)
+
   {
     fix x' \<omega>'
     assume "(\<rho>(x \<mapsto> \<lbrace>\<rbrace>)) x' = Some \<omega>'" "x' = x" then
     have "\<omega>' = \<lbrace>\<rbrace>" by simp
 
-    from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e`
-    have "{^\<lparr>\<rparr>} \<subseteq> \<V> x" by (rule accept_exp.cases; auto)+
-    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>" by (simp add: Unit)
- 
     from `x' = x` `\<omega>' = \<lbrace>\<rbrace>` `{^\<lparr>\<rparr>} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>`
     have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by simp
     
@@ -223,14 +227,14 @@ proof
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = Prim p in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps)+ then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>p, \<rho>\<rbrace>" by (simp add: accept_exp_to_value_let_prim)
 
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = Prim p in e`
+  have "{^p} \<subseteq> \<V> x" by (rule accept_exp.cases; auto)+
+
   {
     fix x' \<omega>'
     assume "(\<rho>(x \<mapsto> \<lbrace>p, \<rho>\<rbrace>)) x' = Some \<omega>'" "x' = x" then
     have "\<omega>' = \<lbrace>p, \<rho>\<rbrace>" by simp
 
-    from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = Prim p in e`
-    have "{^p} \<subseteq> \<V> x" by (rule accept_exp.cases; auto)+
- 
     from `x' = x` `\<omega>' = \<lbrace>p, \<rho>\<rbrace>` `{^p} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>p, \<rho>\<rbrace>`
     have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by simp
     
@@ -293,13 +297,13 @@ proof
     show "\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l" by simp
   qed
 
+  from `{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l'` `\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l` 
+  have "{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l" by blast
+
   {
     fix x' \<omega>'
     assume "(\<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)) x' = Some \<omega>'" "x' = x\<^sub>l" then
     have "\<omega>' = \<omega>\<^sub>l" by simp 
-
-    from `{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l'` `\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l` 
-    have "{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l" by blast
 
     from `{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>l` `\<omega>' = \<omega>\<^sub>l` `x' = x\<^sub>l`  
     have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by blast
@@ -407,13 +411,13 @@ proof
     show "\<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r" by simp
   qed
 
+  from `{|\<omega>\<^sub>r|} \<subseteq> \<V> x\<^sub>r'` `\<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r` 
+  have "{|\<omega>\<^sub>r|} \<subseteq> \<V> x\<^sub>r" by blast
+
   {
     fix x' \<omega>'
     assume "(\<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r)) x' = Some \<omega>'" "x' = x\<^sub>r" then
     have "\<omega>' = \<omega>\<^sub>r" by simp 
-
-    from `{|\<omega>\<^sub>r|} \<subseteq> \<V> x\<^sub>r'` `\<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r` 
-    have "{|\<omega>\<^sub>r|} \<subseteq> \<V> x\<^sub>r" by blast
 
     from `{|\<omega>\<^sub>r|} \<subseteq> \<V> x\<^sub>r` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>r` `\<omega>' = \<omega>\<^sub>r` `x' = x\<^sub>r`  
     have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by blast
@@ -492,6 +496,104 @@ lemma accept_state_to_env_let_fst: "
   \<rho> x\<^sub>p = Some \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace> \<Longrightarrow> \<rho>\<^sub>p x\<^sub>1 = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<omega>)
 "
+proof
+  assume "\<rho> x\<^sub>p = Some \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>" and "\<rho>\<^sub>p x\<^sub>1 = Some \<omega>"
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle>" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FST x\<^sub>p in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps)+
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>" by (blast intro: accept_val_env.cases) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>p" by (blast intro: accept_value.cases)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>p` `\<rho>\<^sub>p x\<^sub>1 = Some \<omega>`
+  have "{|\<omega>|} \<subseteq> \<V> x\<^sub>1" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (blast intro: accept_val_env.cases)+
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>`
+  have " | \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace> | \<in> \<V> x\<^sub>p" by (blast intro: accept_val_env.cases) then
+  have "^prim.Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p" by simp
+
+  from  `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FST x\<^sub>p in e`
+  have "\<V> x\<^sub>1 \<subseteq> \<V> x"
+  proof cases
+    case Let_Fst
+    from `\<forall>x\<^sub>1 x\<^sub>2. ^prim.Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>1 \<subseteq> \<V> x`
+    and `^prim.Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p`
+    show "\<V> x\<^sub>1 \<subseteq> \<V> x" by blast
+  qed
+
+
+  from `{|\<omega>|} \<subseteq> \<V> x\<^sub>1` `\<V> x\<^sub>1 \<subseteq> \<V> x` 
+  have "{|\<omega>|} \<subseteq> \<V> x" by blast
+
+  {
+    fix x' \<omega>'
+    assume "(\<rho>(x \<mapsto> \<omega>)) x' = Some \<omega>'" "x' = x" then
+    have "\<omega>' = \<omega>" by simp 
+    from `{|\<omega>|} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>` `\<omega>' = \<omega>` `x' = x`  
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by blast
+    
+  } moreover 
+  {
+    fix x' \<omega>'
+    assume "(\<rho>(x \<mapsto> \<omega>)) x' = Some \<omega>'" "x' \<noteq> x" then
+    have "\<rho> x' = Some \<omega>'" by simp
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` 
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: accept_val_env.simps)
+   
+  } then
+  show "\<forall>x' \<omega>'. (\<rho>(x \<mapsto> \<omega>)) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" using calculation by auto
+qed
+
+(*
+proof
+  assume "\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>" "\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l"
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>" then 
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps)+
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>" by (blast intro: accept_val_env.cases) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l" by (blast intro: accept_value.cases)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l` `\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l`
+  have "{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l'" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>l" by (blast intro: accept_val_env.cases)+
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>`
+  have " | \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace> | \<in> \<V> x\<^sub>s" by (blast intro: accept_val_env.cases) then
+  have "^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s" by simp
+
+  from  `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e`
+  have "\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l"
+  proof cases
+    case Let_Case
+    from `\<forall>x\<^sub>l'. ^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l`
+    and `^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s`
+    show "\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l" by simp
+  qed
+
+  {
+    fix x' \<omega>'
+    assume "(\<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)) x' = Some \<omega>'" "x' = x\<^sub>l" then
+    have "\<omega>' = \<omega>\<^sub>l" by simp 
+
+    from `{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l'` `\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l` 
+    have "{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l" by blast
+
+    from `{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>l` `\<omega>' = \<omega>\<^sub>l` `x' = x\<^sub>l`  
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by blast
+    
+  } moreover 
+  {
+    fix x' \<omega>'
+    assume "(\<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)) x' = Some \<omega>'" "x' \<noteq> x\<^sub>l" then
+    have "\<rho> x' = Some \<omega>'" by simp
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` 
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: accept_val_env.simps)
+   
+  } then
+  show "\<forall>x' \<omega>'. (\<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" using calculation by auto
+qed
+*)
+(*
  apply (rule accept_value_accept_val_env.Any, auto)
       apply (erule accept_state.cases, auto)
       apply (erule accept_val_env.cases, auto)
@@ -512,6 +614,8 @@ lemma accept_state_to_env_let_fst: "
    apply (erule accept_state.cases, auto)
    apply (erule accept_val_env.cases, auto)
 done
+*)
+
 
 lemma accept_state_to_state_left_fst: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
