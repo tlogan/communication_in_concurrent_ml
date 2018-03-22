@@ -637,56 +637,72 @@ qed
 
 
 lemma accept_state_to_env_let_app: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> f = Some \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace> \<Longrightarrow> \<rho> x\<^sub>a = Some \<omega>\<^sub>a \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l(f\<^sub>l \<mapsto> \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>, x\<^sub>l \<mapsto> \<omega>\<^sub>a)
 "
- apply (rule accept_value_accept_val_env.Any, auto)
-           apply (erule accept_state.cases, auto)
-           apply (erule accept_exp.cases, auto, (drule spec)+, auto)
-            apply (erule accept_val_env.cases, auto, (drule spec)+, auto)
-           apply (erule accept_val_env.cases, auto)
-          apply (erule accept_state.cases, auto)
-          apply (erule accept_val_env.cases, auto)
-         apply (erule accept_state.cases, auto)
-         apply (erule accept_val_env.cases, auto)
-         apply (drule spec[of _ f]; auto)
-         apply (erule accept_value.cases, auto)
-        apply (erule accept_state.cases, auto)
-        apply (erule accept_val_env.cases, auto)
-       apply (erule accept_state.cases, auto)
-       apply (erule accept_val_env.cases, auto)
-       apply (frule spec[of _ f])
-       apply (drule spec[of _ "\<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>"])
-       apply (drule spec[of _ x\<^sub>a])
-       apply (drule spec[of _ \<omega>\<^sub>a], auto)
-       apply (erule accept_exp.cases, auto)
-      apply (erule accept_state.cases, auto)
-      apply (erule accept_val_env.cases, auto)
-     apply (rename_tac x' \<omega>)
-     apply (erule accept_state.cases, auto)
-     apply (erule accept_val_env.cases, auto)
-     apply (frule spec[of _ f])
-     apply (drule spec[of _ "\<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>"])
-     apply (drule spec[of _ x\<^sub>a])
-     apply (drule spec[of _ \<omega>\<^sub>a]; auto)
-     apply (erule accept_value.cases, auto)
-     apply (erule accept_val_env.cases, auto)
-    apply (rename_tac x' \<omega>)
-    apply (erule accept_state.cases, auto)
-    apply (erule accept_val_env.cases, auto)
-    apply (frule spec[of _ f])
-    apply (drule spec[of _ "\<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>"])
-    apply (drule spec[of _ x\<^sub>a])
-    apply (drule spec[of _ \<omega>\<^sub>a]; auto)
-    apply (erule accept_value.cases, auto)
-    apply (erule accept_val_env.cases, auto)
-done
+proof
+  assume "\<rho> f = Some \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>" "\<rho> x\<^sub>a = Some \<omega>\<^sub>a"
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle>" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps)+
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> x\<^sub>a = Some \<omega>\<^sub>a`
+  have "{|\<omega>\<^sub>a|} \<subseteq> \<V> x\<^sub>a" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>a" by (blast intro: accept_val_env.cases)+
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> f = Some \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>`
+  have "{|\<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>|} \<subseteq> \<V> f" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>" by (blast intro: accept_val_env.cases)+
+
+  from `{|\<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>|} \<subseteq> \<V> f`
+  have "^Abs f\<^sub>l x\<^sub>l e\<^sub>l \<in> \<V> f" by simp
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>`
+  have "{|\<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>|} \<subseteq> \<V> f\<^sub>l" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l" by (rule accept_value.cases; auto)+
+
+
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e`
+  have "\<V> x\<^sub>a \<subseteq> \<V> x\<^sub>l"
+  proof cases
+    case Let_App
+    assume "\<forall>f' x' e'. ^Abs f' x' e' \<in> \<V> f \<longrightarrow> \<V> x\<^sub>a \<subseteq> \<V> x' \<and> \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x"
+    with `^Abs f\<^sub>l x\<^sub>l e\<^sub>l \<in> \<V> f`
+    show "\<V> x\<^sub>a \<subseteq> \<V> x\<^sub>l" by blast
+  qed
+
+  from `{|\<omega>\<^sub>a|} \<subseteq> \<V> x\<^sub>a` `\<V> x\<^sub>a \<subseteq> \<V> x\<^sub>l`
+  have "{|\<omega>\<^sub>a|} \<subseteq> \<V> x\<^sub>l" by blast
+
+  {
+    fix x' \<omega>'
+    assume "(\<rho>\<^sub>l(f\<^sub>l \<mapsto> \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>, x\<^sub>l \<mapsto> \<omega>\<^sub>a)) x' = Some \<omega>'" "x' = x\<^sub>l" then
+    have "\<omega>' = \<omega>\<^sub>a" by simp 
+    from `{|\<omega>\<^sub>a|} \<subseteq> \<V> x\<^sub>l` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>a` `\<omega>' = \<omega>\<^sub>a` `x' = x\<^sub>l`  
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by blast
+  } moreover 
+  {
+    fix x' \<omega>'
+    assume "(\<rho>\<^sub>l(f\<^sub>l \<mapsto> \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>, x\<^sub>l \<mapsto> \<omega>\<^sub>a)) x' = Some \<omega>'" "x' \<noteq> x\<^sub>l" "x' = f\<^sub>l" then
+    have "\<omega>' = \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>" by simp
+    from `{|\<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>|} \<subseteq> \<V> f\<^sub>l` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>` `\<omega>' = \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>` `x' = f\<^sub>l`  
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by blast
+    
+  } moreover 
+  {
+    fix x' \<omega>'
+    assume "(\<rho>\<^sub>l(f\<^sub>l \<mapsto> \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>, x\<^sub>l \<mapsto> \<omega>\<^sub>a)) x' = Some \<omega>'" "x' \<noteq> x\<^sub>l" "x' \<noteq> f\<^sub>l" then
+    have "\<rho>\<^sub>l x' = Some \<omega>'" by simp
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l` 
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: accept_val_env.simps)
+   
+  } moreover
+  show "\<forall>x \<omega>. (\<rho>\<^sub>l(f\<^sub>l \<mapsto> \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>, x\<^sub>l \<mapsto> \<omega>\<^sub>a)) x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" 
+  using calculation(1) calculation(2) calculation(3) by blast
+
+qed
 
 lemma accept_state_to_stack_let_app: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> f = Some \<lbrace>Abs f' x\<^sub>p e\<^sub>b, \<rho>'\<rbrace> \<Longrightarrow> \<rho> x\<^sub>a = Some \<omega>\<^sub>a \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa>  \<V> (\<lfloor>e\<^sub>b\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>b\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
 "
  apply (rule accept_stack.Nonempty)
     apply (erule accept_state.cases, auto) 
@@ -700,9 +716,9 @@ done
 
 
 lemma accept_state_to_state_let_app: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> f = Some \<lbrace>Abs f' x\<^sub>p e\<^sub>b, \<rho>'\<rbrace> \<Longrightarrow> \<rho> x\<^sub>a = Some \<omega>\<^sub>a \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<langle>e\<^sub>b; \<rho>'(f' \<mapsto> \<lbrace>Abs f' x\<^sub>p e\<^sub>b, \<rho>'\<rbrace>, x\<^sub>p \<mapsto> \<omega>\<^sub>a); \<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>b; \<rho>'(f' \<mapsto> \<lbrace>Abs f' x\<^sub>p e\<^sub>b, \<rho>'\<rbrace>, x\<^sub>p \<mapsto> \<omega>\<^sub>a); \<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>
 "
  apply (rule accept_state.Any)
     apply (erule accept_state_to_exp_let_app, simp)

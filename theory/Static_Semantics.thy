@@ -370,14 +370,15 @@ proof -
   assume "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>" "\<downharpoonright>\<pi>'\<upharpoonleft>" then 
   show "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> \<kappa>"
   proof (cases rule: stack_traceable.cases)
-    case Empty 
+    case Empty assume "\<kappa> = []" "\<downharpoonright>\<pi>\<upharpoonleft>"
+    
     from `\<downharpoonright>\<pi>\<upharpoonleft>` `\<downharpoonright>\<pi>'\<upharpoonleft>`
     have "\<downharpoonright>(\<pi> @ \<pi>')\<upharpoonleft>" by (simp add: Append) then
     have "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> []" by (simp add: stack_traceable.Empty)
     with `\<kappa> = []`
     show "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> \<kappa>" by blast
   next
-    case (Empty_Local \<pi>\<^sub>2 \<pi>\<^sub>1 x)
+    case (Empty_Local \<pi>\<^sub>2 \<pi>\<^sub>1 x) assume "\<pi> = \<pi>\<^sub>1 @ .x # \<pi>\<^sub>2" "\<kappa> = []" "\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>"
     from `\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>` `\<downharpoonright>\<pi>'\<upharpoonleft>` 
     have "\<downharpoonright>(\<pi>\<^sub>2 @ \<pi>')\<upharpoonleft>" by (simp add: Append) then
     have "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ .x # \<pi>\<^sub>2 @ \<pi>' \<mapsto> []" by (simp add: stack_traceable.Empty_Local)
@@ -385,6 +386,10 @@ proof -
     show "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> \<kappa>" by simp
   next
     case (Nonempty \<pi>\<^sub>2 \<pi>\<^sub>1 x\<^sub>\<kappa> b e\<^sub>\<kappa> \<kappa>' \<rho>\<^sub>\<kappa>) 
+    assume 
+      "\<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2" "\<kappa> = \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>'" 
+      "\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>" "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>" "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> \<kappa>'"
+
     from `\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>` `\<downharpoonright>\<pi>'\<upharpoonleft>`
     have "\<downharpoonright>(\<pi>\<^sub>2 @ \<pi>')\<upharpoonleft>" by (simp add: Append)
     with `\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>` `\<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> \<kappa>'`
@@ -453,73 +458,49 @@ proof -
     show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e" by simp
   next
     case (Let e e\<^sub>n x b)
+    assume "e \<preceq>\<^sub>e e\<^sub>n" "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>n"
+
     have "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e\<^sub>n \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = b in e\<^sub>n" by (simp add: subexp.Let) 
-    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>n` (* IH *)
+    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>n`
     show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = b in e\<^sub>n" by blast
   next
     case (Let_Spawn_Child e e\<^sub>c x e\<^sub>n)
+    assume "e \<preceq>\<^sub>e e\<^sub>c" "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>c"
+
     have "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e\<^sub>c \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = SPAWN e\<^sub>c in e\<^sub>n" by (simp add: subexp.Let_Spawn_Child)
-    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>c` (* IH *)
+    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>c`
     show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = SPAWN e\<^sub>c in e\<^sub>n"by blast
   next
     case (Let_Case_Left e e\<^sub>l x x\<^sub>s x\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n)
+    assume "e \<preceq>\<^sub>e e\<^sub>l" "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>l"
+
     have "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e\<^sub>l \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n" by (simp add: subexp.Let_Case_Left)
-    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>l` (* IH *)
+    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>l`
     show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n" by blast
   next
     case (Let_Case_Right e e\<^sub>r x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>n)
+    assume "e \<preceq>\<^sub>e e\<^sub>r" "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>r"
+
     have "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e\<^sub>r \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n" by (simp add: subexp.Let_Case_Right)
-    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>r` (* IH *)
+    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>r`
     show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n" by blast
   next
     case (Let_Abs_Body e e\<^sub>b x f x\<^sub>p e\<^sub>n)
+    assume "e \<preceq>\<^sub>e e\<^sub>b" "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>b"
+
     have "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e\<^sub>b \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n" by (simp add: subexp.Let_Abs_Body)
-    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>b` (* IH *)
+    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>b`
     show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n" by blast
   qed 
   with `e\<^sub>x \<preceq>\<^sub>e e\<^sub>y`
   show "e\<^sub>x \<preceq>\<^sub>e e\<^sub>z" by blast
 qed
-(*
-  apply (erule subexp.induct; auto)
-   apply (drule spec; auto, rule subexp.Let, assumption)
-   apply (drule spec; auto, rule subexp.Let_Spawn_Child, assumption)
-   apply (drule spec; auto, rule subexp.Let_Case_Left, assumption)
-   apply (drule spec; auto, rule subexp.Let_Case_Right, assumption)
-   apply (drule spec; auto, rule subexp.Let_Abs_Body, assumption)
-*)
 
 lemma subexp1: "
   e\<^sub>n \<preceq>\<^sub>e LET x = b in e\<^sub>n
 "
 by (simp add: Let Refl)
 
-(*
-lemma traceable_implies_subexp': "
-  \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<Longrightarrow>
-    (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . LET x = val_to_bind \<omega> in e\<^sub>n \<preceq>\<^sub>e e\<^sub>0)) \<longrightarrow>
-    e \<preceq>\<^sub>e e\<^sub>0
-"
- apply (erule traceable.induct; auto)
-    apply (rule subexp.Refl)
-
-   apply (rotate_tac -1, rule subexp_trans; auto?; rule subexp1)+
-
-   apply (rule subexp_trans; auto?; rule subexp.Let_Spawn_Child; rule subexp.Refl)
-         
-   apply (rotate_tac -1, rule subexp_trans; auto?; rule subexp1)+
-      
-   apply (rule subexp_trans; auto?; rule subexp.Let_Case_Left; rule subexp.Refl)
-   
-   apply (rule subexp_trans; auto?; rule subexp.Let_Case_Right; rule subexp.Refl)
-
-   apply (drule_tac x = f in spec)
-   apply (drule_tac x = "\<lbrace> Abs f' x' e' , _\<rbrace>" in spec)
-   apply (erule impE; simp)
-   apply (blast intro:  Let_Abs_Body Refl subexp_trans)
-
-done
-*)
 
 theorem traceable_implies_subexp: "
   \<lbrakk>

@@ -49,7 +49,7 @@ type_synonym exp_map = "exp \<Rightarrow> var set"
 inductive channel_live :: "(abstract_value_env \<times> exp_map \<times> exp_map) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [55,0,55]55) where
   Result: "
     \<lbrakk>
-      ^Chan x\<^sub>c \<in> \<V> x \<longrightarrow> {y} \<subseteq> \<L>n (RESULT y)
+      {y | x\<^sub>c . built_on_channel \<V> x\<^sub>c y} \<subseteq> \<L>n (RESULT y)
     \<rbrakk> \<Longrightarrow>
     (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> RESULT y
   " |
@@ -216,16 +216,16 @@ inductive channel_live :: "(abstract_value_env \<times> exp_map \<times> exp_map
   " |
   Let_App: "
     \<lbrakk>
-
-      \<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<longrightarrow> \<L>n e\<^sub>b \<subseteq> \<L>x (LET x = APP f x\<^sub>a in e);
+      (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<longrightarrow> 
+        \<L>n e \<subseteq> \<L>x (RESULT \<lfloor>e\<^sub>b\<rfloor>) \<and>
+        \<L>x (RESULT \<lfloor>e\<^sub>b\<rfloor>) \<union> {\<lfloor>e\<^sub>b\<rfloor> | x\<^sub>c . built_on_channel \<V> x\<^sub>c (\<lfloor>e\<^sub>b\<rfloor>)} \<subseteq> \<L>n (RESULT \<lfloor>e\<^sub>b\<rfloor>) \<and>
+        \<L>n e\<^sub>b \<subseteq> \<L>x (LET x = APP f x\<^sub>a in e)
+      );
       (
         (\<L>x (LET x = APP f x\<^sub>a in e) - 
           {x | x\<^sub>c . built_on_channel \<V> x\<^sub>c x}) \<union>
         {x\<^sub>a | x\<^sub>c . built_on_channel \<V> x\<^sub>c x\<^sub>a}
       ) \<subseteq> \<L>n (LET x = APP f x\<^sub>a in e);
-
-      \<L>n e \<subseteq> \<L>x (RESULT \<lfloor>e\<^sub>b\<rfloor>);
-      \<L>x (RESULT \<lfloor>e\<^sub>b\<rfloor>) \<union> {\<lfloor>e\<^sub>b\<rfloor> | x\<^sub>c . built_on_channel \<V> x\<^sub>c (\<lfloor>e\<^sub>b\<rfloor>)} \<subseteq> \<L>n (RESULT \<lfloor>e\<^sub>b\<rfloor>);
 
       (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
