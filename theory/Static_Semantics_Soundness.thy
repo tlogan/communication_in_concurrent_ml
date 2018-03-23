@@ -546,7 +546,7 @@ qed
 
 
 
-lemma accept_state_to_state_left_fst: "
+lemma accept_state_to_state_let_fst: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> x\<^sub>p = Some \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace> \<Longrightarrow> \<rho>\<^sub>p x\<^sub>1 = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>
@@ -757,16 +757,66 @@ theorem accept_state_preserved_under_step : "
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'
 "
- apply (erule seq_step.cases, auto)
-  apply (simp add: accept_state_to_state_result)
-  apply (simp add: accept_state_to_state_let_unit)
-  apply (simp add: accept_state_to_state_let_prim)
-  apply (simp add: accept_state_to_state_left_fst)
-  apply (simp add: accept_state_to_state_let_snd)
-  apply (simp add: accept_state_to_state_let_case_left)
-  apply (simp add: accept_state_to_state_let_case_right)
-  apply (simp add: accept_state_to_state_let_app)
-done
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>"
+  assume "\<sigma> \<hookrightarrow> \<sigma>'" then
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'"
+  proof cases
+    case (Result \<rho> x \<omega> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa>)
+    assume "\<sigma> = \<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" and "\<sigma>' = \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>" and "\<rho> x = Some \<omega>" 
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_result)
+  next
+    case (Let_Unit x e \<rho> \<kappa>)
+    assume "\<sigma> = \<langle>LET x = \<lparr>\<rparr> in e;\<rho>;\<kappa>\<rangle>" and "\<sigma>' = \<langle>e;\<rho> ++ [x \<mapsto> \<lbrace>\<rbrace>];\<kappa>\<rangle>"
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_let_unit)
+  next
+    case (Let_Prim x p e \<rho> \<kappa>)
+    assume "\<sigma> = \<langle>LET x = Prim p in e;\<rho>;\<kappa>\<rangle>" and "\<sigma>' = \<langle>e;\<rho> ++ [x \<mapsto> \<lbrace>p, \<rho>\<rbrace>];\<kappa>\<rangle>"
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_let_prim)
+  next
+    case (Fst \<rho> x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega> x e \<kappa>)
+    assume "\<sigma> = \<langle>LET x = FST x\<^sub>p in e;\<rho>;\<kappa>\<rangle>"
+    and "\<sigma>' = \<langle>e;\<rho> ++ [x \<mapsto> \<omega>];\<kappa>\<rangle>"
+    and "\<rho> x\<^sub>p = Some \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>" and "\<rho>\<^sub>p x\<^sub>1 = Some \<omega>"
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_let_fst)
+  next
+    case (Snd \<rho> x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega> x e \<kappa>)
+    assume "\<sigma> = \<langle>LET x = SND x\<^sub>p in e;\<rho>;\<kappa>\<rangle>"
+    and "\<sigma>' = \<langle>e;\<rho> ++ [x \<mapsto> \<omega>];\<kappa>\<rangle>"
+    and "\<rho> x\<^sub>p = Some \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>" and "\<rho>\<^sub>p x\<^sub>2 = Some \<omega>"
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_let_snd)
+  next
+    case (Case_Left \<rho> x\<^sub>s x\<^sub>l' \<rho>\<^sub>l \<omega>\<^sub>l x x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e \<kappa>)
+
+    assume "\<sigma> = \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>"
+    and "\<sigma>' = \<langle>e\<^sub>l;\<rho> ++ [x\<^sub>l \<mapsto> \<omega>\<^sub>l];\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>"
+    and "\<rho> x\<^sub>s = Some \<lbrace>prim.Left x\<^sub>l', \<rho>\<^sub>l\<rbrace>" and "\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l"
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_let_case_left)
+  next
+    case (Case_Right \<rho> x\<^sub>s x\<^sub>r' \<rho>\<^sub>r \<omega>\<^sub>r x x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e \<kappa>)
+    assume "\<sigma> = \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>"
+    and "\<sigma>' = \<langle>e\<^sub>r;\<rho> ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>r];\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>"
+    and "\<rho> x\<^sub>s = Some \<lbrace>prim.Right x\<^sub>r', \<rho>\<^sub>r\<rbrace>"
+    and "\<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r"
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_let_case_right)
+  next
+    case (Let_App \<rho> f f\<^sub>l x\<^sub>l e\<^sub>l \<rho>\<^sub>l x\<^sub>a \<omega>\<^sub>a x e \<kappa>)
+    assume "\<sigma> = \<langle>LET x = APP f x\<^sub>a in e;\<rho>;\<kappa>\<rangle>"
+    and "\<sigma>' = \<langle>e\<^sub>l;\<rho>\<^sub>l ++ [f\<^sub>l \<mapsto> \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>, x\<^sub>l \<mapsto> \<omega>\<^sub>a];\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>"
+    and "\<rho> f = Some \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>"
+    and "\<rho> x\<^sub>a = Some \<omega>\<^sub>a"
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_let_app)
+  qed
+
+qed
 
 lemma accept_preserved_under_seq_step_down: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) \<Longrightarrow> 
