@@ -809,30 +809,23 @@ proof -
  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e " by (blast intro: accept_state_to_exp_let)
 qed
 
-lemma accept_pool_to_env_let_sync_send: "
+
+lemma accept_pool_let_sync_send_values_relate: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> \<Longrightarrow>
-  \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow>
-  \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
-  \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow>
-  \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)
+  \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi>\<^sub>c x\<^sub>c\<rbrace> \<Longrightarrow>
+  {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 "
-proof
+proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
   and "\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)"
   and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"
-  and "\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace>"
-  and "\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)"
-  and "\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"
-  and "\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>"
+  and "\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi>\<^sub>c x\<^sub>c\<rbrace>"
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: accept_state_pool.simps) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: accept_state.simps)+
-  thm accept_val_env.cases
-  thm accept_exp.Let_Sync
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s` and `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>`
   have "{|\<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>|} \<subseteq> \<V> x\<^sub>s\<^sub>e" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>" by (blast intro: accept_val_env.cases)+
@@ -842,29 +835,74 @@ proof
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s\<^sub>e" by (blast intro: accept_value.cases)
-  with `\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace>`
-  have "{|\<lbrace>c\<rbrace>|} \<subseteq> \<V> x\<^sub>s\<^sub>c" by (blast intro: accept_val_env.cases)
-
-  have "\<exists> x\<^sub>c . ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c"
-  proof (cases c)
-    case (Ch \<pi> x\<^sub>c)
-    assume "c = Ch \<pi> x\<^sub>c" with `{|\<lbrace>c\<rbrace>|} \<subseteq> \<V> x\<^sub>s\<^sub>c`
-    have "{|\<lbrace>Ch \<pi> x\<^sub>c\<rbrace>|} \<subseteq> \<V> x\<^sub>s\<^sub>c" by simp then
-    have "{^Chan x\<^sub>c} \<subseteq> \<V> x\<^sub>s\<^sub>c" by simp then
-    show "\<exists> x\<^sub>c . ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c" by auto
-  qed then
-  obtain x\<^sub>c where "^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c" by blast
+  with `\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi>\<^sub>c x\<^sub>c\<rbrace>`
+  have "{|\<lbrace>Ch \<pi>\<^sub>c x\<^sub>c\<rbrace>|} \<subseteq> \<V> x\<^sub>s\<^sub>c" by (blast intro: accept_val_env.cases) then
+  have "{^Chan x\<^sub>c} \<subseteq> \<V> x\<^sub>s\<^sub>c" by simp then
+  have "^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c" by auto
   
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s`
-  have "{^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s"
+  show "{^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c"
   proof cases
     case Let_Sync
     assume "\<forall>x\<^sub>s\<^sub>c x\<^sub>m x\<^sub>c. ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> \<V> x\<^sub>s\<^sub>e \<longrightarrow> ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<longrightarrow> {^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c"
     with `^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> \<V> x\<^sub>s\<^sub>e` and `^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c`
-    show "{^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s" by blast
+    show "{^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c" by blast
   qed
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>" by (simp add: Unit)
 
+qed
+
+lemma accept_pool_let_sync_send_message_relate: "
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
+  \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
+  \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m \<Longrightarrow>
+  {|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>m \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>m
+"
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
+  and "\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)"
+  and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"
+  and "\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m"
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: accept_state_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: accept_state.simps)
+  with `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>" by (blast intro: accept_val_env.cases) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s\<^sub>e" by (blast intro: accept_value.cases)
+  with `\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m`
+  show "{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>m \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>m" by (blast intro: accept_val_env.cases)
+qed
+
+lemma accept_pool_to_env_let_sync_send: "
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
+  \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
+  \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)
+"
+proof
+  assume "\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace>"
+  and  "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
+  and "\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)"
+  and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: accept_state_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: accept_state.simps)+
+
+  have "{^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s"
+  proof (cases c)
+    case (Ch \<pi> x\<^sub>c)
+    assume "c = Ch \<pi> x\<^sub>c" 
+    with `\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace>`
+    and  `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
+    and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
+    and `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>`
+    show "{^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s" using accept_pool_let_sync_send_values_relate by simp
+  qed
+  
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>" by (simp add: Unit)
   {
     fix x' \<omega>'
     assume "(\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)) x' = Some \<omega>'" "x' \<noteq> x\<^sub>s" then
@@ -874,7 +912,47 @@ proof
   }
   with \<open>{^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>\<close> 
   show "\<forall>x \<omega>. (\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)) x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by simp
+qed
 
+
+lemma accept_pool_let_sync_recv_values_relate: "
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
+  \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
+  \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow>
+  \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch \<pi>\<^sub>c x\<^sub>c\<rbrace> \<Longrightarrow>
+  \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r
+"
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
+  and "\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)"
+  and "\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"
+  and "\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch \<pi>\<^sub>c x\<^sub>c\<rbrace>"
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>" by (simp add: accept_state_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r" by (simp add: accept_state.simps)+
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r` and `\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>`
+  have "{|\<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>|} \<subseteq> \<V> x\<^sub>r\<^sub>e" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>" by (blast intro: accept_val_env.cases)+
+
+  from `{|\<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>|} \<subseteq> \<V> x\<^sub>r\<^sub>e`
+  have "^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>r\<^sub>e" by simp
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r\<^sub>e" by (blast intro: accept_value.cases)
+  with `\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch \<pi>\<^sub>c x\<^sub>c\<rbrace>`
+  have "{|\<lbrace>Ch \<pi>\<^sub>c x\<^sub>c\<rbrace>|} \<subseteq> \<V> x\<^sub>r\<^sub>c" by (blast intro: accept_val_env.cases) then
+  have "{^Chan x\<^sub>c} \<subseteq> \<V> x\<^sub>r\<^sub>c" by simp then
+  have "^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c" by auto
+  
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r`
+  show "\<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r"
+  proof cases
+    case Let_Sync
+    assume "\<forall>x\<^sub>r\<^sub>c x\<^sub>c. ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>r\<^sub>e \<longrightarrow> ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow> \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r"
+    with `^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>r\<^sub>e` and `^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c`
+    show "\<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r" by blast
+  qed
 qed
 
 
@@ -883,86 +961,80 @@ lemma accept_pool_to_stack_let: "
   \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
 "
- apply (erule accept_state_pool.cases, auto)
- apply (drule spec[of _ \<pi>])
- apply (drule spec[of _ "\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>"], auto)
- apply (erule accept_state.cases, auto) 
-done
-
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>)" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>" by (simp add: accept_state_pool.simps) then
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (simp add: accept_state_to_stack_let)
+qed
 
 lemma accept_pool_to_env_let_sync_recv: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E>' = \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s; \<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>); \<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r; \<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m); \<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
-  leaf \<E> \<pi>\<^sub>s \<Longrightarrow>
   \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> \<Longrightarrow>
   \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow>
   \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m \<Longrightarrow>
-  leaf \<E> \<pi>\<^sub>r \<Longrightarrow>
   \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>) \<Longrightarrow> 
   \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace> \<Longrightarrow> 
   \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)
 "
-apply (rule accept_value_accept_val_env.Any; auto)
-      apply (erule accept_state_pool.cases, auto)
-      apply (frule spec[of _ \<pi>\<^sub>s])
-      apply (drule spec[of _ \<pi>\<^sub>r])
-      apply (drule spec[of _ "\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>"])
-      apply (drule spec[of _ "\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>"])
-      apply (drule mp[of "\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) "])
-      apply (drule mp[of "\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)"], auto)
-      apply (erule accept_state.cases[of "(\<V>, \<C>)" "\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>"], auto)
-      apply (erule accept_state.cases[of "(\<V>, \<C>)" "\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>"], auto)
-      apply (erule accept_val_env.cases[of "(\<V>, \<C>)" "\<rho>\<^sub>r"], auto)
-      apply (erule accept_val_env.cases[of "(\<V>, \<C>)" "\<rho>\<^sub>s"], auto)
-      apply (drule spec[of _ x\<^sub>r\<^sub>e])
-      apply (drule spec[of _ x\<^sub>s\<^sub>e])
-      apply (drule spec[of _ "\<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"])
-      apply (drule spec[of _ "\<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"])
-      apply (drule mp[of "\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"], simp)
-      apply (drule mp[of "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"]; auto)
-      apply (erule accept_value.cases[of "(\<V>, \<C>)" "\<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"]; auto)
-      apply (erule accept_value.cases[of "(\<V>, \<C>)" "\<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> "]; auto)
-      apply (erule accept_val_env.cases[of "(\<V>, \<C>)" "\<rho>\<^sub>r\<^sub>e"], auto)
-      apply (erule accept_val_env.cases[of "(\<V>, \<C>)" "\<rho>\<^sub>s\<^sub>e"], auto)
-      apply (erule accept_exp.cases[of "(\<V>, \<C>)" "LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r"]; auto)
-      apply (erule accept_exp.cases[of "(\<V>, \<C>)" "LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s"]; auto)
-      apply (thin_tac "\<forall>x\<^sub>s\<^sub>c x\<^sub>m. ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> \<V> x\<^sub>r\<^sub>e \<longrightarrow> (\<forall>x\<^sub>c. ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<longrightarrow> ^\<lparr>\<rparr> \<in> \<V> x\<^sub>r \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c)")
-      apply (thin_tac "\<forall>x\<^sub>r\<^sub>c. ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>s\<^sub>e \<longrightarrow> (\<forall>x\<^sub>c. ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow> \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>s)")
-      apply (drule spec[of _ x\<^sub>r\<^sub>c])
-      apply (frule spec[of _ x\<^sub>s\<^sub>c])
-      apply (drule spec[of _ x\<^sub>m])
-      apply (drule spec[of _ x\<^sub>r\<^sub>c])
-      apply (drule spec[of _ x\<^sub>s\<^sub>c])
-      apply (drule spec[of _ "\<lbrace>c\<rbrace>"])
-      apply (drule spec[of _ "\<lbrace>c\<rbrace>"])
-      apply (drule spec[of _ "\<omega>\<^sub>m"])
-      apply (drule spec[of _ "x\<^sub>m"])
-      apply (case_tac c, rename_tac \<pi> x\<^sub>c, auto)
+proof
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
+  and "\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)"
+  and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"
+  and "\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m" then
+  have "{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>m" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>m" using accept_pool_let_sync_send_message_relate by auto
 
-    apply (erule accept_state_pool.cases, auto)
-    apply (drule spec[of _ \<pi>\<^sub>s])
-    apply (drule spec[of _ "\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>"])
-    apply (drule mp[of "\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) "], auto)
-    apply (erule accept_state.cases[of "(\<V>, \<C>)" "\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>"], auto)
-    apply (erule accept_val_env.cases[of "(\<V>, \<C>)" "\<rho>\<^sub>s"], auto)
-    apply (drule spec[of _ x\<^sub>s\<^sub>e])
-    apply (drule spec[of _ "\<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"])
-    apply (drule mp[of "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"]; auto)
-    apply (erule accept_value.cases[of "(\<V>, \<C>)" "\<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace> "]; auto)
-    apply (erule accept_val_env.cases[of "(\<V>, \<C>)" "\<rho>\<^sub>s\<^sub>e"], auto)
-   apply (erule accept_state_pool.cases, auto)
-   apply (drule spec[of _ \<pi>\<^sub>r])
-   apply (drule spec[of _ "\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>"]; auto)
-   apply (erule accept_state.cases; auto)
-   apply (drule accept_val_env.cases; auto)
-  apply (erule accept_state_pool.cases, auto)
-  apply (drule spec[of _ \<pi>\<^sub>r])
-  apply (drule spec[of _ "\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>"]; auto)
-  apply (erule accept_state.cases; auto)
-  apply (drule accept_val_env.cases; auto)
-done
+  assume "\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace>"
+  and "\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)"
+  and "\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"
+  and "\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>"
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>" by (simp add: accept_state_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r" by (simp add: accept_state.simps)+
+
+
+  have "\<V> x\<^sub>m \<subseteq> \<V> x\<^sub>r"
+  proof (cases c)
+    case (Ch \<pi>\<^sub>c x\<^sub>c)
+    assume "c = Ch \<pi>\<^sub>c x\<^sub>c" 
+
+    with `c = Ch \<pi>\<^sub>c x\<^sub>c`
+    and `\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace>`
+    and `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
+    and `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>`
+    and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
+    and `\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m`
+    have "\<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c" using \<open>\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace>\<close> accept_pool_let_sync_send_values_relate by blast
+
+    with `c = Ch \<pi>\<^sub>c x\<^sub>c`
+    and `\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>`
+    and `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
+    and `\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)`
+    and `\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>`
+    have "\<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r" using  accept_pool_let_sync_recv_values_relate by auto
+
+    from `\<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c` and `\<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r`
+    show "\<V> x\<^sub>m \<subseteq> \<V> x\<^sub>r" by simp
+  qed
+
+  from `{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>m` and `\<V> x\<^sub>m \<subseteq> \<V> x\<^sub>r`
+  have "{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>r" by blast
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: accept_state_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: accept_state.simps)+
+  {
+    fix x' \<omega>'
+    assume "(\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) x' = Some \<omega>'" "x' \<noteq> x\<^sub>r" then
+    have "\<rho>\<^sub>r x' = Some \<omega>'" by simp
+    with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r` 
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: accept_val_env.simps)
+  }
+  with `{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>r` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>m`
+  show "\<forall>x \<omega>. (\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by auto
+qed
 
 
 lemma accept_preserved_under_sync: "
@@ -999,7 +1071,6 @@ lemma accept_preserved_under_sync: "
    apply (erule accept_pool_to_stack_let; auto)
   apply (erule accept_state_pool.cases; auto)
 done
-
 
 
 lemma accept_pool_to_env_let_chan: "
