@@ -1228,25 +1228,73 @@ theorem accept_preserved_under_concur_step : "
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
 "
- apply (erule concur_step.cases, auto)
-   apply (erule accept_preserved_under_seq_step_down, auto)
-   apply (erule accept_preserved_under_seq_step, auto)
-   apply (erule accept_preserved_under_seq_step_up, auto)
-   apply (erule accept_preserved_under_chan, auto)
-   apply (erule accept_preserved_under_spawn, auto)
-   apply ((erule accept_preserved_under_sync; blast?), auto)
-done
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
+  assume "\<E> \<rightarrow> \<E>'" then
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
+  proof cases
+    case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<sigma>')
+    assume "\<E>' = \<E> ++ [\<pi> ;; \<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>']"
+    assume "leaf \<E> \<pi>" and "\<E> \<pi> = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)"
+    and "\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>'"
+    with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close>
+    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; \<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>')" by (simp add:  accept_preserved_under_seq_step_down)
+    with `\<E>' = \<E> ++ [\<pi> ;; \<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>']`
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by simp
+  next
+    case (Seq_Step \<pi> x b e \<rho> \<kappa> e' \<rho>')
+    assume "\<E>' = \<E> ++ [\<pi> ;; `x \<mapsto> \<langle>e';\<rho>';\<kappa>\<rangle>]"
+    assume "leaf \<E> \<pi>" and "\<E> \<pi> = Some (\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle>)"
+    and "\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle> \<hookrightarrow> \<langle>e';\<rho>';\<kappa>\<rangle>"
+    with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close>
+    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; `x \<mapsto> \<langle>e';\<rho>';\<kappa>\<rangle>)" by (simp add: accept_preserved_under_seq_step)
+    with \<open>\<E>' = \<E> ++ [\<pi> ;; `x \<mapsto> \<langle>e';\<rho>';\<kappa>\<rangle>]\<close>
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by simp
+  next
+    case (Seq_Step_Up \<pi> x b e \<rho> \<kappa> e' \<rho>')
+    assume "\<E>' = \<E> ++ [\<pi> ;; \<upharpoonleft>x \<mapsto> \<langle>e';\<rho>';\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>]"
+    assume "leaf \<E> \<pi>" and "\<E> \<pi> = Some (\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle>)"
+    and "\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle> \<hookrightarrow> \<langle>e';\<rho>';\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>"
+    with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close>
+    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; \<upharpoonleft>x \<mapsto> \<langle>e';\<rho>';\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>)" by (simp add: accept_preserved_under_seq_step_up)
+    with \<open>\<E>' = \<E> ++ [\<pi> ;; \<upharpoonleft>x \<mapsto> \<langle>e';\<rho>';\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>]\<close>
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by simp
+  next
+    case (Let_Chan \<pi> x e \<rho> \<kappa>)
+    assume "\<E>' = \<E> ++ [\<pi> ;; `x \<mapsto> \<langle>e;\<rho> ++ [x \<mapsto> \<lbrace>Ch \<pi> x\<rbrace>];\<kappa>\<rangle>]"
+    assume "leaf \<E> \<pi>" and "\<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e;\<rho>;\<kappa>\<rangle>)"
+    with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close>
+    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; `x \<mapsto> \<langle>e;\<rho> ++ [x \<mapsto> \<lbrace>Ch \<pi> x\<rbrace>];\<kappa>\<rangle>)" by (simp add: accept_preserved_under_chan)
+    with \<open>\<E>' = \<E> ++ [\<pi> ;; `x \<mapsto> \<langle>e;\<rho> ++ [x \<mapsto> \<lbrace>Ch \<pi> x\<rbrace>];\<kappa>\<rangle>]\<close>
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by simp
+  next
+    case (Let_Spawn \<pi> x e\<^sub>c e \<rho> \<kappa>)
+    assume "\<E>' = \<E> ++ [\<pi> ;; `x \<mapsto> \<langle>e;\<rho> ++ [x \<mapsto> \<lbrace>\<rbrace>];\<kappa>\<rangle>, \<pi> ;; .x \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>]"
+    assume "leaf \<E> \<pi>" and "\<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e;\<rho>;\<kappa>\<rangle>)"
+    with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close>
+    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; `x \<mapsto> \<langle>e;\<rho> ++ [x \<mapsto> \<lbrace>\<rbrace>];\<kappa>\<rangle>, \<pi> ;; .x \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)" by (simp add: accept_preserved_under_spawn)
+    with \<open>\<E>' = \<E> ++ [\<pi> ;; `x \<mapsto> \<langle>e;\<rho> ++ [x \<mapsto> \<lbrace>\<rbrace>];\<kappa>\<rangle>, \<pi> ;; .x \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>]\<close>
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by simp
+  next
+    case (Sync \<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e c \<omega>\<^sub>m)
+    assume "\<E>' = \<E> ++ [\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> \<lbrace>\<rbrace>];\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m];\<kappa>\<^sub>r\<rangle>]"
 
-theorem accept_preserved_under_concur_step_star' : "
-  \<E> \<rightarrow>* \<E>' \<Longrightarrow>
-  ((\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>')
-"
- apply (erule star.induct[of concur_step], auto)
- apply (rename_tac \<E> \<E>' \<E>'')
- apply (erule notE)
- apply (erule accept_preserved_under_concur_step, auto)
-done
- 
+    assume "leaf \<E> \<pi>\<^sub>s"
+    and "\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)"
+    and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>s\<^sub>e\<rbrace>"
+    and "leaf \<E> \<pi>\<^sub>r"
+    and "\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)"
+    and "\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>r\<^sub>e\<rbrace>"
+    and "\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>c\<rbrace>"
+    and "\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>c\<rbrace>"
+    and "\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m"
+    with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close>
+    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> \<lbrace>\<rbrace>];\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m];\<kappa>\<^sub>r\<rangle>)" by (simp add: accept_preserved_under_sync)
+    with \<open>\<E>' = \<E> ++ [\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> \<lbrace>\<rbrace>];\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m];\<kappa>\<^sub>r\<rangle>]\<close>
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by simp
+  qed
+qed
+
 
 theorem accept_preserved_under_concur_step_star : "
   \<lbrakk>
@@ -1255,7 +1303,21 @@ theorem accept_preserved_under_concur_step_star : "
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
 "
-by (drule accept_preserved_under_concur_step_star', auto)
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
+  assume "\<E> \<rightarrow>* \<E>'" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
+  proof (induction rule: star.induct)
+    case (refl \<E>)
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" by simp
+  next
+    case (step \<E> \<E>\<^sub>m \<E>')
+    assume " \<E> \<rightarrow> \<E>\<^sub>m"
+    and "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<^sub>m \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" then
+    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: accept_preserved_under_concur_step)
+  qed with `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by blast
+qed
 
 theorem accept_env_to_precise : "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
