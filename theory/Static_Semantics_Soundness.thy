@@ -1324,11 +1324,18 @@ theorem accept_env_to_precise : "
   \<Longrightarrow>
   \<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>
 "
- apply (unfold abstract_value_env_precision_def, unfold env_to_abstract_value_env_def)
- apply (rule allI, rename_tac x)
- apply (case_tac "\<rho> x = None", auto, rename_tac \<omega>)
- apply (erule accept_val_env.cases, auto)
-done
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>"
+  {
+    fix x
+    from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>`
+    have "\<forall>\<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x" by (simp add: accept_val_env.simps) then
+    have "(case \<rho> x of None \<Rightarrow> {} | Some \<omega> \<Rightarrow> {|\<omega>|}) \<subseteq> \<V> x"  by (simp add: option.case_eq_if) then
+    have "(\<parallel>\<rho>\<parallel>) x \<subseteq> \<V> x" by (simp add: env_to_abstract_value_env_def)
+  } then
+  show "\<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>" by (simp add: abstract_value_env_precision_def)
+qed
+
 
 theorem accept_state_to_precise : "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>
