@@ -1459,8 +1459,11 @@ proof -
   have "(\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e';\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>'\<rangle>)) (\<pi>\<^sub>r ;; `x\<^sub>r) 
       = Some (\<langle>e';\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>'\<rangle>)" by simp
   with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e';\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>'\<rangle>)\<close>
-  have "\<parallel>\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)\<parallel> \<sqsubseteq> \<V>" by (blast intro: accept_pool_to_precise) then
-  have "|\<omega>\<^sub>m| \<in> \<V> x\<^sub>r" using abstracted_value_exists by auto 
+  have "\<parallel>\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)\<parallel> \<sqsubseteq> \<V>" by (blast intro: accept_pool_to_precise)
+
+  have "(\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) x\<^sub>r = Some \<omega>\<^sub>m" by simp
+  with `\<parallel>\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)\<parallel> \<sqsubseteq> \<V>`
+  have "|\<omega>\<^sub>m| \<in> \<V> x\<^sub>r" using abstracted_value_exists by blast
   with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>r \<mapsto> LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>n\<close> 
   show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> e\<^sub>n" by (blast intro: traceable.Let_Sync)
 qed
@@ -1475,11 +1478,28 @@ lemma traceable_exp_preserved_sync_send_evt: "
 \<rbrakk> \<Longrightarrow> 
 \<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> e'
 "
- apply ((drule spec)+, erule impE, assumption)
- apply (drule accept_pool_to_precise[of \<V> \<C> _ "\<pi>\<^sub>s ;; `x\<^sub>s" e' "\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)" \<kappa>'], auto)
- apply (drule abstracted_value_exists; simp; blast?; rule traceable.Let_Sync; auto)
- apply (subgoal_tac "|\<lbrace>\<rbrace>| \<in> \<V> x\<^sub>s", assumption, simp)
-done
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>'\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)"
+  and "\<pi>\<^sub>s \<noteq> \<pi>\<^sub>r"
+  assume "\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e"
+  and "\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e';\<rho>\<^sub>s;\<kappa>'\<rangle>)" then
+  have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>s \<mapsto> LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e'" by simp
+
+  with `\<pi>\<^sub>s \<noteq> \<pi>\<^sub>r`
+  have "(\<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>'\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) (\<pi>\<^sub>s ;; `x\<^sub>s) 
+      = Some (\<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>'\<rangle>)" by simp
+  with `\<pi>\<^sub>s \<noteq> \<pi>\<^sub>r` \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> \<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>);\<kappa>'\<rangle>, \<pi>\<^sub>r ;; `x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)\<close>
+  have "\<parallel>\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)\<parallel> \<sqsubseteq> \<V>" using accept_pool_to_precise by blast
+
+  have "(\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)) x\<^sub>s = Some \<lbrace>\<rbrace>" by simp
+  with `\<parallel>\<rho>\<^sub>s(x\<^sub>s \<mapsto> \<lbrace>\<rbrace>)\<parallel> \<sqsubseteq> \<V>`
+  have " |\<lbrace>\<rbrace>| \<in> \<V> x\<^sub>s" using abstracted_value_exists by fastforce
+
+  from \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>s \<mapsto> LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e'\<close> \<open>|\<lbrace>\<rbrace>| \<in> \<V> x\<^sub>s\<close>
+  show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>s ;; `x\<^sub>s \<mapsto> e'" using traceable.Let_Sync by blast
+
+qed
+
 
 lemma traceable_exp_preserved: "
 \<lbrakk>
