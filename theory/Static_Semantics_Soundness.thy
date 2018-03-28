@@ -1577,7 +1577,26 @@ lemma isnt_traceable_sound: "
   \<rbrakk> \<Longrightarrow>
   \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e
 "
- apply (drule star_implies_star_left)
-using isnt_traceable_sound' lift_accept_exp_to_pool by blast
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>0" and "[[] \<mapsto> \<langle>e\<^sub>0; empty; []\<rangle>] \<rightarrow>* \<E>"
+  and "\<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>)"
+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty" by (simp add: accept_value_accept_val_env.Any)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>0\<rfloor>) \<Rrightarrow> []" by (simp add: accept_stack.Empty)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>0` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>0\<rfloor>) \<Rrightarrow> []`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>0; empty; []\<rangle>" by (simp add: accept_state.intros)
+
+  have "[[] \<mapsto> \<langle>e; empty; []\<rangle>] [] = Some (\<langle>e; empty; []\<rangle>)" by simp
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>0; empty; []\<rangle>`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0; empty; []\<rangle>]" by (simp add: accept_state_pool.intros)
+
+  from `[[] \<mapsto> \<langle>e\<^sub>0; empty; []\<rangle>] \<rightarrow>* \<E>`
+  have "star_left op \<rightarrow> [[] \<mapsto> \<langle>e\<^sub>0; empty; []\<rangle>] \<E>" by (simp add: star_implies_star_left)
+
+  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]\<close> \<open>\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)\<close> \<open>star_left op \<rightarrow> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<E>\<close>
+  show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e" using isnt_traceable_sound' by blast
+
+qed
 
 end
