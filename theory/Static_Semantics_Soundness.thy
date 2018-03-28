@@ -1336,29 +1336,6 @@ proof -
   show "\<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>" by (simp add: abstract_value_env_precision_def)
 qed
 
-
-theorem accept_state_to_precise : "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>
-  \<Longrightarrow>
-  \<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>
-"
- apply (erule accept_state.cases, auto)
- apply (erule accept_env_to_precise)
-done
-
-lemma accept_pool_to_state: "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>; 
-    \<E> \<pi> = Some \<sigma> 
-  \<rbrakk> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>
-"
- apply (erule accept_state_pool.cases)
- apply (drule spec[of _ \<pi>])
- apply (drule spec[of _ \<sigma>])
- apply (erule impE, auto)
-done
-  
 theorem accept_pool_to_precise : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>;
@@ -1367,24 +1344,12 @@ theorem accept_pool_to_precise : "
   \<Longrightarrow>
   \<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>
 "
- apply (drule accept_pool_to_state, simp)
- apply (erule accept_state_to_precise)
-done
-
-theorem lift_accept_exp_to_state: "(\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<langle>e; empty; []\<rangle>"
- apply (rule accept_state.Any, auto)
- apply (rule+, auto, rule)
-done
-
-theorem  lift_accept_state_to_pool: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<sigma> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<sigma>]"
-  apply (rule accept_state_pool.Any)
-  apply (case_tac "\<pi> = []", auto)
-done
-
-theorem lift_accept_exp_to_pool: "(\<V>, \<C>) \<Turnstile>\<^sub>e  e \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]"
-  apply (drule lift_accept_exp_to_state)
-  apply (erule lift_accept_state_to_pool)
-done
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>)" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>" by (simp add: accept_state_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps) then
+  show "\<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>"  by (simp add: accept_env_to_precise)
+qed
 
 theorem accept_pool_sound : "
   \<lbrakk>
@@ -1394,9 +1359,12 @@ theorem accept_pool_sound : "
   \<rbrakk> \<Longrightarrow>
   \<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>
 "
- apply (drule accept_preserved_under_concur_step_star[of \<V> \<C> _ \<E>'], auto)
- apply (erule accept_pool_to_precise[of \<V> \<C> \<E>' \<pi> e' \<rho>' \<kappa>'], auto)
-done
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<rightarrow>* \<E>'" and "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: accept_preserved_under_concur_step_star)
+  with \<open>\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
+  show "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (blast intro: accept_pool_to_precise)
+qed
 
 
 theorem isnt_abstract_value_sound : "
@@ -1407,9 +1375,24 @@ theorem isnt_abstract_value_sound : "
   \<rbrakk> \<Longrightarrow>
   \<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>
 "
- apply (drule lift_accept_exp_to_pool)
- apply (erule accept_pool_sound [of \<V> \<C> _ \<E>' \<pi> e' \<rho>' \<kappa>'], auto)
-done
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e" and "[[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'"
+  and "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty" by (simp add: accept_value_accept_val_env.Any)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []" by (simp add: accept_stack.Empty)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>e e` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; empty; []\<rangle>" by (simp add: accept_state.intros)
+
+  have "[[] \<mapsto> \<langle>e; empty; []\<rangle>] [] = Some (\<langle>e; empty; []\<rangle>)" by simp
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; empty; []\<rangle>`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: accept_state_pool.intros)
+
+  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]\<close> \<open>[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'\<close> \<open>\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
+  show "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (simp add: accept_pool_sound)
+qed
+
 
 corollary abstracted_value_exists: "
   \<lbrakk>
@@ -1418,10 +1401,7 @@ corollary abstracted_value_exists: "
   \<rbrakk> \<Longrightarrow>
   {|\<omega>|} \<subseteq> \<V> x
 "
-  apply (unfold abstract_value_env_precision_def)
-  apply (unfold env_to_abstract_value_env_def)
-  apply (drule spec[of _ x]; auto)
-done
+using abstract_value_env_precision_def env_to_abstract_value_env_def by fastforce
 
 corollary isnt_abstract_value_sound_coro: "
   \<lbrakk>
@@ -1432,11 +1412,8 @@ corollary isnt_abstract_value_sound_coro: "
   \<rbrakk> \<Longrightarrow>
   {|\<omega>|} \<subseteq> \<V> x
 "
-  apply (drule isnt_abstract_value_sound; assumption?)
-  apply (unfold abstract_value_env_precision_def)
-  apply (unfold env_to_abstract_value_env_def)
-  apply fastforce
-done
+using abstracted_value_exists isnt_abstract_value_sound by blast
+
 
 lemma traceable_exp_preserved_sync_recv_evt: "
 \<lbrakk>
