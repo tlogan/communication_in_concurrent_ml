@@ -1415,7 +1415,14 @@ corollary abstracted_value_exists: "
   \<rbrakk> \<Longrightarrow>
   {|\<omega>|} \<subseteq> \<V> x
 "
-using abstract_value_env_precision_def env_to_abstract_value_env_def by fastforce
+proof -
+  assume "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" and "\<rho>' x = Some \<omega>"
+
+  from `\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>`
+  have "(\<parallel>\<rho>'\<parallel>) x \<subseteq> \<V> x" by (simp add: abstract_value_env_precision_def)
+  with `\<rho>' x = Some \<omega>`
+  show "{|\<omega>|} \<subseteq> \<V> x" by (simp add: env_to_abstract_value_env_def)
+qed
 
 corollary isnt_abstract_value_sound_coro: "
   \<lbrakk>
@@ -1426,8 +1433,15 @@ corollary isnt_abstract_value_sound_coro: "
   \<rbrakk> \<Longrightarrow>
   {|\<omega>|} \<subseteq> \<V> x
 "
-using abstracted_value_exists isnt_abstract_value_sound by blast
-
+proof -
+  assume "\<rho>' x = Some \<omega>"
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e"
+  and "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'"
+  and "\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" then
+  have "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (simp add: isnt_abstract_value_sound)
+  with `\<rho>' x = Some \<omega>`
+  show "{|\<omega>|} \<subseteq> \<V> x" using abstracted_value_exists by blast
+qed
 
 lemma traceable_exp_preserved_sync_recv_evt: "
 \<lbrakk>
