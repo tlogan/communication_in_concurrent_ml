@@ -1367,6 +1367,27 @@ proof -
 qed
 
 
+lemma accept_exp_to_pool: "
+  \<lbrakk>
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e
+  \<rbrakk> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]
+"
+proof -
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e"
+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty" by (simp add: accept_value_accept_val_env.Any)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []" by (simp add: accept_stack.Empty)
+
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>e e` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; empty; []\<rangle>" by (simp add: accept_state.intros)
+
+  have "[[] \<mapsto> \<langle>e; empty; []\<rangle>] [] = Some (\<langle>e; empty; []\<rangle>)" by simp
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; empty; []\<rangle>`
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: accept_state_pool.intros)
+qed
+
+
 theorem isnt_abstract_value_sound : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e; 
@@ -1379,15 +1400,8 @@ proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e" and "[[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'"
   and "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty" by (simp add: accept_value_accept_val_env.Any)
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []" by (simp add: accept_stack.Empty)
-
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>e e` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; empty; []\<rangle>" by (simp add: accept_state.intros)
-
-  have "[[] \<mapsto> \<langle>e; empty; []\<rangle>] [] = Some (\<langle>e; empty; []\<rangle>)" by simp
-  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; empty; []\<rangle>`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: accept_state_pool.intros)
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>e e`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: accept_exp_to_pool)
 
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]\<close> \<open>[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'\<close> \<open>\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
   show "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (simp add: accept_pool_sound)
@@ -1547,7 +1561,7 @@ done
 
 lemma isnt_traceable_sound': "
   \<lbrakk>
-    star_left op \<rightarrow> \<E>\<^sub>0 \<E>
+    \<E>\<^sub>0 \<rightarrow>* \<E>
   \<rbrakk> \<Longrightarrow>
   \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
@@ -1555,6 +1569,7 @@ lemma isnt_traceable_sound': "
     \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>
   ))
 "
+ apply (drule star_implies_star_left)
  apply (erule star_left.induct; auto)
   apply (simp add: Start)
   using path_balanced.Empty stack_traceable.Empty apply blast
@@ -1581,22 +1596,11 @@ proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>0" and "[[] \<mapsto> \<langle>e\<^sub>0; empty; []\<rangle>] \<rightarrow>* \<E>"
   and "\<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>)"
 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty" by (simp add: accept_value_accept_val_env.Any)
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>0\<rfloor>) \<Rrightarrow> []" by (simp add: accept_stack.Empty)
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>0`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0; empty; []\<rangle>]" by (simp add: accept_exp_to_pool)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>0` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>0\<rfloor>) \<Rrightarrow> []`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>0; empty; []\<rangle>" by (simp add: accept_state.intros)
-
-  have "[[] \<mapsto> \<langle>e; empty; []\<rangle>] [] = Some (\<langle>e; empty; []\<rangle>)" by simp
-  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>0; empty; []\<rangle>`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0; empty; []\<rangle>]" by (simp add: accept_state_pool.intros)
-
-  from `[[] \<mapsto> \<langle>e\<^sub>0; empty; []\<rangle>] \<rightarrow>* \<E>`
-  have "star_left op \<rightarrow> [[] \<mapsto> \<langle>e\<^sub>0; empty; []\<rangle>] \<E>" by (simp add: star_implies_star_left)
-
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]\<close> \<open>\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)\<close> \<open>star_left op \<rightarrow> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<E>\<close>
+  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]\<close> \<open>\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)\<close> \<open>[[] \<mapsto> \<langle>e\<^sub>0; empty; []\<rangle>] \<rightarrow>* \<E>\<close>
   show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e" using isnt_traceable_sound' by blast
-
 qed
 
 end
