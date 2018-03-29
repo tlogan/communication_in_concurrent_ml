@@ -464,6 +464,8 @@ proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle>" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FST x\<^sub>p in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: accept_state.simps)+
 
+  thm accept_state.simps
+
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>" by (blast intro: accept_val_env.cases) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>p" by (blast intro: accept_value.cases)
@@ -1500,34 +1502,190 @@ proof -
 
 qed
 
-
-lemma traceable_exp_preserved: "
-\<lbrakk>
-  \<E> \<rightarrow> \<E>';
-  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
+lemma traceable_exp_preserved_under_seq_step_down: "
+  (\<E>(\<pi> ;; \<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>')) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>
-  );
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
-\<rbrakk> \<Longrightarrow>
-\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'
+  ) \<Longrightarrow>
+  \<E> \<pi> = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) \<Longrightarrow> 
+  \<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>' \<Longrightarrow> 
+  \<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'
 "
-apply (frule concur_step.cases, auto)
-  
-  apply (case_tac "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>", auto)
-  apply (((drule spec)+, erule impE, assumption, erule conjE))
-  apply (erule stack_traceable.cases; auto)
-  apply (erule seq_step.cases; auto; rule traceable.Result; auto)
+proof -
+  assume "(\<E>(\<pi> ;; \<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>')) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
+  assume 
+    "(\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>
+    )"
+  and "\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>'"
+
+  assume "\<E> \<pi> = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)"
+  with \<open>\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>\<close>
+  have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> RESULT x" "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" by simp+
+
+  from `\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>`
+  obtain b \<pi>\<^sub>1 \<pi>\<^sub>2 
+  where "\<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2" 
+  and "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>"
+  and "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> \<kappa>" and "\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>"
+  by (blast intro: stack_traceable.cases)
+
+  from `\<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2` and `\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> RESULT x`
+  have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<mapsto> RESULT x" by simp
+
+  from `\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>'`
+  obtain \<omega> where "\<rho> x = Some \<omega>" and "\<sigma>' = \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>"
+  by (blast intro: seq_step.cases)
+ 
+  from `\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<mapsto> RESULT x` 
+  and `\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>`
+  and `\<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>`
+  have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # (\<pi>\<^sub>2 ;; \<downharpoonleft>x\<^sub>\<kappa>) \<mapsto> e\<^sub>\<kappa>" by (blast intro: traceable.Result)
+
+  show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'"
+  proof cases
+    assume "\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>"
+    with \<open>(\<E>(\<pi> ;; \<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>')) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
+    have "\<sigma>' = \<langle>e';\<rho>';\<kappa>'\<rangle>" by simp
+    with \<open>\<sigma>' = \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>\<close>
+    have "e' = e\<^sub>\<kappa>" by simp
+
+    from `\<pi>' = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>`
+    and \<open>\<pi> = \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2\<close>
+    and `e' = e\<^sub>\<kappa>`
+    and \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # (\<pi>\<^sub>2 ;; \<downharpoonleft>x\<^sub>\<kappa>) \<mapsto> e\<^sub>\<kappa>\<close> 
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by simp
+  next
+    assume "\<pi>' \<noteq> \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>"
+    with \<open>(\<E>(\<pi> ;; \<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>')) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
+    have "\<E> \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" by simp
+    with \<open>\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>\<close> 
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by simp
+  qed
+qed
+
+lemma traceable_exp_preserved_under_seq_step: "
+  \<E> \<rightarrow> \<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>) \<Longrightarrow>
+  (\<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+  \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
+  leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<langle>LET x = b in e;\<rho>;\<kappa>\<rangle> \<hookrightarrow> \<langle>e'';\<rho>'';\<kappa>\<rangle> \<Longrightarrow> 
+  \<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'
+"
+proof -
+  assume "(\<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
+  assume 
+    "(\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>
+    )"
+  and "\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle> \<hookrightarrow> \<langle>e'';\<rho>'';\<kappa>\<rangle>"
+  assume "\<E> \<rightarrow> \<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)" by (blast intro: accept_preserved_under_concur_step)
+
+  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)\<close> and \<open>(\<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
+  have "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (blast intro: accept_pool_to_precise)
+
+  assume "\<E> \<pi> = Some (\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle>)"
+  with \<open>\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>\<close>
+  have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e" "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>" by simp+
+
+  from `\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle> \<hookrightarrow> \<langle>e'';\<rho>'';\<kappa>\<rangle>`
+  have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''"
+  proof cases
+    case Let_Unit
+    assume "b = \<lparr>\<rparr>" and "e'' = e"
+    with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e\<close> 
+    have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = \<lparr>\<rparr> in e''" by simp then
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by (simp add: traceable.Let_Unit)
+  next
+    case (Let_Prim p)
+    assume "b = Prim p" and "e'' = e"
+    with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e\<close>
+    have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = Prim p in e''" by simp then
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by (simp add: traceable.Let_Prim)
+  next
+    case (Fst x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega>)
+    assume "\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]"
+    assume "b = FST x\<^sub>p" and "e'' = e"
+    with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e\<close>
+    have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = FST x\<^sub>p in e''" by simp 
+    with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)\<close>
+    and `\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]`
+    have "\<parallel>\<rho> ++ [x \<mapsto> \<omega>]\<parallel> \<sqsubseteq> \<V>" using accept_pool_sound by fastforce then
+    have "{|\<omega>|} \<subseteq> \<V> x" using abstracted_value_exists by auto
+    with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = FST x\<^sub>p in e''\<close> \<open>{|\<omega>|} \<subseteq> \<V> x\<close> 
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by (blast intro: traceable.Let_Fst)
+  next
+    case (Snd x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega>)
+    assume "\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]"
+    assume "b = SND x\<^sub>p" and "e'' = e"
+    with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e\<close>
+    have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = SND x\<^sub>p in e''" by simp 
+    with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)\<close>
+    and `\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]`
+    have "\<parallel>\<rho> ++ [x \<mapsto> \<omega>]\<parallel> \<sqsubseteq> \<V>" using accept_pool_sound by fastforce then
+    have "{|\<omega>|} \<subseteq> \<V> x" using abstracted_value_exists by auto
+    with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = SND x\<^sub>p in e''\<close> \<open>{|\<omega>|} \<subseteq> \<V> x\<close> 
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by (blast intro: traceable.Let_Snd)
+  next
+    case (Case_Left x\<^sub>s x\<^sub>l' \<rho>\<^sub>l \<omega>\<^sub>l x\<^sub>l x\<^sub>r e\<^sub>r)
+    from `\<kappa> = \<langle>x,e,\<rho>\<rangle> # \<kappa>`
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by auto
+  next
+    case (Case_Right x\<^sub>s x\<^sub>r' \<rho>\<^sub>r \<omega>\<^sub>r x\<^sub>l e\<^sub>l x\<^sub>r)
+    from `\<kappa> = \<langle>x,e,\<rho>\<rangle> # \<kappa>`
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by auto
+  next
+    case (Let_App f f\<^sub>l x\<^sub>l \<rho>\<^sub>l x\<^sub>a \<omega>\<^sub>a)
+    from `\<kappa> = \<langle>x,e,\<rho>\<rangle> # \<kappa>`
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by auto
+  qed
+
+  show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'"
+  proof cases
+    assume "\<pi>' = \<pi> ;; `x"
+    with \<open>(\<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close> 
+    have "\<langle>e'';\<rho>'';\<kappa>\<rangle> = \<langle>e';\<rho>';\<kappa>'\<rangle>" by simp then
+    have "e'' = e'" by simp
+    from \<open>\<pi>' = \<pi> ;; `x\<close> and \<open>e'' = e'\<close> and \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''\<close>
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by auto
+  next
+    assume "\<pi>' \<noteq> \<pi> ;; `x"
+    with \<open>(\<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
+    have "\<E> \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" by simp
+    with \<open>\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>\<close> 
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by simp
+  qed
+qed
+
+lemma traceable_exp_preserved: "
+  \<lbrakk>
+    \<E> \<rightarrow> \<E>';
+    \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
+    (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>
+    );
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
+  \<rbrakk> \<Longrightarrow>
+  \<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'
+"
+apply (frule concur_step.cases; auto)
+  apply (auto simp: traceable_exp_preserved_under_seq_step_down)
   
   apply (case_tac "\<pi>' = \<pi> ;; `x", auto)
   apply ((drule spec)+, erule impE, assumption, erule conjE)
   apply (drule accept_preserved_under_concur_step, auto)
   apply (drule accept_pool_to_precise, auto)
-  apply (erule seq_step.cases, auto)
+  apply (erule seq_step.cases)
+apply simp
   apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Unit; auto)
   apply (drule abstracted_value_exists; auto; simp; rule traceable.Let_Prim; auto)
   apply (drule abstracted_value_exists; auto; rule traceable.Let_Fst; auto)
   apply (drule abstracted_value_exists; auto; rule traceable.Let_Snd; auto)
+apply simp
+apply simp
+apply simp
   
   apply (case_tac "\<pi>' = \<pi> ;; \<upharpoonleft>x", auto)
   apply ((drule spec)+, erule impE, assumption, erule conjE)
@@ -1558,6 +1716,7 @@ apply (frule concur_step.cases, auto)
   apply (smt exp.inject(1) accept_preserved_under_concur_step option.inject state.inject traceable_exp_preserved_sync_send_evt)
 
 done
+
 
 
 lemma traceable_stack_preserved: "
