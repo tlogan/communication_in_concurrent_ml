@@ -8,14 +8,16 @@ end
 
 structure CourseGrainChan : CHAN = struct
 
-	datatype 'a chan = Ch of 'a chan_content ref  
-  and 'a chan_content = 
+  type message_queue = 'a option ref queue
+
+  datatype 'a chan_content = 
     Send of 'a message_queue | 
     Recv of 'a message_queue | 
     Empty
-  withtype message_queue = 'a option ref queue
 
-  fun channel () = Empty
+	datatype 'a chan = Ch of 'a chan_content ref  
+
+  fun channel () = Ch (ref Empty)
 
   fun send (Ch contentRef) m = let
     val sendMopRef = ref (Some m)
@@ -24,7 +26,7 @@ structure CourseGrainChan : CHAN = struct
 
     (case !contentRef of
       Recv q => 
-        (dequeue q) := Some m;
+        (valOf (dequeue q)) := Some m;
         if (isEmpty q) then contentRef := Empty else (); 
         sendMopRef := None |
       Send q => enqueue (q, sendMopRef) |
@@ -45,7 +47,7 @@ structure CourseGrainChan : CHAN = struct
     (case !contentRef of
       Send q => 
         let
-          val sendMopRef = dequeue q
+          val sendMopRef = valOf (dequeue q)
           val mop = !sendMopRef
         in
           if (isEmpty q) then contentRef := Empty else (); 
@@ -66,3 +68,53 @@ structure CourseGrainChan : CHAN = struct
 end
 
 
+
+structure FineGrainChan : CHAN = struct
+
+  type message_queue = 'a option ref conurrent_queue
+
+
+	datatype 'a chan = Ch of {sendq : 'a message_queue, recvq: 'a message_queue}  
+
+  fun channel () = Ch {sendq = emptyQueue (), recvq = emptyQueue ()} 
+
+  fun send (Ch {sendq, recvq}) m = let
+    
+    fun loop () = 
+      case (dequeue recvq) of
+        None => 
+          enqueue (sendq, sendMopRef)
+        Some statusRef =>      
+          case compareAndSet (statusRef, None, Some m) of
+            Some _ => loop () | (* already synched*)
+            None => () (* success *)
+  in
+    loop ();
+    wait ()
+  end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+end
