@@ -6,7 +6,7 @@ signature CHAN = sig
 end
 
 
-structure CourseGrainChan : CHAN = struct
+structure ManyToManyChan : CHAN = struct
 
   type message_queue = 'a option ref queue
 
@@ -15,14 +15,14 @@ structure CourseGrainChan : CHAN = struct
     Recv of 'a message_queue | 
     Empty
 
-	datatype 'a chan = Ch of 'a chan_content ref  
+	datatype 'a chan = Ch of 'a chan_content ref * mutex_lock 
 
-  fun channel () = Ch (ref Empty)
+  fun channel () = Ch (ref Empty, lock)
 
-  fun send (Ch contentRef) m = let
+  fun send (Ch (contentRef, lock)) m = let
     val sendMopRef = ref (Some m)
   in 
-    mutexAcquire contentRef;
+    mutexAcquire lock;
 
     (case !contentRef of
       Recv q => 
@@ -30,19 +30,19 @@ structure CourseGrainChan : CHAN = struct
         if (isEmpty q) then contentRef := Empty else (); 
         sendMopRef := None |
       Send q => enqueue (q, sendMopRef) |
-      Empty => contentRef := Send (queue sendMopRef) );
+      Empty => contentRef := Send (queue [sendMopRef]));
 
-    mutexRelease contentRef;
+    mutexRelease lock;
 
     wait (sendMopRef, fn mop => mop = None);
 
     ()
   end
    
-  fun recv (Ch contentRef) =  let
+  fun recv (Ch (contentRef, lock)) =  let
     val recvMopRef = ref None
   in 
-    mutexAcquire contentRef;
+    mutexAcquire lock;
 
     (case !contentRef of
       Send q => 
@@ -55,10 +55,10 @@ structure CourseGrainChan : CHAN = struct
           recvMopRef := mop
         end |
       Recv q => enqueue (q, recvMopRef) |
-      Empty => contentRef := Recv (queue recvMopRef)
+      Empty => contentRef := Recv (queue [recvMopRef])
     );
 
-    mutexRelease contentRef;
+    mutexRelease lock;
 
     wait (recvMopRef, fn mop => mop <> None);
 
@@ -69,29 +69,6 @@ end
 
 
 
-structure FineGrainChan : CHAN = struct
-
-  type message_queue = 'a option ref conurrent_queue
-
-
-	datatype 'a chan = Ch of {sendq : 'a message_queue, recvq: 'a message_queue}  
-
-  fun channel () = Ch {sendq = emptyQueue (), recvq = emptyQueue ()} 
-
-  fun send (Ch {sendq, recvq}) m = let
-    
-    fun loop () = 
-      case (dequeue recvq) of
-        None => 
-          enqueue (sendq, sendMopRef)
-        Some statusRef =>      
-          case compareAndSet (statusRef, None, Some m) of
-            Some _ => loop () | (* already synched*)
-            None => () (* success *)
-  in
-    loop ();
-    wait ()
-  end
 
 
 
@@ -114,7 +91,3 @@ structure FineGrainChan : CHAN = struct
 
 
 
-
-
-
-end
