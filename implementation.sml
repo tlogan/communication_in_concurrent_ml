@@ -11,8 +11,8 @@ structure ManyToManyChan : CHAN = struct
   type message_queue = 'a option ref queue
 
   datatype 'a chan_content = 
-    Send of 'a message_queue | 
-    Recv of 'a message_queue | 
+    Send of (cond * 'a) queue | 
+    Recv of (cond  * 'a option ref) queue | 
     Inactive
 
 	datatype 'a chan = Ch of 'a chan_content ref * mutex_lock 
@@ -20,105 +20,169 @@ structure ManyToManyChan : CHAN = struct
   fun channel () = Ch (ref Inactive, lock)
 
   fun send (Ch (contentRef, lock)) m = let
-    val sendMopRef = ref (Some m)
-
-    fun conclude () = 
-      mutexRelease lock; 
-      wait (sendMopRef, fn mop => mop = None);
-      ()
-  in 
+    val sendCond = condition lock 
+  in
     mutexAcquire lock;
-
-    (case !contentRef of
+    case !contentRef of
       Recv q => 
-        (valOf (dequeue q)) := Some m;
-        if (isInactive q) then contentRef := Inactive else (); 
+        let
+          val (recvCond, mopRef) = dequeue q
+        in
+          mopRef := Some m;
+          if (isEmpty q) then contentRef := Inactive else (); 
+          mutexRelease lock;
+          signal recvCond; 
+          () 
+        end
         () |
       Send q => 
-        enqueue (q, sendMopRef);
-        conclude () |
+        enqueue (q, (sendCond, m));
+        mutexRelease lock;
+        wait sendCond;
+        () |
       Inactive => 
-        contentRef := Send (queue [sendMopRef]);
-        conclude ()
-    );
-
+        contentRef := Send (queue [(sendCond, m)]);
+        mutexRelease lock;
+        wait sendCond;
+        ()
   end
    
   fun recv (Ch (contentRef, lock)) =  let
-    val recvMopRef = ref None
-
-    fun conclude () =
-      mutexRelease lock;
-      wait (recvMopRef, fn mop => mop <> None);
-      valOf (!recvMopRef)
-  in 
+    val recvCond = condition lock
+    val mopRef = ref None
+  in
     mutexAcquire lock;
-    (case !contentRef of
-      Send q => 
+    case !contentRef of 
+      Send q =>
         let
-          val sendMopRef = valOf (dequeue q)
-          val m = valOf (!sendMopRef)
+          val (sendCond, m) = dequeue q
         in
-          if (isInactive q) then contentRef := Inactive else (); 
-          sendMopRef := None;
-          m 
+          if (isEmpty q) then contentRef := Inactive else (); 
+          mutexRelease lock;
+          signal sendCond; 
+          m
         end |
-      Recv q => 
-        enqueue (q, recvMopRef);  
-        conclude () |
-      Inactive => 
-        contentRef := Recv (queue [recvMopRef]);
-        conclude () |
-    )
+      Recv q =>
+        enqueue (q, (recvCond, mopRef));
+        mutexRelease lock;
+        wait recvCond;
+        valOf (!mopRef) | 
+      Inactive =>
+        contentRef := Recv (queue [(recvCond, mopRef)]);
+        mutexRelease lock;
+        wait recvCond;
+        valOf (!mopRef)
   end
 
 end
 
 
 
-structure OneToOneChan : CHAN = struct
+structure OneShotChan : CHAN = struct
 
-  datatype 'a chan_content = 
-    Active of 'a option ref | 
+  datatype 'a chan_content =
+    Send of condition * 'a |
+    Recv of condition * 'a option ref |
     Inactive  
 
-	datatype 'a chan = Ch of 'a chan_content ref
+	datatype 'a chan = Ch of 'a chan_content ref * mutex_lock
 
-  fun channel () = Ch (ref Intactive)
+  fun channel () = Ch (ref Inactive)
 
-  fun send (Ch contentRef) m = let
-    val sendMopRef = ref (Some m)
-  in 
-    case compareAndSwap (contentRef, Inactive, Active sendMopRef) of
+  fun send (Ch (contentRef, lock)) m = let
+    val sendCond = condition lock 
+  in
+    case !contentRef of
       Inactive => 
-        wait (sendMopRef, fn mop => mop = None); () |
-      Active recvMopRef => 
-        recvMopRef := Some m; ()
+        contentRef := Send (sendCond, m);
+        wait sendCond; 
+        () |
+      Recv (recvCond, mopRef) =>
+        mopRef := Some m;
+        signal recvCond;
+        () |
+      Send _ => raise NeverHappens
   end
 
 
-  fun recv (Ch contentRef) = let
-    val recvMopRef = ref None 
-  in 
-    case compareAndSwap (contentRef, Inactive, Active recvMopRef) of
+  fun recv (Ch (contentRef, lock)) = let
+    val recvCond = condition lock;
+    val mopRef = ref None;
+  in
+    case !contentRef of
       Inactive => 
-        wait (recvMopRef, fn mop => mop <> None); 
-        valOf (!recvMopRef) |
-      Active sendMopRef => 
-        let
-          val m = valOf (!sendMopRef) 
-        in
-          sendMopRef := None;
-          m
-        end
+        contentRef := Recv (recvCond, mopRef)
+        wait recvCond; 
+        valOf (!mopRef) |
+      Send (sendCond, m) =>
+        signal sendCond;
+        m
   end
+      
 
 end
 
 
 
+structure FanOutChan : CHAN = struct
 
+  datatype 'a chan_content =
+    Send of condition * 'a |
+    Recv of condition queue * 'a option ref |
+    Inactive
+  
+	datatype 'a chan = Ch of 'a chan_content ref * mutex_lock
 
+  fun channel () = Ch (ref Inactive, lock)
+
+  fun send (Ch (contentRef, lock)) m = let
+    val sendCond = condition lock 
+  in
+    case compareAndSwap (contentRef, Inactive, Send (sendCond, m)) of
+      Inactive =>
+        wait sendCond;
+        () |
+
+      Recv (q, mopRef) => 
+        mopRef := Some m; 
+        signal (dequeue q);
+
+        mutexRelease lock;
+        if (isEmpty q) then contentRef := Inactive else (); 
+        mutexRelease lock;
+        () |
+
+      Send _ => raise NeverHappens
+  end
+
+  fun recv (Ch (contentRef, lock)) =
+    mutexAcquire lock;
+    case !contentRef of
+      Inactive =>
+        let
+          val recvCond = condition lock 
+          val mopRef = ref None
+        in
+          contentRef := Recv (queue [recvCond], mopRef);
+          mutexRelease lock;
+          wait recvCond;
+          valOf (!mopRef) 
+        end |
+      Recv (q, mopRef) => 
+        let
+          val recvCond = condition lock 
+        in
+          enqueue (q, recvCond);
+          mutexRelease lock;
+          wait recvCond;
+          valOf (!mopRef) 
+        end |
+      Send (sendCond, m) =>
+        mutexRelease lock;
+        signal sendCond;
+        m
+      
+end
 
 
 
