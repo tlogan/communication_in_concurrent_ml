@@ -22,7 +22,7 @@ structure ManyToManyChan : CHAN = struct
   fun send (Ch (contentRef, lock)) m = let
     val sendCond = condition lock 
   in
-    mutexAcquire lock;
+    acquire lock;
     (case !contentRef of
       Recv q => 
         let
@@ -30,19 +30,19 @@ structure ManyToManyChan : CHAN = struct
         in
           mopRef := Some m;
           if (isEmpty q) then contentRef := Inactive else (); 
-          mutexRelease lock;
+          release lock;
           signal recvCond; 
           () 
         end
         () |
       Send q => 
         enqueue (q, (sendCond, m));
-        mutexRelease lock;
+        release lock;
         wait sendCond;
         () |
       Inactive => 
         contentRef := Send (queue [(sendCond, m)]);
-        mutexRelease lock;
+        release lock;
         wait sendCond;
         ()
     )
@@ -52,25 +52,25 @@ structure ManyToManyChan : CHAN = struct
     val recvCond = condition lock
     val mopRef = ref None
   in
-    mutexAcquire lock;
+    acquire lock;
     (case !contentRef of 
       Send q =>
         let
           val (sendCond, m) = dequeue q
         in
           if (isEmpty q) then contentRef := Inactive else (); 
-          mutexRelease lock;
+          release lock;
           signal sendCond; 
           m
         end |
       Recv q =>
         enqueue (q, (recvCond, mopRef));
-        mutexRelease lock;
+        release lock;
         wait recvCond;
         valOf (!mopRef) | 
       Inactive =>
         contentRef := Recv (queue [(recvCond, mopRef)]);
-        mutexRelease lock;
+        release lock;
         wait recvCond;
         valOf (!mopRef)
     )
@@ -114,7 +114,7 @@ structure FanOutChan : CHAN = struct
   end
 
   fun recv (Ch (contentRef, lock)) =
-    mutexAcquire lock;
+    acquire lock;
     (case !contentRef of
       Inactive =>
         let
@@ -122,7 +122,7 @@ structure FanOutChan : CHAN = struct
           val mopRef = ref None
         in
           contentRef := Recv (queue [recvCond], mopRef);
-          mutexRelease lock;
+          release lock;
           wait recvCond;
           valOf (!mopRef) 
         end |
@@ -131,13 +131,13 @@ structure FanOutChan : CHAN = struct
           val recvCond = condition lock 
         in
           enqueue (q, recvCond);
-          mutexRelease lock;
+          release lock;
           wait recvCond;
           valOf (!mopRef) 
         end |
       Send (sendCond, m) =>
         contentRef := Inactive;
-        mutexRelease lock;
+        release lock;
         signal sendCond;
         m
     ) 
@@ -159,22 +159,22 @@ structure FanInChan : CHAN = struct
   fun send (Ch (contentRef, lock)) m = let
     val sendCond = condition lock 
   in
-    mutexAcquire lock;
+    acquire lock;
     case !contentRef of
       Recv (cond, mopRef) => 
         mopRef := Some m;
         contentRef := Inactive;
-        mutexRelease lock;
+        release lock;
         signal cond;
         () |
       Send q =>
         enqueue (q, (sendCond, m));
-        mutexRelease lock;
+        release lock;
         wait sendCond;
         () |
       Inactive => 
         contentRef := Send (queue [(sendCond, m)])
-        mutexRelease lock;
+        release lock;
         wait sendCond;
         ()
   end
