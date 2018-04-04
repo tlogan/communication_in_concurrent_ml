@@ -19,9 +19,7 @@ structure ManyToManyChan : CHAN = struct
 
   fun channel () = Ch (ref Inactive, mutexLock ())
 
-  fun send (Ch (contentRef, lock)) m = let
-    val sendCond = condition lock 
-  in
+  fun send (Ch (contentRef, lock)) m = 
     acquire lock;
     (case !contentRef of
       Recv q => 
@@ -36,22 +34,26 @@ structure ManyToManyChan : CHAN = struct
         end
         () |
       Send q => 
-        enqueue (q, (sendCond, m));
-        release lock;
-        wait sendCond;
-        () |
+        let
+          val sendCond = condition lock 
+        in
+          enqueue (q, (sendCond, m));
+          release lock;
+          wait sendCond;
+          () 
+        end |
       Inactive => 
-        contentRef := Send (queue [(sendCond, m)]);
-        release lock;
-        wait sendCond;
-        ()
+        let
+          val sendCond = condition lock 
+        in
+          contentRef := Send (queue [(sendCond, m)]);
+          release lock;
+          wait sendCond;
+          ()
+        end
     )
-  end
    
-  fun recv (Ch (contentRef, lock)) =  let
-    val recvCond = condition lock
-    val mopRef = ref None
-  in
+  fun recv (Ch (contentRef, lock)) =  
     acquire lock;
     (case !contentRef of 
       Send q =>
@@ -64,17 +66,26 @@ structure ManyToManyChan : CHAN = struct
           m
         end |
       Recv q =>
-        enqueue (q, (recvCond, mopRef));
-        release lock;
-        wait recvCond;
-        valOf (!mopRef) | 
+        let
+          val recvCond = condition lock
+          val mopRef = ref None
+        in
+          enqueue (q, (recvCond, mopRef));
+          release lock;
+          wait recvCond;
+          valOf (!mopRef) | 
+        end
       Inactive =>
-        contentRef := Recv (queue [(recvCond, mopRef)]);
-        release lock;
-        wait recvCond;
-        valOf (!mopRef)
+        let
+          val recvCond = condition lock
+          val mopRef = ref None
+        in
+          contentRef := Recv (queue [(recvCond, mopRef)]);
+          release lock;
+          wait recvCond;
+          valOf (!mopRef)
+        end
     )
-  end
 
 end
 
@@ -105,7 +116,11 @@ structure FanOutChan : CHAN = struct
           val recvCond = dequeue q
         in
           mopRef := Some m; 
+
+          acquire lock;
           if (isEmpty q) then contentRef := Inactive else (); 
+          release lock;
+
           signal (recvCond);
           () 
         end |
@@ -129,8 +144,9 @@ structure FanOutChan : CHAN = struct
       Recv (q, mopRef) => 
         let
           val recvCond = condition lock 
+          val mopRef = ref None
         in
-          enqueue (q, recvCond);
+          enqueue (q, (recvCond, mopRef));
           release lock;
           wait recvCond;
           valOf (!mopRef) 
@@ -156,27 +172,33 @@ structure FanInChan : CHAN = struct
 
   fun channel () = Ch (ref Inactive, mutexLock ())
 
-  fun send (Ch (contentRef, lock)) m = let
-    val sendCond = condition lock 
-  in
+  fun send (Ch (contentRef, lock)) m = 
     acquire lock;
     case !contentRef of
-      Recv (cond, mopRef) => 
+      Recv (recvCond, mopRef) => 
         mopRef := Some m;
         contentRef := Inactive;
         release lock;
-        signal cond;
+        signal recvCond;
         () |
       Send q =>
-        enqueue (q, (sendCond, m));
-        release lock;
-        wait sendCond;
-        () |
+        let
+          val sendCond = condition lock 
+        in
+          enqueue (q, (sendCond, m));
+          release lock;
+          wait sendCond;
+          () 
+        end |
       Inactive => 
-        contentRef := Send (queue [(sendCond, m)])
-        release lock;
-        wait sendCond;
-        ()
+        let
+          val sendCond = condition lock 
+        in
+          contentRef := Send (queue [(sendCond, m)])
+          release lock;
+          wait sendCond;
+          ()
+        end 
   end
 
 
@@ -193,7 +215,9 @@ structure FanInChan : CHAN = struct
         let
           val (sendCond, m) = dequeue q
         in
+          acquire lock;
           if (isEmpty q) then contentRef := Inactive else (); 
+          release lock;
           signal sendCond;
           m 
         end
