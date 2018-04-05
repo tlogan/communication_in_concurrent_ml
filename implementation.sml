@@ -333,7 +333,6 @@ structure OneShotToOneChan : CHAN = struct
     wait sendCond;
     ()
 
-
   fun recv (Ch (sendCond, recvCond, mopRef)) =
     wait recvCond;
     signal sendCond;
