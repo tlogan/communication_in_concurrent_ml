@@ -323,26 +323,21 @@ end
 
 structure OneShotToOneChan : CHAN = struct
 
-	datatype 'a chan = Ch of condition * 'a option ref
+	datatype 'a chan = Ch of condition * condition * 'a option ref
 
-  fun channel () = Ch (condition (), ref None)
+  fun channel () = Ch (condition (), condition (), ref None)
 
-  fun send (Ch (cond, mopRef)) m =
+  fun send (Ch (sendCond, recvCond, mopRef)) m =
     mopRef := Some m;
-    signal cond; 
-    wait cond; 
+    signal recvCond;  
+    wait sendCond;
     ()
 
 
-  fun recv (Ch (cond, mopRef)) =
-    case !mopRef of
-      None => 
-        wait cond; 
-        signal cond; 
-        valOf (!mopRef) |
-      Some m =>
-        signal cond; 
-        m
+  fun recv (Ch (sendCond, recvCond, mopRef)) =
+    wait recvCond;
+    signal sendCond;
+    valOf (!mopRef)
 
 end
 
