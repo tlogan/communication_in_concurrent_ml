@@ -271,7 +271,7 @@ structure OneToOneChan : CHAN = struct
 
 end
 
-structure OneShotToManyChan : CHAN = struct
+structure OneShotChan : CHAN = struct
 
   datatype 'a chan_content =
     Send of condition * 'a |
