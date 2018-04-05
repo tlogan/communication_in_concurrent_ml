@@ -95,7 +95,7 @@ structure FanOutChan : CHAN = struct
 
   datatype 'a chan_content =
     Send of condition * 'a |
-    Recv of condition queue * 'a option ref |
+    Recv of (condition * 'a option ref) queue  |
     Inactive
   
 	datatype 'a chan = Ch of 'a chan_content ref * mutex_lock
@@ -111,9 +111,9 @@ structure FanOutChan : CHAN = struct
         wait sendCond;
         () |
 
-      Recv (q, mopRef) => 
+      Recv q => 
         let
-          val recvCond = dequeue q
+          val (recvCond, mopRef) = dequeue q
         in
           mopRef := Some m; 
 
@@ -136,15 +136,16 @@ structure FanOutChan : CHAN = struct
           val recvCond = condition lock 
           val mopRef = ref None
         in
-          contentRef := Recv (queue [recvCond], mopRef);
+          contentRef := Recv (queue [(recvCond, mopRef)]);
           release lock;
           wait recvCond;
           valOf (!mopRef) 
         end |
-      Recv (q, mopRef) => 
+      Recv q => 
         let
           val recvCond = condition lock 
           val mopRef = ref None
+        in
         in
           enqueue (q, (recvCond, mopRef));
           release lock;
@@ -158,7 +159,6 @@ structure FanOutChan : CHAN = struct
         m
     ) 
 end
-
 
 
 structure FanInChan : CHAN = struct
@@ -199,7 +199,6 @@ structure FanInChan : CHAN = struct
           wait sendCond;
           ()
         end 
-  end
 
 
   fun recv (Ch (contentRef, lock)) = let
@@ -220,7 +219,7 @@ structure FanInChan : CHAN = struct
           release lock;
           signal sendCond;
           m 
-        end
+        end |
       Recv _ => raise NeverHappens
   
   end
