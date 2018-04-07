@@ -1764,8 +1764,26 @@ proof -
 
     show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (blast intro: traceable_exp_preserved_under_seq_step_down)
   next
-    case (Seq_Step \<pi> x b e \<rho> \<kappa> e' \<rho>')
-    then show ?thesis sorry
+    case (Seq_Step \<pi> x b e \<rho> \<kappa>'' e'' \<rho>'')
+
+    assume "\<E>' = \<E> ++ [\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>''\<rangle>]"
+    and "leaf \<E> \<pi>"
+    and "\<E> \<pi> = Some (\<langle>LET x = b in e;\<rho>;\<kappa>''\<rangle>)"
+    and "\<langle>LET x = b in e;\<rho>;\<kappa>''\<rangle> \<hookrightarrow> \<langle>e'';\<rho>'';\<kappa>''\<rangle>"
+
+    from `\<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)` and \<open>\<E>' = \<E> ++ [\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>''\<rangle>]\<close>
+    have "(\<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>''\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" by auto
+
+    from `\<E> \<rightarrow> \<E>'` and \<open>\<E>' = \<E> ++ [\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>''\<rangle>]\<close>
+    have "\<E> \<rightarrow> \<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>''\<rangle>)" by auto
+
+    from  \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> 
+    and \<open>\<E> \<rightarrow> \<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>''\<rangle>)\<close> \<open>(\<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>''\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
+    and \<open>\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>\<close> 
+    and \<open>\<E> \<pi> = Some (\<langle>LET x = b in e;\<rho>;\<kappa>''\<rangle>)\<close>
+    and \<open>\<langle>LET x = b in e;\<rho>;\<kappa>''\<rangle> \<hookrightarrow> \<langle>e'';\<rho>'';\<kappa>''\<rangle>\<close>
+
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (auto simp: traceable_exp_preserved_under_seq_step)
   next
     case (Seq_Step_Up \<pi> x b e \<rho> \<kappa> e' \<rho>')
     then show ?thesis sorry
