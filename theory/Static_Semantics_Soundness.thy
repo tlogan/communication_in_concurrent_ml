@@ -747,21 +747,21 @@ proof -
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_let_prim)
   next
-    case (Fst \<rho> x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega> x e \<kappa>)
+    case (Let_Fst \<rho> x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega> x e \<kappa>)
     assume "\<sigma> = \<langle>LET x = FST x\<^sub>p in e;\<rho>;\<kappa>\<rangle>"
     and "\<sigma>' = \<langle>e;\<rho> ++ [x \<mapsto> \<omega>];\<kappa>\<rangle>"
     and "\<rho> x\<^sub>p = Some \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>" and "\<rho>\<^sub>p x\<^sub>1 = Some \<omega>"
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_let_fst)
   next
-    case (Snd \<rho> x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega> x e \<kappa>)
+    case (Let_Snd \<rho> x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega> x e \<kappa>)
     assume "\<sigma> = \<langle>LET x = SND x\<^sub>p in e;\<rho>;\<kappa>\<rangle>"
     and "\<sigma>' = \<langle>e;\<rho> ++ [x \<mapsto> \<omega>];\<kappa>\<rangle>"
     and "\<rho> x\<^sub>p = Some \<lbrace>prim.Pair x\<^sub>1 x\<^sub>2, \<rho>\<^sub>p\<rbrace>" and "\<rho>\<^sub>p x\<^sub>2 = Some \<omega>"
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_let_snd)
   next
-    case (Case_Left \<rho> x\<^sub>s x\<^sub>l' \<rho>\<^sub>l \<omega>\<^sub>l x x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e \<kappa>)
+    case (Let_Case_Left \<rho> x\<^sub>s x\<^sub>l' \<rho>\<^sub>l \<omega>\<^sub>l x x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e \<kappa>)
 
     assume "\<sigma> = \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>"
     and "\<sigma>' = \<langle>e\<^sub>l;\<rho> ++ [x\<^sub>l \<mapsto> \<omega>\<^sub>l];\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>"
@@ -769,7 +769,7 @@ proof -
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>`
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: accept_state_to_state_let_case_left)
   next
-    case (Case_Right \<rho> x\<^sub>s x\<^sub>r' \<rho>\<^sub>r \<omega>\<^sub>r x x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e \<kappa>)
+    case (Let_Case_Right \<rho> x\<^sub>s x\<^sub>r' \<rho>\<^sub>r \<omega>\<^sub>r x x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e \<kappa>)
     assume "\<sigma> = \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>"
     and "\<sigma>' = \<langle>e\<^sub>r;\<rho> ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>r];\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>"
     and "\<rho> x\<^sub>s = Some \<lbrace>prim.Right x\<^sub>r', \<rho>\<^sub>r\<rbrace>"
@@ -1639,7 +1639,7 @@ proof -
     have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = Prim p in e''" by simp then
     show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by (simp add: traceable.Let_Prim)
   next
-    case (Fst x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega>)
+    case (Let_Fst x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega>)
     assume "\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]"
     assume "b = FST x\<^sub>p" and "e'' = e"
     with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e\<close>
@@ -1651,7 +1651,7 @@ proof -
     with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = FST x\<^sub>p in e''\<close> \<open>{|\<omega>|} \<subseteq> \<V> x\<close> 
     show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by (blast intro: traceable.Let_Fst)
   next
-    case (Snd x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega>)
+    case (Let_Snd x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega>)
     assume "\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]"
     assume "b = SND x\<^sub>p" and "e'' = e"
     with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e\<close>
@@ -1663,11 +1663,11 @@ proof -
     with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = SND x\<^sub>p in e''\<close> \<open>{|\<omega>|} \<subseteq> \<V> x\<close> 
     show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by (blast intro: traceable.Let_Snd)
   next
-    case (Case_Left x\<^sub>s x\<^sub>l' \<rho>\<^sub>l \<omega>\<^sub>l x\<^sub>l x\<^sub>r e\<^sub>r)
+    case (Let_Case_Left x\<^sub>s x\<^sub>l' \<rho>\<^sub>l \<omega>\<^sub>l x\<^sub>l x\<^sub>r e\<^sub>r)
     from `\<kappa> = \<langle>x,e,\<rho>\<rangle> # \<kappa>`
     show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by auto
   next
-    case (Case_Right x\<^sub>s x\<^sub>r' \<rho>\<^sub>r \<omega>\<^sub>r x\<^sub>l e\<^sub>l x\<^sub>r)
+    case (Let_Case_Right x\<^sub>s x\<^sub>r' \<rho>\<^sub>r \<omega>\<^sub>r x\<^sub>l e\<^sub>l x\<^sub>r)
     from `\<kappa> = \<langle>x,e,\<rho>\<rangle> # \<kappa>`
     show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by auto
   next
