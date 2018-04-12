@@ -2,6 +2,7 @@ theory Runtime_Semantics
   imports Main Syntax "~~/src/HOL/Library/Sublist" Stars
 begin
 
+
 datatype control_label = 
   L_Seq var ("`_" [71] 70) | 
   L_Spawn var ("._" [71] 70) |
@@ -10,27 +11,18 @@ datatype control_label =
 
 type_synonym control_path = "control_label list"
 
-
 datatype chan = Ch control_path var
-
 
 datatype val = 
   V_Unit ("\<lbrace>\<rbrace>") |
   V_Chan chan ("\<lbrace>_\<rbrace>") |
   V_Closure prim "var \<rightharpoonup> val" ("\<lbrace>_, _\<rbrace>")
 
-fun val_to_bind :: "val \<Rightarrow> bind" where
-  "val_to_bind \<lbrace>\<rbrace> = \<lparr>\<rparr>" |
-  "val_to_bind \<lbrace> _ \<rbrace> = CHAN \<lparr>\<rparr>" |
-  "val_to_bind \<lbrace>p, _ \<rbrace> = Prim p"
-
 type_synonym val_env = "var \<rightharpoonup> val"
-
+  
 datatype cont = Cont var exp val_env ("\<langle>_,_,_\<rangle>" [0, 0, 0] 70) 
 
 datatype state = State exp val_env "cont list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
-  
-type_synonym state_pool = "control_path \<rightharpoonup> state"
 
 
 inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<hookrightarrow>" 55) where 
@@ -88,17 +80,19 @@ inductive_cases Result_E[elim!]: "\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<
 abbreviation control_path_append :: "control_path => control_label => control_path" (infixl ";;" 61) where
   "\<pi>;;lab \<equiv> \<pi> @ [lab]"
   
+
+fun val_to_bind :: "val \<Rightarrow> bind" where
+  "val_to_bind \<lbrace>\<rbrace> = \<lparr>\<rparr>" |
+  "val_to_bind \<lbrace> _ \<rbrace> = CHAN \<lparr>\<rparr>" |
+  "val_to_bind \<lbrace>p, _ \<rbrace> = Prim p"
+
+
+type_synonym state_pool = "control_path \<rightharpoonup> state"
+
+
 definition leaf :: "state_pool \<Rightarrow> control_path \<Rightarrow> bool" where
   "leaf \<E> \<pi> \<equiv> \<not>(\<E> \<pi> = None) \<and> (\<nexists> \<pi>' . \<not>(\<E> \<pi>' = None) \<and> strict_prefix \<pi> \<pi>')"
 
-
-lemma leaf_elim: "
-  \<lbrakk> 
-    leaf \<E> \<pi>; strict_prefix \<pi> \<pi>' 
-  \<rbrakk> \<Longrightarrow>
-  \<E> \<pi>' = None
-"
-using leaf_def by blast
   
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Seq_Step_Down: "
@@ -168,6 +162,16 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
 
 abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "\<E> \<rightarrow>* \<E>' \<equiv> star concur_step \<E> \<E>'"
+
+
+lemma leaf_elim: "
+  \<lbrakk> 
+    leaf \<E> \<pi>; strict_prefix \<pi> \<pi>' 
+  \<rbrakk> \<Longrightarrow>
+  \<E> \<pi>' = None
+"
+using leaf_def by blast
+
 
 inductive path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
   Empty: "

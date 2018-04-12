@@ -9,15 +9,6 @@ datatype exp =
   Let var bind exp ("LET _ = _ in _" [0,0, 61] 61) |
   Result var ("RESULT _" [61] 61)
 
-and prim = 
-  Send_Evt var var |
-  Recv_Evt var |
-  Pair var var |
-  Left var |
-  Right var |
-  Abs var var exp
-
-
 and bind = 
   Unit ("\<lparr>\<rparr>") |
   Chan ("CHAN \<lparr>\<rparr>") |
@@ -29,6 +20,15 @@ and bind =
   Case var var exp var exp ("CASE _ LEFT _ |> _ RIGHT _ |> _" [0,0,0,0, 61] 61) |
   App var var ("APP _ _" [61, 61] 61)
   
+and prim = 
+  Send_Evt var var |
+  Recv_Evt var |
+  Pair var var |
+  Left var |
+  Right var |
+  Abs var var exp
+
+
 abbreviation bind_send_evt :: "var => var => bind" ("SEND EVT _ _" [0, 61] 61) where
   "SEND EVT x y \<equiv> Prim (Send_Evt x y)"
   
