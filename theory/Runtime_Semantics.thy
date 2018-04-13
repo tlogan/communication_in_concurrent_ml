@@ -75,25 +75,18 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
     \<langle>e\<^sub>l; \<rho>\<^sub>l ++ [f\<^sub>l \<mapsto> \<lbrace>Abs f\<^sub>l x\<^sub>l e\<^sub>l, \<rho>\<^sub>l\<rbrace>, x\<^sub>l \<mapsto> \<omega>\<^sub>a]; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
   "
 
-inductive_cases Result_E[elim!]: "\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>"
-
-abbreviation control_path_append :: "control_path => control_label => control_path" (infixl ";;" 61) where
-  "\<pi>;;lab \<equiv> \<pi> @ [lab]"
-  
-
-fun val_to_bind :: "val \<Rightarrow> bind" where
-  "val_to_bind \<lbrace>\<rbrace> = \<lparr>\<rparr>" |
-  "val_to_bind \<lbrace> _ \<rbrace> = CHAN \<lparr>\<rparr>" |
-  "val_to_bind \<lbrace>p, _ \<rbrace> = Prim p"
 
 
 type_synonym state_pool = "control_path \<rightharpoonup> state"
 
-
 definition leaf :: "state_pool \<Rightarrow> control_path \<Rightarrow> bool" where
   "leaf \<E> \<pi> \<equiv> \<not>(\<E> \<pi> = None) \<and> (\<nexists> \<pi>' . \<not>(\<E> \<pi>' = None) \<and> strict_prefix \<pi> \<pi>')"
 
-  
+
+abbreviation control_path_append :: "control_path => control_label => control_path" (infixl ";;" 61) where
+  "\<pi>;;lab \<equiv> \<pi> @ [lab]"
+
+
 inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Seq_Step_Down: "
     \<lbrakk> 
@@ -194,5 +187,12 @@ lemma up_down_balanced: "
    \<downharpoonright>[\<upharpoonleft>x, \<downharpoonleft>x] \<upharpoonleft>
 "
 using Up_Down path_balanced.Empty by fastforce
+
+inductive_cases Result_E[elim!]: "\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>"
+
+fun val_to_bind :: "val \<Rightarrow> bind" where
+  "val_to_bind \<lbrace>\<rbrace> = \<lparr>\<rparr>" |
+  "val_to_bind \<lbrace> _ \<rbrace> = CHAN \<lparr>\<rparr>" |
+  "val_to_bind \<lbrace>p, _ \<rbrace> = Prim p"
 
 end
