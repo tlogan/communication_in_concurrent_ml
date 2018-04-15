@@ -73,8 +73,7 @@ lemma isnt_send_path_sound': "
   
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
-    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
-    \<E>' (\<pi>\<^sub>y;;`x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>);\<kappa>\<^sub>y\<rangle>) 
+    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>
   \<rbrakk> \<Longrightarrow> 
   \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
@@ -307,8 +306,7 @@ lemma isnt_recv_path_sound': "
 
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>); 
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>e\<rbrace>;
-    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
-    \<E>' (\<pi>\<^sub>y;;`x\<^sub>y) = Some (\<langle>e\<^sub>y;\<rho>\<^sub>y(x\<^sub>y \<mapsto> \<omega>);\<kappa>\<^sub>y\<rangle>) 
+    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>
   \<rbrakk> \<Longrightarrow>
   \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
@@ -346,6 +344,7 @@ lemma runtime_recv_paths_are_inclusive: "
 apply (unfold is_recv_path_def; auto)
 using runtime_paths_are_inclusive by auto
 
+(*
 lemma topology_trim_equal_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
@@ -376,6 +375,8 @@ theorem topology_one_shot_strong_sound: "
  apply (unfold all_def; auto)
  apply (unfold singular_strong_def)
 by (metis isnt_send_path_sound runtime_send_paths_are_inclusive topology_trim_equal_sound)
+
+*)
 
 
 theorem topology_one_shot_sound: "
