@@ -234,9 +234,7 @@ lemma isnt_send_path_sound: "
   is_static_send_path (\<V>, \<C>, e) x\<^sub>c \<pi>\<^sub>y
 "
  apply (unfold is_send_path_def is_static_send_path_def; auto)
-  apply (rule exI, rule conjI)
    apply (frule isnt_send_path_sound'; assumption?; auto; blast)
-  apply (frule isnt_send_path_sound'; assumption?; blast)
 done
 
 
@@ -328,9 +326,7 @@ lemma isnt_recv_path_sound: "
   is_static_recv_path (\<V>, \<C>, e) x\<^sub>c \<pi>\<^sub>y
 "
  apply (unfold is_recv_path_def is_static_recv_path_def; auto)
-  apply (rule exI, rule conjI)
    apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
-  apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
 done
 
 lemma runtime_recv_paths_are_inclusive: "
