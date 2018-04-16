@@ -2,6 +2,7 @@ theory Static_Communication_Analysis
   imports Main Syntax Runtime_Semantics Static_Semantics Runtime_Communication_Analysis
 begin
 
+(*
 inductive built_on_channel :: "abstract_value_env \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"  where
   Chan: "
     \<lbrakk>
@@ -299,6 +300,7 @@ fun trim :: "exp_map \<Rightarrow> exp \<Rightarrow> exp" where
      else
        RESULT (Var ''trimmed''))
   " 
+*)
 
 definition is_static_send_path :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
   "is_static_send_path \<A> x\<^sub>c \<pi>\<^sub>y \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> (\<exists> x\<^sub>y x\<^sub>e x\<^sub>s\<^sub>c x\<^sub>m e\<^sub>n . 
@@ -348,6 +350,7 @@ lemma inclusive_preserved_under_unordered_extension: "
   apply (simp add: Spawn_Right)
 done
 
+(*
 
 inductive trim_equal :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" ("_ _ \<tturnstile> _ \<cong> _" [56, 0, 56]55) where
   Refl: "
@@ -375,6 +378,8 @@ definition static_one_shot_strong :: "(abstract_value_env \<times> abstract_valu
   "static_one_shot_strong \<A> e\<^sub>t x\<^sub>c \<equiv> 
     case \<A> of (\<V>, _, _) \<Rightarrow>
     all (is_static_send_path \<A> x\<^sub>c) (singular_strong \<V> e\<^sub>t)"
+
+*)
 
 definition singular :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
  "singular \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
