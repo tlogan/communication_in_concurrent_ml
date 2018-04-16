@@ -1,5 +1,5 @@
 theory Static_Communication_Analysis
-  imports Main Syntax Runtime_Semantics Static_Semantics Runtime_Communication_Analysis
+  imports Main Syntax Runtime_Semantics Static_Semantics Static_Traceability Runtime_Communication_Analysis
 begin
 
 (*

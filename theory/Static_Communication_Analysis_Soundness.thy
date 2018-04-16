@@ -2,7 +2,7 @@ theory Static_Communication_Analysis_Soundness
   imports 
     Main
     Syntax 
-    Runtime_Semantics Runtime_Semantics Static_Semantics Static_Semantics_Soundness
+    Runtime_Semantics Runtime_Semantics Static_Semantics Static_Traceability Static_Semantics_Soundness
     Runtime_Communication_Analysis Static_Communication_Analysis
 begin
 
