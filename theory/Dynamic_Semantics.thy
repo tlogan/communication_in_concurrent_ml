@@ -166,28 +166,6 @@ lemma leaf_elim: "
 using leaf_def by blast
 
 
-inductive path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
-  Empty: "
-    \<downharpoonright>[]\<upharpoonleft>
-  " |
-  Linear: "
-    \<downharpoonright>[`x]\<upharpoonleft>
-  " |
-  Up_Down: "
-    \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow>
-    \<downharpoonright>(\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x))\<upharpoonleft>
-  " |
-  Append: "
-    \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow>
-    \<downharpoonright> (\<pi> @ \<pi>') \<upharpoonleft>
-  "
-
-
-lemma up_down_balanced: "
-   \<downharpoonright>[\<upharpoonleft>x, \<downharpoonleft>x] \<upharpoonleft>
-"
-using Up_Down path_balanced.Empty by fastforce
-
 inductive_cases Result_E[elim!]: "\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>"
 
 fun val_to_bind :: "val \<Rightarrow> bind" where

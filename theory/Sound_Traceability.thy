@@ -5,6 +5,29 @@ theory Sound_Traceability
     "~~/src/HOL/Library/List"
 begin
 
+
+inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<tturnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55)  where
+  Empty: "
+    \<lbrakk> 
+      \<downharpoonright>\<pi>\<upharpoonleft>
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> e \<down> \<pi> \<mapsto> []
+  " |
+  Empty_Local: "
+    \<lbrakk> 
+      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ .x # \<pi>\<^sub>2 \<mapsto> []
+  " |
+  Nonempty: "
+    \<lbrakk> 
+      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>;
+      \<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>;
+      \<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> \<kappa>
+    \<rbrakk> \<Longrightarrow>
+    \<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<mapsto> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>
+  "
+
 lemma singleton_eq_empty_surround: "
   [l] = ([] @ l # [])
 "

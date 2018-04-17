@@ -3,6 +3,107 @@ theory Sound_Semantics
       "~~/src/HOL/Eisbach/Eisbach_Tools"
 begin
 
+fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) where
+  "|\<lbrace>\<rbrace>| = ^\<lparr>\<rparr>" |
+  "|\<lbrace>Ch \<pi> x\<rbrace>| = ^Chan x" |
+  "|\<lbrace>p, \<rho>\<rbrace>| = ^p"
+
+
+definition env_to_abstract_value_env :: "(var \<rightharpoonup> val) \<Rightarrow> abstract_value_env" ("\<parallel>_\<parallel>" [0]61) where
+  "\<parallel>\<rho>\<parallel> = (\<lambda> x . (case (\<rho> x) of 
+    Some \<omega> \<Rightarrow> {|\<omega>|} |
+    None \<Rightarrow> {}
+  ))"
+
+inductive accept_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55)
+and  accept_val_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
+where
+  Unit: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>\<rbrace>
+  " |
+
+  Chan: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>c\<rbrace>
+  " |
+
+  Send_Evt: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
+    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Send_Evt _ _, \<rho>\<rbrace>
+  " |
+
+  Recv_Evt: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
+    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Recv_Evt _, \<rho>\<rbrace>
+  " |
+
+  Left: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
+    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Left _, \<rho>\<rbrace>
+  " |
+
+  Right: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
+    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Right _, \<rho>\<rbrace>
+  " |
+
+  Abs: "
+    \<lbrakk>
+      {^Abs f x e} \<subseteq> \<V> f;
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+      (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
+    \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Abs f x e, \<rho>\<rbrace>
+  " |
+
+  Pair: "
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
+    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<lbrace>Pair _ _, \<rho>\<rbrace>
+  " |
+
+  Any : "
+    \<lbrakk>
+      (\<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>
+        {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>
+      )
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
+  "
+
+
+inductive accept_stack :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile>\<^sub>\<kappa> _ \<Rrightarrow> _" [56,0,56]55) where
+  Empty: "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<W> \<Rrightarrow> []" |
+  Nonempty: "
+    \<lbrakk> 
+      \<W> \<subseteq> \<V> x;
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+      (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>;
+      (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
+    \<rbrakk> \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<W> \<Rrightarrow> (\<langle>x, e, \<rho>\<rangle> # \<kappa>)
+  "
+
+
+inductive accept_state :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<sigma>" 55)  where
+  Any: "
+    \<lbrakk>
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+      (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>;
+      (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
+    \<rbrakk> \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>
+  "
+
+inductive accept_state_pool :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<E>" 55) where
+  Any: "
+    (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>)
+    \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
+  "
 
 lemma accept_state_to_exp_result: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>

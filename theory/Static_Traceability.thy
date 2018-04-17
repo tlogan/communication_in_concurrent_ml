@@ -3,6 +3,28 @@ theory Static_Traceability
     "~~/src/HOL/Library/List"
 begin
 
+inductive path_balanced :: "control_path \<Rightarrow> bool" ("\<downharpoonright>_\<upharpoonleft>" [0]55) where
+  Empty: "
+    \<downharpoonright>[]\<upharpoonleft>
+  " |
+  Linear: "
+    \<downharpoonright>[`x]\<upharpoonleft>
+  " |
+  Up_Down: "
+    \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow>
+    \<downharpoonright>(\<upharpoonleft>x # (\<pi> ;; \<downharpoonleft>x))\<upharpoonleft>
+  " |
+  Append: "
+    \<downharpoonright>\<pi>\<upharpoonleft> \<Longrightarrow> \<downharpoonright>\<pi>'\<upharpoonleft> \<Longrightarrow>
+    \<downharpoonright> (\<pi> @ \<pi>') \<upharpoonleft>
+  "
+
+lemma up_down_balanced: "
+   \<downharpoonright>[\<upharpoonleft>x, \<downharpoonleft>x] \<upharpoonleft>
+"
+using Up_Down path_balanced.Empty by fastforce
+
+
 inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<turnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55)  where
   Start: "
     \<V> \<turnstile> e\<^sub>0 \<down> [] \<mapsto> e\<^sub>0
@@ -90,26 +112,5 @@ inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> contr
     \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;\<upharpoonleft>x \<mapsto> e'
   "
 
-inductive stack_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<tturnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55)  where
-  Empty: "
-    \<lbrakk> 
-      \<downharpoonright>\<pi>\<upharpoonleft>
-    \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> e \<down> \<pi> \<mapsto> []
-  " |
-  Empty_Local: "
-    \<lbrakk> 
-      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>
-    \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ .x # \<pi>\<^sub>2 \<mapsto> []
-  " |
-  Nonempty: "
-    \<lbrakk> 
-      \<downharpoonright>\<pi>\<^sub>2\<upharpoonleft>;
-      \<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> LET x\<^sub>\<kappa> = b in e\<^sub>\<kappa>;
-      \<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 \<mapsto> \<kappa>
-    \<rbrakk> \<Longrightarrow>
-    \<V> \<tturnstile> e\<^sub>0 \<down> \<pi>\<^sub>1 @ \<upharpoonleft>x\<^sub>\<kappa> # \<pi>\<^sub>2 \<mapsto> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>
-  "
 
 end
