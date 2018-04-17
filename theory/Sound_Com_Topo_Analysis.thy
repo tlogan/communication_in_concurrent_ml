@@ -18,10 +18,10 @@ lemma static_send_chan_doesnt_exist_sound: "
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c
 "
  apply (frule static_eval_to_pool)
- apply (drule accept_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
+ apply (drule static_eval_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
  apply (erule static_eval_pool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
- apply (erule accept_state.cases; auto)
+ apply (erule static_eval_state.cases; auto)
  apply (erule static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>e], drule spec[of _ "\<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>"]; simp)
  apply (erule conjE)
@@ -39,7 +39,7 @@ lemma static_send_evt_doesnt_exist_sound: "
   \<rbrakk> \<Longrightarrow>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
 "
-  apply (drule isnt_abstract_value_sound_coro; assumption?; auto)
+  apply (drule isnt_static_eval_sound_coro; assumption?; auto)
 done
 
 lemma static_message_isnt_sent_sound: "
@@ -54,10 +54,10 @@ lemma static_message_isnt_sent_sound: "
   \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 "
   apply (frule static_eval_to_pool)
-  apply (drule accept_preserved_under_concur_step_star [of _ _ _ \<E>']; assumption?)
+  apply (drule static_eval_preserved_under_concur_step_star [of _ _ _ \<E>']; assumption?)
   apply (erule static_eval_pool.cases; auto)
   apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
-  apply (erule accept_state.cases; auto)
+  apply (erule static_eval_state.cases; auto)
   apply (erule static_eval.cases[of _ "LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y"]; auto)
   apply (thin_tac "\<forall>x\<^sub>r\<^sub>c. ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<longrightarrow> (\<forall>x\<^sub>c. ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow> \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y)")
   apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ x\<^sub>m])
@@ -82,7 +82,7 @@ lemma isnt_send_path_sound': "
 
 "
  apply (rule conjI)
- apply (insert isnt_traceable_sound, blast)
+ apply (insert isnt_static_traceable_sound, blast)
  apply (rule conjI, (erule static_send_chan_doesnt_exist_sound; assumption))
  apply (erule static_send_evt_doesnt_exist_sound; assumption)
 done
@@ -274,10 +274,10 @@ lemma static_recv_chan_doesnt_exist_sound: "
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c
 "
  apply (frule static_eval_to_pool)
- apply (drule accept_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
+ apply (drule static_eval_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
  apply (erule static_eval_pool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
- apply (erule accept_state.cases; auto)
+ apply (erule static_eval_state.cases; auto)
  apply (erule static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>e], drule spec[of _ "\<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>e\<rbrace>"]; simp)
  apply (erule conjE)
@@ -295,7 +295,7 @@ lemma static_recv_evt_doesnt_exist_sound: "
   \<rbrakk> \<Longrightarrow> 
   {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e 
 "
-  apply (drule isnt_abstract_value_sound_coro; assumption?; auto)
+  apply (drule isnt_static_eval_sound_coro; assumption?; auto)
 done
 
 lemma isnt_recv_path_sound': "
@@ -311,7 +311,7 @@ lemma isnt_recv_path_sound': "
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
   {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e
 "
- apply (rule conjI, erule isnt_traceable_sound; assumption?)
+ apply (rule conjI, erule isnt_static_traceable_sound; assumption?)
  apply (rule conjI, (erule static_recv_chan_doesnt_exist_sound; assumption))
  apply (erule static_recv_evt_doesnt_exist_sound; assumption)
 done

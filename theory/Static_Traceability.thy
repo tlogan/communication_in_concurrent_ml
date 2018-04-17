@@ -25,7 +25,7 @@ lemma up_down_balanced: "
 using Up_Down path_balanced.Empty by fastforce
 
 
-inductive traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<turnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55)  where
+inductive static_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> exp \<Rightarrow> bool" ("_ \<turnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55)  where
   Start: "
     \<V> \<turnstile> e\<^sub>0 \<down> [] \<mapsto> e\<^sub>0
   " |
