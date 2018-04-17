@@ -1,5 +1,5 @@
-theory Static_Semantics_Soundness
-  imports Main Syntax Runtime_Semantics Static_Semantics
+theory Sound_Semantics
+  imports Main Syntax Dynamic_Semantics Static_Semantics
       "~~/src/HOL/Eisbach/Eisbach_Tools"
 begin
 

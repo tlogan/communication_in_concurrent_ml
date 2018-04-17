@@ -1,5 +1,5 @@
 theory Static_Semantics
-  imports Main Syntax Runtime_Semantics
+  imports Main Syntax Dynamic_Semantics
     "~~/src/HOL/Library/List"
 begin
 

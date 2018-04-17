@@ -1,9 +1,10 @@
-theory Static_Communication_Analysis_Soundness
+theory Sound_Com_Topo_Analysis
   imports 
     Main
     Syntax 
-    Runtime_Semantics Runtime_Semantics Static_Semantics Static_Traceability Static_Semantics_Soundness
-    Runtime_Communication_Analysis Static_Communication_Analysis
+    Dynamic_Semantics Static_Semantics Sound_Semantics
+    Static_Traceability Sound_Traceability
+    Dynamic_Com_Topo_Analysis Static_Com_Topo_Analysis
 begin
 
 lemma static_send_chan_doesnt_exist_sound: "

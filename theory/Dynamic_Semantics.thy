@@ -1,4 +1,4 @@
-theory Runtime_Semantics
+theory Dynamic_Semantics
   imports Main Syntax "~~/src/HOL/Library/Sublist" Stars
 begin
 

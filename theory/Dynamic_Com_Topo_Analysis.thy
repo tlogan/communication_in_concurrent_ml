@@ -1,5 +1,5 @@
-theory Runtime_Communication_Analysis
-  imports Main Syntax Runtime_Semantics Static_Semantics
+theory Dynamic_Com_Topo_Analysis
+  imports Main Syntax Dynamic_Semantics
 begin
 
 definition is_send_path :: "state_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where

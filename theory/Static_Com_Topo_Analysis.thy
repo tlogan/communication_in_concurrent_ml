@@ -1,5 +1,8 @@
-theory Static_Communication_Analysis
-  imports Main Syntax Runtime_Semantics Static_Semantics Static_Traceability Runtime_Communication_Analysis
+theory Static_Com_Topo_Analysis
+  imports Main Syntax 
+    Dynamic_Semantics Static_Semantics 
+    Static_Traceability 
+    Dynamic_Com_Topo_Analysis
 begin
 
 (*
