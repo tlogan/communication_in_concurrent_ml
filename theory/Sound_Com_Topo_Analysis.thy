@@ -378,10 +378,9 @@ by (metis isnt_send_path_sound runtime_send_paths_are_inclusive topology_trim_eq
 
 theorem topology_one_shot_sound: "
   \<lbrakk>
+    static_one_shot (\<V>, \<C>, e) x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-  
-    static_one_shot (\<V>, \<C>, e) x\<^sub>c
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> x\<^sub>c)
 "
