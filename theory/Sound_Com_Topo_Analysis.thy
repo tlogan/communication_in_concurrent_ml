@@ -17,16 +17,16 @@ lemma static_send_chan_doesnt_exist_sound: "
   \<rbrakk> \<Longrightarrow> 
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c
 "
- apply (frule accept_exp_to_pool)
+ apply (frule static_eval_to_pool)
  apply (drule accept_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
- apply (erule accept_state_pool.cases; auto)
+ apply (erule static_eval_pool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
  apply (erule accept_state.cases; auto)
- apply (erule accept_val_env.cases; auto)
+ apply (erule static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>e], drule spec[of _ "\<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>"]; simp)
  apply (erule conjE)
- apply (erule accept_value.cases; auto)
- apply (erule accept_val_env.cases; auto)
+ apply (erule static_eval_value.cases; auto)
+ apply (erule static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "\<lbrace>Ch \<pi> x\<^sub>c\<rbrace>"]; simp)
 done
 
@@ -53,12 +53,12 @@ lemma static_message_isnt_sent_sound: "
   \<rbrakk> \<Longrightarrow> 
   \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 "
-  apply (frule accept_exp_to_pool)
+  apply (frule static_eval_to_pool)
   apply (drule accept_preserved_under_concur_step_star [of _ _ _ \<E>']; assumption?)
-  apply (erule accept_state_pool.cases; auto)
+  apply (erule static_eval_pool.cases; auto)
   apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
   apply (erule accept_state.cases; auto)
-  apply (erule accept_exp.cases[of _ "LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y"]; auto)
+  apply (erule static_eval.cases[of _ "LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y"]; auto)
   apply (thin_tac "\<forall>x\<^sub>r\<^sub>c. ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<longrightarrow> (\<forall>x\<^sub>c. ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow> \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>y)")
   apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ x\<^sub>m])
   apply (frule static_send_evt_doesnt_exist_sound; assumption?)
@@ -273,16 +273,16 @@ lemma static_recv_chan_doesnt_exist_sound: "
   \<rbrakk> \<Longrightarrow> 
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c
 "
- apply (frule accept_exp_to_pool)
+ apply (frule static_eval_to_pool)
  apply (drule accept_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
- apply (erule accept_state_pool.cases; auto)
+ apply (erule static_eval_pool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
  apply (erule accept_state.cases; auto)
- apply (erule accept_val_env.cases; auto)
+ apply (erule static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>e], drule spec[of _ "\<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>e\<rbrace>"]; simp)
  apply (erule conjE)
- apply (erule accept_value.cases; auto)
- apply (erule accept_val_env.cases; auto)
+ apply (erule static_eval_value.cases; auto)
+ apply (erule static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "\<lbrace>Ch \<pi> x\<^sub>c\<rbrace>"]; simp)
 done
 

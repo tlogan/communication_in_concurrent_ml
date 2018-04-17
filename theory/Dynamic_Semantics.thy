@@ -77,9 +77,9 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
 
 
 
-type_synonym state_pool = "control_path \<rightharpoonup> state"
+type_synonym trace_pool = "control_path \<rightharpoonup> state"
 
-definition leaf :: "state_pool \<Rightarrow> control_path \<Rightarrow> bool" where
+definition leaf :: "trace_pool \<Rightarrow> control_path \<Rightarrow> bool" where
   "leaf \<E> \<pi> \<equiv> \<not>(\<E> \<pi> = None) \<and> (\<nexists> \<pi>' . \<not>(\<E> \<pi>' = None) \<and> strict_prefix \<pi> \<pi>')"
 
 
@@ -87,7 +87,7 @@ abbreviation control_path_append :: "control_path => control_label => control_pa
   "\<pi>;;lab \<equiv> \<pi> @ [lab]"
 
 
-inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
+inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Seq_Step_Down: "
     \<lbrakk> 
       leaf \<E> \<pi>;
@@ -153,7 +153,7 @@ inductive concur_step :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool
     ]
   "
 
-abbreviation concur_steps :: "state_pool \<Rightarrow> state_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
+abbreviation dynamic_eval :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "\<E> \<rightarrow>* \<E>' \<equiv> star concur_step \<E> \<E>'"
 
 
