@@ -341,40 +341,6 @@ lemma runtime_recv_paths_are_inclusive: "
 apply (unfold is_recv_path_def; auto)
 using runtime_paths_are_inclusive by auto
 
-(*
-lemma topology_trim_equal_sound: "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e;
-    \<V> (trim \<L>n e) \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2;
-
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1;
-    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2
-  \<rbrakk> \<Longrightarrow>
-  \<pi>\<^sub>1 = \<pi>\<^sub>2
-"
-sorry
-
-theorem topology_one_shot_strong_sound: "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e;
-
-    static_one_shot_strong (\<V>, \<C>, e) (trim \<L>n e) x\<^sub>c
-  \<rbrakk> \<Longrightarrow>
-  one_shot \<E>' (Ch \<pi> x\<^sub>c)
-"
-
- apply (unfold static_one_shot_strong_def)
- apply (unfold one_shot_def, auto)
- apply (unfold all_def; auto)
- apply (unfold singular_strong_def)
-by (metis isnt_send_path_sound runtime_send_paths_are_inclusive topology_trim_equal_sound)
-
-*)
-
 
 theorem topology_one_shot_sound: "
   \<lbrakk>
@@ -461,5 +427,40 @@ theorem topology_fan_in_sound: "
  apply (unfold fan_in_def)
   apply (erule topology_all_noncompetitive_recv_sound; auto)
 done
+
+
+(*
+lemma topology_trim_equal_sound: "
+  \<lbrakk>
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e;
+    \<V> (trim \<L>n e) \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2;
+
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1;
+    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2
+  \<rbrakk> \<Longrightarrow>
+  \<pi>\<^sub>1 = \<pi>\<^sub>2
+"
+sorry
+
+theorem topology_one_shot_strong_sound: "
+  \<lbrakk>
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e;
+
+    static_one_shot_strong (\<V>, \<C>, e) (trim \<L>n e) x\<^sub>c
+  \<rbrakk> \<Longrightarrow>
+  one_shot \<E>' (Ch \<pi> x\<^sub>c)
+"
+
+ apply (unfold static_one_shot_strong_def)
+ apply (unfold one_shot_def, auto)
+ apply (unfold all_def; auto)
+ apply (unfold singular_strong_def)
+by (metis isnt_send_path_sound runtime_send_paths_are_inclusive topology_trim_equal_sound)
+
+*)
 
 end
