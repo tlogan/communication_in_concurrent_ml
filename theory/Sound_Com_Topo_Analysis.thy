@@ -250,7 +250,7 @@ lemma runtime_send_paths_are_inclusive: "
 apply (unfold is_send_path_def; auto)
 using runtime_paths_are_inclusive by blast
 
-theorem topology_all_singular_send_sound: "
+theorem all_singular_send_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -342,7 +342,7 @@ apply (unfold is_recv_path_def; auto)
 using runtime_paths_are_inclusive by auto
 
 
-theorem topology_one_shot_sound: "
+theorem one_shot_sound: "
   \<lbrakk>
     static_one_shot (\<V>, \<C>, e) x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
@@ -352,12 +352,12 @@ theorem topology_one_shot_sound: "
 "
  apply (unfold static_one_shot_def)
  apply (unfold one_shot_def)
- apply (auto dest: topology_all_singular_send_sound)
+ apply (auto dest: all_singular_send_sound)
 done
 
 
 
-theorem topology_all_noncompetitive_send_sound: "
+theorem all_noncompetitive_send_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -372,7 +372,7 @@ using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
 
 
-theorem topology_all_noncompetitive_recv_sound: "
+theorem all_noncompetitive_recv_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     all (is_static_recv_path (\<V>, \<C>, e) x\<^sub>c) noncompetitive;
@@ -385,7 +385,7 @@ apply (simp add: all_def noncompetitive_def; auto)
 using isnt_recv_path_sound runtime_recv_paths_are_inclusive by blast
 
 
-theorem topology_one_to_one_sound: "
+theorem one_to_one_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -396,11 +396,11 @@ theorem topology_one_to_one_sound: "
 "
  apply (unfold static_one_to_one_def, auto)
  apply (unfold one_to_one_def, auto)
-  apply (erule topology_all_noncompetitive_send_sound; auto)
-  apply (erule topology_all_noncompetitive_recv_sound; auto)
+  apply (erule all_noncompetitive_send_sound; auto)
+  apply (erule all_noncompetitive_recv_sound; auto)
 done
 
-theorem topology_fan_out_sound: "
+theorem fan_out_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -411,10 +411,10 @@ theorem topology_fan_out_sound: "
 "
  apply (unfold static_fan_out_def)
  apply (unfold fan_out_def)
-  apply (erule topology_all_noncompetitive_send_sound; auto)
+  apply (erule all_noncompetitive_send_sound; auto)
 done
 
-theorem topology_fan_in_sound: "
+theorem fan_in_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -425,12 +425,12 @@ theorem topology_fan_in_sound: "
 "
  apply (unfold static_fan_in_def)
  apply (unfold fan_in_def)
-  apply (erule topology_all_noncompetitive_recv_sound; auto)
+  apply (erule all_noncompetitive_recv_sound; auto)
 done
 
 
 (*
-lemma topology_trim_equal_sound: "
+lemma trim_equal_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e;
@@ -444,7 +444,7 @@ lemma topology_trim_equal_sound: "
 "
 sorry
 
-theorem topology_one_shot_strong_sound: "
+theorem one_shot_strong_sound: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -459,7 +459,7 @@ theorem topology_one_shot_strong_sound: "
  apply (unfold one_shot_def, auto)
  apply (unfold all_def; auto)
  apply (unfold singular_strong_def)
-by (metis isnt_send_path_sound runtime_send_paths_are_inclusive topology_trim_equal_sound)
+by (metis isnt_send_path_sound runtime_send_paths_are_inclusive trim_equal_sound)
 
 *)
 
