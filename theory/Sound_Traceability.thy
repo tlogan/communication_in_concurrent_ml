@@ -528,7 +528,7 @@ proof -
     have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = FST x\<^sub>p in e''" by simp 
     with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)\<close>
     and `\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]`
-    have "\<parallel>\<rho> ++ [x \<mapsto> \<omega>]\<parallel> \<sqsubseteq> \<V>" using isnt_static_eval_pool_sound by fastforce then
+    have "\<parallel>\<rho> ++ [x \<mapsto> \<omega>]\<parallel> \<sqsubseteq> \<V>" using values_not_bound_pool_sound by fastforce then
     have "{|\<omega>|} \<subseteq> \<V> x" using abstracted_value_exists by auto
     with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = FST x\<^sub>p in e''\<close> \<open>{|\<omega>|} \<subseteq> \<V> x\<close> 
     show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by (blast intro: static_traceable.Let_Fst)
@@ -540,7 +540,7 @@ proof -
     have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = SND x\<^sub>p in e''" by simp 
     with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; `x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)\<close>
     and `\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]`
-    have "\<parallel>\<rho> ++ [x \<mapsto> \<omega>]\<parallel> \<sqsubseteq> \<V>" using isnt_static_eval_pool_sound by fastforce then
+    have "\<parallel>\<rho> ++ [x \<mapsto> \<omega>]\<parallel> \<sqsubseteq> \<V>" using values_not_bound_pool_sound by fastforce then
     have "{|\<omega>|} \<subseteq> \<V> x" using abstracted_value_exists by auto
     with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = SND x\<^sub>p in e''\<close> \<open>{|\<omega>|} \<subseteq> \<V> x\<close> 
     show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; `x \<mapsto> e''" by (blast intro: static_traceable.Let_Snd)

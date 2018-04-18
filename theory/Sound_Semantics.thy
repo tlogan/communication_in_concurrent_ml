@@ -1491,7 +1491,7 @@ proof -
   show "\<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>"  by (simp add: static_eval_env_to_precise)
 qed
 
-theorem isnt_static_eval_pool_sound : "
+theorem values_not_bound_pool_sound : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>; 
     \<E> \<rightarrow>* \<E>';
@@ -1528,7 +1528,7 @@ proof -
 qed
 
 
-theorem isnt_static_eval_sound : "
+theorem values_not_bound_sound : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e; 
     [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>';
@@ -1544,7 +1544,7 @@ proof -
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: static_eval_to_pool)
 
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]\<close> \<open>[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'\<close> \<open>\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
-  show "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (simp add: isnt_static_eval_pool_sound)
+  show "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (simp add: values_not_bound_pool_sound)
 qed
 
 
@@ -1564,7 +1564,7 @@ proof -
   show "{|\<omega>|} \<subseteq> \<V> x" by (simp add: env_to_abstract_value_env_def)
 qed
 
-corollary isnt_static_eval_sound_coro: "
+corollary values_not_bound_sound_coro: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e ;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -1578,7 +1578,7 @@ proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e"
   and "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'"
   and "\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" then
-  have "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (simp add: isnt_static_eval_sound)
+  have "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (simp add: values_not_bound_sound)
   with `\<rho>' x = Some \<omega>`
   show "{|\<omega>|} \<subseteq> \<V> x" using abstracted_value_exists by blast
 qed

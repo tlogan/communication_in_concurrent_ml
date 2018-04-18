@@ -9,11 +9,11 @@ begin
 
 lemma static_send_chan_doesnt_exist_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
-    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>
+    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c
 "
@@ -32,24 +32,23 @@ done
 
 lemma static_send_evt_doesnt_exist_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
 "
-  apply (drule isnt_static_eval_sound_coro; assumption?; auto)
+  apply (drule values_not_bound_sound_coro; assumption?; auto)
 done
-
+(*
 lemma static_message_isnt_sent_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
-    \<E>' (\<pi>\<^sub>y;;`x\<^sub>y) = Some (\<langle>e\<^sub>y; \<rho>\<^sub>y(x\<^sub>y \<mapsto> \<lbrace>\<rbrace>); \<kappa>\<^sub>y\<rangle>)
+    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 "
@@ -66,15 +65,15 @@ lemma static_message_isnt_sent_sound: "
   apply (drule spec[of _ x\<^sub>c])
   apply (drule static_send_chan_doesnt_exist_sound; assumption?; auto)
 done
+*)
 
 lemma isnt_send_path_sound': "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-  
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Send_Evt x\<^sub>s\<^sub>c x\<^sub>m, \<rho>\<^sub>e\<rbrace>;
-    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
@@ -228,9 +227,9 @@ by (blast dest: runtime_paths_are_inclusive')
 
 lemma isnt_send_path_sound: "
   \<lbrakk>
+    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>y;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>y
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow> 
   is_static_send_path (\<V>, \<C>, e) x\<^sub>c \<pi>\<^sub>y
 "
@@ -252,10 +251,9 @@ using runtime_paths_are_inclusive by blast
 
 theorem all_singular_send_sound: "
   \<lbrakk>
+    all (is_static_send_path (\<V>, \<C>, e) x\<^sub>c) singular;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-  
-    all (is_static_send_path (\<V>, \<C>, e) x\<^sub>c) singular
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) op=
 "
@@ -265,11 +263,11 @@ using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
 lemma static_recv_chan_doesnt_exist_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>e\<rbrace>;
-    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>
+    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c
 "
@@ -288,24 +286,23 @@ done
 
 lemma static_recv_evt_doesnt_exist_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>e\<rbrace>;
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>e\<rbrace>
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e 
 "
-  apply (drule isnt_static_eval_sound_coro; assumption?; auto)
+  apply (drule values_not_bound_sound_coro; assumption?; auto)
 done
 
 lemma isnt_recv_path_sound': "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>); 
     \<rho>\<^sub>y x\<^sub>e = Some \<lbrace>Recv_Evt x\<^sub>r\<^sub>c, \<rho>\<^sub>e\<rbrace>;
-    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>
+    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some \<lbrace>Ch \<pi> x\<^sub>c\<rbrace>;
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
   \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y \<and>
   ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
@@ -319,10 +316,9 @@ done
 
 lemma isnt_recv_path_sound: "
   \<lbrakk>
+    is_recv_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>y;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-  
-    is_recv_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>y
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow> 
   is_static_recv_path (\<V>, \<C>, e) x\<^sub>c \<pi>\<^sub>y
 "
@@ -359,10 +355,9 @@ done
 
 theorem all_noncompetitive_send_sound: "
   \<lbrakk>
+    all (is_static_send_path (\<V>, \<C>, e) x\<^sub>c) noncompetitive;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-  
-    all (is_static_send_path (\<V>, \<C>, e) x\<^sub>c) noncompetitive
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
 "
@@ -374,9 +369,8 @@ using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
 theorem all_noncompetitive_recv_sound: "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     all (is_static_recv_path (\<V>, \<C>, e) x\<^sub>c) noncompetitive;
-  
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
@@ -387,10 +381,9 @@ using isnt_recv_path_sound runtime_recv_paths_are_inclusive by blast
 
 theorem one_to_one_sound: "
   \<lbrakk>
+    static_one_to_one (\<V>, \<C>, e) x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-  
-    static_one_to_one (\<V>, \<C>, e) x\<^sub>c
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   one_to_one \<E>' (Ch \<pi> x\<^sub>c)
 "
@@ -402,10 +395,9 @@ done
 
 theorem fan_out_sound: "
   \<lbrakk>
+    static_fan_out (\<V>, \<C>, e) x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-  
-    static_fan_out (\<V>, \<C>, e) x\<^sub>c
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   fan_out \<E>' (Ch \<pi> x\<^sub>c)
 "
@@ -416,10 +408,9 @@ done
 
 theorem fan_in_sound: "
   \<lbrakk>
+    static_fan_in (\<V>, \<C>, e) x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-  
-    static_fan_in (\<V>, \<C>, e) x\<^sub>c
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   fan_in \<E>' (Ch \<pi> x\<^sub>c)
 "
