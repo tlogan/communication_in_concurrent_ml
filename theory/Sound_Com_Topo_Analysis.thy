@@ -95,71 +95,71 @@ lemma inclusive_preserved: "
 "
  apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; \<downharpoonleft>x\<^sub>\<kappa>'"; auto))
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LReturn x\<^sub>\<kappa>')"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LReturn x\<^sub>\<kappa>')"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `xa"; auto))
-   apply (simp add: Ordered)
-   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
-   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
-
-
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `xa"; auto))
-   apply (simp add: Ordered)
-   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
-   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
-
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `xa"; auto))
-   apply (simp add: Ordered)
-   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
-   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
-
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `xa"; auto))
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext xa)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; \<upharpoonleft>xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; \<upharpoonleft>xa"; auto))
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext xa)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; \<upharpoonleft>xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; \<upharpoonleft>xa"; auto))
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext xa)"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext xa)"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LCall xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LCall xa)"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LCall xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LCall xa)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
    
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; \<upharpoonleft>xa"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; \<upharpoonleft>xa"; auto))
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LCall xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LCall xa)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `x"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `x"; auto))
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext x)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext x)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; .x"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; .x"; auto))
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LSpawn x)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LSpawn x)"; auto))
    apply (simp add: Ordered)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi> ;; `x"; auto)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext x)"; auto)
   apply (simp add: Spawn_Left)
   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
-  apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `x"; auto)
+  apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext x)"; auto)
   apply (simp add: Spawn_Right)
   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict) 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; `x"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; `x"; auto))
+   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext x)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext x)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+   apply (case_tac "\<pi>\<^sub>1 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
    apply (simp add: Ordered)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; `x\<^sub>s"; auto)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
    apply (metis inclusive.simps inclusive_preserved_under_unordered_extension leaf_def prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
    apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
    apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
@@ -167,28 +167,28 @@ lemma inclusive_preserved: "
    apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
    apply (drule_tac x = \<pi>\<^sub>2 in spec; auto)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.simps(3) prefix_order.le_less prefix_snoc)
-   apply (case_tac "\<pi>\<^sub>1 = \<pi>\<^sub>s ;; `x\<^sub>s"; auto)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+   apply (case_tac "\<pi>\<^sub>1 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
    apply (metis inclusive.simps inclusive_preserved_under_unordered_extension leaf_def prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; `x\<^sub>s"; auto)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
    apply (simp add: Ordered)
    apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
    apply (drule_tac x = \<pi>\<^sub>2 in spec; auto)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
    apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
    apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
    apply (smt Ordered exp.inject(1) inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.inject prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc state.inject)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; `x\<^sub>s"; auto)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
    apply (simp add: Ordered)
    apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
    apply (drule_tac x = \<pi>\<^sub>2 in spec; auto)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.simps(3) prefix_order.le_less prefix_snoc)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; `x\<^sub>r"; auto)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
    apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
    apply (drule_tac x = \<pi>\<^sub>1 in spec; auto)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; `x\<^sub>s"; auto)
+   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
    apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
    apply (drule_tac x = \<pi>\<^sub>1 in spec; auto)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
@@ -419,39 +419,5 @@ theorem fan_in_sound: "
   apply (erule all_noncompetitive_recv_sound; auto)
 done
 
-
-(*
-lemma trim_equal_sound: "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e;
-    \<V> (trim \<L>n e) \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2;
-
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1;
-    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2
-  \<rbrakk> \<Longrightarrow>
-  \<pi>\<^sub>1 = \<pi>\<^sub>2
-"
-sorry
-
-theorem one_shot_strong_sound: "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    (\<V>, \<L>n, \<L>x) \<tturnstile> x\<^sub>c \<triangleleft> e;
-
-    static_one_shot_strong (\<V>, \<C>, e) (trim \<L>n e) x\<^sub>c
-  \<rbrakk> \<Longrightarrow>
-  one_shot \<E>' (Ch \<pi> x\<^sub>c)
-"
-
- apply (unfold static_one_shot_strong_def)
- apply (unfold one_shot_def, auto)
- apply (unfold all_def; auto)
- apply (unfold singular_strong_def)
-by (metis isnt_send_path_sound runtime_send_paths_are_inclusive trim_equal_sound)
-
-*)
 
 end

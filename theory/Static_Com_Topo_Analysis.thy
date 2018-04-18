@@ -27,10 +27,10 @@ inductive inclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bo
     \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
   " |
  Spawn_Left: "
-    \<pi> @ .x # \<pi>\<^sub>1 \<asymp> \<pi> @ `x # \<pi>\<^sub>2
+    \<pi> @ (LSpawn x) # \<pi>\<^sub>1 \<asymp> \<pi> @ (LNext x) # \<pi>\<^sub>2
  " |
  Spawn_Right: "
-    \<pi> @ `x # \<pi>\<^sub>1 \<asymp> \<pi> @ .x # \<pi>\<^sub>2
+    \<pi> @ (LNext x) # \<pi>\<^sub>1 \<asymp> \<pi> @ (LSpawn x) # \<pi>\<^sub>2
  "
 
 lemma inclusive_commut: "

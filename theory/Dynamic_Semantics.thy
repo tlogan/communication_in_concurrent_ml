@@ -4,10 +4,10 @@ begin
 
 
 datatype control_label = 
-  L_Seq var ("`_" [71] 70) | 
-  L_Spawn var ("._" [71] 70) |
-  L_Up var ("\<upharpoonleft>_" [71] 70) |
-  L_Down var ("\<downharpoonleft>_" [71] 70)
+  LNext var | 
+  LSpawn var |
+  LCall var |
+  LReturn var
 
 type_synonym control_path = "control_label list"
 
@@ -94,7 +94,7 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
       \<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) ;
       \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>'
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;\<downharpoonleft>x\<^sub>\<kappa> \<mapsto> \<sigma>']
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LReturn x\<^sub>\<kappa>) \<mapsto> \<sigma>']
   " |
   Seq_Step: "
     \<lbrakk> 
@@ -102,7 +102,7 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
       \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
       \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<kappa>\<rangle>
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;`x \<mapsto> \<langle>e'; \<rho>'; \<kappa>\<rangle>]
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LNext x) \<mapsto> \<langle>e'; \<rho>'; \<kappa>\<rangle>]
   " |
   Seq_Step_Up: "
     \<lbrakk> 
@@ -110,7 +110,7 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
       \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
       \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;\<upharpoonleft>x \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LCall x) \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
   " |
   Let_Chan: "
     \<lbrakk> 
@@ -118,7 +118,7 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
       \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>)
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [
-      \<pi>;;`x \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> \<lbrace>Ch \<pi> x\<rbrace>]; \<kappa>\<rangle>)
+      \<pi>;;(LNext x) \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> \<lbrace>Ch \<pi> x\<rbrace>]; \<kappa>\<rangle>)
     ]
   " |
   Let_Spawn: "
@@ -127,8 +127,8 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
       \<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [
-      \<pi>;;`x \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> \<lbrace>\<rbrace>]; \<kappa>\<rangle>), 
-      \<pi>;;.x \<mapsto> (\<langle>e\<^sub>c; \<rho>; []\<rangle>) 
+      \<pi>;;(LNext x) \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> \<lbrace>\<rbrace>]; \<kappa>\<rangle>), 
+      \<pi>;;(LSpawn x) \<mapsto> (\<langle>e\<^sub>c; \<rho>; []\<rangle>) 
     ]
   " |
   Let_Sync: "
@@ -148,8 +148,8 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
 
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [
-      \<pi>\<^sub>s;;`x\<^sub>s \<mapsto> (\<langle>e\<^sub>s; \<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> \<lbrace>\<rbrace>]; \<kappa>\<^sub>s\<rangle>), 
-      \<pi>\<^sub>r;;`x\<^sub>r \<mapsto> (\<langle>e\<^sub>r; \<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m]; \<kappa>\<^sub>r\<rangle>)
+      \<pi>\<^sub>s;;(LNext x\<^sub>s) \<mapsto> (\<langle>e\<^sub>s; \<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> \<lbrace>\<rbrace>]; \<kappa>\<^sub>s\<rangle>), 
+      \<pi>\<^sub>r;;(LNext x\<^sub>r) \<mapsto> (\<langle>e\<^sub>r; \<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m]; \<kappa>\<^sub>r\<rangle>)
     ]
   "
 
