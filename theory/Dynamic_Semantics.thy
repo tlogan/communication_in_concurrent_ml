@@ -156,21 +156,4 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
 abbreviation dynamic_eval :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "\<E> \<rightarrow>* \<E>' \<equiv> star concur_step \<E> \<E>'"
 
-
-lemma leaf_elim: "
-  \<lbrakk> 
-    leaf \<E> \<pi>; strict_prefix \<pi> \<pi>' 
-  \<rbrakk> \<Longrightarrow>
-  \<E> \<pi>' = None
-"
-using leaf_def by blast
-
-
-inductive_cases Result_E[elim!]: "\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>"
-
-fun val_to_bind :: "val \<Rightarrow> bind" where
-  "val_to_bind \<lbrace>\<rbrace> = \<lparr>\<rparr>" |
-  "val_to_bind \<lbrace> _ \<rbrace> = CHAN \<lparr>\<rparr>" |
-  "val_to_bind \<lbrace>p, _ \<rbrace> = Prim p"
-
 end

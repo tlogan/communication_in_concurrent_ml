@@ -7,6 +7,13 @@ begin
 
 
 (*
+
+fun val_to_bind :: "val \<Rightarrow> bind" where
+  "val_to_bind \<lbrace>\<rbrace> = \<lparr>\<rparr>" |
+  "val_to_bind \<lbrace> _ \<rbrace> = CHAN \<lparr>\<rparr>" |
+  "val_to_bind \<lbrace>p, _ \<rbrace> = Prim p"
+
+
 inductive built_on_channel :: "abstract_value_env \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"  where
   Chan: "
     \<lbrakk>
