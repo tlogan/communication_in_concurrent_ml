@@ -6,8 +6,8 @@ datatype var = Var string
 
 (* ANF grammar *)
 datatype exp = 
-  Let var bind exp ("LET _ = _ in _" [0,0, 61] 61) |
-  Result var ("RESULT _" [61] 61)
+  ELet var bind exp ("LET _ = _ in _" [0,0, 61] 61) |
+  EResult var ("RESULT _" [61] 61)
 
 and bind = 
   Unit ("\<lparr>\<rparr>") |

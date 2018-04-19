@@ -39,7 +39,7 @@ lemma static_send_evt_doesnt_exist_sound: "
   \<rbrakk> \<Longrightarrow>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
 "
-  apply (drule values_not_bound_sound_coro; assumption?; auto)
+  apply (drule values_not_bound_sound; assumption?; auto)
 done
 
 
@@ -269,7 +269,7 @@ lemma static_recv_evt_doesnt_exist_sound: "
   \<rbrakk> \<Longrightarrow> 
   {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e 
 "
-  apply (drule values_not_bound_sound_coro; assumption?; auto)
+  apply (drule values_not_bound_sound; assumption?; auto)
 done
 
 lemma isnt_recv_path_sound': "

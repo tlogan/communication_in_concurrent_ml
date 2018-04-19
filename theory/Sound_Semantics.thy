@@ -9,12 +9,6 @@ fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) 
   "|VClosure p \<rho>| = ^p"
 
 
-definition env_to_abstract_value_env :: "(var \<rightharpoonup> val) \<Rightarrow> abstract_value_env" ("\<parallel>_\<parallel>" [0]61) where
-  "\<parallel>\<rho>\<parallel> = (\<lambda> x . (case (\<rho> x) of 
-    Some \<omega> \<Rightarrow> {|\<omega>|} |
-    None \<Rightarrow> {}
-  ))"
-
 inductive static_eval_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55)
 and  static_eval_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
 where
@@ -1459,50 +1453,47 @@ proof -
 qed
 
 theorem static_eval_env_to_precise : "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-  \<Longrightarrow>
-  \<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>
+  \<rho> x = Some \<omega> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho> \<Longrightarrow>
+  {|\<omega>|} \<subseteq> \<V> x
 "
 proof -
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>"
-  {
-    fix x
-    from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>`
-    have "\<forall>\<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x" by (simp add: static_eval_env.simps) then
-    have "(case \<rho> x of None \<Rightarrow> {} | Some \<omega> \<Rightarrow> {|\<omega>|}) \<subseteq> \<V> x"  by (simp add: option.case_eq_if) then
-    have "(\<parallel>\<rho>\<parallel>) x \<subseteq> \<V> x" by (simp add: env_to_abstract_value_env_def)
-  } then
-  show "\<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>" by (simp add: abstract_value_env_precision_def)
+  assume "\<rho> x = Some \<omega>" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" then
+  show "{|\<omega>|} \<subseteq> \<V> x" by (simp add: static_eval_env.simps)
 qed
 
 theorem static_eval_pool_to_precise : "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>;
-    \<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>)
-  \<rbrakk>
-  \<Longrightarrow>
-  \<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>
+  \<rho> x = Some \<omega> \<Longrightarrow>
+  \<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
+  {|\<omega>|} \<subseteq> \<V> x
 "
 proof -
+  assume "\<rho> x = Some \<omega>"
+
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>)" then
+
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>" by (simp add: static_eval_pool.simps) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps) then
-  show "\<parallel>\<rho>\<parallel> \<sqsubseteq> \<V>"  by (simp add: static_eval_env_to_precise)
+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps) 
+  with `\<rho> x = Some \<omega>`
+
+  show "{|\<omega>|} \<subseteq> \<V> x" by (simp add: static_eval_env.simps)
 qed
 
 theorem values_not_bound_pool_sound : "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>; 
-    \<E> \<rightarrow>* \<E>';
-    \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)
-  \<rbrakk> \<Longrightarrow>
-  \<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>
+  \<rho>' x = Some \<omega> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> 
+  \<E> \<rightarrow>* \<E>' \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
+  {|\<omega>|} \<subseteq> \<V> x
 "
 proof -
+  assume "\<rho>' x = Some \<omega>"
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<rightarrow>* \<E>'" and "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: static_eval_preserved_under_concur_step_star)
-  with \<open>\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
-  show "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (blast intro: static_eval_pool_to_precise)
+  with \<open>\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close> and `\<rho>' x = Some \<omega>`
+  show "{|\<omega>|} \<subseteq> \<V> x" using static_eval_pool_to_precise by auto
 qed
 
 
@@ -1528,58 +1519,26 @@ qed
 
 
 theorem values_not_bound_sound : "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e; 
-    [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)
-  \<rbrakk> \<Longrightarrow>
-  \<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>
+  \<rho>' x = Some \<omega> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
+  {|\<omega>|} \<subseteq> \<V> x
 "
 proof -
+  assume "\<rho>' x = Some \<omega>"
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e" and "[[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'"
   and "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e e`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: static_eval_to_pool)
 
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]\<close> \<open>[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'\<close> \<open>\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
-  show "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (simp add: values_not_bound_pool_sound)
-qed
+  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]\<close> 
+  and \<open>[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'\<close> 
+  and \<open>\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
+  and `\<rho>' x = Some \<omega> `
 
-
-corollary abstracted_value_exists: "
-  \<lbrakk>
-    \<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>;
-    \<rho>' x = Some \<omega>
-  \<rbrakk> \<Longrightarrow>
-  {|\<omega>|} \<subseteq> \<V> x
-"
-proof -
-  assume "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" and "\<rho>' x = Some \<omega>"
-
-  from `\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>`
-  have "(\<parallel>\<rho>'\<parallel>) x \<subseteq> \<V> x" by (simp add: abstract_value_env_precision_def)
-  with `\<rho>' x = Some \<omega>`
-  show "{|\<omega>|} \<subseteq> \<V> x" by (simp add: env_to_abstract_value_env_def)
-qed
-
-corollary values_not_bound_sound_coro: "
-  \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e ;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
-    \<rho>' x = Some \<omega>
-  \<rbrakk> \<Longrightarrow>
-  {|\<omega>|} \<subseteq> \<V> x
-"
-proof -
-  assume "\<rho>' x = Some \<omega>"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e"
-  and "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'"
-  and "\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" then
-  have "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (simp add: values_not_bound_sound)
-  with `\<rho>' x = Some \<omega>`
-  show "{|\<omega>|} \<subseteq> \<V> x" using abstracted_value_exists by blast
+  show " {|\<omega>|} \<subseteq> \<V> x" using values_not_bound_pool_sound by blast
 qed
 
 end

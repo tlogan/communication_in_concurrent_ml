@@ -120,6 +120,9 @@ lemma static_traceable_exp_preserved_sync_recv_evt: "
 \<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>r ;; (LNext x\<^sub>r) \<mapsto> e\<^sub>n
 "
 proof -
+
+  have "(\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) x\<^sub>r = Some \<omega>\<^sub>m" by simp
+
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; (LNext x\<^sub>s) \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; (LNext x\<^sub>r) \<mapsto> \<langle>e';\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>'\<rangle>)"
   assume " \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e"
   and "\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>n;\<rho>\<^sub>r;\<kappa>'\<rangle>)" then
@@ -127,12 +130,11 @@ proof -
   have "(\<E>(\<pi>\<^sub>s ;; (LNext x\<^sub>s) \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; (LNext x\<^sub>r) \<mapsto> \<langle>e';\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>'\<rangle>)) (\<pi>\<^sub>r ;; (LNext x\<^sub>r)) 
       = Some (\<langle>e';\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>'\<rangle>)" by simp
   with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; (LNext x\<^sub>s) \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; (LNext x\<^sub>r) \<mapsto> \<langle>e';\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>'\<rangle>)\<close>
-  have "\<parallel>\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)\<parallel> \<sqsubseteq> \<V>" by (blast intro: static_eval_pool_to_precise)
+  and `(\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) x\<^sub>r = Some \<omega>\<^sub>m`
 
-  have "(\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) x\<^sub>r = Some \<omega>\<^sub>m" by simp
-  with `\<parallel>\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)\<parallel> \<sqsubseteq> \<V>`
-  have "|\<omega>\<^sub>m| \<in> \<V> x\<^sub>r" using abstracted_value_exists by blast
+  have "{ | \<omega>\<^sub>m | } \<subseteq> \<V> x\<^sub>r"  using static_eval_pool_to_precise by blast
   with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>r \<mapsto> LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>n\<close> 
+
   show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>r ;; (LNext x\<^sub>r) \<mapsto> e\<^sub>n" by (blast intro: static_traceable.Let_Sync)
 qed
 
@@ -147,21 +149,22 @@ lemma static_traceable_exp_preserved_sync_send_evt: "
 \<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>s ;; (LNext x\<^sub>s) \<mapsto> e'
 "
 proof -
+  have "(\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit)) x\<^sub>s = Some VUnit" by simp
+
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; (LNext x\<^sub>s) \<mapsto> \<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>'\<rangle>, \<pi>\<^sub>r ;; (LNext x\<^sub>r) \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)"
   and "\<pi>\<^sub>s \<noteq> \<pi>\<^sub>r"
+
   assume "\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e"
   and "\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e';\<rho>\<^sub>s;\<kappa>'\<rangle>)" then
-  have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>s \<mapsto> LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e'" by simp
 
+  have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>s \<mapsto> LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e'" by simp
   with `\<pi>\<^sub>s \<noteq> \<pi>\<^sub>r`
+
   have "(\<E>(\<pi>\<^sub>s ;; (LNext x\<^sub>s) \<mapsto> \<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>'\<rangle>, \<pi>\<^sub>r ;; (LNext x\<^sub>r) \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) (\<pi>\<^sub>s ;; (LNext x\<^sub>s)) 
       = Some (\<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>'\<rangle>)" by simp
   with `\<pi>\<^sub>s \<noteq> \<pi>\<^sub>r` \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; (LNext x\<^sub>s) \<mapsto> \<langle>e';\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>'\<rangle>, \<pi>\<^sub>r ;; (LNext x\<^sub>r) \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)\<close>
-  have "\<parallel>\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit)\<parallel> \<sqsubseteq> \<V>" using static_eval_pool_to_precise by blast
-
-  have "(\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit)) x\<^sub>s = Some VUnit" by simp
-  with `\<parallel>\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit)\<parallel> \<sqsubseteq> \<V>`
-  have " |VUnit| \<in> \<V> x\<^sub>s" using abstracted_value_exists by fastforce
+  and `(\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit)) x\<^sub>s = Some VUnit`
+  have  "|VUnit| \<in> \<V> x\<^sub>s" using static_eval_pool_to_precise by blast
 
   from \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>s \<mapsto> LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e'\<close> \<open>|VUnit| \<in> \<V> x\<^sub>s\<close>
   show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>\<^sub>s ;; (LNext x\<^sub>s) \<mapsto> e'" using static_traceable.Let_Sync by blast
@@ -246,9 +249,6 @@ proof -
   assume "\<E> \<rightarrow> \<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)" by (blast intro: static_eval_preserved_under_concur_step)
 
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)\<close> and \<open>(\<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
-  have "\<parallel>\<rho>'\<parallel> \<sqsubseteq> \<V>" by (blast intro: static_eval_pool_to_precise)
-
   assume "\<E> \<pi> = Some (\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle>)"
   with \<open>\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>\<close>
   have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e" "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>" by simp+
@@ -269,26 +269,38 @@ proof -
     show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; (LNext x) \<mapsto> e''" by (simp add: static_traceable.Let_Prim)
   next
     case (Let_Fst x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega>)
-    assume "\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]"
+    assume "\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]" then
+    have "\<rho>'' x = Some \<omega>" by simp
+
     assume "b = FST x\<^sub>p" and "e'' = e"
     with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e\<close>
+
     have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = FST x\<^sub>p in e''" by simp 
-    with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)\<close>
-    and `\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]`
-    have "\<parallel>\<rho> ++ [x \<mapsto> \<omega>]\<parallel> \<sqsubseteq> \<V>" using values_not_bound_pool_sound by fastforce then
-    have "{|\<omega>|} \<subseteq> \<V> x" using abstracted_value_exists by auto
-    with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = FST x\<^sub>p in e''\<close> \<open>{|\<omega>|} \<subseteq> \<V> x\<close> 
+
+    from \<open>\<E> \<rightarrow> \<E>(\<pi> ;; LNext x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)\<close>
+    have "\<E> \<rightarrow>* \<E>(\<pi> ;; LNext x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)" by simp
+
+    from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> 
+    and \<open>\<E> \<rightarrow>* \<E>(\<pi> ;; LNext x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)\<close>
+    and \<open>\<rho>'' x = Some \<omega>\<close> 
+
+    have "{|\<omega>|} \<subseteq> \<V> x" by (meson fun_upd_same values_not_bound_pool_sound)
+    with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = FST x\<^sub>p in e''\<close>
+
     show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; (LNext x) \<mapsto> e''" by (blast intro: static_traceable.Let_Fst)
   next
     case (Let_Snd x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p \<omega>)
-    assume "\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]"
+    assume "\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]" then
+    have "\<rho>'' x = Some \<omega>" by simp
+
     assume "b = SND x\<^sub>p" and "e'' = e"
     with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = b in e\<close>
     have "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = SND x\<^sub>p in e''" by simp 
-    with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)\<close>
-    and `\<rho>'' = \<rho> ++ [x \<mapsto> \<omega>]`
-    have "\<parallel>\<rho> ++ [x \<mapsto> \<omega>]\<parallel> \<sqsubseteq> \<V>" using values_not_bound_pool_sound by fastforce then
-    have "{|\<omega>|} \<subseteq> \<V> x" using abstracted_value_exists by auto
+
+    from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> 
+    and \<open>\<E> \<rightarrow> \<E>(\<pi> ;; LNext x \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)\<close> 
+    and `\<rho>'' x = Some \<omega>`
+    have "{|\<omega>|} \<subseteq> \<V> x" by (metis fun_upd_same star_step1 values_not_bound_pool_sound)
     with \<open>\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = SND x\<^sub>p in e''\<close> \<open>{|\<omega>|} \<subseteq> \<V> x\<close> 
     show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> ;; (LNext x) \<mapsto> e''" by (blast intro: static_traceable.Let_Snd)
   next
@@ -334,11 +346,11 @@ lemma static_traceable_exp_preserved_under_seq_step_up: "
 "
   apply (case_tac "\<pi>' = \<pi> ;; (LCall x)"; auto)
   apply ((drule spec)+, erule impE, assumption, erule conjE)
-  apply (drule static_eval_pool_to_precise, auto)
   apply (erule seq_step.cases, auto)
-  apply (drule abstracted_value_exists, simp+, rule static_traceable.Let_Case_Left; auto)
-  apply (drule abstracted_value_exists, simp+, rule static_traceable.Let_Case_Right; auto)
-  apply (drule abstracted_value_exists, simp+, rule static_traceable.Let_App; auto)
+  apply (simp add: static_traceable.Let_Case_Left)
+  apply (simp add: static_traceable.Let_Case_Right)
+  apply (drule static_eval_pool_to_precise, auto)
+    using static_traceable.Let_App apply blast
 done
 
 lemma static_traceable_exp_preserved_under_chan:"

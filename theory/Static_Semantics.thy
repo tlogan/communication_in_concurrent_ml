@@ -142,9 +142,4 @@ inductive static_eval :: "abstract_value_env \<times> abstract_value_env \<Right
     (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e
   "
 
-   
-definition abstract_value_env_precision :: "abstract_value_env \<Rightarrow> abstract_value_env \<Rightarrow> bool" (infix "\<sqsubseteq>" 55) where
-  "\<V> \<sqsubseteq> \<V>' \<equiv> (\<forall> x . \<V> x \<subseteq> \<V>' x)"
-
-
 end
