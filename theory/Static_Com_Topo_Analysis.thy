@@ -5,6 +5,19 @@ theory Static_Com_Topo_Analysis
     Dynamic_Com_Topo_Analysis
 begin
 
+(*
+
+Need to consider only subprograms where channel is live.
+
+Transform 
+  Let x = (Sync Send xc mc) in exp_sender
+  Let y = (Sync Recv xc) in exp in exp_receiver
+into 
+  Let x = (Spawn exp_receiver[y\mc]) in exp_sender
+
+*)
+
+
 definition is_static_send_path :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
   "is_static_send_path \<A> x\<^sub>c \<pi>\<^sub>y \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> (\<exists> x\<^sub>y x\<^sub>e x\<^sub>s\<^sub>c x\<^sub>m e\<^sub>n . 
     \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n \<and>
