@@ -233,35 +233,25 @@ inductive channel_live :: "(abstract_value_env \<times> exp_map \<times> exp_map
     (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = APP f x\<^sub>a in e
   "
 
+
 (*
 
-inductive live_equal :: "abstract_value_env \<Rightarrow> exp_map \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" ("_ _ _ \<tturnstile> _ \<cong> _" [56, 0, 56]55) where
-  Refl: "
-    \<V> Ln e \<tturnstile> \<pi> \<cong> \<pi>
-  " |
-  Induct_Left: "
-    \<lbrakk>
-      \<not> (\<V> \<turnstile> e \<down> \<pi> \<mapsto> e');
-      \<V> Ln e \<tturnstile> \<pi> \<cong> \<pi>\<^sub>2
-    \<rbrakk> \<Longrightarrow>
-    \<V> Ln e \<tturnstile> \<pi> ;; l \<cong> \<pi>\<^sub>2
-  " |
-  Induct_Right: "
-    \<lbrakk>
-      \<not> (\<V> \<turnstile> e \<down> \<pi> \<mapsto> e');
-      \<V> Ln e \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi>
-    \<rbrakk> \<Longrightarrow>
-    \<V> Ln e \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi> ;; l
-  "
+DECLARATIVE DECSCRIPTION:
 
-definition singular_strong :: "abstract_value_env \<Rightarrow> exp_map \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" where
- "singular_strong \<V> Ln e \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> (\<V> Ln e \<tturnstile> \<pi>\<^sub>1 \<cong> \<pi>\<^sub>2) \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
+Create predicate chanel_gen_exp to state all expressions that create a channel bound to x\<^sub>c.
+Create predicate acitve_exp to state that an is active from a channel exp.
+use active exp to limit is_send_path analysis to particular channel creation site.
 
-definition static_one_shot_strong :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "static_one_shot_strong \<A> e\<^sub>t x\<^sub>c \<equiv> 
-    case \<A> of (\<V>, _, _) \<Rightarrow>
-    all (is_static_send_path \<A> x\<^sub>c) (singular_strong \<V> e\<^sub>t)"
+COMPUTATIONAL TECHNIQUE:
+Need to consider only subprograms where channel is live.
+
+Transform 
+  Let x = (Sync Send xc mc) in exp_sender
+  Let y = (Sync Recv xc) in exp in exp_receiver
+into 
+  Let x = (Spawn exp_receiver[y\mc]) in exp_sender
 
 *)
+
 
 end
