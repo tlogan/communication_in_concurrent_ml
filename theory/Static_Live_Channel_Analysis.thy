@@ -46,101 +46,99 @@ inductive built_on_chan :: "abstract_value_env \<Rightarrow> var \<Rightarrow> v
     built_on_chan V x\<^sub>c x
   "
 
-type_synonym exp_map = "exp \<Rightarrow> var set"
-inductive channel_live :: "(abstract_value_env \<times> exp_map \<times> exp_map) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [55,0,55]55) where
+type_synonym exp_to_label = "exp \<Rightarrow> control_label set"
+
+
+datatype def_use_label = Def var | Use var
+
+fun defUseLabel :: "exp \<Rightarrow> def_use_label" where
+  "defUseLabel (LET x = b in e) = Def x" |
+  "defUseLabel (RESULT y) = Use y"
+
+
+fun chanSet :: "abstract_value_env \<Rightarrow> var \<Rightarrow> var \<Rightarrow> var set" where
+  "chanSet V x\<^sub>c x = (if built_on_chan V x\<^sub>c x then {x} else {})" 
+
+type_synonym label_map = "def_use_label \<Rightarrow> var set"
+inductive channel_live :: "(abstract_value_env \<times> label_map \<times> label_map) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [55,0,55]55) where
   Result: "
     \<lbrakk>
-      {y | x\<^sub>c . built_on_chan V x\<^sub>c y} \<subseteq> Ln (RESULT y)
+      {y | x\<^sub>c . built_on_chan V x\<^sub>c y} \<subseteq> Ln (Use y)
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> RESULT y
   " |
   Let_Unit: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = \<lparr>\<rparr> in e);
-      Lx (LET x = \<lparr>\<rparr> in e) \<subseteq> Ln (LET x = \<lparr>\<rparr> in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
+      Lx (Def x) \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = \<lparr>\<rparr> in e
   " |
   Let_Chan: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = CHAN \<lparr>\<rparr> in e);
-      (Lx (LET x = CHAN \<lparr>\<rparr> in e) - 
-        {x | x\<^sub>c . built_on_chan V x\<^sub>c x}
-      ) \<subseteq> Ln (LET x = CHAN \<lparr>\<rparr> in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
+      (Lx (Def x) - chanSet V x\<^sub>c x) \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = CHAN \<lparr>\<rparr> in e
   " |
   Let_Send_Evt: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
       (
-        (Lx (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x}) \<union> 
-        {x\<^sub>s\<^sub>c | x\<^sub>c . built_on_chan V x\<^sub>c x\<^sub>s\<^sub>c} \<union> 
-        {x\<^sub>m | x\<^sub>c .  built_on_chan V x\<^sub>c x\<^sub>m} 
-      ) \<subseteq> Ln (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e);
+        (Lx (Def x) - chanSet V x\<^sub>c x) \<union> 
+        chanSet V x\<^sub>c x\<^sub>s\<^sub>c \<union> chanSet V x\<^sub>c x\<^sub>m 
+      ) \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e
   " |
   Let_Recv_Evt: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = RECV EVT x\<^sub>r\<^sub>c in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
       (
-        (Lx (LET x = RECV EVT x\<^sub>r\<^sub>c in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x}) \<union> 
-        {x\<^sub>r\<^sub>c | x\<^sub>c . built_on_chan V x\<^sub>c x\<^sub>r\<^sub>c}
-      ) \<subseteq> Ln (LET x = RECV EVT x\<^sub>r\<^sub>c in e);
+        (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>r\<^sub>c
+      ) \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = RECV EVT x\<^sub>r\<^sub>c in e
   " |
   Let_Pair: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
       (
-        (Lx (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x}) \<union> 
-        {x\<^sub>1 | x\<^sub>c . built_on_chan V x\<^sub>c x\<^sub>1} \<union> 
-        {x\<^sub>2 | x\<^sub>c . built_on_chan V x\<^sub>c x\<^sub>2}
-      ) \<subseteq> Ln (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e);
+        (Lx (Def x) - chanSet V x\<^sub>c x) \<union> 
+        chanSet V x\<^sub>c x\<^sub>1 \<union> chanSet V x\<^sub>c x\<^sub>2
+      ) \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e
   " |
   Let_Left: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = LEFT x\<^sub>a in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
       (
-        (Lx (LET x = LEFT x\<^sub>a in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x}) \<union> 
-        {x\<^sub>a | x\<^sub>c . built_on_chan V x\<^sub>c x\<^sub>a}
-      ) \<subseteq> Ln (LET x = LEFT x\<^sub>a in e);
+        (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a
+      ) \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = LEFT x\<^sub>a in e
   " |
   Let_Right: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = RIGHT x\<^sub>a in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
       (
-        (Lx (LET x = RIGHT x\<^sub>a in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x}) \<union> 
-        {x\<^sub>a | x\<^sub>c . built_on_chan V x\<^sub>c x\<^sub>a}
-      ) \<subseteq> Ln (LET x = RIGHT x\<^sub>a in e);
+        (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a
+      ) \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = RIGHT x\<^sub>a in e
   " |
   Let_Abs: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = FN f x\<^sub>p . e\<^sub>b  in e);
-      (
-        (Lx (LET x = FN f x\<^sub>p . e\<^sub>b  in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x})
-      ) \<subseteq> Ln (LET x = FN f x\<^sub>p . e\<^sub>b  in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
+      (Lx (Def x) - chanSet V x\<^sub>c x) \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e\<^sub>b;
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
@@ -148,11 +146,8 @@ inductive channel_live :: "(abstract_value_env \<times> exp_map \<times> exp_map
   " |
   Let_Spawn: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = SPAWN e\<^sub>c in e);
-      (
-        (Lx (LET x = SPAWN e\<^sub>c in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x})
-      ) \<subseteq> Ln (LET x = SPAWN e\<^sub>c in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
+      (Lx (Def x) - chanSet V x\<^sub>c x) \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e\<^sub>c;
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
@@ -160,54 +155,38 @@ inductive channel_live :: "(abstract_value_env \<times> exp_map \<times> exp_map
   " |
   Let_Sync: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = SYNC x\<^sub>e in e);
-      (
-        (Lx (LET x = SYNC x\<^sub>e in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x}) \<union>
-        {x\<^sub>e | x\<^sub>c . built_on_chan V x\<^sub>c x\<^sub>e}
-      ) \<subseteq> Ln (LET x = SYNC x\<^sub>e in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
+      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>e \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = SYNC x\<^sub>e in e
   " |
   Let_Fst: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = FST x\<^sub>a in e);
-      (
-        (Lx (LET x = FST x\<^sub>a in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x}) \<union> 
-        {x\<^sub>a | x\<^sub>c . built_on_chan V x\<^sub>c x\<^sub>a}
-      ) \<subseteq> Ln (LET x = FST x\<^sub>a in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
+      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = FST x\<^sub>a in e
   " |
   Let_Snd: "
     \<lbrakk>
-      Ln e \<subseteq> Lx (LET x = SND x\<^sub>a in e);
-      (
-        (Lx (LET x = SND x\<^sub>a in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x}) \<union> 
-        {x\<^sub>a | x\<^sub>c . built_on_chan V x\<^sub>c x\<^sub>a}
-      ) \<subseteq> Ln (LET x = SND x\<^sub>a in e);
+      Ln (defUseLabel e) \<subseteq> Lx (Def x);
+      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = SND x\<^sub>a in e
   " |
   Let_Case: "
     \<lbrakk>
-      Ln e\<^sub>l \<union> Ln e\<^sub>r \<subseteq> Lx (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e);
-      (
-        (Lx (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x}) \<union> 
-        {x\<^sub>s | x\<^sub>c . built_on_chan V x\<^sub>c x\<^sub>s}
-      ) \<subseteq> Ln (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e);
+      Ln (defUseLabel e\<^sub>l) \<union> Ln (defUseLabel e\<^sub>r) \<subseteq> Lx (Def x);
+      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>s \<subseteq> Ln (Def x);
 
-      Ln e \<subseteq> Lx (RESULT \<lfloor>e\<^sub>l\<rfloor>);
-      Lx (RESULT \<lfloor>e\<^sub>l\<rfloor>) \<union> {\<lfloor>e\<^sub>l\<rfloor> | x\<^sub>c . built_on_chan V x\<^sub>c (\<lfloor>e\<^sub>l\<rfloor>)} \<subseteq> Ln (RESULT \<lfloor>e\<^sub>l\<rfloor>);
+      Ln (defUseLabel e) \<subseteq> Lx (Use (\<lfloor>e\<^sub>l\<rfloor>));
+      Lx (Use (\<lfloor>e\<^sub>l\<rfloor>)) \<union> chanSet V x\<^sub>c (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> Ln (Use (\<lfloor>e\<^sub>l\<rfloor>));
 
-      Ln e \<subseteq> Lx (RESULT \<lfloor>e\<^sub>r\<rfloor>);
-      Lx (RESULT \<lfloor>e\<^sub>r\<rfloor>) \<union> {\<lfloor>e\<^sub>r\<rfloor> | x\<^sub>c . built_on_chan V x\<^sub>c (\<lfloor>e\<^sub>r\<rfloor>)} \<subseteq> Ln (RESULT \<lfloor>e\<^sub>r\<rfloor>);
+      Ln (defUseLabel e) \<subseteq> Lx (Use (\<lfloor>e\<^sub>r\<rfloor>));
+      Lx (Use (\<lfloor>e\<^sub>r\<rfloor>)) \<union> chanSet V x\<^sub>c (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> Ln (Use (\<lfloor>e\<^sub>r\<rfloor>));
 
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e\<^sub>l;
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e\<^sub>r;
@@ -218,20 +197,15 @@ inductive channel_live :: "(abstract_value_env \<times> exp_map \<times> exp_map
   Let_App: "
     \<lbrakk>
       (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow> 
-        Ln e \<subseteq> Lx (RESULT \<lfloor>e\<^sub>b\<rfloor>) \<and>
-        Lx (RESULT \<lfloor>e\<^sub>b\<rfloor>) \<union> {\<lfloor>e\<^sub>b\<rfloor> | x\<^sub>c . built_on_chan V x\<^sub>c (\<lfloor>e\<^sub>b\<rfloor>)} \<subseteq> Ln (RESULT \<lfloor>e\<^sub>b\<rfloor>) \<and>
-        Ln e\<^sub>b \<subseteq> Lx (LET x = APP f x\<^sub>a in e)
+        Ln (defUseLabel e) \<subseteq> Lx (Use (\<lfloor>e\<^sub>b\<rfloor>)) \<and>
+        Lx (Use (\<lfloor>e\<^sub>b\<rfloor>)) \<union> chanSet V x\<^sub>c (\<lfloor>e\<^sub>b\<rfloor>) \<subseteq> Ln (Use (\<lfloor>e\<^sub>b\<rfloor>)) \<and>
+        Ln (defUseLabel e\<^sub>b) \<subseteq> Lx (Def x)
       );
-      (
-        (Lx (LET x = APP f x\<^sub>a in e) - 
-          {x | x\<^sub>c . built_on_chan V x\<^sub>c x}) \<union>
-        {x\<^sub>a | x\<^sub>c . built_on_chan V x\<^sub>c x\<^sub>a}
-      ) \<subseteq> Ln (LET x = APP f x\<^sub>a in e);
-
+      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = APP f x\<^sub>a in e
-  "
+  " 
 
 
 inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^sub>e _" [56,56]55) where
@@ -341,30 +315,5 @@ the path to exp receiver will change from (LNext a) (LSpawn b) (LNext c) ... (LN
 There's actually no need for subs
 
 *)
-
-
-inductive active_exp :: "abstract_value_env \<Rightarrow> exp_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> exp \<Rightarrow> bool" where
-  Sync_Spawn_Transform : "
-    subexp (LET x = SYNC xSE in e') e\<^sub>0 \<Longrightarrow>
-    subexp (LET y = SYNC xRE in e) e\<^sub>0 \<Longrightarrow>
-
-    {^Send_Evt xSC xM} \<subseteq> V xSE \<Longrightarrow>
-    {^Recv_Evt xRC} \<subseteq> V xRE \<Longrightarrow>
-
-    {^Chan xCO} \<subseteq> V xSC \<Longrightarrow>
-    {^Chan xCO} \<subseteq> V xRC \<Longrightarrow>
-
-    {^Chan xC} \<subseteq> V xM \<Longrightarrow>
-    {^Chan xC} \<subseteq> V y \<Longrightarrow>
-
-    xCO \<noteq> xC \<Longrightarrow>
-
-    \<exists> x . x \<in> Ln e \<Longrightarrow>
-
-    \<exists> x . x \<in> Ln e' \<Longrightarrow>
-
-    active_exp V Ln xC e\<^sub>0 (LET x = SPAWN e in e')
-  "
-
 
 end
