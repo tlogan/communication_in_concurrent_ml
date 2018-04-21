@@ -46,8 +46,6 @@ inductive built_on_chan :: "abstract_value_env \<Rightarrow> var \<Rightarrow> v
     built_on_chan V x\<^sub>c x
   "
 
-type_synonym exp_to_label = "exp \<Rightarrow> control_label set"
-
 
 datatype def_use_label = Def var | Use var
 
@@ -63,7 +61,7 @@ type_synonym label_map = "def_use_label \<Rightarrow> var set"
 inductive channel_live :: "(abstract_value_env \<times> label_map \<times> label_map) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [55,0,55]55) where
   Result: "
     \<lbrakk>
-      {y | x\<^sub>c . built_on_chan V x\<^sub>c y} \<subseteq> Ln (Use y)
+      chanSet V x\<^sub>c y \<subseteq> Ln (Use y)
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> RESULT y
   " |
@@ -97,9 +95,7 @@ inductive channel_live :: "(abstract_value_env \<times> label_map \<times> label
   Let_Recv_Evt: "
     \<lbrakk>
       Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (
-        (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>r\<^sub>c
-      ) \<subseteq> Ln (Def x);
+      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>r\<^sub>c \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = RECV EVT x\<^sub>r\<^sub>c in e
@@ -118,9 +114,7 @@ inductive channel_live :: "(abstract_value_env \<times> label_map \<times> label
   Let_Left: "
     \<lbrakk>
       Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (
-        (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a
-      ) \<subseteq> Ln (Def x);
+      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = LEFT x\<^sub>a in e
@@ -128,9 +122,7 @@ inductive channel_live :: "(abstract_value_env \<times> label_map \<times> label
   Let_Right: "
     \<lbrakk>
       Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (
-        (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a
-      ) \<subseteq> Ln (Def x);
+      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (Def x);
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = RIGHT x\<^sub>a in e
