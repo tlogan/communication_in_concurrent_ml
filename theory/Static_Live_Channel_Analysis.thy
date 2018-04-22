@@ -57,6 +57,8 @@ fun defUseLabel :: "exp \<Rightarrow> def_use_label" where
 fun chanSet :: "abstract_value_env \<Rightarrow> var \<Rightarrow> var \<Rightarrow> var set" where
   "chanSet V x\<^sub>c x = (if built_on_chan V x\<^sub>c x then {x} else {})" 
 
+
+
 type_synonym label_map = "def_use_label \<Rightarrow> var set"
 inductive channel_live :: "(abstract_value_env \<times> label_map \<times> label_map) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" ("_ \<tturnstile> _ \<triangleleft> _" [55,0,55]55) where
   Result: "
@@ -197,8 +199,10 @@ inductive channel_live :: "(abstract_value_env \<times> label_map \<times> label
       (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e
     \<rbrakk> \<Longrightarrow>
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = APP f x\<^sub>a in e
-  " 
+  "
 
+definition chanAlive :: "label_map \<Rightarrow> def_use_label \<Rightarrow> bool" where
+  "chanAlive Ln l \<equiv> (\<exists> x . x \<in> Ln l)"
 
 inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^sub>e _" [56,56]55) where
   Refl : "
@@ -235,6 +239,26 @@ inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^s
     e \<preceq>\<^sub>e (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)
   "
 
+(*
+
+Need to consider only subprograms where channel is live.
+
+strategy 1:
+Find all the fragments that start with (LET x = CHAN \<lparr>\<rparr> in e).
+Find all the fragments that start with (LET x = RECV eRE in e).
+join fragments with initial (LET y = SPAWN (LET x = RECV eRE in) in (LET x = CHAN \<lparr>\<rparr> in e))
+
+incomplete strategy 2:
+Transform 
+  Let x = (Sync Send xc mc) in exp_sender
+  Let y = (Sync Recv xc) in exp in exp_receiver
+into 
+  Let x = (Spawn exp_receiver) in exp_sender
+
+the path to exp receiver will change from (LNext a) (LSpawn b) (LNext c) ... (LNext y) to (LSpawn x)  
+There's actually no need for subs
+
+*)
 
 
 lemma subexp_trans: "
@@ -293,19 +317,5 @@ lemma subexp1: "
 by (simp add: Let Refl)
 
 
-(*
-
-Need to consider only subprograms where channel is live.
-
-Transform 
-  Let x = (Sync Send xc mc) in exp_sender
-  Let y = (Sync Recv xc) in exp in exp_receiver
-into 
-  Let x = (Spawn exp_receiver) in exp_sender
-
-the path to exp receiver will change from (LNext a) (LSpawn b) (LNext c) ... (LNext y) to (LSpawn x)  
-There's actually no need for subs
-
-*)
 
 end
