@@ -201,8 +201,39 @@ inductive channel_live :: "(abstract_value_env \<times> label_map \<times> label
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = APP f x\<^sub>a in e
   "
 
+
+fun fragments :: "abstract_value_env \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> exp list" where
+  "fragments V xC (LET y = CHAN \<lparr>\<rparr> in e) = 
+    (if xC = y then
+      [LET y = CHAN \<lparr>\<rparr> in e] @ (fragments V xC e)
+    else 
+      [] @ (fragments V xC e))
+  " |
+  "fragments V xC (LET x = RECV EVT xRC in e) = 
+    (if {^Chan xC} \<subseteq> V x then
+      [LET x = RECV EVT xRC in e] @ (fragments V xC e)
+    else 
+      [] @ (fragments V xC e))
+  " | 
+  "fragments V xC (LET x = b in e) = [] @ (fragments V xC e)" |
+  "fragments V xC (RESULT y) = []"
+
+
 fun liveFragments :: "label_map \<Rightarrow> exp \<Rightarrow> exp list" where
-  "liveFragments Ln e\<^sub>0 = []"
+  "liveFragments Ln (RESULT y) = 
+    (if (card (Ln (Use y)) > 0) then 
+      [RESULT y] 
+    else 
+      [])
+  " |
+  "liveFragments Ln (LET x = b in e) = 
+    (if (card (Ln (Def x)) > 0) then 
+      [
+        LET x = b in e
+      ] 
+    else 
+      [])
+  "
 
 fun combineFragments :: "exp list \<Rightarrow> exp option" where
   "combineFragments [] = None" |
@@ -214,7 +245,6 @@ fun simplifyExp :: "label_map \<Rightarrow> exp \<Rightarrow> exp" where
       None \<Rightarrow> e0 | 
       Some e1 \<Rightarrow> e1
   )"
-
 
 
 definition chanAlive :: "label_map \<Rightarrow> def_use_label \<Rightarrow> bool" where
