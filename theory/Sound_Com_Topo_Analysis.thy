@@ -236,10 +236,14 @@ theorem all_singular_send_sound: "
  apply (simp add: all_def singular_def; auto)
 using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
-lemma all_singular_send_preserved: "
+lemma all_send_paths_equal_preserved: "
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e \<Longrightarrow>
-  [[] \<mapsto> \<langle>(simplifyExp Ln e);Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<Longrightarrow>
-  all (is_send_path \<E>simp (Ch \<pi> x\<^sub>c)) op= \<Longrightarrow>
+  (\<forall> eSimp \<E>simp. 
+    isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>e eSimp \<longrightarrow>
+    [[] \<mapsto> \<langle>eSimp;Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<longrightarrow>
+    all (is_send_path \<E>simp (Ch \<pi> x\<^sub>c)) op= 
+  ) \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) op=
 "
@@ -365,6 +369,21 @@ lemma all_noncompetitive_recv_preserved: "
 "
 sorry
 
+theorem one_shot_sound: "
+  \<lbrakk>
+    static_one_shot \<V> Lx x\<^sub>c e;
+    (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
+  \<rbrakk> \<Longrightarrow>
+  one_shot \<E>' (Ch \<pi> x\<^sub>c)
+"
+ apply (unfold static_one_shot_def)
+ apply (unfold one_shot_def)
+ using all_send_paths_equal_preserved all_singular_send_sound apply blast
+done
+
+(*
 
 theorem one_shot_sound: "
   \<lbrakk>
@@ -423,5 +442,7 @@ theorem fan_in_sound: "
  apply (unfold fan_in_def)
   apply (erule all_noncompetitive_recv_sound; auto)
 done
+
+*)
 
 end
