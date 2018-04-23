@@ -339,10 +339,14 @@ apply (simp add: all_def noncompetitive_def; auto)
 using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
 
-lemma all_noncompetitive_send_preserved: "
+lemma all_send_paths_noncompetitive_preserved: "
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e \<Longrightarrow>
-  [[] \<mapsto> \<langle>(simplifyExp Ln e);Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<Longrightarrow>
-  all (is_send_path \<E>simp (Ch \<pi> x\<^sub>c)) ordered \<Longrightarrow>
+  (\<forall> eSimp \<E>simp. 
+    isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>e eSimp \<longrightarrow>
+    [[] \<mapsto> \<langle>eSimp;Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<longrightarrow>
+    all (is_send_path \<E>simp (Ch \<pi> x\<^sub>c)) ordered 
+  ) \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
 "
@@ -360,14 +364,19 @@ apply (simp add: all_def noncompetitive_def; auto)
 using isnt_recv_path_sound runtime_recv_paths_are_inclusive by blast
 
 
-lemma all_noncompetitive_recv_preserved: "
+lemma all_recv_paths_noncompetitive_preserved: "
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e \<Longrightarrow>
-  [[] \<mapsto> \<langle>(simplifyExp Ln e);Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<Longrightarrow>
-  all (is_recv_path \<E>simp (Ch \<pi> x\<^sub>c)) ordered \<Longrightarrow>
+  (\<forall> eSimp \<E>simp. 
+    isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>e eSimp \<longrightarrow>
+    [[] \<mapsto> \<langle>eSimp;Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<longrightarrow>
+    all (is_recv_path \<E>simp (Ch \<pi> x\<^sub>c)) ordered 
+  ) \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
 "
 sorry
+
 
 theorem one_shot_sound: "
   \<lbrakk>
@@ -383,41 +392,25 @@ theorem one_shot_sound: "
  using all_send_paths_equal_preserved all_singular_send_sound apply blast
 done
 
-(*
-
-theorem one_shot_sound: "
-  \<lbrakk>
-    static_one_shot \<V> Ln x\<^sub>c e;
-    (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
-  \<rbrakk> \<Longrightarrow>
-  one_shot \<E>' (Ch \<pi> x\<^sub>c)
-"
- apply (unfold static_one_shot_def)
- apply (unfold one_shot_def)
- apply (auto dest: all_singular_send_sound)
-done
-
 
 theorem one_to_one_sound: "
   \<lbrakk>
-    static_one_to_one \<V> Ln x\<^sub>c e;
+    static_one_to_one \<V> Lx x\<^sub>c e;
     (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   one_to_one \<E>' (Ch \<pi> x\<^sub>c)
 "
- apply (unfold static_one_to_one_def, auto)
+ apply (unfold static_one_to_one_def)
  apply (unfold one_to_one_def, auto)
-  apply (erule all_noncompetitive_send_sound; auto)
-  apply (erule all_noncompetitive_recv_sound; auto)
+  apply (metis all_noncompetitive_send_sound all_send_paths_noncompetitive_preserved)
+  apply (metis all_noncompetitive_recv_sound all_recv_paths_noncompetitive_preserved)
 done
 
 theorem fan_out_sound: "
   \<lbrakk>
-    static_fan_out \<V> Ln x\<^sub>c e;
+    static_fan_out \<V> Lx x\<^sub>c e;
     (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
@@ -426,12 +419,12 @@ theorem fan_out_sound: "
 "
  apply (unfold static_fan_out_def)
  apply (unfold fan_out_def)
-  apply (erule all_noncompetitive_send_sound; auto)
+  apply (metis all_noncompetitive_send_sound all_send_paths_noncompetitive_preserved)
 done
 
 theorem fan_in_sound: "
   \<lbrakk>
-    static_fan_in \<V> Ln x\<^sub>c e;
+    static_fan_in \<V> Lx x\<^sub>c e;
     (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
@@ -440,9 +433,8 @@ theorem fan_in_sound: "
 "
  apply (unfold static_fan_in_def)
  apply (unfold fan_in_def)
-  apply (erule all_noncompetitive_recv_sound; auto)
+  apply (metis all_noncompetitive_recv_sound all_recv_paths_noncompetitive_preserved)
 done
 
-*)
 
 end
