@@ -230,6 +230,9 @@ inductive isLiveFragment :: "label_map \<Rightarrow> exp \<Rightarrow> exp \<Rig
     isLiveFragment Lx (RESULT x) (RESULT y)
   "
 
+
+
+(* TO DO: ensure that the abstract value env doesn't need hold values of new spawn variables*)
 inductive isSimplifiedExp :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> exp \<Rightarrow> bool" where
   Let_Spawn: "
     isSimplifiedExp V Lx xC e eNext \<Longrightarrow>
