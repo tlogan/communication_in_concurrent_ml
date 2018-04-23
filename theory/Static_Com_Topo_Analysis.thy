@@ -60,18 +60,22 @@ definition noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarr
  "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
 
 
-(* need new definitions that consider all subprograms where x\<^sub>c is live*)
 definition static_one_shot :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
-  "static_one_shot \<V> Ln x\<^sub>c e \<equiv> all (is_static_send_path \<V> (simplifyExp Ln e) x\<^sub>c) singular"
+  "static_one_shot \<V> Lx x\<^sub>c e \<equiv> 
+    (\<forall> eSimp . isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> all (is_static_send_path \<V> eSimp x\<^sub>c) singular)"
 
 definition static_one_to_one :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow>  bool" where
-  "static_one_to_one \<V> Ln x\<^sub>c e \<equiv> all (is_static_send_path \<V> (simplifyExp Ln e) x\<^sub>c) noncompetitive \<and> all (is_static_recv_path \<V> e x\<^sub>c) noncompetitive"
+  "static_one_to_one \<V> Lx x\<^sub>c e \<equiv> 
+    (\<forall> eSimp . isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> 
+      all (is_static_send_path \<V> eSimp x\<^sub>c) noncompetitive \<and> all (is_static_recv_path \<V> eSimp x\<^sub>c) noncompetitive)"
 
 definition static_fan_out :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
-  "static_fan_out \<V> Ln x\<^sub>c e \<equiv> all (is_static_send_path \<V> (simplifyExp Ln e) x\<^sub>c) noncompetitive"
+  "static_fan_out \<V> Lx x\<^sub>c e \<equiv> 
+    (\<forall> eSimp . isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> all (is_static_send_path \<V> eSimp x\<^sub>c) noncompetitive)"
 
 definition static_fan_in :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
-  "static_fan_in \<V> Ln x\<^sub>c e \<equiv> all (is_static_recv_path \<V> (simplifyExp Ln e) x\<^sub>c) noncompetitive"
+  "static_fan_in \<V> Lx x\<^sub>c e \<equiv> 
+    (\<forall> eSimp . isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> all (is_static_recv_path \<V> eSimp x\<^sub>c) noncompetitive)"
 
 
 end

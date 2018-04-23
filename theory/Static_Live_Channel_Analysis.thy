@@ -201,88 +201,50 @@ inductive channel_live :: "(abstract_value_env \<times> label_map \<times> label
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = APP f x\<^sub>a in e
   "
 
-
-fun fragments :: "abstract_value_env \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> exp list" where
-  "fragments V xC (LET y = CHAN \<lparr>\<rparr> in e) = 
-    (if xC = y then
-      [LET y = CHAN \<lparr>\<rparr> in e] @ (fragments V xC e)
-    else 
-      [] @ (fragments V xC e))
+inductive expStartsWithChan :: "abstract_value_env \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
+  Let_Chan: "
+    expStartsWithChan V xC (LET xC = CHAN \<lparr>\<rparr> in e)
   " |
-  "fragments V xC (LET x = RECV EVT xRC in e) = 
-    (if {^Chan xC} \<subseteq> V x then
-      [LET x = RECV EVT xRC in e] @ (fragments V xC e)
-    else 
-      [] @ (fragments V xC e))
-  " | 
-  "fragments V xC (LET x = b in e) = [] @ (fragments V xC e)" |
-  "fragments V xC (RESULT y) = []"
-
-
-fun liveFragments :: "label_map \<Rightarrow> exp \<Rightarrow> exp list" where
-  "liveFragments Ln (RESULT y) = 
-    (if (card (Ln (Use y)) > 0) then 
-      [RESULT y] 
-    else 
-      [])
-  " |
-  "liveFragments Ln (LET x = b in e) = 
-    (if (card (Ln (Def x)) > 0) then 
-      [
-        LET x = b in e
-      ] 
-    else 
-      [])
+  Let_Sync_Recv_Evt: "
+    {^Chan xC} \<subseteq> V x \<Longrightarrow>
+    expStartsWithChan V xC (LET x = RECV EVT xRC in e)
   "
 
-fun combineFragments :: "exp list \<Rightarrow> exp option" where
-  "combineFragments [] = None" |
-  "combineFragments (e # es) = Some e"
 
-fun simplifyExp :: "label_map \<Rightarrow> exp \<Rightarrow> exp" where
-  "simplifyExp Ln e0 = (
-    case (combineFragments (liveFragments Ln e0)) of
-      None \<Rightarrow> e0 | 
-      Some e1 \<Rightarrow> e1
-  )"
-
-
-definition chanAlive :: "label_map \<Rightarrow> def_use_label \<Rightarrow> bool" where
-  "chanAlive Ln l \<equiv> (\<exists> x . x \<in> Ln l)"
-
-inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^sub>e _" [56,56]55) where
-  Refl : "
-    e \<preceq>\<^sub>e e
-  " | 
-  Let: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = b in e\<^sub>n)
-  " | 
-  Let_Spawn_Child: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>c
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = SPAWN e\<^sub>c in e\<^sub>n)
+inductive isLiveFragment :: "label_map \<Rightarrow> exp \<Rightarrow> exp \<Rightarrow> bool" where
+  TrimEnd: "
+    Set.is_empty (Lx (Def x)) \<Longrightarrow>
+    isLiveFragment Lx (LET x = b in e) (LET x = b in RESULT y)
   " |
-  Let_Case_Left: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>l
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
-  " | 
-  Let_Case_Right: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>r
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
+  TrimStart: "
+    Set.is_empty (Lx (Def x)) \<Longrightarrow>
+    isLiveFragment Lx e liveExp \<Longrightarrow>
+    isLiveFragment Lx (LET x = b in e) liveExp
   " |
-  Let_Abs_Body: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>b 
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)
+  Live_Let: "
+    \<not> Set.is_empty (Lx (Def x)) \<Longrightarrow>
+    isLiveFragment Lx e liveExp \<Longrightarrow>
+    isLiveFragment Lx (LET x = b in e) (LET x = b in liveExp)
+  " |
+  Live_Result: "
+    isLiveFragment Lx (RESULT x) (RESULT y)
+  "
+
+inductive isSimplifiedExp :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> exp \<Rightarrow> bool" where
+  Let_Spawn: "
+    isSimplifiedExp V Lx xC e eNext \<Longrightarrow>
+    isSimplifiedExp V Lx xC e eChild \<Longrightarrow>
+    isSimplifiedExp V Lx xC e (LET x = SPAWN eChild in eNext)
+  " |
+  Let_Chan: "
+    isLiveFragment Lx e (LET xC = CHAN \<lparr>\<rparr> in eNext) \<Longrightarrow>
+    isSimplifiedExp V Lx xC e (LET xC = CHAN \<lparr>\<rparr> in eNext)
+  " |
+  Let_Sync_Recv_Evt: "
+    isLiveFragment Lx e (LET y = SYNC xRE in eNext) \<Longrightarrow>
+    {^Chan xC} \<subseteq> V y \<Longrightarrow>
+    {^Recv_Evt xRC} \<subseteq> V xRE \<Longrightarrow>
+    isSimplifiedExp V Lx xC e (LET y = SYNC xRE in eNext)
   "
 
 (*
@@ -343,63 +305,6 @@ the path to exp receiver will change from (LNext a) (LSpawn b) (LNext c) ... (LN
 There's actually no need for subs
 
 *)
-
-
-lemma subexp_trans: "
-  e\<^sub>x \<preceq>\<^sub>e e\<^sub>y \<Longrightarrow> e\<^sub>y \<preceq>\<^sub>e e\<^sub>z \<Longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>z
-"
-proof -
-  assume "e\<^sub>x \<preceq>\<^sub>e e\<^sub>y"
-  assume "e\<^sub>y \<preceq>\<^sub>e e\<^sub>z" then
-  have "(\<forall> e\<^sub>x . e\<^sub>x \<preceq>\<^sub>e e\<^sub>y \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>z)"
-  proof (induction rule: subexp.induct)
-    case (Refl e)
-    show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e" by simp
-  next
-    case (Let e e\<^sub>n x b)
-    assume "e \<preceq>\<^sub>e e\<^sub>n" "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>n"
-
-    have "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e\<^sub>n \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = b in e\<^sub>n" by (simp add: subexp.Let) 
-    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>n`
-    show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = b in e\<^sub>n" by blast
-  next
-    case (Let_Spawn_Child e e\<^sub>c x e\<^sub>n)
-    assume "e \<preceq>\<^sub>e e\<^sub>c" "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>c"
-
-    have "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e\<^sub>c \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = SPAWN e\<^sub>c in e\<^sub>n" by (simp add: subexp.Let_Spawn_Child)
-    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>c`
-    show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = SPAWN e\<^sub>c in e\<^sub>n"by blast
-  next
-    case (Let_Case_Left e e\<^sub>l x x\<^sub>s x\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n)
-    assume "e \<preceq>\<^sub>e e\<^sub>l" "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>l"
-
-    have "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e\<^sub>l \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n" by (simp add: subexp.Let_Case_Left)
-    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>l`
-    show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n" by blast
-  next
-    case (Let_Case_Right e e\<^sub>r x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>n)
-    assume "e \<preceq>\<^sub>e e\<^sub>r" "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>r"
-
-    have "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e\<^sub>r \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n" by (simp add: subexp.Let_Case_Right)
-    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>r`
-    show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n" by blast
-  next
-    case (Let_Abs_Body e e\<^sub>b x f x\<^sub>p e\<^sub>n)
-    assume "e \<preceq>\<^sub>e e\<^sub>b" "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>b"
-
-    have "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e\<^sub>b \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n" by (simp add: subexp.Let_Abs_Body)
-    with `\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>b`
-    show "\<forall>e\<^sub>x. e\<^sub>x \<preceq>\<^sub>e e \<longrightarrow> e\<^sub>x \<preceq>\<^sub>e LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n" by blast
-  qed 
-  with `e\<^sub>x \<preceq>\<^sub>e e\<^sub>y`
-  show "e\<^sub>x \<preceq>\<^sub>e e\<^sub>z" by blast
-qed
-
-lemma subexp1: "
-  e\<^sub>n \<preceq>\<^sub>e LET x = b in e\<^sub>n
-"
-by (simp add: Let Refl)
-
 
 
 end
