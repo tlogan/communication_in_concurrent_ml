@@ -201,6 +201,22 @@ inductive channel_live :: "(abstract_value_env \<times> label_map \<times> label
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = APP f x\<^sub>a in e
   "
 
+fun liveFragments :: "label_map \<Rightarrow> exp \<Rightarrow> exp list" where
+  "liveFragments Ln e\<^sub>0 = []"
+
+fun combineFragments :: "exp list \<Rightarrow> exp option" where
+  "combineFragments [] = None" |
+  "combineFragments (e # es) = Some e"
+
+fun simplifyExp :: "label_map \<Rightarrow> exp \<Rightarrow> exp" where
+  "simplifyExp Ln e0 = (
+    case (combineFragments (liveFragments Ln e0)) of
+      None \<Rightarrow> e0 | 
+      Some e1 \<Rightarrow> e1
+  )"
+
+
+
 definition chanAlive :: "label_map \<Rightarrow> def_use_label \<Rightarrow> bool" where
   "chanAlive Ln l \<equiv> (\<exists> x . x \<in> Ln l)"
 
@@ -241,12 +257,50 @@ inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^s
 
 (*
 
-Need to consider only subprograms where channel is live.
+Xiao says "
+The next definition
+and lemma show that for each dynamic send/receive site of
+any channel instance, there is a corresponding approximate path in
+the extended CFG, which starts from the channel’s creation site
+(TLL modification: or from ad-hoc spawn expression to tie in sync recv_evts into corresponding chan expression with sync send_evt)
+"
+
+dynamic flow of channel instance:
+let \<pi> \<in> Sendst(k)
+PathHtk(\<pi>) = \<langle>\<pi>1, \<pi>2\<rangle>. This means that
+\<pi>1(1)
+1 is the creation site of k, k flows through \<pi>1 and then is sent as
+a message from \<pi>1(−1) to \<pi>2(1) on some channel instance, and some
+value is sent on k at \<pi>2(−1) is a send on k.
+
+for every dynamic path to a send or recv site in an expression,
+there is a corresponding modified path in a corresponding modified expression.
+
+
+Q: Need to modify dynamic semantics with history of communication?
+A: Seems like the only reason is because modified paths use 
+the sender's front with receiver's back for passed channels.  
+We can simply use the back, the path of which is already recorded in the trace_pool.
+
+(\<pi>Send, Ch \<pi>C xC, \<pi>Recv)
+
+Xiao says:
+
+"
+Lemma 6 For any trace t 2 Trace(p), channel instance k in t, and any control path \<pi>1, \<pi>2 2
+Sendst(k) [ Recvst(k), if \<pi>1 6= \<pi>2 then PathHtk(\<pi>1) 6= PathHtk(\<pi>2).
+
+Proof: This is obvious from dynamic semantics on Section 3.1.
+"
+
+Need to consider only subprograms where channel is live.o
+
+Check how Xiao proves that graph of subprogram actually represents the whole program.
 
 strategy 1:
 Find all the fragments that start with (LET x = CHAN \<lparr>\<rparr> in e).
 Find all the fragments that start with (LET x = RECV eRE in e).
-join fragments with initial (LET y = SPAWN (LET x = RECV eRE in) in (LET x = CHAN \<lparr>\<rparr> in e))
+join fragments with initial (LET * = SPAWN (LET x = RECV eRE in) in (LET x = CHAN \<lparr>\<rparr> in e))
 
 incomplete strategy 2:
 Transform 

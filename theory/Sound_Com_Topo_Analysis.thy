@@ -207,7 +207,7 @@ lemma isnt_send_path_sound: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow> 
-  is_static_send_path (\<V>, \<C>, e) x\<^sub>c \<pi>\<^sub>y
+  is_static_send_path \<V> e x\<^sub>c \<pi>\<^sub>y
 "
  apply (unfold is_send_path_def is_static_send_path_def; auto)
    apply (frule isnt_send_path_sound'; assumption?; auto; blast)
@@ -227,7 +227,7 @@ using runtime_paths_are_inclusive by blast
 
 theorem all_singular_send_sound: "
   \<lbrakk>
-    all (is_static_send_path (\<V>, \<C>, e) x\<^sub>c) singular;
+    all (is_static_send_path \<V> e x\<^sub>c) singular;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -296,7 +296,7 @@ lemma isnt_recv_path_sound: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow> 
-  is_static_recv_path (\<V>, \<C>, e) x\<^sub>c \<pi>\<^sub>y
+  is_static_recv_path \<V> e x\<^sub>c \<pi>\<^sub>y
 "
  apply (unfold is_recv_path_def is_static_recv_path_def; auto)
    apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
@@ -316,7 +316,7 @@ using runtime_paths_are_inclusive by auto
 
 theorem one_shot_sound: "
   \<lbrakk>
-    static_one_shot (\<V>, \<C>, e) x\<^sub>c;
+    static_one_shot \<V> e x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -331,7 +331,7 @@ done
 
 theorem all_noncompetitive_send_sound: "
   \<lbrakk>
-    all (is_static_send_path (\<V>, \<C>, e) x\<^sub>c) noncompetitive;
+    all (is_static_send_path \<V> e x\<^sub>c) noncompetitive;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -345,7 +345,7 @@ using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
 theorem all_noncompetitive_recv_sound: "
   \<lbrakk>
-    all (is_static_recv_path (\<V>, \<C>, e) x\<^sub>c) noncompetitive;
+    all (is_static_recv_path \<V> e x\<^sub>c) noncompetitive;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -357,7 +357,7 @@ using isnt_recv_path_sound runtime_recv_paths_are_inclusive by blast
 
 theorem one_to_one_sound: "
   \<lbrakk>
-    static_one_to_one (\<V>, \<C>, e) x\<^sub>c;
+    static_one_to_one \<V> e x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -371,7 +371,7 @@ done
 
 theorem fan_out_sound: "
   \<lbrakk>
-    static_fan_out (\<V>, \<C>, e) x\<^sub>c;
+    static_fan_out \<V> e x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -384,7 +384,7 @@ done
 
 theorem fan_in_sound: "
   \<lbrakk>
-    static_fan_in (\<V>, \<C>, e) x\<^sub>c;
+    static_fan_in \<V> e x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>

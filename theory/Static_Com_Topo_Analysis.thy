@@ -6,15 +6,15 @@ theory Static_Com_Topo_Analysis
     Static_Live_Channel_Analysis
 begin
 
-definition is_static_send_path :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
-  "is_static_send_path \<A> x\<^sub>c \<pi>\<^sub>y \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> (\<exists> x\<^sub>y x\<^sub>e x\<^sub>s\<^sub>c x\<^sub>m e\<^sub>n . 
+definition is_static_send_path :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
+  "is_static_send_path \<V> e x\<^sub>c \<pi>\<^sub>y \<equiv> (\<exists> x\<^sub>y x\<^sub>e x\<^sub>s\<^sub>c x\<^sub>m e\<^sub>n . 
     \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n \<and>
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
     {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
   )"
 
-definition is_static_recv_path :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
-  "is_static_recv_path \<A> x\<^sub>c \<pi>\<^sub>y \<equiv> case \<A> of (\<V>, \<C>, e) \<Rightarrow> (\<exists> x\<^sub>y x\<^sub>e x\<^sub>r\<^sub>c e\<^sub>n. 
+definition is_static_recv_path :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
+  "is_static_recv_path \<V> e x\<^sub>c \<pi>\<^sub>y \<equiv> (\<exists> x\<^sub>y x\<^sub>e x\<^sub>r\<^sub>c e\<^sub>n. 
     \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n \<and>
     ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
     {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e
@@ -62,17 +62,17 @@ definition noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarr
 
 
 (* need new definitions that consider all subprograms where x\<^sub>c is live*)
-definition static_one_shot :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "static_one_shot \<A> x\<^sub>c \<equiv> all (is_static_send_path \<A> x\<^sub>c) singular"
+definition static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+  "static_one_shot \<V> e x\<^sub>c \<equiv> all (is_static_send_path \<V> e x\<^sub>c) singular"
 
-definition static_one_to_one :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "static_one_to_one \<A> x\<^sub>c \<equiv> all (is_static_send_path \<A> x\<^sub>c) noncompetitive \<and> all (is_static_recv_path \<A> x\<^sub>c) noncompetitive"
+definition static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+  "static_one_to_one \<V> e x\<^sub>c \<equiv> all (is_static_send_path \<V> e x\<^sub>c) noncompetitive \<and> all (is_static_recv_path \<V> e x\<^sub>c) noncompetitive"
 
-definition static_fan_out :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "static_fan_out \<A> x\<^sub>c \<equiv> all (is_static_send_path \<A> x\<^sub>c) noncompetitive"
+definition static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+  "static_fan_out \<V> e x\<^sub>c \<equiv> all (is_static_send_path \<V> e x\<^sub>c) noncompetitive"
 
-definition static_fan_in :: "(abstract_value_env \<times> abstract_value_env \<times> exp) \<Rightarrow> var \<Rightarrow> bool" where
-  "static_fan_in \<A> x\<^sub>c \<equiv> all (is_static_recv_path \<A> x\<^sub>c) noncompetitive"
+definition static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+  "static_fan_in \<V> e x\<^sub>c \<equiv> all (is_static_recv_path \<V> e x\<^sub>c) noncompetitive"
 
 
 end
