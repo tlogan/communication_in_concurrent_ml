@@ -236,6 +236,14 @@ theorem all_singular_send_sound: "
  apply (simp add: all_def singular_def; auto)
 using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
+lemma all_singular_send_preserved: "
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e \<Longrightarrow>
+  [[] \<mapsto> \<langle>(simplifyExp Ln e);Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<Longrightarrow>
+  all (is_send_path \<E>simp (Ch \<pi> x\<^sub>c)) op= \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) op=
+"
+sorry
 
 lemma static_recv_chan_doesnt_exist_sound: "
   \<lbrakk>
@@ -314,20 +322,6 @@ apply (unfold is_recv_path_def; auto)
 using runtime_paths_are_inclusive by auto
 
 
-theorem one_shot_sound: "
-  \<lbrakk>
-    static_one_shot \<V> e x\<^sub>c;
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
-  \<rbrakk> \<Longrightarrow>
-  one_shot \<E>' (Ch \<pi> x\<^sub>c)
-"
- apply (unfold static_one_shot_def)
- apply (unfold one_shot_def)
- apply (auto dest: all_singular_send_sound)
-done
-
-
 
 theorem all_noncompetitive_send_sound: "
   \<lbrakk>
@@ -341,7 +335,14 @@ apply (simp add: all_def noncompetitive_def; auto)
 using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
 
-
+lemma all_noncompetitive_send_preserved: "
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e \<Longrightarrow>
+  [[] \<mapsto> \<langle>(simplifyExp Ln e);Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<Longrightarrow>
+  all (is_send_path \<E>simp (Ch \<pi> x\<^sub>c)) ordered \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
+"
+sorry
 
 theorem all_noncompetitive_recv_sound: "
   \<lbrakk>
@@ -355,9 +356,35 @@ apply (simp add: all_def noncompetitive_def; auto)
 using isnt_recv_path_sound runtime_recv_paths_are_inclusive by blast
 
 
+lemma all_noncompetitive_recv_preserved: "
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e \<Longrightarrow>
+  [[] \<mapsto> \<langle>(simplifyExp Ln e);Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<Longrightarrow>
+  all (is_recv_path \<E>simp (Ch \<pi> x\<^sub>c)) ordered \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
+"
+sorry
+
+
+theorem one_shot_sound: "
+  \<lbrakk>
+    static_one_shot \<V> Ln x\<^sub>c e;
+    (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
+  \<rbrakk> \<Longrightarrow>
+  one_shot \<E>' (Ch \<pi> x\<^sub>c)
+"
+ apply (unfold static_one_shot_def)
+ apply (unfold one_shot_def)
+ apply (auto dest: all_singular_send_sound)
+done
+
+
 theorem one_to_one_sound: "
   \<lbrakk>
-    static_one_to_one \<V> e x\<^sub>c;
+    static_one_to_one \<V> Ln x\<^sub>c e;
+    (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -371,7 +398,8 @@ done
 
 theorem fan_out_sound: "
   \<lbrakk>
-    static_fan_out \<V> e x\<^sub>c;
+    static_fan_out \<V> Ln x\<^sub>c e;
+    (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -384,7 +412,8 @@ done
 
 theorem fan_in_sound: "
   \<lbrakk>
-    static_fan_in \<V> e x\<^sub>c;
+    static_fan_in \<V> Ln x\<^sub>c e;
+    (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -394,6 +423,5 @@ theorem fan_in_sound: "
  apply (unfold fan_in_def)
   apply (erule all_noncompetitive_recv_sound; auto)
 done
-
 
 end

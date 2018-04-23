@@ -62,17 +62,17 @@ definition noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarr
 
 
 (* need new definitions that consider all subprograms where x\<^sub>c is live*)
-definition static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "static_one_shot \<V> e x\<^sub>c \<equiv> all (is_static_send_path \<V> e x\<^sub>c) singular"
+definition static_one_shot :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
+  "static_one_shot \<V> Ln x\<^sub>c e \<equiv> all (is_static_send_path \<V> (simplifyExp Ln e) x\<^sub>c) singular"
 
-definition static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "static_one_to_one \<V> e x\<^sub>c \<equiv> all (is_static_send_path \<V> e x\<^sub>c) noncompetitive \<and> all (is_static_recv_path \<V> e x\<^sub>c) noncompetitive"
+definition static_one_to_one :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow>  bool" where
+  "static_one_to_one \<V> Ln x\<^sub>c e \<equiv> all (is_static_send_path \<V> (simplifyExp Ln e) x\<^sub>c) noncompetitive \<and> all (is_static_recv_path \<V> e x\<^sub>c) noncompetitive"
 
-definition static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "static_fan_out \<V> e x\<^sub>c \<equiv> all (is_static_send_path \<V> e x\<^sub>c) noncompetitive"
+definition static_fan_out :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
+  "static_fan_out \<V> Ln x\<^sub>c e \<equiv> all (is_static_send_path \<V> (simplifyExp Ln e) x\<^sub>c) noncompetitive"
 
-definition static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "static_fan_in \<V> e x\<^sub>c \<equiv> all (is_static_recv_path \<V> e x\<^sub>c) noncompetitive"
+definition static_fan_in :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
+  "static_fan_in \<V> Ln x\<^sub>c e \<equiv> all (is_static_recv_path \<V> (simplifyExp Ln e) x\<^sub>c) noncompetitive"
 
 
 end
