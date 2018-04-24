@@ -201,16 +201,6 @@ inductive channel_live :: "(abstract_value_env \<times> label_map \<times> label
     (V, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> LET x = APP f x\<^sub>a in e
   "
 
-inductive expStartsWithChan :: "abstract_value_env \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
-  Let_Chan: "
-    expStartsWithChan V xC (LET xC = CHAN \<lparr>\<rparr> in e)
-  " |
-  Let_Sync_Recv_Evt: "
-    {^Chan xC} \<subseteq> V x \<Longrightarrow>
-    expStartsWithChan V xC (LET x = RECV EVT xRC in e)
-  "
-
-
 inductive isLiveFragment :: "label_map \<Rightarrow> exp \<Rightarrow> exp \<Rightarrow> bool" where
   TrimEnd: "
     Set.is_empty (Lx (Def x)) \<Longrightarrow>
@@ -231,8 +221,10 @@ inductive isLiveFragment :: "label_map \<Rightarrow> exp \<Rightarrow> exp \<Rig
   "
 
 
-
 (* TO DO: ensure that the abstract value env doesn't need hold values of new spawn variables*)
+(* find channel creation subexpressions*)
+(* transforming LET x = SYNC xSE in e into LET x = SPAWN eCh in e, should work*)
+(* How to determine eCh? Find the SYNC RECVE EVT sub expression, where channel values send site's values*)
 inductive isSimplifiedExp :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> exp \<Rightarrow> bool" where
   Let_Spawn: "
     isSimplifiedExp V Lx xC e eNext \<Longrightarrow>
@@ -249,6 +241,9 @@ inductive isSimplifiedExp :: "abstract_value_env \<Rightarrow> label_map \<Right
     {^Recv_Evt xRC} \<subseteq> V xRE \<Longrightarrow>
     isSimplifiedExp V Lx xC e (LET y = SYNC xRE in eNext)
   "
+
+
+
 
 (*
 
