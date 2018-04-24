@@ -3,40 +3,6 @@ begin
 
 
 (*
-inductive subexp :: "exp \<Rightarrow> exp \<Rightarrow> bool" ("_ \<preceq>\<^sub>e _" [56,56]55) where
-  Refl : "
-    e \<preceq>\<^sub>e e
-  " | 
-  Let: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>n
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = b in e\<^sub>n)
-  " | 
-  Let_Spawn_Child: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>c
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = SPAWN e\<^sub>c in e\<^sub>n)
-  " |
-  Let_Case_Left: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>l
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
-  " | 
-  Let_Case_Right: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>r
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n)
-  " |
-  Let_Abs_Body: "
-    \<lbrakk>
-      e \<preceq>\<^sub>e e\<^sub>b 
-    \<rbrakk> \<Longrightarrow>
-    e \<preceq>\<^sub>e (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n)
-  "
 
 lemma subexp_trans: "
   e\<^sub>x \<preceq>\<^sub>e e\<^sub>y \<Longrightarrow> e\<^sub>y \<preceq>\<^sub>e e\<^sub>z \<Longrightarrow> e\<^sub>x \<preceq>\<^sub>e e\<^sub>z

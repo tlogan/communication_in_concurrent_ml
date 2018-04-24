@@ -1,4 +1,4 @@
-theory Dynamic_Com_Topo_Analysis
+theory Dynamic_Communication_Analysis
   imports Main Syntax Dynamic_Semantics
 begin
 
