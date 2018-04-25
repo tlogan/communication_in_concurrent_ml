@@ -336,7 +336,7 @@ definition every_two_static_paths  :: "(static_path \<Rightarrow> bool) \<Righta
 
 
 inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "
+  Sync: "
     every_two_static_paths (is_static_path LF (NLet xC) (is_static_send_node_label V e xC)) singular \<Longrightarrow>
     static_live_flow_set Ln Lx F LF \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
@@ -345,7 +345,7 @@ inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
   "
 
 inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "
+  Sync: "
     every_two_static_paths (is_static_path LF (NLet xC) (is_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     every_two_static_paths (is_static_path LF (NLet xC) (is_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_flow_set Ln Lx F LF \<Longrightarrow>
@@ -355,7 +355,7 @@ inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarro
   "
 
 inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "
+  Sync: "
     every_two_static_paths (is_static_path LF (NLet xC) (is_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_flow_set Ln Lx F LF \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
@@ -364,7 +364,7 @@ inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
   "
 
 inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
-  "
+  Sync: "
     every_two_static_paths (is_static_path LF (NLet xC) (is_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_flow_set Ln Lx F LF \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
