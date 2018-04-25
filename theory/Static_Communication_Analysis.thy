@@ -200,22 +200,46 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
   "
 
 
+inductive is_static_live_flow :: "label_map \<Rightarrow> label_map \<Rightarrow> flow_set \<Rightarrow> flow \<Rightarrow> bool"  where
+  Next: "
+    (l, ENext, l') \<in> F \<Longrightarrow>
+    \<not> Set.is_empty (Lx l) \<Longrightarrow>
+    \<not> Set.is_empty (Ln l') \<Longrightarrow>
+    is_static_live_flow Ln Lx F (l, ENext, l')
+  " |
+  Spawn: "
+    (l, ENext, l') \<in> F \<Longrightarrow>
+    \<not> Set.is_empty (Lx l) \<Longrightarrow>
+    \<not> Set.is_empty (Ln l') \<Longrightarrow>
+    is_static_live_flow Ln Lx F (l, ENext, l')
+  " |
+  Call: "
+    (l, ENext, l') \<in> F \<Longrightarrow>
+    \<not> Set.is_empty (Lx l) \<Longrightarrow>
+    \<not> Set.is_empty (Ln l') \<Longrightarrow>
+    is_static_live_flow Ln Lx F (l, ENext, l')
+  " |
+  Return: "
+    (l, ENext, l') \<in> F \<Longrightarrow>
+    \<not> Set.is_empty (Lx l) \<Longrightarrow>
+    \<not> Set.is_empty (Ln l') \<Longrightarrow>
+    is_static_live_flow Ln Lx F (l, ENext, l')
+  " |
+  Send: "
+    ((NLet xSend), ESend, (NLet xRecv)) \<in> F \<Longrightarrow>
+    \<not> Set.is_empty (Lx (NLet xSend)) \<Longrightarrow>
+    {xRecv} \<subseteq> (Ln (NLet xRecv)) \<Longrightarrow>
+    is_static_live_flow Ln Lx F ((NLet xSend), ESend, (NLet xRecv))
+  "
 
-inductive static_live_flow :: "label_map \<Rightarrow> label_map \<Rightarrow> flow_set \<Rightarrow> flow_set \<Rightarrow> bool"  where
+
+inductive static_live_flow_set :: "label_map \<Rightarrow> label_map \<Rightarrow> flow_set \<Rightarrow> flow_set \<Rightarrow> bool"  where
   "
     (\<forall> l cl l' .
-      (l, cl, l') \<in> F \<longrightarrow> 
-      \<not> Set.is_empty (Lx l) \<longrightarrow> 
-      \<not> Set.is_empty (Ln l') \<longrightarrow>
-      (l, cl, l') \<in> LF
+      is_static_live_flow Ln Lx F (l, cl, l') \<longrightarrow>
+      (l, cl, l') \<in> LF 
     ) \<Longrightarrow>
-    (\<forall> xSend xRecv .
-      ((NLet xSend), ESend, (NLet xRecv)) \<in> LF \<longrightarrow> 
-      \<not> Set.is_empty (Lx (NLet xSend)) \<longrightarrow> 
-      {xRecv} \<subseteq> (Ln (NLet xRecv)) \<longrightarrow>
-      ((NLet xSend), ESend, (NLet xRecv)) \<in> LF
-    ) \<Longrightarrow>
-    static_live_flow Ln Lx F LF
+    static_live_flow_set Ln Lx F LF
   "
 
 
