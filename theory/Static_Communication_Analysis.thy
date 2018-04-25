@@ -259,18 +259,21 @@ inductive is_static_recv_node_label :: "abstract_value_env \<Rightarrow> exp \<R
     is_static_recv_node_label V e xC (NLet x)
   "
 
-inductive is_static_path :: "flow_set \<Rightarrow> static_path \<Rightarrow> bool" where
+
+inductive is_static_path :: "flow_set \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty: "
-    is_static_path F []
+    isEnd start \<Longrightarrow>
+    is_static_path F start isEnd []
   " |
   Edge: "
-    (nl, el, nl') \<in> F \<Longrightarrow>
-    is_static_path F [(nl, el)]
+    isEnd end \<Longrightarrow>
+    (start, edge, end) \<in> F \<Longrightarrow>
+    is_static_path F start isEnd [(start, el)]
   " |
-  Step: " 
-    (nl, el, nl') \<in> F \<Longrightarrow>
-    is_static_path F ((nl', el') # path) \<Longrightarrow>
-    is_static_path F ((nl, el) # (nl', el') # path)
+  Step: "
+    is_static_path F middle isEnd ((middle, edge') # path) \<Longrightarrow>
+    (start, edge, middle) \<in> F \<Longrightarrow>
+    is_static_path F start isEnd ((start, edge) # (middle, edge') # path)
   "
 
 
@@ -302,42 +305,71 @@ lemma inclusive_commut: "
   apply (simp add: Ordered)
   apply (simp add: Spawn_Right)
   apply (simp add: Spawn_Left)
+  apply (simp add: Send_Right)
+  apply (simp add: Send_Left)
 done
 
 
 lemma inclusive_preserved_under_unordered_extension: "
-  \<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> \<not> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<Longrightarrow> \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>1 ;; l \<asymp> \<pi>\<^sub>2
+  \<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> \<not> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<Longrightarrow> \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>1 @ [l] \<asymp> \<pi>\<^sub>2
 "
  apply (erule inclusive.cases; auto)
   apply (simp add: Spawn_Left)
   apply (simp add: Spawn_Right)
+  apply (simp add: Send_Left)
+  apply (simp add: Send_Right)
 done
 
-definition singular :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
+definition singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
  "singular \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
 
-definition noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" where
+definition noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
  "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
 
 
-(*
-definition static_one_shot :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
-  "static_one_shot \<V> Lx x\<^sub>c e \<equiv> 
-    (\<forall> eSimp . isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> all (is_static_send_path \<V> eSimp x\<^sub>c) singular)"
+definition every_two_static_paths  :: "(static_path \<Rightarrow> bool) \<Rightarrow> (static_path \<Rightarrow> static_path \<Rightarrow> bool) \<Rightarrow> bool" where
+  "every_two_static_paths P R \<equiv> (\<forall> path1 path2 .
+    P path1 \<longrightarrow>
+    P path2 \<longrightarrow>
+    R path1 path2
+  )"
 
-definition static_one_to_one :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow>  bool" where
-  "static_one_to_one \<V> Lx x\<^sub>c e \<equiv> 
-    (\<forall> eSimp . isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> 
-      all (is_static_send_path \<V> eSimp x\<^sub>c) noncompetitive \<and> all (is_static_recv_path \<V> eSimp x\<^sub>c) noncompetitive)"
 
-definition static_fan_out :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
-  "static_fan_out \<V> Lx x\<^sub>c e \<equiv> 
-    (\<forall> eSimp . isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> all (is_static_send_path \<V> eSimp x\<^sub>c) noncompetitive)"
+inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+  "
+    every_two_static_paths (is_static_path LF (NLet xC) (is_static_send_node_label V e xC)) singular \<Longrightarrow>
+    static_live_flow_set Ln Lx F LF \<Longrightarrow>
+    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+    static_flow_set V F e \<Longrightarrow>
+    static_one_shot V e xC 
+  "
 
-definition static_fan_in :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
-  "static_fan_in \<V> Lx x\<^sub>c e \<equiv> 
-    (\<forall> eSimp . isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> all (is_static_recv_path \<V> eSimp x\<^sub>c) noncompetitive)"
+inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+  "
+    every_two_static_paths (is_static_path LF (NLet xC) (is_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (is_static_path LF (NLet xC) (is_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    static_live_flow_set Ln Lx F LF \<Longrightarrow>
+    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+    static_flow_set V F e \<Longrightarrow>
+    static_one_to_one V e xC 
+  "
 
-*)
+inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+  "
+    every_two_static_paths (is_static_path LF (NLet xC) (is_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    static_live_flow_set Ln Lx F LF \<Longrightarrow>
+    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+    static_flow_set V F e \<Longrightarrow>
+    static_fan_out V e xC 
+  "
+
+inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+  "
+    every_two_static_paths (is_static_path LF (NLet xC) (is_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    static_live_flow_set Ln Lx F LF \<Longrightarrow>
+    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+    static_flow_set V F e \<Longrightarrow>
+    static_fan_in V e xC 
+  "
 
 end
