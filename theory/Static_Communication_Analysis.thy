@@ -56,80 +56,80 @@ fun chanSet :: "abstract_value_env \<Rightarrow> var \<Rightarrow> var \<Rightar
   "chanSet V x\<^sub>c x = (if built_on_chan V x\<^sub>c x then {x} else {})"
 
 
-type_synonym label_map = "def_use_label \<Rightarrow> var set"
+type_synonym label_map = "node_label \<Rightarrow> var set"
 inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "
     \<lbrakk>
-      chanSet V x\<^sub>c y \<subseteq> Ln (Use y)
+      chanSet V x\<^sub>c y \<subseteq> Ln (NResult y)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (RESULT y)
   " |
   Let_Unit: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      Lx (Def x) \<subseteq> Ln (Def x);
+      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
+      Lx (NLet x) \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Chan: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (Lx (Def x) - chanSet V x\<^sub>c x) \<subseteq> Ln (Def x);
+      Ln (nodeLabel e) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - chanSet V x\<^sub>c x) \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
+      Ln (nodeLabel e) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
       (
-        (Lx (Def x) - chanSet V x\<^sub>c x) \<union> 
+        (Lx (NLet x) - chanSet V x\<^sub>c x) \<union> 
         chanSet V x\<^sub>c x\<^sub>s\<^sub>c \<union> chanSet V x\<^sub>c x\<^sub>m 
-      ) \<subseteq> Ln (Def x);
+      ) \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>r\<^sub>c \<subseteq> Ln (Def x);
+      Ln (nodeLabel e) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>r\<^sub>c \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = RECV EVT x\<^sub>r\<^sub>c in e)
   " |
   Let_Pair: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
+      Ln (nodeLabel e) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
       (
-        (Lx (Def x) - chanSet V x\<^sub>c x) \<union> 
+        (Lx (NLet x) - chanSet V x\<^sub>c x) \<union> 
         chanSet V x\<^sub>c x\<^sub>1 \<union> chanSet V x\<^sub>c x\<^sub>2
-      ) \<subseteq> Ln (Def x);
+      ) \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
   " |
   Let_Left: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (Def x);
+      Ln (nodeLabel e) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = LEFT x\<^sub>a in e)
   " |
   Let_Right: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (Def x);
+      Ln (nodeLabel e) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = RIGHT x\<^sub>a in e)
   " |
   Let_Abs: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (Lx (Def x) - chanSet V x\<^sub>c x) \<subseteq> Ln (Def x);
+      Ln (nodeLabel e) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - chanSet V x\<^sub>c x) \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>b;
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
@@ -137,8 +137,8 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
   " |
   Let_Spawn: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (Lx (Def x) - chanSet V x\<^sub>c x) \<subseteq> Ln (Def x);
+      Ln (nodeLabel e) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - chanSet V x\<^sub>c x) \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>c;
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
@@ -146,38 +146,39 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
   " |
   Let_Sync: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>e \<subseteq> Ln (Def x);
+      Ln (nodeLabel e) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
+      \<forall> xSC xM . {^Send_Evt xSC xM} \<subseteq> V x\<^sub>e \<longrightarrow> (chanSet V x\<^sub>c xM) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>e \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = SYNC x\<^sub>e in e)
   " |
   Let_Fst: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (Def x);
+      Ln (nodeLabel e) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = FST x\<^sub>a in e)
   " |
   Let_Snd: "
     \<lbrakk>
-      Ln (defUseLabel e) \<subseteq> Lx (Def x);
-      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (Def x);
+      Ln (nodeLabel e) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = SND x\<^sub>a in e)
   " |
   Let_Case: "
     \<lbrakk>
-      Ln (defUseLabel e\<^sub>l) \<union> Ln (defUseLabel e\<^sub>r) \<subseteq> Lx (Def x);
-      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>s \<subseteq> Ln (Def x);
+      Ln (nodeLabel e\<^sub>l) \<union> Ln (nodeLabel e\<^sub>r) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>s \<subseteq> Ln (NLet x);
 
-      Ln (defUseLabel e) \<subseteq> Lx (Use (\<lfloor>e\<^sub>l\<rfloor>));
-      Lx (Use (\<lfloor>e\<^sub>l\<rfloor>)) \<union> chanSet V x\<^sub>c (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> Ln (Use (\<lfloor>e\<^sub>l\<rfloor>));
+      Ln (nodeLabel e) \<subseteq> Lx (NResult (\<lfloor>e\<^sub>l\<rfloor>));
+      Lx (NResult (\<lfloor>e\<^sub>l\<rfloor>)) \<union> chanSet V x\<^sub>c (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> Ln (NResult (\<lfloor>e\<^sub>l\<rfloor>));
 
-      Ln (defUseLabel e) \<subseteq> Lx (Use (\<lfloor>e\<^sub>r\<rfloor>));
-      Lx (Use (\<lfloor>e\<^sub>r\<rfloor>)) \<union> chanSet V x\<^sub>c (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> Ln (Use (\<lfloor>e\<^sub>r\<rfloor>));
+      Ln (nodeLabel e) \<subseteq> Lx (NResult (\<lfloor>e\<^sub>r\<rfloor>));
+      Lx (NResult (\<lfloor>e\<^sub>r\<rfloor>)) \<union> chanSet V x\<^sub>c (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> Ln (NResult (\<lfloor>e\<^sub>r\<rfloor>));
 
       static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>l;
       static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>r;
@@ -188,11 +189,11 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
   Let_App: "
     \<lbrakk>
       (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow> 
-        Ln (defUseLabel e) \<subseteq> Lx (Use (\<lfloor>e\<^sub>b\<rfloor>)) \<and>
-        Lx (Use (\<lfloor>e\<^sub>b\<rfloor>)) \<union> chanSet V x\<^sub>c (\<lfloor>e\<^sub>b\<rfloor>) \<subseteq> Ln (Use (\<lfloor>e\<^sub>b\<rfloor>)) \<and>
-        Ln (defUseLabel e\<^sub>b) \<subseteq> Lx (Def x)
+        Ln (nodeLabel e) \<subseteq> Lx (NResult (\<lfloor>e\<^sub>b\<rfloor>)) \<and>
+        Lx (NResult (\<lfloor>e\<^sub>b\<rfloor>)) \<union> chanSet V x\<^sub>c (\<lfloor>e\<^sub>b\<rfloor>) \<subseteq> Ln (NResult (\<lfloor>e\<^sub>b\<rfloor>)) \<and>
+        Ln (nodeLabel e\<^sub>b) \<union> (chanSet V x\<^sub>c x) \<subseteq> Lx (NLet x)
       );
-      (Lx (Def x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (Def x);
+      (Lx (NLet x) - chanSet V x\<^sub>c x) \<union> chanSet V x\<^sub>c x\<^sub>a \<subseteq> Ln (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = APP f x\<^sub>a in e)
@@ -200,123 +201,21 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
 
 
 
-inductive static_live_flow :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> exp \<Rightarrow> bool"  where
-  Result: "
-    static_live_flow \<V> \<F> (RESULT x)
-  " |
-  Let_Unit: "
-    \<lbrakk>
-      {(Def x , (LNext x), defUseLabel e)} \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = \<lparr>\<rparr> in e)
-  " |
-  Let_Chan: "
-    \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = CHAN \<lparr>\<rparr> in e)
-  " |
-  Let_Send_Evt: "
-    \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
-  " |
-  Let_Recv_Evt: "
-    \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = RECV EVT x\<^sub>c in e)
-  " |
-  Let_Pair: "
-    \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
-  " |
-  Let_Left: "
-    \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = LEFT x\<^sub>p in e)
-  " |
-  Let_Right: "
-    \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = RIGHT x\<^sub>p in e)
-  " |
-  Let_Abs: "
-    \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e\<^sub>b;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
-  " |
-  Let_Spawn: "
-    \<lbrakk>
-      {
-        (Def x, (LNext x), defUseLabel e),
-        (Def x, (LSpawn x), defUseLabel e\<^sub>c)
-      } \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e\<^sub>c;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = SPAWN e\<^sub>c in e)
-  " |
-  Let_Sync: "
-    \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = SYNC x\<^sub>e in e)
-  " |
-  Let_Fst: "
-    \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = FST x\<^sub>p in e)
-  " |
-  Let_Snd: "
-    \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = SND x\<^sub>p in e)
-  " |
-  Let_Case: "
-    \<lbrakk>
-      {
-        (Def x, (LCall x), defUseLabel e\<^sub>l),
-        (Def x, (LCall x), defUseLabel e\<^sub>r),
-        (Use (\<lfloor>e\<^sub>l\<rfloor>), (LReturn x), defUseLabel e),
-        (Use (\<lfloor>e\<^sub>r\<rfloor>), (LReturn x), defUseLabel e)
-      } \<subseteq> \<F>;
-      static_live_flow \<V> \<F> e\<^sub>l;
-      static_live_flow \<V> \<F> e\<^sub>r;
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
-  " |
-  Let_App: "
-    \<lbrakk>
-      (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<longrightarrow>
-        {
-          (Def x, (LCall x), defUseLabel e\<^sub>b),
-          (Use (\<lfloor>e\<^sub>b\<rfloor>), (LReturn x), defUseLabel e)
-        } \<subseteq> \<F>);
-      static_live_flow \<V> \<F> e
-    \<rbrakk> \<Longrightarrow>
-    static_live_flow \<V> \<F> (LET x = APP f x\<^sub>a in e)
+inductive static_live_flow :: "label_map \<Rightarrow> label_map \<Rightarrow> flow_set \<Rightarrow> flow_set \<Rightarrow> bool"  where
+  "
+    (\<forall> l cl l' .
+      (l, cl, l') \<in> F \<longrightarrow> 
+      \<not> Set.is_empty (Lx l) \<longrightarrow> 
+      \<not> Set.is_empty (Ln l') \<longrightarrow>
+      (l, cl, l') \<in> LF
+    ) \<Longrightarrow>
+    (\<forall> xSend xRecv .
+      ((NLet xSend), ESend, (NLet xRecv)) \<in> LF \<longrightarrow> 
+      \<not> Set.is_empty (Lx (NLet xSend)) \<longrightarrow> 
+      {xRecv} \<subseteq> (Ln (NLet xRecv)) \<longrightarrow>
+      ((NLet xSend), ESend, (NLet xRecv)) \<in> LF
+    ) \<Longrightarrow>
+    static_live_flow Ln Lx F LF
   "
 
 
@@ -374,6 +273,7 @@ definition noncompetitive :: "control_path \<Rightarrow> control_path \<Rightarr
  "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
 
 
+(*
 definition static_one_shot :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
   "static_one_shot \<V> Lx x\<^sub>c e \<equiv> 
     (\<forall> eSimp . isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> all (is_static_send_path \<V> eSimp x\<^sub>c) singular)"
@@ -391,5 +291,6 @@ definition static_fan_in :: "abstract_value_env \<Rightarrow> label_map \<Righta
   "static_fan_in \<V> Lx x\<^sub>c e \<equiv> 
     (\<forall> eSimp . isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> all (is_static_recv_path \<V> eSimp x\<^sub>c) noncompetitive)"
 
+*)
 
 end

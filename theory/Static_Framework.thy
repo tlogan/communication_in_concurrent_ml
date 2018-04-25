@@ -3,14 +3,18 @@ theory Static_Framework
       "~~/src/HOL/Eisbach/Eisbach_Tools"
 begin
 
-datatype def_use_label = Def var | Use var
+datatype node_label = NLet var | NResult var
 
-fun defUseLabel :: "exp \<Rightarrow> def_use_label" where
-  "defUseLabel (LET x = b in e) = Def x" |
-  "defUseLabel (RESULT y) = Use y"
+fun nodeLabel :: "exp \<Rightarrow> node_label" where
+  "nodeLabel (LET x = b in e) = NLet x" |
+  "nodeLabel (RESULT y) = NResult y"
+
+datatype edge_label = ENext | ESpawn | ESend | ECall | EReturn
 
 
-type_synonym flow_set = "(def_use_label \<times> control_label \<times> def_use_label) set"
+type_synonym flow_set = "(node_label \<times> edge_label \<times> node_label) set"
+
+
 
 
 inductive static_flow :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> exp \<Rightarrow> bool"  where
@@ -19,56 +23,56 @@ inductive static_flow :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow
   " |
   Let_Unit: "
     \<lbrakk>
-      {(Def x , (LNext x), defUseLabel e)} \<subseteq> \<F>;
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>;
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
     static_flow \<V> \<F> (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Chan: "
     \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
     static_flow \<V> \<F> (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
     static_flow \<V> \<F> (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
     static_flow \<V> \<F> (LET x = RECV EVT x\<^sub>c in e)
   " |
   Let_Pair: "
     \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
     static_flow \<V> \<F> (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
   " |
   Let_Left: "
     \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
     static_flow \<V> \<F> (LET x = LEFT x\<^sub>p in e)
   " |
   Let_Right: "
     \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
     static_flow \<V> \<F> (LET x = RIGHT x\<^sub>p in e)
   " |
   Let_Abs: "
     \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
       static_flow \<V> \<F> e\<^sub>b;
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
@@ -77,8 +81,8 @@ inductive static_flow :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow
   Let_Spawn: "
     \<lbrakk>
       {
-        (Def x, (LNext x), defUseLabel e),
-        (Def x, (LSpawn x), defUseLabel e\<^sub>c)
+        (NLet x, ENext, nodeLabel e),
+        (NLet x, ESpawn, nodeLabel e\<^sub>c)
       } \<subseteq> \<F>;
       static_flow \<V> \<F> e\<^sub>c;
       static_flow \<V> \<F> e
@@ -87,21 +91,28 @@ inductive static_flow :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow
   " |
   Let_Sync: "
     \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
+      (\<forall> xSC xM xC xRC y.
+        {^Send_Evt xSC xM} \<subseteq> V x\<^sub>e \<longrightarrow>
+        {^Chan xC} \<subseteq> V xSC \<longrightarrow>
+        {^Chan xC} \<subseteq> V xRC \<longrightarrow>
+        {^Recv_Evt xRC} \<subseteq> \<V> y \<longrightarrow>
+        {(NLet x, ESend, NLet y)} \<subseteq> \<F>
+      );
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
     static_flow \<V> \<F> (LET x = SYNC x\<^sub>e in e)
   " |
   Let_Fst: "
     \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
     static_flow \<V> \<F> (LET x = FST x\<^sub>p in e)
   " |
   Let_Snd: "
     \<lbrakk>
-      {(Def x, (LNext x), defUseLabel e)} \<subseteq> \<F>;
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
     static_flow \<V> \<F> (LET x = SND x\<^sub>p in e)
@@ -109,10 +120,10 @@ inductive static_flow :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow
   Let_Case: "
     \<lbrakk>
       {
-        (Def x, (LCall x), defUseLabel e\<^sub>l),
-        (Def x, (LCall x), defUseLabel e\<^sub>r),
-        (Use (\<lfloor>e\<^sub>l\<rfloor>), (LReturn x), defUseLabel e),
-        (Use (\<lfloor>e\<^sub>r\<rfloor>), (LReturn x), defUseLabel e)
+        (NLet x, ECall, nodeLabel e\<^sub>l),
+        (NLet x, ECall, nodeLabel e\<^sub>r),
+        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn, nodeLabel e),
+        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn, nodeLabel e)
       } \<subseteq> \<F>;
       static_flow \<V> \<F> e\<^sub>l;
       static_flow \<V> \<F> e\<^sub>r;
@@ -124,8 +135,8 @@ inductive static_flow :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow
     \<lbrakk>
       (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<longrightarrow>
         {
-          (Def x, (LCall x), defUseLabel e\<^sub>b),
-          (Use (\<lfloor>e\<^sub>b\<rfloor>), (LReturn x), defUseLabel e)
+          (NLet x, ECall, nodeLabel e\<^sub>b),
+          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn, nodeLabel e)
         } \<subseteq> \<F>);
       static_flow \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
