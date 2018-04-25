@@ -205,18 +205,6 @@ by (blast dest: runtime_paths_are_inclusive')
 
 
 
-lemma isnt_send_path_sound: "
-  \<lbrakk>
-    is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>y;
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
-  \<rbrakk> \<Longrightarrow> 
-  is_static_path LF (NLet xC) (is_static_send_node_label V e xC) \<pi>\<^sub>y
-"
- apply (unfold is_send_path_def is_static_send_path_def; auto)
-   apply (frule isnt_send_path_sound'; assumption?; auto; blast)
-done
-
 
 lemma runtime_send_paths_are_inclusive: "
   \<lbrakk>
@@ -311,6 +299,64 @@ using runtime_paths_are_inclusive by auto
 *)
 
 
+inductive pathsCongruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  "
+    pathsCongruent \<pi> path
+  "
+
+
+lemma isnt_send_path_sound: "
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>Sync \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
+  static_flow_set \<V> F e \<Longrightarrow>
+  static_chan_liveness \<V> Ln Lx x\<^sub>c e \<Longrightarrow>
+  static_live_flow_set Ln Lx F LF \<Longrightarrow>
+  \<exists> pathSync . (pathsCongruent \<pi>Sync pathSync) \<and> is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c) pathSync
+"
+sorry
+
+(*
+ apply (unfold is_send_path_def is_static_send_path_def; auto)
+   apply (frule isnt_send_path_sound'; assumption?; auto; blast)
+done
+*)
+
+lemma runtime_send_paths_are_inclusive: "
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 \<Longrightarrow> pathsCongruent \<pi>1 path1 \<Longrightarrow>
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 \<Longrightarrow> pathsCongruent \<pi>2 path2 \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
+  static_flow_set \<V> F e \<Longrightarrow>
+  static_chan_liveness \<V> Ln Lx x\<^sub>c e \<Longrightarrow>
+  static_live_flow_set Ln Lx F LF \<Longrightarrow>
+  path1 \<asymp> path2
+"
+sorry
+
+lemma path_equality_sound: "
+  path1 = path2 \<Longrightarrow>
+  pathsCongruent \<pi>1 path1 \<Longrightarrow>
+  pathsCongruent \<pi>2 path2 \<Longrightarrow>
+(*
+  static_live_flow_set Ln Lx F LF \<Longrightarrow>
+  static_chan_liveness \<V> Ln Lx x\<^sub>c e \<Longrightarrow>
+  static_flow_set \<V> F e \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 \<Longrightarrow> 
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 \<Longrightarrow> 
+*)
+  \<pi>1 = \<pi>2
+"
+sorry
+
+(*
+apply (unfold is_send_path_def; auto)
+using runtime_paths_are_inclusive by blast
+*)
+
+
 theorem singular_send_to_equal_send: "
 
   every_two_static_paths (is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) singular \<Longrightarrow>
@@ -321,11 +367,11 @@ theorem singular_send_to_equal_send: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) op =
 "
-sorry
+ apply (simp add: all_def every_two_static_paths_def singular_def; auto)
 (*
- apply (simp add: all_def singular_def; auto)
 using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 *)
+sorry
 
 
 
