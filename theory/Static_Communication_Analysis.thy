@@ -200,7 +200,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
   "
 
 
-inductive is_static_live_flow :: "label_map \<Rightarrow> label_map \<Rightarrow> flow_set \<Rightarrow> flow \<Rightarrow> bool"  where
+inductive is_static_live_flow :: "label_map \<Rightarrow> label_map \<Rightarrow> flow_set \<Rightarrow> flow_label \<Rightarrow> bool"  where
   Next: "
     (l, ENext, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Lx l) \<Longrightarrow>
@@ -243,19 +243,36 @@ inductive static_live_flow_set :: "label_map \<Rightarrow> label_map \<Rightarro
   "
 
 
-definition is_static_send_path :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
-  "is_static_send_path \<V> e x\<^sub>c \<pi>\<^sub>y \<equiv> (\<exists> x\<^sub>y x\<^sub>e x\<^sub>s\<^sub>c x\<^sub>m e\<^sub>n . 
-    \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n \<and>
-    ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
-    {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
-  )"
+inductive is_static_send_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
+  Sync: "
+    {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
+    {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
+    is_subexp e (LET x = SYNC xE in e') \<Longrightarrow>
+    is_static_send_node_label V e xC (NLet x)
+  "
 
-definition is_static_recv_path :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> control_path \<Rightarrow> bool" where
-  "is_static_recv_path \<V> e x\<^sub>c \<pi>\<^sub>y \<equiv> (\<exists> x\<^sub>y x\<^sub>e x\<^sub>r\<^sub>c e\<^sub>n. 
-    \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n \<and>
-    ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
-    {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e
-  )"
+inductive is_static_recv_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
+  Sync: "
+    {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
+    {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
+    is_subexp e (LET x = SYNC xE in e') \<Longrightarrow>
+    is_static_recv_node_label V e xC (NLet x)
+  "
+
+inductive is_static_path :: "flow_set \<Rightarrow> static_path \<Rightarrow> bool" where
+  Empty: "
+    is_static_path F []
+  " |
+  Edge: "
+    (nl, el, nl') \<in> F \<Longrightarrow>
+    is_static_path F [(nl, el)]
+  " |
+  Step: " 
+    (nl, el, nl') \<in> F \<Longrightarrow>
+    is_static_path F ((nl', el') # path) \<Longrightarrow>
+    is_static_path F ((nl, el) # (nl', el') # path)
+  "
+
 
 inductive inclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
   Ordered: "
