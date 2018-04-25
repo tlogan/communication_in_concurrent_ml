@@ -6,6 +6,7 @@ theory Sound_Communication_Analysis
     Dynamic_Communication_Analysis Static_Communication_Analysis
 begin
 
+(*
 lemma static_send_chan_doesnt_exist_sound: "
   \<lbrakk>
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> x\<^sub>c));
@@ -231,18 +232,6 @@ using runtime_paths_are_inclusive by blast
 
 
 
-theorem all_singular_send_sound: "
-  \<lbrakk>
-    every_two_static_paths is_static_path LF (NLet xC) (is_static_send_node_label V e xC) singular;
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
-  \<rbrakk> \<Longrightarrow>
-  all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) op=
-"
- apply (simp add: all_def singular_def; auto)
-using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
-
-
 lemma static_recv_chan_doesnt_exist_sound: "
   \<lbrakk>
     \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi> x\<^sub>c));
@@ -319,86 +308,106 @@ apply (unfold is_recv_path_def; auto)
 using runtime_paths_are_inclusive by auto
 
 
+*)
 
-theorem all_noncompetitive_send_sound: "
-  \<lbrakk>
-    all (is_static_send_path \<V> e x\<^sub>c) noncompetitive;
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
-  \<rbrakk> \<Longrightarrow>
-  all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
+
+theorem singular_send_to_equal_send: "
+
+  every_two_static_paths (is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) singular \<Longrightarrow>
+  static_live_flow_set Ln Lx F LF \<Longrightarrow> 
+  static_chan_liveness \<V> Ln Lx x\<^sub>c e \<Longrightarrow> 
+  static_flow_set \<V> F e \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) op =
 "
-apply (simp add: all_def noncompetitive_def; auto)
+sorry
+(*
+ apply (simp add: all_def singular_def; auto)
 using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
+*)
 
-theorem all_noncompetitive_recv_sound: "
-  \<lbrakk>
-    every_two_static_paths (is_static_path LF (NLet xC) (is_static_recv_node_label V e xC)) noncompetitive;
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
-  \<rbrakk> \<Longrightarrow>
-  all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
-"
-apply (simp add: all_def noncompetitive_def; auto)
-using isnt_recv_path_sound runtime_recv_paths_are_inclusive by blast
 
 
 theorem one_shot_sound: "
   \<lbrakk>
-    static_one_shot \<V> Lx x\<^sub>c e;
-    (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
+    static_one_shot \<V> e x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> x\<^sub>c)
 "
- apply (unfold static_one_shot_def)
+ apply (erule static_one_shot.cases; auto)
  apply (unfold one_shot_def)
- using all_send_paths_equal_preserved all_singular_send_sound apply blast
+ apply (metis singular_send_to_equal_send)
 done
 
 
-theorem one_to_one_sound: "
-  \<lbrakk>
-    static_one_to_one \<V> Lx x\<^sub>c e;
-    (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
-    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
-  \<rbrakk> \<Longrightarrow>
-  one_to_one \<E>' (Ch \<pi> x\<^sub>c)
+theorem noncompetitive_send_to_ordered_send: "
+   every_two_static_paths (is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) noncompetitive \<Longrightarrow>
+   static_live_flow_set Ln Lx F LF \<Longrightarrow> 
+   static_chan_liveness \<V> Ln Lx x\<^sub>c e \<Longrightarrow> 
+   static_flow_set \<V> F e \<Longrightarrow>
+   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+   all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
 "
- apply (unfold static_one_to_one_def)
- apply (unfold one_to_one_def, auto)
-  apply (metis all_noncompetitive_send_sound all_send_paths_noncompetitive_preserved)
-  apply (metis all_noncompetitive_recv_sound all_recv_paths_noncompetitive_preserved)
-done
+sorry
+(*
+apply (simp add: all_def noncompetitive_def; auto)
+using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
+*)
 
 theorem fan_out_sound: "
   \<lbrakk>
-    static_fan_out \<V> Lx x\<^sub>c e;
-    (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
+    static_fan_out \<V> e x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   fan_out \<E>' (Ch \<pi> x\<^sub>c)
 "
- apply (unfold static_fan_out_def)
+ apply (erule static_fan_out.cases; auto)
  apply (unfold fan_out_def)
-  apply (metis all_noncompetitive_send_sound all_send_paths_noncompetitive_preserved)
+ apply (metis noncompetitive_send_to_ordered_send)
 done
+
+lemma noncompetitive_recv_to_ordered_recv: "
+   every_two_static_paths (is_static_path LF (NLet x\<^sub>c) (is_static_recv_node_label \<V> e x\<^sub>c)) noncompetitive \<Longrightarrow>
+   static_live_flow_set Ln Lx F LF \<Longrightarrow> 
+   static_chan_liveness \<V> Ln Lx x\<^sub>c e \<Longrightarrow> 
+   static_flow_set \<V> F e \<Longrightarrow>
+   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+   all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
+"
+sorry
+
 
 theorem fan_in_sound: "
   \<lbrakk>
-    static_fan_in \<V> Lx x\<^sub>c e;
-    (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e;
+    static_fan_in \<V> e x\<^sub>c;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
   fan_in \<E>' (Ch \<pi> x\<^sub>c)
 "
- apply (unfold static_fan_in_def)
+ apply (erule static_fan_in.cases; auto)
  apply (unfold fan_in_def)
-  apply (metis all_noncompetitive_recv_sound all_recv_paths_noncompetitive_preserved)
+ apply (metis noncompetitive_recv_to_ordered_recv)
+done
+
+
+theorem one_to_one_sound: "
+  \<lbrakk>
+    static_one_to_one \<V> e x\<^sub>c;
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e;
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
+  \<rbrakk> \<Longrightarrow>
+  one_to_one \<E>' (Ch \<pi> x\<^sub>c)
+"
+ apply (erule static_one_to_one.cases; auto)
+ apply (unfold one_to_one_def)
+ apply (simp add: noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
 done
 
 
