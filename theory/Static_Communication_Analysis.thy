@@ -1,11 +1,9 @@
 theory Static_Communication_Analysis
   imports Main Syntax 
-    Dynamic_Semantics Static_Semantics 
-    Static_Traceability 
+    Dynamic_Semantics Static_Semantics
     Dynamic_Communication_Analysis
     Static_Framework
 begin
-
 
 
 inductive built_on_chan :: "abstract_value_env \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"  where
@@ -279,9 +277,7 @@ inductive is_static_path :: "flow_set \<Rightarrow> node_label \<Rightarrow> (no
 
 inductive inclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
   Ordered: "
-    \<lbrakk>
-      prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
-    \<rbrakk> \<Longrightarrow>
+    prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<Longrightarrow>
     \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
   " |
   Spawn_Left: "

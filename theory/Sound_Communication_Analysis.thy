@@ -1,10 +1,9 @@
-theory Sound_Com_Topo_Analysis
+theory Sound_Communication_Analysis
   imports 
     Main
     Syntax 
     Dynamic_Semantics Static_Semantics Sound_Semantics
-    Static_Traceability Sound_Traceability
-    Dynamic_Com_Topo_Analysis Static_Com_Topo_Analysis
+    Dynamic_Communication_Analysis Static_Communication_Analysis
 begin
 
 lemma static_send_chan_doesnt_exist_sound: "
@@ -174,6 +173,7 @@ lemma inclusive_preserved: "
  
 done
 
+
 lemma runtime_paths_are_inclusive': "
   \<E>\<^sub>0 \<rightarrow>* \<E> \<Longrightarrow>
   (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 \<sigma>\<^sub>1 \<sigma>\<^sub>2.
@@ -190,6 +190,8 @@ lemma runtime_paths_are_inclusive': "
  apply (blast dest: inclusive_preserved)
 done
 
+
+
 lemma runtime_paths_are_inclusive: "
   \<lbrakk>
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
@@ -201,13 +203,14 @@ lemma runtime_paths_are_inclusive: "
 by (blast dest: runtime_paths_are_inclusive')
 
 
+
 lemma isnt_send_path_sound: "
   \<lbrakk>
     is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>y;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow> 
-  is_static_send_path \<V> e x\<^sub>c \<pi>\<^sub>y
+  is_static_path LF (NLet xC) (is_static_send_node_label V e xC) \<pi>\<^sub>y
 "
  apply (unfold is_send_path_def is_static_send_path_def; auto)
    apply (frule isnt_send_path_sound'; assumption?; auto; blast)
@@ -225,9 +228,12 @@ lemma runtime_send_paths_are_inclusive: "
 apply (unfold is_send_path_def; auto)
 using runtime_paths_are_inclusive by blast
 
+
+
+
 theorem all_singular_send_sound: "
   \<lbrakk>
-    all (is_static_send_path \<V> e x\<^sub>c) singular;
+    every_two_static_paths is_static_path LF (NLet xC) (is_static_send_node_label V e xC) singular;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -236,18 +242,6 @@ theorem all_singular_send_sound: "
  apply (simp add: all_def singular_def; auto)
 using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
-lemma all_send_paths_equal_preserved: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e \<Longrightarrow>
-  (\<forall> eSimp \<E>simp. 
-    isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e eSimp \<longrightarrow>
-    [[] \<mapsto> \<langle>eSimp;Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<longrightarrow>
-    all (is_send_path \<E>simp (Ch \<pi> x\<^sub>c)) op= 
-  ) \<Longrightarrow>
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-  all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) op=
-"
-sorry
 
 lemma static_recv_chan_doesnt_exist_sound: "
   \<lbrakk>
@@ -301,14 +295,13 @@ lemma isnt_recv_path_sound': "
  apply (erule static_recv_evt_doesnt_exist_sound; assumption)
 done
 
-
 lemma isnt_recv_path_sound: "
   \<lbrakk>
     is_recv_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>y;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow> 
-  is_static_recv_path \<V> e x\<^sub>c \<pi>\<^sub>y
+  is_static_path LF (NLet xC) (is_static_recv_node_label V e xC) \<pi>\<^sub>y
 "
  apply (unfold is_recv_path_def is_static_recv_path_def; auto)
    apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
@@ -338,23 +331,9 @@ theorem all_noncompetitive_send_sound: "
 apply (simp add: all_def noncompetitive_def; auto)
 using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
-
-lemma all_send_paths_noncompetitive_preserved: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e \<Longrightarrow>
-  (\<forall> eSimp \<E>simp. 
-    isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e eSimp \<longrightarrow>
-    [[] \<mapsto> \<langle>eSimp;Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<longrightarrow>
-    all (is_send_path \<E>simp (Ch \<pi> x\<^sub>c)) ordered 
-  ) \<Longrightarrow>
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-  all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
-"
-sorry
-
 theorem all_noncompetitive_recv_sound: "
   \<lbrakk>
-    all (is_static_recv_path \<V> e x\<^sub>c) noncompetitive;
+    every_two_static_paths (is_static_path LF (NLet xC) (is_static_recv_node_label V e xC)) noncompetitive;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
@@ -362,20 +341,6 @@ theorem all_noncompetitive_recv_sound: "
 "
 apply (simp add: all_def noncompetitive_def; auto)
 using isnt_recv_path_sound runtime_recv_paths_are_inclusive by blast
-
-
-lemma all_recv_paths_noncompetitive_preserved: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> (\<V>, Ln, Lx) \<tturnstile> x\<^sub>c \<triangleleft> e \<Longrightarrow>
-  (\<forall> eSimp \<E>simp. 
-    isSimplifiedExp \<V> Lx x\<^sub>c e eSimp \<longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e eSimp \<longrightarrow>
-    [[] \<mapsto> \<langle>eSimp;Map.empty;[]\<rangle>] \<rightarrow>* \<E>simp \<longrightarrow>
-    all (is_recv_path \<E>simp (Ch \<pi> x\<^sub>c)) ordered 
-  ) \<Longrightarrow>
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-  all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
-"
-sorry
 
 
 theorem one_shot_sound: "
