@@ -274,19 +274,25 @@ inductive is_static_path :: "flow_set \<Rightarrow> static_path \<Rightarrow> bo
   "
 
 
-inductive inclusive :: "control_path \<Rightarrow> control_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
+inductive inclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
   Ordered: "
     \<lbrakk>
       prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1
     \<rbrakk> \<Longrightarrow>
     \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
   " |
- Spawn_Left: "
-    \<pi> @ (LSpawn x) # \<pi>\<^sub>1 \<asymp> \<pi> @ (LNext x) # \<pi>\<^sub>2
- " |
- Spawn_Right: "
-    \<pi> @ (LNext x) # \<pi>\<^sub>1 \<asymp> \<pi> @ (LSpawn x) # \<pi>\<^sub>2
- "
+  Spawn_Left: "
+    \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
+  " |
+  Spawn_Right: "
+    \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>2
+  " |
+  Send_Left: "
+    \<pi> @ (NLet x, ESend) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
+  " |
+  Send_Right: "
+    \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend) # \<pi>\<^sub>2
+  "
 
 lemma inclusive_commut: "
   \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>2 \<asymp> \<pi>\<^sub>1
