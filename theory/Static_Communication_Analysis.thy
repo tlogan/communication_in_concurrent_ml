@@ -131,7 +131,6 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
   " |
   Let_Abs: "
     \<lbrakk>
-
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) \<subseteq> Lx (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>b;
@@ -174,6 +173,16 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
   " |
   Let_Case: "
     \<lbrakk>
+
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>s \<union> 
+        Ln (nodeLabel e\<^sub>r) \<union> Ln (nodeLabel e\<^sub>l) \<subseteq> Ln (NLet x);
+
+      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>l;
+      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>r 
+
+(*
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) \<subseteq> Lx (NResult (\<lfloor>e\<^sub>r\<rfloor>));
       Ln (nodeLabel e) \<subseteq> Lx (NResult (\<lfloor>e\<^sub>l\<rfloor>));
@@ -185,6 +194,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
       static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>r;
       Ln (nodeLabel e\<^sub>l) \<union> Ln (nodeLabel e\<^sub>r) \<subseteq> Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>s \<subseteq> Ln (NLet x)
+*)
 
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
@@ -192,13 +202,16 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
   Let_App: "
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a \<subseteq> Ln (NLet x)
+(*
+      static_chan_liveness V Ln Lx x\<^sub>c e;
       (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow> 
         Ln (nodeLabel e) \<subseteq> Lx (NResult (\<lfloor>e\<^sub>b\<rfloor>)) \<and>
         Lx (NResult (\<lfloor>e\<^sub>b\<rfloor>)) \<union> chanSet V Ln x\<^sub>c (\<lfloor>e\<^sub>b\<rfloor>) \<subseteq> Ln (NResult (\<lfloor>e\<^sub>b\<rfloor>)) \<and>
         Ln (nodeLabel e\<^sub>b) \<subseteq> Lx (NLet x)
       );
       (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a \<subseteq> Ln (NLet x)
-
+*)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = APP f x\<^sub>a in e)
   "
