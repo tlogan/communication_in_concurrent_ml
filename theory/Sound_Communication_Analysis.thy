@@ -298,10 +298,30 @@ using runtime_paths_are_inclusive by auto
 
 *)
 
+inductive pathsCongruent :: "trace_pool \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  Spawn: "
+    pathsCongruent \<E> \<pi> path \<Longrightarrow>
+    pathsCongruent \<E> ((LSpawn x) # \<pi>) ((NLet x, ESpawn) # path)
+  " (*|
+  Send: "
+    pathsCongruent \<E> \<pi> path \<Longrightarrow>
+    pathsCongruent \<E> ((LNext x) # \<pi>) ((NLet x, ESend) # path)
+  "*)
 
-inductive pathsCongruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
-  "
-    pathsCongruent \<pi> path
+inductive pathsCongruentModChan :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  Let_Chan: "
+    \<E> \<pi>C = Some (\<langle>LET xC = CHAN \<lparr>\<rparr> in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+    \<E> (\<pi>C @ (LNext xC) # \<pi>) = Some (\<langle>LET xLast = SYNC xELast in eLast;\<rho>Last;\<kappa>Last\<rangle>) \<Longrightarrow>
+    pathsCongruent \<E> ((LNext xC) # \<pi>) path \<Longrightarrow>
+    pathsCongruentModChan \<E> (Ch \<pi>C xC) ((LNext xC) # \<pi>) path
+  "  |
+  Let_Sync_Recv: "
+    \<rho> xR = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
+    \<rho> xE = Some (VClosure (Recv_Evt xRC) \<rho>Recv) \<Longrightarrow>
+    \<E> \<pi>Pre = Some (\<langle>LET xR = SYNC xE in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+    \<E> (\<pi>Pre @ (LNext xR) # \<pi>) = Some (\<langle>LET xLast = SYNC xELast in eLast;\<rho>Last;\<kappa>Last\<rangle>) \<Longrightarrow>
+    pathsCongruent \<E> (\<pi>C @ (LNext xR) # \<pi>) path1 \<Longrightarrow>
+    pathsCongruentModChan \<E> (Ch \<pi>C xC) (\<pi>Pre @ (LNext xR) # \<pi>) (path1 @ path2)
   "
 
 
@@ -312,7 +332,9 @@ lemma isnt_send_path_sound: "
   static_flow_set \<V> F e \<Longrightarrow>
   static_chan_liveness \<V> Ln Lx x\<^sub>c e \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow>
-  \<exists> pathSync . (pathsCongruent \<pi>Sync pathSync) \<and> is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c) pathSync
+  \<exists> pathSync . 
+    (pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>Sync pathSync) \<and> 
+    is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c) pathSync
 "
 sorry
 
@@ -323,8 +345,10 @@ done
 *)
 
 lemma runtime_send_paths_are_inclusive: "
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 \<Longrightarrow> pathsCongruent \<pi>1 path1 \<Longrightarrow>
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 \<Longrightarrow> pathsCongruent \<pi>2 path2 \<Longrightarrow>
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 \<Longrightarrow> 
+  pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 \<Longrightarrow> 
+  pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   static_flow_set \<V> F e \<Longrightarrow>
@@ -335,9 +359,6 @@ lemma runtime_send_paths_are_inclusive: "
 sorry
 
 lemma path_equality_sound: "
-  path1 = path2 \<Longrightarrow>
-  pathsCongruent \<pi>1 path1 \<Longrightarrow>
-  pathsCongruent \<pi>2 path2 \<Longrightarrow>
 (*
   static_live_flow_set Ln Lx F LF \<Longrightarrow>
   static_chan_liveness \<V> Ln Lx x\<^sub>c e \<Longrightarrow>
@@ -347,8 +368,12 @@ lemma path_equality_sound: "
   is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 \<Longrightarrow> 
 *)
+  path1 = path2 \<Longrightarrow>
+  pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
+  pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
   \<pi>1 = \<pi>2
 "
+
 sorry
 
 (*

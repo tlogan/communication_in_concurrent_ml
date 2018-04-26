@@ -11,7 +11,7 @@ fun nodeLabel :: "exp \<Rightarrow> node_label" where
 
 type_synonym node_set = "node_label set"
 
-datatype edge_label = ENext | ESpawn | ECall | EReturn | ESend 
+datatype edge_label = ENext | ESpawn | ECall | EReturn | ESend var
 
 type_synonym flow_label = "(node_label \<times> edge_label \<times> node_label)"
 
@@ -102,7 +102,7 @@ inductive static_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Righta
         {^Chan xC} \<subseteq> V xSC \<longrightarrow>
         {^Chan xC} \<subseteq> V xRC \<longrightarrow>
         {^Recv_Evt xRC} \<subseteq> \<V> y \<longrightarrow>
-        {(NLet x, ESend, NLet y)} \<subseteq> \<F>
+        {(NLet x, ESend xM, NLet y)} \<subseteq> \<F>
       );
       static_flow_set \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
