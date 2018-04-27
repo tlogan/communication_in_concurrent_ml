@@ -62,7 +62,7 @@ fun chanSet :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<R
 
 (*
   need \<subseteq> instead of = for liveness sets, because variables are not necessarily unique.
-  also, additional values may be included in outer abstractions.
+  need to create extra label_map to pass through outer live variables.
 *)
 inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "
