@@ -173,14 +173,12 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
   " |
   Let_Case: "
     \<lbrakk>
-
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>s \<union> 
-        (Ln (nodeLabel e\<^sub>r) - {x\<^sub>r}) \<union> (Ln (nodeLabel e\<^sub>l) - {x\<^sub>l}) \<subseteq> Ln (NLet x);
-
       static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>l;
-      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>r 
+      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>r;
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>s \<union> 
+         (Ln (nodeLabel e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (nodeLabel e\<^sub>r) - {x\<^sub>r}) \<subseteq> Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
   " |
