@@ -60,8 +60,6 @@ fun chanSet :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<R
   "chanSet V Ln x\<^sub>c x = (if built_on_chan V Ln x\<^sub>c x then {x} else {})"
 
 
-
-
 (*
   need \<subseteq> instead of = for liveness sets, because variables are not necessarily unique.
   also, additional values may be included in outer abstractions.
@@ -185,7 +183,9 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
   Let_App: "
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
-      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a \<subseteq> Ln (NLet x)
+      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c f \<union> 
+        chanSet V Ln x\<^sub>c x\<^sub>a \<subseteq> Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = APP f x\<^sub>a in e)
   "
