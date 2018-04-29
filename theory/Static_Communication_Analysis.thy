@@ -330,7 +330,7 @@ inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
   Sync: "
     every_two_static_paths (is_static_path LF (NLet xC) (is_static_send_node_label V e xC)) singular \<Longrightarrow>
     static_live_flow_set Ln Lx F LF \<Longrightarrow>
-    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+    static_chan_liveness V Ln Lx Lo xC e \<Longrightarrow>
     static_flow_set V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
@@ -340,7 +340,7 @@ inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarro
     every_two_static_paths (is_static_path LF (NLet xC) (is_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     every_two_static_paths (is_static_path LF (NLet xC) (is_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_flow_set Ln Lx F LF \<Longrightarrow>
-    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+    static_chan_liveness V Ln Lx Lo xC e \<Longrightarrow>
     static_flow_set V F e \<Longrightarrow>
     static_one_to_one V e xC 
   "
@@ -349,7 +349,7 @@ inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
   Sync: "
     every_two_static_paths (is_static_path LF (NLet xC) (is_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_flow_set Ln Lx F LF \<Longrightarrow>
-    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+    static_chan_liveness V Ln Lx Lo xC e \<Longrightarrow>
     static_flow_set V F e \<Longrightarrow>
     static_fan_out V e xC 
   "
@@ -358,7 +358,7 @@ inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> v
   Sync: "
     every_two_static_paths (is_static_path LF (NLet xC) (is_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_flow_set Ln Lx F LF \<Longrightarrow>
-    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+    static_chan_liveness V Ln Lx Lo xC e \<Longrightarrow>
     static_flow_set V F e \<Longrightarrow>
     static_fan_in V e xC 
   "
