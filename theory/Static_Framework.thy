@@ -11,7 +11,7 @@ fun nodeLabel :: "exp \<Rightarrow> node_label" where
 
 type_synonym node_set = "node_label set"
 
-datatype edge_label = ENext | ESpawn | ECall | EReturn | ESend var
+datatype edge_label = ENext | ECall | EReturn | ESpawn |  ESend var 
 
 type_synonym flow_label = "(node_label \<times> edge_label \<times> node_label)"
 

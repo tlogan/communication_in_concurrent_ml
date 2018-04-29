@@ -327,32 +327,51 @@ inductive is_live_suffix :: "trace_pool \<Rightarrow> chan \<Rightarrow> control
     is_live_suffix \<E> c ((LNext xR) # \<pi>) (\<pi>Pre @ (LNext xR) # \<pi>) 
   "
 
-
-value "suffix [2] [1,2]"
-
-
-inductive pathsCongruentModChan :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  Empty: "
+    paths_congruent [] []
+  " |
+  Next: "
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (LNext x # \<pi>) ((NLet x, ENext) # path)
+  " |
+  Call: "
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (LCall x # \<pi>) ((NLet x, ECall) # path)
+  " |
+  Return: "
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (LReturn x # \<pi>) ((NLet x, EReturn) # path)
+  " |
+  Spawn: "
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (LSpawn x # \<pi>) ((NLet x, ESpawn) # path)
+  " |
+  Send: "
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (LNext x # \<pi>) ((NLet x, ESend xM) # path)
   "
-    (* is_live_abstract_path LF path \<Longrightarrow>*)
+
+inductive pathsCongruentModChan :: "trace_pool \<Rightarrow> flow_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  Path: "
+    is_static_path LF (NLet xC) (\<lambda> nl . True) path \<Longrightarrow>
     suffix pathSuffix path \<Longrightarrow>
-    (* paths_congruent \<E> \<pi>Suffix pathSuffix \<Longrightarrow>*)
-    is_live_suffix \<E> c \<pi>Suffix \<pi> \<Longrightarrow>
-    pathsCongruentModChan \<E> c \<pi> path
+    paths_congruent \<pi>Suffix pathSuffix \<Longrightarrow>
+    is_live_suffix \<E> (Ch \<pi>C xC) \<pi>Suffix \<pi> \<Longrightarrow>
+    pathsCongruentModChan \<E> LF (Ch \<pi>C xC) \<pi> path
   "
 
 
-lemma send_paths_inclusive: "
+lemma same_run_abstract_paths_inclusive: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 \<Longrightarrow> 
-  pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
-  pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
-(*
+  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
+  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow>
   static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
-*)
   path1 \<asymp> path2 
 "
 sorry
@@ -360,14 +379,12 @@ sorry
 
 lemma send_path_equality_sound: "
   path1 = path2 \<Longrightarrow>
-  pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
-  pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
-(*
+  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
+  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow>
   static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
-*)
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 \<Longrightarrow> 
@@ -376,16 +393,14 @@ lemma send_path_equality_sound: "
 sorry
 
 
-lemma singular_to_equal_send_paths: "
+lemma abstract_paths_equal_exclusive_implies_concrete_paths_equal_under_send: "
   path1 = path2 \<or> \<not> path1 \<asymp> path2 \<Longrightarrow>
-  pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
-  pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
-(*
+  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
+  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow>
   static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
-*)
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 \<Longrightarrow> 
@@ -406,7 +421,7 @@ lemma isnt_send_path_sound: "
   static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow>
   \<exists> pathSync . 
-    (pathsCongruentModChan \<E>' (Ch \<pi> x\<^sub>c) \<pi>Sync pathSync) \<and> 
+    (pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>Sync pathSync) \<and> 
     is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c) pathSync
 "
 sorry
@@ -417,7 +432,7 @@ done
 *)
 
 
-theorem singular_send_paths_to_equal_send_paths: "
+theorem abstract_paths_singular_implies_concrete_paths_equal_under_send: "
 
   every_two_static_paths (is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) singular \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow> 
@@ -445,7 +460,7 @@ theorem one_shot_sound: "
 "
  apply (erule static_one_shot.cases; auto)
  apply (unfold one_shot_def)
- apply (metis singular_send_to_equal_send)
+ apply (simp add: abstract_paths_singular_implies_concrete_paths_equal_under_send)
 done
 
 
