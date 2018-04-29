@@ -316,7 +316,7 @@ inductive is_live_suffix :: "trace_pool \<Rightarrow> chan \<Rightarrow> control
   Chan: "
     \<E> \<pi>C = Some (\<langle>LET xC = CHAN \<lparr>\<rparr> in e;r;k\<rangle>) \<Longrightarrow>
     \<E> (\<pi>C @ (LNext xC) # \<pi>) = Some \<sigma> \<Longrightarrow>
-    is_live_suffix \<E> (Ch \<pi>C xC) (\<pi>C @ (LNext xC) # \<pi>) ((LNext xC) # \<pi>)
+    is_live_suffix \<E> (Ch \<pi>C xC) ((LNext xC) # \<pi>) (\<pi>C @ (LNext xC) # \<pi>)
   " | 
   Sync_Recv: "
     \<rho>Y xE = Some (VClosure (Recv_Evt xRC) \<rho>Recv) \<Longrightarrow>
@@ -324,15 +324,19 @@ inductive is_live_suffix :: "trace_pool \<Rightarrow> chan \<Rightarrow> control
     \<rho> xR = Some (VChan c) \<Longrightarrow>
     \<E> (\<pi>Pre ;; (LNext xR)) = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
     \<E> (\<pi>Pre @ (LNext xR) # \<pi>) = Some \<sigma> \<Longrightarrow>
-    is_live_suffix \<E> c (\<pi>Pre @ (LNext xR) # \<pi>) ((LNext xR) # \<pi>)
+    is_live_suffix \<E> c ((LNext xR) # \<pi>) (\<pi>Pre @ (LNext xR) # \<pi>) 
   "
+
+
+value "suffix [2] [1,2]"
+
 
 inductive pathsCongruentModChan :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   "
     (* is_live_abstract_path LF path \<Longrightarrow>*)
-    (* abstract_suffix path pathSuffix \<Longrightarrow>*)
+    suffix pathSuffix path \<Longrightarrow>
     (* paths_congruent \<E> \<pi>Suffix pathSuffix \<Longrightarrow>*)
-    is_live_suffix \<E> c \<pi> \<pi>Suffix \<Longrightarrow>
+    is_live_suffix \<E> c \<pi>Suffix \<pi> \<Longrightarrow>
     pathsCongruentModChan \<E> c \<pi> path
   "
 
