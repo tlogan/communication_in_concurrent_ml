@@ -310,27 +310,29 @@ inductive path_concrete_abstract :: "trace_pool \<Rightarrow> control_path \<Rig
     path_concrete_abstract \<E> ((LNext x) # \<pi>) ((NLet x, ESend) # path)
   "
 
-inductive is_graph_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where
-  Let_Chan: "
-    \<E> \<pi>C = Some (\<langle>LET xC = CHAN \<lparr>\<rparr> in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-    \<E> (\<pi>C @ (LNext xC) # \<pi>) = Some (\<langle>LET xLast = SYNC xELast in eLast;\<rho>Last;\<kappa>Last\<rangle>) \<Longrightarrow>
-    pathsCongruentModChan \<E> (Ch \<pi>C xC) ((LNext xC) # \<pi>) path
-  "  |
-  Let_Sync_Recv: "
-    \<rho> xR = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
-    \<rho> xE = Some (VClosure (Recv_Evt xRC) \<rho>Recv) \<Longrightarrow>
-    \<E> \<pi>Pre = Some (\<langle>LET xR = SYNC xE in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-    \<E> (\<pi>Pre @ (LNext xR) # \<pi>) = Some (\<langle>LET xLast = SYNC xELast in eLast;\<rho>Last;\<kappa>Last\<rangle>) \<Longrightarrow>
-    pathsCongruentModChan \<E> (Ch \<pi>C xC) (\<pi>Pre @ (LNext xR) # \<pi>) (path1 @ path2)
-  "
 *)
+
+inductive is_live_suffix :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" where
+  Chan: "
+    \<E> \<pi>C = Some (\<langle>LET xC = CHAN \<lparr>\<rparr> in e;r;k\<rangle>) \<Longrightarrow>
+    \<E> (\<pi>C @ (LNext xC) # \<pi>) = Some \<sigma> \<Longrightarrow>
+    is_live_suffix \<E> (Ch \<pi>C xC) (\<pi>C @ (LNext xC) # \<pi>) ((LNext xC) # \<pi>)
+  " | 
+  Sync_Recv: "
+    \<rho>Y xE = Some (VClosure (Recv_Evt xRC) \<rho>Recv) \<Longrightarrow>
+    \<E> \<pi>Pre = Some (\<langle>LET xR = SYNC xE in eY;\<rho>Y;\<kappa>Y\<rangle>) \<Longrightarrow>
+    \<rho> xR = Some (VChan c) \<Longrightarrow>
+    \<E> (\<pi>Pre ;; (LNext xR)) = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+    \<E> (\<pi>Pre @ (LNext xR) # \<pi>) = Some \<sigma> \<Longrightarrow>
+    is_live_suffix \<E> c (\<pi>Pre @ (LNext xR) # \<pi>) ((LNext xR) # \<pi>)
+  "
 
 inductive pathsCongruentModChan :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   "
     (* is_live_abstract_path LF path \<Longrightarrow>*)
     (* abstract_suffix path pathSuffix \<Longrightarrow>*)
     (* paths_congruent \<E> \<pi>Suffix pathSuffix \<Longrightarrow>*)
-    (* is_live_suffix \<E> c \<pi> \<pi>Suffix \<Longrightarrow>*)
+    is_live_suffix \<E> c \<pi> \<pi>Suffix \<Longrightarrow>
     pathsCongruentModChan \<E> c \<pi> path
   "
 
