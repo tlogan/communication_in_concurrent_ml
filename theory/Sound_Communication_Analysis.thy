@@ -65,111 +65,111 @@ done
 
 lemma inclusive_preserved: "
   \<E> \<rightarrow> \<E>' \<Longrightarrow>
-  \<forall>\<pi>\<^sub>1. (\<exists>\<sigma>\<^sub>1. \<E> \<pi>\<^sub>1 = Some \<sigma>\<^sub>1) \<longrightarrow> (\<forall>\<pi>\<^sub>2. (\<exists>\<sigma>\<^sub>2. \<E> \<pi>\<^sub>2 = Some \<sigma>\<^sub>2) \<longrightarrow> \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow>
-  \<E>' \<pi>\<^sub>1 = Some \<sigma>\<^sub>1 \<Longrightarrow> \<E>' \<pi>\<^sub>2 = Some \<sigma>\<^sub>2 \<Longrightarrow> 
-  \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
+  \<forall>\<pi>1. (\<exists>\<sigma>\<^sub>1. \<E> \<pi>1 = Some \<sigma>\<^sub>1) \<longrightarrow> (\<forall>\<pi>2. (\<exists>\<sigma>\<^sub>2. \<E> \<pi>2 = Some \<sigma>\<^sub>2) \<longrightarrow> \<pi>1 \<asymp> \<pi>2) \<Longrightarrow>
+  \<E>' \<pi>1 = Some \<sigma>\<^sub>1 \<Longrightarrow> \<E>' \<pi>2 = Some \<sigma>\<^sub>2 \<Longrightarrow> 
+  \<pi>1 \<asymp> \<pi>2
 "
  apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LReturn x\<^sub>\<kappa>')"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LReturn x\<^sub>\<kappa>')"; auto))
+   apply (case_tac "\<pi>1 = \<pi> ;; (LReturn x\<^sub>\<kappa>')"; auto; (case_tac "\<pi>2 = \<pi> ;; (LReturn x\<^sub>\<kappa>')"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext xa)"; auto))
-   apply (simp add: Ordered)
-   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
-   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
-
-
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext xa)"; auto))
-   apply (simp add: Ordered)
-   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
-   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
-
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext xa)"; auto))
-   apply (simp add: Ordered)
-   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
-   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
-
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext xa)"; auto))
+   apply (case_tac "\<pi>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>2 = \<pi> ;; (LNext xa)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LCall xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LCall xa)"; auto))
+   apply (case_tac "\<pi>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>2 = \<pi> ;; (LNext xa)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LCall xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LCall xa)"; auto))
+   apply (case_tac "\<pi>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>2 = \<pi> ;; (LNext xa)"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+   apply (case_tac "\<pi>1 = \<pi> ;; (LNext xa)"; auto; (case_tac "\<pi>2 = \<pi> ;; (LNext xa)"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+
+   apply (case_tac "\<pi>1 = \<pi> ;; (LCall xa)"; auto; (case_tac "\<pi>2 = \<pi> ;; (LCall xa)"; auto))
+   apply (simp add: Ordered)
+   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
+   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
+
+   apply (case_tac "\<pi>1 = \<pi> ;; (LCall xa)"; auto; (case_tac "\<pi>2 = \<pi> ;; (LCall xa)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
    
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LCall xa)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LCall xa)"; auto))
+   apply (case_tac "\<pi>1 = \<pi> ;; (LCall xa)"; auto; (case_tac "\<pi>2 = \<pi> ;; (LCall xa)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext x)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext x)"; auto))
+   apply (case_tac "\<pi>1 = \<pi> ;; (LNext x)"; auto; (case_tac "\<pi>2 = \<pi> ;; (LNext x)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LSpawn x)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LSpawn x)"; auto))
+   apply (case_tac "\<pi>1 = \<pi> ;; (LSpawn x)"; auto; (case_tac "\<pi>2 = \<pi> ;; (LSpawn x)"; auto))
    apply (simp add: Ordered)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext x)"; auto)
+   apply (case_tac "\<pi>2 = \<pi> ;; (LNext x)"; auto)
   apply (simp add: Spawn_Left)
   apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
-  apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext x)"; auto)
+  apply (case_tac "\<pi>1 = \<pi> ;; (LNext x)"; auto)
   apply (simp add: Spawn_Right)
   apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict) 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi> ;; (LNext x)"; auto; (case_tac "\<pi>\<^sub>2 = \<pi> ;; (LNext x)"; auto))
+   apply (case_tac "\<pi>1 = \<pi> ;; (LNext x)"; auto; (case_tac "\<pi>2 = \<pi> ;; (LNext x)"; auto))
    apply (simp add: Ordered)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def prefix_append prefix_order.dual_order.order_iff_strict)
 
 
-   apply (case_tac "\<pi>\<^sub>1 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
+   apply (case_tac "\<pi>1 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
+   apply (case_tac "\<pi>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
    apply (simp add: Ordered)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
+   apply (case_tac "\<pi>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
    apply (metis inclusive.simps inclusive_preserved_under_unordered_extension leaf_def prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
    apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
    apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
    apply (smt Ordered exp.inject(1) inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.inject prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc state.inject)
    apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
-   apply (drule_tac x = \<pi>\<^sub>2 in spec; auto)
+   apply (drule_tac x = \<pi>2 in spec; auto)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.simps(3) prefix_order.le_less prefix_snoc)
-   apply (case_tac "\<pi>\<^sub>1 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
+   apply (case_tac "\<pi>1 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
+   apply (case_tac "\<pi>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
    apply (metis inclusive.simps inclusive_preserved_under_unordered_extension leaf_def prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
+   apply (case_tac "\<pi>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
    apply (simp add: Ordered)
    apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
-   apply (drule_tac x = \<pi>\<^sub>2 in spec; auto)
+   apply (drule_tac x = \<pi>2 in spec; auto)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
+   apply (case_tac "\<pi>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
    apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
    apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
    apply (smt Ordered exp.inject(1) inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.inject prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc state.inject)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
+   apply (case_tac "\<pi>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
    apply (simp add: Ordered)
    apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
-   apply (drule_tac x = \<pi>\<^sub>2 in spec; auto)
+   apply (drule_tac x = \<pi>2 in spec; auto)
    apply (metis Ordered inclusive_preserved_under_unordered_extension leaf_def option.simps(3) prefix_order.le_less prefix_snoc)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
+   apply (case_tac "\<pi>2 = \<pi>\<^sub>r ;; (LNext x\<^sub>r)"; auto)
    apply (drule_tac x = \<pi>\<^sub>r in spec; auto)
-   apply (drule_tac x = \<pi>\<^sub>1 in spec; auto)
+   apply (drule_tac x = \<pi>1 in spec; auto)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
-   apply (case_tac "\<pi>\<^sub>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
+   apply (case_tac "\<pi>2 = \<pi>\<^sub>s ;; (LNext x\<^sub>s)"; auto)
    apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
-   apply (drule_tac x = \<pi>\<^sub>1 in spec; auto)
+   apply (drule_tac x = \<pi>1 in spec; auto)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
    apply (drule_tac x = \<pi>\<^sub>s in spec; auto)
-   apply (drule_tac x = \<pi>\<^sub>1 in spec; auto)
+   apply (drule_tac x = \<pi>1 in spec; auto)
    apply (metis Ordered inclusive_commut inclusive_preserved_under_unordered_extension leaf_def option.distinct(1) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc)
  
 done
@@ -177,17 +177,17 @@ done
 
 lemma runtime_paths_are_inclusive': "
   \<E>\<^sub>0 \<rightarrow>* \<E> \<Longrightarrow>
-  (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 \<sigma>\<^sub>1 \<sigma>\<^sub>2.
+  (\<forall> \<pi>1 \<pi>2 \<sigma>\<^sub>1 \<sigma>\<^sub>2.
     \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
-    \<E> \<pi>\<^sub>1 = Some \<sigma>\<^sub>1 \<longrightarrow>
-    \<E> \<pi>\<^sub>2 = Some \<sigma>\<^sub>2 \<longrightarrow>
-    \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
+    \<E> \<pi>1 = Some \<sigma>\<^sub>1 \<longrightarrow>
+    \<E> \<pi>2 = Some \<sigma>\<^sub>2 \<longrightarrow>
+    \<pi>1 \<asymp> \<pi>2
   )
 "
  apply (drule star_implies_star_left)
  apply (erule star_left.induct; auto)
   apply (simp add: Ordered)
- apply (rename_tac \<E> \<E>' \<pi>\<^sub>1 \<sigma>\<^sub>1 \<pi>\<^sub>2 \<sigma>\<^sub>2)
+ apply (rename_tac \<E> \<E>' \<pi>1 \<sigma>\<^sub>1 \<pi>2 \<sigma>\<^sub>2)
  apply (blast dest: inclusive_preserved)
 done
 
@@ -196,10 +196,10 @@ done
 lemma runtime_paths_are_inclusive: "
   \<lbrakk>
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi>\<^sub>1' = Some \<sigma>\<^sub>1';
-    \<E>' \<pi>\<^sub>2' = Some \<sigma>\<^sub>2'
+    \<E>' \<pi>1' = Some \<sigma>\<^sub>1';
+    \<E>' \<pi>2' = Some \<sigma>\<^sub>2'
   \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>1' \<asymp> \<pi>\<^sub>2'
+  \<pi>1' \<asymp> \<pi>2'
 "
 by (blast dest: runtime_paths_are_inclusive')
 
@@ -209,10 +209,10 @@ by (blast dest: runtime_paths_are_inclusive')
 lemma runtime_send_paths_are_inclusive: "
   \<lbrakk>
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    is_send_path \<E>' c \<pi>\<^sub>1';
-    is_send_path \<E>' c \<pi>\<^sub>2'
+    is_send_path \<E>' c \<pi>1';
+    is_send_path \<E>' c \<pi>2'
   \<rbrakk> \<Longrightarrow> 
-  \<pi>\<^sub>1' \<asymp> \<pi>\<^sub>2'
+  \<pi>1' \<asymp> \<pi>2'
 "
 apply (unfold is_send_path_def; auto)
 using runtime_paths_are_inclusive by blast
@@ -287,28 +287,14 @@ done
 lemma runtime_recv_paths_are_inclusive: "
   \<lbrakk>
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    is_recv_path \<E>' c \<pi>\<^sub>1';
-    is_recv_path \<E>' c \<pi>\<^sub>2'
+    is_recv_path \<E>' c \<pi>1';
+    is_recv_path \<E>' c \<pi>2'
   \<rbrakk> \<Longrightarrow>
-  \<pi>\<^sub>1' \<asymp> \<pi>\<^sub>2'
+  \<pi>1' \<asymp> \<pi>2'
 "
 apply (unfold is_recv_path_def; auto)
 using runtime_paths_are_inclusive by auto
 
-
-*)
-(*
-scraps:
-
-inductive path_concrete_abstract :: "trace_pool \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
-  Spawn: "
-    path_concrete_abstract \<E> \<pi> path \<Longrightarrow>
-    path_concrete_abstract \<E> ((LSpawn x) # \<pi>) ((NLet x, ESpawn) # path)
-  " |
-  Send: "
-    path_concrete_abstract \<E> \<pi> path \<Longrightarrow>
-    path_concrete_abstract \<E> ((LNext x) # \<pi>) ((NLet x, ESend) # path)
-  "
 
 *)
 
@@ -352,22 +338,23 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
     paths_congruent (LNext x # \<pi>) ((NLet x, ESend xM) # path)
   "
 
-inductive pathsCongruentModChan :: "trace_pool \<Rightarrow> flow_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> flow_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Path: "
     is_static_path LF (NLet xC) (\<lambda> nl . True) path \<Longrightarrow>
     suffix pathSuffix path \<Longrightarrow>
     paths_congruent \<pi>Suffix pathSuffix \<Longrightarrow>
     is_live_suffix \<E> (Ch \<pi>C xC) \<pi>Suffix \<pi> \<Longrightarrow>
-    pathsCongruentModChan \<E> LF (Ch \<pi>C xC) \<pi> path
+    paths_congruent_mod_chan \<E> LF (Ch \<pi>C xC) \<pi> path
   "
 
 
-lemma same_run_abstract_paths_inclusive: "
+
+lemma send_abstract_paths_of_same_run_inclusive: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 \<Longrightarrow> 
-  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
-  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 \<Longrightarrow> 
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 \<Longrightarrow> 
+  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow>
   static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
@@ -377,40 +364,38 @@ lemma same_run_abstract_paths_inclusive: "
 sorry
 
 
+
+
 lemma send_path_equality_sound: "
   path1 = path2 \<Longrightarrow>
-  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
-  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow>
   static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 \<Longrightarrow> 
-  \<pi>\<^sub>1 = \<pi>\<^sub>2
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 \<Longrightarrow> 
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 \<Longrightarrow> 
+  \<pi>1 = \<pi>2
 "
 sorry
 
 
-lemma abstract_paths_equal_exclusive_implies_concrete_paths_equal_under_send: "
-  path1 = path2 \<or> \<not> path1 \<asymp> path2 \<Longrightarrow>
-  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
-  pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
+lemma send_abstract_paths_equal_exclusive_implies_concrete_paths_equal: "
+  path1 = path2 \<or> \<not> path1 \<asymp> path2 \<Longrightarrow> 
+  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 path2 \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow>
   static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 \<Longrightarrow>
+  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 \<Longrightarrow>
   \<pi>\<^sub>1 = \<pi>\<^sub>2
 "
-sorry
-(*
-apply (unfold is_send_path_def; auto)
-using runtime_paths_are_inclusive by blast
-*)
+by (simp add: send_abstract_paths_of_same_run_inclusive send_path_equality_sound)
 
 
 lemma isnt_send_path_sound: "
@@ -421,7 +406,7 @@ lemma isnt_send_path_sound: "
   static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow>
   \<exists> pathSync . 
-    (pathsCongruentModChan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>Sync pathSync) \<and> 
+    (paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>Sync pathSync) \<and> 
     is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c) pathSync
 "
 sorry
@@ -432,7 +417,7 @@ done
 *)
 
 
-theorem abstract_paths_singular_implies_concrete_paths_equal_under_send: "
+theorem one_shot_sound': "
 
   every_two_static_paths (is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) singular \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow> 
@@ -443,11 +428,13 @@ theorem abstract_paths_singular_implies_concrete_paths_equal_under_send: "
   all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) op =
 "
  apply (simp add: all_def every_two_static_paths_def singular_def; auto)
-(*
-using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
-*)
-sorry
-
+ apply (frule_tac \<pi>Sync = \<pi>\<^sub>1 in isnt_send_path_sound; auto)
+ apply (drule_tac x = pathSync in spec)
+ apply (frule_tac \<pi>Sync = \<pi>\<^sub>2 in isnt_send_path_sound; auto)
+ apply (drule_tac x = pathSynca in spec)
+ apply (erule impE, simp)
+ apply (simp add: send_abstract_paths_equal_exclusive_implies_concrete_paths_equal)
+done
 
 
 theorem one_shot_sound: "
@@ -460,7 +447,7 @@ theorem one_shot_sound: "
 "
  apply (erule static_one_shot.cases; auto)
  apply (unfold one_shot_def)
- apply (simp add: abstract_paths_singular_implies_concrete_paths_equal_under_send)
+ apply (simp add: one_shot_sound')
 done
 
 
