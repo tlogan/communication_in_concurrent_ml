@@ -60,137 +60,129 @@ fun chanSet :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<R
   "chanSet V Ln x\<^sub>c x = (if built_on_chan V Ln x\<^sub>c x then {x} else {})"
 
 
-(*
-  need \<subseteq> instead of = for liveness sets, because variables are not necessarily unique.
-  need to create extra label_map to pass through outer live variables.
-*)
-inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> (var \<Rightarrow> var set) \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
+inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "
     \<lbrakk>
-      Lo y \<subseteq> Lx (NResult y);
-      chanSet V Ln x\<^sub>c y \<union> Lo y \<subseteq> Ln (NResult y)
+      chanSet V Ln x\<^sub>c y = Ln (NResult y)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (RESULT y)
+    static_chan_liveness V Ln Lx x\<^sub>c (RESULT y)
   " |
   Let_Unit: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      Lx (NLet x) \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      Lx (NLet x) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = \<lparr>\<rparr> in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Chan: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = CHAN \<lparr>\<rparr> in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>s\<^sub>c \<union> chanSet V Ln x\<^sub>c x\<^sub>m \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>s\<^sub>c \<union> chanSet V Ln x\<^sub>c x\<^sub>m = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>r\<^sub>c \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>r\<^sub>c = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = RECV EVT x\<^sub>r\<^sub>c in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = RECV EVT x\<^sub>r\<^sub>c in e)
   " |
   Let_Pair: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union>  chanSet V Ln x\<^sub>c x\<^sub>1 \<union> chanSet V Ln x\<^sub>c x\<^sub>2 \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union>  chanSet V Ln x\<^sub>c x\<^sub>1 \<union> chanSet V Ln x\<^sub>c x\<^sub>2 = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
   " |
   Let_Left: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = LEFT x\<^sub>a in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = LEFT x\<^sub>a in e)
   " |
   Let_Right: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = RIGHT x\<^sub>a in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = RIGHT x\<^sub>a in e)
   " |
   Let_Abs: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e\<^sub>b;
-      (Lx (NLet x) - {x}) \<union> (Ln (nodeLabel e\<^sub>b) - {x\<^sub>p}) \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>b;
+      (Lx (NLet x) - {x}) \<union> (Ln (nodeLabel e\<^sub>b) - {x\<^sub>p}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
   " |
   Let_Spawn: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e\<^sub>c;
-      Ln (nodeLabel e) \<union> Ln (nodeLabel e\<^sub>c) \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Lx (NLet x);
-      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>c;
+      Ln (nodeLabel e) \<union> Ln (nodeLabel e\<^sub>c) = Lx (NLet x);
+      (Lx (NLet x) - {x}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = SPAWN e\<^sub>c in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SPAWN e\<^sub>c in e)
   " |
   Let_Sync: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>e \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>e = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = SYNC x\<^sub>e in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SYNC x\<^sub>e in e)
   " |
   Let_Fst: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = FST x\<^sub>a in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = FST x\<^sub>a in e)
   " |
   Let_Snd: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = SND x\<^sub>a in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SND x\<^sub>a in e)
   " |
   Let_Case: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      Ln (nodeLabel e) \<subseteq> Lo (\<lfloor>e\<^sub>l\<rfloor>);
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e\<^sub>l;
-      Ln (nodeLabel e) \<subseteq> Lo (\<lfloor>e\<^sub>l\<rfloor>);
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e\<^sub>r;
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>l;
+      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>r;
       (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>s \<union> 
-         (Ln (nodeLabel e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (nodeLabel e\<^sub>r) - {x\<^sub>r}) \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+         (Ln (nodeLabel e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (nodeLabel e\<^sub>r) - {x\<^sub>r}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
   " |
   Let_App: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx Lo x\<^sub>c e;
-      Ln (nodeLabel e) \<subseteq> Lx (NLet x);
-      (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow> Ln (nodeLabel e) \<subseteq> Lo (\<lfloor>e\<^sub>b\<rfloor>));
-      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c f \<union> chanSet V Ln x\<^sub>c x\<^sub>a \<union> Lo (\<lfloor>e\<rfloor>) \<subseteq> Ln (NLet x)
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c f \<union> chanSet V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx Lo x\<^sub>c (LET x = APP f x\<^sub>a in e)
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = APP f x\<^sub>a in e)
   "
 
 
