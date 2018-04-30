@@ -298,11 +298,11 @@ using runtime_paths_are_inclusive by auto
 
 *)
 
-inductive is_live_suffix :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" where
+inductive is_live_split :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   Chan: "
     \<E> \<pi>C = Some (\<langle>LET xC = CHAN \<lparr>\<rparr> in e;r;k\<rangle>) \<Longrightarrow>
     \<E> (\<pi>C @ (LNext xC) # \<pi>) = Some \<sigma> \<Longrightarrow>
-    is_live_suffix \<E> (Ch \<pi>C xC) ((LNext xC) # \<pi>) (\<pi>C @ (LNext xC) # \<pi>)
+    is_live_split \<E> (Ch \<pi>C xC) \<pi>C ((LNext xC) # \<pi>) (\<pi>C @ (LNext xC) # \<pi>)
   " | 
   Sync_Recv: "
     \<rho>Y xE = Some (VClosure (Recv_Evt xRC) \<rho>Recv) \<Longrightarrow>
@@ -310,40 +310,50 @@ inductive is_live_suffix :: "trace_pool \<Rightarrow> chan \<Rightarrow> control
     \<rho> xR = Some (VChan c) \<Longrightarrow>
     \<E> (\<pi>Pre ;; (LNext xR)) = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
     \<E> (\<pi>Pre @ (LNext xR) # \<pi>) = Some \<sigma> \<Longrightarrow>
-    is_live_suffix \<E> c ((LNext xR) # \<pi>) (\<pi>Pre @ (LNext xR) # \<pi>) 
+    is_live_split \<E> c \<pi>Pre ((LNext xR) # \<pi>) (\<pi>Pre @ (LNext xR) # \<pi>) 
   "
 
-inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive paths_congruent :: "trace_pool \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty: "
-    paths_congruent [] []
+    paths_congruent \<E> \<pi>Pre [] []
   " |
   Next: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (LNext x # \<pi>) ((NLet x, ENext) # path)
+    paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
+    b = SYNC xE \<longrightarrow> \<rho> xE \<noteq> Some (VClosure (Send_Evt xSC xM) \<rho>Send) \<Longrightarrow>
+    \<E> (\<pi>Pre) = Some (\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+    \<E> (\<pi>Pre @ (LNext x # \<pi>)) = Some \<sigma> \<Longrightarrow>
+    paths_congruent \<E> \<pi>Pre (LNext x # \<pi>) ((NLet x, ENext) # path)
   " |
   Call: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (LCall x # \<pi>) ((NLet x, ECall) # path)
+    paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
+    \<E> (\<pi>Pre @ (LCall x # \<pi>)) = Some \<sigma> \<Longrightarrow>
+    paths_congruent \<E> \<pi>Pre (LCall x # \<pi>) ((NLet x, ECall) # path)
   " |
   Return: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (LReturn x # \<pi>) ((NLet x, EReturn) # path)
+    paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
+    \<E> (\<pi>Pre @ (LReturn x # \<pi>)) = Some \<sigma> \<Longrightarrow>
+    paths_congruent \<E> \<pi>Pre (LReturn x # \<pi>) ((NLet x, EReturn) # path)
   " |
   Spawn: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (LSpawn x # \<pi>) ((NLet x, ESpawn) # path)
+    paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
+    \<E> (\<pi>Pre @ (LSpawn x # \<pi>)) = Some \<sigma> \<Longrightarrow>
+    paths_congruent \<E> \<pi>Pre (LSpawn x # \<pi>) ((NLet x, ESpawn) # path)
   " |
   Send: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (LNext x # \<pi>) ((NLet x, ESend xM) # path)
+    paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
+    \<rho> xE = Some (VClosure (Send_Evt xSC xM) \<rho>Send) \<Longrightarrow>
+    \<E> \<pi>Pre = Some (\<langle>LET x = SYNC xE in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+    \<E> (\<pi>Pre @ (LNext x # \<pi>)) = Some \<sigma> \<Longrightarrow>
+    paths_congruent \<E> \<pi>Pre (LNext x # \<pi>) ((NLet x, ESend xM) # path)
   "
+
 
 inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> flow_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Path: "
     is_static_path LF (NLet xC) (\<lambda> nl . True) path \<Longrightarrow>
     suffix pathSuffix path \<Longrightarrow>
-    paths_congruent \<pi>Suffix pathSuffix \<Longrightarrow>
-    is_live_suffix \<E> (Ch \<pi>C xC) \<pi>Suffix \<pi> \<Longrightarrow>
+    paths_congruent \<E> \<pi> \<pi>Suffix pathSuffix \<Longrightarrow>
+    is_live_split \<E> (Ch \<pi>C xC) \<pi>Pre \<pi>Suffix \<pi> \<Longrightarrow>
     paths_congruent_mod_chan \<E> LF (Ch \<pi>C xC) \<pi> path
   "
 
@@ -418,7 +428,6 @@ done
 
 
 theorem one_shot_sound': "
-
   every_two_static_paths (is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) singular \<Longrightarrow>
   static_live_flow_set Ln Lx F LF \<Longrightarrow> 
   static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow> 
