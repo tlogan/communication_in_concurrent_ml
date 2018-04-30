@@ -298,6 +298,84 @@ using runtime_paths_are_inclusive by auto
 
 *)
 
+inductive 
+  dynamic_built_on_chan_var :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> var \<Rightarrow> bool" and
+  dynamic_built_on_chan_prim :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> prim \<Rightarrow> bool" and
+  dynamic_built_on_chan_exp :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> exp \<Rightarrow> bool" 
+where
+  Chan: "
+    \<rho> x = Some (VChan c) \<Longrightarrow>
+    dynamic_built_on_chan_var \<rho> c x
+  " |
+  Closure: "
+    dynamic_built_on_chan_prim \<rho>' c p \<Longrightarrow>
+    \<rho> x = Some (VClosure p \<rho>') \<Longrightarrow>
+    dynamic_built_on_chan_var \<rho> c x
+  " |
+
+
+  Send_Evt: "
+    dynamic_built_on_chan_var \<rho> c xSC \<or> dynamic_built_on_chan_var \<rho> c xM \<Longrightarrow>
+    dynamic_built_on_chan_prim \<rho> c (Send_Evt xSC xM)
+  " |
+  Recv_Evt: "
+    dynamic_built_on_chan_var \<rho> c xRC \<Longrightarrow>
+    dynamic_built_on_chan_prim \<rho> c (Recv_Evt xRC)
+  " |
+  Pair: "
+    dynamic_built_on_chan_var \<rho> c x1 \<or> dynamic_built_on_chan \<rho> c x2 \<Longrightarrow>
+    dynamic_built_on_chan_prim \<rho> c (Pair x1 x2)
+  " |
+  Left: "
+    dynamic_built_on_chan_var \<rho> c xSum \<Longrightarrow>
+    dynamic_built_on_chan_prim \<rho> c (Left xSum)
+  " |
+  Right: "
+    dynamic_built_on_chan_var \<rho> c xSum \<Longrightarrow>
+    dynamic_built_on_chan_prim \<rho> c (Right xSum)
+  " |
+  Abs: "
+    dynamic_built_on_chan_exp \<rho>' c e \<Longrightarrow>
+    dynamic_built_on_chan_prim \<rho> c (Abs f x e)
+  " |
+
+  Result: "
+    dynamic_built_on_chan_var \<rho> c x \<Longrightarrow>
+    dynamic_built_on_chan_exp \<rho> c (RESULT x)
+  " |
+  Let_Prim: "
+    dynamic_built_on_chan_prim \<rho> c p \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
+    dynamic_built_on_chan_exp \<rho> c (LET x = Prim p in e)
+  " |
+  Let_Spawn: "
+    dynamic_built_on_chan_exp \<rho> c eCh \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
+    dynamic_built_on_chan_exp \<rho> c (LET x = SPAWN eCh in e)
+  " |
+  Let_Sync: "
+    dynamic_built_on_chan_var \<rho> c xY \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
+    dynamic_built_on_chan_exp \<rho> c (LET x = SYNC xY in e)
+  " |
+  Let_Fst: "
+    dynamic_built_on_chan_var \<rho> c xP \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
+    dynamic_built_on_chan_exp \<rho> c (LET x = FST xP in e)
+  " |
+  Let_Snd: "
+    dynamic_built_on_chan_var \<rho> c xP \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
+    dynamic_built_on_chan_exp \<rho> c (LET x = SND xP in e)
+  " |
+  Let_Case: "
+    dynamic_built_on_chan_var \<rho> c xS \<or> 
+    dynamic_built_on_chan_exp \<rho> c eL \<or> dynamic_built_on_chan_exp \<rho> c eR \<or> 
+    dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
+    dynamic_built_on_chan_exp \<rho> c (LET x = CASE xS LEFT xL |> eL RIGHT xR |> eR in e)
+  " |
+  Let_App: "
+    dynamic_built_on_chan_var \<rho> c f \<or>
+    dynamic_built_on_chan_var \<rho> c xA \<or>
+    dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
+    dynamic_built_on_chan_exp \<rho> c (LET x = APP f xA in e)
+  "
+
 inductive is_live_split :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   Chan: "
     \<E> \<pi>C = Some (\<langle>LET xC = CHAN \<lparr>\<rparr> in e;r;k\<rangle>) \<Longrightarrow>
@@ -307,7 +385,7 @@ inductive is_live_split :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_
   Sync_Recv: "
     \<rho>Y xE = Some (VClosure (Recv_Evt xRC) \<rho>Recv) \<Longrightarrow>
     \<E> \<pi>Pre = Some (\<langle>LET xR = SYNC xE in eY;\<rho>Y;\<kappa>Y\<rangle>) \<Longrightarrow>
-    \<rho> xR = Some (VChan c) \<Longrightarrow>
+    dynamic_built_on_chan_var \<rho> c xR \<Longrightarrow>
     \<E> (\<pi>Pre ;; (LNext xR)) = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
     \<E> (\<pi>Pre @ (LNext xR) # \<pi>) = Some \<sigma> \<Longrightarrow>
     is_live_split \<E> c \<pi>Pre ((LNext xR) # \<pi>) (\<pi>Pre @ (LNext xR) # \<pi>) 
@@ -352,7 +430,7 @@ inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> flow_set \<Right
   Path: "
     is_static_path LF (NLet xC) (\<lambda> nl . True) path \<Longrightarrow>
     suffix pathSuffix path \<Longrightarrow>
-    paths_congruent \<E> \<pi> \<pi>Suffix pathSuffix \<Longrightarrow>
+    paths_congruent \<E> \<pi>Pre \<pi>Suffix pathSuffix \<Longrightarrow>
     is_live_split \<E> (Ch \<pi>C xC) \<pi>Pre \<pi>Suffix \<pi> \<Longrightarrow>
     paths_congruent_mod_chan \<E> LF (Ch \<pi>C xC) \<pi> path
   "
