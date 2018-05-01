@@ -377,6 +377,9 @@ where
   "
 
 inductive is_live_split :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" where
+  Empty: "
+    is_live_split \<E> (Ch \<pi>C xC) \<pi> [] \<pi>
+  " | 
   Chan: "
     \<E> \<pi>C = Some (\<langle>LET xC = CHAN \<lparr>\<rparr> in e;r;k\<rangle>) \<Longrightarrow>
     \<E> (\<pi>C @ (LNext xC) # \<pi>) = Some \<sigma> \<Longrightarrow>
@@ -490,7 +493,13 @@ lemma isnt_send_path_sound: "
     is_static_path V F Ln xC (NLet xC) (is_static_send_node_label \<V> e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
+ apply (rule exI; auto)
  apply (unfold paths_congruent_mod_chan.simps; auto)
+ apply (rule exI; auto)
+ apply ((rule exI)+; auto)
+ apply (rule paths_congruent.Empty)
+ apply (rule is_live_split.Empty)
+ 
 sorry
 (*
  apply (unfold is_send_path.simps is_static_send_path.simps; auto)

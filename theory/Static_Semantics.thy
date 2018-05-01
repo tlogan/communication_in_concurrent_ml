@@ -12,7 +12,7 @@ fun result_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
   "\<lfloor>LET _ = _ in e\<rfloor> = \<lfloor>e\<rfloor>"
 
 
-inductive static_eval :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>e" 55) where
+inductive maybe_static_eval :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>e" 55) where
   Result: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e (RESULT x)
   " |
