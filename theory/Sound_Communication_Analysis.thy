@@ -9,13 +9,13 @@ begin
 (*
 lemma static_send_chan_doesnt_exist_sound: "
   \<lbrakk>
-    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> x\<^sub>c));
+    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> xC));
     \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
-  ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c
+  ^Chan xC \<in> \<V> x\<^sub>s\<^sub>c
 "
  apply (frule static_eval_to_pool)
  apply (drule static_eval_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
@@ -27,7 +27,7 @@ lemma static_send_chan_doesnt_exist_sound: "
  apply (erule conjE)
  apply (erule static_eval_value.cases; auto)
  apply (erule static_eval_env.cases; auto)
- apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> x\<^sub>c))"]; simp)
+ apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
 done
 
 lemma static_send_evt_doesnt_exist_sound: "
@@ -46,13 +46,13 @@ done
 lemma isnt_send_path_sound': "
   \<lbrakk>
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> x\<^sub>c));
+    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> xC));
     \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y \<and>
-  ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<and>
+  ^Chan xC \<in> \<V> x\<^sub>s\<^sub>c \<and>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> \<V> x\<^sub>e
 
 "
@@ -222,13 +222,13 @@ using runtime_paths_are_inclusive by blast
 
 lemma static_recv_chan_doesnt_exist_sound: "
   \<lbrakk>
-    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi> x\<^sub>c));
+    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi> xC));
     \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
-  ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c
+  ^Chan xC \<in> \<V> x\<^sub>r\<^sub>c
 "
  apply (frule static_eval_to_pool)
  apply (drule static_eval_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
@@ -240,7 +240,7 @@ lemma static_recv_chan_doesnt_exist_sound: "
  apply (erule conjE)
  apply (erule static_eval_value.cases; auto)
  apply (erule static_eval_env.cases; auto)
- apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> x\<^sub>c))"]; simp)
+ apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
 done
 
 lemma static_recv_evt_doesnt_exist_sound: "
@@ -259,12 +259,12 @@ lemma isnt_recv_path_sound': "
   \<lbrakk>
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>); 
     \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
-    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi> x\<^sub>c));
+    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi> xC));
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
     (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
   \<V> \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y \<and>
-  ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<and>
+  ^Chan xC \<in> \<V> x\<^sub>r\<^sub>c \<and>
   {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> \<V> x\<^sub>e
 "
  apply (rule conjI, erule isnt_static_traceable_sound; assumption?)
@@ -274,7 +274,7 @@ done
 
 lemma isnt_recv_path_sound: "
   \<lbrakk>
-    is_recv_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>y;
+    is_recv_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>y;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow> 
@@ -426,22 +426,23 @@ inductive paths_congruent :: "trace_pool \<Rightarrow> control_path \<Rightarrow
   "
 
 
-inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> flow_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> flow_set \<Rightarrow> label_map \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Path: "
-    is_static_path LF (NLet xC) (\<lambda> nl . True) path \<Longrightarrow>
+    is_static_path V F Ln xC (NLet xC) (\<lambda> nl . True) path \<Longrightarrow>
     suffix pathSuffix path \<Longrightarrow>
     paths_congruent \<E> \<pi>Pre \<pi>Suffix pathSuffix \<Longrightarrow>
     is_live_split \<E> (Ch \<pi>C xC) \<pi>Pre \<pi>Suffix \<pi> \<Longrightarrow>
-    paths_congruent_mod_chan \<E> LF (Ch \<pi>C xC) \<pi> path
+    paths_congruent_mod_chan \<E> F Ln (Ch \<pi>C xC) \<pi> path
   "
 
 
 lemma send_abstract_paths_of_same_run_inclusive: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 \<Longrightarrow> 
-  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
+  is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
+  is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
+  paths_congruent_mod_chan \<E>' F Ln (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' F Ln (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   path1 \<asymp> path2 
@@ -451,13 +452,14 @@ sorry
 
 lemma send_path_equality_sound: "
   path1 = path2 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' F Ln (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' F Ln (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 \<Longrightarrow> 
+  is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
+  is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
   \<pi>1 = \<pi>2
 "
 sorry
@@ -465,26 +467,28 @@ sorry
 
 lemma send_abstract_paths_equal_exclusive_implies_concrete_paths_equal: "
   path1 = path2 \<or> \<not> path1 \<asymp> path2 \<Longrightarrow> 
-  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 path2 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' F Ln (Ch \<pi> xC) \<pi>\<^sub>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' F Ln (Ch \<pi> xC) \<pi>\<^sub>2 path2 \<Longrightarrow>
+  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 \<Longrightarrow>
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 \<Longrightarrow>
+  is_send_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>1 \<Longrightarrow>
+  is_send_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>2 \<Longrightarrow>
   \<pi>\<^sub>1 = \<pi>\<^sub>2
 "
 by (simp add: send_abstract_paths_of_same_run_inclusive send_path_equality_sound)
 
 
 lemma isnt_send_path_sound: "
-  is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>Sync \<Longrightarrow>
+  is_send_path \<E>' (Ch \<pi> xC) \<pi>Sync \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   \<exists> pathSync . 
-    (paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>Sync pathSync) \<and> 
-    is_static_path F (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c) pathSync
+    (paths_congruent_mod_chan \<E>' F Ln (Ch \<pi> xC) \<pi>Sync pathSync) \<and> 
+    is_static_path V F Ln xC (NLet xC) (is_static_send_node_label \<V> e xC) pathSync
 "
 sorry
 (*
@@ -495,11 +499,12 @@ done
 
 
 theorem one_shot_sound': "
-  every_two_static_paths (is_static_path F (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) singular \<Longrightarrow>
+  every_two_static_paths (is_static_path V F Ln xC (NLet xC) (is_static_send_node_label \<V> e xC)) singular \<Longrightarrow>
+  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
-  all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) op =
+  all (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
  apply (simp add: all_def every_two_static_paths_def singular_def; auto)
  apply (frule_tac \<pi>Sync = \<pi>\<^sub>1 in isnt_send_path_sound; auto)
@@ -513,11 +518,11 @@ done
 
 theorem one_shot_sound: "
   \<lbrakk>
-    static_one_shot \<V> e x\<^sub>c;
+    static_one_shot \<V> e xC;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  one_shot \<E>' (Ch \<pi> x\<^sub>c)
+  one_shot \<E>' (Ch \<pi> xC)
 "
  apply (erule static_one_shot.cases; auto)
  apply (unfold one_shot_def)
@@ -526,11 +531,12 @@ done
 
 
 theorem noncompetitive_send_to_ordered_send: "
-   every_two_static_paths (is_static_path F (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) noncompetitive \<Longrightarrow>
+   every_two_static_paths (is_static_path V F Ln xC (NLet xC) (is_static_send_node_label \<V> e xC)) noncompetitive \<Longrightarrow>
+   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
    static_flow_set \<V> F e \<Longrightarrow>
    (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-   all (is_send_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
+   all (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
 (*
@@ -540,11 +546,11 @@ using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 
 theorem fan_out_sound: "
   \<lbrakk>
-    static_fan_out \<V> e x\<^sub>c;
+    static_fan_out \<V> e xC;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  fan_out \<E>' (Ch \<pi> x\<^sub>c)
+  fan_out \<E>' (Ch \<pi> xC)
 "
  apply (erule static_fan_out.cases; auto)
  apply (unfold fan_out_def)
@@ -552,22 +558,23 @@ theorem fan_out_sound: "
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two_static_paths (is_static_path F (NLet x\<^sub>c) (is_static_recv_node_label \<V> e x\<^sub>c)) noncompetitive \<Longrightarrow>
+   every_two_static_paths (is_static_path V F Ln xC (NLet xC) (is_static_recv_node_label \<V> e xC)) noncompetitive \<Longrightarrow>
+   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
    static_flow_set \<V> F e \<Longrightarrow>
    (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-   all (is_recv_path \<E>' (Ch \<pi> x\<^sub>c)) ordered
+   all (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
 
 
 theorem fan_in_sound: "
   \<lbrakk>
-    static_fan_in \<V> e x\<^sub>c;
+    static_fan_in \<V> e xC;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  fan_in \<E>' (Ch \<pi> x\<^sub>c)
+  fan_in \<E>' (Ch \<pi> xC)
 "
  apply (erule static_fan_in.cases; auto)
  apply (unfold fan_in_def)
@@ -577,11 +584,11 @@ done
 
 theorem one_to_one_sound: "
   \<lbrakk>
-    static_one_to_one \<V> e x\<^sub>c;
+    static_one_to_one \<V> e xC;
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow>
-  one_to_one \<E>' (Ch \<pi> x\<^sub>c)
+  one_to_one \<E>' (Ch \<pi> xC)
 "
  apply (erule static_one_to_one.cases; auto)
  apply (unfold one_to_one_def)
