@@ -79,8 +79,8 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
 
 type_synonym trace_pool = "control_path \<rightharpoonup> state"
 
-definition leaf :: "trace_pool \<Rightarrow> control_path \<Rightarrow> bool" where
-  "leaf \<E> \<pi> \<equiv> \<not>(\<E> \<pi> = None) \<and> (\<nexists> \<pi>' . \<not>(\<E> \<pi>' = None) \<and> strict_prefix \<pi> \<pi>')"
+inductive leaf :: "trace_pool \<Rightarrow> control_path \<Rightarrow> bool" where
+  "\<not>(\<E> \<pi> = None) \<and> (\<nexists> \<pi>' . \<not>(\<E> \<pi>' = None) \<and> strict_prefix \<pi> \<pi>') \<Longrightarrow> leaf \<E> \<pi>"
 
 
 abbreviation control_path_append :: "control_path => control_label => control_path" (infixl ";;" 61) where

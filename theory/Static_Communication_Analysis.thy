@@ -8,57 +8,57 @@ begin
 type_synonym label_map = "node_label \<Rightarrow> var set"
 
 
-inductive built_on_chan :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"  where
+inductive static_built_on_chan :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"  where
   Chan: "
     \<lbrakk>
       ^Chan x\<^sub>c \<in> V x 
     \<rbrakk> \<Longrightarrow> 
-    built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Send_Evt: "
     \<lbrakk>
       ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> V x;
-      built_on_chan V Ln x\<^sub>c x\<^sub>s\<^sub>c \<or> built_on_chan V Ln x\<^sub>c x\<^sub>m 
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>s\<^sub>c \<or> static_built_on_chan V Ln x\<^sub>c x\<^sub>m 
     \<rbrakk> \<Longrightarrow> 
-    built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Recv_Evt: "
     \<lbrakk>
       ^Recv_Evt x\<^sub>r\<^sub>c \<in> V x;
-      built_on_chan V Ln x\<^sub>c x\<^sub>r\<^sub>c
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>r\<^sub>c
     \<rbrakk> \<Longrightarrow> 
-    built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Pair: "
     \<lbrakk>
       ^(Pair x\<^sub>1 x\<^sub>2) \<in> V x;
-      built_on_chan V Ln x\<^sub>c x\<^sub>1 \<or> built_on_chan V Ln x\<^sub>c x\<^sub>2
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>1 \<or> static_built_on_chan V Ln x\<^sub>c x\<^sub>2
     \<rbrakk> \<Longrightarrow> 
-    built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Left: "
     \<lbrakk>
       ^(Left x\<^sub>a) \<in> V x;
-      built_on_chan V Ln x\<^sub>c x\<^sub>a
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>a
     \<rbrakk> \<Longrightarrow> 
-    built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Right: "
     \<lbrakk>
       ^(Right x\<^sub>a) \<in> V x;
-      built_on_chan V Ln x\<^sub>c x\<^sub>a
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>a
     \<rbrakk> \<Longrightarrow> 
-    built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Abs: "
     ^Abs f x\<^sub>p e\<^sub>b \<in> V x \<Longrightarrow> 
     \<not> Set.is_empty (Ln (nodeLabel e\<^sub>b)) \<Longrightarrow>
-    built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   "
 
 
 fun chanSet :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> var set" where
-  "chanSet V Ln x\<^sub>c x = (if built_on_chan V Ln x\<^sub>c x then {x} else {})"
+  "chanSet V Ln x\<^sub>c x = (if static_built_on_chan V Ln x\<^sub>c x then {x} else {})"
 
 
 inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
@@ -190,7 +190,7 @@ inductive is_static_send_node_label :: "abstract_value_env \<Rightarrow> exp \<R
   Sync: "
     {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
     {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
-    is_subexp e (LET x = SYNC xE in e') \<Longrightarrow>
+    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
     is_static_send_node_label V e xC (NLet x)
   "
 
@@ -198,7 +198,7 @@ inductive is_static_recv_node_label :: "abstract_value_env \<Rightarrow> exp \<R
   Sync: "
     {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
     {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
-    is_subexp e (LET x = SYNC xE in e') \<Longrightarrow>
+    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
     is_static_recv_node_label V e xC (NLet x)
   "
 
@@ -230,7 +230,7 @@ inductive is_static_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightar
   " |
   Step_Send: "
     is_static_path V F Ln xC middle isEnd ((middle, edge') # path) \<Longrightarrow>
-    built_on_chan V Ln xC xM \<Longrightarrow>
+    static_built_on_chan V Ln xC xM \<Longrightarrow>
     (start, ESend xM, middle) \<in> F \<Longrightarrow>
     is_static_path V F Ln xC start isEnd ((start, edge) # (middle, edge') # path)
   "
@@ -277,19 +277,37 @@ lemma inclusive_preserved_under_unordered_extension: "
   apply (simp add: Send_Right)
 done
 
-definition singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
- "singular \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> \<pi>\<^sub>1 = \<pi>\<^sub>2 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
 
-definition noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
- "noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2 \<equiv> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<or> \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2)"
+inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  equal: "
+    \<pi>\<^sub>1 = \<pi>\<^sub>2 \<Longrightarrow> 
+    singular \<pi>\<^sub>1 \<pi>\<^sub>2
+  " |
+  not_inclusive: "
+    \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow> 
+    singular \<pi>\<^sub>1 \<pi>\<^sub>2
+  "
+
+inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  ordered: "
+    ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> 
+    noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
+  " |
+  not_inclusive: "
+    \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow> 
+    noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
+  "
 
 
-definition every_two_static_paths  :: "(static_path \<Rightarrow> bool) \<Rightarrow> (static_path \<Rightarrow> static_path \<Rightarrow> bool) \<Rightarrow> bool" where
-  "every_two_static_paths P R \<equiv> (\<forall> path1 path2 .
-    P path1 \<longrightarrow>
-    P path2 \<longrightarrow>
-    R path1 path2
-  )"
+inductive every_two_static_paths  :: "(static_path \<Rightarrow> bool) \<Rightarrow> (static_path \<Rightarrow> static_path \<Rightarrow> bool) \<Rightarrow> bool" where
+  pred: "
+    (\<forall> path1 path2 .
+      P path1 \<longrightarrow>
+      P path2 \<longrightarrow>
+      R path1 path2
+    ) \<Longrightarrow>
+    every_two_static_paths P R
+  "
 
 
 inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
