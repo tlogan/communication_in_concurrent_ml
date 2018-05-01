@@ -505,9 +505,9 @@ theorem one_shot_sound': "
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
-  all (is_send_path \<E>' (Ch \<pi> xC)) op =
+  every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
- apply (simp add: all.simps every_two_static_paths.simps singular.simps; auto)
+ apply (simp add: every_two_dynamic_paths.simps every_two_static_paths.simps singular.simps; auto)
  apply (frule_tac \<pi>Sync = \<pi>\<^sub>1 in isnt_send_path_sound; auto)
  apply (drule_tac x = pathSync in spec)
  apply (frule_tac \<pi>Sync = \<pi>\<^sub>2 in isnt_send_path_sound; auto)
@@ -537,11 +537,11 @@ theorem noncompetitive_send_to_ordered_send: "
    static_flow_set \<V> F e \<Longrightarrow>
    (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-   all (is_send_path \<E>' (Ch \<pi> xC)) ordered
+   every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
 (*
-apply (simp add: all.simps noncompetitive.simps; auto)
+apply (simp add: every_two_dynamic_paths.simps noncompetitive.simps; auto)
 using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 *)
 
@@ -564,7 +564,7 @@ lemma noncompetitive_recv_to_ordered_recv: "
    static_flow_set \<V> F e \<Longrightarrow>
    (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-   all (is_recv_path \<E>' (Ch \<pi> xC)) ordered
+   every_two_dynamic_paths (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
 

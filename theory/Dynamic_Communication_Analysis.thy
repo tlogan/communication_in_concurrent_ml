@@ -19,40 +19,43 @@ inductive is_recv_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_p
   "
 
 
-inductive all  :: "(control_path \<Rightarrow> bool) \<Rightarrow> (control_path \<Rightarrow> control_path \<Rightarrow> bool) \<Rightarrow> bool" where
+inductive every_two_dynamic_paths  :: "(control_path \<Rightarrow> bool) \<Rightarrow> (control_path \<Rightarrow> control_path \<Rightarrow> bool) \<Rightarrow> bool" where
   "
     (\<forall> \<pi>\<^sub>1 \<pi>\<^sub>2 .
       P \<pi>\<^sub>1 \<longrightarrow>
       P \<pi>\<^sub>2 \<longrightarrow>
       R \<pi>\<^sub>1 \<pi>\<^sub>2
     ) \<Longrightarrow>
-    all P R
+    every_two_dynamic_paths P R
   "
 
 fun ordered where
   "ordered \<pi>\<^sub>1 \<pi>\<^sub>2 = (prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1)"
 
 inductive one_shot :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
-  "all (is_send_path \<E> c) op= \<Longrightarrow> one_shot \<E> c"
+  "
+    every_two_dynamic_paths (is_send_path \<E> c) op= \<Longrightarrow> 
+    one_shot \<E> c
+  "
 
 
 inductive one_to_one :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
   "
-    all (is_send_path \<E> c) ordered \<and> all (is_recv_path \<E> c) ordered \<Longrightarrow> 
+    every_two_dynamic_paths (is_send_path \<E> c) ordered \<and> every_two_dynamic_paths (is_recv_path \<E> c) ordered \<Longrightarrow> 
     one_to_one \<E> c
   "
   
 
 inductive fan_out :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
   "
-    all (is_send_path \<E> c) ordered \<Longrightarrow>
+    every_two_dynamic_paths (is_send_path \<E> c) ordered \<Longrightarrow>
     fan_out \<E> c
   "
 
   
 inductive fan_in :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
   "
-    all (is_recv_path \<E> c) ordered \<Longrightarrow> 
+    every_two_dynamic_paths (is_recv_path \<E> c) ordered \<Longrightarrow> 
     fan_in \<E> c
   "
 
