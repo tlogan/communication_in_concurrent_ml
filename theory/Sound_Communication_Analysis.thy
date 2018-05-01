@@ -436,15 +436,12 @@ inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> flow_set \<Right
   "
 
 
-
 lemma send_abstract_paths_of_same_run_inclusive: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> x\<^sub>c) \<pi>2 \<Longrightarrow> 
-  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
-  static_live_flow_set Ln Lx F LF \<Longrightarrow>
-  static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   path1 \<asymp> path2 
@@ -452,14 +449,10 @@ lemma send_abstract_paths_of_same_run_inclusive: "
 sorry
 
 
-
-
 lemma send_path_equality_sound: "
   path1 = path2 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
-  static_live_flow_set Ln Lx F LF \<Longrightarrow>
-  static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>2 path2 \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
@@ -472,10 +465,8 @@ sorry
 
 lemma send_abstract_paths_equal_exclusive_implies_concrete_paths_equal: "
   path1 = path2 \<or> \<not> path1 \<asymp> path2 \<Longrightarrow> 
-  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 path2 \<Longrightarrow>
-  static_live_flow_set Ln Lx F LF \<Longrightarrow>
-  static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>\<^sub>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>\<^sub>2 path2 \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
@@ -491,11 +482,9 @@ lemma isnt_send_path_sound: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   static_flow_set \<V> F e \<Longrightarrow>
-  static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow>
-  static_live_flow_set Ln Lx F LF \<Longrightarrow>
   \<exists> pathSync . 
-    (paths_congruent_mod_chan \<E>' LF (Ch \<pi> x\<^sub>c) \<pi>Sync pathSync) \<and> 
-    is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c) pathSync
+    (paths_congruent_mod_chan \<E>' F (Ch \<pi> x\<^sub>c) \<pi>Sync pathSync) \<and> 
+    is_static_path F (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c) pathSync
 "
 sorry
 (*
@@ -506,9 +495,7 @@ done
 
 
 theorem one_shot_sound': "
-  every_two_static_paths (is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) singular \<Longrightarrow>
-  static_live_flow_set Ln Lx F LF \<Longrightarrow> 
-  static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow> 
+  every_two_static_paths (is_static_path F (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) singular \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
@@ -539,9 +526,7 @@ done
 
 
 theorem noncompetitive_send_to_ordered_send: "
-   every_two_static_paths (is_static_path LF (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) noncompetitive \<Longrightarrow>
-   static_live_flow_set Ln Lx F LF \<Longrightarrow> 
-   static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow> 
+   every_two_static_paths (is_static_path F (NLet x\<^sub>c) (is_static_send_node_label \<V> e x\<^sub>c)) noncompetitive \<Longrightarrow>
    static_flow_set \<V> F e \<Longrightarrow>
    (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
@@ -567,9 +552,7 @@ theorem fan_out_sound: "
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two_static_paths (is_static_path LF (NLet x\<^sub>c) (is_static_recv_node_label \<V> e x\<^sub>c)) noncompetitive \<Longrightarrow>
-   static_live_flow_set Ln Lx F LF \<Longrightarrow> 
-   static_chan_liveness \<V> Ln Lx Lo x\<^sub>c e \<Longrightarrow> 
+   every_two_static_paths (is_static_path F (NLet x\<^sub>c) (is_static_recv_node_label \<V> e x\<^sub>c)) noncompetitive \<Longrightarrow>
    static_flow_set \<V> F e \<Longrightarrow>
    (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
