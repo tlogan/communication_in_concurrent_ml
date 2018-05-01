@@ -278,7 +278,7 @@ lemma isnt_recv_path_sound: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e e;
     [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
   \<rbrakk> \<Longrightarrow> 
-  is_static_path LF (NLet xC) (is_static_recv_node_label V e xC) \<pi>\<^sub>y
+  may_be_static_path LF (NLet xC) (may_be_static_recv_node_label V e xC) \<pi>\<^sub>y
 "
  apply (unfold is_recv_path.simps is_static_recv_path.simps; auto)
    apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
@@ -490,7 +490,7 @@ lemma isnt_send_path_sound: "
   static_flow_set \<V> F e \<Longrightarrow>
   \<exists> pathSync . 
     (paths_congruent_mod_chan \<E>' (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
-    is_static_path V F Ln xC (NLet xC) (is_static_send_node_label \<V> e xC) pathSync
+    may_be_static_path V F Ln xC (NLet xC) (may_be_static_send_node_label \<V> e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
  apply (rule exI; auto)
@@ -499,8 +499,8 @@ lemma isnt_send_path_sound: "
  apply ((rule exI)+; auto)
  apply (rule paths_congruent.Empty)
  apply (rule is_live_split.Empty)
- 
 sorry
+
 (*
  apply (unfold is_send_path.simps is_static_send_path.simps; auto)
    apply (frule isnt_send_path_sound'; assumption?; auto; blast)
@@ -509,8 +509,7 @@ done
 
 
 theorem one_shot_sound': "
-  every_two_static_paths (is_static_path V F Ln xC (NLet xC) (is_static_send_node_label \<V> e xC)) singular \<Longrightarrow>
-  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+  every_two_static_paths (may_be_static_path V F Ln xC (NLet xC) (may_be_static_send_node_label \<V> e xC)) singular \<Longrightarrow>
   static_flow_set \<V> F e \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
@@ -541,8 +540,7 @@ done
 
 
 theorem noncompetitive_send_to_ordered_send: "
-   every_two_static_paths (is_static_path V F Ln xC (NLet xC) (is_static_send_node_label \<V> e xC)) noncompetitive \<Longrightarrow>
-   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+   every_two_static_paths (may_be_static_path V F Ln xC (NLet xC) (may_be_static_send_node_label \<V> e xC)) noncompetitive \<Longrightarrow>
    static_flow_set \<V> F e \<Longrightarrow>
    (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
@@ -568,8 +566,7 @@ theorem fan_out_sound: "
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two_static_paths (is_static_path V F Ln xC (NLet xC) (is_static_recv_node_label \<V> e xC)) noncompetitive \<Longrightarrow>
-   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+   every_two_static_paths (may_be_static_path V F Ln xC (NLet xC) (may_be_static_recv_node_label \<V> e xC)) noncompetitive \<Longrightarrow>
    static_flow_set \<V> F e \<Longrightarrow>
    (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
