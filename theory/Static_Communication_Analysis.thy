@@ -71,6 +71,318 @@ where
     may_be_built_on_abstract_chan_exp V x\<^sub>c (LET x = b in e)
   "
 
+
+
+inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
+  Result: "
+    \<lbrakk>
+      chanSet V Ln x\<^sub>c y = Ln (NResult y)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (RESULT y)
+  " |
+  Let_Unit: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      Lx (NLet x) = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = \<lparr>\<rparr> in e)
+  " |
+  Let_Chan: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = CHAN \<lparr>\<rparr> in e)
+  " |
+  Let_Send_Evt: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>s\<^sub>c \<union> chanSet V Ln x\<^sub>c x\<^sub>m = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e)
+  " |
+  Let_Recv_Evt: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>r\<^sub>c = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = RECV EVT x\<^sub>r\<^sub>c in e)
+  " |
+  Let_Pair: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union>  chanSet V Ln x\<^sub>c x\<^sub>1 \<union> chanSet V Ln x\<^sub>c x\<^sub>2 = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
+  " |
+  Let_Left: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = LEFT x\<^sub>a in e)
+  " |
+  Let_Right: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = RIGHT x\<^sub>a in e)
+  " |
+  Let_Abs: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>b;
+      (Lx (NLet x) - {x}) \<union> (Ln (nodeLabel e\<^sub>b) - {x\<^sub>p}) = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
+  " |
+  Let_Spawn: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>c;
+      Ln (nodeLabel e) \<union> Ln (nodeLabel e\<^sub>c) = Lx (NLet x);
+      (Lx (NLet x) - {x}) = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SPAWN e\<^sub>c in e)
+  " |
+  Let_Sync: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>e = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SYNC x\<^sub>e in e)
+  " |
+  Let_Fst: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = FST x\<^sub>a in e)
+  " |
+  Let_Snd: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SND x\<^sub>a in e)
+  " |
+  Let_Case: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>l;
+      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>r;
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c x\<^sub>s \<union> 
+         (Ln (nodeLabel e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (nodeLabel e\<^sub>r) - {x\<^sub>r}) = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
+  " |
+  Let_App: "
+    \<lbrakk>
+      static_chan_liveness V Ln Lx x\<^sub>c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> chanSet V Ln x\<^sub>c f \<union> chanSet V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
+    \<rbrakk> \<Longrightarrow>
+    static_chan_liveness V Ln Lx x\<^sub>c (LET x = APP f x\<^sub>a in e)
+  "
+
+
+
+inductive is_static_live_flow :: "label_map \<Rightarrow> label_map \<Rightarrow> flow_set \<Rightarrow> flow_label \<Rightarrow> bool"  where
+  Next: "
+    (l, ENext, l') \<in> F \<Longrightarrow>
+    \<not> Set.is_empty (Lx l) \<Longrightarrow>
+    \<not> Set.is_empty (Ln l') \<Longrightarrow>
+    is_static_live_flow Ln Lx F (l, ENext, l')
+  " |
+  Spawn: "
+    (l, ENext, l') \<in> F \<Longrightarrow>
+    \<not> Set.is_empty (Lx l) \<Longrightarrow>
+    \<not> Set.is_empty (Ln l') \<Longrightarrow>
+    is_static_live_flow Ln Lx F (l, ESpawn, l')
+  " |
+  Call: "
+    (l, ENext, l') \<in> F \<Longrightarrow>
+    \<not> Set.is_empty (Lx l) \<Longrightarrow>
+    \<not> Set.is_empty (Ln l') \<Longrightarrow>
+    is_static_live_flow Ln Lx F (l, ECall, l')
+  " |
+  Return: "
+    (l, ENext, l') \<in> F \<Longrightarrow>
+    \<not> Set.is_empty (Lx l) \<Longrightarrow>
+    \<not> Set.is_empty (Ln l') \<Longrightarrow>
+    is_static_live_flow Ln Lx F (l, EReturn, l')
+  " |
+  Send: "
+    ((NLet xSend), ESend xM, (NLet xRecv)) \<in> F \<Longrightarrow>
+    {xM} \<subseteq> (Ln (NLet xSend)) \<Longrightarrow>
+    is_static_live_flow Ln Lx F ((NLet xSend), ESend xM, (NLet xRecv))
+  "
+
+inductive static_live_flow_graph :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> flow_set \<Rightarrow> exp \<Rightarrow> bool"  where
+  Result: "
+    static_live_flow_graph V Ln Lx F (RESULT x)
+  " |
+  Let_Unit: "
+    \<lbrakk>
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = \<lparr>\<rparr> in e)
+  " |
+  Let_Chan: "
+    \<lbrakk>
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = CHAN \<lparr>\<rparr> in e)
+  " |
+  Let_Send_Evt: "
+    \<lbrakk>
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
+  " |
+  Let_Recv_Evt: "
+    \<lbrakk>
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = RECV EVT x\<^sub>c in e)
+  " |
+  Let_Pair: "
+    \<lbrakk>
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
+  " |
+  Let_Left: "
+    \<lbrakk>
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = LEFT x\<^sub>p in e)
+  " |
+  Let_Right: "
+    \<lbrakk>
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = RIGHT x\<^sub>p in e)
+  " |
+  Let_Abs: "
+    \<lbrakk>
+      static_live_flow_graph V Ln Lx F e\<^sub>b;
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
+  " |
+  Let_Spawn: "
+    \<lbrakk>      
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>;
+
+      static_live_flow_graph V Ln Lx F e\<^sub>c;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e\<^sub>c)) \<or>
+      {(NLet x, ESpawn, nodeLabel e\<^sub>c)} \<subseteq> \<F>
+
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = SPAWN e\<^sub>c in e)
+  " |  
+  Let_Sync: "
+    \<lbrakk>
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>;
+
+      (\<forall> xSC xM xC xRC y.
+        {xM} \<subseteq> (Ln (NLet x)) \<longrightarrow>
+        {^Send_Evt xSC xM} \<subseteq> V x\<^sub>e \<longrightarrow>
+        {^Chan xC} \<subseteq> V xSC \<longrightarrow>
+        {^Chan xC} \<subseteq> V xRC \<longrightarrow>
+        {^Recv_Evt xRC} \<subseteq> \<V> y \<longrightarrow>
+        {(NLet x, ESend xM, NLet y)} \<subseteq> \<F>
+      )
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = SYNC x\<^sub>e in e)
+  " |
+  Let_Fst: "
+    \<lbrakk>
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = FST x\<^sub>p in e)
+  " |
+  Let_Snd: "
+    \<lbrakk>
+      static_live_flow_graph V Ln Lx F e;
+      Set.is_empty (Lx (NLet x)) \<or> Set.is_empty (Ln (nodeLabel e)) \<or>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = SND x\<^sub>p in e)
+  " (* |
+  Let_Case: "
+    \<lbrakk>
+      {
+        (NLet x, ECall, nodeLabel e\<^sub>l),
+        (NLet x, ECall, nodeLabel e\<^sub>r),
+        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn, nodeLabel e),
+        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn, nodeLabel e)
+      } \<subseteq> \<F>;
+      static_live_flow_graph V Ln Lx F e\<^sub>l;
+      static_live_flow_graph V Ln Lx F e\<^sub>r;
+      static_live_flow_graph V Ln Lx F e
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
+  " |
+  Let_App: "
+    \<lbrakk>
+      (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<longrightarrow>
+        {
+          (NLet x, ECall, nodeLabel e\<^sub>b),
+          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn, nodeLabel e)
+        } \<subseteq> \<F>);
+      static_live_flow_graph V Ln Lx F e
+    \<rbrakk> \<Longrightarrow>
+    static_live_flow_graph V Ln Lx F (LET x = APP f x\<^sub>a in e)
+  "
+*)
+
+inductive static_live_flow_set :: "label_map \<Rightarrow> label_map \<Rightarrow> flow_set \<Rightarrow> flow_set \<Rightarrow> bool"  where
+  "
+    (\<forall> l cl l' .
+      is_static_live_flow Ln Lx F (l, cl, l') \<longrightarrow>
+      (l, cl, l') \<in> LF 
+    ) \<Longrightarrow>
+    static_live_flow_set Ln Lx F LF
+  "
+
+
 inductive may_be_static_send_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
   Sync: "
     {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
