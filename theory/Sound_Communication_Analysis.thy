@@ -482,6 +482,49 @@ lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
 by (simp add: send_static_paths_of_same_run_inclusive send_path_equality_sound)
 
 
+lemma isnt_send_site_sound: "
+  \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
+  \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+  static_flow_set V F e \<Longrightarrow>
+  may_be_static_send_node_label V e xC (NLet x\<^sub>y)
+"
+sorry
+
+lemma isnt_send_path_sound'': "
+  \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
+  \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+  static_flow_set V F e \<Longrightarrow>
+  may_be_static_send_node_label V e xC (NLet x\<^sub>y) \<Longrightarrow>
+  \<exists> pathSync . 
+    (paths_congruent_mod_chan \<E>' (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
+    may_be_static_live_path V F Ln Lx xC (NLet xC) (\<lambda> nl . nl = (NLet x\<^sub>y)) pathSync
+"
+sorry
+
+
+lemma isnt_send_path_sound': "
+  \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
+  \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+  static_flow_set V F e \<Longrightarrow>
+  \<exists> pathSync . 
+    (paths_congruent_mod_chan \<E>' (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
+    may_be_static_live_path V F Ln Lx xC (NLet xC) (may_be_static_send_node_label V e xC) pathSync
+"
+sorry
+
+
 lemma isnt_send_path_sound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
@@ -493,13 +536,18 @@ lemma isnt_send_path_sound: "
     may_be_static_live_path V F Ln Lx xC (NLet xC) (may_be_static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
+  by (simp add: isnt_send_path_sound')
+(*
  apply (rule exI; auto)
  apply (unfold paths_congruent_mod_chan.simps; auto)
  apply (rule exI; auto)
  apply ((rule exI)+; auto)
  apply (rule paths_congruent.Empty)
  apply (rule is_live_split.Empty)
+ apply (unfold may_be_static_send_node_label.simps; auto)
 sorry
+*)
+
 
 (*
  apply (unfold is_send_path.simps is_static_send_path.simps; auto)
