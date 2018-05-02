@@ -408,12 +408,12 @@ inductive paths_congruent :: "trace_pool \<Rightarrow> control_path \<Rightarrow
   Call: "
     paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
     \<E> (\<pi>Pre @ (LCall x # \<pi>)) = Some \<sigma> \<Longrightarrow>
-    paths_congruent \<E> \<pi>Pre (LCall x # \<pi>) ((NLet x, ECall) # path)
+    paths_congruent \<E> \<pi>Pre (LCall x # \<pi>) ((NLet x, ECall x) # path)
   " |
   Return: "
     paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
     \<E> (\<pi>Pre @ (LReturn x # \<pi>)) = Some \<sigma> \<Longrightarrow>
-    paths_congruent \<E> \<pi>Pre (LReturn x # \<pi>) ((NLet x, EReturn) # path)
+    paths_congruent \<E> \<pi>Pre (LReturn x # \<pi>) ((NLet x, EReturn x) # path)
   " |
   Spawn: "
     paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>

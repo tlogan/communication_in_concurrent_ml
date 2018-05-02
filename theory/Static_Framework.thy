@@ -11,7 +11,7 @@ fun nodeLabel :: "exp \<Rightarrow> node_label" where
 
 type_synonym node_set = "node_label set"
 
-datatype edge_label = ENext | ECall | EReturn | ESpawn |  ESend var 
+datatype edge_label = ENext | ECall var | EReturn var | ESpawn |  ESend var 
 
 type_synonym flow_label = "(node_label \<times> edge_label \<times> node_label)"
 
@@ -125,10 +125,10 @@ inductive static_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Righta
   Let_Case: "
     \<lbrakk>
       {
-        (NLet x, ECall, nodeLabel e\<^sub>l),
-        (NLet x, ECall, nodeLabel e\<^sub>r),
-        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn, nodeLabel e),
-        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn, nodeLabel e)
+        (NLet x, ECall x, nodeLabel e\<^sub>l),
+        (NLet x, ECall x, nodeLabel e\<^sub>r),
+        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn x, nodeLabel e),
+        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn x, nodeLabel e)
       } \<subseteq> \<F>;
       static_flow_set \<V> \<F> e\<^sub>l;
       static_flow_set \<V> \<F> e\<^sub>r;
@@ -140,8 +140,8 @@ inductive static_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Righta
     \<lbrakk>
       (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<longrightarrow>
         {
-          (NLet x, ECall, nodeLabel e\<^sub>b),
-          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn, nodeLabel e)
+          (NLet x, ECall x, nodeLabel e\<^sub>b),
+          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn x, nodeLabel e)
         } \<subseteq> \<F>);
       static_flow_set \<V> \<F> e
     \<rbrakk> \<Longrightarrow>
