@@ -301,6 +301,7 @@ using runtime_paths_are_inclusive by auto
 inductive 
   dynamic_built_on_chan_var :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> var \<Rightarrow> bool" and
   dynamic_built_on_chan_prim :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> prim \<Rightarrow> bool" and
+  dynamic_built_on_chan_bindee :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> bind \<Rightarrow> bool" and
   dynamic_built_on_chan_exp :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> exp \<Rightarrow> bool" 
 where
   Chan: "
@@ -339,41 +340,44 @@ where
     dynamic_built_on_chan_prim \<rho> c (Abs f x e)
   " |
 
+  Prim: "
+    dynamic_built_on_chan_prim \<rho> c p \<Longrightarrow>
+    dynamic_built_on_chan_bindee \<rho> c (Prim p)
+  " |
+  Spawn: "
+    dynamic_built_on_chan_exp \<rho> c eCh \<Longrightarrow>
+    dynamic_built_on_chan_bindee \<rho> c (SPAWN eCh)
+  " |
+  Sync: "
+    dynamic_built_on_chan_var \<rho> c xY \<Longrightarrow>
+    dynamic_built_on_chan_bindee \<rho> c (SYNC xY)
+  " |
+  Fst: "
+    dynamic_built_on_chan_var \<rho> c xP \<Longrightarrow>
+    dynamic_built_on_chan_bindee \<rho> c (FST xP)
+  " |
+  Snd: "
+    dynamic_built_on_chan_var \<rho> c xP \<Longrightarrow>
+    dynamic_built_on_chan_bindee \<rho> c (SND xP)
+  " |
+  Case: "
+    dynamic_built_on_chan_var \<rho> c xS \<or> 
+    dynamic_built_on_chan_exp \<rho> c eL \<or> dynamic_built_on_chan_exp \<rho> c eR \<Longrightarrow>
+    dynamic_built_on_chan_bindee \<rho> c (CASE xS LEFT xL |> eL RIGHT xR |> eR)
+  " |
+  App: "
+    dynamic_built_on_chan_var \<rho> c f \<or>
+    dynamic_built_on_chan_var \<rho> c xA \<Longrightarrow>
+    dynamic_built_on_chan_bindee \<rho> c (APP f xA)
+  " |
+
   Result: "
     dynamic_built_on_chan_var \<rho> c x \<Longrightarrow>
     dynamic_built_on_chan_exp \<rho> c (RESULT x)
   " |
-  Let_Prim: "
-    dynamic_built_on_chan_prim \<rho> c p \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
-    dynamic_built_on_chan_exp \<rho> c (LET x = Prim p in e)
-  " |
-  Let_Spawn: "
-    dynamic_built_on_chan_exp \<rho> c eCh \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
-    dynamic_built_on_chan_exp \<rho> c (LET x = SPAWN eCh in e)
-  " |
-  Let_Sync: "
-    dynamic_built_on_chan_var \<rho> c xY \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
-    dynamic_built_on_chan_exp \<rho> c (LET x = SYNC xY in e)
-  " |
-  Let_Fst: "
-    dynamic_built_on_chan_var \<rho> c xP \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
-    dynamic_built_on_chan_exp \<rho> c (LET x = FST xP in e)
-  " |
-  Let_Snd: "
-    dynamic_built_on_chan_var \<rho> c xP \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
-    dynamic_built_on_chan_exp \<rho> c (LET x = SND xP in e)
-  " |
-  Let_Case: "
-    dynamic_built_on_chan_var \<rho> c xS \<or> 
-    dynamic_built_on_chan_exp \<rho> c eL \<or> dynamic_built_on_chan_exp \<rho> c eR \<or> 
-    dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
-    dynamic_built_on_chan_exp \<rho> c (LET x = CASE xS LEFT xL |> eL RIGHT xR |> eR in e)
-  " |
-  Let_App: "
-    dynamic_built_on_chan_var \<rho> c f \<or>
-    dynamic_built_on_chan_var \<rho> c xA \<or>
-    dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
-    dynamic_built_on_chan_exp \<rho> c (LET x = APP f xA in e)
+  Let: "
+    dynamic_built_on_chan_bindee \<rho> c b \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
+    dynamic_built_on_chan_exp \<rho> c (LET x = b in e)
   "
 
 inductive is_live_split :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" where
@@ -497,19 +501,22 @@ lemma isnt_send_site_sound: "
 defer
  apply (rule exI[of _ x\<^sub>m]; auto?)
  apply (rule exI[of _ x\<^sub>e]; auto?)
+defer
+ apply (rule exI[of _ e\<^sub>n]; auto?)
 sorry
 
-lemma isnt_send_path_sound'': "
-  \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
-  \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
+lemma isnt_path_sound: "
+  \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<rho> z = Some \<omega> \<Longrightarrow>
+  dynamic_built_on_chan_var \<rho> (Ch \<pi>C xC) z \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F e \<Longrightarrow>
-  \<exists> pathSync . 
-    (paths_congruent_mod_chan \<E>' (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
-    may_be_static_live_path V F Ln Lx xC (NLet xC) (\<lambda> nl . nl = (NLet x\<^sub>y)) pathSync
+  isEnd (NLet x) \<Longrightarrow>
+  \<exists> path . 
+    paths_congruent_mod_chan \<E>' (Ch \<pi>C xC) \<pi> (path @ [(NLet x, ENext)]) \<and> 
+    may_be_static_live_path V F Ln Lx xC (NLet xC) isEnd (path @ [(NLet x, ENext)])
 "
 sorry
 
@@ -526,8 +533,6 @@ lemma isnt_send_path_sound: "
     may_be_static_live_path V F Ln Lx xC (NLet xC) (may_be_static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
-  apply (insert isnt_send_site_sound)
-  apply (insert isnt_send_path_sound'')
 sorry
 (*
  apply (rule exI; auto)
