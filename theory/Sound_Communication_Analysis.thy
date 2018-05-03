@@ -3,44 +3,11 @@ theory Sound_Communication_Analysis
     Main
     Syntax 
     Dynamic_Semantics Static_Semantics Sound_Semantics
+    Static_Traceability Sound_Traceability
     Dynamic_Communication_Analysis Static_Communication_Analysis
 begin
 
 (*
-lemma static_send_chan_doesnt_exist_sound: "
-  \<lbrakk>
-    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> xC));
-    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    (V, C) \<Turnstile>\<^sub>e e
-  \<rbrakk> \<Longrightarrow> 
-  ^Chan xC \<in> V x\<^sub>s\<^sub>c
-"
- apply (frule static_eval_to_pool)
- apply (drule static_eval_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
- apply (erule static_eval_pool.cases; auto)
- apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
- apply (erule static_eval_state.cases; auto)
- apply (erule static_eval_env.cases; auto)
- apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e)"]; simp)
- apply (erule conjE)
- apply (erule static_eval_value.cases; auto)
- apply (erule static_eval_env.cases; auto)
- apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
-done
-
-lemma static_send_evt_doesnt_exist_sound: "
-  \<lbrakk>
-    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    (V, C) \<Turnstile>\<^sub>e e
-  \<rbrakk> \<Longrightarrow>
-  {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> V x\<^sub>e
-"
-  apply (drule values_not_bound_sound; assumption?; auto)
-done
 
 
 lemma isnt_send_path_sound': "
@@ -58,8 +25,8 @@ lemma isnt_send_path_sound': "
 "
  apply (rule conjI)
  apply (insert isnt_static_traceable_sound, blast)
- apply (rule conjI, (erule static_send_chan_doesnt_exist_sound; assumption))
- apply (erule static_send_evt_doesnt_exist_sound; assumption)
+ apply (rule conjI, (erule isnt_send_chan_sound; assumption))
+ apply (erule isnt_send_evt_sound; assumption)
 done
 
 
@@ -230,16 +197,16 @@ lemma static_recv_chan_doesnt_exist_sound: "
   \<rbrakk> \<Longrightarrow> 
   ^Chan xC \<in> V x\<^sub>r\<^sub>c
 "
- apply (frule static_eval_to_pool)
- apply (drule static_eval_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
- apply (erule static_eval_pool.cases; auto)
+ apply (frule may_be_static_eval_to_pool)
+ apply (drule may_be_static_eval_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
+ apply (erule may_be_static_eval_pool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
- apply (erule static_eval_state.cases; auto)
- apply (erule static_eval_env.cases; auto)
+ apply (erule may_be_static_eval_state.cases; auto)
+ apply (erule may_be_static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e)"]; simp)
  apply (erule conjE)
- apply (erule static_eval_value.cases; auto)
- apply (erule static_eval_env.cases; auto)
+ apply (erule may_be_static_eval_value.cases; auto)
+ apply (erule may_be_static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
 done
 
@@ -486,24 +453,41 @@ lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
 by (simp add: send_static_paths_of_same_run_inclusive send_path_equality_sound)
 
 
-lemma isnt_send_site_sound: "
-  \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
-  \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
-  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-  static_flow_set V F e \<Longrightarrow>
-  may_be_static_send_node_label V e xC (NLet x\<^sub>y)
+
+lemma isnt_send_chan_sound: "
+  \<lbrakk>
+    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> xC));
+    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
+    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    (V, C) \<Turnstile>\<^sub>e e
+  \<rbrakk> \<Longrightarrow> 
+  ^Chan xC \<in> V x\<^sub>s\<^sub>c
 "
- apply (unfold may_be_static_send_node_label.simps; auto)
- apply (rule exI[of _ x\<^sub>s\<^sub>c]; auto)
-defer
- apply (rule exI[of _ x\<^sub>m]; auto?)
- apply (rule exI[of _ x\<^sub>e]; auto?)
-defer
- apply (rule exI[of _ e\<^sub>n]; auto?)
-sorry
+ apply (frule may_be_static_eval_to_pool)
+ apply (drule may_be_static_eval_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
+ apply (erule may_be_static_eval_pool.cases; auto)
+ apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
+ apply (erule may_be_static_eval_state.cases; auto)
+ apply (erule may_be_static_eval_env.cases; auto)
+ apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e)"]; simp)
+ apply (erule conjE)
+ apply (erule may_be_static_eval_value.cases; auto)
+ apply (erule may_be_static_eval_env.cases; auto)
+ apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
+done
+
+lemma isnt_send_evt_sound: "
+  \<lbrakk>
+    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
+    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    (V, C) \<Turnstile>\<^sub>e e
+  \<rbrakk> \<Longrightarrow>
+  {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> V x\<^sub>e
+"
+  apply (drule values_not_bound_sound; assumption?; auto)
+done
 
 lemma isnt_path_sound: "
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
@@ -519,6 +503,28 @@ lemma isnt_path_sound: "
     may_be_static_live_path V F Ln Lx xC (NLet xC) isEnd (path @ [(NLet x, ENext)])
 "
 sorry
+
+
+lemma isnt_send_site_sound: "
+  \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
+  \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  may_be_static_send_node_label V e xC (NLet x\<^sub>y)
+"
+ apply (unfold may_be_static_send_node_label.simps; auto)
+ apply (rule exI[of _ x\<^sub>s\<^sub>c]; auto)
+ apply (auto simp: isnt_send_chan_sound)
+ apply (rule exI[of _ x\<^sub>m]; auto?)
+ apply (rule exI[of _ x\<^sub>e]; auto?)
+ apply (blast dest: isnt_send_evt_sound)
+ apply (rule exI; auto?)
+ apply (rule exI[of _ e\<^sub>n]; auto?)
+ apply (blast dest: isnt_static_traceable_sound)
+done
+
+
 
 
 
@@ -546,7 +552,6 @@ done
    apply (frule isnt_send_path_sound'; assumption?; auto; blast)
 done
 *)
-
 
 theorem one_shot_sound': "
   every_two_static_paths (may_be_static_live_path V F Ln Lx xC (NLet xC) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
@@ -582,7 +587,7 @@ done
 
 theorem noncompetitive_send_to_ordered_send: "
    every_two_static_paths (may_be_static_live_path V F Ln Lx xC (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
    static_flow_set V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>

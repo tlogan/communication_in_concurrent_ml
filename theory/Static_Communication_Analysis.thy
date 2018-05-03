@@ -2,6 +2,7 @@ theory Static_Communication_Analysis
   imports Main Syntax 
     Dynamic_Semantics Static_Semantics
     Dynamic_Communication_Analysis
+    Static_Traceability
     Static_Framework
 begin
 
@@ -300,7 +301,7 @@ inductive may_be_static_send_node_label :: "abstract_value_env \<Rightarrow> exp
   Sync: "
     {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
     {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
-    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
+    V \<turnstile> e \<down> \<pi> \<mapsto> (LET x = SYNC xE in e') \<Longrightarrow>
     may_be_static_send_node_label V e xC (NLet x)
   "
 
@@ -308,7 +309,7 @@ inductive may_be_static_recv_node_label :: "abstract_value_env \<Rightarrow> exp
   Sync: "
     {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
     {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
-    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
+    V \<turnstile> e \<down> \<pi> \<mapsto> (LET x = SYNC xE in e') \<Longrightarrow>
     may_be_static_recv_node_label V e xC (NLet x)
   "
 
