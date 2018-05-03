@@ -533,18 +533,13 @@ lemma isnt_send_path_sound: "
     may_be_static_live_path V F Ln Lx xC (NLet xC) (may_be_static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
-sorry
-(*
- apply (rule exI; auto)
- apply (unfold paths_congruent_mod_chan.simps; auto)
- apply (rule exI; auto)
- apply ((rule exI)+; auto)
- apply (rule paths_congruent.Empty)
- apply (rule is_live_split.Empty)
- apply (unfold may_be_static_send_node_label.simps; auto)
-sorry
-*)
-
+ apply (frule_tac x\<^sub>s\<^sub>c = x\<^sub>s\<^sub>c and \<pi>C = \<pi>C and \<rho>\<^sub>e = \<rho>\<^sub>e in isnt_send_site_sound; auto?)
+ apply (frule isnt_path_sound; auto?)
+  apply (auto simp: 
+    dynamic_built_on_chan_var.simps 
+    dynamic_built_on_chan_var_dynamic_built_on_chan_prim_dynamic_built_on_chan_bindee_dynamic_built_on_chan_exp.Send_Evt 
+  )
+done
 
 (*
  apply (unfold is_send_path.simps is_static_send_path.simps; auto)
