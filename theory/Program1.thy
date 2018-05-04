@@ -1,5 +1,7 @@
 theory Program1
- imports Main Syntax
+ imports Main 
+  Syntax
+  Static_Semantics
 begin
 
 abbreviation no_chan_loop where "no_chan_loop \<equiv> Var ''no_chan_loop''"
@@ -13,6 +15,7 @@ abbreviation x where "x \<equiv> Var ''x''"
 abbreviation y where "y \<equiv> Var ''y''"
 abbreviation z where "z \<equiv> Var ''z''"
 abbreviation call_server where "call_server \<equiv> Var ''call_server''"
+abbreviation server where "server \<equiv> Var ''server''"
 
 
 definition program where "program = (
@@ -31,7 +34,7 @@ definition program where "program = (
       $LET w = $FST $pair in
       $LET replCh = $SND $pair in 
       $LET z = $SYNC ($SEND EVT $replCh $x) in
-      $APP $loop $z
+      $APP $loop $w
     ) in
     $LET z  = $SPAWN ($APP $loop ($RIGHT $\<lparr>\<rparr>)) in
     $ch
@@ -46,6 +49,16 @@ definition program where "program = (
     $y
   ) in
 
+  $LET server = $APP $make_server $\<lparr>\<rparr> in
+  $LET z = $SPAWN
+    $APP $call_server $\<lparr>$server, $RIGHT $\<lparr>\<rparr>\<rparr>
+  in
+  $LET z = $SPAWN
+    $LET z = $APP $call_server $\<lparr>$server, $LEFT ($RIGHT $\<lparr>\<rparr>)\<rparr> in
+    $LET z = $APP $call_server $\<lparr>$server, ($RIGHT $\<lparr>\<rparr>)\<rparr> in
+    $z
+  in
+  $LET z = $APP $call_server $\<lparr>$server, $LEFT ($RIGHT $\<lparr>\<rparr>)\<rparr> in
   $\<lparr>\<rparr>
 )"
 
@@ -95,6 +108,33 @@ abbreviation g140 where "g140 \<equiv> Var ''g140''"
 abbreviation g141 where "g141 \<equiv> Var ''g141''"
 abbreviation g142 where "g142 \<equiv> Var ''g142''"
 abbreviation g143 where "g143 \<equiv> Var ''g143''"
+abbreviation g144 where "g144 \<equiv> Var ''g144''"
+abbreviation g145 where "g145 \<equiv> Var ''g145''"
+abbreviation g146 where "g146 \<equiv> Var ''g146''"
+abbreviation g147 where "g147 \<equiv> Var ''g147''"
+abbreviation g148 where "g148 \<equiv> Var ''g148''"
+abbreviation g149 where "g149 \<equiv> Var ''g149''"
+abbreviation g150 where "g150 \<equiv> Var ''g150''"
+abbreviation g151 where "g151 \<equiv> Var ''g151''"
+abbreviation g152 where "g152 \<equiv> Var ''g152''"
+abbreviation g153 where "g153 \<equiv> Var ''g153''"
+abbreviation g154 where "g154 \<equiv> Var ''g154''"
+abbreviation g155 where "g155 \<equiv> Var ''g155''"
+abbreviation g156 where "g156 \<equiv> Var ''g156''"
+abbreviation g157 where "g157 \<equiv> Var ''g157''"
+abbreviation g158 where "g158 \<equiv> Var ''g158''"
+abbreviation g159 where "g159 \<equiv> Var ''g159''"                       
+abbreviation g160 where "g160 \<equiv> Var ''g160''"
+abbreviation g161 where "g161 \<equiv> Var ''g161''"
+abbreviation g162 where "g162 \<equiv> Var ''g162''"
+abbreviation g163 where "g163 \<equiv> Var ''g163''"
+abbreviation g164 where "g164 \<equiv> Var ''g164''"
+abbreviation g165 where "g165 \<equiv> Var ''g165''"
+abbreviation g166 where "g166 \<equiv> Var ''g166''"
+abbreviation g167 where "g167 \<equiv> Var ''g167''"
+abbreviation g168 where "g168 \<equiv> Var ''g168''"
+abbreviation g169 where "g169 \<equiv> Var ''g169''"
+
 
 
 definition anf_program where "anf_program = (
@@ -128,7 +168,7 @@ LET g108 = FN g109 g110 .
     LET g123 = SND g121 in 
     LET g124 = SEND EVT g123 g119 in 
     LET g125 = SYNC g124 in 
-    LET g126 = APP g118 g125 in 
+    LET g126 = APP g118 g122 in 
     RESULT g126 
   in 
   LET g127 = SPAWN 
@@ -150,7 +190,179 @@ LET g131 = FN g132 g133 .
   RESULT g141 
 in 
 LET g142 = \<lparr>\<rparr> in 
-RESULT g142
+LET g143 = APP g108 g142 in 
+LET g144 = SPAWN 
+  LET g145 = \<lparr>\<rparr> in 
+  LET g146 = RIGHT g145 in
+  LET g147 = \<lparr>g143, g146\<rparr> in
+  LET g148 = APP g131 g147 in
+  RESULT g148 
+in
+LET g149 = SPAWN 
+  LET g150 = \<lparr>\<rparr> in
+  LET g151 = RIGHT g150 in
+  LET g152 = LEFT g151 in
+  LET g153 = \<lparr>g143, g152\<rparr> in
+  LET g154 = APP g131 g153 in
+  LET g155 = \<lparr>\<rparr> in
+  LET g156 = RIGHT g155 in
+  LET g157 = \<lparr>g143, g156\<rparr> in
+  LET g158 = APP g131 g157 in
+  RESULT g158 
+in
+LET g159 = \<lparr>\<rparr> in
+LET g160 = RIGHT g159 in
+LET g161 = LEFT g160 in
+LET g162 = \<lparr>g143, g161\<rparr> in
+LET g163 = APP g131 g162 in
+LET g164 = \<lparr>\<rparr> in
+RESULT g164
 )"
+
+value "
+  (\<lambda> _ . {})(
+    g100 := {^Abs g101 g102 (
+      LET g103 = CASE g102 
+        LEFT g104 |> 
+          LET g105 = APP g101 g104 in 
+          RESULT g105
+        RIGHT g106 |> 
+          LET g107 = \<lparr>\<rparr> in 
+          RESULT g107
+      in 
+      RESULT g103)},
+    g101 :=  {^Abs g101 g102 (
+      LET g103 = CASE g102 
+        LEFT g104 |> 
+          LET g105 = APP g101 g104 in 
+          RESULT g105
+        RIGHT g106 |> 
+          LET g107 = \<lparr>\<rparr> in 
+          RESULT g107
+      in 
+      RESULT g103
+    )},
+    g102 := {^Left g114},
+    g103 := {^\<lparr>\<rparr>},
+    g104 := {^Left g113, ^Right g112},
+    g105 := {^\<lparr>\<rparr>},
+    g106 := {^\<lparr>\<rparr>},
+    g107 := {^\<lparr>\<rparr>},
+    g108 := {^Abs g109 g110 (
+      LET g111 = CHAN \<lparr>\<rparr> in 
+      LET g112 = \<lparr>\<rparr> in 
+      LET g113 = RIGHT g112 in 
+      LET g114 = LEFT g113 in 
+      LET g115 = LEFT g114 in 
+      LET g116 = APP g100 g115 in 
+      LET g117 = FN g118 g119 . 
+        LET g120 = RECV EVT g111 in 
+        LET g121 = SYNC g120 in 
+        LET g122 = FST g121 in 
+        LET g123 = SND g121 in 
+        LET g124 = SEND EVT g123 g119 in 
+        LET g125 = SYNC g124 in 
+        LET g126 = APP g118 g125 in 
+        RESULT g126 
+      in 
+      LET g127 = SPAWN 
+        LET g128 = \<lparr>\<rparr> in 
+        LET g129 = RIGHT g128 in 
+        LET g130 = APP g117 g129 in 
+        RESULT g130 
+      in 
+      RESULT g111 
+    )},
+    g109 :=  {^Abs g109 g110 (
+      LET g111 = CHAN \<lparr>\<rparr> in 
+      LET g112 = \<lparr>\<rparr> in 
+      LET g113 = RIGHT g112 in 
+      LET g114 = LEFT g113 in 
+      LET g115 = LEFT g114 in 
+      LET g116 = APP g100 g115 in 
+      LET g117 = FN g118 g119 . 
+        LET g120 = RECV EVT g111 in 
+        LET g121 = SYNC g120 in 
+        LET g122 = FST g121 in 
+        LET g123 = SND g121 in 
+        LET g124 = SEND EVT g123 g119 in 
+        LET g125 = SYNC g124 in 
+        LET g126 = APP g118 g125 in 
+        RESULT g126 
+      in 
+      LET g127 = SPAWN 
+        LET g128 = \<lparr>\<rparr> in 
+        LET g129 = RIGHT g128 in 
+        LET g130 = APP g117 g129 in 
+        RESULT g130 
+      in 
+      RESULT g111 
+    )},
+    g110 := {},
+    g111 := {^Chan g111},
+    g112 := {^\<lparr>\<rparr>},
+    g113 := {^Right g112},
+    g114 := {^Left g113},
+    g115 := {^Left g114},
+    g116 := {},
+    g117 :=  {^Abs g118 g119 (
+      LET g120 = RECV EVT g111 in 
+      LET g121 = SYNC g120 in 
+      LET g122 = FST g121 in 
+      LET g123 = SND g121 in 
+      LET g124 = SEND EVT g123 g119 in 
+      LET g125 = SYNC g124 in 
+      LET g126 = APP g118 g125 in 
+      RESULT g126 
+    )},
+    g118 :=  {^Abs g118 g119 (
+      LET g120 = RECV EVT g111 in 
+      LET g121 = SYNC g120 in 
+      LET g122 = FST g121 in 
+      LET g123 = SND g121 in 
+      LET g124 = SEND EVT g123 g119 in 
+      LET g125 = SYNC g124 in 
+      LET g126 = APP g118 g125 in 
+      RESULT g126 
+    )},
+    g119 := {^Right g128},
+    g120 := {^Recv_Evt g111},
+    g121 := {},
+    g122 := {},
+    g123 := {},
+    g124 := {^Send_Evt g123 g119},
+    g125 := {^\<lparr>\<rparr>},
+    g126 := {},
+    g127 := {^\<lparr>\<rparr>},
+    g128 := {^\<lparr>\<rparr>},
+    g129 := {^Right g128},
+    g130 := {},
+    g131 :=  {^Abs g132 g133 (
+      LET g134 = FST g133 in 
+      LET g135 = SND g133 in 
+      LET g136 = CHAN \<lparr>\<rparr> in LET g137 = \<lparr>g135, g136\<rparr> in 
+      LET g138 = SEND EVT g134 g137 in 
+      LET g139 = SYNC g138 in 
+      LET g140 = RECV EVT g136 in 
+      LET g141 = SYNC g140 in 
+      RESULT g141 
+    )},
+    g132 :=  {^Abs g132 g133 (
+      LET g134 = FST g133 in 
+      LET g135 = SND g133 in 
+      LET g136 = CHAN \<lparr>\<rparr> in LET g137 = \<lparr>g135, g136\<rparr> in 
+      LET g138 = SEND EVT g134 g137 in 
+      LET g139 = SYNC g138 in 
+      LET g140 = RECV EVT g136 in 
+      LET g141 = SYNC g140 in 
+      RESULT g141 
+    )}
+  )
+"
+(*
+    (V, C) \<Turnstile>\<^sub>e e;
+    static_flow_set V F e \<Longrightarrow>
+    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+*)
 
 end
