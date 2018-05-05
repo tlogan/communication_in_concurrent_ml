@@ -326,11 +326,17 @@ value "
       LET g126 = APP g118 g125 in 
       RESULT g126 
     )},
-    g119 := {^Right g128},
+    g119 := {
+      ^Right g128, ^Right g145, 
+      ^Left g151, ^Right g155, ^Left g160
+    },
     g120 := {^Recv_Evt g111},
-    g121 := {},
-    g122 := {},
-    g123 := {},
+    g121 := {^Pair g135 g136},
+    g122 := {
+      ^Right g145, 
+      ^Left g151, ^Right g155, ^Left g160
+    },
+    g123 := {^Chan g136},
     g124 := {^Send_Evt g123 g119},
     g125 := {^\<lparr>\<rparr>},
     g126 := {},
