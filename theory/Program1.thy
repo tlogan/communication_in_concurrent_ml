@@ -2,6 +2,7 @@ theory Program1
  imports Main 
   Syntax
   Static_Semantics
+  Static_Framework
 begin
 
 abbreviation no_chan_loop where "no_chan_loop \<equiv> Var ''no_chan_loop''"
@@ -427,10 +428,83 @@ definition program_V where "program_V =
     g164 := {^\<lparr>\<rparr>}
   )
 "
+
+definition program_F :: flow_set where "program_F = {
+
+  (NLet g103, ECall g103, NLet g105),
+  (NLet g105, ECall g105, NLet g103),
+  (NResult g103, EReturn g105, NResult g105),
+  (NResult g105, EReturn g103, NResult g103),
+  (NLet g107, ENext, NResult g107),
+  (NResult g107, EReturn g103, NResult g103),
+  (NLet g103, ECall g103, NLet g107),
+  (NLet g100, ENext, NLet g108),
+  (NLet g111, ENext, NLet g112),
+  (NLet g112, ENext, NLet g113),
+  (NLet g113, ENext, NLet g114),
+  (NLet g114, ENext, NLet g115),
+  (NLet g116, ECall g116, NLet g103),
+  (NResult g103, EReturn g116, NLet g117),
+  (NLet g120, ENext, NLet g121),
+  (NLet g121, ENext, NLet g122),
+  (NLet g122, ENext, NLet g123),
+  (NLet g123, ENext, NLet g124),
+  (NLet g124, ENext, NLet g125),
+  (NLet g125, ESend g119, NLet g141),
+  (NLet g125, ENext, NLet g126),
+  (NLet g126, ECall g126, NLet g120),
+  (NResult g126, EReturn g126, NResult g126),
+  (NLet g117, ENext, NLet g127),
+  (NLet g127, ESpawn, NLet g128),
+  (NLet g128, ENext, NLet g129),
+  (NLet g129, ENext, NLet g130),
+  (NLet g130, ECall g130, NLet g120),
+  (NResult g126, EReturn g130, NResult g130),
+  (NLet g127, ENext, NResult g111),
+  (NLet g108, ENext, NLet g131),
+  (NLet g134, ENext, NLet g135),
+  (NLet g135, ENext, NLet g136),
+  (NLet g136, ENext, NLet g137),
+  (NLet g137, ENext, NLet g138),
+  (NLet g138, ENext, NLet g139),
+  (NLet g139, ESend g137, NLet g121),
+  (NLet g139, ENext, NLet g140),
+  (NLet g140, ENext, NLet g141),
+  (NLet g141, ENext, NResult g141),
+  (NLet g131, ENext, NLet g142),
+  (NLet g142, ENext, NLet g143),
+  (NLet g143, ENext, NLet g144),
+  (NLet g144, ESpawn, NLet g145),
+  (NLet g145, ENext, NLet g146),
+  (NLet g146, ENext, NLet g147),
+  (NLet g147, ENext, NLet g148),
+  (NLet g148, ECall g148, NLet g134),
+  (NResult g141, EReturn g148, NResult g148),
+  (NLet g144, ENext, NLet g149),
+  (NLet g149, ESpawn, NLet g150),
+  (NLet g150, ENext, NLet g151),
+  (NLet g151, ENext, NLet g152),
+  (NLet g153, ENext, NLet g154),
+  (NLet g154, ECall g154, NLet g134),
+  (NResult g141, EReturn g154, NLet g155),
+  (NLet g155, ENext, NLet g156),
+  (NLet g156, ENext, NLet g157),
+  (NLet g157, ENext, NLet g158),
+  (NLet g158, ECall g158, NLet g134),
+  (NResult g141, EReturn g158, NResult g158),
+  (NLet g149, ENext, NLet g159),
+  (NLet g159, ENext, NLet g160),
+  (NLet g160, ENext, NLet g161),
+  (NLet g161, ENext, NLet g162),
+  (NLet g163, ECall g163, NLet g134),
+  (NResult g141, EReturn g163, NLet g164),
+  (NLet g164, ENext, NResult g164)
+}"
 (*
     (V, C) \<Turnstile>\<^sub>e e;
     static_flow_set V F e \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
 *)
+
 
 end

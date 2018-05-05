@@ -1,5 +1,22 @@
 theory Z_Scraps
+  imports Main
 begin
+
+inductive test1 :: "int \<Rightarrow> bool" where
+  "test1 2"
+
+fun foo1 :: "int \<Rightarrow> int" where
+  "foo1 i = (if (test1 i) then 2 else 3)"
+
+value "foo1 2"
+
+fun test2 :: "int \<Rightarrow> bool" where
+  "test2 i = (i = 2)"
+
+fun foo2 :: "int \<Rightarrow> int" where
+  "foo2 i = (if (test2 i) then 2 else 3)"
+
+value "foo2 2"
 
 
 (*
