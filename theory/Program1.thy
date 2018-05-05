@@ -182,7 +182,8 @@ in
 LET g131 = FN g132 g133 . 
   LET g134 = FST g133 in 
   LET g135 = SND g133 in 
-  LET g136 = CHAN \<lparr>\<rparr> in LET g137 = \<lparr>g135, g136\<rparr> in 
+  LET g136 = CHAN \<lparr>\<rparr> in 
+  LET g137 = \<lparr>g135, g136\<rparr> in 
   LET g138 = SEND EVT g134 g137 in 
   LET g139 = SYNC g138 in 
   LET g140 = RECV EVT g136 in 
@@ -298,7 +299,7 @@ value "
       in 
       RESULT g111 
     )},
-    g110 := {},
+    g110 := {^\<lparr>\<rparr>},
     g111 := {^Chan g111},
     g112 := {^\<lparr>\<rparr>},
     g113 := {^Right g112},
@@ -356,7 +357,55 @@ value "
       LET g140 = RECV EVT g136 in 
       LET g141 = SYNC g140 in 
       RESULT g141 
-    )}
+    )},
+    g133 := {^Pair g143 g146},
+    g134 := {^Chan g111},
+    g135 := {^Right g145},
+    g136 := {^Chan g136},
+    g137 := {^Pair g135 g136},
+    g138 := {^Send_Evt g134 g137},
+    g139 := {^\<lparr>\<rparr>},
+    g140 := {^Recv_Evt g136},
+    g141 := {
+      ^Right g128, ^Right g145, 
+      ^Left g151, ^Right g155, ^Left g160
+    },
+    g142 := {^\<lparr>\<rparr>},
+    g143 := {^Chan g111},
+    g144 := {^\<lparr>\<rparr>},
+    g145 := {^\<lparr>\<rparr>},
+    g146 := {^Right g145},
+    g147 := {^Pair g143 g146},
+    g148 := {
+      ^Right g128,
+      ^Left g151, ^Right g155, ^Left g160
+    },
+    g149 := {^\<lparr>\<rparr>},
+    g150 := {^\<lparr>\<rparr>},
+    g151 := {^Right g150},
+    g152 := {^Left g151},
+    g153 := {^Pair g143 g152},
+    g154 := {
+      ^Right g128, ^Right g145, 
+      ^Left g160
+    },
+    g155 := {^\<lparr>\<rparr>},
+    g156 := {^Right g156},
+    g157 := {^Pair g143 g156},
+    g158 := {
+      ^Right g145, 
+      ^Left g160,
+      ^Left g151
+    },
+    g159 := {^\<lparr>\<rparr>},
+    g160 := {^Right g159},
+    g161 := {^Left g160},
+    g162 := {^Pair g143 g161},
+    g163 := {
+      ^Right g128, ^Right g145, 
+      ^Left g151, ^Right g155
+    },
+    g164 := {^\<lparr>\<rparr>}
   )
 "
 (*
