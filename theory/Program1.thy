@@ -220,7 +220,17 @@ LET g164 = \<lparr>\<rparr> in
 RESULT g164
 )"
 
-value "
+definition program_C where "program_C =
+  (\<lambda> _ . {})(
+    g111 := {^Pair g135 g136},
+    g136 := {
+      ^Right g128, ^Right g145, 
+      ^Left g151, ^Right g155, ^Left g160
+    }
+  )
+"
+
+definition program_V where "program_V =
   (\<lambda> _ . {})(
     g100 := {^Abs g101 g102 (
       LET g103 = CASE g102 
@@ -364,7 +374,10 @@ value "
       LET g141 = SYNC g140 in 
       RESULT g141 
     )},
-    g133 := {^Pair g143 g146},
+    g133 := {
+      ^Pair g143 g146, ^Pair g143 g152, 
+      ^Pair g143 g156, ^Pair g143 g161
+    },
     g134 := {^Chan g111},
     g135 := {^Right g145},
     g136 := {^Chan g136},
