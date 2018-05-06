@@ -271,28 +271,28 @@ inductive may_be_static_live_flow :: "flow_set \<Rightarrow> node_map \<Rightarr
     may_be_static_live_flow F Ln Lx ((NLet xSend), ESend xM, (NLet xRecv))
   "
 
-inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
-    may_be_static_live_path V F Ln Lx xC start isEnd []
+    may_be_static_live_path V F Ln Lx start isEnd []
   " |
   Edge: "
     isEnd end \<Longrightarrow>
     may_be_static_live_flow F Ln Lx (start, edge, end) \<Longrightarrow>
-    may_be_static_live_path V F Ln Lx xC start isEnd [(start, edge)]
+    may_be_static_live_path V F Ln Lx start isEnd [(start, edge)]
   " |
   Step_Next: "
-    may_be_static_live_path V F Ln Lx xC middle isEnd ((middle, edge') # path) \<Longrightarrow>
+    may_be_static_live_path V F Ln Lx middle isEnd ((middle, edge') # path) \<Longrightarrow>
     may_be_static_live_flow F Ln Lx (start, edge, middle) \<Longrightarrow>
-    may_be_static_live_path V F Ln Lx xC start isEnd ((start, edge) # (middle, edge') # path)
+    may_be_static_live_path V F Ln Lx start isEnd ((start, edge) # (middle, edge') # path)
   " |
 
   Pre_Return: "
-    may_be_static_live_path V F Ln Lx xC (NResult y) isEnd ((NResult y, EReturn x) # path) \<Longrightarrow>
+    may_be_static_live_path V F Ln Lx (NResult y) isEnd ((NResult y, EReturn x) # path) \<Longrightarrow>
     may_be_static_path  F (NResult y) pre \<Longrightarrow>
     \<not> static_balanced (pre @ [(NResult y, EReturn x)]) \<Longrightarrow>
     \<not> Set.is_empty (Lx (NLet x)) \<Longrightarrow>
-    may_be_static_live_path V F Ln Lx xC start isEnd (pre @ (NResult y, EReturn x) # path)
+    may_be_static_live_path V F Ln Lx start isEnd (pre @ (NResult y, EReturn x) # path)
   " |
 
   Post_Call: "
@@ -300,7 +300,7 @@ inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set 
     isEnd end \<Longrightarrow>
     \<not> static_balanced ((NLet x, ECall x) # post) \<Longrightarrow>
     \<not> Set.is_empty (Lx (NLet x)) \<Longrightarrow>
-    may_be_static_live_path V F Ln Lx xC (NLet x) isEnd ((NLet x, ECall x) # post)
+    may_be_static_live_path V F Ln Lx (NLet x) isEnd ((NLet x, ECall x) # post)
   " 
 
 
@@ -397,7 +397,7 @@ inductive every_two_static_paths  :: "(static_path \<Rightarrow> bool) \<Rightar
 
 inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_static_live_path V F Ln Lx xC (NLet xC) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
+    every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
     static_flow_set V F e \<Longrightarrow>
     static_one_shot V e xC 
@@ -405,8 +405,8 @@ inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
 
 inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_static_live_path V F Ln Lx xC (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two_static_paths (may_be_static_live_path V F Ln Lx xC (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
     static_flow_set V F e \<Longrightarrow>
     static_one_to_one V e xC 
@@ -414,7 +414,7 @@ inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarro
 
 inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_static_live_path V F Ln Lx xC (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
     static_flow_set V F e \<Longrightarrow>
     static_fan_out V e xC 
@@ -422,7 +422,7 @@ inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
 
 inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_static_live_path V F Ln Lx xC (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
     static_flow_set V F e \<Longrightarrow>
     static_fan_in V e xC 

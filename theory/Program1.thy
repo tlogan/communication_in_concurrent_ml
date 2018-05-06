@@ -3,6 +3,7 @@ theory Program1
   Syntax
   Static_Semantics
   Static_Framework
+  Static_Communication_Analysis
 begin
 
 abbreviation no_chan_loop where "no_chan_loop \<equiv> Var ''no_chan_loop''"
@@ -221,7 +222,7 @@ LET g164 = \<lparr>\<rparr> in
 RESULT g164
 )"
 
-definition program_C where "program_C =
+definition C where "C =
   (\<lambda> _ . {})(
     g111 := {^Pair g135 g136},
     g136 := {
@@ -231,7 +232,7 @@ definition program_C where "program_C =
   )
 "
 
-definition program_V where "program_V =
+definition V where "V =
   (\<lambda> _ . {})(
     g100 := {^Abs g101 g102 (
       LET g103 = CASE g102 
@@ -429,7 +430,7 @@ definition program_V where "program_V =
   )
 "
 
-definition program_F :: flow_set where "program_F = {
+definition F :: flow_set where "F = {
 
   (NLet g103, ECall g103, NLet g105),
   (NLet g105, ECall g105, NLet g103),
@@ -501,7 +502,7 @@ definition program_F :: flow_set where "program_F = {
   (NLet g164, ENext, NResult g164)
 }"
 
-definition program_Ln_g111 :: node_map where "program_Ln_g111 = 
+definition Ln_g111 :: node_map where "Ln_g111 = 
   (\<lambda> _ . {})(
     NLet g108 := {},
     NLet g111 := {},
@@ -564,7 +565,7 @@ definition program_Ln_g111 :: node_map where "program_Ln_g111 =
   )
 "
 
-definition program_Lx_g111 :: node_map where "program_Lx_g111 = 
+definition Lx_g111 :: node_map where "Lx_g111 = 
   (\<lambda> _ . {})(
     NLet g108 := {},
     NLet g111 := {g111},
@@ -627,7 +628,7 @@ definition program_Lx_g111 :: node_map where "program_Lx_g111 =
   )
 "
 
-definition program_Ln_g136 :: node_map where "program_Ln_g136 = 
+definition Ln_g136 :: node_map where "Ln_g136 = 
   (\<lambda> _ . {})(
     NLet g121 := {},
     NLet g122 := {g121},
@@ -646,7 +647,7 @@ definition program_Ln_g136 :: node_map where "program_Ln_g136 =
   )
 "
 
-definition program_Lx_g136 :: node_map where "program_Lx_g136 = 
+definition Lx_g136 :: node_map where "Lx_g136 = 
   (\<lambda> _ . {})(
     NLet g121 := {g121},
     NLet g122 := {g121},
@@ -664,6 +665,11 @@ definition program_Lx_g136 :: node_map where "program_Lx_g136 =
     NResult g141 := {}
   )
 "
+
+lemma "
+  may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g111) (\<lambda> x . True) []
+"
+sorry
 (*
     (V, C) \<Turnstile>\<^sub>e e;
     static_flow_set V F e \<Longrightarrow>
