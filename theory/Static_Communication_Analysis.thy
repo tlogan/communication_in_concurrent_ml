@@ -9,76 +9,76 @@ begin
 
 
 inductive 
-  may_be_built_on_abstract_chan :: "abstract_value_env \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool" and
-  may_be_built_on_abstract_chan_exp :: "abstract_value_env \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool"
+  may_be_built_on_abstract_chan :: "abstract_value_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"
 where
   Chan: "
     \<lbrakk>
       ^Chan x\<^sub>c \<in> V x 
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V x\<^sub>c x
+    may_be_built_on_abstract_chan V Ln x\<^sub>c x
   " |
   Send_Evt: "
     \<lbrakk>
       ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> V x;
-      may_be_built_on_abstract_chan V x\<^sub>c x\<^sub>s\<^sub>c \<or> may_be_built_on_abstract_chan V x\<^sub>c x\<^sub>m 
+      may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>s\<^sub>c \<or> may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>m 
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V x\<^sub>c x
+    may_be_built_on_abstract_chan V Ln x\<^sub>c x
   " |
   Recv_Evt: "
     \<lbrakk>
       ^Recv_Evt x\<^sub>r\<^sub>c \<in> V x;
-      may_be_built_on_abstract_chan V x\<^sub>c x\<^sub>r\<^sub>c
+      may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>r\<^sub>c
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V x\<^sub>c x
+    may_be_built_on_abstract_chan V Ln x\<^sub>c x
   " |
   Pair: "
     \<lbrakk>
       ^(Pair x\<^sub>1 x\<^sub>2) \<in> V x;
-      may_be_built_on_abstract_chan V x\<^sub>c x\<^sub>1 \<or> may_be_built_on_abstract_chan V x\<^sub>c x\<^sub>2
+      may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>1 \<or> may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>2
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V x\<^sub>c x
+    may_be_built_on_abstract_chan V Ln x\<^sub>c x
   " |
   Left: "
     \<lbrakk>
       ^(Left x\<^sub>a) \<in> V x;
-      may_be_built_on_abstract_chan V x\<^sub>c x\<^sub>a
+      may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>a
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V x\<^sub>c x
+    may_be_built_on_abstract_chan V Ln x\<^sub>c x
   " |
   Right: "
     \<lbrakk>
       ^(Right x\<^sub>a) \<in> V x;
-      may_be_built_on_abstract_chan V x\<^sub>c x\<^sub>a
+      may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>a
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V x\<^sub>c x
+    may_be_built_on_abstract_chan V Ln x\<^sub>c x
   " |
   Abs: "
     ^Abs f x\<^sub>p e\<^sub>b \<in> V x \<Longrightarrow> 
-    may_be_built_on_abstract_chan_exp V x\<^sub>c e\<^sub>b \<Longrightarrow>
-    may_be_built_on_abstract_chan V x\<^sub>c x
+    \<not> Set.is_empty (Ln (nodeLabel e\<^sub>b)) \<Longrightarrow>
+    may_be_built_on_abstract_chan V Ln x\<^sub>c x
   " 
-
+(*
   |
 
   Result: "
-    may_be_built_on_abstract_chan V x\<^sub>c x \<Longrightarrow>
+    may_be_built_on_abstract_chan V Ln x\<^sub>c x \<Longrightarrow>
     may_be_built_on_abstract_chan_exp V x\<^sub>c (RESULT x)
   " |
   Let: "
-    may_be_built_on_abstract_chan V x\<^sub>c x \<or> 
+    may_be_built_on_abstract_chan V Ln x\<^sub>c x \<or> 
     may_be_built_on_abstract_chan_exp V x\<^sub>c e \<Longrightarrow>
     may_be_built_on_abstract_chan_exp V x\<^sub>c (LET x = b in e)
   "
+*)
 
-fun chan_set :: "abstract_value_env \<Rightarrow> var \<Rightarrow> var \<Rightarrow> var set" where
-  "chan_set V x\<^sub>c x = (if (may_be_built_on_abstract_chan V x\<^sub>c x) then {x} else {})"
+fun chan_set :: "abstract_value_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> var set" where
+  "chan_set V Ln x\<^sub>c x = (if (may_be_built_on_abstract_chan V Ln x\<^sub>c x) then {x} else {})"
 
 
 inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "
     \<lbrakk>
-      chan_set V x\<^sub>c y = Ln (NResult y)
+      chan_set V Ln x\<^sub>c y = Ln (NResult y)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (RESULT y)
   " |
@@ -102,7 +102,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x\<^sub>s\<^sub>c \<union> chan_set V x\<^sub>c x\<^sub>m = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>s\<^sub>c \<union> chan_set V Ln x\<^sub>c x\<^sub>m = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e)
   " |
@@ -110,7 +110,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x\<^sub>r\<^sub>c = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>r\<^sub>c = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = RECV EVT x\<^sub>r\<^sub>c in e)
   " |
@@ -118,7 +118,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union>  chan_set V x\<^sub>c x\<^sub>1 \<union> chan_set V x\<^sub>c x\<^sub>2 = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union>  chan_set V Ln x\<^sub>c x\<^sub>1 \<union> chan_set V Ln x\<^sub>c x\<^sub>2 = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
   " |
@@ -126,7 +126,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x\<^sub>a = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = LEFT x\<^sub>a in e)
   " |
@@ -134,7 +134,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x\<^sub>a = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = RIGHT x\<^sub>a in e)
   " |
@@ -160,7 +160,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x\<^sub>e = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>e = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = SYNC x\<^sub>e in e)
   " |
@@ -169,7 +169,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       {^Pair x1 x2} \<subseteq> V x\<^sub>a;
-      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x1 = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x1 = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = FST x\<^sub>a in e)
   " |
@@ -178,7 +178,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       {^Pair x1 x2} \<subseteq> V x\<^sub>a;
-      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x2 = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x2 = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = SND x\<^sub>a in e)
   " |
@@ -188,7 +188,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
       Ln (nodeLabel e) = Lx (NLet x);
       static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>l;
       static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>r;
-      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x\<^sub>s \<union> 
+      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>s \<union> 
          (Ln (nodeLabel e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (nodeLabel e\<^sub>r) - {x\<^sub>r}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
@@ -197,7 +197,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c f \<union> chan_set V x\<^sub>c x\<^sub>a = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c f \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = APP f x\<^sub>a in e)
   "
