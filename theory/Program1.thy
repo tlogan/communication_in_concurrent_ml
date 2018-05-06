@@ -666,8 +666,30 @@ definition Lx_g136 :: node_map where "Lx_g136 =
   )
 "
 
-lemma "
-  may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g111) (\<lambda> x . True) []
+lemma tangent_call: "
+  may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g111) (\<lambda> x . True) [
+    (NLet g111, ENext),
+    (NLet g112, ENext),
+    (NLet g113, ENext),
+    (NLet g114, ENext),
+    (NLet g115, ENext),
+    (NLet g116, ECall g116),
+    (NLet g103, ECall g103),
+    (NLet g105, ECall g105),
+    (NLet g103, ECall g103),
+    (NLet g105, ECall g105),
+    (NLet g103, ECall g103),
+    (NLet g107, ENext),
+    (NResult g107, EReturn g103),
+    (NResult g103, EReturn g105),
+    (NResult g105, EReturn g103),
+    (NResult g103, EReturn g105),
+    (NResult g105, EReturn g103),
+    (NResult g103, EReturn g116),
+    (NLet g117, ENext),
+    (NLet g127, ESpawn),
+    (NLet g128, ENext)
+  ]
 "
 sorry
 (*
