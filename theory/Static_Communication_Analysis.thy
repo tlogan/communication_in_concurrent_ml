@@ -6,7 +6,6 @@ theory Static_Communication_Analysis
     Static_Framework
 begin
 
-type_synonym label_map = "node_label \<Rightarrow> var set"
 
 
 inductive 
@@ -76,7 +75,7 @@ fun chan_set :: "abstract_value_env \<Rightarrow> var \<Rightarrow> var \<Righta
   "chan_set V x\<^sub>c x = (if (may_be_built_on_abstract_chan V x\<^sub>c x) then {x} else {})"
 
 
-inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
+inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "
     \<lbrakk>
       chan_set V x\<^sub>c y = Ln (NResult y)
@@ -169,7 +168,8 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x\<^sub>a = Ln (NLet x)
+      {^Pair x1 x2} \<subseteq> V x\<^sub>a;
+      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x1 = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = FST x\<^sub>a in e)
   " |
@@ -177,7 +177,8 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> label_map \<
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x\<^sub>a = Ln (NLet x)
+      {^Pair x1 x2} \<subseteq> V x\<^sub>a;
+      (Lx (NLet x) - {x}) \<union> chan_set V x\<^sub>c x2 = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = SND x\<^sub>a in e)
   " |
@@ -236,7 +237,7 @@ inductive static_balanced :: "static_path \<Rightarrow> bool" where
   "
 
 
-inductive may_be_static_live_flow :: "flow_set \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> flow_label \<Rightarrow> bool"  where
+inductive may_be_static_live_flow :: "flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> flow_label \<Rightarrow> bool"  where
   Next: "
     (l, ENext, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Lx l) \<Longrightarrow>
@@ -270,7 +271,7 @@ inductive may_be_static_live_flow :: "flow_set \<Rightarrow> label_map \<Rightar
     may_be_static_live_flow F Ln Lx ((NLet xSend), ESend xM, (NLet xRecv))
   "
 
-inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
     may_be_static_live_path V F Ln Lx xC start isEnd []
