@@ -666,7 +666,7 @@ definition Lx_g136 :: node_map where "Lx_g136 =
   )
 "
 
-lemma tangent_call: "
+lemma path_with_tangent_call_is_live_for_g111: "
   may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g111) (\<lambda> x . True) [
     (NLet g111, ENext),
     (NLet g112, ENext),
@@ -692,6 +692,71 @@ lemma tangent_call: "
   ]
 "
 sorry
+
+lemma path_with_server_loop_is_live_for_g111: "
+  may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g128) (\<lambda> x . True) [
+    (NLet g128, ENext),
+    (NLet g129, ENext),
+    (NLet g130, ECall g130),
+    (NLet g120, ENext),
+    (NLet g121, ENext),
+    (NLet g122, ENext),
+    (NLet g123, ENext),
+    (NLet g124, ENext),
+    (NLet g125, ENext),
+    (NLet g126, ECall g126),
+    (NLet g120, ENext),
+    (NLet g121, ENext),
+    (NLet g122, ENext),
+    (NLet g123, ENext),
+    (NLet g124, ENext),
+    (NLet g125, ENext),
+    (NLet g126, ECall g126)
+  ]
+"
+sorry
+
+
+lemma path_with_chan_message_is_live_for_g136: "
+  may_be_static_live_path V F Ln_g136 Lx_g136 (NLet g136) (\<lambda> x . x = (NLet g125)) [
+    (NLet g136, ENext),
+    (NLet g137, ENext),
+    (NLet g138, ENext),
+    (NLet g139, ESend g137),
+    (NLet g121, ENext),
+    (NLet g122, ENext),
+    (NLet g123, ENext),
+    (NLet g124, ENext)
+  ]
+"
+sorry
+
+
+lemma path_with_server_loop_is_not_live_for_g136: "
+  \<not> may_be_static_live_path V F Ln_g136 Lx_g136 (NLet g136) (\<lambda> x . x = (NLet g125)) [
+    (NLet g121, ENext),
+    (NLet g122, ENext),
+    (NLet g123, ENext),
+    (NLet g124, ENext),
+    (NLet g125, ENext),
+    (NLet g126, ECall g126),
+    (NLet g120, ENext),
+    (NLet g121, ENext),
+    (NLet g122, ENext)
+  ]
+"
+  apply (rule notI)
+  apply (erule may_be_static_live_path.cases; auto)
+  apply (case_tac pre; auto)
+  apply (case_tac list; auto)
+  apply (case_tac lista; auto)
+  apply (case_tac list; auto)
+  apply (case_tac lista; auto)
+  apply (case_tac list; auto)
+  apply (case_tac lista; auto)
+  apply (case_tac list; auto)
+  apply (case_tac lista; auto)
+done
 (*
     (V, C) \<Turnstile>\<^sub>e e;
     static_flow_set V F e \<Longrightarrow>
