@@ -214,9 +214,10 @@ inductive may_be_static_path :: "flow_set \<Rightarrow> node_label \<Rightarrow>
     may_be_static_path F end [(start, edge)]
   " |
   Step: "
-    may_be_static_path F end ((middle, edge') # path) \<Longrightarrow>
+    may_be_static_path F end ((middle, edge') # post) \<Longrightarrow>
     (start, edge, middle) \<in> F \<Longrightarrow>
-    may_be_static_path F end ([(start, edge), (middle, edge')] @ path)
+    path = [(start, edge), (middle, edge')] @ post \<Longrightarrow>
+    may_be_static_path F end path
   "
 
 inductive static_balanced :: "static_path \<Rightarrow> bool" where
@@ -288,11 +289,12 @@ inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set 
   " |
 
   Pre_Return: "
-    may_be_static_live_path V F Ln Lx (NResult y) isEnd ((NResult y, EReturn x) # path) \<Longrightarrow>
+    may_be_static_live_path V F Ln Lx (NResult y) isEnd ((NResult y, EReturn x) # post) \<Longrightarrow>
     may_be_static_path  F (NResult y) pre \<Longrightarrow>
     \<not> static_balanced (pre @ [(NResult y, EReturn x)]) \<Longrightarrow>
     \<not> Set.is_empty (Lx (NLet x)) \<Longrightarrow>
-    may_be_static_live_path V F Ln Lx start isEnd (pre @ (NResult y, EReturn x) # path)
+    path = pre @ (NResult y, EReturn x) # post \<Longrightarrow>
+    may_be_static_live_path V F Ln Lx start isEnd path
   " |
 
   Post_Call: "

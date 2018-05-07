@@ -691,6 +691,67 @@ lemma path_with_tangent_call_is_live_for_g111: "
     (NLet g128, ENext)
   ]
 "
+ apply (rule may_be_static_live_path.Step_Next)
+ apply (rule may_be_static_live_path.Step_Next)
+ apply (rule may_be_static_live_path.Step_Next)
+ apply (rule may_be_static_live_path.Step_Next)
+ apply (rule may_be_static_live_path.Step_Next)
+ apply (rule may_be_static_live_path.Step_Next)
+ apply (rule may_be_static_live_path.Pre_Return[of 
+   V F Ln_g111 Lx_g111 g103 _ g116 _
+   "[(NLet g103, ECall g103), (NLet g105, ECall g105), 
+     (NLet g103, ECall g103), (NLet g105, ECall g105), 
+     (NLet g103, ECall g103), (NLet g107, ENext), 
+     (NResult g107, EReturn g103), (NResult g103, EReturn g105), 
+     (NResult g105, EReturn g103), (NResult g103, EReturn g105),
+     (NResult g105, EReturn g103)]"
+ ]; auto?)
+ apply (rule may_be_static_live_path.Step_Next)+
+ apply (rule may_be_static_live_path.Edge; auto?)
+ apply (
+  (rule may_be_static_live_flow.Next; auto?),
+  (unfold F_def; auto),
+  (unfold Lx_g111_def; auto),
+  (simp add: Set.is_empty_def),
+  (unfold Ln_g111_def; auto),
+  (simp add: Set.is_empty_def)
+ )
+ apply (
+  (rule may_be_static_live_flow.Spawn; auto?),
+  (unfold F_def; auto),
+  (unfold Lx_g111_def; auto),
+  (simp add: Set.is_empty_def),
+  (unfold Ln_g111_def; auto),
+  (simp add: Set.is_empty_def)
+ )
+ apply (
+  (rule may_be_static_live_flow.Next; auto?),
+  (unfold F_def; auto),
+  (unfold Lx_g111_def; auto),
+  (simp add: Set.is_empty_def),
+  (unfold Ln_g111_def; auto),
+  (simp add: Set.is_empty_def)
+ )
+ apply (
+  (rule may_be_static_live_flow.Return; auto?),
+  (unfold F_def; auto),
+  (unfold Ln_g111_def; auto),
+  (simp add: Set.is_empty_def)
+ )
+ apply (rule may_be_static_path.Step; auto?)
+ apply (rule may_be_static_path.Step; auto?)
+ apply (rule may_be_static_path.Step; auto?)
+ apply (rule may_be_static_path.Step; auto?)
+ apply (rule may_be_static_path.Step; auto?)
+ apply (rule may_be_static_path.Step; auto?)
+ apply (rule may_be_static_path.Step; auto?)
+ apply (rule may_be_static_path.Step; auto?)
+ apply (rule may_be_static_path.Step; auto?)
+ apply (rule may_be_static_path.Step; auto?)
+ apply (rule may_be_static_path.Edge; auto?)
+ apply (unfold F_def; auto)+
+ apply (erule static_balanced.cases; auto?)
+
 sorry
 
 lemma path_with_server_loop_is_live_for_g111: "
