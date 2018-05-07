@@ -756,21 +756,100 @@ sorry
 
 
 lemma "
-  static_balanced path \<Longrightarrow>
-  path = [(NLet g103, ECall g103), 
-    (*
-    (NLet g105, ECall g105), (NLet g103, ECall g103), 
-    (NLet g105, ECall g105), (NLet g103, ECall g103),
+  static_balanced [(NLet g103, ECall g103), 
+
+    (NLet g105, ECall g105),  (NLet g103, ECall g103),
+
+
+    (NLet g105, ECall g105), (*(NLet g103, ECall g103),
     (NLet g107, ENext), (NResult g107, EReturn g103), 
     (NResult g103, EReturn g105), (NResult g105, EReturn g103), 
     (NResult g103, EReturn g105), (NResult g105, EReturn g103), 
     *)
     (NResult g103, EReturn g116)
-  ] \<longrightarrow>
+  ] \<Longrightarrow>
   False
 "
- apply (erule static_balanced.induct; auto)
-sorry
+ apply (erule static_balanced.cases; auto?)
+ apply (case_tac path; auto)
+ apply (case_tac list; auto)
+ apply (rotate_tac -1)
+
+ apply (erule static_balanced.cases; auto?)
+ apply (case_tac path; auto)
+ apply (case_tac list; auto)
+ apply (rotate_tac -1)
+
+ apply (erule static_balanced.cases; auto?)
+ apply (case_tac path; auto)
+ apply (case_tac list; auto)
+ apply (rotate_tac -1)
+
+ apply (erule static_balanced.cases; auto?)
+ apply (simp add: Cons_eq_append_conv; auto)
+ apply (rotate_tac -1)
+ apply (erule static_balanced.cases; auto?)
+ apply (simp add: Cons_eq_append_conv)
+ apply (case_tac lista; auto)
+ apply (rotate_tac -1)
+
+ apply (erule static_balanced.cases; auto?)
+ apply (simp add: Cons_eq_append_conv; auto)
+ apply (rotate_tac -1)
+ apply (erule static_balanced.cases; auto?)
+ apply (simp add: Cons_eq_append_conv)
+ apply (case_tac lista; auto)
+ apply (rotate_tac -1)
+
+ apply (erule static_balanced.cases; auto?)
+ apply (case_tac path; auto)
+ apply (case_tac list; auto)
+ apply (rotate_tac -1)
+
+ apply (erule static_balanced.cases; auto?)
+ apply (case_tac path; auto)
+ apply (case_tac list; auto)
+ apply (rotate_tac -1)
+
+ apply (erule static_balanced.cases; auto?)
+ apply (simp add: Cons_eq_append_conv; auto)
+ apply (rotate_tac -1)
+ apply (erule static_balanced.cases; auto?)
+ apply (simp add: Cons_eq_append_conv)
+ apply (case_tac lista; auto)
+ apply (rotate_tac -1)
+
+ apply (erule static_balanced.cases; auto?)
+ apply (case_tac path; auto)
+ apply (case_tac list; auto)
+ apply (rotate_tac -1)
+
+ apply (erule static_balanced.cases; auto?)
+ apply (case_tac path; auto)
+ apply (case_tac list; auto)
+ apply (rotate_tac -1)
+
+
+ apply (erule static_balanced.cases; auto?)
+ apply (simp add: Cons_eq_append_conv; auto)
+ apply (rotate_tac -1)
+ apply (erule static_balanced.cases; auto?)
+ apply (simp add: Cons_eq_append_conv)
+ apply (case_tac lista; auto)
+ apply (rotate_tac -1)
+
+ apply (erule static_balanced.cases; auto?)
+ apply (case_tac path; auto)
+ apply (case_tac list; auto)
+ apply (rotate_tac -1)
+
+ apply (erule static_balanced.cases; auto?)
+ apply (simp add: Cons_eq_append_conv; auto)
+ apply (rotate_tac -1)
+ apply (erule static_balanced.cases; auto?)
+ apply (simp add: Cons_eq_append_conv)
+
+done
 
 lemma path_with_server_loop_is_live_for_g111: "
   may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g128) (\<lambda> x . True) [
