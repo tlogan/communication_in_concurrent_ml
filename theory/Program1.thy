@@ -451,7 +451,7 @@ definition F :: flow_set where "F = {
   (NLet g122, ENext, NLet g123),
   (NLet g123, ENext, NLet g124),
   (NLet g124, ENext, NLet g125),
-  (NLet g125, ESend g119, NLet g141),
+  (NLet g125, ESend g124, NLet g141),
   (NLet g125, ENext, NLet g126),
   (NLet g126, ECall g126, NLet g120),
   (NResult g126, EReturn g126, NResult g126),
@@ -468,7 +468,7 @@ definition F :: flow_set where "F = {
   (NLet g136, ENext, NLet g137),
   (NLet g137, ENext, NLet g138),
   (NLet g138, ENext, NLet g139),
-  (NLet g139, ESend g137, NLet g121),
+  (NLet g139, ESend g138, NLet g121),
   (NLet g139, ENext, NLet g140),
   (NLet g140, ENext, NLet g141),
   (NLet g141, ENext, NResult g141),
@@ -722,14 +722,35 @@ lemma path_with_chan_message_is_live_for_g136: "
     (NLet g136, ENext),
     (NLet g137, ENext),
     (NLet g138, ENext),
-    (NLet g139, ESend g137),
+    (NLet g139, ESend g138),
     (NLet g121, ENext),
     (NLet g122, ENext),
     (NLet g123, ENext),
     (NLet g124, ENext)
   ]
 "
-sorry
+ apply (rule may_be_static_live_path.Step_Next)+
+ apply (rule may_be_static_live_path.Edge; auto?)
+ apply (
+  (rule may_be_static_live_flow.Next; auto?),
+  (unfold F_def; auto),
+  (unfold Lx_g136_def; auto),
+  (simp add: Set.is_empty_def),
+  (unfold Ln_g136_def; auto),
+  (simp add: Set.is_empty_def)
+ )+
+ apply (rule may_be_static_live_flow.Send; auto?)
+ apply (unfold F_def; auto)
+ apply (unfold Ln_g136_def; auto)
+ apply (
+  (rule may_be_static_live_flow.Next; auto?),
+  (unfold F_def; auto),
+  (unfold Lx_g136_def; auto),
+  (simp add: Set.is_empty_def),
+  (unfold Ln_g136_def; auto),
+  (simp add: Set.is_empty_def)
+ )+
+done
 
 
 lemma path_with_server_loop_is_not_live_for_g136: "

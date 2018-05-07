@@ -266,9 +266,9 @@ inductive may_be_static_live_flow :: "flow_set \<Rightarrow> node_map \<Rightarr
     may_be_static_live_flow F Ln Lx (l, EReturn x, l')
   " |
   Send: "
-    ((NLet xSend), ESend xM, (NLet xRecv)) \<in> F \<Longrightarrow>
-    {xM} \<subseteq> (Ln (NLet xSend)) \<Longrightarrow>
-    may_be_static_live_flow F Ln Lx ((NLet xSend), ESend xM, (NLet xRecv))
+    ((NLet xSend), ESend xE, (NLet xRecv)) \<in> F \<Longrightarrow>
+    {xE} \<subseteq> (Ln (NLet xSend)) \<Longrightarrow>
+    may_be_static_live_flow F Ln Lx ((NLet xSend), ESend xE, (NLet xRecv))
   "
 
 inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
@@ -333,10 +333,10 @@ inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarro
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>2
   " |
   Send_Left: "
-    \<pi> @ (NLet x, ESend xM) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
+    \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
   " |
   Send_Right: "
-    \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend xM) # \<pi>\<^sub>2
+    \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>2
   "
 
 lemma may_be_inclusive_commut: "
