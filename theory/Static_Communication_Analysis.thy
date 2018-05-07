@@ -232,9 +232,20 @@ inductive static_balanced :: "static_path \<Rightarrow> bool" where
     static_balanced ((NLet x, ECall x) # (path @ [(NResult y, EReturn x)]))
   " |
   Append: "
+    path \<noteq> [] \<Longrightarrow>
     static_balanced path \<Longrightarrow>
+    path' \<noteq> [] \<Longrightarrow>
     static_balanced path' \<Longrightarrow>
     static_balanced (path @ path')
+  "
+
+inductive static_unbalanced :: "static_path \<Rightarrow> bool" where
+  Result: "
+    static_unbalanced ((NResult y, EReturn x) # post)
+  " |
+  Next: "
+    static_unbalanced post \<Longrightarrow>
+    static_unbalanced ((NLet x, ENext) # post)
   "
 
 

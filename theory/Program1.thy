@@ -666,6 +666,7 @@ definition Lx_g136 :: node_map where "Lx_g136 =
   )
 "
 
+
 lemma path_with_tangent_call_is_live_for_g111: "
   may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g111) (\<lambda> x . True) [
     (NLet g111, ENext),
@@ -751,7 +752,24 @@ lemma path_with_tangent_call_is_live_for_g111: "
  apply (rule may_be_static_path.Edge; auto?)
  apply (unfold F_def; auto)+
  apply (erule static_balanced.cases; auto?)
+sorry
 
+
+lemma "
+  static_balanced path \<Longrightarrow>
+  path = [(NLet g103, ECall g103), 
+    (*
+    (NLet g105, ECall g105), (NLet g103, ECall g103), 
+    (NLet g105, ECall g105), (NLet g103, ECall g103),
+    (NLet g107, ENext), (NResult g107, EReturn g103), 
+    (NResult g103, EReturn g105), (NResult g105, EReturn g103), 
+    (NResult g103, EReturn g105), (NResult g105, EReturn g103), 
+    *)
+    (NResult g103, EReturn g116)
+  ] \<longrightarrow>
+  False
+"
+ apply (erule static_balanced.induct; auto)
 sorry
 
 lemma path_with_server_loop_is_live_for_g111: "
