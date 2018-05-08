@@ -444,6 +444,7 @@ definition F :: flow_set where "F = {
   (NLet g112, ENext, NLet g113),
   (NLet g113, ENext, NLet g114),
   (NLet g114, ENext, NLet g115),
+  (NLet g115, ENext, NLet g116),
   (NLet g116, ECall g116, NLet g103),
   (NResult g103, EReturn g116, NLet g117),
   (NLet g120, ENext, NLet g121),
@@ -751,10 +752,33 @@ lemma path_with_tangent_call_is_live_for_g111: "
  apply (rule may_be_static_path.Step; auto?)
  apply (rule may_be_static_path.Edge; auto?)
  apply (unfold F_def; auto)+
- apply (erule static_balanced.cases; auto?)
-sorry
+ apply (
+   (erule static_balanced.cases; auto?),
+   ((match premises in 
+      I: "_ = (pre @ _)" for pre \<Rightarrow> 
+          \<open>insert I; (cases pre)\<close>
+    ); auto)+,
+  (rotate_tac -1)?
+ )+
+
+ apply (unfold Lx_g111_def; auto)
+ apply (simp add: Set.is_empty_def)
+ apply (rule may_be_static_live_flow.Call_Live_Outer)
+ apply (unfold F_def; auto)
+ apply (unfold Lx_g111_def; auto)
+ apply (simp add: Set.is_empty_def)
+ apply (
+  (rule may_be_static_live_flow.Next),
+  (unfold F_def; auto),
+  (unfold Lx_g111_def; auto),
+  (simp add: Set.is_empty_def),
+  (unfold Ln_g111_def; auto),
+  (simp add: Set.is_empty_def)
+ )+
+done
 
 
+(*
 lemma "
   static_balanced [(NLet g103, ECall g103), 
 
@@ -781,6 +805,7 @@ lemma "
  )+
 
 done
+*)
 
 
 
