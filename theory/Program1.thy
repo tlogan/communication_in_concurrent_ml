@@ -255,7 +255,7 @@ definition V where "V =
       in 
       RESULT g103
     )},
-    g102 := {^Left g114},
+    g102 := {^Left g114, ^Left g113, ^Right g112},
     g103 := {^\<lparr>\<rparr>},
     g104 := {^Left g113, ^Right g112},
     g105 := {^\<lparr>\<rparr>},
@@ -668,6 +668,26 @@ definition Lx_g136 :: node_map where "Lx_g136 =
 "
 
 
+
+lemma "
+  (V, C) \<Turnstile>\<^sub>e anf_program
+"
+ apply (simp add: V_def C_def anf_program_def)
+ apply (rule may_be_static_eval.Let_Abs; auto?)
+ apply (rule may_be_static_eval.Let_Case; auto?)
+(*
+ apply (simp add: V_def C_def anf_program_def)
+ apply (rule; simp?)+
+*)
+done
+
+(*
+    (V, C) \<Turnstile>\<^sub>e e;
+    static_flow_set V F e \<Longrightarrow>
+    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+*)
+
+(*
 lemma path_with_tangent_call_is_live_for_g111: "
   may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g111) (\<lambda> x . True) [
     (NLet g111, ENext),
@@ -693,12 +713,12 @@ lemma path_with_tangent_call_is_live_for_g111: "
     (NLet g128, ENext)
   ]
 "
- apply (rule may_be_static_live_path.Step_Next)
- apply (rule may_be_static_live_path.Step_Next)
- apply (rule may_be_static_live_path.Step_Next)
- apply (rule may_be_static_live_path.Step_Next)
- apply (rule may_be_static_live_path.Step_Next)
- apply (rule may_be_static_live_path.Step_Next)
+ apply (rule may_be_static_live_path.Step)
+ apply (rule may_be_static_live_path.Step)
+ apply (rule may_be_static_live_path.Step)
+ apply (rule may_be_static_live_path.Step)
+ apply (rule may_be_static_live_path.Step)
+ apply (rule may_be_static_live_path.Step)
  apply (rule may_be_static_live_path.Pre_Return[of 
    V F Ln_g111 Lx_g111 g103 _ g116 _
    "[(NLet g103, ECall g103), (NLet g105, ECall g105), 
@@ -708,7 +728,7 @@ lemma path_with_tangent_call_is_live_for_g111: "
      (NResult g105, EReturn g103), (NResult g103, EReturn g105),
      (NResult g105, EReturn g103)]"
  ]; auto?)
- apply (rule may_be_static_live_path.Step_Next)+
+ apply (rule may_be_static_live_path.Step)+
  apply (rule may_be_static_live_path.Edge; auto?)
  apply (
   (rule may_be_static_live_flow.Next; auto?),
@@ -777,38 +797,6 @@ lemma path_with_tangent_call_is_live_for_g111: "
  )+
 done
 
-
-(*
-lemma "
-  static_balanced [(NLet g103, ECall g103), 
-
-    (NLet g105, ECall g105),  (NLet g103, ECall g103),
-
-
-    (NLet g105, ECall g105), (NLet g103, ECall g103),
-    (NLet g107, ENext), (NResult g107, EReturn g103), 
-    (NResult g103, EReturn g105), (*(NResult g105, EReturn g103), 
-    (NResult g103, EReturn g105), (NResult g105, EReturn g103), 
-    *)
-    (NResult g103, EReturn g116)
-  ] \<Longrightarrow>
-  False
-"
-
- apply (
-   (erule static_balanced.cases; auto?),
-   ((match premises in 
-      I: "_ = (pre @ _)" for pre \<Rightarrow> 
-          \<open>insert I; (cases pre)\<close>
-    ); auto)+,
-  (rotate_tac -1)?
- )+
-
-done
-*)
-
-
-
 lemma path_with_server_loop_is_live_for_g111: "
   may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g128) (\<lambda> x . True) [
     (NLet g128, ENext),
@@ -830,7 +818,45 @@ lemma path_with_server_loop_is_live_for_g111: "
     (NLet g126, ECall g126)
   ]
 "
-sorry
+ apply (rule may_be_static_live_path.Step)+
+ apply (rule may_be_static_live_path.Edge; auto?)
+ apply (rule may_be_static_live_flow.Call_Live_Inner; auto?)
+ apply (unfold F_def; auto)
+ apply (unfold Ln_g111_def; auto)
+ apply (simp add: Set.is_empty_def)
+ apply (
+  (rule may_be_static_live_flow.Next; auto?),
+  (unfold F_def; auto),
+  (unfold Lx_g111_def; auto),
+  (simp add: Set.is_empty_def),
+  (unfold Ln_g111_def; auto),
+  (simp add: Set.is_empty_def)
+ )+
+ apply (rule may_be_static_live_flow.Call_Live_Inner; auto?)
+ apply (unfold F_def; auto)
+ apply (unfold Ln_g111_def; auto)
+ apply (simp add: Set.is_empty_def)
+ apply (
+  (rule may_be_static_live_flow.Next; auto?),
+  (unfold F_def; auto),
+  (unfold Lx_g111_def; auto),
+  (simp add: Set.is_empty_def),
+  (unfold Ln_g111_def; auto),
+  (simp add: Set.is_empty_def)
+ )+
+ apply (rule may_be_static_live_flow.Call_Live_Inner; auto?)
+ apply (unfold F_def; auto)
+ apply (unfold Ln_g111_def; auto)
+ apply (simp add: Set.is_empty_def)
+ apply (
+  (rule may_be_static_live_flow.Next; auto?),
+  (unfold F_def; auto),
+  (unfold Lx_g111_def; auto),
+  (simp add: Set.is_empty_def),
+  (unfold Ln_g111_def; auto),
+  (simp add: Set.is_empty_def)
+ )+
+done
 
 
 lemma path_with_chan_message_is_live_for_g136: "
@@ -845,7 +871,7 @@ lemma path_with_chan_message_is_live_for_g136: "
     (NLet g124, ENext)
   ]
 "
- apply (rule may_be_static_live_path.Step_Next)+
+ apply (rule may_be_static_live_path.Step)+
  apply (rule may_be_static_live_path.Edge; auto?)
  apply (
   (rule may_be_static_live_flow.Next; auto?),
@@ -894,11 +920,8 @@ lemma path_with_server_loop_is_not_live_for_g136: "
   apply (case_tac list; auto)
   apply (case_tac lista; auto)
 done
-(*
-    (V, C) \<Turnstile>\<^sub>e e;
-    static_flow_set V F e \<Longrightarrow>
-    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
 *)
+
 
 
 end

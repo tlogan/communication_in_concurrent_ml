@@ -293,7 +293,7 @@ inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set 
     may_be_static_live_flow F Ln Lx (start, edge, end) \<Longrightarrow>
     may_be_static_live_path V F Ln Lx start isEnd [(start, edge)]
   " |
-  Step_Next: "
+  Step: "
     may_be_static_live_path V F Ln Lx middle isEnd ((middle, edge') # path) \<Longrightarrow>
     may_be_static_live_flow F Ln Lx (start, edge, middle) \<Longrightarrow>
     may_be_static_live_path V F Ln Lx start isEnd ((start, edge) # (middle, edge') # path)
