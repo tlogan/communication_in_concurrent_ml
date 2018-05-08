@@ -1,5 +1,6 @@
 theory Static_Framework
   imports Main Syntax Dynamic_Semantics Static_Semantics
+      Static_Traceability
       "~~/src/HOL/Eisbach/Eisbach_Tools"
 begin
 
@@ -24,105 +25,104 @@ type_synonym step_label = "(node_label \<times> edge_label)"
 type_synonym static_path = "step_label list"
 
 
-inductive static_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> exp \<Rightarrow> bool"  where
+inductive static_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> (var \<Rightarrow> node_label \<Rightarrow> bool) \<Rightarrow> exp \<Rightarrow> bool"  where
   Result: "
-    static_flow_set \<V> \<F> (RESULT x)
+    static_flow_set V F is_recv_site (RESULT x)
   " |
   Let_Unit: "
     \<lbrakk>
-      {(NLet x , ENext, nodeLabel e)} \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = \<lparr>\<rparr> in e)
+    static_flow_set V F is_recv_site (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Chan: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = CHAN \<lparr>\<rparr> in e)
+    static_flow_set V F is_recv_site (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
+    static_flow_set V F is_recv_site (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = RECV EVT x\<^sub>c in e)
+    static_flow_set V F is_recv_site (LET x = RECV EVT x\<^sub>c in e)
   " |
   Let_Pair: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
+    static_flow_set V F is_recv_site (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
   " |
   Let_Left: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = LEFT x\<^sub>p in e)
+    static_flow_set V F is_recv_site (LET x = LEFT x\<^sub>p in e)
   " |
   Let_Right: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = RIGHT x\<^sub>p in e)
+    static_flow_set V F is_recv_site (LET x = RIGHT x\<^sub>p in e)
   " |
   Let_Abs: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e\<^sub>b;
-      static_flow_set \<V> \<F> e
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F is_recv_site e\<^sub>b;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
+    static_flow_set V F is_recv_site (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
   " |
   Let_Spawn: "
     \<lbrakk>
       {
         (NLet x, ENext, nodeLabel e),
         (NLet x, ESpawn, nodeLabel e\<^sub>c)
-      } \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e\<^sub>c;
-      static_flow_set \<V> \<F> e
+      } \<subseteq> F;
+      static_flow_set V F is_recv_site e\<^sub>c;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = SPAWN e\<^sub>c in e)
+    static_flow_set V F is_recv_site (LET x = SPAWN e\<^sub>c in e)
   " |
   Let_Sync: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
-      (\<forall> xSC xM xC xRC y.
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      (\<forall> xSC xM xC y.
         {^Send_Evt xSC xM} \<subseteq> V x\<^sub>e \<longrightarrow>
         {^Chan xC} \<subseteq> V xSC \<longrightarrow>
-        {^Chan xC} \<subseteq> V xRC \<longrightarrow>
-        {^Recv_Evt xRC} \<subseteq> \<V> y \<longrightarrow>
-        {(NLet x, ESend xM, NLet y)} \<subseteq> \<F>
+        is_recv_site xC (NLet y) \<longrightarrow>
+        {(NLet x, ESend xSE, NLet y)} \<subseteq> F
       );
-      static_flow_set \<V> \<F> e
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = SYNC x\<^sub>e in e)
+    static_flow_set V F is_recv_site (LET x = SYNC xSE in e)
   " |
   Let_Fst: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = FST x\<^sub>p in e)
+    static_flow_set V F is_recv_site (LET x = FST x\<^sub>p in e)
   " |
   Let_Snd: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = SND x\<^sub>p in e)
+    static_flow_set V F is_recv_site (LET x = SND x\<^sub>p in e)
   " |
   Let_Case: "
     \<lbrakk>
@@ -131,23 +131,23 @@ inductive static_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Righta
         (NLet x, ECall x, nodeLabel e\<^sub>r),
         (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn x, nodeLabel e),
         (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn x, nodeLabel e)
-      } \<subseteq> \<F>;
-      static_flow_set \<V> \<F> e\<^sub>l;
-      static_flow_set \<V> \<F> e\<^sub>r;
-      static_flow_set \<V> \<F> e
+      } \<subseteq> F;
+      static_flow_set V F is_recv_site e\<^sub>l;
+      static_flow_set V F is_recv_site e\<^sub>r;
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
+    static_flow_set V F is_recv_site (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
   " |
   Let_App: "
     \<lbrakk>
-      (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f \<longrightarrow>
+      (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow>
         {
           (NLet x, ECall x, nodeLabel e\<^sub>b),
           (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn x, nodeLabel e)
-        } \<subseteq> \<F>);
-      static_flow_set \<V> \<F> e
+        } \<subseteq> F);
+      static_flow_set V F is_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set \<V> \<F> (LET x = APP f x\<^sub>a in e)
+    static_flow_set V F is_recv_site (LET x = APP f x\<^sub>a in e)
   "
 
 inductive is_super_exp :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where

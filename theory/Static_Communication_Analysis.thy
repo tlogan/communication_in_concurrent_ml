@@ -412,7 +412,7 @@ inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
   Sync: "
     every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F e \<Longrightarrow>
+    static_flow_set V F (may_be_static_send_node_label V e) e \<Longrightarrow>
     static_one_shot V e xC 
   "
 

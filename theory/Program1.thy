@@ -666,122 +666,60 @@ definition Lx_g136 :: node_map where "Lx_g136 =
   )
 "
 
+definition is_recv_site  where "is_recv_site = 
+ (may_be_static_send_node_label V anf_program)
+"
+
+lemma "
+  static_flow_set V F is_recv_site anf_program
+"
+ apply (simp add: V_def F_def is_recv_site_def anf_program_def)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule static_flow_set.Let_Sync)
+ apply (fold F_def)
+apply simp
+apply (simp add: F_def)
+ apply (fold V_def)
+apply auto
 
 
 lemma "
   (V, C) \<Turnstile>\<^sub>e anf_program
 "
  apply (simp add: V_def C_def anf_program_def)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
- apply (rule; auto?)
-
-(*
- apply (rule may_be_static_eval.Let_App)
- apply (fold V_def)
- apply auto
-apply (simp add: V_def)
-apply (simp add: V_def)
- apply (rule; auto?)
-*)
-(*
- apply (rule may_be_static_eval.Let_Abs)
- apply (fold V_def)
- apply auto
-(*
-^Abs g109 g110
-(LET g111 = CHAN \<lparr>\<rparr> in LET g112 = \<lparr>\<rparr> in LET g113 = RIGHT g112 in LET g114 = LEFT g113 in LET g115 = LEFT g114 in LET g116 = APP g100 g115 in LET g117 = FN g118 g119 . LET g120 = RECV EVT g111 in LET g121 = SYNC g120 in LET g122 = FST g121 in LET g123 = SND g121 in LET g124 = SEND EVT g123 g119 in LET g125 = SYNC g124 in LET g126 = APP g118 g122 in RESULT g126 in LET g127 = SPAWN LET g128 = \<lparr>\<rparr> in LET g129 = RIGHT g128 in LET g130 = APP g117 g129 in RESULT g130 in RESULT g111)
-*)
-(*
-^Abs g109 g110
-(LET g111 = CHAN \<lparr>\<rparr> in LET g112 = \<lparr>\<rparr> in LET g113 = RIGHT g112 in LET g114 = LEFT g113 in LET g115 = LEFT g114 in LET g116 = APP g100 g115 in LET g117 = FN g118 g119 . LET g120 = RECV EVT g111 in LET g121 = SYNC g120 in LET g122 = FST g121 in LET g123 = SND g121 in LET g124 = SEND EVT g123 g119 in LET g125 = SYNC g124 in LET g126 = APP g118 g125 in RESULT g126 in LET g127 = SPAWN LET g128 = \<lparr>\<rparr> in LET g129 = RIGHT g128 in LET g130 = APP g117 g129 in RESULT g130 in RESULT g111)},
-                 *)
-apply (unfold V_def)
- apply (simp add: V_def)
-*)
-
-
-(*
- apply (simp add: V_def C_def anf_program_def)
- apply (rule; simp?)+
-*)
+ apply (rule; auto?)+
 done
 
-(*
-    (V, C) \<Turnstile>\<^sub>e e;
-    static_flow_set V F e \<Longrightarrow>
-    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-*)
+
+
+
 
 (*
+    static_flow_set V F anf_program
+    static_chan_liveness V Ln_g111 Lx_g111 g111 anf_program
+    static_chan_liveness V Ln_g136 Lx_g136 g136 anf_program
+*)
+
+
 lemma path_with_tangent_call_is_live_for_g111: "
   may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g111) (\<lambda> x . True) [
     (NLet g111, ENext),
@@ -1014,7 +952,7 @@ lemma path_with_server_loop_is_not_live_for_g136: "
   apply (case_tac list; auto)
   apply (case_tac lista; auto)
 done
-*)
+(**)
 
 
 
