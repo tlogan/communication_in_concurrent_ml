@@ -275,7 +275,7 @@ definition V where "V =
         LET g123 = SND g121 in 
         LET g124 = SEND EVT g123 g119 in 
         LET g125 = SYNC g124 in 
-        LET g126 = APP g118 g125 in 
+        LET g126 = APP g118 g122 in 
         RESULT g126 
       in 
       LET g127 = SPAWN 
@@ -286,7 +286,7 @@ definition V where "V =
       in 
       RESULT g111 
     )},
-    g109 :=  {^Abs g109 g110 (
+    g109 := {^Abs g109 g110 (
       LET g111 = CHAN \<lparr>\<rparr> in 
       LET g112 = \<lparr>\<rparr> in 
       LET g113 = RIGHT g112 in 
@@ -300,7 +300,7 @@ definition V where "V =
         LET g123 = SND g121 in 
         LET g124 = SEND EVT g123 g119 in 
         LET g125 = SYNC g124 in 
-        LET g126 = APP g118 g125 in 
+        LET g126 = APP g118 g122 in 
         RESULT g126 
       in 
       LET g127 = SPAWN 
@@ -317,7 +317,7 @@ definition V where "V =
     g113 := {^Right g112},
     g114 := {^Left g113},
     g115 := {^Left g114},
-    g116 := {},
+    g116 := {^\<lparr>\<rparr>},
     g117 :=  {^Abs g118 g119 (
       LET g120 = RECV EVT g111 in 
       LET g121 = SYNC g120 in 
@@ -325,7 +325,7 @@ definition V where "V =
       LET g123 = SND g121 in 
       LET g124 = SEND EVT g123 g119 in 
       LET g125 = SYNC g124 in 
-      LET g126 = APP g118 g125 in 
+      LET g126 = APP g118 g122 in 
       RESULT g126 
     )},
     g118 :=  {^Abs g118 g119 (
@@ -335,7 +335,7 @@ definition V where "V =
       LET g123 = SND g121 in 
       LET g124 = SEND EVT g123 g119 in 
       LET g125 = SYNC g124 in 
-      LET g126 = APP g118 g125 in 
+      LET g126 = APP g118 g122 in 
       RESULT g126 
     )},
     g119 := {
@@ -381,7 +381,7 @@ definition V where "V =
       ^Pair g143 g156, ^Pair g143 g161
     },
     g134 := {^Chan g111},
-    g135 := {^Right g145},
+    g135 := {^Right g145, ^Left g151, ^Right g155, ^Left g160},
     g136 := {^Chan g136},
     g137 := {^Pair g135 g136},
     g138 := {^Send_Evt g134 g137},
@@ -398,7 +398,7 @@ definition V where "V =
     g146 := {^Right g145},
     g147 := {^Pair g143 g146},
     g148 := {
-      ^Right g128,
+      ^Right g128, ^Right g145, 
       ^Left g151, ^Right g155, ^Left g160
     },
     g149 := {^\<lparr>\<rparr>},
@@ -411,12 +411,11 @@ definition V where "V =
       ^Left g160
     },
     g155 := {^\<lparr>\<rparr>},
-    g156 := {^Right g156},
+    g156 := {^Right g155},
     g157 := {^Pair g143 g156},
     g158 := {
-      ^Right g145, 
-      ^Left g160,
-      ^Left g151
+      ^Right g128, ^Right g145, 
+      ^Left g151, ^Right g155, ^Left g160
     },
     g159 := {^\<lparr>\<rparr>},
     g160 := {^Right g159},
@@ -424,7 +423,7 @@ definition V where "V =
     g162 := {^Pair g143 g161},
     g163 := {
       ^Right g128, ^Right g145, 
-      ^Left g151, ^Right g155
+      ^Left g151, ^Right g155, ^Left g160
     },
     g164 := {^\<lparr>\<rparr>}
   )
@@ -673,8 +672,110 @@ lemma "
   (V, C) \<Turnstile>\<^sub>e anf_program
 "
  apply (simp add: V_def C_def anf_program_def)
- apply (rule may_be_static_eval.Let_Abs; auto?)
- apply (rule may_be_static_eval.Let_Case; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+
+ apply (rule may_be_static_eval.Let_App)
+ apply (fold V_def)
+ apply auto
+apply (simp add: V_def)
+apply (simp add: V_def)
+
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+
+(*
+ apply (rule may_be_static_eval.Let_App)
+ apply (fold V_def)
+ apply auto
+apply (simp add: V_def)
+apply (simp add: V_def)
+ apply (rule; auto?)
+*)
+(*
+ apply (rule may_be_static_eval.Let_Abs)
+ apply (fold V_def)
+ apply auto
+(*
+^Abs g109 g110
+(LET g111 = CHAN \<lparr>\<rparr> in LET g112 = \<lparr>\<rparr> in LET g113 = RIGHT g112 in LET g114 = LEFT g113 in LET g115 = LEFT g114 in LET g116 = APP g100 g115 in LET g117 = FN g118 g119 . LET g120 = RECV EVT g111 in LET g121 = SYNC g120 in LET g122 = FST g121 in LET g123 = SND g121 in LET g124 = SEND EVT g123 g119 in LET g125 = SYNC g124 in LET g126 = APP g118 g122 in RESULT g126 in LET g127 = SPAWN LET g128 = \<lparr>\<rparr> in LET g129 = RIGHT g128 in LET g130 = APP g117 g129 in RESULT g130 in RESULT g111)
+*)
+(*
+^Abs g109 g110
+(LET g111 = CHAN \<lparr>\<rparr> in LET g112 = \<lparr>\<rparr> in LET g113 = RIGHT g112 in LET g114 = LEFT g113 in LET g115 = LEFT g114 in LET g116 = APP g100 g115 in LET g117 = FN g118 g119 . LET g120 = RECV EVT g111 in LET g121 = SYNC g120 in LET g122 = FST g121 in LET g123 = SND g121 in LET g124 = SEND EVT g123 g119 in LET g125 = SYNC g124 in LET g126 = APP g118 g125 in RESULT g126 in LET g127 = SPAWN LET g128 = \<lparr>\<rparr> in LET g129 = RIGHT g128 in LET g130 = APP g117 g129 in RESULT g130 in RESULT g111)},
+                 *)
+apply (unfold V_def)
+ apply (simp add: V_def)
+*)
+
+
 (*
  apply (simp add: V_def C_def anf_program_def)
  apply (rule; simp?)+
