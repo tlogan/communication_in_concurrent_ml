@@ -408,7 +408,7 @@ definition V where "V =
     g153 := {^Pair g143 g152},
     g154 := {
       ^Right g128, ^Right g145, 
-      ^Left g160
+      ^Left g151, ^Right g155, ^Left g160
     },
     g155 := {^\<lparr>\<rparr>},
     g156 := {^Right g155},
@@ -719,13 +719,6 @@ lemma "
  apply (rule; auto?)
  apply (rule; auto?)
  apply (rule; auto?)
-
- apply (rule may_be_static_eval.Let_App)
- apply (fold V_def)
- apply auto
-apply (simp add: V_def)
-apply (simp add: V_def)
-
  apply (rule; auto?)
  apply (rule; auto?)
  apply (rule; auto?)
