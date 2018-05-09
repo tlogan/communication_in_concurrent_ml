@@ -97,7 +97,7 @@ inductive static_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow
     \<rbrakk> \<Longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;(LCall x) \<mapsto> e\<^sub>r
   " |
-  Let_App: " 
+  Let_App: "
     \<lbrakk>
       \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> LET x = APP f x\<^sub>a in e\<^sub>n;
       ^Abs f' x' e' \<in> \<V> f

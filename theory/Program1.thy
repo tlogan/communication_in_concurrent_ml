@@ -5,7 +5,7 @@ theory Program1
   Static_Framework
   Static_Communication_Analysis
 begin
-(*
+
 abbreviation no_chan_loop where "no_chan_loop \<equiv> Var ''no_chan_loop''"
 abbreviation make_server where "make_server \<equiv> Var ''make_server''"
 abbreviation ch where "ch \<equiv> Var ''ch''"
@@ -703,17 +703,15 @@ lemma "
 
  apply (fold F_def)
  apply (fold V_def)
- apply (simp add: may_be_static_recv_node_label.simps; auto?)
  apply (fold anf_program_def)
-apply (erule static_traceable.cases; auto?)
- apply (unfold F_def)
- apply (unfold V_def)
- apply (unfold anf_program_def)
+ apply (simp add: may_be_static_recv_node_label.simps; auto?)
 
-  apply blast
+
+
+
 sorry
 
-
+(*
 lemma "
   (V, C) \<Turnstile>\<^sub>e anf_program
 "

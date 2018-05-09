@@ -29,10 +29,6 @@ inductive is_super_exp :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
   Refl : "
     is_super_exp e e
   " | 
-  Let: "
-    is_super_exp e\<^sub>n e \<Longrightarrow>
-    is_super_exp (LET x = b in e\<^sub>n) e
-  " | 
   Let_Spawn_Child: "
     is_super_exp e\<^sub>c e \<Longrightarrow>
     is_super_exp (LET x = SPAWN e\<^sub>c in e\<^sub>n) e
@@ -48,6 +44,10 @@ inductive is_super_exp :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
   Let_Abs_Body: "
     is_super_exp e\<^sub>b e \<Longrightarrow>
     is_super_exp (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n) e
+  " | 
+  Let: "
+    is_super_exp e\<^sub>n e \<Longrightarrow>
+    is_super_exp (LET x = b in e\<^sub>n) e
   "
 
 
@@ -107,6 +107,7 @@ lemma is_super_exp1: "
 by (simp add: Let Refl)
 
 
+(*
 fun val_to_bind :: "val \<Rightarrow> bind" where
   "val_to_bind VUnit = \<lparr>\<rparr>" |
   "val_to_bind (VChan _) = CHAN \<lparr>\<rparr>" |
@@ -127,97 +128,47 @@ proof -
     case (Start \<V> e\<^sub>0)
     then show ?case by (simp add: Refl)
   next
+    thm Result
     case (Result \<V> e\<^sub>0 \<pi> x \<pi>' x\<^sub>r b e\<^sub>n)
-    then show ?case sorry
+    then show ?case using is_super_exp1 is_super_exp_trans by blast
   next
     case (Let_Unit \<V> e\<^sub>0 \<pi> x e\<^sub>n)
-    then show ?case sorry
+    then show ?case using is_super_exp1 is_super_exp_trans by blast
   next
     case (Let_Chan \<V> e\<^sub>0 \<pi> x e\<^sub>n)
-    then show ?case sorry
+    then show ?case using is_super_exp1 is_super_exp_trans by blast
   next
     case (Let_Prim \<V> e\<^sub>0 \<pi> x p e\<^sub>n)
-    then show ?case sorry
+    then show ?case using is_super_exp1 is_super_exp_trans by blast
   next
     case (Let_Spawn_Child \<V> e\<^sub>0 \<pi> x e\<^sub>c e\<^sub>n)
-    then show ?case sorry
+    then show ?case  using Refl is_super_exp.Let_Spawn_Child is_super_exp_trans by blast
   next
     case (Let_Spawn \<V> e\<^sub>0 \<pi> x e\<^sub>c e\<^sub>n)
-    then show ?case sorry
+    then show ?case using is_super_exp1 is_super_exp_trans by blast
   next
     case (Let_Sync \<V> e\<^sub>0 \<pi> x x\<^sub>v e\<^sub>n)
-    then show ?case sorry
+    then show ?case using is_super_exp1 is_super_exp_trans by blast
   next
     case (Let_Fst \<V> e\<^sub>0 \<pi> x p e\<^sub>n)
-    then show ?case sorry
+    then show ?case using is_super_exp1 is_super_exp_trans by blast
   next
     case (Let_Snd \<V> e\<^sub>0 \<pi> x p e\<^sub>n)
-    then show ?case sorry
+    then show ?case using is_super_exp1 is_super_exp_trans by blast
   next
     case (Let_Case_Left \<V> e\<^sub>0 \<pi> x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n)
-    then show ?case sorry
+    then show ?case using Refl is_super_exp.Let_Case_Left is_super_exp_trans by blast
   next
     case (Let_Case_Right \<V> e\<^sub>0 \<pi> x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n)
-    then show ?case sorry
+    then show ?case using Refl is_super_exp.Let_Case_Right is_super_exp_trans by blast
   next
     case (Let_App \<V> e\<^sub>0 \<pi> x f x\<^sub>a e\<^sub>n f' x' e')
-    then show ?case sorry
+    then show ?case by (metis Let_Abs_Body Refl is_super_exp_trans val_to_bind.simps(3) value_to_abstract_value.simps(3))
   qed
-    case (Start \<V> e\<^sub>0)
-    then show ?case
-    by (simp add: Refl)
-  next
-    case (Result \<V> e\<^sub>0 \<pi> x \<pi>' x\<^sub>r b e\<^sub>n)
-    then show ?case
-    using is_super_exp1 is_super_exp_trans by blast
-  next
-    case (Let_Unit \<V> e\<^sub>0 \<pi> x e\<^sub>n)
-    then show ?case
-    using is_super_exp1 is_super_exp_trans by blast
-  next
-    case (Let_Chan \<V> e\<^sub>0 \<pi> x e\<^sub>n)
-    then show ?case
-    using is_super_exp1 is_super_exp_trans by blast
-  next
-    case (Let_Prim \<V> e\<^sub>0 \<pi> x p e\<^sub>n)
-    then show ?case
-    using is_super_exp1 is_super_exp_trans by blast
-    next
-    case (Let_Spawn_Child \<V> e\<^sub>0 \<pi> x e\<^sub>c e\<^sub>n)
-    then show ?case
-    using Refl is_super_exp.Let_Spawn_Child is_super_exp_trans by blast
-  next
-    case (Let_Spawn \<V> e\<^sub>0 \<pi> x e\<^sub>c e\<^sub>n)
-    then show ?case
-    using is_super_exp1 is_super_exp_trans by blast
-  next
-      case (Let_Sync \<V> e\<^sub>0 \<pi> x x\<^sub>v e\<^sub>n)
-    then show ?case
-    using is_super_exp1 is_super_exp_trans by blast
-  next
-    case (Let_Fst \<V> e\<^sub>0 \<pi> x p e\<^sub>n)
-    then show ?case
-    using is_super_exp1 is_super_exp_trans by blast
-  next
-    case (Let_Snd \<V> e\<^sub>0 \<pi> x p e\<^sub>n)
-      then show ?case
-        using is_super_exp1 is_super_exp_trans by blast
-  next
-    case (Let_Case_Left \<V> e\<^sub>0 \<pi> x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n)
-    then show ?case
-      using Refl is_super_exp.Let_Case_Left is_super_exp_trans by blast
-  next
-    case (Let_Case_Right \<V> e\<^sub>0 \<pi> x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n)
-    then show ?case
-    using Refl is_super_exp.Let_Case_Right is_super_exp_trans by blast
-  next
-    case (Let_App \<V> e\<^sub>0 \<pi> x f x\<^sub>a e\<^sub>n)
-    then show ?case
-    by (metis (no_types, hide_lams) Let_Abs_Body Refl is_super_exp_trans val_to_bind.simps(3) value_to_abstract_value.simps(3))
-  qed
-  with `\<forall>x \<omega>. |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists>x e\<^sub>n. LET x = val_to_bind \<omega> in e\<^sub>n is_super_exp e\<^sub>0)`
-  show "e is_super_exp e\<^sub>0"
+  with `\<forall>x \<omega>. |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists>x e\<^sub>n. is_super_exp e\<^sub>0 (LET x = val_to_bind \<omega> in e\<^sub>n))`
+  show "is_super_exp e\<^sub>0 e"
   by blast
 qed
+*)
 
 end

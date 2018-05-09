@@ -10,7 +10,7 @@ inductive may_be_static_send_node_label :: "abstract_value_env \<Rightarrow> exp
   Sync: "
     {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
     {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
-    V \<turnstile> e \<down> \<pi> \<mapsto> (LET x = SYNC xE in e') \<Longrightarrow>
+    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
     may_be_static_send_node_label V e xC (NLet x)
   "
 
@@ -18,7 +18,7 @@ inductive may_be_static_recv_node_label :: "abstract_value_env \<Rightarrow> exp
   Sync: "
     {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
     {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
-    V \<turnstile> e \<down> \<pi> \<mapsto> (LET x = SYNC xE in e') \<Longrightarrow>
+    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
     may_be_static_recv_node_label V e xC (NLet x)
   "
 
@@ -537,7 +537,7 @@ inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
   Sync: "
     every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (may_be_static_send_node_label V e) e \<Longrightarrow>
+    static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
@@ -546,7 +546,7 @@ inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarro
     every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (may_be_static_send_node_label V e) e \<Longrightarrow>
+    static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
@@ -554,7 +554,7 @@ inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
   Sync: "
     every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (may_be_static_send_node_label V e) e \<Longrightarrow>
+    static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
@@ -562,7 +562,7 @@ inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> v
   Sync: "
     every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (may_be_static_send_node_label V e) e \<Longrightarrow>
+    static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
     static_fan_in V e xC 
   "
 
