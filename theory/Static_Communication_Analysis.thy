@@ -6,7 +6,147 @@ theory Static_Communication_Analysis
     Static_Framework
 begin
 
+inductive may_be_static_send_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
+  Sync: "
+    {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
+    {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
+    V \<turnstile> e \<down> \<pi> \<mapsto> (LET x = SYNC xE in e') \<Longrightarrow>
+    may_be_static_send_node_label V e xC (NLet x)
+  "
 
+inductive may_be_static_recv_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
+  Sync: "
+    {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
+    {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
+    V \<turnstile> e \<down> \<pi> \<mapsto> (LET x = SYNC xE in e') \<Longrightarrow>
+    may_be_static_recv_node_label V e xC (NLet x)
+  "
+
+
+inductive static_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> (var \<Rightarrow> node_label \<Rightarrow> bool) \<Rightarrow> exp \<Rightarrow> bool"  where
+  Result: "
+    static_flow_set V F may_be_recv_site (RESULT x)
+  " |
+  Let_Unit: "
+    \<lbrakk>
+      {(NLet x , ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = \<lparr>\<rparr> in e)
+  " |
+  Let_Chan: "
+    \<lbrakk>
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = CHAN \<lparr>\<rparr> in e)
+  " |
+  Let_Send_Evt: "
+    \<lbrakk>
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
+  " |
+  Let_Recv_Evt: "
+    \<lbrakk>
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = RECV EVT x\<^sub>c in e)
+  " |
+  Let_Pair: "
+    \<lbrakk>
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
+  " |
+  Let_Left: "
+    \<lbrakk>
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = LEFT x\<^sub>p in e)
+  " |
+  Let_Right: "
+    \<lbrakk>
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = RIGHT x\<^sub>p in e)
+  " |
+  Let_Abs: "
+    \<lbrakk>
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F may_be_recv_site e\<^sub>b;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
+  " |
+  Let_Spawn: "
+    \<lbrakk>
+      {
+        (NLet x, ENext, nodeLabel e),
+        (NLet x, ESpawn, nodeLabel e\<^sub>c)
+      } \<subseteq> F;
+      static_flow_set V F may_be_recv_site e\<^sub>c;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = SPAWN e\<^sub>c in e)
+  " |
+  Let_Sync: "
+    \<lbrakk>
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      (\<forall> xSC xM xC y.
+        {^Send_Evt xSC xM} \<subseteq> V xSE \<longrightarrow>
+        {^Chan xC} \<subseteq> V xSC \<longrightarrow>
+        may_be_recv_site xC (NLet y) \<longrightarrow>
+        {(NLet x, ESend xSE, NLet y)} \<subseteq> F
+      );
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = SYNC xSE in e)
+  " |
+  Let_Fst: "
+    \<lbrakk>
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = FST x\<^sub>p in e)
+  " |
+  Let_Snd: "
+    \<lbrakk>
+      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = SND x\<^sub>p in e)
+  " |
+  Let_Case: "
+    \<lbrakk>
+      {
+        (NLet x, ECall x, nodeLabel e\<^sub>l),
+        (NLet x, ECall x, nodeLabel e\<^sub>r),
+        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn x, nodeLabel e),
+        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn x, nodeLabel e)
+      } \<subseteq> F;
+      static_flow_set V F may_be_recv_site e\<^sub>l;
+      static_flow_set V F may_be_recv_site e\<^sub>r;
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
+  " |
+  Let_App: "
+    \<lbrakk>
+      (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow>
+        {
+          (NLet x, ECall x, nodeLabel e\<^sub>b),
+          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn x, nodeLabel e)
+        } \<subseteq> F);
+      static_flow_set V F may_be_recv_site e
+    \<rbrakk> \<Longrightarrow>
+    static_flow_set V F may_be_recv_site (LET x = APP f x\<^sub>a in e)
+  "
 
 inductive 
   may_be_built_on_abstract_chan :: "abstract_value_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"
@@ -317,21 +457,6 @@ inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set 
   " 
 
 
-inductive may_be_static_send_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
-  Sync: "
-    {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
-    {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
-    V \<turnstile> e \<down> \<pi> \<mapsto> (LET x = SYNC xE in e') \<Longrightarrow>
-    may_be_static_send_node_label V e xC (NLet x)
-  "
-
-inductive may_be_static_recv_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
-  Sync: "
-    {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
-    {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
-    V \<turnstile> e \<down> \<pi> \<mapsto> (LET x = SYNC xE in e') \<Longrightarrow>
-    may_be_static_recv_node_label V e xC (NLet x)
-  "
 
 
 inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
@@ -421,7 +546,7 @@ inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarro
     every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F e \<Longrightarrow>
+    static_flow_set V F (may_be_static_send_node_label V e) e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
@@ -429,7 +554,7 @@ inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
   Sync: "
     every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F e \<Longrightarrow>
+    static_flow_set V F (may_be_static_send_node_label V e) e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
@@ -437,7 +562,7 @@ inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> v
   Sync: "
     every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F e \<Longrightarrow>
+    static_flow_set V F (may_be_static_send_node_label V e) e \<Longrightarrow>
     static_fan_in V e xC 
   "
 

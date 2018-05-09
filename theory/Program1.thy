@@ -5,7 +5,7 @@ theory Program1
   Static_Framework
   Static_Communication_Analysis
 begin
-
+(*
 abbreviation no_chan_loop where "no_chan_loop \<equiv> Var ''no_chan_loop''"
 abbreviation make_server where "make_server \<equiv> Var ''make_server''"
 abbreviation ch where "ch \<equiv> Var ''ch''"
@@ -666,14 +666,18 @@ definition Lx_g136 :: node_map where "Lx_g136 =
   )
 "
 
-definition is_recv_site  where "is_recv_site = 
- (may_be_static_send_node_label V anf_program)
+definition may_be_recv_site where "may_be_recv_site = 
+ (may_be_static_recv_node_label V anf_program)
 "
 
 lemma "
-  static_flow_set V F is_recv_site anf_program
+  static_flow_set V F may_be_recv_site anf_program
 "
- apply (simp add: V_def F_def is_recv_site_def anf_program_def)
+ apply (simp add: 
+    V_def F_def 
+    may_be_recv_site_def may_be_static_send_node_label.simps
+    anf_program_def
+ )
  apply (rule; auto?)
  apply (rule; auto?)
  apply (rule; auto?)
@@ -694,12 +698,20 @@ lemma "
  apply (rule; auto?)
  apply (rule; auto?)
  apply (rule; auto?)
- apply (rule static_flow_set.Let_Sync)
+
+ apply (rule; auto?)
+
  apply (fold F_def)
-apply simp
-apply (simp add: F_def)
  apply (fold V_def)
-apply auto
+ apply (simp add: may_be_static_recv_node_label.simps; auto?)
+ apply (fold anf_program_def)
+apply (erule static_traceable.cases; auto?)
+ apply (unfold F_def)
+ apply (unfold V_def)
+ apply (unfold anf_program_def)
+
+  apply blast
+sorry
 
 
 lemma "
@@ -952,7 +964,7 @@ lemma path_with_server_loop_is_not_live_for_g136: "
   apply (case_tac list; auto)
   apply (case_tac lista; auto)
 done
-(**)
+*)
 
 
 
