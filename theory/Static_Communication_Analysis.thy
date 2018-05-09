@@ -194,7 +194,7 @@ where
   " |
   Abs: "
     ^Abs f x\<^sub>p e\<^sub>b \<in> V x \<Longrightarrow> 
-    \<not> Set.is_empty (Ln (nodeLabel e\<^sub>b)) \<Longrightarrow>
+    \<not> Set.is_empty (Ln (nodeLabel e\<^sub>b) - {x\<^sub>p}) \<Longrightarrow>
     may_be_built_on_abstract_chan V Ln x\<^sub>c x
   " 
 (*
