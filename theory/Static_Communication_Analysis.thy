@@ -308,8 +308,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      {^Pair x1 x2} \<subseteq> V x\<^sub>a;
-      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x1 = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = FST x\<^sub>a in e)
   " |
@@ -317,8 +316,7 @@ inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<R
     \<lbrakk>
       static_chan_liveness V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      {^Pair x1 x2} \<subseteq> V x\<^sub>a;
-      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x2 = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_chan_liveness V Ln Lx x\<^sub>c (LET x = SND x\<^sub>a in e)
   " |

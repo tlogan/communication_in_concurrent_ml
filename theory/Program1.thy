@@ -706,8 +706,69 @@ lemma "
  apply (auto simp: Set.is_empty_def)
 
 
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+
+ apply (rule may_be_built_on_abstract_chan.Pair; auto)
+ apply (rule may_be_built_on_abstract_chan.Chan; auto)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+
+ apply (rule; auto?)+
+
+ apply (erule may_be_built_on_abstract_chan.cases; auto)+
+ apply (auto simp: Set.is_empty_def)
+
+
+ apply (rule may_be_built_on_abstract_chan.Pair; auto)
+ apply (rule may_be_built_on_abstract_chan.Chan; auto)
+
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (rule may_be_built_on_abstract_chan.Chan; auto)
+ apply (erule may_be_built_on_abstract_chan.cases; auto)+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+
+
+ thm static_chan_liveness.Let_Fst[of _ _ _ _ _ _ g143]
+ apply (fold V_def Ln_g111_def Lx_g111_def anf_program_def)
+ apply (rule static_chan_liveness.Let_Fst[of _ _ _ _ _ _ g133])
+defer
+defer
+defer
+ apply (fold V_def Ln_g111_def Lx_g111_def anf_program_def)
 
  apply (fold V_def Ln_g111_def Lx_g111_def anf_program_def)
+ apply (rule; auto?)
+
+
+
+
 
 
 
