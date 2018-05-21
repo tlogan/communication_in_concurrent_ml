@@ -669,152 +669,7 @@ definition Lx_g136 :: node_map where "Lx_g136 =
   )
 "
 
-lemma "
-  static_chan_liveness V Ln_g111 Lx_g111 g111 anf_program
-"
- apply (unfold V_def Ln_g111_def Lx_g111_def anf_program_def)
- apply (rule; auto?)+
- apply (erule may_be_built_on_abstract_chan.cases; auto)+
- apply (auto simp: Set.is_empty_def)
 
-
-
- apply (rule may_be_built_on_abstract_chan.Pair; auto)
- apply (rule may_be_built_on_abstract_chan.Chan; auto)
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
-
- apply (rule may_be_built_on_abstract_chan.Chan; auto)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
-
- apply (rule; auto?)+
-
- apply (erule may_be_built_on_abstract_chan.cases; auto)+
- apply (auto simp: Set.is_empty_def)
-
- apply (rule may_be_built_on_abstract_chan.Pair; auto)
- apply (rule may_be_built_on_abstract_chan.Chan; auto)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
-
- apply (rule may_be_built_on_abstract_chan.Chan; auto)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
- apply (auto simp: Set.is_empty_def)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
- apply (auto simp: Set.is_empty_def)
-
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
- apply (auto simp: Set.is_empty_def)
-
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
- apply (auto simp: Set.is_empty_def)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
- apply (auto simp: Set.is_empty_def)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
- apply (auto simp: Set.is_empty_def)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
- apply (auto simp: Set.is_empty_def)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
- apply (auto simp: Set.is_empty_def)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
- apply (auto simp: Set.is_empty_def)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
- apply (auto simp: Set.is_empty_def)
-
-
- apply (rule may_be_built_on_abstract_chan.Pair; auto)
- apply (rule may_be_built_on_abstract_chan.Chan; auto)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
-
- apply (rule; auto?)+
-
- apply (erule may_be_built_on_abstract_chan.cases; auto)+
- apply (auto simp: Set.is_empty_def)
-
-
- apply (rule may_be_built_on_abstract_chan.Pair; auto)
- apply (rule may_be_built_on_abstract_chan.Chan; auto)
-
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
- apply (rule may_be_built_on_abstract_chan.Chan; auto)
- apply (erule may_be_built_on_abstract_chan.cases; auto)+
- apply (auto simp: Set.is_empty_def)
-
- apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
-
-
- thm static_chan_liveness.Let_Fst[of _ _ _ _ _ _ g143]
- apply (fold V_def Ln_g111_def Lx_g111_def anf_program_def)
- apply (rule static_chan_liveness.Let_Fst[of _ _ _ _ _ _ g133])
-defer
-defer
-defer
- apply (fold V_def Ln_g111_def Lx_g111_def anf_program_def)
-
- apply (fold V_def Ln_g111_def Lx_g111_def anf_program_def)
- apply (rule; auto?)
-
-
-
-
-
-
-
-
-
-sorry
-
-
-
-
-
-lemma "
-  static_chan_liveness V Ln_g136 Lx_g136 g136 anf_program
-"
-sorry
-
-
-(*
-definition may_be_recv_site where "may_be_recv_site = 
- (may_be_static_recv_node_label V anf_program)
-"
-
-lemma "
-  static_flow_set V F may_be_recv_site anf_program
-"
- apply (unfold 
-    V_def F_def 
-    may_be_recv_site_def may_be_static_send_node_label.simps
-    anf_program_def
- )
- apply (rule; auto?)+
- apply (simp add: may_be_static_recv_node_label.simps; auto?)
- apply (erule is_super_exp.cases; auto?; simp?)+
- apply (rule; auto?)+
- apply (simp add: may_be_static_recv_node_label.simps; auto?)
- apply (erule is_super_exp.cases; auto?; simp?)+
- apply (rule; auto?)+
-done
-
-
-lemma "
-  (V, C) \<Turnstile>\<^sub>e anf_program
-"
- apply (simp add: V_def C_def anf_program_def)
- apply (rule; auto?)+
-done
 
 
 lemma path_with_tangent_call_is_live_for_g111: "
@@ -925,6 +780,7 @@ lemma path_with_tangent_call_is_live_for_g111: "
   (simp add: Set.is_empty_def)
  )+
 done
+
 
 lemma path_with_server_loop_is_live_for_g111: "
   may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g128) (\<lambda> x . True) [
@@ -1049,6 +905,144 @@ lemma path_with_server_loop_is_not_live_for_g136: "
   apply (case_tac list; auto)
   apply (case_tac lista; auto)
 done
+
+
+
+(*
+definition may_be_recv_site where "may_be_recv_site = 
+ (may_be_static_recv_node_label V anf_program)
+"
+
+lemma "
+  static_flow_set V F may_be_recv_site anf_program
+"
+ apply (unfold 
+    V_def F_def 
+    may_be_recv_site_def may_be_static_send_node_label.simps
+    anf_program_def
+ )
+ apply (rule; auto?)+
+ apply (simp add: may_be_static_recv_node_label.simps; auto?)
+ apply (erule is_super_exp.cases; auto?; simp?)+
+ apply (rule; auto?)+
+ apply (simp add: may_be_static_recv_node_label.simps; auto?)
+ apply (erule is_super_exp.cases; auto?; simp?)+
+ apply (rule; auto?)+
+done
+
+
+lemma "
+  (V, C) \<Turnstile>\<^sub>e anf_program
+"
+ apply (simp add: V_def C_def anf_program_def)
+ apply (rule; auto?)+
+done
+
+
+lemma "
+  static_chan_liveness V Ln_g111 Lx_g111 g111 anf_program
+"
+ apply (unfold V_def Ln_g111_def Lx_g111_def anf_program_def)
+ apply (rule; auto?)+
+ apply (erule may_be_built_on_abstract_chan.cases; auto)+
+ apply (auto simp: Set.is_empty_def)
+
+
+
+ apply (rule may_be_built_on_abstract_chan.Pair; auto)
+ apply (rule may_be_built_on_abstract_chan.Chan; auto)
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+
+ apply (rule may_be_built_on_abstract_chan.Chan; auto)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+
+ apply (rule; auto?)+
+
+ apply (erule may_be_built_on_abstract_chan.cases; auto)+
+ apply (auto simp: Set.is_empty_def)
+
+ apply (rule may_be_built_on_abstract_chan.Pair; auto)
+ apply (rule may_be_built_on_abstract_chan.Chan; auto)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+
+ apply (rule may_be_built_on_abstract_chan.Chan; auto)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (auto simp: Set.is_empty_def)
+
+
+ apply (rule may_be_built_on_abstract_chan.Pair; auto)
+ apply (rule may_be_built_on_abstract_chan.Chan; auto)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+
+ apply (rule; auto?)+
+
+ apply (erule may_be_built_on_abstract_chan.cases; auto)+
+ apply (auto simp: Set.is_empty_def)
+
+
+ apply (rule may_be_built_on_abstract_chan.Pair; auto)
+ apply (rule may_be_built_on_abstract_chan.Chan; auto)
+
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+ apply (rule may_be_built_on_abstract_chan.Chan; auto)
+ apply (erule may_be_built_on_abstract_chan.cases; auto)+
+ apply (auto simp: Set.is_empty_def)
+
+ apply ((rotate_tac 1), (erule may_be_built_on_abstract_chan.cases; auto))+
+
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+ apply (rule; auto?)
+
+ apply (fold V_def Ln_g111_def Lx_g111_def anf_program_def)
+
+sorry
+
+
+
+
+
+lemma "
+  static_chan_liveness V Ln_g136 Lx_g136 g136 anf_program
+"
+sorry
+
 *)
 
 

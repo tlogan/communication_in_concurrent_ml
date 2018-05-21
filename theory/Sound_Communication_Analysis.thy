@@ -491,7 +491,7 @@ done
 
 lemma isnt_path_sound: "
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  \<rho> z = Some \<omega> \<Longrightarrow>
+  \<rho> z \<noteq> None \<Longrightarrow>
   dynamic_built_on_chan_var \<rho> (Ch \<pi>C xC) z \<Longrightarrow>
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -499,10 +499,19 @@ lemma isnt_path_sound: "
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
-    paths_congruent_mod_chan \<E>' (Ch \<pi>C xC) \<pi> (path @ [(NLet x, ENext)]) \<and> 
-    may_be_static_live_path V F Ln Lx (NLet xC) isEnd (path @ [(NLet x, ENext)])
+    paths_congruent_mod_chan \<E>' (Ch \<pi>C xC) \<pi> path \<and>
+    may_be_static_live_path V F Ln Lx (NLet xC) isEnd path
 "
 sorry
+
+
+lemma isnt_exp_sound: "
+  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E> \<Longrightarrow>
+  is_super_exp e\<^sub>0 e
+"
+sorry
+
 
 
 lemma isnt_send_site_sound: "
@@ -520,7 +529,8 @@ lemma isnt_send_site_sound: "
  apply (rule exI[of _ x\<^sub>e]; auto?)
  apply (blast dest: isnt_send_evt_sound)
  apply (rule exI; auto?)
-sorry
+ apply (erule isnt_exp_sound; auto)
+done
 
 
 lemma isnt_send_path_sound: "
@@ -529,7 +539,7 @@ lemma isnt_send_path_sound: "
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
-  \<exists> pathSync . 
+  \<exists> pathSync .
     (paths_congruent_mod_chan \<E>' (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
     may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC) pathSync
 "
@@ -542,11 +552,6 @@ lemma isnt_send_path_sound: "
   )
 done
 
-(*
- apply (unfold is_send_path.simps is_static_send_path.simps; auto)
-   apply (frule isnt_send_path_sound'; assumption?; auto; blast)
-done
-*)
 
 theorem one_shot_sound': "
   every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
@@ -581,12 +586,12 @@ done
 
 
 theorem noncompetitive_send_to_ordered_send: "
-   every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
-   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
-   every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) ordered
+  every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+  static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
 (*

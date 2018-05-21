@@ -444,17 +444,7 @@ inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set 
     \<not> Set.is_empty (Lx (NLet x)) \<Longrightarrow>
     path = pre @ (NResult y, EReturn x) # post \<Longrightarrow>
     may_be_static_live_path V F Ln Lx start isEnd path
-  " |
-
-  Post_Call: "
-    may_be_static_path F end ((NLet x, ECall x) # post) \<Longrightarrow>
-    isEnd end \<Longrightarrow>
-    \<not> static_balanced ((NLet x, ECall x) # post) \<Longrightarrow>
-    \<not> Set.is_empty (Lx (NLet x)) \<Longrightarrow>
-    may_be_static_live_path V F Ln Lx (NLet x) isEnd ((NLet x, ECall x) # post)
-  " 
-
-
+  "
 
 
 inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
