@@ -15,61 +15,53 @@ inductive is_super_stack :: "cont list \<Rightarrow> exp \<Rightarrow> bool" whe
   "
 
 
-lemma super_exp_preserved: "
-  \<E> \<rightarrow> \<E>' \<Longrightarrow>
-  \<forall> \<pi> e \<rho> \<kappa> . \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> is_super_exp e\<^sub>0 e \<Longrightarrow>
-  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
-  is_super_exp e\<^sub>0 e'
-"
-sorry
-
-lemma isnt_exp_sound': "
-  \<E>\<^sub>0 \<rightarrow>* \<E> \<Longrightarrow> 
-  \<forall> \<pi> e \<rho> \<kappa> .
-    \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
-    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    is_super_exp e\<^sub>0 e
+lemma isnt_exp_sound_generalized: "
+  \<E> \<rightarrow>* \<E>' \<Longrightarrow> 
+  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+  leaf \<E> \<pi> \<Longrightarrow>
+  prefix \<pi> \<pi>' \<Longrightarrow>
+  is_super_exp e e' \<or> is_super_stack \<kappa> e'
 "
 proof -
- assume "\<E>\<^sub>0 \<rightarrow>* \<E> " then
- have "star_left concur_step \<E>\<^sub>0 \<E>" by (simp add: star_implies_star_left) then
- show "
-  \<forall> \<pi> e \<rho> \<kappa> .
-    \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
-    \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    is_super_exp e\<^sub>0 e
- "
- proof (induction rule: star_left.induct)
-   case (refl \<E>\<^sub>0)
-   show "
-     \<forall>\<pi> e \<rho> \<kappa>. 
-        \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow> 
-        \<E>\<^sub>0 \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
-        is_super_exp e\<^sub>0 e
-   " by (simp add: Refl)
- next
-   case (step \<E>\<^sub>0 \<E> \<E>') 
-   assume "star_left op \<rightarrow> \<E>\<^sub>0 \<E>" 
-   and "\<E> \<rightarrow> \<E>'"
-   and "\<forall>\<pi> e \<rho> \<kappa>. \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow> \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> is_super_exp e\<^sub>0 e"
-   then
+  assume "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" "\<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" 
+  and "leaf \<E> \<pi>" "prefix \<pi> \<pi>'"
 
-   show "
-     \<forall>\<pi>' e' \<rho>' \<kappa>'. 
-       \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow> 
-       \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow> 
-       is_super_exp e\<^sub>0 e'
-   " by (meson super_exp_preserved)
+  assume "\<E> \<rightarrow>* \<E>'" then
+  have "
+    \<forall> \<pi> e \<rho> \<kappa> \<pi>' e' \<rho>' \<kappa>' .
+      \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+      \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+      leaf \<E> \<pi> \<longrightarrow>
+      prefix \<pi> \<pi>' \<longrightarrow>
+      is_super_exp e e' \<or> is_super_stack \<kappa> e'
+  "
+  proof (induction rule: star.induct)
+    case (refl \<E>)
+    show ?case
+      by (metis is_super_exp.simps leaf.cases option.distinct(1) option.inject prefix_order.dual_order.order_iff_strict state.inject)
+  next
+    case (step E1 E2 E3)
+    {
+      fix \<pi>1 e1 \<rho>1 \<kappa>1 \<pi>3 e3 \<rho>3 \<kappa>3
+      assume "E1 \<pi>1 = Some (\<langle>e1;\<rho>1;\<kappa>1\<rangle>)" "E3 \<pi>3 = Some (\<langle>e3;\<rho>3;\<kappa>3\<rangle>)" 
+      assume "leaf E1 \<pi>1" "prefix \<pi>1 \<pi>3"
+      have "is_super_exp e1 e3 \<or> is_super_stack \<kappa>1 e3" sorry
+    } then
+    show ?case by blast
   qed
-qed
+  with \<open>\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)\<close> \<open>\<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close> \<open>leaf \<E> \<pi>\<close> \<open>prefix \<pi> \<pi>'\<close>
 
+  show "is_super_exp e e' \<or> is_super_stack \<kappa> e'" by blast
+
+qed
 
 lemma isnt_exp_sound: "
   [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   is_super_exp e\<^sub>0 e'
 "
-by (simp add: isnt_exp_sound')
+sorry
 
 
 end
