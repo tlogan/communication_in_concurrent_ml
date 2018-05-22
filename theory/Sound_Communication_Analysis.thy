@@ -4,6 +4,7 @@ theory Sound_Communication_Analysis
     Syntax 
     Dynamic_Semantics Static_Semantics Sound_Semantics
     Static_Traceability Sound_Traceability
+    Static_Framework Sound_Framework
     Dynamic_Communication_Analysis Static_Communication_Analysis
 begin
 
@@ -503,16 +504,6 @@ lemma isnt_path_sound: "
     may_be_static_live_path V F Ln Lx (NLet xC) isEnd path
 "
 sorry
-
-
-lemma isnt_exp_sound: "
-  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E> \<Longrightarrow>
-  is_super_exp e\<^sub>0 e
-"
-sorry
-
-
 
 lemma isnt_send_site_sound: "
   \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
