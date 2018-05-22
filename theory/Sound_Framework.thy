@@ -14,17 +14,10 @@ inductive is_super_stack :: "cont list \<Rightarrow> exp \<Rightarrow> bool" whe
     is_super_stack (\<langle>x, e, \<rho>\<rangle> # \<kappa>) e'
   "
 
-lemma pool_nonempty: "
-  [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E> \<Longrightarrow> 
-  \<exists> \<pi> e \<rho> \<kappa> . \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)
-"
-sorry
-
 
 lemma super_exp_preserved: "
-  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  is_super_exp e\<^sub>0 e \<Longrightarrow>
   \<E> \<rightarrow> \<E>' \<Longrightarrow>
+  \<forall> \<pi> e \<rho> \<kappa> . \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> is_super_exp e\<^sub>0 e \<Longrightarrow>
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow> 
   is_super_exp e\<^sub>0 e'
 "
@@ -56,7 +49,7 @@ proof -
    " by (simp add: Refl)
  next
    case (step \<E>\<^sub>0 \<E> \<E>') 
-   assume "star_left op \<rightarrow> \<E>\<^sub>0 \<E>"
+   assume "star_left op \<rightarrow> \<E>\<^sub>0 \<E>" 
    and "\<E> \<rightarrow> \<E>'"
    and "\<forall>\<pi> e \<rho> \<kappa>. \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow> \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> is_super_exp e\<^sub>0 e"
    then
@@ -66,7 +59,7 @@ proof -
        \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow> 
        \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow> 
        is_super_exp e\<^sub>0 e'
-   " by (metis pool_nonempty star_left_implies_star super_exp_preserved)
+   " by (meson super_exp_preserved)
   qed
 qed
 
