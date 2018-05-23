@@ -50,6 +50,31 @@ inductive is_super_exp :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
     is_super_exp (LET x = b in e\<^sub>n) e
   "
 
+inductive is_super_exp_left :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
+  Refl : "
+    is_super_exp_left e0 e0
+  " | 
+  Let_Spawn_Child: "
+    is_super_exp_left e0 (LET x = SPAWN e\<^sub>c in e\<^sub>n)\<Longrightarrow>
+    is_super_exp_left e0 e\<^sub>c
+  " |
+  Let_Case_Left: "
+    is_super_exp_left e0 (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n) \<Longrightarrow>
+    is_super_exp_left e0 e\<^sub>l
+  " |
+  Let_Case_Right: "
+    is_super_exp_left e0 (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n) \<Longrightarrow>
+    is_super_exp_left e0 e\<^sub>r
+  " |
+  Let_Abs_Body: "
+    is_super_exp_left e0 (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n) \<Longrightarrow>
+    is_super_exp_left e0 e\<^sub>b
+  " | 
+  Let: "
+    is_super_exp_left e0 (LET x = b in e\<^sub>n) \<Longrightarrow>
+    is_super_exp_left e0 e\<^sub>n
+  "
+
 
 lemma is_super_exp_trans: "
   is_super_exp e\<^sub>z e\<^sub>y \<Longrightarrow> is_super_exp e\<^sub>y e\<^sub>x \<Longrightarrow> is_super_exp e\<^sub>z e\<^sub>x
@@ -104,8 +129,19 @@ qed
 lemma is_super_exp1: "
   is_super_exp (LET x = b in e\<^sub>n) e\<^sub>n
 "
-by (simp add: Let Refl)
+by (simp add: is_super_exp.Let is_super_exp.Refl)
 
+lemma is_super_exp_left_implies_is_super_exp: "
+  is_super_exp_left e e' \<Longrightarrow> is_super_exp e e'
+"
+ apply (erule is_super_exp_left.induct; auto?)
+  apply (simp add: is_super_exp.Refl)
+  using is_super_exp.Let_Spawn_Child is_super_exp.Refl is_super_exp_trans apply blast
+  using is_super_exp.Let_Case_Left is_super_exp.Refl is_super_exp_trans apply blast
+  using is_super_exp.Let_Case_Right is_super_exp.Refl is_super_exp_trans apply blast
+  using is_super_exp.Let_Abs_Body is_super_exp.Refl is_super_exp_trans apply blast
+  using is_super_exp1 is_super_exp_trans apply blast
+done
 
 (*
 fun val_to_bind :: "val \<Rightarrow> bind" where
