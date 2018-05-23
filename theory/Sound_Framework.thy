@@ -21,42 +21,45 @@ inductive is_super_exp_over_state :: "exp \<Rightarrow> state \<Rightarrow> bool
     is_super_exp_over_state e0 (\<langle>e;\<rho>;\<kappa>\<rangle>)
   "
 
+lemma is_super_exp_preserved_over_stack: "
+  E \<rightarrow> E' \<Longrightarrow>
+  \<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma> \<Longrightarrow>
+  E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+  is_super_exp_over_stack e\<^sub>0 \<kappa>'
+"
+proof -
+  assume
+    A: "\<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>" and
+    B: "E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
+
+  assume "E \<rightarrow> E'" then
+
+  show "is_super_exp_over_stack e\<^sub>0 \<kappa>'" sorry
+qed
+
+lemma is_super_exp_preserved_over_exp: "
+  E \<rightarrow> E' \<Longrightarrow>
+  \<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma> \<Longrightarrow>
+  E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+  is_super_exp_left e\<^sub>0 e'
+"
+proof -
+  assume 
+    A: "\<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>" and
+    B: "E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
+
+  assume "E \<rightarrow> E'" then
+
+  show "is_super_exp_left e\<^sub>0 e'" sorry
+qed
+
 lemma is_super_exp_preserved: "
   E \<rightarrow> E' \<Longrightarrow>
   \<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma> \<Longrightarrow>
   E' \<pi>' = Some \<sigma>' \<Longrightarrow>
   is_super_exp_over_state e\<^sub>0 \<sigma>'
 "
-proof -
-
-  assume 
-    A: "\<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>" and
-    B: "E' \<pi>' = Some \<sigma>'"
-
-  assume "E \<rightarrow> E'" then
-
-  show "  is_super_exp_over_state e\<^sub>0 \<sigma>'" 
-  proof cases
-    case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<sigma>')
-    then show ?thesis sorry
-  next
-    case (Seq_Step \<pi> x b e \<rho> \<kappa> e' \<rho>')
-    then show ?thesis sorry
-  next
-    case (Seq_Step_Up \<pi> x b e \<rho> \<kappa> e' \<rho>')
-    then show ?thesis sorry
-  next
-    case (Let_Chan \<pi> x e \<rho> \<kappa>)
-    then show ?thesis sorry
-  next
-    case (Let_Spawn \<pi> x e\<^sub>c e \<rho> \<kappa>)
-    then show ?thesis sorry
-  next
-    case (Let_Sync \<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e c \<omega>\<^sub>m)
-    then show ?thesis sorry
-  qed
-qed
-
+by (metis is_super_exp_over_state.simps is_super_exp_preserved_over_exp is_super_exp_preserved_over_stack state.exhaust)
 
 lemma isnt_exp_sound_generalized: "
   \<E>0 \<rightarrow>* \<E>' \<Longrightarrow>
