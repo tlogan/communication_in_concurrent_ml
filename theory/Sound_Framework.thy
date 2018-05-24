@@ -45,12 +45,64 @@ lemma is_super_exp_preserved_over_exp: "
 "
 proof -
   assume 
-    A: "\<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>" and
-    B: "E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
+    H1: "\<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>" and
+    H2: "E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
 
-  assume "E \<rightarrow> E'" then
+  assume "E \<rightarrow> E'"
 
-  show "is_super_exp_left e\<^sub>0 e'" sorry
+  then show "is_super_exp_left e\<^sub>0 e'"
+  proof cases
+    case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<sigma>')
+
+    assume 
+      H3: "E' = E ++ [\<pi> ;; LReturn x\<^sub>\<kappa> \<mapsto> \<sigma>']" and
+      H4: "leaf E \<pi>" and
+      H5: "E \<pi> = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" and
+      H6: "\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>'" 
+
+    show "is_super_exp_left e\<^sub>0 e'"
+    proof cases
+      assume H7: "\<pi>' = (\<pi> ;; LReturn x\<^sub>\<kappa>)"
+
+      from H3 have "E' (\<pi> ;; LReturn x\<^sub>\<kappa>) = Some \<sigma>'" by simp
+
+      with H2 H7 have H8: "\<sigma>' = \<langle>e';\<rho>';\<kappa>'\<rangle>" by simp
+
+      from H6 obtain \<omega> where
+        H9: "\<sigma>' =  \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>" by (auto simp: seq_step.simps)
+
+      with H8 have H10: "e\<^sub>\<kappa> = e'" by simp
+  
+      from H1 H5 have "is_super_exp_over_state e\<^sub>0 (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" by blast
+
+      then have "is_super_exp_over_stack e\<^sub>0 (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)" by (blast dest: is_super_exp_over_state.cases)
+
+      then have "is_super_exp_left e\<^sub>0 e\<^sub>\<kappa>" by (simp add: is_super_exp_over_stack.simps)
+
+      with H10 show "is_super_exp_left e\<^sub>0 e'" by simp
+
+    next
+      assume H7: "\<pi>' \<noteq> (\<pi> ;; LReturn x\<^sub>\<kappa>)"
+      show ?thesis sorry
+    qed
+
+
+  next
+    case (Seq_Step \<pi> x b e \<rho> \<kappa> e' \<rho>')
+    then show ?thesis sorry
+  next
+    case (Seq_Step_Up \<pi> x b e \<rho> \<kappa> e' \<rho>')
+    then show ?thesis sorry
+    next
+      case (Let_Chan \<pi> x e \<rho> \<kappa>)
+      then show ?thesis sorry
+  next
+    case (Let_Spawn \<pi> x e\<^sub>c e \<rho> \<kappa>)
+    then show ?thesis sorry
+  next
+    case (Let_Sync \<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e c \<omega>\<^sub>m)
+    then show ?thesis sorry
+  qed
 qed
 
 lemma is_super_exp_preserved: "
