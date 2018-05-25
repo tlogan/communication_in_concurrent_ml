@@ -1375,13 +1375,13 @@ proof -
     with `\<E>' = \<E> ++ [\<pi> ;; (LReturn x\<^sub>\<kappa>) \<mapsto> \<sigma>']`
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by simp
   next
-    case (Seq_Step \<pi> x b e \<rho> \<kappa> e' \<rho>')
-    assume "\<E>' = \<E> ++ [\<pi> ;; (LNext x) \<mapsto> \<langle>e';\<rho>';\<kappa>\<rangle>]"
+    case (Seq_Step \<pi> x b e \<rho> \<kappa> \<rho>')
+    assume "\<E>' = \<E> ++ [\<pi> ;; (LNext x) \<mapsto> \<langle>e;\<rho>';\<kappa>\<rangle>]"
     assume "leaf \<E> \<pi>" and "\<E> \<pi> = Some (\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle>)"
-    and "\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle> \<hookrightarrow> \<langle>e';\<rho>';\<kappa>\<rangle>"
+    and "\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle> \<hookrightarrow> \<langle>e;\<rho>';\<kappa>\<rangle>"
     with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close>
-    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e';\<rho>';\<kappa>\<rangle>)" by (simp add: may_be_static_eval_preserved_under_seq_step)
-    with \<open>\<E>' = \<E> ++ [\<pi> ;; (LNext x) \<mapsto> \<langle>e';\<rho>';\<kappa>\<rangle>]\<close>
+    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e;\<rho>';\<kappa>\<rangle>)" by (simp add: may_be_static_eval_preserved_under_seq_step)
+    with \<open>\<E>' = \<E> ++ [\<pi> ;; (LNext x) \<mapsto> \<langle>e;\<rho>';\<kappa>\<rangle>]\<close>
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by simp
   next
     case (Seq_Step_Up \<pi> x b e \<rho> \<kappa> e' \<rho>')

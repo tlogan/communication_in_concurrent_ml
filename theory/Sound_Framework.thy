@@ -62,11 +62,11 @@ proof -
 
     show "is_super_exp_left e\<^sub>0 e'"
     proof cases
-      assume H7: "\<pi>' = (\<pi> ;; LReturn x\<^sub>\<kappa>)"
+      assume "\<pi>' = (\<pi> ;; LReturn x\<^sub>\<kappa>)"
 
-      from H3 have "E' (\<pi> ;; LReturn x\<^sub>\<kappa>) = Some \<sigma>'" by simp
+      with H3 have "E' \<pi>' = Some \<sigma>'" by simp
 
-      with H2 H7 have H8: "\<sigma>' = \<langle>e';\<rho>';\<kappa>'\<rangle>" by simp
+      with H2 have H8: "\<sigma>' = \<langle>e';\<rho>';\<kappa>'\<rangle>" by simp
 
       from H6 obtain \<omega> where
         H9: "\<sigma>' =  \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>" by (auto simp: seq_step.simps)
@@ -88,17 +88,28 @@ proof -
       with H1 show "is_super_exp_left e\<^sub>0 e'" by (blast dest: is_super_exp_over_state.cases)
     qed
   next
-    case (Seq_Step \<pi> x b el \<rho>l \<kappa>l el' \<rho>l')
+    case (Seq_Step \<pi> x b el \<rho>l \<kappa>l \<rho>l')
     assume 
-      H3: "E' = E ++ [\<pi> ;; LNext x \<mapsto> \<langle>el';\<rho>l';\<kappa>l\<rangle>]" and
+      H3: "E' = E ++ [\<pi> ;; LNext x \<mapsto> \<langle>el;\<rho>l';\<kappa>l\<rangle>]" and
       H4: "leaf E \<pi>" and
       H5: "E \<pi> = Some (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" and
-      H6: "\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle> \<hookrightarrow> \<langle>el';\<rho>l';\<kappa>l\<rangle>"
+      H6: "\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle> \<hookrightarrow> \<langle>el;\<rho>l';\<kappa>l\<rangle>"
 
     show "is_super_exp_left e\<^sub>0 e'"
     proof cases
       assume "\<pi>' = \<pi> ;; LNext x"
-      show "is_super_exp_left e\<^sub>0 e'" sorry
+
+      with H3 have H7: "E' \<pi>' = Some (\<langle>el;\<rho>l';\<kappa>l\<rangle>)" by simp
+
+      with H2 have H8: "e' = el" by simp
+
+      from H1 H5 have "is_super_exp_over_state e\<^sub>0 (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" by blast then
+  
+      have "is_super_exp_left e\<^sub>0 (LET x = b in el)" by (blast dest: is_super_exp_over_state.cases) then
+
+      have "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
+     
+      with H8 show "is_super_exp_left e\<^sub>0 e'" by simp
     next
       assume "\<pi>' \<noteq> \<pi> ;; LNext x"
 

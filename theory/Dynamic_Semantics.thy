@@ -100,9 +100,9 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
     \<lbrakk> 
       leaf \<E> \<pi> ;
       \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
-      \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<kappa>\<rangle>
+      \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e; \<rho>'; \<kappa>\<rangle>
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LNext x) \<mapsto> \<langle>e'; \<rho>'; \<kappa>\<rangle>]
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LNext x) \<mapsto> \<langle>e; \<rho>'; \<kappa>\<rangle>]
   " |
   Seq_Step_Up: "
     \<lbrakk> 
