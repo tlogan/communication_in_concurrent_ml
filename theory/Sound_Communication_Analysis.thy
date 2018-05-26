@@ -3,7 +3,6 @@ theory Sound_Communication_Analysis
     Main
     Syntax 
     Dynamic_Semantics Static_Semantics Sound_Semantics
-    Static_Traceability Sound_Traceability
     Static_Framework Sound_Framework
     Dynamic_Communication_Analysis Static_Communication_Analysis
 begin

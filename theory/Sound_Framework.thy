@@ -58,7 +58,7 @@ proof -
       H3: "E' = E ++ [\<pi> ;; LReturn x\<^sub>\<kappa> \<mapsto> \<sigma>']" and
       H4: "leaf E \<pi>" and
       H5: "E \<pi> = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" and
-      H6: "\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>'" 
+      H6: "\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<down>\<hookrightarrow> \<sigma>'" 
 
     show "is_super_exp_left e\<^sub>0 e'"
     proof cases
@@ -69,7 +69,7 @@ proof -
       with H2 have H8: "\<sigma>' = \<langle>e';\<rho>';\<kappa>'\<rangle>" by simp
 
       from H6 obtain \<omega> where
-        H9: "\<sigma>' =  \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>" by (auto simp: seq_step.simps)
+        H9: "\<sigma>' =  \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>" by (auto simp: seq_step_down.simps)
 
       with H8 have H10: "e\<^sub>\<kappa> = e'" by simp
   
@@ -93,7 +93,7 @@ proof -
       H3: "E' = E ++ [\<pi> ;; LNext x \<mapsto> \<langle>el;\<rho>l';\<kappa>l\<rangle>]" and
       H4: "leaf E \<pi>" and
       H5: "E \<pi> = Some (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" and
-      H6: "\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle> \<hookrightarrow> \<langle>el;\<rho>l';\<kappa>l\<rangle>"
+      H6: "seq_step (LET x = b in el) \<rho>l \<rho>l'"
 
     show "is_super_exp_left e\<^sub>0 e'"
     proof cases
@@ -123,7 +123,7 @@ proof -
       H3: "E' = E ++ [\<pi> ;; LCall x \<mapsto> \<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>]" and
       H4: "leaf E \<pi>" and
       H5: "E \<pi> = Some (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" and
-      H6: "\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle> \<hookrightarrow> \<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>"
+      H6: "\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle> \<up>\<hookrightarrow> \<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>"
 
     show "is_super_exp_left e\<^sub>0 e'"
     proof cases

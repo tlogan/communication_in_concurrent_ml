@@ -3,6 +3,9 @@ theory Static_Traceability
     "~~/src/HOL/Library/List"
 begin
 
+
+(*
+
 inductive balanced :: "control_path \<Rightarrow> bool" where
   Empty: "
     balanced []
@@ -105,5 +108,6 @@ inductive static_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow
     \<V> \<turnstile> e\<^sub>0 \<down> \<pi>;;(LCall x) \<mapsto> e'
   "
 
+*)
 
 end

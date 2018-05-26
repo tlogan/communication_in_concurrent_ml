@@ -25,37 +25,36 @@ datatype cont = Cont var exp val_env ("\<langle>_,_,_\<rangle>" [0, 0, 0] 70)
 datatype state = State exp val_env "cont list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
 
 
-inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<hookrightarrow>" 55) where 
-  Result: "
-    \<rho> x = Some \<omega> \<Longrightarrow>
-    \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>
-  " |
+inductive seq_step :: "(bind \<times> val_env) \<Rightarrow> val \<Rightarrow> bool" where
   Let_Unit: "
-    \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e; \<rho> ++ [x \<mapsto> VUnit]; \<kappa>\<rangle>
+    seq_step (\<lparr>\<rparr>, \<rho>) VUnit
   " |
   Let_Prim: "
-    \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e; \<rho> ++ [x \<mapsto> (VClosure p \<rho>)]; \<kappa>\<rangle>
+    seq_step (Prim p, \<rho>) (VClosure p \<rho>)
   " |
   Let_Fst: "
     \<lbrakk> 
       \<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p); 
-      \<rho>\<^sub>p x\<^sub>1 = Some \<omega> 
+      \<rho>\<^sub>p x\<^sub>1 = Some \<omega>
     \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e; \<rho> ++ [x \<mapsto> \<omega>]; \<kappa>\<rangle>
+    seq_step (FST x\<^sub>p, \<rho>) \<omega>
   " |
   Let_Snd: "
     \<lbrakk> 
       \<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p); 
-      \<rho>\<^sub>p x\<^sub>2 = Some \<omega> 
+      \<rho>\<^sub>p x\<^sub>2 = Some \<omega>
     \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = SND x\<^sub>p in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e; \<rho> ++ [x \<mapsto> \<omega>]; \<kappa>\<rangle>
-  " |
+    seq_step (SND x\<^sub>p, \<rho>) \<omega>
+  "
+
+
+inductive seq_step_up :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<up>\<hookrightarrow>" 55) where 
   Let_Case_Left: "
     \<lbrakk> 
       \<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l); 
       \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l
     \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> 
+    \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<up>\<hookrightarrow> 
     \<langle>e\<^sub>l; \<rho> ++ [x\<^sub>l \<mapsto> \<omega>\<^sub>l]; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
   " |
   Let_Case_Right: "
@@ -63,7 +62,7 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
       \<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r); 
       \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r
     \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> 
+    \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<up>\<hookrightarrow> 
     \<langle>e\<^sub>r; \<rho> ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>r]; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
   " |
   Let_App: "
@@ -71,8 +70,14 @@ inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<h
       \<rho> f = Some (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l); 
       \<rho> x\<^sub>a = Some \<omega>\<^sub>a 
     \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> 
+    \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<up>\<hookrightarrow> 
     \<langle>e\<^sub>l; \<rho>\<^sub>l ++ [f\<^sub>l \<mapsto> (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l), x\<^sub>l \<mapsto> \<omega>\<^sub>a]; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
+  "
+
+inductive seq_step_down :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<down>\<hookrightarrow>" 55) where 
+  Result: "
+    \<rho> x = Some \<omega> \<Longrightarrow>
+    \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<down>\<hookrightarrow> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>
   "
 
 
@@ -92,7 +97,7 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
     \<lbrakk> 
       leaf \<E> \<pi>;
       \<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) ;
-      \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>'
+      \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<down>\<hookrightarrow> \<sigma>'
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [\<pi>;;(LReturn x\<^sub>\<kappa>) \<mapsto> \<sigma>']
   " |
@@ -100,15 +105,15 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
     \<lbrakk> 
       leaf \<E> \<pi> ;
       \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
-      \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e; \<rho>'; \<kappa>\<rangle>
+      seq_step (b, \<rho>) \<omega>
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LNext x) \<mapsto> \<langle>e; \<rho>'; \<kappa>\<rangle>]
+    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LNext x) \<mapsto> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>]
   " |
   Seq_Step_Up: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
       \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
-      \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
+      \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<up>\<hookrightarrow> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [\<pi>;;(LCall x) \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
   " |

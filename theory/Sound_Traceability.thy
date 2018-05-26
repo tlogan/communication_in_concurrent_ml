@@ -5,6 +5,7 @@ theory Sound_Traceability
     "~~/src/HOL/Library/List"
 begin
 
+(*
 
 inductive stack_static_traceable :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> control_path \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<tturnstile> _ \<down> _ \<mapsto> _" [56,0,0,56]55)  where
   Empty: "
@@ -603,5 +604,6 @@ proof -
   show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e" using isnt_static_traceable_sound' by blast
 qed
 
-  
+  *)
+
 end
