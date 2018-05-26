@@ -10,47 +10,32 @@ inductive is_super_exp_over_stack :: "exp \<Rightarrow> cont list \<Rightarrow> 
   " |
   Nonempty: "
     is_super_exp_left e0 e\<^sub>\<kappa> \<Longrightarrow>
-    (* is_super_exp_over_stack e0 \<kappa> \<Longrightarrow> *)
+    is_super_exp_over_stack e0 \<kappa> \<Longrightarrow>
     is_super_exp_over_stack e0 (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
   "
 
 inductive is_super_exp_over_state :: "exp \<Rightarrow> state \<Rightarrow> bool" where
-  "
+  Any: "
     is_super_exp_left e0 e \<Longrightarrow>
     is_super_exp_over_stack e0 \<kappa> \<Longrightarrow>
     is_super_exp_over_state e0 (\<langle>e;\<rho>;\<kappa>\<rangle>)
   "
 
-lemma is_super_exp_preserved_over_stack: "
+
+lemma is_super_exp_over_state_preserved: "
   E \<rightarrow> E' \<Longrightarrow>
   \<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma> \<Longrightarrow>
-  E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
-  is_super_exp_over_stack e\<^sub>0 \<kappa>'
-"
-proof -
-  assume
-    A: "\<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>" and
-    B: "E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
-
-  assume "E \<rightarrow> E'" then
-
-  show "is_super_exp_over_stack e\<^sub>0 \<kappa>'" sorry
-qed
-
-lemma is_super_exp_preserved_over_exp: "
-  E \<rightarrow> E' \<Longrightarrow>
-  \<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma> \<Longrightarrow>
-  E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
-  is_super_exp_left e\<^sub>0 e'
+  E' \<pi>' = Some \<sigma>' \<Longrightarrow>
+  is_super_exp_over_state e\<^sub>0 \<sigma>'
 "
 proof -
   assume 
     H1: "\<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>" and
-    H2: "E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
+    H2: "E' \<pi>' = Some \<sigma>'"
 
   assume "E \<rightarrow> E'"
 
-  then show "is_super_exp_left e\<^sub>0 e'"
+  then show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
   proof cases
     case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<omega>)
 
@@ -60,27 +45,35 @@ proof -
       H5: "E \<pi> = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" and
       H6: "\<rho> x = Some \<omega>" 
 
-    show "is_super_exp_left e\<^sub>0 e'"
-    proof cases
-      assume "\<pi>' = (\<pi> ;; LReturn x\<^sub>\<kappa>)"
+    from H1 H5 have "is_super_exp_over_state e\<^sub>0 (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" by blast
 
+    then have "is_super_exp_over_stack e\<^sub>0 (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)" by (blast dest: is_super_exp_over_state.cases)
+
+    then have 
+      "is_super_exp_left e\<^sub>0 e\<^sub>\<kappa>" and 
+      "is_super_exp_over_stack e\<^sub>0 \<kappa>" by (blast dest: is_super_exp_over_stack.cases)+
+
+    then have H7: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)" by (auto simp: is_super_exp_over_state.intros)
+
+    show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
+    proof cases
+      assume H8: "\<pi>' = \<pi> ;; LReturn x\<^sub>\<kappa>"
+      
       with H3 have "E' \<pi>' = Some (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)" by simp
 
-      with H2 have H8: "e\<^sub>\<kappa> = e'" by simp
-  
-      from H1 H5 have "is_super_exp_over_state e\<^sub>0 (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" by blast
+      with H2
+      have "\<sigma>' = (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)" by simp
 
-      then have "is_super_exp_over_stack e\<^sub>0 (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)" by (blast dest: is_super_exp_over_state.cases)
-
-      then have "is_super_exp_left e\<^sub>0 e\<^sub>\<kappa>" by (simp add: is_super_exp_over_stack.simps)
-
-      with H8 show "is_super_exp_left e\<^sub>0 e'" by simp
+      with H7
+      show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
     next
-      assume H7: "\<pi>' \<noteq> (\<pi> ;; LReturn x\<^sub>\<kappa>)"
+      assume H8: "\<pi>' \<noteq> \<pi> ;; LReturn x\<^sub>\<kappa>"
 
-      with H2 H3 have "E \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" by auto
+      with H3 have "E' \<pi>' = E \<pi>'" by simp
 
-      with H1 show "is_super_exp_left e\<^sub>0 e'" by (blast dest: is_super_exp_over_state.cases)
+      with H2 have "E \<pi>' = Some \<sigma>'" by simp
+  
+      with H1 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_over_state.cases)
     qed
   next
     case (Seq_Step \<pi> x b el \<rho>l \<kappa>l \<omega>)
@@ -90,27 +83,35 @@ proof -
       H5: "E \<pi> = Some (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" and
       H6: "seq_step (b, \<rho>l) \<omega>"
 
-    show "is_super_exp_left e\<^sub>0 e'"
+    from H1 H5 have H7: "is_super_exp_over_state e\<^sub>0 (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" by blast
+
+    then have 
+      H8: "is_super_exp_left e\<^sub>0 (LET x = b in el)" and
+      H9: "is_super_exp_over_stack e\<^sub>0 \<kappa>l" by (blast dest: is_super_exp_over_state.cases)+
+
+    from H8 have H10: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
+
+    from H9 H10 have H11: "is_super_exp_over_state e\<^sub>0 (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
+
+    show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
     proof cases
-      assume "\<pi>' = \<pi> ;; LNext x"
+      assume H8: "\<pi>' = \<pi> ;; LNext x"
+      
+      with H3 have "E' \<pi>' = Some (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by simp
 
-      with H3 have H7: "E' \<pi>' = Some (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by simp
+      with H2
+      have "\<sigma>' = (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by simp
 
-      with H2 have H8: "e' = el" by simp
-
-      from H1 H5 have "is_super_exp_over_state e\<^sub>0 (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" by blast then
-  
-      have "is_super_exp_left e\<^sub>0 (LET x = b in el)" by (blast dest: is_super_exp_over_state.cases) then
-
-      have "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
-     
-      with H8 show "is_super_exp_left e\<^sub>0 e'" by simp
+      with H11
+      show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
     next
-      assume "\<pi>' \<noteq> \<pi> ;; LNext x"
+      assume H8: "\<pi>' \<noteq> \<pi> ;; LNext x"
 
-      with H2 H3 have "E \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" by auto
+      with H3 have "E' \<pi>' = E \<pi>'" by simp
 
-      with H1 show "is_super_exp_left e\<^sub>0 e'" by (blast dest: is_super_exp_over_state.cases)
+      with H2 have "E \<pi>' = Some \<sigma>'" by simp
+  
+      with H1 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_over_state.cases)
     qed
   next
     case (Seq_Step_Up \<pi> x b el \<rho>l \<kappa>l el' \<rho>l')
@@ -120,16 +121,18 @@ proof -
       H5: "E \<pi> = Some (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" and
       H6: "seq_step_up (b, \<rho>l) (el', \<rho>l')"
 
-    show "is_super_exp_left e\<^sub>0 e'"
+    show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
     proof cases
-      assume "\<pi>' = \<pi> ;; LCall x "
-      show "is_super_exp_left e\<^sub>0 e'" sorry
+      assume HX: "\<pi>' = \<pi> ;; LCall x"
+      show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
     next
-      assume "\<pi>' \<noteq> \<pi> ;; LCall x"
+      assume HX: "\<pi>' \<noteq> \<pi> ;; LCall x"
 
-      with H2 H3 have "E \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" by auto
+      with H3 have "E' \<pi>' = E \<pi>'" by simp
 
-      with H1 show "is_super_exp_left e\<^sub>0 e'" by (blast dest: is_super_exp_over_state.cases)
+      with H2 have "E \<pi>' = Some \<sigma>'" by simp
+  
+      with H1 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_over_state.cases)
     qed
   next
     case (Let_Chan \<pi> x e \<rho> \<kappa>)
@@ -138,16 +141,18 @@ proof -
       H4: "leaf E \<pi>" and
       H5: "E \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e;\<rho>;\<kappa>\<rangle>)"
 
-    show "is_super_exp_left e\<^sub>0 e'"
+    show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
     proof cases
-      assume "\<pi>' = \<pi> ;; LNext x"
-      show "is_super_exp_left e\<^sub>0 e'" sorry
+      assume HX: "\<pi>' = \<pi> ;; LNext x"
+      show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
     next
-      assume "\<pi>' \<noteq> \<pi> ;; LNext x"
+      assume HX: "\<pi>' \<noteq> \<pi> ;; LNext x"
 
-      with H2 H3 have "E \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" by auto
+      with H3 have "E' \<pi>' = E \<pi>'" by simp
 
-      with H1 show "is_super_exp_left e\<^sub>0 e'" by (blast dest: is_super_exp_over_state.cases)
+      with H2 have "E \<pi>' = Some \<sigma>'" by simp
+  
+      with H1 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_over_state.cases)
     qed
   next
     case (Let_Spawn \<pi> x e\<^sub>c e \<rho> \<kappa>)
@@ -156,23 +161,25 @@ proof -
       H4: "leaf E \<pi>" and
       H5: "E \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e;\<rho>;\<kappa>\<rangle>)"
 
-    show "is_super_exp_left e\<^sub>0 e'"
+    show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
     proof cases
-      assume "\<pi>' = \<pi> ;; LSpawn x"
-      show "is_super_exp_left e\<^sub>0 e'" sorry
+      assume HX: "\<pi>' = \<pi> ;; LSpawn x"
+      show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
     next
-      assume H6: "\<pi>' \<noteq> \<pi> ;; LSpawn x"
+      assume HX: "\<pi>' \<noteq> \<pi> ;; LSpawn x"
 
-      show "is_super_exp_left e\<^sub>0 e'"
+      show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
       proof cases
-        assume "\<pi>' = \<pi> ;; LNext x"
-        show "is_super_exp_left e\<^sub>0 e'" sorry
+        assume HXX: "\<pi>' = \<pi> ;; LNext x"
+        show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
       next
-        assume "\<pi>' \<noteq> \<pi> ;; LNext x"
+        assume HXX: "\<pi>' \<noteq> \<pi> ;; LNext x"
   
-        with H2 H3 H6 have "E \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" by auto
+        with HX H3 have "E' \<pi>' = E \<pi>'" by simp
   
-        with H1 show "is_super_exp_left e\<^sub>0 e'" by (blast dest: is_super_exp_over_state.cases)
+        with H2 have "E \<pi>' = Some \<sigma>'" by simp
+    
+        with H1 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_over_state.cases)
       qed
     qed
   next
@@ -183,23 +190,25 @@ proof -
       H4: "leaf E \<pi>\<^sub>s" and
       H5: "E \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)"
 
-    show "is_super_exp_left e\<^sub>0 e'"
+    show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
     proof cases
-      assume "\<pi>' = \<pi>\<^sub>r ;; LNext x\<^sub>r"
-      show "is_super_exp_left e\<^sub>0 e'" sorry
+      assume HX: "\<pi>' = \<pi>\<^sub>r ;; LNext x\<^sub>r"
+      show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
     next
-      assume H6: "\<pi>' \<noteq> \<pi>\<^sub>r ;; LNext x\<^sub>r"
+      assume HX: "\<pi>' \<noteq> \<pi>\<^sub>r ;; LNext x\<^sub>r"
 
-      show "is_super_exp_left e\<^sub>0 e'"
+      show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
       proof cases
-        assume "\<pi>' = \<pi>\<^sub>s ;; LNext x\<^sub>s"
-        show "is_super_exp_left e\<^sub>0 e'" sorry
+        assume HXX: "\<pi>' = \<pi>\<^sub>s ;; LNext x\<^sub>s"
+        show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
       next
-        assume "\<pi>' \<noteq> \<pi>\<^sub>s ;; LNext x\<^sub>s"
+        assume HXX: "\<pi>' \<noteq> \<pi>\<^sub>s ;; LNext x\<^sub>s"
   
-        with H2 H3 H6 have "E \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" by auto
-
-        with H1 show "is_super_exp_left e\<^sub>0 e'" by (blast dest: is_super_exp_over_state.cases)
+        with HX H3 have "E' \<pi>' = E \<pi>'" by simp
+  
+        with H2 have "E \<pi>' = Some \<sigma>'" by simp
+    
+        with H1 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_over_state.cases)
       qed
     qed
   qed

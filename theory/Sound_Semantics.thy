@@ -1428,6 +1428,7 @@ proof -
       H5: "\<E> \<pi> = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" and 
       H6: "\<rho> x = Some \<omega>"
 
+
     from H1 H5 H6
     have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;; LReturn x\<^sub>\<kappa> \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)" using may_be_static_eval_pool.simps may_be_static_eval_state_to_state_result by fastforce
 
