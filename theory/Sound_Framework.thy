@@ -52,26 +52,21 @@ proof -
 
   then show "is_super_exp_left e\<^sub>0 e'"
   proof cases
-    case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<sigma>')
+    case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<omega>)
 
     assume 
-      H3: "E' = E ++ [\<pi> ;; LReturn x\<^sub>\<kappa> \<mapsto> \<sigma>']" and
+      H3: "E' = E ++ [\<pi> ;; LReturn x\<^sub>\<kappa> \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>]" and
       H4: "leaf E \<pi>" and
       H5: "E \<pi> = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" and
-      H6: "\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<down>\<hookrightarrow> \<sigma>'" 
+      H6: "\<rho> x = Some \<omega>" 
 
     show "is_super_exp_left e\<^sub>0 e'"
     proof cases
       assume "\<pi>' = (\<pi> ;; LReturn x\<^sub>\<kappa>)"
 
-      with H3 have "E' \<pi>' = Some \<sigma>'" by simp
+      with H3 have "E' \<pi>' = Some (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)" by simp
 
-      with H2 have H8: "\<sigma>' = \<langle>e';\<rho>';\<kappa>'\<rangle>" by simp
-
-      from H6 obtain \<omega> where
-        H9: "\<sigma>' =  \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>" by (auto simp: seq_step_down.simps)
-
-      with H8 have H10: "e\<^sub>\<kappa> = e'" by simp
+      with H2 have H8: "e\<^sub>\<kappa> = e'" by simp
   
       from H1 H5 have "is_super_exp_over_state e\<^sub>0 (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" by blast
 
@@ -79,7 +74,7 @@ proof -
 
       then have "is_super_exp_left e\<^sub>0 e\<^sub>\<kappa>" by (simp add: is_super_exp_over_stack.simps)
 
-      with H10 show "is_super_exp_left e\<^sub>0 e'" by simp
+      with H8 show "is_super_exp_left e\<^sub>0 e'" by simp
     next
       assume H7: "\<pi>' \<noteq> (\<pi> ;; LReturn x\<^sub>\<kappa>)"
 
@@ -88,18 +83,18 @@ proof -
       with H1 show "is_super_exp_left e\<^sub>0 e'" by (blast dest: is_super_exp_over_state.cases)
     qed
   next
-    case (Seq_Step \<pi> x b el \<rho>l \<kappa>l \<rho>l')
+    case (Seq_Step \<pi> x b el \<rho>l \<kappa>l \<omega>)
     assume 
-      H3: "E' = E ++ [\<pi> ;; LNext x \<mapsto> \<langle>el;\<rho>l';\<kappa>l\<rangle>]" and
+      H3: "E' = E ++ [\<pi> ;; LNext x \<mapsto> \<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>]" and
       H4: "leaf E \<pi>" and
       H5: "E \<pi> = Some (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" and
-      H6: "seq_step (LET x = b in el) \<rho>l \<rho>l'"
+      H6: "seq_step (b, \<rho>l) \<omega>"
 
     show "is_super_exp_left e\<^sub>0 e'"
     proof cases
       assume "\<pi>' = \<pi> ;; LNext x"
 
-      with H3 have H7: "E' \<pi>' = Some (\<langle>el;\<rho>l';\<kappa>l\<rangle>)" by simp
+      with H3 have H7: "E' \<pi>' = Some (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by simp
 
       with H2 have H8: "e' = el" by simp
 
@@ -123,7 +118,7 @@ proof -
       H3: "E' = E ++ [\<pi> ;; LCall x \<mapsto> \<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>]" and
       H4: "leaf E \<pi>" and
       H5: "E \<pi> = Some (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" and
-      H6: "\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle> \<up>\<hookrightarrow> \<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>"
+      H6: "seq_step_up (b, \<rho>l) (el', \<rho>l')"
 
     show "is_super_exp_left e\<^sub>0 e'"
     proof cases
