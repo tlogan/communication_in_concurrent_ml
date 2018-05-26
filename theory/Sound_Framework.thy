@@ -93,12 +93,24 @@ proof -
 
     from H9 H10 have H11: "is_super_exp_over_state e\<^sub>0 (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
 
-    with H1
-    have "\<forall> \<pi>' \<sigma>' . (E ++ [\<pi> ;; LNext x \<mapsto> \<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>]) \<pi>' = Some \<sigma>' \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
+    show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
+    proof cases
+      assume H8: "\<pi>' = \<pi> ;; LNext x"
+      
+      with H3 have "E' \<pi>' = Some (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by simp
 
-    with H3 have "\<forall> \<pi>' \<sigma>' . E' \<pi>' = Some \<sigma>' \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
+      with H2 have "\<sigma>' = (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by simp
 
-    with H2 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by blast
+      with H11 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
+    next
+      assume H8: "\<pi>' \<noteq> \<pi> ;; LNext x"
+
+      with H3 have "E' \<pi>' = E \<pi>'" by simp
+
+      with H2 have "E \<pi>' = Some \<sigma>'" by simp
+  
+      with H1 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_over_state.cases)
+    qed
   next
     case (Seq_Step_Up \<pi> x b el \<rho>l \<kappa>l el' \<rho>l')
     assume 
