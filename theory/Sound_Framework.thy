@@ -4,23 +4,68 @@ theory Sound_Framework
       "~~/src/HOL/Eisbach/Eisbach_Tools"
 begin
 
+
+inductive is_super_exp_over_prim :: "exp \<Rightarrow> prim \<Rightarrow> bool" where
+  Send_Evt: "
+    is_super_exp_over_prim e0 (Send_Evt xC xM)
+  " |
+  Recv_Evt: "
+    is_super_exp_over_prim e0 (Recv_Evt xC)
+  " |
+  Pair: "
+    is_super_exp_over_prim e0 (Pair x1 x2)
+  " |
+  Left: "
+    is_super_exp_over_prim e0 (Left x)
+  " |
+  Right: "
+    is_super_exp_over_prim e0 (Right x)
+  " |
+  Abs: "
+    is_super_exp_left e0 e\<^sub>b \<Longrightarrow>
+    is_super_exp_over_prim e0 (Abs f\<^sub>p x\<^sub>p e\<^sub>b)
+  " 
+
+inductive 
+  is_super_exp_over_env :: "exp \<Rightarrow> val_env \<Rightarrow> bool" and
+  is_super_exp_over_val :: "exp \<Rightarrow> val \<Rightarrow> bool"
+where
+  VUnit: "
+    is_super_exp_over_val e0 VUnit
+  " |
+  VChan: "
+    is_super_exp_over_val e0 (VChan c)
+  " |
+  VClosure: "
+    is_super_exp_left e0 e\<^sub>b \<Longrightarrow>
+    is_super_exp_over_prim e0 p \<Longrightarrow>
+    is_super_exp_over_env e0 \<rho>' \<Longrightarrow>
+    is_super_exp_over_val e0 (VClosure p \<rho>')
+  " |
+
+  Intro: "
+    \<forall> f \<omega> . \<rho> f = Some \<omega> \<longrightarrow> is_super_exp_over_val e0 \<omega> \<Longrightarrow>
+    is_super_exp_over_env e0 \<rho>
+  "
+
 inductive is_super_exp_over_stack :: "exp \<Rightarrow> cont list \<Rightarrow> bool" where
   Empty: "
     is_super_exp_over_stack e0 []
   " |
   Nonempty: "
     is_super_exp_left e0 e\<^sub>\<kappa> \<Longrightarrow>
+    is_super_exp_over_env e0 \<rho>\<^sub>\<kappa> \<Longrightarrow>
     is_super_exp_over_stack e0 \<kappa> \<Longrightarrow>
     is_super_exp_over_stack e0 (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
   "
 
 inductive is_super_exp_over_state :: "exp \<Rightarrow> state \<Rightarrow> bool" where
-  Any: "
+  Intro: "
     is_super_exp_left e0 e \<Longrightarrow>
+    is_super_exp_over_env e0 \<rho> \<Longrightarrow>
     is_super_exp_over_stack e0 \<kappa> \<Longrightarrow>
     is_super_exp_over_state e0 (\<langle>e;\<rho>;\<kappa>\<rangle>)
   "
-
 
 lemma is_super_exp_over_state_preserved: "
   E \<rightarrow> E' \<Longrightarrow>
@@ -45,15 +90,42 @@ proof -
       H5: "E \<pi> = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" and
       H6: "\<rho> x = Some \<omega>" 
 
-    from H1 H5 have "is_super_exp_over_state e\<^sub>0 (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" by blast
-
-    then have "is_super_exp_over_stack e\<^sub>0 (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)" by (blast dest: is_super_exp_over_state.cases)
+    from H1 H5 have H7: "is_super_exp_over_state e\<^sub>0 (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" by blast
 
     then have 
-      "is_super_exp_left e\<^sub>0 e\<^sub>\<kappa>" and 
-      "is_super_exp_over_stack e\<^sub>0 \<kappa>" by (blast dest: is_super_exp_over_stack.cases)+
+      H8: "is_super_exp_over_env e\<^sub>0 \<rho>" and 
+      H9: "is_super_exp_over_stack e\<^sub>0 (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)" by (blast dest: is_super_exp_over_state.cases)+
 
-    then have H7: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)" by (auto simp: is_super_exp_over_state.intros)
+    then have 
+      H10: "is_super_exp_left e\<^sub>0 e\<^sub>\<kappa>" and 
+      H11: "is_super_exp_over_env e\<^sub>0 \<rho>\<^sub>\<kappa>" and 
+      H12: "is_super_exp_over_stack e\<^sub>0 \<kappa>" by (blast dest: is_super_exp_over_stack.cases)+
+
+    {
+      fix f f\<^sub>p x\<^sub>p e\<^sub>b \<rho>'
+      assume H13: "(\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)) f = Some (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>')"
+
+      have "is_super_exp_left e\<^sub>0 e\<^sub>b" 
+      proof cases
+        assume "f = x\<^sub>\<kappa>"
+
+        with H13 have "\<omega> = (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>')" by simp
+
+        with H6 have "\<rho> x = Some (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>')" by simp
+
+        with H8 show "is_super_exp_left e\<^sub>0 e\<^sub>b" by (meson is_super_exp_over_env.cases)
+      next
+        assume "f \<noteq> x\<^sub>\<kappa>"
+
+        with H13 have "\<rho>\<^sub>\<kappa> f = Some (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>')" by simp
+
+        with H11 show "is_super_exp_left e\<^sub>0 e\<^sub>b" by (meson is_super_exp_over_env.cases)
+      qed
+    }
+
+    then have H13: "is_super_exp_over_env e\<^sub>0 (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>))" by (simp add: is_super_exp_over_env.intros)
+
+    with H10 H12 have H14: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)" by (simp add: is_super_exp_over_state.intros)
 
     show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
     proof cases
@@ -64,7 +136,7 @@ proof -
       with H2
       have "\<sigma>' = (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)" by simp
 
-      with H7
+      with H14
       show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
     next
       assume H8: "\<pi>' \<noteq> \<pi> ;; LReturn x\<^sub>\<kappa>"
@@ -87,11 +159,15 @@ proof -
 
     then have 
       H8: "is_super_exp_left e\<^sub>0 (LET x = b in el)" and
-      H9: "is_super_exp_over_stack e\<^sub>0 \<kappa>l" by (blast dest: is_super_exp_over_state.cases)+
+      H9: "is_super_exp_over_env e\<^sub>0 \<rho>l" and
+      H10: "is_super_exp_over_stack e\<^sub>0 \<kappa>l" by (blast dest: is_super_exp_over_state.cases)+
 
-    from H8 have H10: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
+    from H8 have H11: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
 
-    from H9 H10 have H11: "is_super_exp_over_state e\<^sub>0 (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
+    from H6 have "(\<forall> f\<^sub>p x\<^sub>p e\<^sub>b \<rho>' . \<omega> \<noteq> (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>'))"
+    have "is_super_exp_over_env e\<^sub>0 (\<rho>l(x \<mapsto> \<omega>))" sorry
+
+    with H10 H11 have H12: "is_super_exp_over_state e\<^sub>0 (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
 
     show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
     proof cases
@@ -101,7 +177,7 @@ proof -
 
       with H2 have "\<sigma>' = (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by simp
 
-      with H11 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
+      with H12 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
     next
       assume H8: "\<pi>' \<noteq> \<pi> ;; LNext x"
 
@@ -113,11 +189,44 @@ proof -
     qed
   next
     case (Seq_Step_Up \<pi> x b el \<rho>l \<kappa>l el' \<rho>l')
+
     assume 
       H3: "E' = E ++ [\<pi> ;; LCall x \<mapsto> \<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>]" and
       H4: "leaf E \<pi>" and
       H5: "E \<pi> = Some (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" and
       H6: "seq_step_up (b, \<rho>l) (el', \<rho>l')"
+
+    from H1 H5 have H7: "is_super_exp_over_state e\<^sub>0 (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" by blast
+
+    then have 
+      H8: "is_super_exp_left e\<^sub>0 (LET x = b in el)" and
+      H9: "is_super_exp_over_stack e\<^sub>0 \<kappa>l" by (blast dest: is_super_exp_over_state.cases)+
+
+    from H8 have H10: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
+
+    from H9 H10 have H11: "is_super_exp_over_stack e\<^sub>0 (\<langle>x,el,\<rho>l\<rangle> # \<kappa>l)" by (simp add: is_super_exp_over_stack.Nonempty)
+
+    from H6 have H12: "is_super_exp_left e\<^sub>0 el'" 
+    proof cases
+      case (Let_Case_Left x\<^sub>s x\<^sub>l' \<rho>\<^sub>l \<omega>\<^sub>l x\<^sub>l x\<^sub>r e\<^sub>r)
+      show ?thesis using H8 is_super_exp_left.Let_Case_Left local.Let_Case_Left(1) by blast
+    next
+      case (Let_Case_Right x\<^sub>s x\<^sub>r' \<rho>\<^sub>r \<omega>\<^sub>r x\<^sub>l e\<^sub>l x\<^sub>r)
+      show ?thesis using H8 is_super_exp_left.Let_Case_Right local.Let_Case_Right(1) by blast
+    next
+      case (Let_App f f\<^sub>l x\<^sub>l \<rho>\<^sub>l x\<^sub>a \<omega>\<^sub>a)
+    
+      assume 
+        H12: "b = APP f x\<^sub>a" and
+        H13: "\<rho>l' = \<rho>\<^sub>l(f\<^sub>l \<mapsto> VClosure (Abs f\<^sub>l x\<^sub>l el') \<rho>\<^sub>l, x\<^sub>l \<mapsto> \<omega>\<^sub>a)" and
+        H14: "\<rho>l f = Some (VClosure (Abs f\<^sub>l x\<^sub>l el') \<rho>\<^sub>l)" and
+        H15: "\<rho>l x\<^sub>a = Some \<omega>\<^sub>a"
+
+
+      show "is_super_exp_left e\<^sub>0 el'"  sorry
+    qed
+
+    with H11 have "is_super_exp_over_state e\<^sub>0 (\<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
 
     show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
     proof cases
