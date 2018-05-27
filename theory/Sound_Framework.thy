@@ -113,22 +113,29 @@ proof -
 
         with H6 have "\<rho> x = Some (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>')" by simp
 
-        with H8 show "is_super_exp_left e\<^sub>0 e\<^sub>b"
-          by (metis is_super_exp_over_env.cases is_super_exp_over_prim.cases is_super_exp_over_val.cases prim.distinct(17) prim.distinct(23) prim.distinct(27) prim.distinct(29) prim.distinct(9) prim.inject(6) val.distinct(3) val.distinct(5) val.inject(2))
+        with H8 have "is_super_exp_over_val e\<^sub>0 (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>')" by (auto simp: is_super_exp_over_env.simps)
+
+        then have "is_super_exp_over_prim e\<^sub>0 (Abs f\<^sub>p x\<^sub>p e\<^sub>b)" by (auto simp: is_super_exp_over_val.simps)
+
+        then show "is_super_exp_left e\<^sub>0 e\<^sub>b" by (blast dest: is_super_exp_over_prim.cases)
       next
         assume "f \<noteq> x\<^sub>\<kappa>"
 
         with H13 have "\<rho>\<^sub>\<kappa> f = Some (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>')" by simp
 
-        with H11 show "is_super_exp_left e\<^sub>0 e\<^sub>b"
-          by (metis is_super_exp_over_env.cases is_super_exp_over_prim.cases is_super_exp_over_val.cases prim.distinct(17) prim.distinct(23) prim.distinct(27) prim.distinct(29) prim.distinct(9) prim.inject(6) val.distinct(3) val.distinct(5) val.inject(2))
+        with H11 have "is_super_exp_over_val e\<^sub>0 (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>')" by (auto simp: is_super_exp_over_env.simps)
+
+        then have "is_super_exp_over_prim e\<^sub>0 (Abs f\<^sub>p x\<^sub>p e\<^sub>b)" by (auto simp: is_super_exp_over_val.simps)
+        
+        then show "is_super_exp_left e\<^sub>0 e\<^sub>b" by (blast dest: is_super_exp_over_prim.cases)
       qed
     }
 
     then have H13: "is_super_exp_over_env e\<^sub>0 (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>))"
       using H11 H6 H8 is_super_exp_over_env.simps by auto
 
-    with H10 H12 have H14: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)" by (simp add: is_super_exp_over_state.intros)
+    with H10 H12 have H14: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)" 
+      by (simp add: is_super_exp_over_state.intros)
 
     show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
     proof cases
@@ -322,14 +329,6 @@ proof -
     qed
   qed
 qed
-
-lemma is_super_exp_preserved: "
-  E \<rightarrow> E' \<Longrightarrow>
-  \<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma> \<Longrightarrow>
-  E' \<pi>' = Some \<sigma>' \<Longrightarrow>
-  is_super_exp_over_state e\<^sub>0 \<sigma>'
-"
-sorry
 
 lemma isnt_exp_sound_generalized: "
   \<E>0 \<rightarrow>* \<E>' \<Longrightarrow>
