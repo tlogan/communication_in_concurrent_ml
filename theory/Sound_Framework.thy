@@ -113,17 +113,20 @@ proof -
 
         with H6 have "\<rho> x = Some (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>')" by simp
 
-        with H8 show "is_super_exp_left e\<^sub>0 e\<^sub>b" by (meson is_super_exp_over_env.cases)
+        with H8 show "is_super_exp_left e\<^sub>0 e\<^sub>b"
+          by (metis is_super_exp_over_env.cases is_super_exp_over_prim.cases is_super_exp_over_val.cases prim.distinct(17) prim.distinct(23) prim.distinct(27) prim.distinct(29) prim.distinct(9) prim.inject(6) val.distinct(3) val.distinct(5) val.inject(2))
       next
         assume "f \<noteq> x\<^sub>\<kappa>"
 
         with H13 have "\<rho>\<^sub>\<kappa> f = Some (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>')" by simp
 
-        with H11 show "is_super_exp_left e\<^sub>0 e\<^sub>b" by (meson is_super_exp_over_env.cases)
+        with H11 show "is_super_exp_left e\<^sub>0 e\<^sub>b"
+          by (metis is_super_exp_over_env.cases is_super_exp_over_prim.cases is_super_exp_over_val.cases prim.distinct(17) prim.distinct(23) prim.distinct(27) prim.distinct(29) prim.distinct(9) prim.inject(6) val.distinct(3) val.distinct(5) val.inject(2))
       qed
     }
 
-    then have H13: "is_super_exp_over_env e\<^sub>0 (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>))" by (simp add: is_super_exp_over_env.intros)
+    then have H13: "is_super_exp_over_env e\<^sub>0 (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>))"
+      using H11 H6 H8 is_super_exp_over_env.simps by auto
 
     with H10 H12 have H14: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)" by (simp add: is_super_exp_over_state.intros)
 
@@ -164,10 +167,8 @@ proof -
 
     from H8 have H11: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
 
-    from H6 have "(\<forall> f\<^sub>p x\<^sub>p e\<^sub>b \<rho>' . \<omega> \<noteq> (VClosure (Abs f\<^sub>p x\<^sub>p e\<^sub>b) \<rho>'))"
-    have "is_super_exp_over_env e\<^sub>0 (\<rho>l(x \<mapsto> \<omega>))" sorry
 
-    with H10 H11 have H12: "is_super_exp_over_state e\<^sub>0 (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
+    with H10 H11 have H12: "is_super_exp_over_state e\<^sub>0 (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" sorry
 
     show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
     proof cases
@@ -204,7 +205,8 @@ proof -
 
     from H8 have H10: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
 
-    from H9 H10 have H11: "is_super_exp_over_stack e\<^sub>0 (\<langle>x,el,\<rho>l\<rangle> # \<kappa>l)" by (simp add: is_super_exp_over_stack.Nonempty)
+    from H9 H10 have H11: "is_super_exp_over_stack e\<^sub>0 (\<langle>x,el,\<rho>l\<rangle> # \<kappa>l)"
+      using H7 is_super_exp_over_stack.Nonempty is_super_exp_over_state.cases by blast
 
     from H6 have H12: "is_super_exp_left e\<^sub>0 el'" 
     proof cases
@@ -223,10 +225,10 @@ proof -
         H15: "\<rho>l x\<^sub>a = Some \<omega>\<^sub>a"
 
 
-      show "is_super_exp_left e\<^sub>0 el'"  sorry
+      show "is_super_exp_left e\<^sub>0 el'" sorry
     qed
 
-    with H11 have "is_super_exp_over_state e\<^sub>0 (\<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
+    with H11 have "is_super_exp_over_state e\<^sub>0 (\<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>)" sorry
 
     show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
     proof cases
@@ -327,7 +329,7 @@ lemma is_super_exp_preserved: "
   E' \<pi>' = Some \<sigma>' \<Longrightarrow>
   is_super_exp_over_state e\<^sub>0 \<sigma>'
 "
-by (metis is_super_exp_over_state.simps is_super_exp_preserved_over_exp is_super_exp_preserved_over_stack state.exhaust)
+sorry
 
 lemma isnt_exp_sound_generalized: "
   \<E>0 \<rightarrow>* \<E>' \<Longrightarrow>
@@ -350,7 +352,7 @@ proof -
     is_super_exp_over_state e\<^sub>0 \<sigma>'
   " proof (induction)
     case (refl x)
-    show ?case by (simp add: is_super_exp_left.Refl is_super_exp_over_stack.Empty is_super_exp_over_state.intros)
+    show ?case sorry
   next
     case (step E0 E E')
     assume "star_left op \<rightarrow> E0 E"
