@@ -115,7 +115,6 @@ proof -
 
     from L1H2 have L1H5: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
 
-
     from local.Seq_Step(4) 
     have "is_super_exp_over_val e\<^sub>0 \<omega>"
     proof cases
@@ -172,12 +171,6 @@ proof -
   next
     case (Seq_Step_Up \<pi> x b el \<rho>l \<kappa>l el' \<rho>l')
 
-    assume 
-      H3: "E' = E ++ [\<pi> ;; LCall x \<mapsto> \<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>]" and
-      H4: "leaf E \<pi>" and
-      H5: "E \<pi> = Some (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" and
-      H6: "seq_step_up (b, \<rho>l) (el', \<rho>l')"
-
     from H1 local.Seq_Step_Up(3) have L1H1: "is_super_exp_over_state e\<^sub>0 (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" by blast
 
     then have 
@@ -191,9 +184,36 @@ proof -
     from L1H3 L1H4 L1H5 have L1H6: "is_super_exp_over_stack e\<^sub>0 (\<langle>x,el,\<rho>l\<rangle> # \<kappa>l)" 
       by (simp add: is_super_exp_over_stack.Nonempty)
 
-    then have "is_super_exp_over_state e\<^sub>0 (\<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>)" sorry
+    from local.Seq_Step_Up(4)
+    have 
+      L1H7: "is_super_exp_left e\<^sub>0 el' \<and> is_super_exp_over_env e\<^sub>0 \<rho>l'"
+    proof cases
+      case (Let_Case_Left x\<^sub>s x\<^sub>l' \<rho>\<^sub>l \<omega>\<^sub>l x\<^sub>l x\<^sub>r e\<^sub>r)
 
-    then show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (smt H1 H2 H3 map_add_empty map_add_upd map_upd_Some_unfold)
+      from L1H2 local.Let_Case_Left(1) 
+      have L2H1: "is_super_exp_left e\<^sub>0 el'" by (blast dest: is_super_exp_left.Let_Case_Left)
+
+      with L1H3 local.Let_Case_Left(3) local.Let_Case_Left(4) have "is_super_exp_over_val e\<^sub>0 \<omega>\<^sub>l"
+        by (metis is_super_exp_over_env.cases is_super_exp_over_val.cases val.distinct(3) val.distinct(5) val.inject(2))
+
+      with L1H3 have "is_super_exp_over_env e\<^sub>0 (\<rho>l(x\<^sub>l \<mapsto> \<omega>\<^sub>l))"
+        by (smt is_super_exp_over_env.cases is_super_exp_over_env_is_super_exp_over_val.Intro map_upd_Some_unfold)
+
+      with local.Let_Case_Left(2) 
+      have L2H2: "is_super_exp_over_env e\<^sub>0 \<rho>l'" by simp
+
+      with L2H1 show "is_super_exp_left e\<^sub>0 el' \<and> is_super_exp_over_env e\<^sub>0 \<rho>l'" by simp
+    next
+      case (Let_Case_Right x\<^sub>s x\<^sub>r' \<rho>\<^sub>r \<omega>\<^sub>r x\<^sub>l e\<^sub>l x\<^sub>r)
+      then show ?thesis sorry
+    next
+      case (Let_App f f\<^sub>l x\<^sub>l \<rho>\<^sub>l x\<^sub>a \<omega>\<^sub>a)
+      then show ?thesis sorry
+    qed
+
+    with L1H6 have "is_super_exp_over_state e\<^sub>0 (\<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
+
+    with H1 H2 local.Seq_Step_Up(1)  show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (metis fun_upd_other fun_upd_same map_add_empty map_add_upd option.sel)
   next
     case (Let_Chan \<pi> x e \<rho> \<kappa>)
     assume
