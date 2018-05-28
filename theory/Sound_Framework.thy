@@ -120,45 +120,45 @@ proof -
     have "is_super_exp_over_val e\<^sub>0 \<omega>"
     proof cases
       case Let_Unit
-      then show ?thesis by (simp add: VUnit)
+      then show "is_super_exp_over_val e\<^sub>0 \<omega>" by (simp add: VUnit)
     next
       case (Let_Prim p)
 
       have L2H1: "is_super_exp_over_prim e\<^sub>0 p"
       proof (cases p)
         case (Send_Evt x11 x12)
-        then show ?thesis by (simp add: is_super_exp_over_prim.Send_Evt)
+        then show "is_super_exp_over_prim e\<^sub>0 p" by (simp add: is_super_exp_over_prim.Send_Evt)
       next
         case (Recv_Evt x2)
-        then show ?thesis by (simp add: is_super_exp_over_prim.Recv_Evt)
+        then show "is_super_exp_over_prim e\<^sub>0 p" by (simp add: is_super_exp_over_prim.Recv_Evt)
       next
         case (Pair x31 x32)
-        then show ?thesis by (simp add: is_super_exp_over_prim.Pair)
+        then show "is_super_exp_over_prim e\<^sub>0 p" by (simp add: is_super_exp_over_prim.Pair)
       next
         case (Left x4)
-        then show ?thesis by (simp add: is_super_exp_over_prim.Left)
+        then show "is_super_exp_over_prim e\<^sub>0 p" by (simp add: is_super_exp_over_prim.Left)
       next
         case (Right x5)
-        then show ?thesis by (simp add: is_super_exp_over_prim.Right)
+        then show "is_super_exp_over_prim e\<^sub>0 p" by (simp add: is_super_exp_over_prim.Right)
       next
         case (Abs x61 x62 x63)
 
         with L1H2 local.Let_Prim(1) local.Abs
-        show ?thesis by (smt is_super_exp_left.Let_Abs_Body is_super_exp_over_prim.Abs )
+        show "is_super_exp_over_prim e\<^sub>0 p" by (smt is_super_exp_left.Let_Abs_Body is_super_exp_over_prim.Abs )
       qed
 
       have L2H3: "is_super_exp_over_env e\<^sub>0 \<rho>l" by (simp add: L1H3)
 
       with L2H1 have "is_super_exp_over_val e\<^sub>0 (VClosure p \<rho>l)" by (simp add: VClosure)
 
-      with local.Let_Prim(2) show ?thesis by simp
+      with local.Let_Prim(2) show "is_super_exp_over_val e\<^sub>0 \<omega>" by simp
     next
       case (Let_Fst x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
-      then show ?thesis
+      then show "is_super_exp_over_val e\<^sub>0 \<omega>"
         by (metis L1H3 is_super_exp_over_env.cases is_super_exp_over_val.cases val.distinct(3) val.distinct(5) val.inject(2))
     next
       case (Let_Snd x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
-      then show ?thesis
+      then show "is_super_exp_over_val e\<^sub>0 \<omega>"
         by (metis L1H3 is_super_exp_over_env.cases is_super_exp_over_val.cases val.distinct(3) val.distinct(5) val.inject(2))
     qed
     
@@ -178,52 +178,22 @@ proof -
       H5: "E \<pi> = Some (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" and
       H6: "seq_step_up (b, \<rho>l) (el', \<rho>l')"
 
-    from H1 H5 have H7: "is_super_exp_over_state e\<^sub>0 (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" by blast
+    from H1 local.Seq_Step_Up(3) have L1H1: "is_super_exp_over_state e\<^sub>0 (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" by blast
 
     then have 
-      H8: "is_super_exp_left e\<^sub>0 (LET x = b in el)" and
-      H9: "is_super_exp_over_stack e\<^sub>0 \<kappa>l" by (blast dest: is_super_exp_over_state.cases)+
+      L1H2: "is_super_exp_left e\<^sub>0 (LET x = b in el)" and
+      L1H3: "is_super_exp_over_env e\<^sub>0 \<rho>l" and
+      L1H4: "is_super_exp_over_stack e\<^sub>0 \<kappa>l" by (blast dest: is_super_exp_over_state.cases)+
 
-    from H8 have H10: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
+    from L1H2 have L1H5: "is_super_exp_left e\<^sub>0 el"
+      using is_super_exp_left.Let by blast
 
-    from H9 H10 have H11: "is_super_exp_over_stack e\<^sub>0 (\<langle>x,el,\<rho>l\<rangle> # \<kappa>l)"
-      using H7 is_super_exp_over_stack.Nonempty is_super_exp_over_state.cases by blast
+    from L1H3 L1H4 L1H5 have L1H6: "is_super_exp_over_stack e\<^sub>0 (\<langle>x,el,\<rho>l\<rangle> # \<kappa>l)" 
+      by (simp add: is_super_exp_over_stack.Nonempty)
 
-    from H6 have H12: "is_super_exp_left e\<^sub>0 el'" 
-    proof cases
-      case (Let_Case_Left x\<^sub>s x\<^sub>l' \<rho>\<^sub>l \<omega>\<^sub>l x\<^sub>l x\<^sub>r e\<^sub>r)
-      show ?thesis using H8 is_super_exp_left.Let_Case_Left local.Let_Case_Left(1) by blast
-    next
-      case (Let_Case_Right x\<^sub>s x\<^sub>r' \<rho>\<^sub>r \<omega>\<^sub>r x\<^sub>l e\<^sub>l x\<^sub>r)
-      show ?thesis using H8 is_super_exp_left.Let_Case_Right local.Let_Case_Right(1) by blast
-    next
-      case (Let_App f f\<^sub>l x\<^sub>l \<rho>\<^sub>l x\<^sub>a \<omega>\<^sub>a)
-    
-      assume 
-        H12: "b = APP f x\<^sub>a" and
-        H13: "\<rho>l' = \<rho>\<^sub>l(f\<^sub>l \<mapsto> VClosure (Abs f\<^sub>l x\<^sub>l el') \<rho>\<^sub>l, x\<^sub>l \<mapsto> \<omega>\<^sub>a)" and
-        H14: "\<rho>l f = Some (VClosure (Abs f\<^sub>l x\<^sub>l el') \<rho>\<^sub>l)" and
-        H15: "\<rho>l x\<^sub>a = Some \<omega>\<^sub>a"
+    then have "is_super_exp_over_state e\<^sub>0 (\<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>)" sorry
 
-
-      show "is_super_exp_left e\<^sub>0 el'" sorry
-    qed
-
-    with H11 have "is_super_exp_over_state e\<^sub>0 (\<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>)" sorry
-
-    show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
-    proof cases
-      assume HX: "\<pi>' = \<pi> ;; LCall x"
-      show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
-    next
-      assume HX: "\<pi>' \<noteq> \<pi> ;; LCall x"
-
-      with H3 have "E' \<pi>' = E \<pi>'" by simp
-
-      with H2 have "E \<pi>' = Some \<sigma>'" by simp
-  
-      with H1 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_over_state.cases)
-    qed
+    then show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (smt H1 H2 H3 map_add_empty map_add_upd map_upd_Some_unfold)
   next
     case (Let_Chan \<pi> x e \<rho> \<kappa>)
     assume
