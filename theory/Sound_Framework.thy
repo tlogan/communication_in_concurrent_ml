@@ -105,28 +105,23 @@ proof -
       by (metis map_add_empty map_add_upd map_upd_Some_unfold)
   next
     case (Seq_Step \<pi> x b el \<rho>l \<kappa>l \<omega>)
-(*
-    assume 
-      H3: "E' = E ++ [\<pi> ;; LNext x \<mapsto> \<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>]" and
-      H4: "leaf E \<pi>" and
-      H5: "E \<pi> = Some (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" and
-      H6: "seq_step (b, \<rho>l) \<omega>"
-*)
+
     from H1 local.Seq_Step(3) 
-    have H7: "is_super_exp_over_state e\<^sub>0 (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" by blast
+    have L1H1: "is_super_exp_over_state e\<^sub>0 (\<langle>LET x = b in el;\<rho>l;\<kappa>l\<rangle>)" by blast
 
     then have 
-      H8: "is_super_exp_left e\<^sub>0 (LET x = b in el)" and
-      H9: "is_super_exp_over_env e\<^sub>0 \<rho>l" and
-      H10: "is_super_exp_over_stack e\<^sub>0 \<kappa>l" by (blast dest: is_super_exp_over_state.cases)+
+      L1H2: "is_super_exp_left e\<^sub>0 (LET x = b in el)" and
+      L1H3: "is_super_exp_over_env e\<^sub>0 \<rho>l" and
+      L1H4: "is_super_exp_over_stack e\<^sub>0 \<kappa>l" by (blast dest: is_super_exp_over_state.cases)+
 
-    from H8 have H11: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
+    from L1H2 have L1H5: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
 
-    have H12: "is_super_exp_over_env e\<^sub>0 (\<rho>l(x \<mapsto> \<omega>))" sorry
+    have L1H6: "is_super_exp_over_env e\<^sub>0 (\<rho>l(x \<mapsto> \<omega>))" sorry
 
-    with H10 H11 have H13: "is_super_exp_over_state e\<^sub>0 (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
-
-    show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
+    with L1H4 L1H5 have L1H7: "is_super_exp_over_state e\<^sub>0 (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
+   
+    with H1 H2 local.Seq_Step(1) show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
+      by (metis map_add_empty map_add_upd map_upd_Some_unfold)
   next
     case (Seq_Step_Up \<pi> x b el \<rho>l \<kappa>l el' \<rho>l')
 
