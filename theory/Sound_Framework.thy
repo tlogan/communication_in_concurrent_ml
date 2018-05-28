@@ -37,14 +37,13 @@ where
     is_super_exp_over_val e0 (VChan c)
   " |
   VClosure: "
-    is_super_exp_left e0 e\<^sub>b \<Longrightarrow>
     is_super_exp_over_prim e0 p \<Longrightarrow>
     is_super_exp_over_env e0 \<rho>' \<Longrightarrow>
     is_super_exp_over_val e0 (VClosure p \<rho>')
   " |
 
   Intro: "
-    \<forall> f \<omega> . \<rho> f = Some \<omega> \<longrightarrow> is_super_exp_over_val e0 \<omega> \<Longrightarrow>
+    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow> is_super_exp_over_val e0 \<omega> \<Longrightarrow>
     is_super_exp_over_env e0 \<rho>
   "
 
@@ -98,7 +97,7 @@ proof -
     from L1H2 L1H5 local.Seq_Step_Down(4) have L1H7: "is_super_exp_over_env e\<^sub>0 (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>))"
       by (smt is_super_exp_over_env.cases is_super_exp_over_env_is_super_exp_over_val.Intro map_upd_Some_unfold)
 
-    with L1H4 L1H6 L1H7 have L1H8: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>)"
+    with L1H4 L1H6 L1H7 have L1H8: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>)"
       by (simp add: is_super_exp_over_state.intros)
 
     with H1 H2 local.Seq_Step_Down(1) show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
@@ -116,7 +115,55 @@ proof -
 
     from L1H2 have L1H5: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
 
-    have L1H6: "is_super_exp_over_env e\<^sub>0 (\<rho>l(x \<mapsto> \<omega>))" sorry
+
+    from local.Seq_Step(4) 
+    have "is_super_exp_over_val e\<^sub>0 \<omega>"
+    proof cases
+      case Let_Unit
+      then show ?thesis by (simp add: VUnit)
+    next
+      case (Let_Prim p)
+
+      have L2H1: "is_super_exp_over_prim e\<^sub>0 p"
+      proof (cases p)
+        case (Send_Evt x11 x12)
+        then show ?thesis by (simp add: is_super_exp_over_prim.Send_Evt)
+      next
+        case (Recv_Evt x2)
+        then show ?thesis by (simp add: is_super_exp_over_prim.Recv_Evt)
+      next
+        case (Pair x31 x32)
+        then show ?thesis by (simp add: is_super_exp_over_prim.Pair)
+      next
+        case (Left x4)
+        then show ?thesis by (simp add: is_super_exp_over_prim.Left)
+      next
+        case (Right x5)
+        then show ?thesis by (simp add: is_super_exp_over_prim.Right)
+      next
+        case (Abs x61 x62 x63)
+
+        with L1H2 local.Let_Prim(1) local.Abs
+        show ?thesis by (smt is_super_exp_left.Let_Abs_Body is_super_exp_over_prim.Abs )
+      qed
+
+      have L2H3: "is_super_exp_over_env e\<^sub>0 \<rho>l" by (simp add: L1H3)
+
+      with L2H1 have "is_super_exp_over_val e\<^sub>0 (VClosure p \<rho>l)" by (simp add: VClosure)
+
+      with local.Let_Prim(2) show ?thesis by simp
+    next
+      case (Let_Fst x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
+      then show ?thesis
+        by (metis L1H3 is_super_exp_over_env.cases is_super_exp_over_val.cases val.distinct(3) val.distinct(5) val.inject(2))
+    next
+      case (Let_Snd x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
+      then show ?thesis
+        by (metis L1H3 is_super_exp_over_env.cases is_super_exp_over_val.cases val.distinct(3) val.distinct(5) val.inject(2))
+    qed
+    
+    with L1H3 have L1H6: "is_super_exp_over_env e\<^sub>0 (\<rho>l(x \<mapsto> \<omega>))"
+      by (smt is_super_exp_over_env.cases is_super_exp_over_env_is_super_exp_over_val.Intro map_upd_Some_unfold)
 
     with L1H4 L1H5 have L1H7: "is_super_exp_over_state e\<^sub>0 (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
    
