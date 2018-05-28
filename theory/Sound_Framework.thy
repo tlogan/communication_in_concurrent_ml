@@ -178,11 +178,12 @@ proof -
       L1H3: "is_super_exp_over_env e\<^sub>0 \<rho>l" and
       L1H4: "is_super_exp_over_stack e\<^sub>0 \<kappa>l" by (blast dest: is_super_exp_over_state.cases)+
 
-    from L1H2 have L1H5: "is_super_exp_left e\<^sub>0 el"
-      using is_super_exp_left.Let by blast
+    from L1H2 have 
+      L1H5: "is_super_exp_left e\<^sub>0 el" by (blast dest: is_super_exp_left.Let)
 
-    from L1H3 L1H4 L1H5 have L1H6: "is_super_exp_over_stack e\<^sub>0 (\<langle>x,el,\<rho>l\<rangle> # \<kappa>l)" 
-      by (simp add: is_super_exp_over_stack.Nonempty)
+    from L1H3 L1H4 L1H5 have 
+      L1H6: "is_super_exp_over_stack e\<^sub>0 (\<langle>x,el,\<rho>l\<rangle> # \<kappa>l)" 
+        by (simp add: is_super_exp_over_stack.Nonempty)
 
     from local.Seq_Step_Up(4)
     have 
@@ -190,25 +191,62 @@ proof -
     proof cases
       case (Let_Case_Left x\<^sub>s x\<^sub>l' \<rho>\<^sub>l \<omega>\<^sub>l x\<^sub>l x\<^sub>r e\<^sub>r)
 
-      from L1H2 local.Let_Case_Left(1) 
-      have L2H1: "is_super_exp_left e\<^sub>0 el'" by (blast dest: is_super_exp_left.Let_Case_Left)
+      from L1H2 local.Let_Case_Left(1) have 
+        L2H1: "is_super_exp_left e\<^sub>0 el'" by (blast dest: is_super_exp_left.Let_Case_Left)
 
-      with L1H3 local.Let_Case_Left(3) local.Let_Case_Left(4) have "is_super_exp_over_val e\<^sub>0 \<omega>\<^sub>l"
-        by (metis is_super_exp_over_env.cases is_super_exp_over_val.cases val.distinct(3) val.distinct(5) val.inject(2))
+      from L1H3 local.Let_Case_Left(3) have 
+        "is_super_exp_over_val e\<^sub>0 (VClosure (prim.Left x\<^sub>l') \<rho>\<^sub>l)"
+        by (blast dest: is_super_exp_over_env.cases)
+
+      then have "is_super_exp_over_env e\<^sub>0 \<rho>\<^sub>l" by (blast dest: is_super_exp_over_val.cases)
+
+      with local.Let_Case_Left(4) have "is_super_exp_over_val e\<^sub>0 \<omega>\<^sub>l" by (blast dest: is_super_exp_over_env.cases)
 
       with L1H3 have "is_super_exp_over_env e\<^sub>0 (\<rho>l(x\<^sub>l \<mapsto> \<omega>\<^sub>l))"
         by (smt is_super_exp_over_env.cases is_super_exp_over_env_is_super_exp_over_val.Intro map_upd_Some_unfold)
 
-      with local.Let_Case_Left(2) 
-      have L2H2: "is_super_exp_over_env e\<^sub>0 \<rho>l'" by simp
+      with local.Let_Case_Left(2) have 
+        L2H2: "is_super_exp_over_env e\<^sub>0 \<rho>l'" by simp
 
       with L2H1 show "is_super_exp_left e\<^sub>0 el' \<and> is_super_exp_over_env e\<^sub>0 \<rho>l'" by simp
     next
       case (Let_Case_Right x\<^sub>s x\<^sub>r' \<rho>\<^sub>r \<omega>\<^sub>r x\<^sub>l e\<^sub>l x\<^sub>r)
-      then show ?thesis sorry
+
+      from L1H2 local.Let_Case_Right(1) have 
+        L2H1: "is_super_exp_left e\<^sub>0 el'"
+          by (blast dest: is_super_exp_left.Let_Case_Right)
+
+      from L1H3 local.Let_Case_Right(3)
+      have "is_super_exp_over_val e\<^sub>0 (VClosure (prim.Right x\<^sub>r') \<rho>\<^sub>r)"
+        by (blast dest: is_super_exp_over_env.cases)
+
+      then have "is_super_exp_over_env e\<^sub>0 \<rho>\<^sub>r" by (blast dest: is_super_exp_over_val.cases)
+
+      with L1H3 local.Let_Case_Right(2) local.Let_Case_Right(4) have 
+        L2H2: "is_super_exp_over_env e\<^sub>0 \<rho>l'"
+          by (auto simp: is_super_exp_over_env.simps)
+
+      with L2H1 show "is_super_exp_left e\<^sub>0 el' \<and> is_super_exp_over_env e\<^sub>0 \<rho>l'" by simp
     next
       case (Let_App f f\<^sub>l x\<^sub>l \<rho>\<^sub>l x\<^sub>a \<omega>\<^sub>a)
-      then show ?thesis sorry
+
+      from L1H3 local.Let_App(3) have
+        L2H1: "is_super_exp_over_val e\<^sub>0 (VClosure (Abs f\<^sub>l x\<^sub>l el') \<rho>\<^sub>l)" by (blast dest: is_super_exp_over_env.cases)
+
+      then have 
+        "is_super_exp_over_prim e\<^sub>0 (Abs f\<^sub>l x\<^sub>l el')" by (blast dest: is_super_exp_over_val.cases)
+
+      then have L2H2: "is_super_exp_left e\<^sub>0 el'" by (blast dest: is_super_exp_over_prim.cases)
+
+      from L2H1 have L2H3: "is_super_exp_over_env e\<^sub>0 \<rho>\<^sub>l" by (blast dest: is_super_exp_over_val.cases)
+
+      with L1H3 local.Let_App(4) have
+        L2H1: "is_super_exp_over_val e\<^sub>0 \<omega>\<^sub>a" by (blast dest: is_super_exp_over_env.cases)
+
+      with L1H3 L2H3 local.Let_App(2) local.Let_App(3) have 
+        L2H4: "is_super_exp_over_env e\<^sub>0 \<rho>l'" by (auto simp: is_super_exp_over_env.simps)
+
+       with L2H2 show "is_super_exp_left e\<^sub>0 el' \<and> is_super_exp_over_env e\<^sub>0 \<rho>l'" by simp
     qed
 
     with L1H6 have "is_super_exp_over_state e\<^sub>0 (\<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>)" by (simp add: is_super_exp_over_state.intros)
@@ -216,81 +254,16 @@ proof -
     with H1 H2 local.Seq_Step_Up(1)  show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (metis fun_upd_other fun_upd_same map_add_empty map_add_upd option.sel)
   next
     case (Let_Chan \<pi> x e \<rho> \<kappa>)
-    assume
-      H3: "E' = E ++ [\<pi> ;; LNext x \<mapsto> \<langle>e;\<rho> ++ [x \<mapsto> VChan (Ch \<pi> x)];\<kappa>\<rangle>]" and
-      H4: "leaf E \<pi>" and
-      H5: "E \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e;\<rho>;\<kappa>\<rangle>)"
 
-    show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
-    proof cases
-      assume HX: "\<pi>' = \<pi> ;; LNext x"
-      show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
-    next
-      assume HX: "\<pi>' \<noteq> \<pi> ;; LNext x"
-
-      with H3 have "E' \<pi>' = E \<pi>'" by simp
-
-      with H2 have "E \<pi>' = Some \<sigma>'" by simp
-  
-      with H1 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_over_state.cases)
-    qed
+    show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
   next
     case (Let_Spawn \<pi> x e\<^sub>c e \<rho> \<kappa>)
-    assume
-      H3: "E' = E ++ [\<pi> ;; LNext x \<mapsto> \<langle>e;\<rho> ++ [x \<mapsto> VUnit];\<kappa>\<rangle>, \<pi> ;; LSpawn x \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>]" and
-      H4: "leaf E \<pi>" and
-      H5: "E \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e;\<rho>;\<kappa>\<rangle>)"
 
-    show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
-    proof cases
-      assume HX: "\<pi>' = \<pi> ;; LSpawn x"
-      show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
-    next
-      assume HX: "\<pi>' \<noteq> \<pi> ;; LSpawn x"
-
-      show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
-      proof cases
-        assume HXX: "\<pi>' = \<pi> ;; LNext x"
-        show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
-      next
-        assume HXX: "\<pi>' \<noteq> \<pi> ;; LNext x"
-  
-        with HX H3 have "E' \<pi>' = E \<pi>'" by simp
-  
-        with H2 have "E \<pi>' = Some \<sigma>'" by simp
-    
-        with H1 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_over_state.cases)
-      qed
-    qed
+    show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
   next
     case (Let_Sync \<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e c \<omega>\<^sub>m)
 
-    assume 
-      H3: "E' = E ++ [\<pi>\<^sub>s ;; LNext x\<^sub>s \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> VUnit];\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; LNext x\<^sub>r \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m];\<kappa>\<^sub>r\<rangle>]" and
-      H4: "leaf E \<pi>\<^sub>s" and
-      H5: "E \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)"
-
-    show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
-    proof cases
-      assume HX: "\<pi>' = \<pi>\<^sub>r ;; LNext x\<^sub>r"
-      show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
-    next
-      assume HX: "\<pi>' \<noteq> \<pi>\<^sub>r ;; LNext x\<^sub>r"
-
-      show "is_super_exp_over_state e\<^sub>0 \<sigma>'"
-      proof cases
-        assume HXX: "\<pi>' = \<pi>\<^sub>s ;; LNext x\<^sub>s"
-        show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
-      next
-        assume HXX: "\<pi>' \<noteq> \<pi>\<^sub>s ;; LNext x\<^sub>s"
-  
-        with HX H3 have "E' \<pi>' = E \<pi>'" by simp
-  
-        with H2 have "E \<pi>' = Some \<sigma>'" by simp
-    
-        with H1 show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_over_state.cases)
-      qed
-    qed
+    show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
   qed
 qed
 
