@@ -307,8 +307,6 @@ proof -
   next
     case (Let_Sync \<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e c \<omega>\<^sub>m)
 
-
-
     from H1 local.Let_Sync(6) have 
       "is_super_exp_over_state e\<^sub>0 (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)" by blast
 
@@ -318,37 +316,40 @@ proof -
       L1H3: "is_super_exp_over_stack e\<^sub>0 \<kappa>\<^sub>r" using is_super_exp_over_state.cases by blast+
 
     have 
-      "is_super_exp_left e\<^sub>0 e\<^sub>r"
+      L1H4: "is_super_exp_left e\<^sub>0 e\<^sub>r"
       using L1H1 is_super_exp_left.Let by blast
-
 
     from H1 local.Let_Sync(3) have 
       "is_super_exp_over_state e\<^sub>0 (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)" by blast
 
     then have 
-      L1H4: "is_super_exp_left e\<^sub>0 (LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s)" and
-      L1H5: "is_super_exp_over_env e\<^sub>0 \<rho>\<^sub>s" and
-      L1H6: "is_super_exp_over_stack e\<^sub>0 \<kappa>\<^sub>s" using is_super_exp_over_state.cases by blast+
+      L1H5: "is_super_exp_left e\<^sub>0 (LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s)" and
+      L1H6: "is_super_exp_over_env e\<^sub>0 \<rho>\<^sub>s" and
+      L1H7: "is_super_exp_over_stack e\<^sub>0 \<kappa>\<^sub>s" using is_super_exp_over_state.cases by blast+
 
-    have 
-      "is_super_exp_left e\<^sub>0 e\<^sub>s"
-      using L1H4 is_super_exp_left.Let by blast
-
-    have 
-      "is_super_exp_over_val e\<^sub>0 \<omega>\<^sub>m"
-      by (metis L1H5 is_super_exp_over_env.cases is_super_exp_over_val.cases local.Let_Sync(10) local.Let_Sync(4) val.distinct(3) val.distinct(5) val.inject(2))
+    from L1H6 local.Let_Sync(4) have 
+      L1H8: "is_super_exp_over_val e\<^sub>0 (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)" using is_super_exp_over_env.cases by auto
 
     then have 
-      "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>r;\<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m];\<kappa>\<^sub>r\<rangle>)" sorry
+      L1H9: "is_super_exp_over_env e\<^sub>0 \<rho>\<^sub>s\<^sub>e"  using is_super_exp_over_val.cases by blast
+
+    from L1H9 local.Let_Sync(10) have 
+      L1H10: "is_super_exp_over_val e\<^sub>0 \<omega>\<^sub>m" using is_super_exp_over_env.cases by auto
+
+    from L1H5 have 
+      L1H11: "is_super_exp_left e\<^sub>0 e\<^sub>s" using is_super_exp_left.Let by blast
 
     have 
-      "is_super_exp_over_val e\<^sub>0 VUnit" by (simp add: VUnit)
+      L1H12: "is_super_exp_over_val e\<^sub>0 VUnit" by (simp add: VUnit)
 
-    have 
-      "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>s;\<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> VUnit];\<kappa>\<^sub>s\<rangle>)" sorry
+    from L1H2 L1H3 L1H4 L1H10 L1H12 have 
+      L1H13: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)" by (simp add: is_super_exp_over_env.simps is_super_exp_over_state.intros)
 
-    show 
-      "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
+    from L1H6 L1H7 L1H11 L1H12 have 
+      L1H14: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>)" by (simp add: is_super_exp_over_env.simps is_super_exp_over_state.intros)
+
+    from H1 H2 L1H13 L1H14 local.Let_Sync(1) show 
+      "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (smt fun_upd_apply map_add_empty map_add_upd option.sel)
 
   qed
 qed
@@ -360,54 +361,77 @@ lemma isnt_exp_sound_generalized: "
   is_super_exp_over_state e\<^sub>0 \<sigma>'
 "
 proof -
+  assume 
+    H1: "\<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and 
+    H2: "\<E>' \<pi>' = Some \<sigma>'" and
+    H3: "\<E>0 \<rightarrow>* \<E>'"
 
-  assume P1: "\<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and P2: "\<E>' \<pi>' = Some \<sigma>'"
+  from H3 have 
+    H4: "star_left (op \<rightarrow>) \<E>0 \<E>'" by (simp add: star_implies_star_left)
 
-  assume "\<E>0 \<rightarrow>* \<E>'" then
+  then have 
+    H5: "
+      \<forall> \<pi>' \<sigma>' .
+      \<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
+      \<E>' \<pi>' = Some \<sigma>' \<longrightarrow>
+      is_super_exp_over_state e\<^sub>0 \<sigma>'
+    " 
+  proof (induction)
+    case (refl E')
 
-  have "star_left (op \<rightarrow>) \<E>0 \<E>'" by (simp add: star_implies_star_left) then
-
-  have "
-    \<forall> \<pi>' \<sigma>' .
-    \<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
-    \<E>' \<pi>' = Some \<sigma>' \<longrightarrow>
-    is_super_exp_over_state e\<^sub>0 \<sigma>'
-  " proof (induction)
-    case (refl x)
-    show ?case sorry
-  next
-    case (step E0 E E')
-    assume "star_left op \<rightarrow> E0 E"
-    assume "E \<rightarrow> E'"
-    assume IH: "\<forall>\<pi>' \<sigma>'. E0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow> E \<pi>' = Some \<sigma>' \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>'"
     {
       fix \<pi>' \<sigma>'
       assume 
-        P1: "E0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and
-        P2: "E' \<pi>' = Some \<sigma>'" 
+        L1H1: "E' = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and
+        L1H2:  "E' \<pi>' = Some \<sigma>'"
+  
+      have 
+        L1H3: "is_super_exp_left e\<^sub>0 e\<^sub>0" by (simp add: is_super_exp_left.Refl)
+      have 
+        L1H4: "is_super_exp_over_env e\<^sub>0 Map.empty" by (simp add: is_super_exp_over_env_is_super_exp_over_val.Intro)
+      have 
+        L1H5: "is_super_exp_over_stack e\<^sub>0 []" by (simp add: is_super_exp_over_stack.Empty)
 
-      from IH and P1
+      from L1H3 L1H4 L1H5 have 
+        L1H6: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>0;Map.empty;[]\<rangle>)" by (simp add: is_super_exp_over_state.intros)
 
-      have IH2: "\<forall>\<pi>' \<sigma>'. E \<pi>' = Some \<sigma>' \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>'"  by blast
-      with P2 \<open>E \<rightarrow> E'\<close>
+     from L1H1 L1H2 L1H6 have
+        "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (metis fun_upd_apply option.distinct(1) option.sel)
+    }
 
-      have "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (blast dest: is_super_exp_preserved) then
+    then show 
+      "\<forall>\<pi>' \<sigma>'. E' = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow> E' \<pi>' = Some \<sigma>' \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
+   next
+    case (step E0 E E')
+    {
+      fix \<pi>' \<sigma>'
+      assume 
+        L2H1: "E0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and
+        L2H2: "E' \<pi>' = Some \<sigma>'" 
 
-      have "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (simp add: is_super_exp_left_implies_is_super_exp)
-    } then
-    show ?case by blast
+      from L2H1 local.step(3) have 
+        L2H3: "\<forall>\<pi>' \<sigma>'. E \<pi>' = Some \<sigma>' \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
+
+      from L2H1 L2H2 step.IH step.hyps(2) have 
+        "is_super_exp_over_state e\<^sub>0 \<sigma>'" using is_super_exp_over_state_preserved by blast
+
+      then have 
+        "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (simp add: is_super_exp_left_implies_is_super_exp)
+    } 
+
+    then show 
+      "\<forall>\<pi>' \<sigma>'. E0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow> E' \<pi>' = Some \<sigma>' \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>'" by blast
   qed
-  with P1 and P2
 
-  show "is_super_exp_over_state e\<^sub>0 \<sigma>'" by blast
+  from H1 H2 H5 show 
+    "is_super_exp_over_state e\<^sub>0 \<sigma>'" by blast
 qed
 
 lemma isnt_exp_sound: "
   [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   is_super_exp e\<^sub>0 e'
-"
-by (metis is_super_exp_left_implies_is_super_exp is_super_exp_over_state.cases isnt_exp_sound_generalized state.inject)
-
+" 
+using is_super_exp_left_implies_is_super_exp is_super_exp_over_state.simps isnt_exp_sound_generalized by fastforce
 
 end
