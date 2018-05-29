@@ -264,13 +264,13 @@ proof -
       L1H2: "is_super_exp_over_env e\<^sub>0 \<rho>" and
       L1H3: "is_super_exp_over_stack e\<^sub>0 \<kappa>" using is_super_exp_over_state.cases by blast+
 
-    with L1H1 have
+    from L1H1 have
       L1H4: "is_super_exp_left e\<^sub>0 e" using is_super_exp_left.Let by blast
 
-    with L1H2 have
+    from L1H2 have
       L1H5: "is_super_exp_over_env e\<^sub>0 (\<rho>(x \<mapsto> VChan (Ch \<pi> x)))" using VChan is_super_exp_over_env.simps by auto
 
-    with L1H4 L1H5 L1H3 have
+    from L1H4 L1H5 L1H3 have
       "is_super_exp_over_state e\<^sub>0 (\<langle>e;\<rho> ++ [x \<mapsto> VChan (Ch \<pi> x)];\<kappa>\<rangle>)" using is_super_exp_over_state.intros by simp
 
     with H1 H2 local.Let_Chan(1) show
@@ -278,11 +278,78 @@ proof -
   next
     case (Let_Spawn \<pi> x e\<^sub>c e \<rho> \<kappa>)
 
-    then show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
+    from H1 local.Let_Spawn(3) have
+      "is_super_exp_over_state e\<^sub>0 (\<langle>LET x = SPAWN e\<^sub>c in e;\<rho>;\<kappa>\<rangle>)" by blast
+
+    then have
+      L1H1: "is_super_exp_left e\<^sub>0 (LET x = SPAWN e\<^sub>c in e)" and
+      L1H2: "is_super_exp_over_env e\<^sub>0 \<rho>" and
+      L1H3: "is_super_exp_over_stack e\<^sub>0 \<kappa>" using is_super_exp_over_state.cases by blast+
+
+    from L1H1 have
+      L1H4: "is_super_exp_left e\<^sub>0 e\<^sub>c" using is_super_exp_left.Let_Spawn_Child by blast
+
+    from L1H1 have
+      L1H5: "is_super_exp_left e\<^sub>0 e" using is_super_exp_left.Let by blast
+
+    from L1H2 L1H4 have
+      L1H6: "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>c;\<rho>;[]\<rangle>)" by (simp add: is_super_exp_over_stack.Empty is_super_exp_over_state.intros)
+
+    have
+      L1H7: "is_super_exp_over_val e\<^sub>0 VUnit" by (simp add: VUnit)
+
+    from L1H2 L1H3 L1H5 L1H7 have
+      L1H8: "is_super_exp_over_state e\<^sub>0 (\<langle>e;\<rho>(x \<mapsto> VUnit);\<kappa>\<rangle>)" by (simp add:is_super_exp_over_env.simps is_super_exp_over_state.intros)
+   
+    from H1 H2 L1H6 L1H8 local.Let_Spawn(1) show
+      "is_super_exp_over_state e\<^sub>0 \<sigma>'" by (smt fun_upd_apply map_add_empty map_add_upd option.sel)
+
   next
     case (Let_Sync \<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e c \<omega>\<^sub>m)
 
-    show "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
+
+
+    from H1 local.Let_Sync(6) have 
+      "is_super_exp_over_state e\<^sub>0 (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)" by blast
+
+    then have 
+      L1H1: "is_super_exp_left e\<^sub>0 (LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r)" and
+      L1H2: "is_super_exp_over_env e\<^sub>0 \<rho>\<^sub>r" and
+      L1H3: "is_super_exp_over_stack e\<^sub>0 \<kappa>\<^sub>r" using is_super_exp_over_state.cases by blast+
+
+    have 
+      "is_super_exp_left e\<^sub>0 e\<^sub>r"
+      using L1H1 is_super_exp_left.Let by blast
+
+
+    from H1 local.Let_Sync(3) have 
+      "is_super_exp_over_state e\<^sub>0 (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)" by blast
+
+    then have 
+      L1H4: "is_super_exp_left e\<^sub>0 (LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s)" and
+      L1H5: "is_super_exp_over_env e\<^sub>0 \<rho>\<^sub>s" and
+      L1H6: "is_super_exp_over_stack e\<^sub>0 \<kappa>\<^sub>s" using is_super_exp_over_state.cases by blast+
+
+    have 
+      "is_super_exp_left e\<^sub>0 e\<^sub>s"
+      using L1H4 is_super_exp_left.Let by blast
+
+    have 
+      "is_super_exp_over_val e\<^sub>0 \<omega>\<^sub>m"
+      by (metis L1H5 is_super_exp_over_env.cases is_super_exp_over_val.cases local.Let_Sync(10) local.Let_Sync(4) val.distinct(3) val.distinct(5) val.inject(2))
+
+    then have 
+      "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>r;\<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m];\<kappa>\<^sub>r\<rangle>)" sorry
+
+    have 
+      "is_super_exp_over_val e\<^sub>0 VUnit" by (simp add: VUnit)
+
+    have 
+      "is_super_exp_over_state e\<^sub>0 (\<langle>e\<^sub>s;\<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> VUnit];\<kappa>\<^sub>s\<rangle>)" sorry
+
+    show 
+      "is_super_exp_over_state e\<^sub>0 \<sigma>'" sorry
+
   qed
 qed
 
