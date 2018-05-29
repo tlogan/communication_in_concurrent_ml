@@ -134,79 +134,41 @@ by (simp add: is_super_exp.Let is_super_exp.Refl)
 lemma is_super_exp_left_implies_is_super_exp: "
   is_super_exp_left e e' \<Longrightarrow> is_super_exp e e'
 "
- apply (erule is_super_exp_left.induct; auto?)
-  apply (simp add: is_super_exp.Refl)
-  using is_super_exp.Let_Spawn_Child is_super_exp.Refl is_super_exp_trans apply blast
-  using is_super_exp.Let_Case_Left is_super_exp.Refl is_super_exp_trans apply blast
-  using is_super_exp.Let_Case_Right is_super_exp.Refl is_super_exp_trans apply blast
-  using is_super_exp.Let_Abs_Body is_super_exp.Refl is_super_exp_trans apply blast
-  using is_super_exp1 is_super_exp_trans apply blast
-done
-
-(*
-fun val_to_bind :: "val \<Rightarrow> bind" where
-  "val_to_bind VUnit = \<lparr>\<rparr>" |
-  "val_to_bind (VChan _) = CHAN \<lparr>\<rparr>" |
-  "val_to_bind (VClosure p _) = Prim p"
-
-theorem static_traceable_implies_is_super_exp: "
-  \<lbrakk>
-    \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e;
-    (\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . is_super_exp e\<^sub>0 (LET x = val_to_bind \<omega> in e\<^sub>n )))
-  \<rbrakk> \<Longrightarrow>
-  is_super_exp e\<^sub>0 e 
-"
 proof -
-  assume "\<forall>x \<omega>. |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists>x e\<^sub>n. is_super_exp e\<^sub>0 (LET x = val_to_bind \<omega> in e\<^sub>n ))"
-  assume "\<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e" then
-  have "(\<forall> x \<omega> . |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists> x e\<^sub>n . is_super_exp e\<^sub>0 (LET x = val_to_bind \<omega> in e\<^sub>n ))) \<longrightarrow> is_super_exp e\<^sub>0 e"
-  proof (induction rule: static_traceable.induct)
-    case (Start \<V> e\<^sub>0)
-    then show ?case by (simp add: Refl)
+  assume "is_super_exp_left e e'"
+  
+  then show "is_super_exp e e'"
+  proof induction
+    case (Refl e0)
+    show 
+      "is_super_exp e0 e0" by (simp add: is_super_exp.Refl)
   next
-    thm Result
-    case (Result \<V> e\<^sub>0 \<pi> x \<pi>' x\<^sub>r b e\<^sub>n)
-    then show ?case using is_super_exp1 is_super_exp_trans by blast
+    case (Let_Spawn_Child e0 x e\<^sub>c e\<^sub>n)
+    from Let_Spawn_Child.IH show 
+      "is_super_exp e0 e\<^sub>c"
+    using is_super_exp.Let_Spawn_Child is_super_exp.Refl is_super_exp_trans by blast
   next
-    case (Let_Unit \<V> e\<^sub>0 \<pi> x e\<^sub>n)
-    then show ?case using is_super_exp1 is_super_exp_trans by blast
+    case (Let_Case_Left e0 x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n)
+    from Let_Case_Left.IH show
+      "is_super_exp e0 e\<^sub>l"
+    using is_super_exp.Let_Case_Left is_super_exp.Refl is_super_exp_trans by blast
   next
-    case (Let_Chan \<V> e\<^sub>0 \<pi> x e\<^sub>n)
-    then show ?case using is_super_exp1 is_super_exp_trans by blast
+    case (Let_Case_Right e0 x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n)
+    from Let_Case_Right.IH show 
+      "is_super_exp e0 e\<^sub>r"
+    using is_super_exp.Let_Case_Right is_super_exp.Refl is_super_exp_trans by blast
   next
-    case (Let_Prim \<V> e\<^sub>0 \<pi> x p e\<^sub>n)
-    then show ?case using is_super_exp1 is_super_exp_trans by blast
+    case (Let_Abs_Body e0 x f x\<^sub>p e\<^sub>b e\<^sub>n)
+    from Let_Abs_Body.IH show 
+      "is_super_exp e0 e\<^sub>b"
+    using is_super_exp.Let_Abs_Body is_super_exp.Refl is_super_exp_trans by blast
   next
-    case (Let_Spawn_Child \<V> e\<^sub>0 \<pi> x e\<^sub>c e\<^sub>n)
-    then show ?case  using Refl is_super_exp.Let_Spawn_Child is_super_exp_trans by blast
-  next
-    case (Let_Spawn \<V> e\<^sub>0 \<pi> x e\<^sub>c e\<^sub>n)
-    then show ?case using is_super_exp1 is_super_exp_trans by blast
-  next
-    case (Let_Sync \<V> e\<^sub>0 \<pi> x x\<^sub>v e\<^sub>n)
-    then show ?case using is_super_exp1 is_super_exp_trans by blast
-  next
-    case (Let_Fst \<V> e\<^sub>0 \<pi> x p e\<^sub>n)
-    then show ?case using is_super_exp1 is_super_exp_trans by blast
-  next
-    case (Let_Snd \<V> e\<^sub>0 \<pi> x p e\<^sub>n)
-    then show ?case using is_super_exp1 is_super_exp_trans by blast
-  next
-    case (Let_Case_Left \<V> e\<^sub>0 \<pi> x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n)
-    then show ?case using Refl is_super_exp.Let_Case_Left is_super_exp_trans by blast
-  next
-    case (Let_Case_Right \<V> e\<^sub>0 \<pi> x x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r e\<^sub>n)
-    then show ?case using Refl is_super_exp.Let_Case_Right is_super_exp_trans by blast
-  next
-    case (Let_App \<V> e\<^sub>0 \<pi> x f x\<^sub>a e\<^sub>n f' x' e')
-    then show ?case by (metis Let_Abs_Body Refl is_super_exp_trans val_to_bind.simps(3) value_to_abstract_value.simps(3))
+    case (Let e0 x b e\<^sub>n)
+    from Let.IH show
+      "is_super_exp e0 e\<^sub>n"
+    using is_super_exp1 is_super_exp_trans by blast
   qed
-  with `\<forall>x \<omega>. |\<omega>| \<in> \<V> x \<longrightarrow> (\<exists>x e\<^sub>n. is_super_exp e\<^sub>0 (LET x = val_to_bind \<omega> in e\<^sub>n))`
-  show "is_super_exp e\<^sub>0 e"
-  by blast
 qed
-*)
-
 
 
 end

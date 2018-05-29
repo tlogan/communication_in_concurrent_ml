@@ -1518,7 +1518,7 @@ lemma may_be_static_eval_to_pool: "
 proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e"
 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty" by (simp add: may_be_static_eval_value_may_be_static_eval_env.Any)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty" by (simp add: may_be_static_eval_value_may_be_static_eval_env.Intro)
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []" by (simp add: may_be_static_eval_stack.Empty)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e e` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []`

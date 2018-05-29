@@ -377,13 +377,13 @@ proof -
       is_super_exp_over_state e\<^sub>0 \<sigma>'
     " 
   proof (induction)
-    case (refl E')
+    case (refl E0)
 
     {
       fix \<pi>' \<sigma>'
       assume 
-        L1H1: "E' = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and
-        L1H2:  "E' \<pi>' = Some \<sigma>'"
+        L1H1: "E0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and
+        L1H2:  "E0 \<pi>' = Some \<sigma>'"
   
       have 
         L1H3: "is_super_exp_left e\<^sub>0 e\<^sub>0" by (simp add: is_super_exp_left.Refl)
@@ -400,7 +400,7 @@ proof -
     }
 
     then show 
-      "\<forall>\<pi>' \<sigma>'. E' = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow> E' \<pi>' = Some \<sigma>' \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
+      "\<forall>\<pi>' \<sigma>'. E0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow> E0 \<pi>' = Some \<sigma>' \<longrightarrow> is_super_exp_over_state e\<^sub>0 \<sigma>'" by simp
    next
     case (step E0 E E')
     {
