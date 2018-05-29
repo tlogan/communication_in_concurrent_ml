@@ -3,7 +3,7 @@ theory Dynamic_Communication_Analysis
 begin
 
 inductive is_send_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where
-  "
+  Intro: "
     \<E> \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
     \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan c) \<Longrightarrow>
@@ -11,7 +11,7 @@ inductive is_send_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_p
   "
 
 inductive is_recv_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where
-  "
+  Intro: "
     \<E> \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
     \<rho> x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e) \<Longrightarrow>
     \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan c) \<Longrightarrow>

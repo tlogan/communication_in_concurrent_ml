@@ -10,26 +10,6 @@ begin
 (*
 
 
-lemma isnt_send_path_sound': "
-  \<lbrakk>
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> xC));
-    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    (V, C) \<Turnstile>\<^sub>e e
-  \<rbrakk> \<Longrightarrow> 
-  V \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y \<and>
-  ^Chan xC \<in> V x\<^sub>s\<^sub>c \<and>
-  {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> V x\<^sub>e
-
-"
- apply (rule conjI)
- apply (insert isnt_static_traceable_sound, blast)
- apply (rule conjI, (erule isnt_send_chan_sound; assumption))
- apply (erule isnt_send_evt_sound; assumption)
-done
-
-
 lemma inclusive_preserved: "
   \<E> \<rightarrow> \<E>' \<Longrightarrow>
   \<forall>\<pi>1. (\<exists>\<sigma>\<^sub>1. \<E> \<pi>1 = Some \<sigma>\<^sub>1) \<longrightarrow> (\<forall>\<pi>2. (\<exists>\<sigma>\<^sub>2. \<E> \<pi>2 = Some \<sigma>\<^sub>2) \<longrightarrow> \<pi>1 \<asymp> \<pi>2) \<Longrightarrow>
@@ -185,84 +165,6 @@ apply (unfold is_send_path.simps; auto)
 using runtime_paths_are_inclusive by blast
 
 
-
-
-lemma static_recv_chan_doesnt_exist_sound: "
-  \<lbrakk>
-    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi> xC));
-    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    (V, C) \<Turnstile>\<^sub>e e
-  \<rbrakk> \<Longrightarrow> 
-  ^Chan xC \<in> V x\<^sub>r\<^sub>c
-"
- apply (frule may_be_static_eval_to_pool)
- apply (drule may_be_static_eval_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
- apply (erule may_be_static_eval_pool.cases; auto)
- apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
- apply (erule may_be_static_eval_state.cases; auto)
- apply (erule may_be_static_eval_env.cases; auto)
- apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e)"]; simp)
- apply (erule conjE)
- apply (erule may_be_static_eval_value.cases; auto)
- apply (erule may_be_static_eval_env.cases; auto)
- apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
-done
-
-lemma static_recv_evt_doesnt_exist_sound: "
-  \<lbrakk>
-    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    (V, C) \<Turnstile>\<^sub>e e
-  \<rbrakk> \<Longrightarrow> 
-  {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> V x\<^sub>e 
-"
-  apply (drule values_not_bound_sound; assumption?; auto)
-done
-
-lemma isnt_recv_path_sound': "
-  \<lbrakk>
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>); 
-    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
-    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi> xC));
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    (V, C) \<Turnstile>\<^sub>e e
-  \<rbrakk> \<Longrightarrow>
-  V \<turnstile> e \<down> \<pi>\<^sub>y \<mapsto> LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y \<and>
-  ^Chan xC \<in> V x\<^sub>r\<^sub>c \<and>
-  {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> V x\<^sub>e
-"
- apply (rule conjI, erule isnt_static_traceable_sound; assumption?)
- apply (rule conjI, (erule static_recv_chan_doesnt_exist_sound; assumption))
- apply (erule static_recv_evt_doesnt_exist_sound; assumption)
-done
-
-lemma isnt_recv_path_sound: "
-  \<lbrakk>
-    is_recv_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>y;
-    (V, C) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
-  \<rbrakk> \<Longrightarrow> 
-  may_be_static_live_path LF (NLet xC) (may_be_static_recv_node_label V e xC) \<pi>\<^sub>y
-"
- apply (unfold is_recv_path.simps is_static_recv_path.simps; auto)
-   apply (frule isnt_recv_path_sound'; blast?; assumption?; blast)
-done
-
-lemma runtime_recv_paths_are_inclusive: "
-  \<lbrakk>
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
-    is_recv_path \<E>' c \<pi>1';
-    is_recv_path \<E>' c \<pi>2'
-  \<rbrakk> \<Longrightarrow>
-  \<pi>1' \<asymp> \<pi>2'
-"
-apply (unfold is_recv_path.simps; auto)
-using runtime_paths_are_inclusive by auto
-
-
 *)
 
 inductive 
@@ -401,13 +303,70 @@ inductive paths_congruent :: "trace_pool \<Rightarrow> control_path \<Rightarrow
 
 
 inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
-  Path: "
+  Intro: "
     suffix pathSuffix path \<Longrightarrow>
     paths_congruent \<E> \<pi>Pre \<pi>Suffix pathSuffix \<Longrightarrow>
     is_live_split \<E> (Ch \<pi>C xC) \<pi>Pre \<pi>Suffix \<pi> \<Longrightarrow>
     paths_congruent_mod_chan \<E> (Ch \<pi>C xC) \<pi> path
   "
 
+inductive is_sync_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where
+  Intro: "
+    \<E> \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
+    dynamic_built_on_chan_var \<rho> c x\<^sub>e \<Longrightarrow>
+    is_sync_path \<E> c \<pi>\<^sub>y
+  "
+
+lemma static_paths_of_same_run_inclusive: "
+  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+
+  is_sync_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
+  is_sync_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
+
+  paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
+  static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
+  path1 \<asymp> path2
+"
+proof -
+  show 
+    "path1 \<asymp> path2" sorry
+qed
+
+lemma xyz: "
+  is_send_path \<E> (Ch \<pi>C xC) \<pi> \<Longrightarrow> 
+  is_sync_path \<E> (Ch \<pi>C xC) \<pi>
+"
+proof -
+  assume H1: "is_send_path \<E> (Ch \<pi>C xC) \<pi>"
+  
+  from H1
+  obtain x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa> x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>e where
+    "\<E> \<pi> = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<and> 
+    \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<and> 
+    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC))" sorry
+
+  then have
+    H2: "\<E> \<pi> = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) " and
+    H3: "\<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e)" and
+    H4: "\<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC))" by blast+
+
+  from H4 have
+    H5: "dynamic_built_on_chan_var \<rho>\<^sub>e (Ch \<pi>C xC) x\<^sub>s\<^sub>c"
+  by (simp add: dynamic_built_on_chan_var_dynamic_built_on_chan_prim_dynamic_built_on_chan_bindee_dynamic_built_on_chan_exp.Chan)
+
+  from H5 have
+    H6: "dynamic_built_on_chan_prim \<rho>\<^sub>e (Ch \<pi>C xC) (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m)"
+  by (simp add: dynamic_built_on_chan_var_dynamic_built_on_chan_prim_dynamic_built_on_chan_bindee_dynamic_built_on_chan_exp.Send_Evt)
+
+  from H3 H6 have
+    H7: "dynamic_built_on_chan_var \<rho> (Ch \<pi>C xC) x\<^sub>e" using Closure by blast
+
+  from H2 H7 show 
+    "is_sync_path \<E> (Ch \<pi>C xC) \<pi>" by (simp add: is_sync_path.intros)
+qed
 
 lemma send_static_paths_of_same_run_inclusive: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
@@ -418,9 +377,9 @@ lemma send_static_paths_of_same_run_inclusive: "
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
-  path1 \<asymp> path2 
+  path1 \<asymp> path2
 "
-sorry
+  using static_paths_of_same_run_inclusive xyz by blast
 
 
 lemma send_path_equality_sound: "
