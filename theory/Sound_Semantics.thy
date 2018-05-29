@@ -9,8 +9,9 @@ fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) 
   "|VClosure p \<rho>| = ^p"
 
 
-inductive may_be_static_eval_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55)
-and  may_be_static_eval_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
+inductive 
+  may_be_static_eval_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55) and  
+  may_be_static_eval_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
 where
   Unit: "
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnit
@@ -21,50 +22,39 @@ where
   " |
 
   Send_Evt: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho> \<Longrightarrow>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Send_Evt _ _) \<rho>)
   " |
 
   Recv_Evt: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho> \<Longrightarrow>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Recv_Evt _) \<rho>)
   " |
 
   Left: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho> \<Longrightarrow>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Left _) \<rho>)
   " |
 
   Right: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho> \<Longrightarrow>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Right _) \<rho>)
   " |
 
   Abs: "
-    \<lbrakk>
-      {^Abs f x e} \<subseteq> \<V> f;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e;
-      (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-    \<rbrakk> \<Longrightarrow> 
+    {^Abs f x e} \<subseteq> \<V> f \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho> \<Longrightarrow>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Abs f x e) \<rho>)
   " |
 
   Pair: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
-    \<Longrightarrow>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho> \<Longrightarrow>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Pair _ _) \<rho>)
   " |
 
-  Any : "
-    \<lbrakk>
-      (\<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>
-        {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>
-      )
-    \<rbrakk> \<Longrightarrow>
+  Intro: " 
+    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega> \<Longrightarrow>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>
   "
 
@@ -83,7 +73,7 @@ inductive may_be_static_eval_stack :: "abstract_value_env \<times> abstract_valu
 
 
 inductive may_be_static_eval_state :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<sigma>" 55)  where
-  Any: "
+  Intro: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile>\<^sub>e e;
       (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>;
@@ -93,9 +83,8 @@ inductive may_be_static_eval_state :: "abstract_value_env \<times> abstract_valu
   "
 
 inductive may_be_static_eval_pool :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<E>" 55) where
-  Any: "
-    (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>)
-    \<Longrightarrow> 
+  Intro: "
+    (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>) \<Longrightarrow> 
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
   "
 
@@ -103,9 +92,12 @@ lemma may_be_static_eval_state_to_exp_result: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>
 "
 proof -
- assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" then
- have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" by (simp add: may_be_static_eval_state.simps) then
- show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>" by (rule may_be_static_eval_stack.cases; auto)
+  assume 
+    "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" 
+  then have 
+    "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" by (simp add: may_be_static_eval_state.simps) then
+  show 
+    "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>" by (rule may_be_static_eval_stack.cases; auto)
 qed
 
 
@@ -115,22 +107,27 @@ lemma may_be_static_eval_state_to_exp_let_case_left: "
   (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l
 "
 proof -
-  assume "\<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e"  
-  and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>"
-  by (simp add: may_be_static_eval_state.simps)+ then
-  have "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x" by (simp add: may_be_static_eval_env.simps)
-  with `\<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)`
-  have "^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s" by fastforce
-  with `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l"
+  assume 
+    H1: "\<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)" and
+    H2: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>" 
+
+
+  from H2 have 
+    H3: "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" and
+    H4: "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" using may_be_static_eval_state.cases by blast+
+
+  from H4 have H5: "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x" using may_be_static_eval_env.simps by auto
+
+  from H1 H5 have 
+    H6: "^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s" by fastforce
+
+  from H3 show 
+    "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l"
   proof cases
     case Let_Case 
-    with 
-      `\<forall>x\<^sub>l'. ^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l`  
-      `^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s`
-    show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l" by blast
+
+    from H6 local.Let_Case(1) show 
+      "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l" by auto
   qed
 qed
 
@@ -931,57 +928,6 @@ proof -
   from H1 H2
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>" by (auto simp: may_be_static_eval_state_to_state_result)
 qed
-
-(*
-lemma may_be_static_eval_preserved_under_seq_step_down: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) \<Longrightarrow> 
-  \<rho> x = Some \<omega> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;;(LReturn x\<^sub>\<kappa>) \<mapsto> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>)
-"
-proof -
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" by (simp add: may_be_static_eval_pool.simps)
-  
-  assume "\<rho> x = Some \<omega>" with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>" 
-    using may_be_static_eval_state_to_state_result by auto
-
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>\<close>
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;;(LReturn x\<^sub>\<kappa>) \<mapsto> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>)" using may_be_static_eval_pool.simps by auto
-qed
-*)
-
-(*
-lemma may_be_static_eval_preserved_under_seq_step_up: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
-  \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<up>\<hookrightarrow> \<sigma>' \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>;;(LCall x) \<mapsto> \<sigma>')
-"
-proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>)" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>" by (simp add: may_be_static_eval_pool.simps)
-
-  assume "\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<up>\<hookrightarrow> \<sigma>'" with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: may_be_static_eval_state_preserved_under_step_up)
-
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'\<close>
-  show "\<forall>\<pi>' \<sigma>. (\<E>(\<pi> ;;(LCall x) \<mapsto> \<sigma>')) \<pi>' = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>" by (simp add: may_be_static_eval_pool.simps)
-qed
-*)
-(*
-lemma may_be_static_eval_preserved_under_seq_step: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> leaf \<E> \<pi> \<Longrightarrow> \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
-  seq_step (LET x = b in e) \<rho> \<rho>' \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> ;;(LNext x) \<mapsto> \<langle>e; \<rho>'; \<kappa>\<rangle>)
-"
-proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>)" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>" by (simp add: may_be_static_eval_pool.simps)
-
-  assume "\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<sigma>'" with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: may_be_static_eval_state_preserved_under_step)
-
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'\<close>
-  show "\<forall>\<pi>' \<sigma>. (\<E>(\<pi> ;;(LNext x) \<mapsto> \<sigma>')) \<pi>' = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>" by (simp add: may_be_static_eval_pool.simps)
-qed
-*)
 
 lemma may_be_static_eval_pool_to_exp_let: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>

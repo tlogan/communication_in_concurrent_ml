@@ -139,7 +139,7 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
 
       \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChan c); 
       \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChan c);      
-      \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m 
+      \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m
 
     \<rbrakk> \<Longrightarrow>
     \<E> \<rightarrow> \<E> ++ [
