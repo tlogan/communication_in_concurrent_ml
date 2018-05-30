@@ -325,17 +325,52 @@ lemma static_paths_of_same_run_inclusive: "
 
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+(*
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
+*)
   path1 \<asymp> path2
 "
 proof -
-  show 
-    "path1 \<asymp> path2" sorry
+
+  assume
+    H1: "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'" and
+    H2: "is_sync_path \<E>' (Ch \<pi> xC) \<pi>1" and
+    H3: "is_sync_path \<E>' (Ch \<pi> xC) \<pi>2" and
+    H4: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1" and
+    H5: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2"
+
+  from H1 have
+    "star_left (op \<rightarrow>) [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<E>'" by (simp add: star_implies_star_left)
+
+  then obtain E0 where 
+    H6: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
+    H7: "star_left (op \<rightarrow>) E0 \<E>'" by auto
+
+  from H7 have 
+    H8: "
+      \<forall> \<pi>1 \<pi>2 path1 path2.
+      E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<longrightarrow>
+      is_sync_path \<E>' (Ch \<pi> xC) \<pi>1 \<longrightarrow>
+      is_sync_path \<E>' (Ch \<pi> xC) \<pi>2 \<longrightarrow>
+      paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow>
+      paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow>
+      path1 \<asymp> path2
+    "
+  proof induction
+    case (refl E0)
+    then show ?case sorry
+  next
+    case (step E0 E E')
+    then show ?case sorry
+  qed
+
+  from H2 H3 H4 H5 H6 H8 show 
+    "path1 \<asymp> path2" by simp
 qed
 
-lemma xyz: "
+lemma is_send_path_to_sync_path: "
   is_send_path \<E> (Ch \<pi>C xC) \<pi> \<Longrightarrow> 
   is_sync_path \<E> (Ch \<pi>C xC) \<pi>
 "
@@ -343,15 +378,18 @@ proof -
   assume H1: "is_send_path \<E> (Ch \<pi>C xC) \<pi>"
   
   from H1
-  obtain x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa> x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>e where
-    "\<E> \<pi> = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<and> 
-    \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<and> 
-    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC))" sorry
+  have
+    "
+      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa> x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>e . 
+      \<E> \<pi> = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<and> 
+      \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<and> 
+      \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC))
+    " using is_send_path.simps by auto
 
-  then have
+  then obtain x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa> x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>e where
     H2: "\<E> \<pi> = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) " and
     H3: "\<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e)" and
-    H4: "\<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC))" by blast+
+    H4: "\<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC))" by blast
 
   from H4 have
     H5: "dynamic_built_on_chan_var \<rho>\<^sub>e (Ch \<pi>C xC) x\<^sub>s\<^sub>c"
@@ -379,7 +417,7 @@ lemma send_static_paths_of_same_run_inclusive: "
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   path1 \<asymp> path2
 "
-  using static_paths_of_same_run_inclusive xyz by blast
+by (metis is_send_path_to_sync_path static_paths_of_same_run_inclusive)
 
 
 lemma send_path_equality_sound: "
