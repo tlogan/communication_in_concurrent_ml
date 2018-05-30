@@ -360,7 +360,19 @@ proof -
     "
   proof induction
     case (refl E0)
-    then show ?case sorry
+    {
+      fix \<pi>1 \<pi>2 path1 path2 
+      assume 
+        L2H1: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
+        L2H2: "is_sync_path E0 (Ch \<pi> xC) \<pi>1" and
+        L2H3: "is_sync_path E0 (Ch \<pi> xC) \<pi>2" and
+        L2H4: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>1 path1" and
+        L2H5: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>2 path2"
+
+       have "path1 \<asymp> path2" sorry
+    }
+
+    then show ?case by blast
   next
     case (step E0 E E')
     then show ?case sorry
