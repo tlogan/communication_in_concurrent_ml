@@ -2,7 +2,6 @@ theory Static_Communication_Analysis
   imports Main Syntax 
     Dynamic_Semantics Static_Semantics
     Dynamic_Communication_Analysis
-    Static_Traceability
     Static_Framework
 begin
 

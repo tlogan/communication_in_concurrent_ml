@@ -310,34 +310,23 @@ inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> chan \<Rightarro
     paths_congruent_mod_chan \<E> (Ch \<pi>C xC) \<pi> path
   "
 
-inductive is_sync_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where
-  Intro: "
-    \<E> \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
-    dynamic_built_on_chan_var \<rho> c x\<^sub>e \<Longrightarrow>
-    is_sync_path \<E> c \<pi>\<^sub>y
-  "
-
 lemma static_paths_of_same_run_inclusive: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
 
-  is_sync_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
-  is_sync_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
+  \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
+  \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
 
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-(*
-  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-  static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
-  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
-*)
+ 
   path1 \<asymp> path2
 "
 proof -
 
   assume
     H1: "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'" and
-    H2: "is_sync_path \<E>' (Ch \<pi> xC) \<pi>1" and
-    H3: "is_sync_path \<E>' (Ch \<pi> xC) \<pi>2" and
+    H2: "\<E>' \<pi>1 \<noteq> None" and
+    H3: "\<E>' \<pi>2 \<noteq> None" and
     H4: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1" and
     H5: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2"
 
@@ -352,24 +341,37 @@ proof -
     H8: "
       \<forall> \<pi>1 \<pi>2 path1 path2.
       E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<longrightarrow>
-      is_sync_path \<E>' (Ch \<pi> xC) \<pi>1 \<longrightarrow>
-      is_sync_path \<E>' (Ch \<pi> xC) \<pi>2 \<longrightarrow>
+      \<E>' \<pi>1 \<noteq> None \<longrightarrow>
+      \<E>' \<pi>2 \<noteq> None \<longrightarrow>
       paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow>
       paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow>
       path1 \<asymp> path2
     "
   proof induction
     case (refl E0)
+
     {
       fix \<pi>1 \<pi>2 path1 path2 
       assume 
         L2H1: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
-        L2H2: "is_sync_path E0 (Ch \<pi> xC) \<pi>1" and
-        L2H3: "is_sync_path E0 (Ch \<pi> xC) \<pi>2" and
+        L2H2: "E0 \<pi>1 \<noteq> None" and
+        L2H3: "E0 \<pi>2 \<noteq> None" and
         L2H4: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>1 path1" and
         L2H5: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>2 path2"
 
-       have "path1 \<asymp> path2" sorry
+      thm paths_congruent_mod_chan.intros
+
+      from L2H4 obtain pathSuffix1 \<pi>Pre1 \<pi>Suffix1 where
+        L2H6: "suffix pathSuffix1 path1" and
+        L2H7: "paths_congruent E0 \<pi>Pre1 \<pi>Suffix1 pathSuffix1" and
+        L2H8: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre1 \<pi>Suffix1 \<pi>1" using paths_congruent_mod_chan.simps by blast
+
+      from L2H5 obtain pathSuffix2 \<pi>Pre2 \<pi>Suffix2 where
+        L2H9: "suffix pathSuffix2 path2" and
+        L2H10: "paths_congruent E0 \<pi>Pre2 \<pi>Suffix2 pathSuffix2" and
+        L2H11: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre2 \<pi>Suffix2 \<pi>2" using paths_congruent_mod_chan.simps by blast
+
+      have "path1 \<asymp> path2" sorry
     }
 
     then show ?case by blast
@@ -382,40 +384,20 @@ proof -
     "path1 \<asymp> path2" by simp
 qed
 
-lemma is_send_path_to_sync_path: "
+lemma is_send_path_implies_nonempty_pool: "
   is_send_path \<E> (Ch \<pi>C xC) \<pi> \<Longrightarrow> 
-  is_sync_path \<E> (Ch \<pi>C xC) \<pi>
+  \<E> \<pi> \<noteq> None
 "
 proof -
   assume H1: "is_send_path \<E> (Ch \<pi>C xC) \<pi>"
   
-  from H1
-  have
-    "
-      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa> x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>e . 
-      \<E> \<pi> = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<and> 
-      \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<and> 
-      \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC))
+  then have
+    H2: "
+      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) 
     " using is_send_path.simps by auto
 
-  then obtain x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa> x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>e where
-    H2: "\<E> \<pi> = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) " and
-    H3: "\<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e)" and
-    H4: "\<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC))" by blast
-
-  from H4 have
-    H5: "dynamic_built_on_chan_var \<rho>\<^sub>e (Ch \<pi>C xC) x\<^sub>s\<^sub>c"
-  by (simp add: dynamic_built_on_chan_var_dynamic_built_on_chan_prim_dynamic_built_on_chan_bindee_dynamic_built_on_chan_exp.Chan)
-
-  from H5 have
-    H6: "dynamic_built_on_chan_prim \<rho>\<^sub>e (Ch \<pi>C xC) (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m)"
-  by (simp add: dynamic_built_on_chan_var_dynamic_built_on_chan_prim_dynamic_built_on_chan_bindee_dynamic_built_on_chan_exp.Send_Evt)
-
-  from H3 H6 have
-    H7: "dynamic_built_on_chan_var \<rho> (Ch \<pi>C xC) x\<^sub>e" using Closure by blast
-
-  from H2 H7 show 
-    "is_sync_path \<E> (Ch \<pi>C xC) \<pi>" by (simp add: is_sync_path.intros)
+  then show 
+    "\<E> \<pi> \<noteq> None" by blast
 qed
 
 lemma send_static_paths_of_same_run_inclusive: "
@@ -429,7 +411,7 @@ lemma send_static_paths_of_same_run_inclusive: "
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   path1 \<asymp> path2
 "
-by (metis is_send_path_to_sync_path static_paths_of_same_run_inclusive)
+using is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive by fastforce
 
 
 lemma send_path_equality_sound: "

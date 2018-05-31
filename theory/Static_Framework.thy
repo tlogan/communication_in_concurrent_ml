@@ -1,6 +1,5 @@
 theory Static_Framework
   imports Main Syntax Dynamic_Semantics Static_Semantics
-      Static_Traceability
       "~~/src/HOL/Eisbach/Eisbach_Tools"
 begin
 
