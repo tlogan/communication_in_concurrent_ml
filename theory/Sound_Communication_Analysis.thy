@@ -249,13 +249,12 @@ where
     dynamic_built_on_chan_exp \<rho> c (LET x = b in e)
   "
 
+(* is_live_split \<E> (Ch \<pi>C xC) \<pi>Pre \<pi>Suffix \<pi> *)
+(* split at channel creation or receiving a channel *)
 inductive is_live_split :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" where
-  Empty: "
-    is_live_split \<E> (Ch \<pi>C xC) \<pi> [] \<pi>
-  " | 
   Chan: "
     \<E> \<pi>C = Some (\<langle>LET xC = CHAN \<lparr>\<rparr> in e;r;k\<rangle>) \<Longrightarrow>
-    \<E> (\<pi>C @ (LNext xC) # \<pi>) = Some \<sigma> \<Longrightarrow>
+    \<E> (\<pi>C @ (LNext xC) # \<pi>) \<noteq> None \<Longrightarrow>
     is_live_split \<E> (Ch \<pi>C xC) \<pi>C ((LNext xC) # \<pi>) (\<pi>C @ (LNext xC) # \<pi>)
   " | 
   Sync_Recv: "
@@ -263,52 +262,41 @@ inductive is_live_split :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_
     \<E> \<pi>Pre = Some (\<langle>LET xR = SYNC xE in eY;\<rho>Y;\<kappa>Y\<rangle>) \<Longrightarrow>
     dynamic_built_on_chan_var \<rho> c xR \<Longrightarrow>
     \<E> (\<pi>Pre ;; (LNext xR)) = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-    \<E> (\<pi>Pre @ (LNext xR) # \<pi>) = Some \<sigma> \<Longrightarrow>
+    \<E> (\<pi>Pre @ (LNext xR) # \<pi>) \<noteq> None \<Longrightarrow>
     is_live_split \<E> c \<pi>Pre ((LNext xR) # \<pi>) (\<pi>Pre @ (LNext xR) # \<pi>) 
   "
 
-inductive paths_congruent :: "trace_pool \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+(* paths_congruent \<pi>Suffix pathSuffix *)
+inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty: "
-    paths_congruent \<E> \<pi>Pre [] []
+    paths_congruent [] []
   " |
   Next: "
-    paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
-    b = SYNC xE \<longrightarrow> \<rho> xE \<noteq> Some (VClosure (Send_Evt xSC xM) \<rho>Send) \<Longrightarrow>
-    \<E> (\<pi>Pre) = Some (\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-    \<E> (\<pi>Pre @ (LNext x # \<pi>)) = Some \<sigma> \<Longrightarrow>
-    paths_congruent \<E> \<pi>Pre (LNext x # \<pi>) ((NLet x, ENext) # path)
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (LNext x # \<pi>) ((NLet x, ENext) # path)
   " |
   Call: "
-    paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
-    \<E> (\<pi>Pre @ (LCall x # \<pi>)) = Some \<sigma> \<Longrightarrow>
-    paths_congruent \<E> \<pi>Pre (LCall x # \<pi>) ((NLet x, ECall x) # path)
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (LCall x # \<pi>) ((NLet x, ECall x) # path)
   " |
   Return: "
-    paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
-    \<E> (\<pi>Pre @ (LReturn x # \<pi>)) = Some \<sigma> \<Longrightarrow>
-    paths_congruent \<E> \<pi>Pre (LReturn x # \<pi>) ((NLet x, EReturn x) # path)
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (LReturn x # \<pi>) ((NLet x, EReturn x) # path)
   " |
   Spawn: "
-    paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
-    \<E> (\<pi>Pre @ (LSpawn x # \<pi>)) = Some \<sigma> \<Longrightarrow>
-    paths_congruent \<E> \<pi>Pre (LSpawn x # \<pi>) ((NLet x, ESpawn) # path)
-  " |
-  Send: "
-    paths_congruent \<E> \<pi>Pre \<pi> path \<Longrightarrow>
-    \<rho> xE = Some (VClosure (Send_Evt xSC xM) \<rho>Send) \<Longrightarrow>
-    \<E> \<pi>Pre = Some (\<langle>LET x = SYNC xE in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-    \<E> (\<pi>Pre @ (LNext x # \<pi>)) = Some \<sigma> \<Longrightarrow>
-    paths_congruent \<E> \<pi>Pre (LNext x # \<pi>) ((NLet x, ESend xM) # path)
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (LSpawn x # \<pi>) ((NLet x, ESpawn) # path)
   "
 
 
 inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Intro: "
     suffix pathSuffix path \<Longrightarrow>
-    paths_congruent \<E> \<pi>Pre \<pi>Suffix pathSuffix \<Longrightarrow>
+    paths_congruent \<pi>Suffix pathSuffix \<Longrightarrow>
     is_live_split \<E> (Ch \<pi>C xC) \<pi>Pre \<pi>Suffix \<pi> \<Longrightarrow>
     paths_congruent_mod_chan \<E> (Ch \<pi>C xC) \<pi> path
   "
+
 
 lemma static_paths_of_same_run_inclusive: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
@@ -359,21 +347,28 @@ proof -
         L2H4: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>1 path1" and
         L2H5: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>2 path2"
 
-      thm paths_congruent_mod_chan.intros
-
       from L2H4 obtain pathSuffix1 \<pi>Pre1 \<pi>Suffix1 where
         L2H6: "suffix pathSuffix1 path1" and
-        L2H7: "paths_congruent E0 \<pi>Pre1 \<pi>Suffix1 pathSuffix1" and
-        L2H8: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre1 \<pi>Suffix1 \<pi>1" using paths_congruent_mod_chan.simps by blast
+        L2H7: "paths_congruent \<pi>Suffix1 pathSuffix1" and
+        L2H8: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre1 \<pi>Suffix1 \<pi>1" using paths_congruent_mod_chan.simps by auto
+
 
       from L2H5 obtain pathSuffix2 \<pi>Pre2 \<pi>Suffix2 where
         L2H9: "suffix pathSuffix2 path2" and
-        L2H10: "paths_congruent E0 \<pi>Pre2 \<pi>Suffix2 pathSuffix2" and
-        L2H11: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre2 \<pi>Suffix2 \<pi>2" using paths_congruent_mod_chan.simps by blast
+        L2H10: "paths_congruent \<pi>Suffix2 pathSuffix2" and
+        L2H11: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre2 \<pi>Suffix2 \<pi>2" using paths_congruent_mod_chan.simps by auto
+
+      have L2H12: "\<pi>1 = []" by (metis L2H1 L2H2 fun_upd_apply)
+      have L2H13: "\<pi>2 = []" by (metis L2H1 L2H3 fun_upd_apply)
+
+
+      have L2H14: "paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path1" 
+        using L2H12 L2H4 by auto
+      have L2H15: "paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path2" 
+        using L2H13 L2H5 by blast
 
       have "path1 \<asymp> path2" sorry
     }
-
     then show ?case by blast
   next
     case (step E0 E E')
