@@ -288,7 +288,6 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
     paths_congruent (LSpawn x # \<pi>) ((NLet x, ESpawn) # path)
   "
 
-
 inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Intro: "
     suffix pathSuffix path \<Longrightarrow>
@@ -297,6 +296,74 @@ inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> chan \<Rightarro
     paths_congruent_mod_chan \<E> (Ch \<pi>C xC) \<pi> path
   "
 
+lemma empty_path_congruence_inclusive: "
+  paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path1 \<Longrightarrow>
+  paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path2 \<Longrightarrow>
+  path1 \<asymp> path2
+"
+apply (auto simp: paths_congruent_mod_chan.simps)
+apply (auto simp: is_live_split.simps)
+done
+
+
+lemma static_paths_of_same_run_inclusive_base: "
+  E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
+  E0 \<pi>1 \<noteq> None \<Longrightarrow>
+  E0 \<pi>2 \<noteq> None \<Longrightarrow>
+  paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
+  paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  path1 \<asymp> path2
+"
+proof -
+  assume 
+    H1: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
+    H2: "E0 \<pi>1 \<noteq> None" and
+    H3: "E0 \<pi>2 \<noteq> None" and
+    H4: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>1 path1" and
+    H5: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>2 path2"
+
+  from H4 obtain pathSuffix1 \<pi>Pre1 \<pi>Suffix1 where
+    H6: "suffix pathSuffix1 path1" and
+    H7: "paths_congruent \<pi>Suffix1 pathSuffix1" and
+    H8: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre1 \<pi>Suffix1 \<pi>1" using paths_congruent_mod_chan.simps by auto
+
+
+  from H5 obtain pathSuffix2 \<pi>Pre2 \<pi>Suffix2 where
+    H9: "suffix pathSuffix2 path2" and
+    H10: "paths_congruent \<pi>Suffix2 pathSuffix2" and
+    H11: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre2 \<pi>Suffix2 \<pi>2" using paths_congruent_mod_chan.simps by auto
+
+  have H12: "\<pi>1 = []" by (metis H1 H2 fun_upd_apply)
+  have H13: "\<pi>2 = []" by (metis H1 H3 fun_upd_apply)
+
+  from H12 H4 
+  have H14: "paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path1" by auto
+
+  from H13 H5 
+  have H15: "paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path2" by blast
+
+  from H14 H15 
+  show "path1 \<asymp> path2" using empty_path_congruence_inclusive by auto
+qed
+
+lemma static_paths_of_same_run_inclusive_step: "
+star_left op \<rightarrow> E0 E \<Longrightarrow>
+\<forall>\<pi>1 \<pi>2 path1 path2.
+  E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<longrightarrow>
+  E \<pi>1 \<noteq> None \<longrightarrow>
+  E \<pi>2 \<noteq> None \<longrightarrow>
+  paths_congruent_mod_chan E (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
+  paths_congruent_mod_chan E (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
+  path1 \<asymp> path2 \<Longrightarrow>
+E \<rightarrow> E' \<Longrightarrow>
+E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
+E' \<pi>1 \<noteq> None \<Longrightarrow>
+E' \<pi>2 \<noteq> None \<Longrightarrow>
+paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
+paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+path1 \<asymp> path2 
+"
+sorry
 
 lemma static_paths_of_same_run_inclusive: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
@@ -306,7 +373,7 @@ lemma static_paths_of_same_run_inclusive: "
 
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
- 
+
   path1 \<asymp> path2
 "
 proof -
@@ -337,42 +404,12 @@ proof -
     "
   proof induction
     case (refl E0)
-
-    {
-      fix \<pi>1 \<pi>2 path1 path2 
-      assume 
-        L2H1: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
-        L2H2: "E0 \<pi>1 \<noteq> None" and
-        L2H3: "E0 \<pi>2 \<noteq> None" and
-        L2H4: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>1 path1" and
-        L2H5: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>2 path2"
-
-      from L2H4 obtain pathSuffix1 \<pi>Pre1 \<pi>Suffix1 where
-        L2H6: "suffix pathSuffix1 path1" and
-        L2H7: "paths_congruent \<pi>Suffix1 pathSuffix1" and
-        L2H8: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre1 \<pi>Suffix1 \<pi>1" using paths_congruent_mod_chan.simps by auto
-
-
-      from L2H5 obtain pathSuffix2 \<pi>Pre2 \<pi>Suffix2 where
-        L2H9: "suffix pathSuffix2 path2" and
-        L2H10: "paths_congruent \<pi>Suffix2 pathSuffix2" and
-        L2H11: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre2 \<pi>Suffix2 \<pi>2" using paths_congruent_mod_chan.simps by auto
-
-      have L2H12: "\<pi>1 = []" by (metis L2H1 L2H2 fun_upd_apply)
-      have L2H13: "\<pi>2 = []" by (metis L2H1 L2H3 fun_upd_apply)
-
-
-      have L2H14: "paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path1" 
-        using L2H12 L2H4 by auto
-      have L2H15: "paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path2" 
-        using L2H13 L2H5 by blast
-
-      have "path1 \<asymp> path2" sorry
-    }
-    then show ?case by blast
+    then show ?case
+      using static_paths_of_same_run_inclusive_base by blast
   next
     case (step E0 E E')
-    then show ?case sorry
+    then show ?case
+      using static_paths_of_same_run_inclusive_step by blast
   qed
 
   from H2 H3 H4 H5 H6 H8 show 
@@ -395,12 +432,18 @@ proof -
     "\<E> \<pi> \<noteq> None" by blast
 qed
 
+
 lemma send_static_paths_of_same_run_inclusive: "
   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+
+(*
+  may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC) path1 \<Longrightarrow>
+  may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC) path2 \<Longrightarrow>
+*)
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
@@ -424,6 +467,7 @@ lemma send_path_equality_sound: "
 sorry
 
 
+
 lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
   path1 = path2 \<or> \<not> path1 \<asymp> path2 \<Longrightarrow> 
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>\<^sub>1 path1 \<Longrightarrow>
@@ -437,7 +481,6 @@ lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
   \<pi>\<^sub>1 = \<pi>\<^sub>2
 "
 by (simp add: send_static_paths_of_same_run_inclusive send_path_equality_sound)
-
 
 
 lemma isnt_send_chan_sound: "
