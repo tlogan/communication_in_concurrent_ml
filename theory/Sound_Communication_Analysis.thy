@@ -12,9 +12,9 @@ begin
 
 lemma inclusive_preserved: "
   \<E> \<rightarrow> \<E>' \<Longrightarrow>
-  \<forall>\<pi>1. (\<exists>\<sigma>\<^sub>1. \<E> \<pi>1 = Some \<sigma>\<^sub>1) \<longrightarrow> (\<forall>\<pi>2. (\<exists>\<sigma>\<^sub>2. \<E> \<pi>2 = Some \<sigma>\<^sub>2) \<longrightarrow> \<pi>1 \<asymp> \<pi>2) \<Longrightarrow>
+  \<forall>\<pi>1. (\<exists>\<sigma>\<^sub>1. \<E> \<pi>1 = Some \<sigma>\<^sub>1) \<longrightarrow> (\<forall>\<pi>2. (\<exists>\<sigma>\<^sub>2. \<E> \<pi>2 = Some \<sigma>\<^sub>2) \<longrightarrow> \<pi>1 \<sqsubseteq> \<pi>2) \<Longrightarrow>
   \<E>' \<pi>1 = Some \<sigma>\<^sub>1 \<Longrightarrow> \<E>' \<pi>2 = Some \<sigma>\<^sub>2 \<Longrightarrow> 
-  \<pi>1 \<asymp> \<pi>2
+  \<pi>1 \<sqsubseteq> \<pi>2
 "
  apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
 
@@ -128,7 +128,7 @@ lemma runtime_paths_are_inclusive': "
     \<E>\<^sub>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
     \<E> \<pi>1 = Some \<sigma>\<^sub>1 \<longrightarrow>
     \<E> \<pi>2 = Some \<sigma>\<^sub>2 \<longrightarrow>
-    \<pi>1 \<asymp> \<pi>2
+    \<pi>1 \<sqsubseteq> \<pi>2
   )
 "
  apply (drule star_implies_star_left)
@@ -146,7 +146,7 @@ lemma runtime_paths_are_inclusive: "
     \<E>' \<pi>1' = Some \<sigma>\<^sub>1';
     \<E>' \<pi>2' = Some \<sigma>\<^sub>2'
   \<rbrakk> \<Longrightarrow> 
-  \<pi>1' \<asymp> \<pi>2'
+  \<pi>1' \<sqsubseteq> \<pi>2'
 "
 by (blast dest: runtime_paths_are_inclusive')
 
@@ -159,7 +159,7 @@ lemma runtime_send_paths_are_inclusive: "
     is_send_path \<E>' c \<pi>1';
     is_send_path \<E>' c \<pi>2'
   \<rbrakk> \<Longrightarrow> 
-  \<pi>1' \<asymp> \<pi>2'
+  \<pi>1' \<sqsubseteq> \<pi>2'
 "
 apply (unfold is_send_path.simps; auto)
 using runtime_paths_are_inclusive by blast
@@ -296,10 +296,23 @@ inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> chan \<Rightarro
     paths_congruent_mod_chan \<E> (Ch \<pi>C xC) \<pi> path
   "
 
+
+
+lemma equal_implies_inclusive: "
+  path1 = path2 \<Longrightarrow> path1 \<sqsubseteq> path2
+"
+by (simp add: Ordered)
+
+lemma cong_mod_chan_preservered_under_reduction: "
+  paths_congruent_mod_chan (\<E>(\<pi> ;; l \<mapsto> \<sigma>)) (Ch \<pi>C xC) (\<pi>;;l) path \<Longrightarrow>
+  paths_congruent_mod_chan \<E> (Ch \<pi>C xC) \<pi> (butlast path)
+"
+sorry
+
 lemma empty_path_congruence_inclusive: "
   paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path1 \<Longrightarrow>
   paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path2 \<Longrightarrow>
-  path1 \<asymp> path2
+  path1 \<sqsubseteq> path2
 "
 apply (auto simp: paths_congruent_mod_chan.simps)
 apply (auto simp: is_live_split.simps)
@@ -312,7 +325,7 @@ lemma static_paths_of_same_run_inclusive_base: "
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
   paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
   paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-  path1 \<asymp> path2
+  path1 \<sqsubseteq> path2
 "
 proof -
   assume 
@@ -343,26 +356,37 @@ proof -
   have H15: "paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path2" by blast
 
   from H14 H15 
-  show "path1 \<asymp> path2" using empty_path_congruence_inclusive by auto
+  show "path1 \<sqsubseteq> path2" using empty_path_congruence_inclusive by auto
 qed
 
 lemma static_paths_of_same_run_inclusive_step: "
-star_left op \<rightarrow> E0 E \<Longrightarrow>
+(*star_left op \<rightarrow> [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] E \<Longrightarrow>*)
 \<forall>\<pi>1 \<pi>2 path1 path2.
-  E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<longrightarrow>
   E \<pi>1 \<noteq> None \<longrightarrow>
   E \<pi>2 \<noteq> None \<longrightarrow>
   paths_congruent_mod_chan E (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
   paths_congruent_mod_chan E (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
-  path1 \<asymp> path2 \<Longrightarrow>
+  path1 \<sqsubseteq> path2 \<Longrightarrow>
 E \<rightarrow> E' \<Longrightarrow>
-E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
 paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
 paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-path1 \<asymp> path2 
+path1 \<sqsubseteq> path2 
 "
+ (*apply (auto simp: paths_congruent_mod_chan.simps)*)
+ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
+
+   apply (case_tac "\<pi>1 = \<pi>' ;; LReturn x\<^sub>\<kappa>"; auto; (case_tac "\<pi>2 = \<pi>' ;; LReturn x\<^sub>\<kappa>"; auto))
+
+     apply (drule_tac x = \<pi>' in spec; auto)+
+     apply (drule_tac x = "(butlast path1)" in spec; auto)
+      using cong_mod_chan_preservered_under_reduction apply blast
+     apply (drule_tac x = "(butlast path2)" in spec; auto)
+      using cong_mod_chan_preservered_under_reduction apply blast
+
+ (* initialize IH with (butlast path1) and (butlast path2)*)
+
 sorry
 
 lemma static_paths_of_same_run_inclusive: "
@@ -374,7 +398,7 @@ lemma static_paths_of_same_run_inclusive: "
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
 
-  path1 \<asymp> path2
+  path1 \<sqsubseteq> path2
 "
 proof -
 
@@ -400,20 +424,34 @@ proof -
       \<E>' \<pi>2 \<noteq> None \<longrightarrow>
       paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow>
       paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow>
-      path1 \<asymp> path2
+      path1 \<sqsubseteq> path2
     "
   proof induction
     case (refl E0)
-    then show ?case
-      using static_paths_of_same_run_inclusive_base by blast
+    then show "
+      \<forall>\<pi>1 \<pi>2 path1 path2.
+        E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<longrightarrow>
+        E0 \<pi>1 \<noteq> None \<longrightarrow>
+        E0 \<pi>2 \<noteq> None \<longrightarrow> 
+        paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
+        paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
+        path1 \<sqsubseteq> path2"
+    using static_paths_of_same_run_inclusive_base by blast
   next
     case (step E0 E E')
-    then show ?case
+    then show "
+      \<forall>\<pi>1 \<pi>2 path1 path2.
+        E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<longrightarrow>
+        E' \<pi>1 \<noteq> None \<longrightarrow>
+        E' \<pi>2 \<noteq> None \<longrightarrow> 
+        paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
+        paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
+        path1 \<sqsubseteq> path2"
       using static_paths_of_same_run_inclusive_step by blast
   qed
 
   from H2 H3 H4 H5 H6 H8 show 
-    "path1 \<asymp> path2" by simp
+    "path1 \<sqsubseteq> path2" by simp
 qed
 
 lemma is_send_path_implies_nonempty_pool: "
@@ -439,15 +477,10 @@ lemma send_static_paths_of_same_run_inclusive: "
   is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-
-(*
-  may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC) path1 \<Longrightarrow>
-  may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC) path2 \<Longrightarrow>
-*)
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
-  path1 \<asymp> path2
+  path1 \<sqsubseteq> path2
 "
 using is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive by fastforce
 
@@ -469,7 +502,7 @@ sorry
 
 
 lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
-  path1 = path2 \<or> \<not> path1 \<asymp> path2 \<Longrightarrow> 
+  path1 = path2 \<or> \<not> path1 \<sqsubseteq> path2 \<Longrightarrow> 
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>\<^sub>1 path1 \<Longrightarrow>
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>\<^sub>2 path2 \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>

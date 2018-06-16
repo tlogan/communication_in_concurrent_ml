@@ -446,47 +446,27 @@ inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set 
   "
 
 
-inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
+(* does not need to be symmetrical, when used the args can be used in both places  *)
+inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" (infix "\<sqsubseteq>" 55) where
   Ordered: "
-    prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<or> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<Longrightarrow>
-    \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
+    prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>
+    \<pi>\<^sub>1 \<sqsubseteq> \<pi>\<^sub>2
   " |
   Spawn_Left: "
-    \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
-  " |
-  Spawn_Right: "
-    \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>2
+    \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>1 \<sqsubseteq> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
   " |
   Send_Left: "
-    \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
-  " |
-  Send_Right: "
-    \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>2
+    \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>1 \<sqsubseteq> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
   "
-
-lemma may_be_inclusive_commut: "
-  \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>2 \<asymp> \<pi>\<^sub>1
-"
- apply (erule may_be_inclusive.cases; auto)
-  apply (simp add: Ordered)
-  apply (simp add: Ordered)
-  apply (simp add: Spawn_Right)
-  apply (simp add: Spawn_Left)
-  apply (simp add: Send_Right)
-  apply (simp add: Send_Left)
-done
 
 
 lemma may_be_inclusive_preserved_under_unordered_extension: "
-  \<not> prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> \<not> prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<Longrightarrow> \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2 \<Longrightarrow> \<pi>\<^sub>1 @ [l] \<asymp> \<pi>\<^sub>2
+  \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<sqsubseteq> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l] \<sqsubseteq> path\<^sub>2
 "
  apply (erule may_be_inclusive.cases; auto)
   apply (simp add: Spawn_Left)
-  apply (simp add: Spawn_Right)
   apply (simp add: Send_Left)
-  apply (simp add: Send_Right)
 done
-
 
 inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
   equal: "
@@ -494,7 +474,7 @@ inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool"
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   exclusive: "
-    \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow> 
+    \<not> (\<pi>\<^sub>1 \<sqsubseteq> \<pi>\<^sub>2) \<Longrightarrow> 
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
@@ -504,18 +484,15 @@ inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow>
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   exclusive: "
-    \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow> 
+    \<not> (\<pi>\<^sub>1 \<sqsubseteq> \<pi>\<^sub>2) \<Longrightarrow> 
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
 
 inductive every_two_static_paths  :: "(static_path \<Rightarrow> bool) \<Rightarrow> (static_path \<Rightarrow> static_path \<Rightarrow> bool) \<Rightarrow> bool" where
   pred: "
-    (\<forall> path1 path2 .
-      P path1 \<longrightarrow>
-      P path2 \<longrightarrow>
-      R path1 path2
-    ) \<Longrightarrow>
+    (\<forall> path1 path2 . P path1 \<longrightarrow> P path2 \<longrightarrow> 
+      R path1 path2) \<Longrightarrow>
     every_two_static_paths P R
   "
 
