@@ -434,7 +434,7 @@ proof -
 qed
 
 lemma isnt_exp_sound: "
-  ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], H) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+  ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   is_super_exp e\<^sub>0 e'
 " 

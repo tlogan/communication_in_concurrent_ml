@@ -367,30 +367,17 @@ lemma static_paths_of_same_run_inclusive_step: "
   paths_congruent_mod_chan E (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
   paths_congruent_mod_chan E (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
   path1 \<sqsubseteq> path2 \<Longrightarrow>
-E \<rightarrow> E' \<Longrightarrow>
+(E, H) \<rightarrow> (E', H') \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
 paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
 paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
 path1 \<sqsubseteq> path2 
 "
- (*apply (auto simp: paths_congruent_mod_chan.simps)*)
- apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
-
-   apply (case_tac "\<pi>1 = \<pi>' ;; LReturn x\<^sub>\<kappa>"; auto; (case_tac "\<pi>2 = \<pi>' ;; LReturn x\<^sub>\<kappa>"; auto))
-
-     apply (drule_tac x = \<pi>' in spec; auto)+
-     apply (drule_tac x = "(butlast path1)" in spec; auto)
-      using cong_mod_chan_preservered_under_reduction apply blast
-     apply (drule_tac x = "(butlast path2)" in spec; auto)
-      using cong_mod_chan_preservered_under_reduction apply blast
-
- (* initialize IH with (butlast path1) and (butlast path2)*)
-
 sorry
 
 lemma static_paths_of_same_run_inclusive: "
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
@@ -403,23 +390,24 @@ lemma static_paths_of_same_run_inclusive: "
 proof -
 
   assume
-    H1: "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'" and
+    H1: "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')" and
     H2: "\<E>' \<pi>1 \<noteq> None" and
     H3: "\<E>' \<pi>2 \<noteq> None" and
     H4: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1" and
     H5: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2"
 
   from H1 have
-    "star_left (op \<rightarrow>) [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<E>'" by (simp add: star_implies_star_left)
+    "star_left (op \<rightarrow>) ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" by (simp add: star_implies_star_left)
 
-  then obtain E0 where 
-    H6: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
-    H7: "star_left (op \<rightarrow>) E0 \<E>'" by auto
+  then obtain X0 X' where 
+    H6: "X0 = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" 
+        "X' = (\<E>', H')" and
+    H7: "star_left (op \<rightarrow>) X0 X'" by auto
 
   from H7 have 
     H8: "
-      \<forall> \<pi>1 \<pi>2 path1 path2.
-      E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<longrightarrow>
+      \<forall> \<E>' H' \<pi>1 \<pi>2 path1 path2.
+      X0 = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> X' = (\<E>', H') \<longrightarrow>
       \<E>' \<pi>1 \<noteq> None \<longrightarrow>
       \<E>' \<pi>2 \<noteq> None \<longrightarrow>
       paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow>
@@ -427,27 +415,38 @@ proof -
       path1 \<sqsubseteq> path2
     "
   proof induction
-    case (refl E0)
-    then show "
-      \<forall>\<pi>1 \<pi>2 path1 path2.
-        E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<longrightarrow>
-        E0 \<pi>1 \<noteq> None \<longrightarrow>
-        E0 \<pi>2 \<noteq> None \<longrightarrow> 
-        paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
-        paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
-        path1 \<sqsubseteq> path2"
-    using static_paths_of_same_run_inclusive_base by blast
+    case (refl z)
+    then show ?case
+      using static_paths_of_same_run_inclusive_base by blast
   next
-    case (step E0 E E')
-    then show "
-      \<forall>\<pi>1 \<pi>2 path1 path2.
-        E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<longrightarrow>
-        E' \<pi>1 \<noteq> None \<longrightarrow>
-        E' \<pi>2 \<noteq> None \<longrightarrow> 
-        paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
-        paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
-        path1 \<sqsubseteq> path2"
-      using static_paths_of_same_run_inclusive_step by blast
+    case (step x y z)
+
+    {
+
+      fix \<E>' H' \<pi>1 \<pi>2 path1 path2
+      assume 
+        L2H1: "x = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" and
+        L2H2: "z = (\<E>', H')" and
+        L2H3: "\<E>' \<pi>1 \<noteq> None" and
+        L2H4: "\<E>' \<pi>2 \<noteq> None" and
+        L2H5: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1" and
+        L2H6: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2"
+
+      obtain \<E> H where 
+        L2H7: "y = (\<E>, H)" by (meson surj_pair)
+
+      from L2H1 L2H7 step.IH have 
+        L2H8: "\<forall> \<pi>1 \<pi>2 path1 path2 . \<E> \<pi>1 \<noteq> None \<longrightarrow>
+                \<E> \<pi>2 \<noteq> None \<longrightarrow>
+                paths_congruent_mod_chan \<E> (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
+        paths_congruent_mod_chan \<E> (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
+      path1 \<sqsubseteq> path2 "
+        by blast
+
+      from L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 step.hyps(2) have 
+        "path1 \<sqsubseteq> path2" using static_paths_of_same_run_inclusive_step by blast
+    }
+    then show ?case by blast
   qed
 
   from H2 H3 H4 H5 H6 H8 show 
@@ -472,7 +471,7 @@ qed
 
 
 lemma send_static_paths_of_same_run_inclusive: "
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
   paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
@@ -492,7 +491,7 @@ lemma send_path_equality_sound: "
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
   \<pi>1 = \<pi>2
@@ -508,7 +507,7 @@ lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   is_send_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>1 \<Longrightarrow>
   is_send_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>2 \<Longrightarrow>
   \<pi>\<^sub>1 = \<pi>\<^sub>2
@@ -521,13 +520,13 @@ lemma isnt_send_chan_sound: "
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> xC));
     \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H');
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   ^Chan xC \<in> V x\<^sub>s\<^sub>c
 "
  apply (frule may_be_static_eval_to_pool)
- apply (drule may_be_static_eval_preserved_under_concur_step_star[of _ _ _ \<E>']; assumption?)
+ apply (drule may_be_static_eval_preserved_under_concur_step_star[of _ _ _ ]; assumption?)
  apply (erule may_be_static_eval_pool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
  apply (erule may_be_static_eval_state.cases; auto)
@@ -542,7 +541,7 @@ done
 lemma isnt_send_evt_sound: "
   \<lbrakk>
     \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>';
+    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H');
     \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
@@ -555,7 +554,7 @@ lemma isnt_path_sound: "
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   \<rho> z \<noteq> None \<Longrightarrow>
   dynamic_built_on_chan_var \<rho> (Ch \<pi>C xC) z \<Longrightarrow>
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
@@ -570,7 +569,7 @@ lemma isnt_send_site_sound: "
   \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   may_be_static_send_node_label V e xC (NLet x\<^sub>y)
 "
@@ -587,7 +586,7 @@ done
 
 lemma isnt_send_path_sound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
@@ -610,7 +609,7 @@ theorem one_shot_sound': "
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow> 
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
  apply (simp add: every_two_dynamic_paths.simps every_two_static_paths.simps singular.simps; auto)
@@ -627,7 +626,7 @@ theorem one_shot_sound: "
   \<lbrakk>
     static_one_shot V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
+    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> xC)
 "
@@ -642,7 +641,7 @@ theorem noncompetitive_send_to_ordered_send: "
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
@@ -655,7 +654,7 @@ theorem fan_out_sound: "
   \<lbrakk>
     static_fan_out V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
+    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   fan_out \<E>' (Ch \<pi> xC)
 "
@@ -668,7 +667,7 @@ lemma noncompetitive_recv_to_ordered_recv: "
    every_two_static_paths (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
    static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-   [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
    every_two_dynamic_paths (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
@@ -678,7 +677,7 @@ theorem fan_in_sound: "
   \<lbrakk>
     static_fan_in V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
+    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   fan_in \<E>' (Ch \<pi> xC)
 "
@@ -692,7 +691,7 @@ theorem one_to_one_sound: "
   \<lbrakk>
     static_one_to_one V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'
+    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   one_to_one \<E>' (Ch \<pi> xC)
 "
