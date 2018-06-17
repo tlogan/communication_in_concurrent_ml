@@ -81,15 +81,16 @@ inductive leaf :: "trace_pool \<Rightarrow> control_path \<Rightarrow> bool" whe
 abbreviation control_path_append :: "control_path => control_label => control_path" (infixl ";;" 61) where
   "\<pi>;;lab \<equiv> \<pi> @ [lab]"
 
+type_synonym com_set = "(control_path * chan * control_path) set"
 
-inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
+inductive concur_step :: "trace_pool * com_set \<Rightarrow> trace_pool * com_set \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Seq_Step_Down: "
     \<lbrakk> 
       leaf \<E> \<pi>;
       \<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) ;
       \<rho> x = Some \<omega>
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LReturn x\<^sub>\<kappa>) \<mapsto> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>]
+    (\<E>, H) \<rightarrow> (\<E> ++ [\<pi>;;(LReturn x\<^sub>\<kappa>) \<mapsto> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>], H)
   " |
   Seq_Step: "
     \<lbrakk> 
@@ -97,7 +98,7 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
       \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
       seq_step (b, \<rho>) \<omega>
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LNext x) \<mapsto> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>]
+    (\<E>, H) \<rightarrow> (\<E> ++ [\<pi>;;(LNext x) \<mapsto> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>], H)
   " |
   Seq_Step_Up: "
     \<lbrakk> 
@@ -105,26 +106,24 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
       \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
       seq_step_up (b, \<rho>) (e', \<rho>')
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LCall x) \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
+    (\<E>, H) \<rightarrow> (\<E> ++ [\<pi>;;(LCall x) \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>], H)
   " |
   Let_Chan: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
       \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>)
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [
-      \<pi>;;(LNext x) \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> (VChan (Ch \<pi> x))]; \<kappa>\<rangle>)
-    ]
+    (\<E>, H) \<rightarrow> (\<E> ++ [
+      \<pi>;;(LNext x) \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> (VChan (Ch \<pi> x))]; \<kappa>\<rangle>)], H)
   " |
   Let_Spawn: "
     \<lbrakk> 
       leaf \<E> \<pi> ;
       \<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [
+    (\<E>, H) \<rightarrow> (\<E> ++ [
       \<pi>;;(LNext x) \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> VUnit]; \<kappa>\<rangle>), 
-      \<pi>;;(LSpawn x) \<mapsto> (\<langle>e\<^sub>c; \<rho>; []\<rangle>) 
-    ]
+      \<pi>;;(LSpawn x) \<mapsto> (\<langle>e\<^sub>c; \<rho>; []\<rangle>)], H)
   " |
   Let_Sync: "
     \<lbrakk>
@@ -142,13 +141,14 @@ inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool
       \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m
 
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [
-      \<pi>\<^sub>s;;(LNext x\<^sub>s) \<mapsto> (\<langle>e\<^sub>s; \<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> VUnit]; \<kappa>\<^sub>s\<rangle>), 
-      \<pi>\<^sub>r;;(LNext x\<^sub>r) \<mapsto> (\<langle>e\<^sub>r; \<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m]; \<kappa>\<^sub>r\<rangle>)
-    ]
+    (\<E>, H) \<rightarrow> (
+      \<E> ++ [
+        \<pi>\<^sub>s;;(LNext x\<^sub>s) \<mapsto> (\<langle>e\<^sub>s; \<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> VUnit]; \<kappa>\<^sub>s\<rangle>), 
+        \<pi>\<^sub>r;;(LNext x\<^sub>r) \<mapsto> (\<langle>e\<^sub>r; \<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m]; \<kappa>\<^sub>r\<rangle>)], 
+      H \<union> {(\<pi>\<^sub>s, c, \<pi>\<^sub>r)})
   "
 
-abbreviation dynamic_eval :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
-  "\<E> \<rightarrow>* \<E>' \<equiv> star concur_step \<E> \<E>'"
+abbreviation dynamic_eval :: "trace_pool * com_set \<Rightarrow> trace_pool * com_set \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
+  "X \<rightarrow>* X' \<equiv> star concur_step X X'"
 
 end

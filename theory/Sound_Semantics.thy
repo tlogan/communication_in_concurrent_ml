@@ -1355,14 +1355,14 @@ qed
 theorem may_be_static_eval_preserved_under_concur_step : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>; 
-    \<E> \<rightarrow> \<E>'
+    (\<E>, H) \<rightarrow> (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
 "
 proof -
   assume 
     H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and
-    H2: "\<E> \<rightarrow> \<E>'"
+    H2: "(\<E>, H) \<rightarrow> (\<E>', H')"
 
   from H2 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
   proof cases
@@ -1444,24 +1444,44 @@ qed
 theorem may_be_static_eval_preserved_under_concur_step_star : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>;  
-    \<E> \<rightarrow>* \<E>'
+    (\<E>, H) \<rightarrow>* (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'
 "
 proof -
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
-  assume "\<E> \<rightarrow>* \<E>'" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
+  assume 
+    H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and 
+    H2: "(\<E>, H) \<rightarrow>* (\<E>', H')" 
+
+  obtain X X' where H3: "X = (\<E>, H)" and H4: "X' = (\<E>', H')" by simp
+  
+  from H2 H3 H4 have H5: "X \<rightarrow>* X'" by simp
+ 
+  from H5 have 
+    H6: "\<forall> \<E> H \<E>' H' . X = (\<E>, H) \<longrightarrow> X' = (\<E>', H') \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
   proof (induction rule: star.induct)
-    case (refl \<E>)
-    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" by simp
+    case (refl X0)
+    show ?case by simp
   next
-    case (step \<E> \<E>\<^sub>m \<E>')
-    assume " \<E> \<rightarrow> \<E>\<^sub>m"
-    and "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<^sub>m \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" then
-    show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: may_be_static_eval_preserved_under_concur_step)
-  qed with `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by blast
+    case (step X Xm X')
+
+    {
+      fix \<E> H \<E>' H' 
+      assume 
+        L1H1: "X = (\<E>, H)" and 
+        L1H2: "X' = (\<E>', H')" and 
+        L1H3: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
+
+      from L1H1 L1H2 L1H3 
+      have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
+      by (metis eq_fst_iff may_be_static_eval_preserved_under_concur_step step.IH step.hyps(1))
+    }
+    
+    then show ?case by blast
+  qed 
+
+  from H1 H3 H4 H6
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by simp
 qed
 
 theorem may_be_static_eval_env_to_precise : "
@@ -1496,15 +1516,21 @@ qed
 theorem values_not_bound_pool_sound : "
   \<rho>' x = Some \<omega> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> 
-  \<E> \<rightarrow>* \<E>' \<Longrightarrow>
+  (\<E>, H) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
   {|\<omega>|} \<subseteq> \<V> x
 "
 proof -
-  assume "\<rho>' x = Some \<omega>"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<rightarrow>* \<E>'" and "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: may_be_static_eval_preserved_under_concur_step_star)
-  with \<open>\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close> and `\<rho>' x = Some \<omega>`
+  assume 
+    H1: "\<rho>' x = Some \<omega>" and
+    H2: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and 
+    H3: "(\<E>, H) \<rightarrow>* (\<E>', H')" and 
+    H4: "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
+
+  from H2 H3
+  have H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: may_be_static_eval_preserved_under_concur_step_star)
+
+  from H1 H4 H5
   show "{|\<omega>|} \<subseteq> \<V> x" using may_be_static_eval_pool_to_precise by auto
 qed
 
@@ -1533,23 +1559,21 @@ qed
 theorem values_not_bound_sound : "
   \<rho>' x = Some \<omega> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  [[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>' \<Longrightarrow>
+  ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
   {|\<omega>|} \<subseteq> \<V> x
 "
 proof -
-  assume "\<rho>' x = Some \<omega>"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e" and "[[] \<mapsto> \<langle>e; empty; []\<rangle>] \<rightarrow>* \<E>'"
-  and "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
+  assume 
+    H1: "\<rho>' x = Some \<omega>" and
+    H2: "(\<V>, \<C>) \<Turnstile>\<^sub>e e" and 
+    H3: "([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) \<rightarrow>* (\<E>', H')" and 
+    H4: "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>e e`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: may_be_static_eval_to_pool)
+  from H2 have 
+    H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: may_be_static_eval_to_pool)
 
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]\<close> 
-  and \<open>[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<rightarrow>* \<E>'\<close> 
-  and \<open>\<E>' \<pi> = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)\<close>
-  and `\<rho>' x = Some \<omega> `
-
+  from H1 H3 H4 H5
   show " {|\<omega>|} \<subseteq> \<V> x" using values_not_bound_pool_sound by blast
 qed
 
