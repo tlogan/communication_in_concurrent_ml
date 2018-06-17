@@ -293,22 +293,20 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
 
 inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Chan: "
-    paths_congruent ((LNext xC) # \<pi>) path \<Longrightarrow>
-    \<E> (\<pi>C @ (LNext xC) # \<pi>) \<noteq> None \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) (Ch \<pi>C xC) (\<pi>C @ (LNext xC) # \<pi>) path
+    paths_congruent \<pi> path \<Longrightarrow>
+    \<E> (\<pi>C @ \<pi>) \<noteq> None \<Longrightarrow>
+    paths_congruent_mod_chan (\<E>, H) (Ch \<pi>C xC) (\<pi>C @ \<pi>) path
   " |
   Sync: "
 
-    {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
-    paths_congruent ((LNext xR) #\<pi>Suffix) pathSuffix \<Longrightarrow>
-
+    paths_congruent \<pi>Suffix pathSuffix \<Longrightarrow>
+    \<E> (\<pi>R @ \<pi>Suffix) \<noteq> None \<Longrightarrow>
+    dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
     \<E> \<pi>S = Some (\<langle>LET xS = SYNC xSE in eSY;\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
     \<E> \<pi>R = Some (\<langle>LET xR = SYNC xRE in eRY;\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
-    dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
-
-    \<E> (\<pi>R @ (LNext xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
+    {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
     paths_congruent_mod_chan (\<E>, H) c \<pi>S path \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (path @ (NLet xS, ESend xSE) # pathSuffix)
+    paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ \<pi>Suffix) (path @ (NLet xS, ESend xSE) # pathSuffix)
   "
 
 (*
