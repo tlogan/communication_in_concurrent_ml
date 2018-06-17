@@ -251,6 +251,7 @@ where
 
 (* is_live_split \<E> (Ch \<pi>C xC) \<pi>Pre \<pi>Suffix \<pi> *)
 (* split at channel creation or receiving a channel *)
+(*
 inductive is_live_split :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" where
   Chan: "
     \<E> \<pi>C = Some (\<langle>LET xC = CHAN \<lparr>\<rparr> in e;r;k\<rangle>) \<Longrightarrow>
@@ -265,6 +266,7 @@ inductive is_live_split :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_
     \<E> (\<pi>Pre @ (LNext xR) # \<pi>) \<noteq> None \<Longrightarrow>
     is_live_split \<E> c \<pi>Pre ((LNext xR) # \<pi>) (\<pi>Pre @ (LNext xR) # \<pi>) 
   "
+*)
 
 (* paths_congruent \<pi>Suffix pathSuffix *)
 inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
@@ -288,6 +290,28 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
     paths_congruent (LSpawn x # \<pi>) ((NLet x, ESpawn) # path)
   "
 
+
+inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  Chan: "
+    paths_congruent ((LNext xC) # \<pi>) path \<Longrightarrow>
+    \<E> (\<pi>C @ (LNext xC) # \<pi>) \<noteq> None \<Longrightarrow>
+    paths_congruent_mod_chan (\<E>, H) (Ch \<pi>C xC) (\<pi>C @ (LNext xC) # \<pi>) path
+  " |
+  Sync: "
+
+    {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
+    paths_congruent ((LNext xR) #\<pi>Suffix) pathSuffix \<Longrightarrow>
+
+    \<E> \<pi>S = Some (\<langle>LET xS = SYNC xSE in eSY;\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
+    \<E> \<pi>R = Some (\<langle>LET xR = SYNC xRE in eRY;\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
+    dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
+
+    \<E> (\<pi>R @ (LNext xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
+    paths_congruent_mod_chan (\<E>, H) c \<pi>S path \<Longrightarrow>
+    paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (path @ (NLet xS, ESend xSE) # pathSuffix)
+  "
+
+(*
 inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Intro: "
     suffix pathSuffix path \<Longrightarrow>
@@ -295,7 +319,7 @@ inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> chan \<Rightarro
     is_live_split \<E> (Ch \<pi>C xC) \<pi>Pre \<pi>Suffix \<pi> \<Longrightarrow>
     paths_congruent_mod_chan \<E> (Ch \<pi>C xC) \<pi> path
   "
-
+*)
 
 
 lemma equal_implies_inclusive: "
