@@ -249,24 +249,6 @@ where
     dynamic_built_on_chan_exp \<rho> c (LET x = b in e)
   "
 
-(* is_live_split \<E> (Ch \<pi>C xC) \<pi>Pre \<pi>Suffix \<pi> *)
-(* split at channel creation or receiving a channel *)
-(*
-inductive is_live_split :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> control_path \<Rightarrow> bool" where
-  Chan: "
-    \<E> \<pi>C = Some (\<langle>LET xC = CHAN \<lparr>\<rparr> in e;r;k\<rangle>) \<Longrightarrow>
-    \<E> (\<pi>C @ (LNext xC) # \<pi>) \<noteq> None \<Longrightarrow>
-    is_live_split \<E> (Ch \<pi>C xC) \<pi>C ((LNext xC) # \<pi>) (\<pi>C @ (LNext xC) # \<pi>)
-  " | 
-  Sync_Recv: "
-    \<rho>Y xE = Some (VClosure (Recv_Evt xRC) \<rho>Recv) \<Longrightarrow>
-    \<E> \<pi>Pre = Some (\<langle>LET xR = SYNC xE in eY;\<rho>Y;\<kappa>Y\<rangle>) \<Longrightarrow>
-    dynamic_built_on_chan_var \<rho> c xR \<Longrightarrow>
-    \<E> (\<pi>Pre ;; (LNext xR)) = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-    \<E> (\<pi>Pre @ (LNext xR) # \<pi>) \<noteq> None \<Longrightarrow>
-    is_live_split \<E> c \<pi>Pre ((LNext xR) # \<pi>) (\<pi>Pre @ (LNext xR) # \<pi>) 
-  "
-*)
 
 (* paths_congruent \<pi>Suffix pathSuffix *)
 inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
@@ -298,7 +280,6 @@ inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \
     paths_congruent_mod_chan (\<E>, H) (Ch \<pi>C xC) (\<pi>C @ \<pi>) path
   " |
   Sync: "
-
     paths_congruent \<pi>Suffix pathSuffix \<Longrightarrow>
     \<E> (\<pi>R @ \<pi>Suffix) \<noteq> None \<Longrightarrow>
     dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
@@ -310,20 +291,11 @@ inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \
   "
 
 (*
-inductive paths_congruent_mod_chan :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
-  Intro: "
-    suffix pathSuffix path \<Longrightarrow>
-    paths_congruent \<pi>Suffix pathSuffix \<Longrightarrow>
-    is_live_split \<E> (Ch \<pi>C xC) \<pi>Pre \<pi>Suffix \<pi> \<Longrightarrow>
-    paths_congruent_mod_chan \<E> (Ch \<pi>C xC) \<pi> path
-  "
-*)
-
-
 lemma equal_implies_inclusive: "
   path1 = path2 \<Longrightarrow> path1 \<sqsubseteq> path2
 "
 by (simp add: Ordered)
+
 
 lemma cong_mod_chan_preservered_under_reduction: "
   paths_congruent_mod_chan (\<E>(\<pi> ;; l \<mapsto> \<sigma>)) (Ch \<pi>C xC) (\<pi>;;l) path \<Longrightarrow>
@@ -339,14 +311,16 @@ lemma empty_path_congruence_inclusive: "
 apply (auto simp: paths_congruent_mod_chan.simps)
 apply (auto simp: is_live_split.simps)
 done
+*)
+
 
 
 lemma static_paths_of_same_run_inclusive_base: "
   E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
-  paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
-  paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  paths_congruent_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
+  paths_congruent_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
   path1 \<sqsubseteq> path2
 "
 proof -
@@ -354,31 +328,13 @@ proof -
     H1: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
     H2: "E0 \<pi>1 \<noteq> None" and
     H3: "E0 \<pi>2 \<noteq> None" and
-    H4: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>1 path1" and
-    H5: "paths_congruent_mod_chan E0 (Ch \<pi> xC) \<pi>2 path2"
+    H4: "paths_congruent_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>1 path1" and
+    H5: "paths_congruent_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>2 path2"
 
-  from H4 obtain pathSuffix1 \<pi>Pre1 \<pi>Suffix1 where
-    H6: "suffix pathSuffix1 path1" and
-    H7: "paths_congruent \<pi>Suffix1 pathSuffix1" and
-    H8: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre1 \<pi>Suffix1 \<pi>1" using paths_congruent_mod_chan.simps by auto
+  have H6: "\<pi>1 = []" by (metis H1 H2 fun_upd_apply)
+  have H6: "\<pi>2 = []" by (metis H1 H3 fun_upd_apply)
 
-
-  from H5 obtain pathSuffix2 \<pi>Pre2 \<pi>Suffix2 where
-    H9: "suffix pathSuffix2 path2" and
-    H10: "paths_congruent \<pi>Suffix2 pathSuffix2" and
-    H11: "is_live_split E0 (Ch \<pi> xC) \<pi>Pre2 \<pi>Suffix2 \<pi>2" using paths_congruent_mod_chan.simps by auto
-
-  have H12: "\<pi>1 = []" by (metis H1 H2 fun_upd_apply)
-  have H13: "\<pi>2 = []" by (metis H1 H3 fun_upd_apply)
-
-  from H12 H4 
-  have H14: "paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path1" by auto
-
-  from H13 H5 
-  have H15: "paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path2" by blast
-
-  from H14 H15 
-  show "path1 \<sqsubseteq> path2" using empty_path_congruence_inclusive by auto
+  show "path1 \<sqsubseteq> path2" sorry
 qed
 
 lemma static_paths_of_same_run_inclusive_step: "
@@ -386,14 +342,14 @@ lemma static_paths_of_same_run_inclusive_step: "
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
   E \<pi>2 \<noteq> None \<longrightarrow>
-  paths_congruent_mod_chan E (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
-  paths_congruent_mod_chan E (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
+  paths_congruent_mod_chan (E, H) (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
+  paths_congruent_mod_chan (E, H) (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
   path1 \<sqsubseteq> path2 \<Longrightarrow>
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
-paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
-paths_congruent_mod_chan E' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+paths_congruent_mod_chan (E', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
+paths_congruent_mod_chan (E', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
 path1 \<sqsubseteq> path2 
 "
 sorry
@@ -404,8 +360,8 @@ lemma static_paths_of_same_run_inclusive: "
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
 
-  paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
 
   path1 \<sqsubseteq> path2
 "
@@ -415,8 +371,8 @@ proof -
     H1: "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')" and
     H2: "\<E>' \<pi>1 \<noteq> None" and
     H3: "\<E>' \<pi>2 \<noteq> None" and
-    H4: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1" and
-    H5: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2"
+    H4: "paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1" and
+    H5: "paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2"
 
   from H1 have
     "star_left (op \<rightarrow>) ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" by (simp add: star_implies_star_left)
@@ -432,8 +388,8 @@ proof -
       X0 = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> X' = (\<E>', H') \<longrightarrow>
       \<E>' \<pi>1 \<noteq> None \<longrightarrow>
       \<E>' \<pi>2 \<noteq> None \<longrightarrow>
-      paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow>
-      paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow>
+      paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow>
+      paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow>
       path1 \<sqsubseteq> path2
     "
   proof induction
@@ -451,8 +407,8 @@ proof -
         L2H2: "z = (\<E>', H')" and
         L2H3: "\<E>' \<pi>1 \<noteq> None" and
         L2H4: "\<E>' \<pi>2 \<noteq> None" and
-        L2H5: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1" and
-        L2H6: "paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2"
+        L2H5: "paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1" and
+        L2H6: "paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2"
 
       obtain \<E> H where 
         L2H7: "y = (\<E>, H)" by (meson surj_pair)
@@ -460,8 +416,8 @@ proof -
       from L2H1 L2H7 step.IH have 
         L2H8: "\<forall> \<pi>1 \<pi>2 path1 path2 . \<E> \<pi>1 \<noteq> None \<longrightarrow>
                 \<E> \<pi>2 \<noteq> None \<longrightarrow>
-                paths_congruent_mod_chan \<E> (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
-        paths_congruent_mod_chan \<E> (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
+                paths_congruent_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
+        paths_congruent_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
       path1 \<sqsubseteq> path2 "
         by blast
 
@@ -496,8 +452,8 @@ lemma send_static_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
-  paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
@@ -508,8 +464,8 @@ using is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive by f
 
 lemma send_path_equality_sound: "
   path1 = path2 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
@@ -524,8 +480,8 @@ sorry
 
 lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
   path1 = path2 \<or> \<not> path1 \<sqsubseteq> path2 \<Longrightarrow> 
-  paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>\<^sub>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan \<E>' (Ch \<pi> xC) \<pi>\<^sub>2 path2 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>1 path1 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>2 path2 \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -582,7 +538,7 @@ lemma isnt_path_sound: "
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
-    paths_congruent_mod_chan \<E>' (Ch \<pi>C xC) \<pi> path \<and>
+    paths_congruent_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
     may_be_static_live_path V F Ln Lx (NLet xC) isEnd path
 "
 sorry
@@ -613,7 +569,7 @@ lemma isnt_send_path_sound: "
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   \<exists> pathSync .
-    (paths_congruent_mod_chan \<E>' (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
+    (paths_congruent_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
     may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
