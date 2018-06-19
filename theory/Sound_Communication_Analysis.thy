@@ -265,7 +265,7 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
   " |
   Return: "
     paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (LReturn x # \<pi>) ((NLet x, EReturn x) # path)
+    paths_congruent (LReturn y # \<pi>) ((NResult y, EReturn x) # path)
   " |
   Spawn: "
     paths_congruent \<pi> path \<Longrightarrow>
@@ -340,8 +340,36 @@ proof -
     by (metis fun_upd_apply no_empty_paths_congruent_mod_chan)
 qed
 
+
+lemma paths_congruent_mod_chan_preserved_under_reduction: "
+  star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
+  (E, H) \<rightarrow> (E', H') \<Longrightarrow>
+  paths_congruent_mod_chan (E', H') c (\<pi> ;; l) path \<Longrightarrow>
+  paths_congruent_mod_chan (E, H) c \<pi> (butlast path)"
+sorry
+
+
+lemma equal_implies_inclusive: "
+  path1 = path2  \<Longrightarrow> path1 \<asymp> path2 
+"
+by (simp add: Prefix2)
+
+(*
+lemma inclusive_preserved_under_butlast_path_equal: "
+  star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
+  paths_congruent_mod_chan (E(\<pi>' ;; LReturn x\<^sub>\<kappa> \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>), H) (Ch \<pi> xC) (\<pi>' ;; LReturn x\<^sub>\<kappa>) path1 \<Longrightarrow>
+  paths_congruent_mod_chan (E(\<pi>' ;; LReturn x\<^sub>\<kappa> \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>), H) (Ch \<pi> xC) (\<pi>' ;; LReturn x\<^sub>\<kappa>) path2 \<Longrightarrow>
+  leaf E \<pi>' \<Longrightarrow>
+  E \<pi>' = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) \<Longrightarrow>
+  \<rho> x = Some \<omega> \<Longrightarrow>
+  E' = E(\<pi>' ;; LReturn x\<^sub>\<kappa> \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>) \<Longrightarrow>
+  H' = H \<Longrightarrow> \<pi>1 = \<pi>' ;; LReturn x\<^sub>\<kappa> \<Longrightarrow> \<pi>2 = \<pi>' ;; LReturn x\<^sub>\<kappa> \<Longrightarrow> butlast path1 = butlast path2 \<Longrightarrow> 
+  path1 \<asymp> path2"
+sorry
+*)
+
 lemma static_paths_of_same_run_inclusive_step: "
-(*star_left op \<rightarrow> [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] E \<Longrightarrow>*)
+star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
   E \<pi>2 \<noteq> None \<longrightarrow>
@@ -349,6 +377,7 @@ lemma static_paths_of_same_run_inclusive_step: "
   paths_congruent_mod_chan (E, H) (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
   path1 \<asymp> path2 \<Longrightarrow>
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
+\<pi>1 \<noteq> \<pi>2 \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
 paths_congruent_mod_chan (E', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
@@ -359,18 +388,17 @@ sorry
 
 lemma static_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
-
+  \<pi>1 \<noteq> \<pi>2 \<Longrightarrow>
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
-
   paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
   paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-
   path1 \<asymp> path2
 "
 proof -
 
   assume
+    H0: "\<pi>1 \<noteq> \<pi>2" and
     H1: "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')" and
     H2: "\<E>' \<pi>1 \<noteq> None" and
     H3: "\<E>' \<pi>2 \<noteq> None" and
@@ -389,6 +417,7 @@ proof -
     H8: "
       \<forall> \<E>' H' \<pi>1 \<pi>2 path1 path2.
       X0 = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> X' = (\<E>', H') \<longrightarrow>
+      \<pi>1 \<noteq> \<pi>2 \<longrightarrow>
       \<E>' \<pi>1 \<noteq> None \<longrightarrow>
       \<E>' \<pi>2 \<noteq> None \<longrightarrow>
       paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow>
@@ -408,6 +437,7 @@ proof -
       assume 
         L2H1: "x = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" and
         L2H2: "z = (\<E>', H')" and
+        L2H2A: "\<pi>1 \<noteq> \<pi>2" and
         L2H3: "\<E>' \<pi>1 \<noteq> None" and
         L2H4: "\<E>' \<pi>2 \<noteq> None" and
         L2H5: "paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1" and
@@ -417,15 +447,18 @@ proof -
         L2H7: "y = (\<E>, H)" by (meson surj_pair)
 
       from L2H1 L2H7 step.IH have 
-        L2H8: "\<forall> \<pi>1 \<pi>2 path1 path2 . \<E> \<pi>1 \<noteq> None \<longrightarrow>
-                \<E> \<pi>2 \<noteq> None \<longrightarrow>
-                paths_congruent_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
-        paths_congruent_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
-      path1 \<asymp> path2 "
+        L2H8: "
+          \<forall> \<pi>1 \<pi>2 path1 path2 . 
+          \<pi>1 \<noteq> \<pi>2 \<longrightarrow>
+          \<E> \<pi>1 \<noteq> None \<longrightarrow>
+          \<E> \<pi>2 \<noteq> None \<longrightarrow>
+          paths_congruent_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
+          paths_congruent_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
+          path1 \<asymp> path2 "
         by blast
 
       from L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 step.hyps(2) have 
-        "path1 \<asymp> path2" using static_paths_of_same_run_inclusive_step by blast
+        "path1 \<asymp> path2" using static_paths_of_same_run_inclusive_step sorry
     }
     then show ?case by blast
   qed
@@ -451,6 +484,14 @@ proof -
 qed
 
 
+
+lemma equal_concrete_implies_equal_abstract_paths: "
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+  paths_congruent_mod_chan (E', H') c \<pi> path1 \<Longrightarrow>
+  paths_congruent_mod_chan (E', H') c \<pi> path2 \<Longrightarrow>
+  path1 = path2"
+sorry
+
 lemma send_static_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
@@ -462,8 +503,10 @@ lemma send_static_paths_of_same_run_inclusive: "
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   path1 \<asymp> path2
 "
-using is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive by fastforce
-
+apply (case_tac "\<pi>1 = \<pi>2")
+  apply (simp add: equal_concrete_implies_equal_abstract_paths equal_implies_inclusive)
+  apply (simp add: is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive)
+done
 
 lemma send_path_equality_sound: "
   path1 = path2 \<Longrightarrow>
