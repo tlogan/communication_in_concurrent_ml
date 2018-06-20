@@ -371,6 +371,7 @@ sorry
 lemma static_paths_of_same_run_inclusive_step: "
 star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
 \<forall>\<pi>1 \<pi>2 path1 path2.
+  \<pi>1 \<noteq> \<pi>2 \<longrightarrow>
   E \<pi>1 \<noteq> None \<longrightarrow>
   E \<pi>2 \<noteq> None \<longrightarrow>
   paths_congruent_mod_chan (E, H) (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
@@ -407,7 +408,7 @@ proof -
 
   from H1 have
     "star_left (op \<rightarrow>) ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" by (simp add: star_implies_star_left)
-
+  
   then obtain X0 X' where 
     H6: "X0 = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" 
         "X' = (\<E>', H')" and
@@ -432,7 +433,6 @@ proof -
     case (step x y z)
 
     {
-
       fix \<E>' H' \<pi>1 \<pi>2 path1 path2
       assume 
         L2H1: "x = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" and
@@ -457,14 +457,14 @@ proof -
           path1 \<asymp> path2 "
         by blast
 
-      from L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 step.hyps(2) have 
-        "path1 \<asymp> path2" using static_paths_of_same_run_inclusive_step sorry
+      from L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 L2H1 L2H2A step.hyps(1) step.hyps(2) have 
+        "path1 \<asymp> path2" using static_paths_of_same_run_inclusive_step by presburger
     }
     then show ?case by blast
   qed
 
-  from H2 H3 H4 H5 H6 H8 show 
-    "path1 \<asymp> path2" by simp
+  from H0 H2 H3 H4 H5 H6(1) H6(2) H8 show 
+    "path1 \<asymp> path2" by blast
 qed
 
 lemma is_send_path_implies_nonempty_pool: "
