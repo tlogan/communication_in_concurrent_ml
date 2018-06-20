@@ -290,29 +290,6 @@ inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \
     paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (path @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
   "
 
-(*
-lemma equal_implies_inclusive: "
-  path1 = path2 \<Longrightarrow> path1 \<asymp> path2
-"
-by (simp add: Ordered)
-
-
-lemma cong_mod_chan_preservered_under_reduction: "
-  paths_congruent_mod_chan (\<E>(\<pi> ;; l \<mapsto> \<sigma>)) (Ch \<pi>C xC) (\<pi>;;l) path \<Longrightarrow>
-  paths_congruent_mod_chan \<E> (Ch \<pi>C xC) \<pi> (butlast path)
-"
-sorry
-
-lemma empty_path_congruence_inclusive: "
-  paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path1 \<Longrightarrow>
-  paths_congruent_mod_chan E0 (Ch \<pi> xC) [] path2 \<Longrightarrow>
-  path1 \<asymp> path2
-"
-apply (auto simp: paths_congruent_mod_chan.simps)
-apply (auto simp: is_live_split.simps)
-done
-*)
-
 
 lemma no_empty_paths_congruent_mod_chan: "
   \<not> (paths_congruent_mod_chan EH c [] path)"
@@ -340,33 +317,11 @@ proof -
     by (metis fun_upd_apply no_empty_paths_congruent_mod_chan)
 qed
 
-
-lemma paths_congruent_mod_chan_preserved_under_reduction: "
-  star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
-  (E, H) \<rightarrow> (E', H') \<Longrightarrow>
-  paths_congruent_mod_chan (E', H') c (\<pi> ;; l) path \<Longrightarrow>
-  paths_congruent_mod_chan (E, H) c \<pi> (butlast path)"
-sorry
-
-
-lemma equal_implies_inclusive: "
+lemma paths_equal_implies_paths_inclusive: "
   path1 = path2  \<Longrightarrow> path1 \<asymp> path2 
 "
 by (simp add: Prefix2)
 
-(*
-lemma inclusive_preserved_under_butlast_path_equal: "
-  star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
-  paths_congruent_mod_chan (E(\<pi>' ;; LReturn x\<^sub>\<kappa> \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>), H) (Ch \<pi> xC) (\<pi>' ;; LReturn x\<^sub>\<kappa>) path1 \<Longrightarrow>
-  paths_congruent_mod_chan (E(\<pi>' ;; LReturn x\<^sub>\<kappa> \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>), H) (Ch \<pi> xC) (\<pi>' ;; LReturn x\<^sub>\<kappa>) path2 \<Longrightarrow>
-  leaf E \<pi>' \<Longrightarrow>
-  E \<pi>' = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) \<Longrightarrow>
-  \<rho> x = Some \<omega> \<Longrightarrow>
-  E' = E(\<pi>' ;; LReturn x\<^sub>\<kappa> \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>) \<Longrightarrow>
-  H' = H \<Longrightarrow> \<pi>1 = \<pi>' ;; LReturn x\<^sub>\<kappa> \<Longrightarrow> \<pi>2 = \<pi>' ;; LReturn x\<^sub>\<kappa> \<Longrightarrow> butlast path1 = butlast path2 \<Longrightarrow> 
-  path1 \<asymp> path2"
-sorry
-*)
 
 lemma static_paths_of_same_run_inclusive_step: "
 star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
@@ -504,7 +459,7 @@ lemma send_static_paths_of_same_run_inclusive: "
   path1 \<asymp> path2
 "
 apply (case_tac "\<pi>1 = \<pi>2")
-  apply (simp add: equal_concrete_implies_equal_abstract_paths equal_implies_inclusive)
+  apply (simp add: equal_concrete_implies_equal_abstract_paths paths_equal_implies_paths_inclusive)
   apply (simp add: is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive)
 done
 
