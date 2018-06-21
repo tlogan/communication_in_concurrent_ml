@@ -250,38 +250,37 @@ where
   "
 
 
-(* paths_congruent \<pi>Suffix pathSuffix *)
-inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
-  Empty: "
-    paths_congruent [] []
-  " |
+inductive nodes_congruent :: "control_label \<Rightarrow> step_label \<Rightarrow> bool" where
   Next: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (LNext x # \<pi>) ((NLet x, ENext) # path)
-  " |
+    nodes_congruent (LNext x) (NLet x, ENext)" |
   Call: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (LCall x # \<pi>) ((NLet x, ECall x) # path)
-  " |
+    nodes_congruent (LCall x) (NLet x, ECall x)" |
   Return: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (LReturn y # \<pi>) ((NResult y, EReturn x) # path)
-  " |
+    nodes_congruent (LReturn y) (NResult y, EReturn x)" |
   Spawn: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (LSpawn x # \<pi>) ((NLet x, ESpawn) # path)
-  "
+    nodes_congruent (LSpawn x) (NLet x, ESpawn)"
 
+
+inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  Node: "
+    nodes_congruent l n \<Longrightarrow>
+    paths_congruent [l] [n]
+  " |
+  List: "
+    nodes_congruent l n \<Longrightarrow>
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (\<pi> ;; l) (path @ [n])
+  "
 
 inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Chan: "
     paths_congruent ((LNext xC) # \<pi>) path \<Longrightarrow>
-    \<E> (\<pi>C @ \<pi>) \<noteq> None \<Longrightarrow>
+    \<E> (\<pi>C @ (LNext xC) # \<pi>) \<noteq> None \<Longrightarrow>
     paths_congruent_mod_chan (\<E>, H) (Ch \<pi>C xC) (\<pi>C @ (LNext xC) # \<pi>) path
   " |
   Sync: "
     paths_congruent \<pi>Suffix pathSuffix \<Longrightarrow>
-    \<E> (\<pi>R @ \<pi>Suffix) \<noteq> None \<Longrightarrow>
+    \<E> (\<pi>R @ (LNext xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
     dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
     \<E> \<pi>S = Some (\<langle>LET xS = SYNC xSE in eSY;\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
     \<E> \<pi>R = Some (\<langle>LET xR = SYNC xRE in eRY;\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
@@ -321,6 +320,21 @@ lemma paths_equal_implies_paths_inclusive: "
   path1 = path2  \<Longrightarrow> path1 \<asymp> path2 
 "
 by (simp add: Prefix2)
+
+lemma "
+(E, H) \<rightarrow> (E', H') \<Longrightarrow>
+paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [node]) \<Longrightarrow>
+paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
+
+
+apply (erule paths_congruent_mod_chan.cases; auto)
+apply (erule paths_congruent.cases; auto)
+defer
+apply (erule paths_congruent.cases; auto)+
+apply (rule paths_congruent_mod_chan.Chan)
+  apply (simp add: paths_congruent.Empty paths_congruent.Next)
+apply (erule concur_step.cases)
+sorry
 
 
 lemma static_paths_of_same_run_inclusive_step: "
