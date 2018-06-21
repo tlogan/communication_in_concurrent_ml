@@ -267,9 +267,10 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
     paths_congruent [l] [n]
   " |
   List: "
+    \<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
     nodes_congruent l n \<Longrightarrow>
     paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; l) (path @ [n])
+    paths_congruent (l # \<pi>) (n # path)
   "
 
 inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
@@ -323,17 +324,22 @@ by (simp add: Prefix2)
 
 lemma "
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
+\<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
 paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [node]) \<Longrightarrow>
 paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
 
 
 apply (erule paths_congruent_mod_chan.cases; auto)
 apply (erule paths_congruent.cases; auto)
+apply (erule nodes_congruent.cases; auto)
+apply (case_tac "\<pi> \<noteq> \<pi>C @ LNext xC # (butlast \<pi>')"; auto?)
+apply (metis butlast.simps(2) butlast_append butlast_snoc list.simps(3))
+apply (case_tac "path \<noteq> (NLet xC, ENext) # (butlast patha)"; auto?)
+apply (metis butlast.simps(2) butlast_snoc)
+apply (erule paths_congruent.cases; auto)
 defer
-apply (erule paths_congruent.cases; auto)+
-apply (rule paths_congruent_mod_chan.Chan)
-  apply (simp add: paths_congruent.Empty paths_congruent.Next)
-apply (erule concur_step.cases)
+thm paths_congruent.intros
+
 sorry
 
 
