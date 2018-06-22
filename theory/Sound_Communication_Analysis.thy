@@ -328,8 +328,31 @@ paths_congruent (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
 paths_congruent \<pi> path"
 using paths_congruent.cases by fastforce
 
+lemma T1: "
+\<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
+paths_congruent_mod_chan EH' c (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
+E \<pi> \<noteq> None \<Longrightarrow>
+paths_congruent_mod_chan (E, H) c \<pi> path"
+proof -
+  assume
+    H1: "E \<pi> \<noteq> None" and
+    H2: "\<pi> \<noteq> []" "path \<noteq> []" and
+    H3: "paths_congruent_mod_chan EH' c (\<pi> ;; l) (path @ [n])"
 
-lemma "
+  from H3
+  show "paths_congruent_mod_chan (E, H) c \<pi> path"
+  proof cases
+    case (Chan xC \<pi> \<E> \<pi>C H)
+    then show ?thesis sorry
+  next
+    case (Sync \<pi>Suffix pathSuffix E' \<pi>R xR \<rho>RY \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY H' pathPre)
+    then show "paths_congruent_mod_chan (E, H) c \<pi> path" sorry
+  qed
+qed
+
+
+
+lemma T2: "
 \<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
 paths_congruent_mod_chan EH' c (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
 E \<pi> \<noteq> None \<Longrightarrow>
@@ -398,8 +421,26 @@ proof -
 
       then show ?case by blast
     next
-      case (Sync \<pi>Suffix pathSuffix \<E> \<pi>R xR \<rho>RY c \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY H path)
-      then show ?case sorry
+      case (Sync \<pi>Suffix pathSuffix E' \<pi>R xR \<rho>RY c \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY H' pathPre)
+
+      {
+        fix \<pi> l path n
+        assume
+          L2H1: "\<pi>R @ LNext xR # \<pi>Suffix = \<pi> ;; l" and
+          L2H2: "pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix = path @ [n]" and
+          L2H3: "E \<pi> \<noteq> None" and 
+          L2H4: "\<pi> \<noteq> []" and 
+          L2H5: "path \<noteq> []" 
+
+
+        have "\<forall>\<pi> l path n.
+          \<pi>S = \<pi> ;; l \<longrightarrow> pathPre = path @ [n] \<longrightarrow> E \<pi> \<noteq> None \<longrightarrow> \<pi> \<noteq> [] \<longrightarrow> path \<noteq> [] \<longrightarrow> paths_congruent_mod_chan (E, H) c \<pi> path"
+sorry
+
+        have "paths_congruent_mod_chan (E, H) c \<pi> path" sorry
+      }
+      
+      then show ?case by blast
     qed
 
   show "paths_congruent_mod_chan (E, H) c \<pi> path"
