@@ -270,56 +270,8 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
     \<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
     nodes_congruent l n \<Longrightarrow>
     paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (l # \<pi>) (n # path)
+    paths_congruent (\<pi> ;; l) (path @ [n])
   "
-
-
-inductive paths_congruent_left :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
-  Node: "
-    nodes_congruent l n \<Longrightarrow>
-    paths_congruent_left [l] [n]
-  " |
-  List: "
-    \<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
-    nodes_congruent l n \<Longrightarrow>
-    paths_congruent_left \<pi> path \<Longrightarrow>
-    paths_congruent_left (\<pi> ;; l) (path @ [n])
-  "
-
-
-lemma paths_congruent_left_preserved_under_append: "
-paths_congruent_left \<pi>' path' \<Longrightarrow>
-paths_congruent_left \<pi> path \<Longrightarrow> 
-paths_congruent_left (\<pi> @ \<pi>') (path @ path')"
-apply (erule paths_congruent_left.induct; auto)
-  apply (metis Nil_is_append_conv list.distinct(1) paths_congruent_left.simps)
-apply (metis Nil_is_append_conv append.assoc paths_congruent_left.List)
-done
-
-lemma paths_congruent_implies_paths_congruent_left: "
-paths_congruent \<pi> path \<Longrightarrow> paths_congruent_left \<pi> path 
-"
-apply (erule paths_congruent.induct; auto)
-  apply (simp add: paths_congruent_left.Node)
-  using paths_congruent_left.Node paths_congruent_left_preserved_under_append apply fastforce
-done
-
-lemma paths_congruent_preserved_under_append: "
-paths_congruent \<pi> path \<Longrightarrow> 
-paths_congruent \<pi>' path' \<Longrightarrow>
-paths_congruent (\<pi> @ \<pi>') (path @ path')"
-apply (erule paths_congruent.induct; auto)
-  apply (metis list.distinct(1) paths_congruent.simps)
-apply (simp add: paths_congruent.List)
-done
-
-lemma paths_congruent_left_implies_paths_congruent: "
-paths_congruent_left \<pi> path \<Longrightarrow> paths_congruent \<pi> path 
-"
-apply (erule paths_congruent_left.induct; auto)
-  apply (simp add: paths_congruent.Node)
-apply (simp add: paths_congruent.Node paths_congruent_preserved_under_append)
-done
 
 inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Chan: "
@@ -374,10 +326,8 @@ lemma paths_cong_preserved_under_reduction: "
 paths_congruent (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
 \<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
 paths_congruent \<pi> path"
-apply (drule paths_congruent_implies_paths_congruent_left; auto?)
-apply (erule paths_congruent_left.cases; auto)
-apply (erule paths_congruent_left_implies_paths_congruent)
-done
+using paths_congruent.cases by fastforce
+
 
 lemma "
 \<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
