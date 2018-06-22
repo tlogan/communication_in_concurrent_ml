@@ -331,24 +331,49 @@ using paths_congruent.cases by fastforce
 
 lemma "
 \<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
-paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
+paths_congruent_mod_chan EH' c (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
 E \<pi> \<noteq> None \<Longrightarrow>
-paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
+paths_congruent_mod_chan (E, H) c \<pi> path"
 proof -
   assume
     H1: "E \<pi> \<noteq> None" and
     H2: "\<pi> \<noteq> []" "path \<noteq> []" and
-    H3: "paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n])"
+    H3: "paths_congruent_mod_chan EH' c (\<pi> ;; l) (path @ [n])"
 
     from H3
     obtain \<pi>' path' where
         H6: "\<pi>' = \<pi> ;; l" and
         H7: "path' = path @ [n]" and
-        H8: "paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>' path'" by blast
+        H8: "paths_congruent_mod_chan EH' c \<pi>' path'" by blast
 
+    from H8
+    have 
+      "\<forall> \<pi> l path n .
+      \<pi>' = \<pi> ;; l \<longrightarrow> path' = path @ [n] \<longrightarrow>
+      E \<pi> \<noteq> None \<longrightarrow>
+      \<pi> \<noteq> [] \<longrightarrow> path \<noteq> [] \<longrightarrow>
+      paths_congruent_mod_chan (E, H) c \<pi> path"
+    proof induction
+      case (Chan xC \<pi>X path' E' \<pi>C H')
 
+      {
+
+        fix \<pi> l path n
+        assume
+          "\<pi>C @ (LNext xC) # \<pi>X = \<pi> ;; l" and
+          "path' = path @ [n]" and "E \<pi> \<noteq> None" and " \<pi> \<noteq> []" and "path \<noteq> []" 
+
+        have "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path" sorry
+
+      }
+
+      then show ?case by blast
+    next
+      case (Sync \<pi>Suffix pathSuffix \<E> \<pi>R xR \<rho>RY c \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY H path)
+      then show ?case sorry
+    qed
 (*
-      case (Chan \<pi>X)
+      case (Chan \<pi>X) 
 
 
       from local.Chan(1)
