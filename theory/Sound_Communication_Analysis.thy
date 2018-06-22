@@ -331,18 +331,23 @@ using paths_congruent.cases by fastforce
 
 lemma "
 \<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
-paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [node]) \<Longrightarrow>
+paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
 E \<pi> \<noteq> None \<Longrightarrow>
 paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
 proof -
   assume
     H1: "E \<pi> \<noteq> None" and
     H2: "\<pi> \<noteq> []" "path \<noteq> []" and
-    H3: "paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [node])"
+    H3: "paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n])"
 
     from H3
-    show "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
-    proof cases
+    obtain \<pi>' path' where
+        H6: "\<pi>' = \<pi> ;; l" and
+        H7: "path' = path @ [n]" and
+        H8: "paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>' path'" by blast
+
+
+(*
       case (Chan \<pi>X)
 
 
@@ -372,11 +377,13 @@ proof -
 
       then show "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
         using H1 L1H3 L1H5 paths_congruent_mod_chan.Chan by auto
-
     next
       case (Sync \<pi>Suffix pathSuffix \<pi>R xR \<rho>RY \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY path)
+
+      have "paths_congruent (butlast \<pi>Suffix) (butlast pathSuffix)" sorry
       then show ?thesis sorry
     qed
+*)
 qed
 
 
@@ -398,6 +405,7 @@ paths_congruent_mod_chan (E', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
 paths_congruent_mod_chan (E', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
 path1 \<asymp> path2 
 "
+apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
 sorry
 
 lemma static_paths_of_same_run_inclusive: "
