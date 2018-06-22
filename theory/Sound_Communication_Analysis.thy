@@ -348,11 +348,12 @@ proof -
 
     from H8
     have 
-      "\<forall> \<pi> l path n .
-      \<pi>' = \<pi> ;; l \<longrightarrow> path' = path @ [n] \<longrightarrow>
-      E \<pi> \<noteq> None \<longrightarrow>
-      \<pi> \<noteq> [] \<longrightarrow> path \<noteq> [] \<longrightarrow>
-      paths_congruent_mod_chan (E, H) c \<pi> path"
+      H9: "
+        \<forall> \<pi> l path n .
+        \<pi>' = \<pi> ;; l \<longrightarrow> path' = path @ [n] \<longrightarrow>
+        E \<pi> \<noteq> None \<longrightarrow>
+        \<pi> \<noteq> [] \<longrightarrow> path \<noteq> [] \<longrightarrow>
+        paths_congruent_mod_chan (E, H) c \<pi> path"
     proof induction
       case (Chan xC \<pi>X path' E' \<pi>C H')
 
@@ -360,10 +361,38 @@ proof -
 
         fix \<pi> l path n
         assume
-          "\<pi>C @ (LNext xC) # \<pi>X = \<pi> ;; l" and
-          "path' = path @ [n]" and "E \<pi> \<noteq> None" and " \<pi> \<noteq> []" and "path \<noteq> []" 
+          L2H1: "\<pi>C @ (LNext xC) # \<pi>X = \<pi> ;; l" and
+          L2H2: "path' = path @ [n]" and 
+          L2H3: "E \<pi> \<noteq> None" and 
+          L2H4: "\<pi> \<noteq> []" and
+          L2H5: "path \<noteq> []" 
 
-        have "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path" sorry
+
+        have 
+          L2H6: "\<pi> ;; l = \<pi>C @ (butlast (LNext xC # \<pi>X)) ;; l"
+          by (metis L2H1 butlast_append butlast_snoc list.distinct(1))
+        
+        have 
+          L2H7: "paths_congruent ((butlast (LNext xC # \<pi>X)) ;; l) (path @ [n])"
+          by (metis Chan.hyps(1) L2H1 L2H2 append_butlast_last_id last_appendR last_snoc list.distinct(1))
+  
+        have 
+          L2H8: "butlast (LNext xC # \<pi>X) \<noteq> []"
+          by (metis Chan.hyps(1) L2H2 L2H5 append_self_conv2 butlast_snoc paths_congruent.cases)
+  
+        have 
+          L2H8: "paths_congruent (butlast (LNext xC # \<pi>X)) path"
+          using L2H5 L2H7 L2H8 paths_cong_preserved_under_reduction by blast
+  
+        have 
+          L2H9: "paths_congruent (LNext xC # (butlast \<pi>X)) path"  
+          by (metis L2H8 butlast.simps(1) butlast.simps(2) butlast_snoc list.simps(3) paths_congruent.cases)
+  
+        have L2H10: "\<pi> = \<pi>C @ butlast (LNext xC # \<pi>X)"
+          using L2H6 by blast
+
+        have "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
+          using L2H10 L2H3 L2H8 paths_congruent.cases paths_congruent_mod_chan.Chan by fastforce
 
       }
 
@@ -372,43 +401,9 @@ proof -
       case (Sync \<pi>Suffix pathSuffix \<E> \<pi>R xR \<rho>RY c \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY H path)
       then show ?case sorry
     qed
-(*
-      case (Chan \<pi>X) 
 
-
-      from local.Chan(1)
-      have 
-        L1H1: "\<pi> ;; l = \<pi>C @ (butlast (LNext xC # \<pi>X)) ;; l" 
-        by (metis butlast_append butlast_snoc list.simps(3))
-      
-      have 
-        L1H2: "paths_congruent ((butlast (LNext xC # \<pi>X)) ;; l) (path @ [node])"
-        by (metis append_butlast_last_id last_appendR last_snoc list.distinct(1) local.Chan(1) local.Chan(2))
-
-      have 
-        L1H3: "butlast (LNext xC # \<pi>X) \<noteq> []"
-        using H2(2) L1H1 local.Chan(1) local.Chan(2) paths_congruent.cases by fastforce
-
-      have 
-        L1H4: "paths_congruent (butlast (LNext xC # \<pi>X)) path"
-        using H2(2) L1H2 L1H3 paths_cong_preserved_under_reduction by blast
-
-      have 
-        L1H5: "paths_congruent (LNext xC # (butlast \<pi>X)) path"
-        by (metis L1H3 L1H4 butlast.simps(2))
-
-      have "\<pi> = \<pi>C @ butlast (LNext xC # \<pi>X)"
-        using L1H1 by blast
-
-      then show "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
-        using H1 L1H3 L1H5 paths_congruent_mod_chan.Chan by auto
-    next
-      case (Sync \<pi>Suffix pathSuffix \<pi>R xR \<rho>RY \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY path)
-
-      have "paths_congruent (butlast \<pi>Suffix) (butlast pathSuffix)" sorry
-      then show ?thesis sorry
-    qed
-*)
+  show "paths_congruent_mod_chan (E, H) c \<pi> path"
+    by (simp add: H1 H2(1) H2(2) H6 H7 H9)
 qed
 
 
