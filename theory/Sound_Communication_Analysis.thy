@@ -509,44 +509,34 @@ proof -
     "\<E> \<pi> \<noteq> None" by blast
 qed
 *)
-(*
+
+
 lemma static_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   \<pi>1 \<noteq> \<pi>2 \<Longrightarrow>
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
-  may_be_static_live_path V F Ln Lx (NLet xC) isEnd path1 \<Longrightarrow>
   paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  may_be_static_live_path V F Ln Lx (NLet xC) isEnd path2 \<Longrightarrow>
   paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-  static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
-  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   path1 \<asymp> path2
 "
 sorry
-*)
 
+
+(*
 lemma equal_abstract_implies_equal_concrete_paths: "
   path1 = path2 \<Longrightarrow>
-
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
-
-  (* may_be_static_live_path V F Ln Lx (NLet xC) (\<lambda> _ . True) path1 \<Longrightarrow> *)
   paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-
-  (* may_be_static_live_path V F Ln Lx (NLet xC) (\<lambda> _ . True) path2 \<Longrightarrow> *)
   paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
-
-
   \<pi>1 = \<pi>2"
 sorry
-
+*)
 
 lemma send_static_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
@@ -566,12 +556,6 @@ lemma send_static_paths_of_same_run_inclusive: "
 "
 sorry
 
-lemma gener: 
-"
-  may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC) path2 \<Longrightarrow> 
-  may_be_static_live_path V F Ln Lx (NLet xC) (\<lambda>_.True) path2 
-"
-sorry
 
 lemma send_path_equality_sound: "
   path1 = path2 \<Longrightarrow>
@@ -590,7 +574,6 @@ lemma send_path_equality_sound: "
   is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
   \<pi>1 = \<pi>2
 "
-apply (drule equal_abstract_implies_equal_concrete_paths; (auto simp: gener)?)
 sorry
 
 

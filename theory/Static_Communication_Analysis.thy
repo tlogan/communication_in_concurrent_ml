@@ -446,7 +446,6 @@ inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set 
   "
 
 
-(* does not need to be symmetrical, when used the args can be used in both places  *)
 inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
   Prefix1: "
     prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>
@@ -467,7 +466,30 @@ inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarro
   " |
   Send2: "
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>2
+  " |
+  Covergent_Left: "
+    p1 \<noteq> p2 \<Longrightarrow>
+    prefix p1' p2' \<Longrightarrow>
+    (p1 @ p1') \<asymp> (p2 @ p2')
+  " |
+  Covergemt_Right: "
+    p1 \<noteq> p2 \<Longrightarrow>
+    prefix p2' p1' \<Longrightarrow>
+    (p1 @ p1') \<asymp> (p2 @ p2')
   "
+
+inductive convergent :: "static_path \<Rightarrow> static_path \<Rightarrow> bool"  where
+  Covergent_Left: "
+    p1 \<noteq> p2 \<Longrightarrow>
+    prefix p1' p2' \<Longrightarrow>
+    convergent (p1 @ p1') (p2 @ p2')
+  " |
+  Covergemt_Right: "
+    p1 \<noteq> p2 \<Longrightarrow>
+    prefix p2' p1' \<Longrightarrow>
+    convergent (p1 @ p1') (p2 @ p2')
+  "
+
 
 lemma may_be_inclusive_commut: "
   path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>2 \<asymp> path\<^sub>1
@@ -507,7 +529,7 @@ inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool"
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   exclusive: "
-    \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow> 
+    \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2 \<or> convergent \<pi>\<^sub>1 \<pi>\<^sub>2) \<Longrightarrow> 
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
