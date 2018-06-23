@@ -286,12 +286,10 @@ inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \
     {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
     paths_congruent_mod_chan (\<E>, H) c \<pi>S path \<Longrightarrow>
     paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (path @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
-  " |
-  Exclusive: "
-    paths_congruent (\<pi> ;; l) pathA \<Longrightarrow>
-    \<not> ((path @ [n]) \<asymp> pathA) \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) c (\<pi> ;; l) (path @ [n])
-  "
+  " 
+(*|
+Need a third rule for edge case for reduction preservation
+*)
 
 
 lemma no_empty_paths_congruent_mod_chan: "
@@ -330,8 +328,8 @@ paths_congruent (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
 paths_congruent \<pi> path"
 using paths_congruent.cases by fastforce
 
-(*
-lemma T1: "
+
+lemma paths_cong_mod_chan_preserved_under_reduction: "
 \<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
 paths_congruent_mod_chan EH' c (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
 E \<pi> \<noteq> None \<Longrightarrow>
@@ -345,6 +343,7 @@ proof -
   from H3
   show "paths_congruent_mod_chan (E, H) c \<pi> path"
   proof cases
+
     case (Chan xC \<pi>X E' \<pi>C H')
 
     have 
@@ -433,9 +432,11 @@ proof -
         then show ?thesis sorry
       qed
     qed
+  next
+    case (Exclusive \<pi> l pathA path n \<E> H)
+    then show ?thesis sorry
   qed
 qed
-*)
 
 lemma cong_extension_implies_abstract_paths_inclusive: "
 paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) (\<pi> ;; l) path1 \<Longrightarrow>
@@ -469,10 +470,9 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply (drule_tac x = \<pi>2 in spec; auto?)
   using cong_extension_implies_abstract_paths_inclusive apply auto[1]
 
-  apply (drule_tac x = "(butlast path1)" in spec; auto)
+  apply (drule_tac x = "(butlast path1)" in spec)
+  apply auto
   apply (rotate_tac -1, erule notE)
-  apply (drule_tac x = path2 in spec)
-  
 sorry
 
 lemma static_paths_of_same_run_inclusive: "
