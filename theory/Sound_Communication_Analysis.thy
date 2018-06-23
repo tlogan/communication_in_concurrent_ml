@@ -263,11 +263,9 @@ inductive nodes_congruent :: "control_label \<Rightarrow> step_label \<Rightarro
 
 inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Node: "
-    nodes_congruent l n \<Longrightarrow>
-    paths_congruent [l] [n]
+    paths_congruent [] []
   " |
   List: "
-    \<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
     nodes_congruent l n \<Longrightarrow>
     paths_congruent \<pi> path \<Longrightarrow>
     paths_congruent (\<pi> ;; l) (path @ [n])
@@ -288,6 +286,11 @@ inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \
     {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
     paths_congruent_mod_chan (\<E>, H) c \<pi>S path \<Longrightarrow>
     paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (path @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
+  " |
+  Exclusive: "
+    paths_congruent (\<pi> ;; l) pathA \<Longrightarrow>
+    \<not> ((path @ [n]) \<asymp> pathA) \<Longrightarrow>
+    paths_congruent_mod_chan (\<E>, H) c (\<pi> ;; l) (path @ [n])
   "
 
 
@@ -324,10 +327,10 @@ by (simp add: Prefix2)
 
 lemma paths_cong_preserved_under_reduction: "
 paths_congruent (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
-\<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
 paths_congruent \<pi> path"
 using paths_congruent.cases by fastforce
 
+(*
 lemma T1: "
 \<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
 paths_congruent_mod_chan EH' c (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
@@ -342,111 +345,104 @@ proof -
   from H3
   show "paths_congruent_mod_chan (E, H) c \<pi> path"
   proof cases
-    case (Chan xC \<pi> \<E> \<pi>C H)
-    then show ?thesis sorry
+    case (Chan xC \<pi>X E' \<pi>C H')
+
+    have 
+      H4: "\<pi> ;; l = \<pi>C @ (butlast (LNext xC # \<pi>X)) ;; l"
+      by (metis butlast_append butlast_snoc list.simps(3) local.Chan(3))
+    
+    have 
+      H5: "paths_congruent ((butlast (LNext xC # \<pi>X)) ;; l) (path @ [n])"
+      by (metis append_butlast_last_id last_ConsL last_appendR list.simps(3) local.Chan(3) local.Chan(4))
+
+    have 
+      H6: "butlast (LNext xC # \<pi>X) \<noteq> []"
+      by (metis H2(2) H5 paths_congruent.cases snoc_eq_iff_butlast)
+
+    have 
+      H7: "paths_congruent (butlast (LNext xC # \<pi>X)) path"
+      using H2(2) H5 H6 paths_cong_preserved_under_reduction by blast
+
+    have 
+      H8: "paths_congruent (LNext xC # (butlast \<pi>X)) path"
+      by (metis H6 H7 butlast.simps(2))
+
+    have L2H10: "\<pi> = \<pi>C @ butlast (LNext xC # \<pi>X)"
+    using H4 by blast
+
+    have "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
+    using H1 H6 H8 L2H10 paths_congruent_mod_chan.Chan by auto
+     
+    then show "paths_congruent_mod_chan (E, H) c \<pi> path"
+    by (simp add: local.Chan(2))
+
   next
     case (Sync \<pi>Suffix pathSuffix E' \<pi>R xR \<rho>RY \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY H' pathPre)
-    then show "paths_congruent_mod_chan (E, H) c \<pi> path" sorry
+
+    
+    then show "paths_congruent_mod_chan (E, H) c \<pi> path"
+    proof cases
+      assume L1H1: "pathSuffix = []"
+
+      have L1H2: "path = pathPre @ [(NLet xS, ESend xSE)]"
+        using L1H1 local.Sync(3) by auto
+
+      have L1H3: "\<pi>Suffix = []"
+        using L1H1 local.Sync(4) paths_congruent.cases by blast
+
+      have L1H3: "\<pi> = \<pi>R"
+        using L1H3 local.Sync(2) by blast
+
+      have "paths_congruent_mod_chan (E, H) c \<pi>R (pathPre @ [(NLet xS, ESend xSE)])" sorry
+
+      then show ?thesis sorry
+    next
+      assume L1H1: "pathSuffix \<noteq> []"
+
+      have 
+        L1H2: "path = pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # (butlast pathSuffix)"
+        by (metis L1H1 butlast.simps(2) butlast_append butlast_snoc list.simps(3) local.Sync(3))
+      
+      have L1H3: "\<pi>Suffix \<noteq> []"
+        using local.Sync(4) paths_congruent.cases sorry
+
+      have L1H4: "\<pi> = \<pi>R @ LNext xR # (butlast \<pi>Suffix)"
+        by (metis L1H3 butlast.simps(2) butlast_append butlast_snoc list.distinct(1) local.Sync(2))
+
+      show ?thesis
+      proof cases
+        assume 
+          L2H1: "(butlast pathSuffix) = []"
+
+        have 
+          L2H2: "path = pathPre @ [(NLet xS, ESend xSE), (NLet xR, ENext)]"
+          by (simp add: L1H2 L2H1)
+
+        have 
+          L2H3: "(butlast \<pi>Suffix) = []" sorry
+
+        have L2H4: "\<pi> = \<pi>R @ [LNext xR]" by (simp add: L1H4 L2H3)
+
+        have 
+          "paths_congruent_mod_chan (E, H) c (\<pi>R @ [LNext xR]) (pathPre @ [(NLet xS, ESend xSE), (NLet xR, ENext)])" sorry
+
+        then show ?thesis
+          by (simp add: L2H2 L2H4)
+      next
+        assume "(butlast pathSuffix) \<noteq> []"
+        then show ?thesis sorry
+      qed
+    qed
   qed
 qed
+*)
 
-
-
-lemma T2: "
-\<pi> \<noteq> [] \<Longrightarrow> path \<noteq> [] \<Longrightarrow>
-paths_congruent_mod_chan EH' c (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
-E \<pi> \<noteq> None \<Longrightarrow>
-paths_congruent_mod_chan (E, H) c \<pi> path"
-proof -
-  assume
-    H1: "E \<pi> \<noteq> None" and
-    H2: "\<pi> \<noteq> []" "path \<noteq> []" and
-    H3: "paths_congruent_mod_chan EH' c (\<pi> ;; l) (path @ [n])"
-
-    from H3
-    obtain \<pi>' path' where
-        H6: "\<pi>' = \<pi> ;; l" and
-        H7: "path' = path @ [n]" and
-        H8: "paths_congruent_mod_chan EH' c \<pi>' path'" by blast
-
-    from H8
-    have 
-      H9: "
-        \<forall> \<pi> l path n .
-        \<pi>' = \<pi> ;; l \<longrightarrow> path' = path @ [n] \<longrightarrow>
-        E \<pi> \<noteq> None \<longrightarrow>
-        \<pi> \<noteq> [] \<longrightarrow> path \<noteq> [] \<longrightarrow>
-        paths_congruent_mod_chan (E, H) c \<pi> path"
-    proof induction
-      case (Chan xC \<pi>X path' E' \<pi>C H')
-
-      {
-
-        fix \<pi> l path n
-        assume
-          L2H1: "\<pi>C @ (LNext xC) # \<pi>X = \<pi> ;; l" and
-          L2H2: "path' = path @ [n]" and 
-          L2H3: "E \<pi> \<noteq> None" and 
-          L2H4: "\<pi> \<noteq> []" and
-          L2H5: "path \<noteq> []" 
-
-
-        have 
-          L2H6: "\<pi> ;; l = \<pi>C @ (butlast (LNext xC # \<pi>X)) ;; l"
-          by (metis L2H1 butlast_append butlast_snoc list.distinct(1))
-        
-        have 
-          L2H7: "paths_congruent ((butlast (LNext xC # \<pi>X)) ;; l) (path @ [n])"
-          by (metis Chan.hyps(1) L2H1 L2H2 append_butlast_last_id last_appendR last_snoc list.distinct(1))
-  
-        have 
-          L2H8: "butlast (LNext xC # \<pi>X) \<noteq> []"
-          by (metis Chan.hyps(1) L2H2 L2H5 append_self_conv2 butlast_snoc paths_congruent.cases)
-  
-        have 
-          L2H8: "paths_congruent (butlast (LNext xC # \<pi>X)) path"
-          using L2H5 L2H7 L2H8 paths_cong_preserved_under_reduction by blast
-  
-        have 
-          L2H9: "paths_congruent (LNext xC # (butlast \<pi>X)) path"  
-          by (metis L2H8 butlast.simps(1) butlast.simps(2) butlast_snoc list.simps(3) paths_congruent.cases)
-  
-        have L2H10: "\<pi> = \<pi>C @ butlast (LNext xC # \<pi>X)"
-          using L2H6 by blast
-
-        have "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
-          using L2H10 L2H3 L2H8 paths_congruent.cases paths_congruent_mod_chan.Chan by fastforce
-
-      }
-
-      then show ?case by blast
-    next
-      case (Sync \<pi>Suffix pathSuffix E' \<pi>R xR \<rho>RY c \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY H' pathPre)
-
-      {
-        fix \<pi> l path n
-        assume
-          L2H1: "\<pi>R @ LNext xR # \<pi>Suffix = \<pi> ;; l" and
-          L2H2: "pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix = path @ [n]" and
-          L2H3: "E \<pi> \<noteq> None" and 
-          L2H4: "\<pi> \<noteq> []" and 
-          L2H5: "path \<noteq> []" 
-
-
-        have "\<forall>\<pi> l path n.
-          \<pi>S = \<pi> ;; l \<longrightarrow> pathPre = path @ [n] \<longrightarrow> E \<pi> \<noteq> None \<longrightarrow> \<pi> \<noteq> [] \<longrightarrow> path \<noteq> [] \<longrightarrow> paths_congruent_mod_chan (E, H) c \<pi> path"
+lemma cong_extension_implies_abstract_paths_inclusive: "
+paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) (\<pi> ;; l) path1 \<Longrightarrow>
+paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path2 \<Longrightarrow>
+path1 \<asymp> path2
+"
 sorry
-
-        have "paths_congruent_mod_chan (E, H) c \<pi> path" sorry
-      }
-      
-      then show ?case by blast
-    qed
-
-  show "paths_congruent_mod_chan (E, H) c \<pi> path"
-    by (simp add: H1 H2(1) H2(2) H6 H7 H9)
-qed
-
 
 
 lemma static_paths_of_same_run_inclusive_step: "
@@ -467,6 +463,16 @@ paths_congruent_mod_chan (E', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
 path1 \<asymp> path2 
 "
 apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
+
+  apply (case_tac "\<pi>1 = \<pi>' ;; LReturn x\<^sub>\<kappa>"; auto)
+  apply (drule_tac x = \<pi>' in spec; auto?)
+  apply (drule_tac x = \<pi>2 in spec; auto?)
+  using cong_extension_implies_abstract_paths_inclusive apply auto[1]
+
+  apply (drule_tac x = "(butlast path1)" in spec; auto)
+  apply (rotate_tac -1, erule notE)
+  apply (drule_tac x = path2 in spec)
+  
 sorry
 
 lemma static_paths_of_same_run_inclusive: "
