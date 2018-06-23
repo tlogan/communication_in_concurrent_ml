@@ -432,15 +432,17 @@ proof -
         then show ?thesis sorry
       qed
     qed
-  next
-    case (Exclusive \<pi> l pathA path n \<E> H)
-    then show ?thesis sorry
+  (*next
+    third case
+  *)
   qed
 qed
 
 lemma cong_extension_implies_abstract_paths_inclusive: "
 paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) (\<pi> ;; l) path1 \<Longrightarrow>
+may_be_static_live_path V F Ln Lx (NLet xC) isEnd path1 \<Longrightarrow>
 paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path2 \<Longrightarrow>
+may_be_static_live_path V F Ln Lx (NLet xC) isEnd path2 \<Longrightarrow>
 path1 \<asymp> path2
 "
 sorry
@@ -459,8 +461,12 @@ star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})
 \<pi>1 \<noteq> \<pi>2 \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
+
+may_be_static_live_path V F Ln Lx (NLet xC) isEnd path1 \<Longrightarrow>
 paths_congruent_mod_chan (E', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
+may_be_static_live_path V F Ln Lx (NLet xC) isEnd path2 \<Longrightarrow>
 paths_congruent_mod_chan (E', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+
 path1 \<asymp> path2 
 "
 apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
@@ -482,6 +488,8 @@ lemma static_paths_of_same_run_inclusive: "
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
   paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
   paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
   path1 \<asymp> path2
 "
 proof -
@@ -575,8 +583,13 @@ qed
 
 lemma equal_concrete_implies_equal_abstract_paths: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
-  paths_congruent_mod_chan (E', H') c \<pi> path1 \<Longrightarrow>
-  paths_congruent_mod_chan (E', H') c \<pi> path2 \<Longrightarrow>
+
+  may_be_static_live_path V F Ln Lx (NLet xC) isEnd path1 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>1 path1 \<Longrightarrow>
+
+  may_be_static_live_path V F Ln Lx (NLet xC) isEnd path2 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>2 path2 \<Longrightarrow>
+
   path1 = path2"
 sorry
 
@@ -584,8 +597,13 @@ lemma send_static_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
-  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+
+  may_be_static_live_path V F Ln Lx (NLet xC) isEnd path1 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>1 path1 \<Longrightarrow>
+
+  may_be_static_live_path V F Ln Lx (NLet xC) isEnd path2 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>2 path2 \<Longrightarrow>
+
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
@@ -598,8 +616,13 @@ done
 
 lemma send_path_equality_sound: "
   path1 = path2 \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+
+  may_be_static_live_path V F Ln Lx (NLet xC) isEnd path1 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>1 path1 \<Longrightarrow>
+
+  may_be_static_live_path V F Ln Lx (NLet xC) isEnd path2 \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>2 path2 \<Longrightarrow>
+
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow> 
@@ -614,8 +637,13 @@ sorry
 
 lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
   path1 = path2 \<or> \<not> path1 \<asymp> path2 \<Longrightarrow> 
+
+  may_be_static_live_path V F Ln Lx (NLet xC) isEnd path1 \<Longrightarrow>
   paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>1 path1 \<Longrightarrow>
+
+  may_be_static_live_path V F Ln Lx (NLet xC) isEnd path2 \<Longrightarrow>
   paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>2 path2 \<Longrightarrow>
+
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
