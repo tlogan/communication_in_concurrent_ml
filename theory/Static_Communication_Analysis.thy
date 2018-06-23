@@ -501,6 +501,8 @@ lemma may_be_inclusive_commut: "
   apply (simp add: Prefix1)
   apply (simp add: Spawn1)
   apply (simp add: Send1)
+  apply (simp add: may_be_inclusive.Covergemt_Right)
+  apply (simp add: may_be_inclusive.Covergent_Left)
 done
 
 lemma may_be_inclusive_preserved_under_unordered_extension: "
@@ -511,6 +513,8 @@ lemma may_be_inclusive_preserved_under_unordered_extension: "
   apply (simp add: Send1)
   apply (simp add: Spawn2)
   apply (simp add: Send2)
+  apply (metis Nil_prefix append_Nil2 may_be_inclusive.Covergent_Left)
+  apply (simp add: may_be_inclusive.Covergemt_Right)
 done
 
 lemma may_be_inclusive_preserved_under_unordered_double_extension: "
@@ -521,6 +525,8 @@ lemma may_be_inclusive_preserved_under_unordered_double_extension: "
   apply (simp add: Send1)
   apply (simp add: Spawn2)
   apply (simp add: Send2)
+  apply (metis Nil_prefix append_Nil2 may_be_inclusive.Covergent_Left)
+  apply (metis append_Nil2 append_assoc append_prefixD may_be_inclusive.Covergent_Left prefix_order.order_refl)
 done
 
 inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
@@ -529,7 +535,7 @@ inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool"
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   exclusive: "
-    \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2 \<or> convergent \<pi>\<^sub>1 \<pi>\<^sub>2) \<Longrightarrow> 
+    \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow> 
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
