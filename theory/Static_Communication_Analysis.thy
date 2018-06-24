@@ -468,18 +468,14 @@ inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarro
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>2
   " |
   Covergent_Left: "
-    \<not> prefix p1 p2 \<Longrightarrow>
-    \<not> prefix p2 p1 \<Longrightarrow>
+    \<not> prefix p1 p2 \<Longrightarrow> \<not> prefix p2 p1 \<Longrightarrow>
     prefix p1' p2' \<Longrightarrow>
-    (p1 @ (NLet xS1, ESend xSE1) # (NLet xR, ENext) # p1') \<asymp>
-      (p2 @ (NLet xS2, ESend xSE2) # (NLet xR, ENext) # p2')
+    (p1 @ p1') \<asymp> (p2 @ p2')
   " |
-  Covergemt_Right: "
-    \<not> prefix p1 p2 \<Longrightarrow>
-    \<not> prefix p2 p1 \<Longrightarrow>
+  Covergent_Right: "
+    \<not> prefix p1 p2 \<Longrightarrow> \<not> prefix p2 p1 \<Longrightarrow>
     prefix p2' p1' \<Longrightarrow>
-    (p1 @ (NLet xS1, ESend xSE1) # (NLet xR, ENext) # p1') \<asymp>
-      (p2 @ (NLet xS2, ESend xSE2) # (NLet xR, ENext) # p2')
+    (p1 @ p1') \<asymp> (p2 @ p2')
   "
 
 lemma may_be_inclusive_commut: "
@@ -492,8 +488,8 @@ lemma may_be_inclusive_commut: "
   apply (simp add: Prefix1)
   apply (simp add: Spawn1)
   apply (simp add: Send1)
-  apply (simp add: may_be_inclusive.Covergemt_Right)
-  apply (simp add: may_be_inclusive.Covergent_Left)
+  apply (simp add: Covergent_Right)
+  apply (simp add: Covergent_Left)
 done
 
 lemma may_be_inclusive_preserved_under_unordered_extension: "
@@ -504,8 +500,8 @@ lemma may_be_inclusive_preserved_under_unordered_extension: "
   apply (simp add: Send1)
   apply (simp add: Spawn2)
   apply (simp add: Send2)
-  apply (metis Nil_prefix append_Nil2 may_be_inclusive.Covergent_Left)
-  apply (simp add: may_be_inclusive.Covergemt_Right)
+  apply (metis Covergent_Left Nil_prefix append_Nil2 append_eq_append_conv2 may_be_inclusive_commut)
+  apply (simp add: Covergent_Right)
 done
 
 lemma may_be_inclusive_preserved_under_unordered_double_extension: "
@@ -516,8 +512,8 @@ lemma may_be_inclusive_preserved_under_unordered_double_extension: "
   apply (simp add: Send1)
   apply (simp add: Spawn2)
   apply (simp add: Send2)
-  apply (metis Nil_prefix append_Nil2 may_be_inclusive.Covergent_Left)
-  apply (metis append_Nil2 append_assoc append_prefixD may_be_inclusive.Covergent_Left prefix_order.order_refl)
+  apply (metis Covergent_Right Prefix1 append_assoc may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_snoc)
+  apply (metis Covergent_Right Prefix1 append_assoc may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_snoc)
 done
 
 inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
