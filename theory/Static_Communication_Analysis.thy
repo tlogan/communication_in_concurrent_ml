@@ -468,28 +468,19 @@ inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarro
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>2
   " |
   Covergent_Left: "
-    p1 \<noteq> p2 \<Longrightarrow>
+    \<not> prefix p1 p2 \<Longrightarrow>
+    \<not> prefix p2 p1 \<Longrightarrow>
     prefix p1' p2' \<Longrightarrow>
-    (p1 @ p1') \<asymp> (p2 @ p2')
+    (p1 @ (NLet xS1, ESend xSE1) # (NLet xR, ENext) # p1') \<asymp>
+      (p2 @ (NLet xS2, ESend xSE2) # (NLet xR, ENext) # p2')
   " |
   Covergemt_Right: "
-    p1 \<noteq> p2 \<Longrightarrow>
+    \<not> prefix p1 p2 \<Longrightarrow>
+    \<not> prefix p2 p1 \<Longrightarrow>
     prefix p2' p1' \<Longrightarrow>
-    (p1 @ p1') \<asymp> (p2 @ p2')
+    (p1 @ (NLet xS1, ESend xSE1) # (NLet xR, ENext) # p1') \<asymp>
+      (p2 @ (NLet xS2, ESend xSE2) # (NLet xR, ENext) # p2')
   "
-
-inductive convergent :: "static_path \<Rightarrow> static_path \<Rightarrow> bool"  where
-  Covergent_Left: "
-    p1 \<noteq> p2 \<Longrightarrow>
-    prefix p1' p2' \<Longrightarrow>
-    convergent (p1 @ p1') (p2 @ p2')
-  " |
-  Covergemt_Right: "
-    p1 \<noteq> p2 \<Longrightarrow>
-    prefix p2' p1' \<Longrightarrow>
-    convergent (p1 @ p1') (p2 @ p2')
-  "
-
 
 lemma may_be_inclusive_commut: "
   path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>2 \<asymp> path\<^sub>1
