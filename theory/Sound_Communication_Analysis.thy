@@ -272,24 +272,6 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
   "
 
 inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
-(*
-  Pre_Chan: "
-    \<E> (\<pi>C ;; (LNext xC)) \<noteq> None \<Longrightarrow>
-    prefix \<pi> \<pi>C \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) (Ch \<pi>C xC) \<pi> []
-  " |
-  Pre_Sync: "
-    \<E> (\<pi>R ;; (LNext xR)) \<noteq> None \<Longrightarrow>
-    dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
-    \<E> \<pi>S = Some (\<langle>LET xS = SYNC xSE in eSY;\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
-    \<E> \<pi>R = Some (\<langle>LET xR = SYNC xRE in eRY;\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
-    {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) c \<pi>S pathPre \<Longrightarrow>
-    prefix \<pi> \<pi>R \<Longrightarrow>
-    prefix path (pathPre @ [(NLet xS, ESend xSE)]) \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) c \<pi>R path
-  " |
-*)
   Chan: "
     paths_congruent ((LNext xC) # \<pi>Suff) path \<Longrightarrow>
     \<E> (\<pi>C @ (LNext xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
@@ -342,7 +324,7 @@ lemma paths_cong_preserved_under_reduction: "
   paths_congruent \<pi> path"
 using paths_congruent.cases by fastforce
 
-
+(*
 lemma paths_cong_mod_chan_preserved_under_reduction_chan: "
   paths_congruent ((LNext xC) # \<pi>Suff ;; l) (path @ [n]) \<Longrightarrow>
   E (\<pi>C @ (LNext xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
@@ -359,7 +341,7 @@ lemma  paths_cong_mod_chan_preserved_under_reduction_sync: "
   paths_congruent_mod_chan (\<E>, H) c \<pi>S pathPre \<Longrightarrow>
   paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)"
 by (meson paths_cong_preserved_under_reduction paths_congruent_mod_chan.Sync)
-
+*)
 
 lemma cong_extension_implies_abstract_paths_inclusive: "
   paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) (\<pi> ;; l) path1 \<Longrightarrow>
