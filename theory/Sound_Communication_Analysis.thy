@@ -343,12 +343,15 @@ lemma  paths_cong_mod_chan_preserved_under_reduction_sync: "
 by (meson paths_cong_preserved_under_reduction paths_congruent_mod_chan.Sync)
 *)
 
+(*
 lemma cong_extension_implies_abstract_paths_inclusive: "
   paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) (\<pi> ;; l) path1 \<Longrightarrow>
   paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path2 \<Longrightarrow>
   path1 \<asymp> path2
 "
 sorry
+*)
+
 
 lemma static_paths_of_same_run_inclusive_step: "
 star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
@@ -425,7 +428,6 @@ proof -
       from L2H1 L2H7 step.IH have 
         L2H8: "
           \<forall> \<pi>1 \<pi>2 path1 path2 . 
-          \<pi>1 \<noteq> \<pi>2 \<longrightarrow>
           \<E> \<pi>1 \<noteq> None \<longrightarrow>
           \<E> \<pi>2 \<noteq> None \<longrightarrow>
           paths_congruent_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
@@ -433,8 +435,9 @@ proof -
           path1 \<asymp> path2 "
         by blast
 
-      from L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 L2H1 L2H2A step.hyps(1) step.hyps(2) have 
-        "path1 \<asymp> path2" sorry (*using static_paths_of_same_run_inclusive_step by presburger *)
+      have 
+        "path1 \<asymp> path2"
+        by (metis Covergent_Right Prefix1 Prefix2 append_self_conv butlast.simps(1) prefixeq_butlast)
     }
     then show ?case by blast
   qed
