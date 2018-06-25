@@ -272,6 +272,11 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
   "
 
 inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  Exclusive: "
+    paths_congruent \<pi> pathx \<Longrightarrow>
+    \<not> (pathx \<asymp> path) \<Longrightarrow>
+    paths_congruent_mod_chan (\<E>, H) c \<pi> path
+  " |
   Chan: "
     paths_congruent ((LNext xC) # \<pi>Suff) path \<Longrightarrow>
     \<E> (\<pi>C @ (LNext xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
@@ -284,14 +289,15 @@ inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \
     \<E> \<pi>S = Some (\<langle>LET xS = SYNC xSE in eSY;\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
     \<E> \<pi>R = Some (\<langle>LET xR = SYNC xRE in eRY;\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
     {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) c \<pi>S path \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (path @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
+    paths_congruent_mod_chan (\<E>, H) c \<pi>S pathPre \<Longrightarrow>
+    paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
   " 
 
 lemma no_empty_paths_congruent_mod_chan: "
   \<not> (paths_congruent_mod_chan EH c [] path)"
   apply (rule notI)
   apply (erule paths_congruent_mod_chan.cases; auto)
+  apply (metis Prefix1 append_Nil butlast.simps(1) butlast_snoc not_Cons_self2 paths_congruent.simps prefix_def)
 done
 
 lemma static_paths_of_same_run_inclusive_base: "
@@ -343,32 +349,25 @@ lemma  paths_cong_mod_chan_preserved_under_reduction_sync: "
 by (meson paths_cong_preserved_under_reduction paths_congruent_mod_chan.Sync)
 *)
 
-(*
-lemma cong_extension_implies_abstract_paths_inclusive: "
-  paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) (\<pi> ;; l) path1 \<Longrightarrow>
-  paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path2 \<Longrightarrow>
-  path1 \<asymp> path2
-"
-sorry
-*)
-
-
 lemma static_paths_of_same_run_inclusive_step: "
 star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
   E \<pi>2 \<noteq> None \<longrightarrow>
-  paths_congruent_mod_chan (E, H) (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
-  paths_congruent_mod_chan (E, H) (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
+  paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1 \<longrightarrow> 
+  paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2 \<longrightarrow> 
   path1 \<asymp> path2 \<Longrightarrow>
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
-paths_congruent_mod_chan (E', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
-paths_congruent_mod_chan (E', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>1 path1 \<Longrightarrow> 
+paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>2 path2 \<Longrightarrow>
 path1 \<asymp> path2 
 "
 apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
+  apply (case_tac "\<pi>1 = \<pi> ;; LReturn x\<^sub>\<kappa>"; auto; (case_tac "\<pi>2 = \<pi> ;; LReturn x\<^sub>\<kappa>"; auto)?)
+  apply (drule_tac x = \<pi> in spec; auto)
+  apply (drule_tac x = \<pi> in spec; auto)
 sorry
 
 lemma static_paths_of_same_run_inclusive: "
