@@ -272,9 +272,10 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
   "
 
 inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
-  Exclusive: "
+  Unordered: "
     paths_congruent \<pi> pathx \<Longrightarrow>
-    \<not> (pathx \<asymp> path) \<Longrightarrow>
+    \<not> (prefix pathx path) \<Longrightarrow>
+    \<not> (prefix path pathx) \<Longrightarrow>
     paths_congruent_mod_chan (\<E>, H) c \<pi> path
   " |
   Chan: "
@@ -297,7 +298,7 @@ lemma no_empty_paths_congruent_mod_chan: "
   \<not> (paths_congruent_mod_chan EH c [] path)"
   apply (rule notI)
   apply (erule paths_congruent_mod_chan.cases; auto)
-  apply (metis Prefix1 append_Nil butlast.simps(1) butlast_snoc not_Cons_self2 paths_congruent.simps prefix_def)
+  apply (metis paths_congruent.simps prefix_code(1) snoc_eq_iff_butlast)
 done
 
 lemma static_paths_of_same_run_inclusive_base: "
