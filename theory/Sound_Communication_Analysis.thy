@@ -332,11 +332,18 @@ lemma paths_cong_preserved_under_reduction: "
 using paths_congruent.cases by fastforce
 
 
+lemma equal_concrete_paths_implies_unordered_or_equal_abstract_paths: "
+paths_congruent_mod_chan EH c \<pi> path1 \<Longrightarrow>
+paths_congruent_mod_chan EH c \<pi> path2 \<Longrightarrow>
+path1 = path2 \<or> (\<not> prefix path1 path2 \<and> \<not> prefix path2 path1)
+"
+sorry
+
 lemma path_cong_mod_chan_preserved_under_reduction: "
+paths_congruent_mod_chan (E(\<pi> ;; l \<mapsto> \<sigma>'), H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
+(* (E, H) \<rightarrow> (E(\<pi> ;; l \<mapsto> \<sigma>'), H') \<Longrightarrow> *)
 leaf E \<pi> \<Longrightarrow>
 E \<pi> = Some \<sigma> \<Longrightarrow>
-(* (E, H) \<rightarrow> (E(\<pi> ;; l \<mapsto> \<sigma>'), H') \<Longrightarrow> *)
-paths_congruent_mod_chan (E(\<pi> ;; l \<mapsto> \<sigma>'), H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
 paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path
 "
 sorry
@@ -375,6 +382,12 @@ paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>1 path1 \<Longrightarrow>
 paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>2 path2 \<Longrightarrow>
 path1 \<asymp> path2 
 "
+(* TO DO: switch to ISAR style;
+
+   derive equal and unordered paths; 
+   derive inclusive paths
+
+*)
 apply (case_tac "path1 = []"; (auto simp: Prefix1))
 apply (case_tac "path2 = []", (auto simp: Prefix2))
 apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
@@ -385,6 +398,8 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply (metis append_butlast_last_id path_cong_mod_chan_preserved_under_reduction)
   apply (drule_tac x = "(butlast path2)" in spec; auto)
   apply (metis append_butlast_last_id path_cong_mod_chan_preserved_under_reduction)
+  apply (erule paths_congruent_mod_chan.cases; auto; (erule paths_congruent_mod_chan.cases; auto))
+  apply (erule paths_congruent.cases; auto; (erule paths_congruent.cases; auto); (erule nodes_congruent.cases))
 done
 
 lemma static_paths_of_same_run_inclusive: "

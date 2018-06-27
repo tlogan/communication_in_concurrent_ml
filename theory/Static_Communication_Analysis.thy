@@ -451,18 +451,18 @@ inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarro
     prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>
     \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
   " |
-  Spawn1: "
-    \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
-  " |
-  Send1: "
-    \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
-  " |
   Prefix2: "
     prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<Longrightarrow>
     \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
   " |
+  Spawn1: "
+    \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
+  " |
   Spawn2: "
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>2
+  " |
+  Send1: "
+    \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
   " |
   Send2: "
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>2
@@ -478,10 +478,10 @@ lemma may_be_inclusive_commut: "
 "
  apply (erule may_be_inclusive.cases; auto)
   apply (simp add: Prefix2)
-  apply (simp add: Spawn2)
-  apply (simp add: Send2)
   apply (simp add: Prefix1)
+  apply (simp add: Spawn2)
   apply (simp add: Spawn1)
+  apply (simp add: Send2)
   apply (simp add: Send1)
   using Kite apply auto[1]
   using Kite apply auto[1]
@@ -493,16 +493,16 @@ lemma may_be_inclusive_preserved_under_unordered_extension: "
 "
  apply (erule may_be_inclusive.cases; auto)
   apply (simp add: Spawn1)
-  apply (simp add: Send1)
   apply (simp add: Spawn2)
+  apply (simp add: Send1)
   apply (simp add: Send2)
   using Kite apply auto[1]
   using Kite apply auto[1]
-  using Kite apply auto[1]
+  using Kite apply auto
 done
 
 lemma may_be_inclusive_preserved_under_unordered_double_extension: "
-  \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l1] \<asymp> path\<^sub>2 @ [l2]
+  path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 @ [l1] \<asymp> path\<^sub>2 @ [l2]
 "
 by (metis may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
 
