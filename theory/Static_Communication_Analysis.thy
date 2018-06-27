@@ -467,15 +467,17 @@ inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarro
   Send2: "
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>2
   " |
-  Covergent_Left: "
-    \<not> prefix p1 p2 \<Longrightarrow> \<not> prefix p2 p1 \<Longrightarrow>
+  Kite1: "
+    p1 @ [(NLet x1, ESend xE1)] \<noteq> (p2 @ [(NLet x2, ESend xE2)]) \<Longrightarrow>
     prefix p1' p2' \<Longrightarrow>
-    (p1 @ p1') \<asymp> (p2 @ p2')
+    ((NLet x, ENext) # p1 @ [(NLet x1, ESend xE1)] @ p1') \<asymp> 
+      ((NLet x, ENext) # p2 @ [(NLet x2, ESend xE2)] @ p2')
   " |
-  Covergent_Right: "
-    \<not> prefix p1 p2 \<Longrightarrow> \<not> prefix p2 p1 \<Longrightarrow>
+  Kite2: "
+    p1 @ [(NLet x1, ESend xE1)] \<noteq> (p2 @ [(NLet x2, ESend xE2)]) \<Longrightarrow>
     prefix p2' p1' \<Longrightarrow>
-    (p1 @ p1') \<asymp> (p2 @ p2')
+    ((NLet x, ENext) # p1 @ [(NLet x1, ESend xE1)] @ p1') \<asymp> 
+      ((NLet x, ENext) # p2 @ [(NLet x2, ESend xE2)] @ p2')
   "
 
 lemma may_be_inclusive_commut: "
@@ -488,9 +490,14 @@ lemma may_be_inclusive_commut: "
   apply (simp add: Prefix1)
   apply (simp add: Spawn1)
   apply (simp add: Send1)
-  apply (simp add: Covergent_Right)
-  apply (simp add: Covergent_Left)
+  using Kite2 apply auto[1]
+  using Kite2 apply auto[1]
+  using Kite2 apply auto[1]
+  using Kite1 apply auto[1]
+  using Kite1 apply auto[1]
+  using Kite1 apply auto[1]
 done
+
 
 lemma may_be_inclusive_preserved_under_unordered_extension: "
   \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l] \<asymp> path\<^sub>2
@@ -500,8 +507,6 @@ lemma may_be_inclusive_preserved_under_unordered_extension: "
   apply (simp add: Send1)
   apply (simp add: Spawn2)
   apply (simp add: Send2)
-  apply (metis Covergent_Left Nil_prefix append_Nil2 append_eq_append_conv2 may_be_inclusive_commut)
-  apply (simp add: Covergent_Right)
 done
 
 lemma may_be_inclusive_preserved_under_unordered_double_extension: "

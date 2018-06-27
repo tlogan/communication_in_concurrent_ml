@@ -331,6 +331,16 @@ lemma paths_cong_preserved_under_reduction: "
   paths_congruent \<pi> path"
 using paths_congruent.cases by fastforce
 
+
+lemma path_cong_mod_chan_preserved_under_reduction: "
+leaf E \<pi> \<Longrightarrow>
+E \<pi> = Some \<sigma> \<Longrightarrow>
+(* (E, H) \<rightarrow> (E(\<pi> ;; l \<mapsto> \<sigma>'), H') \<Longrightarrow> *)
+paths_congruent_mod_chan (E(\<pi> ;; l \<mapsto> \<sigma>'), H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
+paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path
+"
+sorry
+
 (*
 lemma paths_cong_mod_chan_preserved_under_reduction_chan: "
   paths_congruent ((LNext xC) # \<pi>Suff ;; l) (path @ [n]) \<Longrightarrow>
@@ -365,11 +375,19 @@ paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>1 path1 \<Longrightarrow>
 paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>2 path2 \<Longrightarrow>
 path1 \<asymp> path2 
 "
+apply (case_tac "path1 = []"; (auto simp: Prefix1))
+apply (case_tac "path2 = []", (auto simp: Prefix2))
+  apply (erule paths_congruent_mod_chan.cases; auto; (erule paths_congruent_mod_chan.cases; auto))
 apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply (case_tac "\<pi>1 = \<pi> ;; LReturn x\<^sub>\<kappa>"; auto; (case_tac "\<pi>2 = \<pi> ;; LReturn x\<^sub>\<kappa>"; auto)?)
   apply (drule_tac x = \<pi> in spec; auto)
   apply (drule_tac x = \<pi> in spec; auto)
-sorry
+  apply (drule_tac x = "(butlast path1)" in spec; auto)
+  apply (metis append_butlast_last_id path_cong_mod_chan_preserved_under_reduction)
+  apply (drule_tac x = "(butlast path2)" in spec; auto)
+  apply (metis append_butlast_last_id path_cong_mod_chan_preserved_under_reduction)
+  apply (erule paths_congruent_mod_chan.cases; auto; (erule paths_congruent_mod_chan.cases; auto))
+done
 
 lemma static_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
