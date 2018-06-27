@@ -467,15 +467,8 @@ inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarro
   Send2: "
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>2
   " |
-  Kite1: "
+  Kite: "
     p1 @ [(NLet x1, ESend xE1)] \<noteq> (p2 @ [(NLet x2, ESend xE2)]) \<Longrightarrow>
-    prefix p1' p2' \<Longrightarrow>
-    ((NLet x, ENext) # p1 @ [(NLet x1, ESend xE1)] @ p1') \<asymp> 
-      ((NLet x, ENext) # p2 @ [(NLet x2, ESend xE2)] @ p2')
-  " |
-  Kite2: "
-    p1 @ [(NLet x1, ESend xE1)] \<noteq> (p2 @ [(NLet x2, ESend xE2)]) \<Longrightarrow>
-    prefix p2' p1' \<Longrightarrow>
     ((NLet x, ENext) # p1 @ [(NLet x1, ESend xE1)] @ p1') \<asymp> 
       ((NLet x, ENext) # p2 @ [(NLet x2, ESend xE2)] @ p2')
   "
@@ -490,14 +483,10 @@ lemma may_be_inclusive_commut: "
   apply (simp add: Prefix1)
   apply (simp add: Spawn1)
   apply (simp add: Send1)
-  using Kite2 apply auto[1]
-  using Kite2 apply auto[1]
-  using Kite2 apply auto[1]
-  using Kite1 apply auto[1]
-  using Kite1 apply auto[1]
-  using Kite1 apply auto[1]
+  using Kite apply auto[1]
+  using Kite apply auto[1]
+  using Kite apply auto[1]
 done
-
 
 lemma may_be_inclusive_preserved_under_unordered_extension: "
   \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l] \<asymp> path\<^sub>2
@@ -507,19 +496,15 @@ lemma may_be_inclusive_preserved_under_unordered_extension: "
   apply (simp add: Send1)
   apply (simp add: Spawn2)
   apply (simp add: Send2)
+  using Kite apply auto[1]
+  using Kite apply auto[1]
+  using Kite apply auto[1]
 done
 
 lemma may_be_inclusive_preserved_under_unordered_double_extension: "
   \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l1] \<asymp> path\<^sub>2 @ [l2]
 "
- apply (erule may_be_inclusive.cases; auto)
-  apply (simp add: Spawn1)
-  apply (simp add: Send1)
-  apply (simp add: Spawn2)
-  apply (simp add: Send2)
-  apply (metis Covergent_Right Prefix1 append_assoc may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_snoc)
-  apply (metis Covergent_Right Prefix1 append_assoc may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_snoc)
-done
+by (metis may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
 
 inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
   equal: "

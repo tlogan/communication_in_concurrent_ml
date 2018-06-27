@@ -377,7 +377,6 @@ path1 \<asymp> path2
 "
 apply (case_tac "path1 = []"; (auto simp: Prefix1))
 apply (case_tac "path2 = []", (auto simp: Prefix2))
-  apply (erule paths_congruent_mod_chan.cases; auto; (erule paths_congruent_mod_chan.cases; auto))
 apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply (case_tac "\<pi>1 = \<pi> ;; LReturn x\<^sub>\<kappa>"; auto; (case_tac "\<pi>2 = \<pi> ;; LReturn x\<^sub>\<kappa>"; auto)?)
   apply (drule_tac x = \<pi> in spec; auto)
@@ -386,7 +385,6 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply (metis append_butlast_last_id path_cong_mod_chan_preserved_under_reduction)
   apply (drule_tac x = "(butlast path2)" in spec; auto)
   apply (metis append_butlast_last_id path_cong_mod_chan_preserved_under_reduction)
-  apply (erule paths_congruent_mod_chan.cases; auto; (erule paths_congruent_mod_chan.cases; auto))
 done
 
 lemma static_paths_of_same_run_inclusive: "
