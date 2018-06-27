@@ -368,13 +368,13 @@ by (meson paths_cong_preserved_under_reduction paths_congruent_mod_chan.Sync)
 *)
 
 lemma static_paths_of_same_run_inclusive_step: "
-star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
   E \<pi>2 \<noteq> None \<longrightarrow>
   paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1 \<longrightarrow> 
   paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2 \<longrightarrow> 
   path1 \<asymp> path2 \<Longrightarrow>
+star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
@@ -388,7 +388,35 @@ path1 \<asymp> path2
    derive inclusive paths
 
 *)
-apply (case_tac "path1 = []"; (auto simp: Prefix1))
+proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (simp add: Prefix2)))
+  assume 
+    H1: "
+      \<forall>\<pi>1. (\<exists>y. E \<pi>1 = Some y) \<longrightarrow>
+      (\<forall>\<pi>2. (\<exists>y. E \<pi>2 = Some y) \<longrightarrow>
+      (\<forall>path1. paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1 \<longrightarrow>
+      (\<forall>path2. paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2 \<longrightarrow> 
+        path1 \<asymp> path2)))" and
+    H2: "star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H)" and
+    H3: "(E, H) \<rightarrow> (E', H')" and
+    H4: "\<exists>y. E' \<pi>1 = Some y" and
+    H5: "\<exists>y. E' \<pi>2 = Some y " and
+    H6: "paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>1 path1" and
+    H7: "paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>2 path2" and
+    H8: "path1 \<noteq> []" and 
+    H9: "path2 \<noteq> []"
+
+  obtain \<sigma>1 where 
+    H10: "E' \<pi>1 = Some \<sigma>1"
+    using H4 by blast
+
+  obtain \<sigma>2 where 
+    H10: "E' \<pi>2 = Some \<sigma>2"
+    using H5 by blast
+
+  show "path1 \<asymp> path2" sorry
+qed
+(*
+apply ((case_tac "path1 = []"; (auto simp: Prefix1)), (case_tac "path2 = []", (auto simp: Prefix2)))
 apply (case_tac "path2 = []", (auto simp: Prefix2))
 apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply (case_tac "\<pi>1 = \<pi> ;; LReturn x\<^sub>\<kappa>"; auto; (case_tac "\<pi>2 = \<pi> ;; LReturn x\<^sub>\<kappa>"; auto)?)
@@ -401,6 +429,7 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply (erule paths_congruent_mod_chan.cases; auto; (erule paths_congruent_mod_chan.cases; auto))
   apply (erule paths_congruent.cases; auto; (erule paths_congruent.cases; auto); (erule nodes_congruent.cases))
 done
+*)
 
 lemma static_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
