@@ -340,10 +340,8 @@ path1 = path2 \<or> (\<not> prefix path1 path2 \<and> \<not> prefix path2 path1)
 sorry
 
 lemma path_cong_mod_chan_preserved_under_reduction: "
-paths_congruent_mod_chan (E(\<pi> ;; l \<mapsto> \<sigma>'), H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
-(* (E, H) \<rightarrow> (E(\<pi> ;; l \<mapsto> \<sigma>'), H') \<Longrightarrow> *)
-leaf E \<pi> \<Longrightarrow>
-E \<pi> = Some \<sigma> \<Longrightarrow>
+paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
+(E, H) \<rightarrow> (E', H') \<Longrightarrow>
 paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path
 "
 sorry
@@ -410,10 +408,44 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
     using H4 by blast
 
   obtain \<sigma>2 where 
-    H10: "E' \<pi>2 = Some \<sigma>2"
+    H11: "E' \<pi>2 = Some \<sigma>2"
     using H5 by blast
 
-  show "path1 \<asymp> path2" sorry
+  obtain \<pi>1x l1 path1x n1 where
+    H12: "\<pi>1x ;; l1 = \<pi>1" and
+    H13: "path1x @ [n1] = path1" and
+    H14: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1x path1x" 
+  by (metis H3 H6 H8 append_butlast_last_id path_cong_mod_chan_preserved_under_reduction no_empty_paths_congruent_mod_chan)
+
+  obtain \<pi>2x l2 path2x n2 where
+    H12: "\<pi>2x ;; l2 = \<pi>2" and
+    H13: "path2x @ [n2] = path2" and
+    H14: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2x path2x"
+  by (metis H3 H7 H9 append_butlast_last_id path_cong_mod_chan_preserved_under_reduction no_empty_paths_congruent_mod_chan)
+
+  show "path1 \<asymp> path2"
+  proof cases
+    assume "leaf E' \<pi>1"
+    show ?thesis
+    proof cases
+      assume "leaf E' \<pi>2"
+      show ?thesis sorry
+    next
+      assume "\<not> (leaf E' \<pi>2)"
+      show ?thesis sorry
+    qed
+  next
+    assume "\<not> (leaf E' \<pi>1)"
+    show ?thesis
+    proof cases
+      assume "leaf E' \<pi>2"
+      show ?thesis sorry
+    next
+      assume "\<not> (leaf E' \<pi>2)"
+      show ?thesis sorry
+    qed
+  qed
+
 qed
 (*
 apply ((case_tac "path1 = []"; (auto simp: Prefix1)), (case_tac "path2 = []", (auto simp: Prefix2)))
