@@ -365,6 +365,21 @@ lemma  paths_cong_mod_chan_preserved_under_reduction_sync: "
 by (meson paths_cong_preserved_under_reduction paths_congruent_mod_chan.Sync)
 *)
 
+lemma leaf_path_unique: "
+  leaf E \<pi>1 \<Longrightarrow>
+  leaf E \<pi>2 \<Longrightarrow>
+  \<pi>1 = \<pi>2
+"
+
+sorry
+
+lemma leaf_preserved_under_reduction: "
+  leaf E' (\<pi> ;; l) \<Longrightarrow>
+  (E, H) \<rightarrow> (E', H') \<Longrightarrow>
+  leaf E \<pi>
+"
+sorry
+
 lemma static_paths_of_same_run_inclusive_step: "
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
@@ -418,14 +433,21 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
   by (metis H3 H6 H8 append_butlast_last_id path_cong_mod_chan_preserved_under_reduction no_empty_paths_congruent_mod_chan)
 
   obtain \<pi>2x l2 path2x n2 where
-    H12: "\<pi>2x ;; l2 = \<pi>2" and
-    H13: "path2x @ [n2] = path2" and
-    H14: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2x path2x"
+    H13: "\<pi>2x ;; l2 = \<pi>2" and
+    H14: "path2x @ [n2] = path2" and
+    H15: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2x path2x"
   by (metis H3 H7 H9 append_butlast_last_id path_cong_mod_chan_preserved_under_reduction no_empty_paths_congruent_mod_chan)
 
   show "path1 \<asymp> path2"
   proof cases
-    assume "leaf E' \<pi>1"
+    assume L1H1: "leaf E' \<pi>1"
+    have 
+      L1H2: "leaf E \<pi>1x"
+      using H12 H3 L1H1 leaf_preserved_under_reduction by blast
+    obtain \<sigma>1x where
+       L1H3: "E \<pi>1x = Some \<sigma>1x"
+      using L1H2 leaf.simps by auto
+
     show ?thesis
     proof cases
       assume "leaf E' \<pi>2"
