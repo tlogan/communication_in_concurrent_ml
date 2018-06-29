@@ -441,6 +441,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
   show "path1 \<asymp> path2"
   proof cases
     assume L1H1: "leaf E' \<pi>1"
+
     have 
       L1H2: "leaf E \<pi>1x"
       using H12 H3 L1H1 leaf_preserved_under_reduction by blast
@@ -450,7 +451,15 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 
     show ?thesis
     proof cases
-      assume "leaf E' \<pi>2"
+      assume L2H1: "leaf E' \<pi>2"
+
+      have 
+        L2H2: "leaf E \<pi>2x"
+        using H13 H3 L2H1 leaf_preserved_under_reduction by blast
+      obtain \<sigma>2x where
+         L2H3: "E \<pi>2x = Some \<sigma>2x"
+        using L2H2 leaf.simps by auto
+
       show ?thesis sorry
     next
       assume "\<not> (leaf E' \<pi>2)"
@@ -460,7 +469,14 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
     assume "\<not> (leaf E' \<pi>1)"
     show ?thesis
     proof cases
-      assume "leaf E' \<pi>2"
+      assume L2H1: "leaf E' \<pi>2"
+      have 
+        L2H2: "leaf E \<pi>2x"
+        using H13 H3 L2H1 leaf_preserved_under_reduction by blast
+      obtain \<sigma>2x where
+         L2H3: "E \<pi>2x = Some \<sigma>2x"
+        using L2H2 leaf.simps by auto
+
       show ?thesis sorry
     next
       assume "\<not> (leaf E' \<pi>2)"
