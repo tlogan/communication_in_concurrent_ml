@@ -365,18 +365,10 @@ lemma  paths_cong_mod_chan_preserved_under_reduction_sync: "
 by (meson paths_cong_preserved_under_reduction paths_congruent_mod_chan.Sync)
 *)
 
-lemma leaf_path_unique: "
-  leaf E \<pi>1 \<Longrightarrow>
-  leaf E \<pi>2 \<Longrightarrow>
-  \<pi>1 = \<pi>2
-"
-
-sorry
-
-lemma leaf_preserved_under_reduction: "
+lemma leaf_prefix_exists: "
   leaf E' (\<pi> ;; l) \<Longrightarrow>
   (E, H) \<rightarrow> (E', H') \<Longrightarrow>
-  leaf E \<pi>
+  E \<pi> \<noteq> None
 "
 sorry
 
@@ -447,27 +439,20 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
   proof cases
     assume L1H1: "leaf E' \<pi>1"
 
-    have 
-      L1H2: "leaf E \<pi>1x"
-      using H12 H3 L1H1 leaf_preserved_under_reduction by blast
     obtain \<sigma>1x where
-       L1H3: "E \<pi>1x = Some \<sigma>1x"
-      using L1H2 leaf.simps by auto
+       L1H2: "E \<pi>1x = Some \<sigma>1x" 
+       using leaf_prefix_exists H12 H3 L1H1 by force
 
     show ?thesis
     proof cases
       assume L2H1: "leaf E' \<pi>2"
 
-      have 
-        L2H2: "leaf E \<pi>2x"
-        using leaf_preserved_under_reduction
-        using H15 H3 L2H1 by blast
       obtain \<sigma>2x where
-         L2H3: "E \<pi>2x = Some \<sigma>2x"
-        using L2H2 leaf.simps by auto
+         L2H2: "E \<pi>2x = Some \<sigma>2x"
+        using leaf_prefix_exists H15 H3 L2H1 by force
 
-      have L2H4: "path1x \<asymp> path2x"
-        using H1 H14 H17 L1H3 L2H3 by blast
+      have L2H3: "path1x \<asymp> path2x"
+        using H1 H14 H17 L1H2 L2H2 by blast
 
       show "path1 \<asymp> path2" sorry
     next
@@ -482,16 +467,13 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
     show ?thesis
     proof cases
       assume L2H1: "leaf E' \<pi>2"
-      have 
-        L2H2: "leaf E \<pi>2x"
-        using H15 H3 L2H1 leaf_preserved_under_reduction by blast
 
       obtain \<sigma>2x where
-         L2H3: "E \<pi>2x = Some \<sigma>2x"
-        using L2H2 leaf.simps by auto
+         L2H2: "E \<pi>2x = Some \<sigma>2x"
+        using leaf_prefix_exists H15 H3 L2H1 by force
 
-      have L2H4: "path1 \<asymp> path2x"
-        using H1 H17 H18 L1H2 L2H3 by blast
+      have L2H3: "path1 \<asymp> path2x"
+        using H1 H17 H18 L1H2 L2H2 by auto
 
       show "path1 \<asymp> path2" sorry
     next
@@ -587,7 +569,7 @@ proof -
 
       have 
         "path1 \<asymp> path2"
-        by (metis Covergent_Right Prefix1 Prefix2 append_self_conv butlast.simps(1) prefixeq_butlast)
+        using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 static_paths_of_same_run_inclusive_step step.hyps(1) step.hyps(2) by blast
     }
     then show ?case by blast
   qed
