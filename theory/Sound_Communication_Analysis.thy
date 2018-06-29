@@ -433,10 +433,15 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
   by (metis H3 H6 H8 append_butlast_last_id path_cong_mod_chan_preserved_under_reduction no_empty_paths_congruent_mod_chan)
 
   obtain \<pi>2x l2 path2x n2 where
-    H13: "\<pi>2x ;; l2 = \<pi>2" and
-    H14: "path2x @ [n2] = path2" and
-    H15: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2x path2x"
+    H15: "\<pi>2x ;; l2 = \<pi>2" and
+    H16: "path2x @ [n2] = path2" and
+    H17: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2x path2x"
   by (metis H3 H7 H9 append_butlast_last_id path_cong_mod_chan_preserved_under_reduction no_empty_paths_congruent_mod_chan)
+
+
+  have H18: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1" sorry
+
+  have H19: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2" sorry
 
   show "path1 \<asymp> path2"
   proof cases
@@ -455,32 +460,47 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 
       have 
         L2H2: "leaf E \<pi>2x"
-        using H13 H3 L2H1 leaf_preserved_under_reduction by blast
+        using leaf_preserved_under_reduction
+        using H15 H3 L2H1 by blast
       obtain \<sigma>2x where
          L2H3: "E \<pi>2x = Some \<sigma>2x"
         using L2H2 leaf.simps by auto
 
-      show ?thesis sorry
+      have L2H4: "path1x \<asymp> path2x"
+        using H1 H14 H17 L1H3 L2H3 by blast
+
+      show "path1 \<asymp> path2" sorry
     next
       assume "\<not> (leaf E' \<pi>2)"
-      show ?thesis sorry
+      show "path1 \<asymp> path2" sorry
     qed
   next
-    assume "\<not> (leaf E' \<pi>1)"
+    assume L1H1: "\<not> (leaf E' \<pi>1)"
+
+    have L1H2: "E \<pi>1 = Some \<sigma>1" sorry
+
     show ?thesis
     proof cases
       assume L2H1: "leaf E' \<pi>2"
       have 
         L2H2: "leaf E \<pi>2x"
-        using H13 H3 L2H1 leaf_preserved_under_reduction by blast
+        using H15 H3 L2H1 leaf_preserved_under_reduction by blast
+
       obtain \<sigma>2x where
          L2H3: "E \<pi>2x = Some \<sigma>2x"
         using L2H2 leaf.simps by auto
 
-      show ?thesis sorry
+      have L2H4: "path1 \<asymp> path2x"
+        using H1 H17 H18 L1H2 L2H3 by blast
+
+      show "path1 \<asymp> path2" sorry
     next
-      assume "\<not> (leaf E' \<pi>2)"
-      show ?thesis sorry
+      assume L2H1: "\<not> (leaf E' \<pi>2)"
+
+      have L2H2: "E \<pi>2 = Some \<sigma>2" sorry
+
+      show "path1 \<asymp> path2"
+        using H1 H18 H19 L1H2 L2H2 by blast
     qed
   qed
 
