@@ -488,6 +488,7 @@ lemma may_be_inclusive_commut: "
   using Kite apply auto[1]
 done
 
+
 lemma may_be_inclusive_preserved_under_unordered_extension: "
   \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l] \<asymp> path\<^sub>2
 "

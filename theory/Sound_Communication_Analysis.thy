@@ -407,6 +407,7 @@ path1 \<asymp> path2
    derive inclusive paths
 
 *)
+
 proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (simp add: Prefix2)))
   assume 
     H1: "
@@ -452,10 +453,8 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
   show "path1 \<asymp> path2"
   proof cases
     assume L1H1: "leaf E \<pi>1x"
-
     obtain \<sigma>1x where
       L1H2: "E \<pi>1x = Some \<sigma>1x" using L1H1 leaf.simps by auto
-
     show "path1 \<asymp> path2"
     proof cases
       assume L2H1: "leaf E \<pi>2x"
@@ -470,7 +469,18 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
         using H11 H15 H3 L2H1 path_state_preserved_for_non_leaf by blast
       have L2H3: "path1x \<asymp> path2"
         using H1 H14 H19 L1H2 L2H2 by auto
-      show "path1 \<asymp> path2" sorry
+
+      have L2H4: "\<not> strict_prefix \<pi>1x \<pi>2"
+        by (metis L1H1 L2H2 leaf.cases option.distinct(1))
+      show "path1 \<asymp> path2"
+      proof cases
+        assume L3H1: "prefix path1x path2"
+        show "path1 \<asymp> path2" sorry
+      next
+        assume L3H1: "\<not> prefix path1x path2"
+        show "path1 \<asymp> path2"
+          by (metis H13 L2H3 L3H1 Prefix2 may_be_inclusive_preserved_under_unordered_extension prefix_prefix)
+      qed
     qed
 
   next
@@ -483,9 +493,17 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       assume L2H1: "leaf E \<pi>2x"
       obtain \<sigma>2x where
         L2H2: "E \<pi>2x = Some \<sigma>2x" using L2H1 leaf.simps by auto
-      have "path1 \<asymp> path2x"
+      have L2H3: "path1 \<asymp> path2x"
         using H1 H17 H18 L1H2 L2H2 by auto
-      show "path1 \<asymp> path2" sorry
+      show "path1 \<asymp> path2"
+      proof cases
+        assume L3H1: "prefix path2x path1"
+        show "path1 \<asymp> path2" sorry
+      next
+        assume L3H1: "\<not> prefix path2x path1"
+        show "path1 \<asymp> path2"
+          by (metis H16 L2H3 L3H1 Prefix1 may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_prefix)
+      qed
     next
       assume L2H1: "\<not> leaf E \<pi>2x"
       have L2H2: "E \<pi>2 = Some \<sigma>2"
