@@ -445,6 +445,7 @@ inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set 
     may_be_static_live_path V F Ln Lx start isEnd path
   "
 
+(*
 
 inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
   Prefix1: "
@@ -507,25 +508,28 @@ lemma may_be_inclusive_preserved_under_unordered_double_extension: "
 "
 by (metis may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
 
+*)
+
 inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
   equal: "
     \<pi>\<^sub>1 = \<pi>\<^sub>2 \<Longrightarrow> 
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
-  " |
+  "
+(*|
   exclusive: "
     \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow> 
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
-  "
+  "*)
 
 inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
   ordered: "
     ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> 
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
-  " |
+  " (*|
   exclusive: "
     \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow> 
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
-  "
+  "*)
 
 
 inductive every_two_static_paths  :: "(static_path \<Rightarrow> bool) \<Rightarrow> (static_path \<Rightarrow> static_path \<Rightarrow> bool) \<Rightarrow> bool" where

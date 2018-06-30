@@ -301,6 +301,7 @@ lemma no_empty_paths_congruent_mod_chan: "
   apply (metis paths_congruent.simps prefix_code(1) snoc_eq_iff_butlast)
 done
 
+(*
 lemma static_paths_of_same_run_inclusive_base: "
   E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
@@ -320,6 +321,7 @@ proof -
     "path1 \<asymp> path2" 
     by (metis fun_upd_apply no_empty_paths_congruent_mod_chan)
 qed
+
 
 lemma paths_equal_implies_paths_inclusive: "
   path1 = path2 \<Longrightarrow> path1 \<asymp> path2 
@@ -345,25 +347,6 @@ paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n]) \<Lon
 paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path
 "
 sorry
-
-(*
-lemma paths_cong_mod_chan_preserved_under_reduction_chan: "
-  paths_congruent ((LNext xC) # \<pi>Suff ;; l) (path @ [n]) \<Longrightarrow>
-  E (\<pi>C @ (LNext xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
-  paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) (\<pi>C @ (LNext xC) # \<pi>Suff) path"
-using paths_cong_preserved_under_reduction paths_congruent_mod_chan.Chan by blast
-
-lemma  paths_cong_mod_chan_preserved_under_reduction_sync: "
-  paths_congruent (\<pi>Suffix ;; l) (pathSuffix @ [n]) \<Longrightarrow>
-  \<E> (\<pi>R @ (LNext xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
-  dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
-  \<E> \<pi>S = Some (\<langle>LET xS = SYNC xSE in eSY;\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
-  \<E> \<pi>R = Some (\<langle>LET xR = SYNC xRE in eRY;\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
-  {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>, H) c \<pi>S pathPre \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)"
-by (meson paths_cong_preserved_under_reduction paths_congruent_mod_chan.Sync)
-*)
 
 lemma leaf_prefix_exists: "
   leaf E' (\<pi> ;; l) \<Longrightarrow>
@@ -633,6 +616,9 @@ lemma send_static_paths_of_same_run_inclusive: "
   path1 \<asymp> path2
 "
 using is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive by fastforce
+*)
+
+
 
 
 lemma send_path_equality_sound: "
@@ -645,10 +631,9 @@ lemma send_path_equality_sound: "
   \<pi>1 = \<pi>2
 "
 sorry
-
-
-lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
-pathSync = pathSynca \<or> \<not> pathSync \<asymp> pathSynca \<Longrightarrow> 
+(*
+lemma send_static_paths_equal_unordered_implies_dynamic_paths_equal: "
+pathSync = pathSynca \<or> (\<not> pathSynca \<asymp> pathSync) \<Longrightarrow> 
 
 ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
 is_send_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>1 \<Longrightarrow>
@@ -659,9 +644,10 @@ paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>2 pathSynca \<Lon
 
 \<pi>\<^sub>1 = \<pi>\<^sub>2
 "
-by (simp add: send_path_equality_sound send_static_paths_of_same_run_inclusive)
-
+by (simp add: send_path_equality_sound send_static_paths_of_same_run_unordered)
+*)
 (* END *)
+
 
 (* PATH SOUND *)
 
@@ -766,14 +752,20 @@ theorem one_shot_sound': "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
+apply (simp add: every_two_dynamic_paths.simps every_two_static_paths.simps singular.simps; auto)
+apply (metis isnt_send_path_sound send_path_equality_sound)
+done
+(*
  apply (simp add: every_two_dynamic_paths.simps every_two_static_paths.simps singular.simps; auto)
  apply (frule_tac \<pi>Sync = \<pi>\<^sub>1 in isnt_send_path_sound; auto)
  apply (drule_tac x = pathSync in spec)
  apply (frule_tac \<pi>Sync = \<pi>\<^sub>2 in isnt_send_path_sound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (simp add: send_static_paths_equal_exclusive_implies_dynamic_paths_equal)
-done
+ apply (simp add: send_static_paths_equal_unordered_implies_dynamic_paths_equal)
+ done
+*)
+
 
 
 theorem one_shot_sound: "
