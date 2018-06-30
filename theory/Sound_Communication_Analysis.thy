@@ -372,6 +372,20 @@ lemma leaf_prefix_exists: "
 "
 sorry
 
+
+lemma path_state_preserved_for_non_leaf: "
+(E, H) \<rightarrow> (E', H') \<Longrightarrow>
+E' (\<pi> ;; l) = Some \<sigma> \<Longrightarrow>
+\<not> leaf E \<pi> \<Longrightarrow>
+E (\<pi> ;; l) = Some \<sigma>
+"
+apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
+  apply presburger+
+  apply (metis append1_eq_conv fun_upd_other)
+  apply (metis butlast_snoc fun_upd_apply)
+done
+
+
 lemma static_paths_of_same_run_inclusive_step: "
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
@@ -437,53 +451,36 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 
   show "path1 \<asymp> path2"
   proof cases
-    assume L1H1: "leaf E' \<pi>1"
+    assume L1H1: "leaf E \<pi>1x"
+    show "path1 \<asymp> path2"
 
-    obtain \<sigma>1x where
-       L1H2: "E \<pi>1x = Some \<sigma>1x" 
-       using leaf_prefix_exists H12 H3 L1H1 by force
-
-    show ?thesis
     proof cases
-      assume L2H1: "leaf E' \<pi>2"
-
-      obtain \<sigma>2x where
-         L2H2: "E \<pi>2x = Some \<sigma>2x"
-        using leaf_prefix_exists H15 H3 L2H1 by force
-
-      have L2H3: "path1x \<asymp> path2x"
-        using H1 H14 H17 L1H2 L2H2 by blast
-
+      assume L2H1: "leaf E \<pi>2x"
       show "path1 \<asymp> path2" sorry
     next
-      assume "\<not> (leaf E' \<pi>2)"
+      assume L2H1: "\<not> leaf E \<pi>2x"
+      have L2H2: "E \<pi>2 = Some \<sigma>2"
+        using H11 H15 H3 L2H1 path_state_preserved_for_non_leaf by blast
       show "path1 \<asymp> path2" sorry
     qed
+
   next
-    assume L1H1: "\<not> (leaf E' \<pi>1)"
+    assume L1H1: "\<not> leaf E \<pi>1x"
+      have L1H2: "E \<pi>1 = Some \<sigma>1"
+        using H10 H12 H3 L1H1 path_state_preserved_for_non_leaf by blast
+    show "path1 \<asymp> path2"
 
-    have L1H2: "E \<pi>1 = Some \<sigma>1" sorry
-
-    show ?thesis
     proof cases
-      assume L2H1: "leaf E' \<pi>2"
-
-      obtain \<sigma>2x where
-         L2H2: "E \<pi>2x = Some \<sigma>2x"
-        using leaf_prefix_exists H15 H3 L2H1 by force
-
-      have L2H3: "path1 \<asymp> path2x"
-        using H1 H17 H18 L1H2 L2H2 by auto
-
+      assume L2H1: "leaf E \<pi>2x"
       show "path1 \<asymp> path2" sorry
     next
-      assume L2H1: "\<not> (leaf E' \<pi>2)"
-
-      have L2H2: "E \<pi>2 = Some \<sigma>2" sorry
-
+      assume L2H1: "\<not> leaf E \<pi>2x"
+      have L2H2: "E \<pi>2 = Some \<sigma>2"
+        using H11 H15 H3 L2H1 path_state_preserved_for_non_leaf by blast
       show "path1 \<asymp> path2"
         using H1 H18 H19 L1H2 L2H2 by blast
     qed
+
   qed
 
 qed
