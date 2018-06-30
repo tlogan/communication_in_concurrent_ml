@@ -462,6 +462,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
         L2H2: "E \<pi>2x = Some \<sigma>2x" using L2H1 leaf.simps by auto
       have "path1x \<asymp> path2x"
         using H1 H14 H17 L1H2 L2H2 by blast
+      (* inclusive definition fails in case of non-unique variable bindings *)
       show "path1 \<asymp> path2" sorry
     next
       assume L2H1: "\<not> leaf E \<pi>2x"
@@ -475,6 +476,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       show "path1 \<asymp> path2"
       proof cases
         assume L3H1: "prefix path1x path2"
+       (* inclusive definition fails in case of non-unique variable bindings *)
         show "path1 \<asymp> path2" sorry
       next
         assume L3H1: "\<not> prefix path1x path2"
