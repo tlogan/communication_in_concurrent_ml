@@ -209,28 +209,29 @@ inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow>
 
 inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F (NLet xC) (may_be_send_node_label V e xC)) singular \<Longrightarrow>
+    every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
+    simple_flow_set V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
 inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F (NLet xC) (may_be_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two_static_paths (may_be_path V F (NLet xC) (may_be_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
 inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F (NLet xC) (may_be_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
 inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F (NLet xC) (may_be_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_fan_in V e xC 
   "
