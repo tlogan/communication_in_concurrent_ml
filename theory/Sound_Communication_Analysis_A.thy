@@ -178,20 +178,17 @@ lemma static_paths_of_same_run_inclusive_base: "
   paths_congruent \<pi>2 path2 \<Longrightarrow>
   path1 \<asymp> path2
 "
-sorry
-(*
 proof -
   assume 
     H1: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
     H2: "E0 \<pi>1 \<noteq> None" and
     H3: "E0 \<pi>2 \<noteq> None" and
-    H4: "paths_congruent (E0, {}) (Ch \<pi> xC) \<pi>1 path1" and
-    H5: "paths_congruent (E0, {}) (Ch \<pi> xC) \<pi>2 path2"
+    H4: "paths_congruent \<pi>1 path1" and
+    H5: "paths_congruent \<pi>2 path2"
   from H1 H2 H4 show 
-    "path1 \<asymp> path2" 
-    by (metis fun_upd_apply no_empty_paths_congruent)
+    "path1 \<asymp> path2"
+    by (metis H3 H5 Nil_prefix Prefix2 append_is_Nil_conv fun_upd_apply list.distinct(1) paths_congruent.cases)
 qed
-*)
 
 lemma paths_equal_implies_paths_inclusive: "
   path1 = path2 \<Longrightarrow> path1 \<asymp> path2 
@@ -202,22 +199,6 @@ lemma paths_cong_preserved_under_reduction: "
   paths_congruent (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
   paths_congruent \<pi> path"
 using paths_congruent.cases by fastforce
-
-
-lemma equal_concrete_paths_implies_unordered_or_equal_abstract_paths: "
-paths_congruent \<pi> path1 \<Longrightarrow>
-paths_congruent \<pi> path2 \<Longrightarrow>
-path1 = path2 \<or> (\<not> prefix path1 path2 \<and> \<not> prefix path2 path1)
-"
-sorry
-
-
-lemma leaf_prefix_exists: "
-  leaf E' (\<pi> ;; l) \<Longrightarrow>
-  (E, H) \<rightarrow> (E', H') \<Longrightarrow>
-  E \<pi> \<noteq> None
-"
-sorry
 
 
 lemma path_state_preserved_for_non_leaf: "
