@@ -532,6 +532,65 @@ by (simp add: equality_preserved_under_congruent send_static_paths_of_same_run_i
 
 (* PATH SOUND *)
 
+inductive 
+  simple_flow_set_env :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> val_env \<Rightarrow> bool"  and
+  simple_flow_set_val :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> val \<Rightarrow> bool"
+where
+  Intro: "
+    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> simple_flow_set_val V F \<omega> \<Longrightarrow>
+    simple_flow_set_env V F \<rho>
+  " |
+
+  Unit: "
+    simple_flow_set_val V F VUnit
+  " |
+
+  Chan: "
+    simple_flow_set_val V F (VChan c)
+  " |
+
+  Send_Evt: "
+    simple_flow_set_env V F \<rho> \<Longrightarrow>
+    simple_flow_set_val V F (VClosure (Send_Evt _ _) \<rho>)
+  " |
+
+  Recv_Evt: "
+    simple_flow_set_env V F \<rho> \<Longrightarrow>
+    simple_flow_set_val V F (VClosure (Recv_Evt _) \<rho>)
+  " |
+
+  Left: "
+    simple_flow_set_env V F \<rho> \<Longrightarrow>
+    simple_flow_set_val V F (VClosure (Left _) \<rho>)
+  " |
+
+  Right: "
+    simple_flow_set_env V F \<rho> \<Longrightarrow>
+    simple_flow_set_val V F (VClosure (Right _) \<rho>)
+  " |
+
+  Abs: "
+    simple_flow_set V F e \<Longrightarrow> 
+    simple_flow_set_env V F  \<rho> \<Longrightarrow>
+    simple_flow_set_val V F (VClosure (Abs f x e) \<rho>)
+  " |
+
+  Pair: "
+    simple_flow_set_env V F \<rho> \<Longrightarrow>
+    simple_flow_set_val V F (VClosure (Pair _ _) \<rho>)
+  " 
+
+inductive simple_flow_set_stack :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> cont list \<Rightarrow> bool" where
+  Empty: "simple_flow_set_stack V F []" |
+  Nonempty: "
+    \<lbrakk> 
+      simple_flow_set V F e;
+      simple_flow_set_env V F \<rho>;
+      simple_flow_set_stack V F \<kappa>
+    \<rbrakk> \<Longrightarrow> 
+    simple_flow_set_stack V F (\<langle>x, e, \<rho>\<rangle> # \<kappa>)
+  "
+
 
 inductive simple_flow_set_pool :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
   Intro: "
@@ -572,7 +631,23 @@ lemma lift_simple_flow_set_to_pool: "
   simple_flow_set V F e \<Longrightarrow>
   simple_flow_set_pool V F [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]
 "
-sorry
+apply (erule simple_flow_set.cases; auto)
+  apply (simp add: simple_flow_set.Result simple_flow_set_env.simps simple_flow_set_pool.Intro simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Unit simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Chan simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Send_Evt simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Recv_Evt simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Pair simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Left simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Right simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Abs simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Spawn simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Sync simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Fst simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Snd simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_Case simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+  apply (simp add: simple_flow_set.Let_App simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+done
 
 lemma isnt_path_sound: "
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
