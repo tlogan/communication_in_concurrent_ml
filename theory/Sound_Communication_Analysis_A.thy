@@ -10,7 +10,7 @@ theory Sound_Communication_Analysis_A
 begin
 
 (*
-
+START just for reference
 
 lemma inclusive_preserved: "
   \<E> \<rightarrow> \<E>' \<Longrightarrow>
@@ -167,6 +167,8 @@ apply (unfold is_send_path.simps; auto)
 using runtime_paths_are_inclusive by blast
 
 
+END just for reference
+********** 
 *)
 
 
@@ -399,21 +401,6 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
   qed
 
 qed
-(*
-apply ((case_tac "path1 = []"; (auto simp: Prefix1)), (case_tac "path2 = []", (auto simp: Prefix2)))
-apply (case_tac "path2 = []", (auto simp: Prefix2))
-apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
-  apply (case_tac "\<pi>1 = \<pi> ;; LReturn x\<^sub>\<kappa>"; auto; (case_tac "\<pi>2 = \<pi> ;; LReturn x\<^sub>\<kappa>"; auto)?)
-  apply (drule_tac x = \<pi> in spec; auto)
-  apply (drule_tac x = \<pi> in spec; auto)
-  apply (drule_tac x = "(butlast path1)" in spec; auto)
-  apply (metis append_butlast_last_id path_cong_mod_chan_preserved_under_reduction)
-  apply (drule_tac x = "(butlast path2)" in spec; auto)
-  apply (metis append_butlast_last_id path_cong_mod_chan_preserved_under_reduction)
-  apply (erule paths_congruent.cases; auto; (erule paths_congruent.cases; auto))
-  apply (erule paths_congruent.cases; auto; (erule paths_congruent.cases; auto); (erule nodes_congruent.cases))
-done
-*)
 
 lemma static_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
@@ -518,13 +505,10 @@ using is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive by f
 
 
 
-lemma send_path_equality_sound: "
+lemma equality_preserved_under_congruent: "
   path1 = path2 \<Longrightarrow>
   paths_congruent \<pi>1 path1 \<Longrightarrow>
   paths_congruent \<pi>2 path2 \<Longrightarrow>
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
   \<pi>1 = \<pi>2
 "
 sorry
@@ -541,7 +525,7 @@ paths_congruent \<pi>\<^sub>2 pathSynca \<Longrightarrow>
 
 \<pi>\<^sub>1 = \<pi>\<^sub>2
 "
-by (simp add: send_path_equality_sound send_static_paths_of_same_run_inclusive)
+by (simp add: equality_preserved_under_congruent send_static_paths_of_same_run_inclusive)
 
 (* END *)
 
@@ -557,7 +541,7 @@ lemma isnt_path_sound: "
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_congruent \<pi> path \<and>
-    may_be_path V F (NLet xC) isEnd path
+    may_be_path V F (nodeLabel e) isEnd path
 "
 sorry
 
@@ -623,7 +607,7 @@ lemma isnt_send_path_sound: "
   simple_flow_set V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_congruent \<pi>Sync pathSync) \<and> 
-    may_be_path V F (NLet xC) (may_be_static_send_node_label V e xC) pathSync
+    may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
  apply (frule_tac x\<^sub>s\<^sub>c = x\<^sub>s\<^sub>c and \<pi>C = \<pi>C and \<rho>\<^sub>e = \<rho>\<^sub>e in isnt_send_site_sound; auto?)
@@ -641,17 +625,16 @@ theorem one_shot_sound': "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
-sorry
-(*
  apply (simp add: every_two_dynamic_paths.simps every_two_static_paths.simps singular.simps; auto)
+
  apply (frule_tac \<pi>Sync = \<pi>\<^sub>1 in isnt_send_path_sound; auto)
  apply (drule_tac x = pathSync in spec)
  apply (frule_tac \<pi>Sync = \<pi>\<^sub>2 in isnt_send_path_sound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (simp add: send_static_paths_equal_unordered_implies_dynamic_paths_equal)
- done
-*)
+ apply (simp add: equality_preserved_under_congruent send_static_paths_of_same_run_inclusive)
+done
+
 theorem one_shot_sound: "
   \<lbrakk>
     static_one_shot V e xC;
@@ -673,11 +656,9 @@ theorem noncompetitive_send_to_ordered_send: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
-sorry
-(*
-apply (simp add: every_two_dynamic_paths.simps noncompetitive.simps; auto)
-using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
-*)
+apply (simp add: every_two_static_paths.simps noncompetitive.simps; auto?)
+using isnt_send_path_sound static_paths_of_same_run_inclusive sorry
+
 
 theorem fan_out_sound: "
   \<lbrakk>
@@ -687,13 +668,10 @@ theorem fan_out_sound: "
   \<rbrakk> \<Longrightarrow>
   fan_out \<E>' (Ch \<pi> xC)
 "
-sorry
-(*
  apply (erule static_fan_out.cases; auto)
  apply (unfold fan_out.simps)
  apply (metis noncompetitive_send_to_ordered_send)
 done
-*)
 
 lemma noncompetitive_recv_to_ordered_recv: "
    every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
@@ -713,13 +691,11 @@ theorem fan_in_sound: "
   \<rbrakk> \<Longrightarrow>
   fan_in \<E>' (Ch \<pi> xC)
 "
-sorry
-(*
  apply (erule static_fan_in.cases; auto)
  apply (unfold fan_in.simps)
  apply (metis noncompetitive_recv_to_ordered_recv)
 done
-*)
+
 
 theorem one_to_one_sound: "
   \<lbrakk>
@@ -729,12 +705,9 @@ theorem one_to_one_sound: "
   \<rbrakk> \<Longrightarrow>
   one_to_one \<E>' (Ch \<pi> xC)
 "
-sorry
-(*
  apply (erule static_one_to_one.cases; auto)
  apply (unfold one_to_one.simps)
  apply (simp add: noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
 done
-*)
 
 end
