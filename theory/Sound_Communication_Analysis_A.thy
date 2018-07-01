@@ -241,6 +241,30 @@ paths_congruent \<pi>2 path2 \<Longrightarrow>
 sorry
 
 
+
+lemma spawn_point: "
+  (E, H) \<rightarrow> (E', H') \<Longrightarrow>
+  leaf E \<pi> \<Longrightarrow>
+  E' (\<pi> ;; l1) = \<sigma>1 \<Longrightarrow>
+  E' (\<pi> ;; l2) = \<sigma>2 \<Longrightarrow>
+  l1 = l2 \<or> 
+  (\<exists> x . l1 = (LNext x) \<and> l2 = (LSpawn x)) \<or>
+  (\<exists> x . l1 = (LSpawn x) \<and> l2 = (LNext x))
+"
+sorry
+
+lemma spawn_point_preserved_under_congruent_paths: "
+l1 = l2 \<or> 
+(\<exists> x . l1 = (LNext x) \<and> l2 = (LSpawn x)) \<or>
+(\<exists> x . l1 = (LSpawn x) \<and> l2 = (LNext x)) \<Longrightarrow>
+paths_congruent [l1] [n1] \<Longrightarrow>
+paths_congruent [l2] [n2] \<Longrightarrow>
+n1 = n2 \<or> 
+(\<exists> x . n1 = (NLet x, ENext) \<and> n2 = (NLet x, ESpawn )) \<or>
+(\<exists> x . n1 = (NLet x, ESpawn ) \<and> n2 = (NLet x, ENext))
+"
+sorry
+
 lemma static_paths_of_same_run_inclusive_step: "
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
@@ -293,6 +317,13 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
     H17: "paths_congruent \<pi>2x path2x"
   by (metis H7 H9 paths_congruent.cases)
 
+ 
+  have H22: "paths_congruent [l1] [n1]"
+    by (metis H12 H13 H6 H8 Node append1_eq_conv append_eq_Cons_conv paths_congruent.simps)
+
+  have H23: "paths_congruent [l2] [n2]"
+    by (metis (no_types, lifting) Cons_eq_append_conv H15 H16 H7 H9 Node append1_eq_conv paths_congruent.simps)
+
   show "path1 \<asymp> path2"
   proof cases
     assume L1H1: "leaf E \<pi>1x"
@@ -317,7 +348,32 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 
       have L2H8: "path1x \<asymp> path2x"
         using H1 H14 H17 L1H2 L2H2 by blast
-      show "path1 \<asymp> path2" sorry
+
+      show "path1 \<asymp> path2"
+      proof cases
+        assume L3H1: "path1x = path2x"
+
+        have L3H3: "
+          l1 = l2 \<or> 
+          (\<exists> x . l1 = (LNext x) \<and> l2 = (LSpawn x)) \<or>
+          (\<exists> x . l1 = (LSpawn x) \<and> l2 = (LNext x))" 
+          using spawn_point H3 L1H1 by auto
+
+        have L3H4: "
+          n1 = n2 \<or> 
+          (\<exists> x . n1 = (NLet x, ENext) \<and> n2 = (NLet x, ESpawn )) \<or>
+          (\<exists> x . n1 = (NLet x, ESpawn ) \<and> n2 = (NLet x, ENext))" 
+          using H22 H23 L3H3 spawn_point_preserved_under_congruent_paths by auto
+
+        have L3H5: "path1x @ [n1] \<asymp> path1x @ [n2]"
+          using L3H4 may_be_inclusive.intros(3) may_be_inclusive.intros(4) paths_equal_implies_paths_inclusive by blast
+        show "path1 \<asymp> path2"
+          using H13 H16 L3H1 L3H5 by auto
+      next
+        assume L3H1: "path1x \<noteq> path2x"
+        show "path1 \<asymp> path2"
+          using H13 H16 L2H6 L2H7 L2H8 L3H1 may_be_inclusive_preserved_under_unordered_double_extension strict_prefixI by blast
+      qed
     next
       assume L2H1: "\<not> leaf E \<pi>2x"
       have L2H2: "E \<pi>2 = Some \<sigma>2"
