@@ -532,9 +532,50 @@ by (simp add: equality_preserved_under_congruent send_static_paths_of_same_run_i
 
 (* PATH SOUND *)
 
+
+inductive simple_flow_set_pool :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
+  Intro: "
+    (\<forall> \<pi> e \<rho> \<kappa> . E \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
+      simple_flow_set V F e \<and>
+      simple_flow_set_env V F \<rho> \<and>
+      simple_flow_set_stack V F \<kappa>
+      ) \<Longrightarrow> 
+    simple_flow_set_pool V F E
+  "
+
+
+lemma simple_flow_set_pool_preserved_star: "
+
+  simple_flow_set_pool V F ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]) \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+  isEnd (NLet x) \<Longrightarrow>
+  simple_flow_set_pool V F \<E>'
+"
+sorry
+
+lemma simple_flow_set_pool_implies_may_be_path: "
+  \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  simple_flow_set_pool V F \<E>' \<Longrightarrow>
+  isEnd (NLet x) \<Longrightarrow>
+  \<exists> path . 
+    paths_congruent \<pi> path \<and>
+    may_be_path V F (nodeLabel e) isEnd path
+"
+sorry
+
+
+lemma lift_simple_flow_set_to_pool: "
+  simple_flow_set V F e \<Longrightarrow>
+  simple_flow_set_pool V F [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]
+"
+sorry
+
 lemma isnt_path_sound: "
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  \<rho> z \<noteq> None \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   simple_flow_set V F e \<Longrightarrow>
@@ -543,7 +584,7 @@ lemma isnt_path_sound: "
     paths_congruent \<pi> path \<and>
     may_be_path V F (nodeLabel e) isEnd path
 "
-sorry
+by (metis lift_simple_flow_set_to_pool simple_flow_set_pool_implies_may_be_path simple_flow_set_pool_preserved_star)
 
 
 lemma isnt_send_evt_sound: "
