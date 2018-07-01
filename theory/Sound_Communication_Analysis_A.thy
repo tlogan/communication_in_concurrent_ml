@@ -4,7 +4,9 @@ theory Sound_Communication_Analysis_A
     Syntax 
     Dynamic_Semantics Static_Semantics Sound_Semantics
     Static_Framework Sound_Framework
-    Dynamic_Communication_Analysis Static_Communication_Analysis_A
+    Dynamic_Communication_Analysis 
+    Static_Communication_Analysis Static_Communication_Analysis 
+    Static_Communication_Analysis_A
 begin
 
 (*
@@ -301,15 +303,16 @@ lemma no_empty_paths_congruent_mod_chan: "
   apply (metis paths_congruent.simps prefix_code(1) snoc_eq_iff_butlast)
 done
 
-(*
 lemma static_paths_of_same_run_inclusive_base: "
-  E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
+  (*E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
-  paths_congruent_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
+  paths_congruent_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>*)
   paths_congruent_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
   path1 \<asymp> path2
 "
+sorry
+(*
 proof -
   assume 
     H1: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
@@ -321,7 +324,7 @@ proof -
     "path1 \<asymp> path2" 
     by (metis fun_upd_apply no_empty_paths_congruent_mod_chan)
 qed
-
+*)
 
 lemma paths_equal_implies_paths_inclusive: "
   path1 = path2 \<Longrightarrow> path1 \<asymp> path2 
@@ -616,8 +619,6 @@ lemma send_static_paths_of_same_run_inclusive: "
   path1 \<asymp> path2
 "
 using is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive by fastforce
-*)
-
 
 
 
@@ -631,8 +632,8 @@ lemma send_path_equality_sound: "
   \<pi>1 = \<pi>2
 "
 sorry
-(*
-lemma send_static_paths_equal_unordered_implies_dynamic_paths_equal: "
+
+lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
 pathSync = pathSynca \<or> (\<not> pathSynca \<asymp> pathSync) \<Longrightarrow> 
 
 ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
@@ -644,8 +645,8 @@ paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>2 pathSynca \<Lon
 
 \<pi>\<^sub>1 = \<pi>\<^sub>2
 "
-by (simp add: send_path_equality_sound send_static_paths_of_same_run_unordered)
-*)
+by (simp add: send_path_equality_sound send_static_paths_of_same_run_inclusive)
+
 (* END *)
 
 
@@ -752,10 +753,6 @@ theorem one_shot_sound': "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
-apply (simp add: every_two_dynamic_paths.simps every_two_static_paths.simps singular.simps; auto)
-apply (metis isnt_send_path_sound send_path_equality_sound)
-done
-(*
  apply (simp add: every_two_dynamic_paths.simps every_two_static_paths.simps singular.simps; auto)
  apply (frule_tac \<pi>Sync = \<pi>\<^sub>1 in isnt_send_path_sound; auto)
  apply (drule_tac x = pathSync in spec)
@@ -764,9 +761,6 @@ done
  apply (erule impE, simp)
  apply (simp add: send_static_paths_equal_unordered_implies_dynamic_paths_equal)
  done
-*)
-
-
 
 theorem one_shot_sound: "
   \<lbrakk>
