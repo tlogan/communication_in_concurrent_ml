@@ -82,11 +82,6 @@ inductive simple_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Righta
   Let_Sync: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      (\<forall> xSC xM xC y.
-        {^Send_Evt xSC xM} \<subseteq> V xSE \<longrightarrow>
-        {^Chan xC} \<subseteq> V xSC \<longrightarrow>
-        {(NLet x, ESend xSE, NLet y)} \<subseteq> F
-      );
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
     simple_flow_set V F (LET x = SYNC xSE in e)
@@ -133,83 +128,21 @@ inductive simple_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Righta
 
 
 
-inductive may_be_live_flow :: "flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> flow_label \<Rightarrow> bool"  where
-  Next: "
-    (l, ENext, l') \<in> F \<Longrightarrow>
-    \<not> Set.is_empty (Lx l) \<Longrightarrow>
-    \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    may_be_live_flow F Ln Lx (l, ENext, l')
-  " |
-  Spawn: "
-    (l, ESpawn, l') \<in> F \<Longrightarrow>
-    \<not> Set.is_empty (Lx l) \<Longrightarrow>
-    \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    may_be_live_flow F Ln Lx (l, ESpawn, l')
-  " |
-  Call_Live_Outer: "
-    (l, ECall x, l') \<in> F \<Longrightarrow>
-    \<not> Set.is_empty (Lx l) \<Longrightarrow>
-    may_be_live_flow F Ln Lx (l, ECall x, l')
-  " |
-  Call_Live_Inner: "
-    (l, ECall x, l') \<in> F \<Longrightarrow>
-    \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    may_be_live_flow F Ln Lx (l, ECall x, l')
-  " |
-  Return: "
-    (l, EReturn x, l') \<in> F \<Longrightarrow>
-    \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    may_be_live_flow F Ln Lx (l, EReturn x, l')
-  " |
-  Send: "
-    ((NLet xSend), ESend xE, (NLet xRecv)) \<in> F \<Longrightarrow>
-    {xE} \<subseteq> (Ln (NLet xSend)) \<Longrightarrow>
-    may_be_live_flow F Ln Lx ((NLet xSend), ESend xE, (NLet xRecv))
-  "
-
-inductive may_be_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive may_be_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
-    may_be_path V F Ln Lx start isEnd []
-  " (*|
+    may_be_path V F start isEnd []
+  " |
   Edge: "
     isEnd end \<Longrightarrow>
-    may_be_live_flow F Ln Lx (start, edge, end) \<Longrightarrow>
-    may_be_path V F Ln Lx start isEnd [(start, edge)]
+    {(start, edge, end)} \<subseteq> F \<Longrightarrow>
+    may_be_path V F start isEnd [(start, edge)]
   " |
   Step: "
-    may_be_path V F Ln Lx middle isEnd ((middle, edge') # path) \<Longrightarrow>
-    may_be_live_flow F Ln Lx (start, edge, middle) \<Longrightarrow>
-    may_be_path V F Ln Lx start isEnd ((start, edge) # (middle, edge') # path)
-  " |
-
-  Pre_Return: "
-    may_be_path V F Ln Lx (NResult y) isEnd ((NResult y, EReturn x) # post) \<Longrightarrow>
-    may_be_path  F (NResult y) pre \<Longrightarrow>
-    \<not> static_balanced (pre @ [(NResult y, EReturn x)]) \<Longrightarrow>
-    \<not> Set.is_empty (Lx (NLet x)) \<Longrightarrow>
-    path = pre @ (NResult y, EReturn x) # post \<Longrightarrow>
-    may_be_path V F Ln Lx start isEnd path
-  "*)
-
-
-
-inductive may_be_send_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
-  Sync: "
-    {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
-    {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
-    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
-    may_be_send_node_label V e xC (NLet x)
+    may_be_path V F middle isEnd ((middle, edge') # path) \<Longrightarrow>
+    {(start, edge, middle)} \<subseteq> F \<Longrightarrow>
+    may_be_path V F start isEnd ((start, edge) # (middle, edge') # path)
   "
-
-inductive may_be_recv_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
-  Sync: "
-    {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
-    {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
-    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
-    may_be_recv_node_label V e xC (NLet x)
-  "
-
 
 
 inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
@@ -274,31 +207,30 @@ inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow>
   "
 
 
-
 inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F Ln Lx (NLet xC) (may_be_send_node_label V e xC)) singular \<Longrightarrow>
+    every_two_static_paths (may_be_path V F (NLet xC) (may_be_send_node_label V e xC)) singular \<Longrightarrow>
     static_one_shot V e xC 
   "
 
 inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F Ln Lx (NLet xC) (may_be_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two_static_paths (may_be_path V F Ln Lx (NLet xC) (may_be_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_path V F (NLet xC) (may_be_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_path V F (NLet xC) (may_be_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
 inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F Ln Lx (NLet xC) (may_be_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_path V F (NLet xC) (may_be_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
 inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F Ln Lx (NLet xC) (may_be_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_static_paths (may_be_path V F (NLet xC) (may_be_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_fan_in V e xC 
   "
