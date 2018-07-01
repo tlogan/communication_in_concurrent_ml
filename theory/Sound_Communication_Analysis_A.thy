@@ -232,6 +232,14 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply (metis butlast_snoc fun_upd_apply)
 done
 
+lemma not_strict_prefix_preserved_under_congruent_paths: "
+\<not> strict_prefix \<pi>1 \<pi>2 \<Longrightarrow>
+paths_congruent \<pi>1 path1 \<Longrightarrow>
+paths_congruent \<pi>2 path2 \<Longrightarrow>
+\<not> strict_prefix path1 path2
+"
+sorry
+
 
 lemma static_paths_of_same_run_inclusive_step: "
 \<forall>\<pi>1 \<pi>2 path1 path2.
@@ -248,13 +256,6 @@ paths_congruent \<pi>1 path1 \<Longrightarrow>
 paths_congruent \<pi>2 path2 \<Longrightarrow>
 path1 \<asymp> path2 
 "
-(* TO DO: switch to ISAR style;
-
-   derive equal and unordered paths; 
-   derive inclusive paths
-
-*)
-
 proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (simp add: Prefix2)))
   assume 
     H1: "
@@ -302,9 +303,20 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       assume L2H1: "leaf E \<pi>2x"
       obtain \<sigma>2x where
         L2H2: "E \<pi>2x = Some \<sigma>2x" using L2H1 leaf.simps by auto
-      have "path1x \<asymp> path2x"
+
+
+      have L2H4: "\<not> strict_prefix \<pi>1x \<pi>2x"
+        by (meson L1H1 L2H1 leaf.cases)
+      have L2H5: "\<not> strict_prefix \<pi>2x \<pi>1x"
+        by (meson L1H1 L2H1 leaf.cases)
+
+      have L2H6: "\<not> strict_prefix path1x path2x"
+        using H14 H17 L2H4 not_strict_prefix_preserved_under_congruent_paths by auto
+      have L2H7: "\<not> strict_prefix path2x path1x"
+        using H14 H17 L2H5 not_strict_prefix_preserved_under_congruent_paths by blast
+
+      have L2H8: "path1x \<asymp> path2x"
         using H1 H14 H17 L1H2 L2H2 by blast
-      (* inclusive definition fails in case of non-unique variable bindings *)
       show "path1 \<asymp> path2" sorry
     next
       assume L2H1: "\<not> leaf E \<pi>2x"
@@ -313,18 +325,12 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       have L2H3: "path1x \<asymp> path2"
         using H1 H14 H7 L1H2 L2H2 by blast
 
-      have L2H4: "\<not> strict_prefix \<pi>1x \<pi>2"
+      have L2H8: "\<not> strict_prefix \<pi>1x \<pi>2"
         by (metis L1H1 L2H2 leaf.cases option.distinct(1))
+      have L2H9: "\<not> strict_prefix path1x path2"
+        using H14 H7 L2H8 not_strict_prefix_preserved_under_congruent_paths by blast
       show "path1 \<asymp> path2"
-      proof cases
-        assume L3H1: "prefix path1x path2"
-       (* inclusive definition fails in case of non-unique variable bindings *)
-        show "path1 \<asymp> path2" sorry
-      next
-        assume L3H1: "\<not> prefix path1x path2"
-        show "path1 \<asymp> path2"
-          by (metis H13 L2H3 L3H1 Prefix2 may_be_inclusive_preserved_under_unordered_extension prefix_prefix)
-      qed
+        by (metis H13 L2H3 L2H9 Prefix2 may_be_inclusive_preserved_under_unordered_extension prefix_prefix strict_prefix_def)
     qed
 
   next
@@ -339,15 +345,12 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
         L2H2: "E \<pi>2x = Some \<sigma>2x" using L2H1 leaf.simps by auto
       have L2H3: "path1 \<asymp> path2x"
         using H1 H17 H6 L1H2 L2H2 by blast
+      have L2H8: "\<not> strict_prefix \<pi>2x \<pi>1"
+        by (metis L1H2 L2H1 leaf.cases option.distinct(1))
+      have L2H9: "\<not> strict_prefix path2x path1"
+        using H17 H6 L2H8 not_strict_prefix_preserved_under_congruent_paths by auto
       show "path1 \<asymp> path2"
-      proof cases
-        assume L3H1: "prefix path2x path1"
-        show "path1 \<asymp> path2" sorry
-      next
-        assume L3H1: "\<not> prefix path2x path1"
-        show "path1 \<asymp> path2"
-          by (metis H16 L2H3 L3H1 Prefix1 may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_prefix)
-      qed
+        by (metis H16 L2H3 L2H9 Prefix1 may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_order.dual_order.not_eq_order_implies_strict prefix_prefix)
     next
       assume L2H1: "\<not> leaf E \<pi>2x"
       have L2H2: "E \<pi>2 = Some \<sigma>2"
