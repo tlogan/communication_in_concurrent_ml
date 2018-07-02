@@ -504,6 +504,24 @@ lemma send_static_paths_of_same_run_inclusive: "
 using is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive by fastforce
 
 
+lemma equality_preserved_under_congruent': "
+  paths_congruent \<pi>1 path \<Longrightarrow>
+\<forall> \<pi>2 .
+  paths_congruent \<pi>2 path \<longrightarrow>
+  \<pi>1 = \<pi>2
+"
+apply (erule paths_congruent.induct)
+  using paths_congruent.cases apply blast
+apply (rule allI)
+apply (rule impI)
+apply (drule_tac x = "(butlast \<pi>2)" in spec; auto)
+apply (erule notE)
+apply (metis butlast_snoc paths_congruent.cases snoc_eq_iff_butlast)
+apply (rotate_tac -1)
+apply (erule paths_congruent.cases; auto)
+apply (erule nodes_congruent.cases; auto; (erule nodes_congruent.cases; auto))
+done
+
 
 lemma equality_preserved_under_congruent: "
   path1 = path2 \<Longrightarrow>
@@ -511,7 +529,7 @@ lemma equality_preserved_under_congruent: "
   paths_congruent \<pi>2 path2 \<Longrightarrow>
   \<pi>1 = \<pi>2
 "
-sorry
+by (simp add: equality_preserved_under_congruent')
 
 lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
 pathSync = pathSynca \<or> (\<not> pathSynca \<asymp> pathSync) \<Longrightarrow> 
