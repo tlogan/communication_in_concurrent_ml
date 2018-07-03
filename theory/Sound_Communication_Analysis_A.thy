@@ -187,9 +187,30 @@ proof -
     H3: "E0 \<pi>2 \<noteq> None" and
     H4: "paths_congruent \<pi>1 path1" and
     H5: "paths_congruent \<pi>2 path2"
-  from H1 H2 H4 show 
-    "path1 \<asymp> path2"
-    by (metis H3 H5 Nil_prefix Prefix2 append_is_Nil_conv fun_upd_apply list.distinct(1) paths_congruent.cases)
+  
+  from H4
+  show "path1 \<asymp> path2"
+  proof cases
+    case Empty
+    then show ?thesis
+      by (simp add: Prefix1)
+  next
+    case (Next \<pi> path x)
+    then show ?thesis
+      using H1 H2 by auto
+  next
+    case (Call \<pi> path x)
+    then show ?thesis
+      using H1 H2 by auto
+  next
+    case (Spawn \<pi> path x)
+    then show ?thesis
+      using H1 H2 by auto
+  next
+    case (Return \<pi> x \<pi>' path y)
+    then show ?thesis
+      using H1 H2 by auto
+  qed 
 qed
 
 lemma paths_equal_implies_paths_inclusive: "
@@ -215,6 +236,8 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply (metis butlast_snoc fun_upd_apply)
 done
 
+
+
 lemma not_strict_prefix_preserved_under_congruent_paths: "
 \<not> strict_prefix \<pi>1 \<pi>2 \<Longrightarrow>
 paths_congruent \<pi>1 path1 \<Longrightarrow>
@@ -224,17 +247,26 @@ paths_congruent \<pi>2 path2 \<Longrightarrow>
 sorry
 
 
-
 lemma spawn_point: "
   (E, H) \<rightarrow> (E', H') \<Longrightarrow>
   leaf E \<pi> \<Longrightarrow>
-  E' (\<pi> ;; l1) = \<sigma>1 \<Longrightarrow>
-  E' (\<pi> ;; l2) = \<sigma>2 \<Longrightarrow>
+  E' (\<pi> ;; l1) = Some \<sigma>1 \<Longrightarrow>
+  E' (\<pi> ;; l2) = Some \<sigma>2 \<Longrightarrow>
   l1 = l2 \<or> 
   (\<exists> x . l1 = (LNext x) \<and> l2 = (LSpawn x)) \<or>
   (\<exists> x . l1 = (LSpawn x) \<and> l2 = (LNext x))
 "
-sorry
+apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
+  apply (metis leaf.cases option.distinct(1) strict_prefixI')
+  apply (metis leaf.cases option.distinct(1) strict_prefixI')
+  apply (metis leaf.cases option.distinct(1) strict_prefixI')
+  apply (metis leaf.cases option.distinct(1) strict_prefixI')
+  apply (metis leaf.cases option.distinct(1) strict_prefixI')
+  apply (metis leaf.cases option.distinct(1) strict_prefixI')
+  apply (metis leaf.cases option.distinct(1) strict_prefixI')
+  apply (metis (mono_tags, lifting) append1_eq_conv fun_upd_apply leaf.cases option.distinct(1) strict_prefixI')
+  apply (smt butlast_snoc exp.inject(1) fun_upd_apply last_snoc leaf.cases option.distinct(1) option.inject state.inject strict_prefixI')
+done
 
 lemma spawn_point_preserved_under_congruent_paths: "
 l1 = l2 \<or> 
@@ -288,24 +320,25 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
     H11: "E' \<pi>2 = Some \<sigma>2"
     using H5 by blast
 
+  from H6
   obtain \<pi>1x l1 path1x n1 where
     H12: "\<pi>1x ;; l1 = \<pi>1" and
     H13: "path1x @ [n1] = path1" and
     H14: "paths_congruent \<pi>1x path1x"
-    by (metis H6 H8 paths_congruent.cases)
+    apply (rule paths_congruent.cases)
+    using H8 by blast+
 
+  from H7
   obtain \<pi>2x l2 path2x n2 where
     H15: "\<pi>2x ;; l2 = \<pi>2" and
     H16: "path2x @ [n2] = path2" and
     H17: "paths_congruent \<pi>2x path2x"
-  by (metis H7 H9 paths_congruent.cases)
-
+    apply (rule paths_congruent.cases)
+    using H9 by blast+
  
-  have H22: "paths_congruent [l1] [n1]"
-    by (metis H12 H13 H6 H8 Node append1_eq_conv append_eq_Cons_conv paths_congruent.simps)
+  have H22: "paths_congruent [l1] [n1]" sorry
 
-  have H23: "paths_congruent [l2] [n2]"
-    by (metis (no_types, lifting) Cons_eq_append_conv H15 H16 H7 H9 Node append1_eq_conv paths_congruent.simps)
+  have H23: "paths_congruent [l2] [n2]" sorry
 
   show "path1 \<asymp> path2"
   proof cases
@@ -340,7 +373,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
           l1 = l2 \<or> 
           (\<exists> x . l1 = (LNext x) \<and> l2 = (LSpawn x)) \<or>
           (\<exists> x . l1 = (LSpawn x) \<and> l2 = (LNext x))" 
-          using spawn_point H3 L1H1 by auto
+          by (smt H10 H11 H12 H14 H15 H16 H3 H7 L1H1 L2H4 L3H1 not_strict_prefix_preserved_under_congruent_paths prefix_snoc spawn_point strict_prefixI' strict_prefix_def)
 
         have L3H4: "
           n1 = n2 \<or> 
@@ -512,15 +545,7 @@ lemma equality_preserved_under_congruent': "
 "
 apply (erule paths_congruent.induct)
   using paths_congruent.cases apply blast
-apply (rule allI)
-apply (rule impI)
-apply (drule_tac x = "(butlast \<pi>2)" in spec; auto)
-apply (erule notE)
-apply (metis butlast_snoc paths_congruent.cases snoc_eq_iff_butlast)
-apply (rotate_tac -1)
-apply (erule paths_congruent.cases; auto)
-apply (erule nodes_congruent.cases; auto; (erule nodes_congruent.cases; auto))
-done
+sorry
 
 
 lemma equality_preserved_under_congruent: "

@@ -249,27 +249,50 @@ where
     dynamic_built_on_chan_exp \<rho> c (LET x = b in e)
   "
 
-
-inductive nodes_congruent :: "control_label \<Rightarrow> step_label \<Rightarrow> bool" where
+inductive balanced :: "control_path \<Rightarrow> bool" where
+  Empty: "
+    balanced []
+  " |
   Next: "
-    nodes_congruent (LNext x) (NLet x, ENext)" |
-  Call: "
-    nodes_congruent (LCall x) (NLet x, ECall x)" |
-  Return: "
-    nodes_congruent (LReturn y) (NResult y, EReturn x)" |
-  Spawn: "
-    nodes_congruent (LSpawn x) (NLet x, ESpawn)"
+    balanced [LNext x]
+  " |
+  CallReturn: "
+    balanced \<pi> \<Longrightarrow>
+    balanced ((LCall x) # (\<pi> ;; (LReturn x)))
+  " |
+  Append: "
+    balanced \<pi> \<Longrightarrow> balanced \<pi>' \<Longrightarrow>
+    balanced (\<pi> @ \<pi>')
+  "
+
+lemma call_return_balanced: "
+   balanced [LCall x, LReturn x]
+"
+using balanced.CallReturn balanced.Empty by fastforce
 
 
 inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
-  Node: "
+  Empty: "
     paths_congruent [] []
   " |
-  List: "
-    nodes_congruent l n \<Longrightarrow>
+  Next: "
     paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; l) (path @ [n])
+    paths_congruent (\<pi> ;; (LNext x)) (path @ [(NLet x, ENext)])
+  " |
+  Call: "
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (\<pi> ;; (LCall x)) (path @ [(NLet x, ECall x)])
+  " |
+  Spawn: "
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (\<pi> ;; (LSpawn x)) (path @ [(NLet x, ESpawn)])
+  " |
+  Return: "
+    paths_congruent (\<pi> @ (LCall x) # \<pi>') path \<Longrightarrow>
+    balanced \<pi>' \<Longrightarrow>
+    paths_congruent (\<pi> @ (LCall x) # \<pi>' ;; (LReturn y)) (path @ [(NResult y, EReturn x)])
   "
+
 
 inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Unordered: "
@@ -298,7 +321,7 @@ lemma no_empty_paths_congruent_mod_chan: "
   \<not> (paths_congruent_mod_chan EH c [] path)"
   apply (rule notI)
   apply (erule paths_congruent_mod_chan.cases; auto)
-  apply (metis paths_congruent.simps prefix_code(1) snoc_eq_iff_butlast)
+  apply (erule paths_congruent.cases; auto)
 done
 
 (*
