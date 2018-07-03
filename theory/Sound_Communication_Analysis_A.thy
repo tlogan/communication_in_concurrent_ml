@@ -539,13 +539,28 @@ using is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive by f
 
 lemma equality_preserved_under_congruent': "
   paths_congruent \<pi>1 path \<Longrightarrow>
-\<forall> \<pi>2 .
-  paths_congruent \<pi>2 path \<longrightarrow>
-  \<pi>1 = \<pi>2
+  \<forall> \<pi>2 .  paths_congruent \<pi>2 path \<longrightarrow> \<pi>1 = \<pi>2
 "
 apply (erule paths_congruent.induct)
   using paths_congruent.cases apply blast
-sorry
+apply (rule allI, rule impI)
+apply (drule_tac x = "butlast \<pi>2" in spec)
+apply (rotate_tac)
+apply (erule paths_congruent.cases; auto)
+apply (rule allI, rule impI)
+apply (drule_tac x = "butlast \<pi>2" in spec)
+apply (rotate_tac)
+apply (erule paths_congruent.cases; auto)
+apply (rule allI, rule impI)
+apply (drule_tac x = "butlast \<pi>2" in spec)
+apply (rotate_tac)
+apply (erule paths_congruent.cases; auto)
+apply (rule allI, rule impI)
+apply (drule_tac x = "butlast \<pi>2" in spec)
+apply (rotate_tac)
+apply (erule paths_congruent.cases; auto)
+  apply (simp add: butlast_append)+
+done
 
 
 lemma equality_preserved_under_congruent: "
@@ -647,7 +662,6 @@ inductive simple_flow_set_pool :: "abstract_value_env \<Rightarrow> flow_set \<R
 
 
 lemma simple_flow_set_pool_preserved_star: "
-
   simple_flow_set_pool V F ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]) \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
