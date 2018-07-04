@@ -108,8 +108,6 @@ lemma equality_preserved_under_congruent: "
 "
 by (simp add: equality_preserved_under_congruent')
 
-
-
 lemma paths_congruent_preserved_under_reduction: "
   paths_congruent \<pi>1 path1 \<Longrightarrow>
   paths_congruent (butlast \<pi>1) (butlast path1) 
@@ -218,42 +216,54 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
 done
 
 
-lemma asdf: "
-paths_congruent \<pi> p \<Longrightarrow>
-\<forall> \<pi>' x \<pi>'' y path n2.
-\<pi> = (\<pi>' @ LCall x # (\<pi>'' ;; LReturn y)) \<longrightarrow> p = (path @ [n2]) \<longrightarrow>
-paths_congruent (\<pi>' @ LCall x # \<pi>'') path \<longrightarrow>
-balanced \<pi>'' \<longrightarrow>
-(NResult y, EReturn x) = n2
+lemma equality_preserved_under_congruent_2': "
+  paths_congruent \<pi> path1 \<Longrightarrow>
+  \<forall> path2 .  paths_congruent \<pi> path2 \<longrightarrow> path1 = path2
 "
 apply (erule paths_congruent.induct)
-  apply blast
-  apply simp
-  apply simp
-  apply simp
-apply (rule allI)+
-apply (rule impI)+
+apply auto[1]
+apply (erule paths_congruent.cases; auto)
+apply (rule allI, rule impI)
+apply (drule_tac x = "butlast path2" in spec)
+apply (rotate_tac)
+apply (erule paths_congruent.cases; auto)
+apply (rule allI, rule impI)
+apply (drule_tac x = "butlast path2" in spec)
+apply (rotate_tac)
+apply (erule paths_congruent.cases; auto)
+apply (rule allI, rule impI)
+apply (drule_tac x = "butlast path2" in spec)
+apply (rotate_tac)
+apply (erule paths_congruent.cases; auto)
+apply (rule allI, rule impI)
+apply (drule_tac x = "butlast path2" in spec)
+apply (rotate_tac)
 apply auto
-sledgehammer
+apply (erule paths_congruent.cases; auto)
+
 sorry
 
-lemma spawn_point_preserved_under_congruent_paths: "
-l1 = l2 \<or> 
-(\<exists> x . l1 = (LNext x) \<and> l2 = (LSpawn x)) \<or>
-(\<exists> x . l1 = (LSpawn x) \<and> l2 = (LNext x)) \<Longrightarrow>
+lemma equality_preserved_under_congruent_2: "
+  \<pi>1 = \<pi>2 \<Longrightarrow>
+  paths_congruent \<pi>1 path1 \<Longrightarrow>
+  paths_congruent \<pi>2 path2 \<Longrightarrow>
+  path1 = path2
+
+"
+by (simp add: equality_preserved_under_congruent_2')
+
+
+
+
+lemma spawn_point_preserved_under_congruent_paths: " 
+l1 = (LNext x) \<Longrightarrow> l2 = (LSpawn x) \<Longrightarrow>
 paths_congruent (\<pi> ;; l1) (path @ [n1]) \<Longrightarrow>
 paths_congruent (\<pi> ;; l2) (path @ [n2]) \<Longrightarrow>
-n1 = n2 \<or> 
-(\<exists> x . n1 = (NLet x, ENext) \<and> n2 = (NLet x, ESpawn )) \<or>
-(\<exists> x . n1 = (NLet x, ESpawn ) \<and> n2 = (NLet x, ENext))
+n1 = (NLet x, ENext) \<and> n2 = (NLet x, ESpawn)
 "
 apply (erule paths_congruent.cases; auto)
-apply (erule paths_congruent.cases; auto)
-apply (erule paths_congruent.cases; auto)
-apply (erule paths_congruent.cases; auto)
-apply (erule paths_congruent.cases; auto)
-apply (erule paths_congruent.cases; auto)
-sorry
+using equality_preserved_under_congruent_2 paths_congruent.Spawn apply blast
+done
 
 lemma static_paths_of_same_run_inclusive_step: "
 \<forall>\<pi>1 \<pi>2 path1 path2.
@@ -356,7 +366,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
           n1 = n2 \<or> 
           (\<exists> x . n1 = (NLet x, ENext) \<and> n2 = (NLet x, ESpawn )) \<or>
           (\<exists> x . n1 = (NLet x, ESpawn ) \<and> n2 = (NLet x, ENext))" 
-          using H22 H23 L3H3 spawn_point_preserved_under_congruent_paths by auto
+          by (metis H12 H13 H14 H15 H16 H17 H6 H7 L3H1 L3H3 append1_eq_conv equality_preserved_under_congruent equality_preserved_under_congruent_2 spawn_point_preserved_under_congruent_paths)
 
         have L3H5: "path1x @ [n1] \<asymp> path1x @ [n2]"
           using L3H4 may_be_inclusive.intros(3) may_be_inclusive.intros(4) paths_equal_implies_paths_inclusive by blast
