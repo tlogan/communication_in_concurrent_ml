@@ -74,7 +74,7 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
 done
 
 
-lemma equality_preserved_under_congruent': "
+lemma equality_abstract_to_concrete': "
   paths_congruent \<pi>1 path \<Longrightarrow>
   \<forall> \<pi>2 .  paths_congruent \<pi>2 path \<longrightarrow> \<pi>1 = \<pi>2
 "
@@ -100,13 +100,13 @@ apply (erule paths_congruent.cases; auto)
 done
 
 
-lemma equality_preserved_under_congruent: "
+lemma equality_abstract_to_concrete: "
   path1 = path2 \<Longrightarrow>
   paths_congruent \<pi>1 path1 \<Longrightarrow>
   paths_congruent \<pi>2 path2 \<Longrightarrow>
   \<pi>1 = \<pi>2
 "
-by (simp add: equality_preserved_under_congruent')
+by (simp add: equality_abstract_to_concrete')
 
 lemma paths_congruent_preserved_under_reduction: "
   paths_congruent \<pi>1 path1 \<Longrightarrow>
@@ -142,11 +142,11 @@ prefix path1 path2 \<longrightarrow>
 prefix \<pi>1 \<pi>2
 "
 apply (erule paths_congruent.induct; auto)
-  apply (simp add: equality_preserved_under_congruent paths_congruent.Empty)
-  apply (simp add: equality_preserved_under_congruent paths_congruent.Next)
-  apply (simp add: Call equality_preserved_under_congruent)
-  apply (simp add: equality_preserved_under_congruent' paths_congruent.Spawn)
-  apply (metis (no_types, hide_lams) append_Cons append_assoc equality_preserved_under_congruent paths_congruent.Return prefix_order.eq_iff)
+  apply (simp add: equality_abstract_to_concrete paths_congruent.Empty)
+  apply (simp add: equality_abstract_to_concrete paths_congruent.Next)
+  apply (simp add: Call equality_abstract_to_concrete)
+  apply (simp add: equality_abstract_to_concrete' paths_congruent.Spawn)
+  apply (metis (no_types, hide_lams) append_Cons append_assoc equality_abstract_to_concrete paths_congruent.Return prefix_order.eq_iff)
   apply (metis append_Cons prefix_append)
 done
 
@@ -216,7 +216,36 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
 done
 
 
-lemma equality_preserved_under_congruent_2': "
+lemma equality_preserved_under_balanced_reduction': "
+balanced \<pi>1' \<Longrightarrow>
+\<forall> \<pi>1 x1 \<pi>2 x2 \<pi>2' . 
+\<pi>1 @ LCall x1 # \<pi>1' = \<pi>2 @ LCall x2 # \<pi>2' \<longrightarrow>
+balanced \<pi>2' \<longrightarrow>
+x1 = x2
+"
+sorry
+
+
+(*
+
+
+a b c d e
+
+
+
+*)
+
+
+lemma equality_preserved_under_balanced_reduction: "
+\<pi>1 @ LCall x1 # \<pi>1' = \<pi>2 @ LCall x2 # \<pi>2' \<Longrightarrow>
+balanced \<pi>1' \<Longrightarrow>
+balanced \<pi>2' \<Longrightarrow> 
+x1 = x2
+"
+sorry
+
+
+lemma equality_contcrete_to_abstract': "
   paths_congruent \<pi> path1 \<Longrightarrow>
   \<forall> path2 .  paths_congruent \<pi> path2 \<longrightarrow> path1 = path2
 "
@@ -240,17 +269,18 @@ apply (drule_tac x = "butlast path2" in spec)
 apply (rotate_tac)
 apply auto
 apply (erule paths_congruent.cases; auto)
+apply (erule paths_congruent.cases; auto)
+  using equality_preserved_under_balanced_reduction apply fastforce
+done
 
-sorry
-
-lemma equality_preserved_under_congruent_2: "
+lemma equality_contcrete_to_abstract: "
   \<pi>1 = \<pi>2 \<Longrightarrow>
   paths_congruent \<pi>1 path1 \<Longrightarrow>
   paths_congruent \<pi>2 path2 \<Longrightarrow>
   path1 = path2
 
 "
-by (simp add: equality_preserved_under_congruent_2')
+by (simp add: equality_contcrete_to_abstract')
 
 
 
@@ -262,7 +292,7 @@ paths_congruent (\<pi> ;; l2) (path @ [n2]) \<Longrightarrow>
 n1 = (NLet x, ENext) \<and> n2 = (NLet x, ESpawn)
 "
 apply (erule paths_congruent.cases; auto)
-using equality_preserved_under_congruent_2 paths_congruent.Spawn apply blast
+using equality_contcrete_to_abstract paths_congruent.Spawn apply blast
 done
 
 lemma static_paths_of_same_run_inclusive_step: "
@@ -366,7 +396,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
           n1 = n2 \<or> 
           (\<exists> x . n1 = (NLet x, ENext) \<and> n2 = (NLet x, ESpawn )) \<or>
           (\<exists> x . n1 = (NLet x, ESpawn ) \<and> n2 = (NLet x, ENext))" 
-          by (metis H12 H13 H14 H15 H16 H17 H6 H7 L3H1 L3H3 append1_eq_conv equality_preserved_under_congruent equality_preserved_under_congruent_2 spawn_point_preserved_under_congruent_paths)
+          by (metis H12 H13 H14 H15 H16 H17 H6 H7 L3H1 L3H3 append1_eq_conv equality_abstract_to_concrete equality_contcrete_to_abstract spawn_point_preserved_under_congruent_paths)
 
         have L3H5: "path1x @ [n1] \<asymp> path1x @ [n2]"
           using L3H4 may_be_inclusive.intros(3) may_be_inclusive.intros(4) paths_equal_implies_paths_inclusive by blast
@@ -536,7 +566,7 @@ paths_congruent \<pi>\<^sub>2 pathSynca \<Longrightarrow>
 
 \<pi>\<^sub>1 = \<pi>\<^sub>2
 "
-by (simp add: equality_preserved_under_congruent send_static_paths_of_same_run_inclusive)
+by (simp add: equality_abstract_to_concrete send_static_paths_of_same_run_inclusive)
 
 (* END *)
 
@@ -758,7 +788,7 @@ theorem one_shot_sound': "
  apply (frule_tac \<pi>Sync = \<pi>\<^sub>2 in isnt_send_path_sound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (simp add: equality_preserved_under_congruent send_static_paths_of_same_run_inclusive)
+ apply (simp add: equality_abstract_to_concrete send_static_paths_of_same_run_inclusive)
 done
 
 theorem one_shot_sound: "
