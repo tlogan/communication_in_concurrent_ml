@@ -288,9 +288,9 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
     paths_congruent (\<pi> ;; (LSpawn x)) (path @ [(NLet x, ESpawn)])
   " |
   Return: "
-    paths_congruent (\<pi> @ (LCall x) # \<pi>') (path @ (NLet x, ECall x) # path') \<Longrightarrow>
+    paths_congruent (\<pi> @ (LCall x) # \<pi>') path \<Longrightarrow>
     balanced \<pi>' \<Longrightarrow>
-    paths_congruent (\<pi> @ (LCall x) # \<pi>' ;; (LReturn y)) ((path @ (NLet x, ECall x) # path') @ [(NResult y, EReturn x)])
+    paths_congruent (\<pi> @ (LCall x) # \<pi>' ;; (LReturn y)) (path @ [(NResult y, EReturn x)])
   "
 
 
