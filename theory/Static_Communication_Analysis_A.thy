@@ -1,7 +1,6 @@
 theory Static_Communication_Analysis_A
   imports Main Syntax 
-    Dynamic_Semantics Static_Semantics Sound_Semantics
-    Static_Framework Sound_Framework
+    Dynamic_Semantics Static_Semantics
     Dynamic_Communication_Analysis
 begin
 
