@@ -4,6 +4,26 @@ theory Static_Communication_Analysis_A
     Dynamic_Communication_Analysis
 begin
 
+datatype node_label = NLet var | NResult var
+
+fun nodeLabel :: "exp \<Rightarrow> node_label" where
+  "nodeLabel (LET x = b in e) = NLet x" |
+  "nodeLabel (RESULT y) = NResult y"
+
+type_synonym node_set = "node_label set"
+
+type_synonym node_map = "node_label \<Rightarrow> var set"
+
+datatype edge_label = ENext | ESpawn | ECall | EReturn
+
+type_synonym flow_label = "(node_label \<times> edge_label \<times> node_label)"
+
+type_synonym flow_set = "flow_label set"
+
+type_synonym step_label = "(node_label \<times> edge_label)"
+
+type_synonym abstract_path = "step_label list"
+
 inductive may_be_static_send_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
   Sync: "
     {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
@@ -142,7 +162,7 @@ inductive simple_flow_set :: "abstract_value_env \<Rightarrow> (node_label * edg
 
 
 
-inductive may_be_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive may_be_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
     may_be_path V F start isEnd []
@@ -159,7 +179,7 @@ inductive may_be_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow
   "
 
 
-inductive may_be_inclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
+inductive may_be_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
   Prefix1: "
     prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>
     \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
@@ -200,7 +220,7 @@ lemma may_be_inclusive_preserved_under_unordered_double_extension: "
 by (metis may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
 
 
-inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive singular :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   equal: "
     \<pi>\<^sub>1 = \<pi>\<^sub>2 \<Longrightarrow> 
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
@@ -210,7 +230,7 @@ inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool"
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
-inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   ordered: "
     ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> 
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
@@ -222,46 +242,46 @@ inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow>
 
 
 
-inductive every_two_static_paths  :: "(static_path \<Rightarrow> bool) \<Rightarrow> (static_path \<Rightarrow> static_path \<Rightarrow> bool) \<Rightarrow> bool" where
+inductive every_two_abstract_paths  :: "(abstract_path \<Rightarrow> bool) \<Rightarrow> (abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool) \<Rightarrow> bool" where
   pred: "
     (\<forall> path1 path2 . P path1 \<longrightarrow> P path2 \<longrightarrow> 
       R path1 path2) \<Longrightarrow>
-    every_two_static_paths P R
+    every_two_abstract_paths P R
   "
 
 
 inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
+    every_two_abstract_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
 inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_abstract_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_abstract_paths (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
 inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_abstract_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
 inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two_abstract_paths (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_fan_in V e xC 
   "
 
 
 
-inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive paths_congruent :: "control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
     paths_congruent [] []
   " |
@@ -282,7 +302,7 @@ inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarro
     paths_congruent (\<pi> ;; (LReturn x)) (path @ [(NResult x, EReturn)])
   " 
 
-lemma static_paths_of_same_run_inclusive_base: "
+lemma abstract_paths_of_same_run_inclusive_base: "
   E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
@@ -522,7 +542,7 @@ apply (erule paths_congruent.cases; auto)
 using equality_contcrete_to_abstract paths_congruent.Spawn apply blast
 done
 
-lemma static_paths_of_same_run_inclusive_step: "
+lemma abstract_paths_of_same_run_inclusive_step: "
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
   E \<pi>2 \<noteq> None \<longrightarrow>
@@ -679,7 +699,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 
 qed
 
-lemma static_paths_of_same_run_inclusive: "
+lemma abstract_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
@@ -716,7 +736,7 @@ proof -
   proof induction
     case (refl z)
     then show ?case
-      using static_paths_of_same_run_inclusive_base by blast
+      using abstract_paths_of_same_run_inclusive_base by blast
   next
     case (step x y z)
 
@@ -745,7 +765,7 @@ proof -
 
       have 
         "path1 \<asymp> path2"
-        using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 static_paths_of_same_run_inclusive_step step.hyps(1) step.hyps(2) by blast
+        using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 abstract_paths_of_same_run_inclusive_step step.hyps(1) step.hyps(2) by blast
     }
     then show ?case by blast
   qed
@@ -770,7 +790,23 @@ proof -
     "\<E> \<pi> \<noteq> None" by blast
 qed
 
-lemma send_static_paths_of_same_run_inclusive: "
+lemma is_recv_path_implies_nonempty_pool: "
+  is_recv_path \<E> (Ch \<pi>C xC) \<pi> \<Longrightarrow> 
+  \<E> \<pi> \<noteq> None
+"
+proof -
+  assume H1: "is_recv_path \<E> (Ch \<pi>C xC) \<pi>"
+  
+  then have
+    H2: "
+      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) 
+    " using is_recv_path.simps by auto
+
+  then show 
+    "\<E> \<pi> \<noteq> None" by blast
+qed
+
+lemma send_abstract_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
@@ -778,10 +814,10 @@ lemma send_static_paths_of_same_run_inclusive: "
   paths_congruent \<pi>2 path2 \<Longrightarrow>
   path1 \<asymp> path2
 "
-using is_send_path_implies_nonempty_pool static_paths_of_same_run_inclusive by fastforce
+using is_send_path_implies_nonempty_pool abstract_paths_of_same_run_inclusive by fastforce
 
 
-lemma send_static_paths_equal_exclusive_implies_dynamic_paths_equal: "
+lemma send_abstract_paths_equal_exclusive_implies_dynamic_paths_equal: "
 pathSync = pathSynca \<or> (\<not> pathSynca \<asymp> pathSync) \<Longrightarrow> 
 
 ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
@@ -793,7 +829,7 @@ paths_congruent \<pi>\<^sub>2 pathSynca \<Longrightarrow>
 
 \<pi>\<^sub>1 = \<pi>\<^sub>2
 "
-by (simp add: equality_abstract_to_concrete send_static_paths_of_same_run_inclusive)
+by (simp add: equality_abstract_to_concrete send_abstract_paths_of_same_run_inclusive)
 
 (* END *)
 
@@ -941,6 +977,18 @@ lemma isnt_send_evt_sound: "
   apply (drule values_not_bound_sound; assumption?; auto)
 done
 
+lemma isnt_recv_evt_sound: "
+  \<lbrakk>
+    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
+    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H');
+    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    (V, C) \<Turnstile>\<^sub>e e
+  \<rbrakk> \<Longrightarrow>
+  {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> V x\<^sub>e
+"
+  apply (drule values_not_bound_sound; assumption?; auto)
+done
+
 lemma isnt_send_chan_sound: "
   \<lbrakk>
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> xC));
@@ -964,6 +1012,29 @@ lemma isnt_send_chan_sound: "
  apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
 done
 
+lemma isnt_recv_chan_sound: "
+  \<lbrakk>
+    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi> xC));
+    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
+    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H');
+    (V, C) \<Turnstile>\<^sub>e e
+  \<rbrakk> \<Longrightarrow> 
+  ^Chan xC \<in> V x\<^sub>r\<^sub>c
+"
+ apply (frule may_be_static_eval_to_pool)
+ apply (drule may_be_static_eval_preserved_under_concur_step_star[of _ _ _ ]; assumption?)
+ apply (erule may_be_static_eval_pool.cases; auto)
+ apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
+ apply (erule may_be_static_eval_state.cases; auto)
+ apply (erule may_be_static_eval_env.cases; auto)
+ apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e)"]; simp)
+ apply (erule conjE)
+ apply (erule may_be_static_eval_value.cases; auto)
+ apply (erule may_be_static_eval_env.cases; auto)
+ apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
+done
+
 lemma isnt_send_site_sound: "
   \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
@@ -978,6 +1049,23 @@ lemma isnt_send_site_sound: "
  apply (rule exI[of _ x\<^sub>m]; auto?)
  apply (rule exI[of _ x\<^sub>e]; auto?)
  apply (blast dest: isnt_send_evt_sound)
+ apply (rule exI; auto?)
+ apply (erule isnt_exp_sound; auto)
+done
+
+lemma isnt_recv_site_sound: "
+  \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<rho> x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e) \<Longrightarrow>
+  \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  may_be_static_recv_node_label V e xC (NLet x\<^sub>y)
+"
+ apply (unfold may_be_static_recv_node_label.simps; auto)
+ apply (rule exI[of _ x\<^sub>r\<^sub>c]; auto)
+ apply (auto simp: isnt_recv_chan_sound)
+ apply (rule exI[of _ x\<^sub>e]; auto?)
+ apply (blast dest: isnt_recv_evt_sound)
  apply (rule exI; auto?)
  apply (erule isnt_exp_sound; auto)
 done
@@ -997,25 +1085,39 @@ lemma isnt_send_path_sound: "
  apply (frule isnt_path_sound; auto?)
 done
 
+lemma isnt_recv_path_sound: "
+  is_recv_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
+  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  simple_flow_set V F e \<Longrightarrow>
+  \<exists> pathSync .
+    (paths_congruent \<pi>Sync pathSync) \<and> 
+    may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC) pathSync
+"
+ apply (unfold is_recv_path.simps; auto)
+ apply (frule_tac x\<^sub>r\<^sub>c = x\<^sub>r\<^sub>c and \<pi>C = \<pi>C and \<rho>\<^sub>e = \<rho>\<^sub>e in isnt_recv_site_sound; auto?)
+ apply (frule isnt_path_sound; auto?)
+done
+
 (* END PATH SOUND *)
 
 
 
 theorem one_shot_sound': "
-  every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
+  every_two_abstract_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
   simple_flow_set V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
- apply (simp add: every_two_dynamic_paths.simps every_two_static_paths.simps singular.simps; auto)
+ apply (simp add: every_two_dynamic_paths.simps every_two_abstract_paths.simps singular.simps; auto)
 
  apply (frule_tac \<pi>Sync = \<pi>\<^sub>1 in isnt_send_path_sound; auto)
  apply (drule_tac x = pathSync in spec)
  apply (frule_tac \<pi>Sync = \<pi>\<^sub>2 in isnt_send_path_sound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (simp add: equality_abstract_to_concrete send_static_paths_of_same_run_inclusive)
+ apply (simp add: equality_abstract_to_concrete send_abstract_paths_of_same_run_inclusive)
 done
 
 theorem one_shot_sound: "
@@ -1033,15 +1135,17 @@ done
 
 
 theorem noncompetitive_send_to_ordered_send: "
-  every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+  every_two_abstract_paths (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
   simple_flow_set V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
-apply (simp add: every_two_static_paths.simps noncompetitive.simps; auto?)
-using isnt_send_path_sound static_paths_of_same_run_inclusive sorry
-
+apply (simp add: every_two_abstract_paths.simps noncompetitive.simps; auto?)
+apply (simp add: every_two_dynamic_paths.simps; auto)
+  using isnt_send_path_sound abstract_paths_of_same_run_inclusive 
+  apply (meson is_send_path_implies_nonempty_pool prefix_abstract_to_concrete)
+done
 
 theorem fan_out_sound: "
   \<lbrakk>
@@ -1057,13 +1161,17 @@ theorem fan_out_sound: "
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two_static_paths (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+   every_two_abstract_paths (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
    simple_flow_set V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
    every_two_dynamic_paths (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
-sorry
+apply (simp add: every_two_abstract_paths.simps noncompetitive.simps; auto?)
+apply (simp add: every_two_dynamic_paths.simps; auto)
+  using isnt_recv_path_sound abstract_paths_of_same_run_inclusive 
+apply (meson is_recv_path_implies_nonempty_pool prefix_abstract_to_concrete)
+done
 
 
 theorem fan_in_sound: "
@@ -1092,7 +1200,5 @@ theorem one_to_one_sound: "
  apply (unfold one_to_one.simps)
  apply (simp add: noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
 done
-
-
 
 end

@@ -1718,27 +1718,6 @@ proof -
 qed
 
 
-datatype node_label = NLet var | NResult var
-
-fun nodeLabel :: "exp \<Rightarrow> node_label" where
-  "nodeLabel (LET x = b in e) = NLet x" |
-  "nodeLabel (RESULT y) = NResult y"
-
-type_synonym node_set = "node_label set"
-
-type_synonym node_map = "node_label \<Rightarrow> var set"
-
-datatype edge_label = ENext | ESpawn | ECall | EReturn
-
-type_synonym flow_label = "(node_label \<times> edge_label \<times> node_label)"
-
-type_synonym flow_set = "flow_label set"
-
-type_synonym step_label = "(node_label \<times> edge_label)"
-
-type_synonym static_path = "step_label list"
-
-
 inductive is_super_exp :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
   Refl : "
     is_super_exp e e
