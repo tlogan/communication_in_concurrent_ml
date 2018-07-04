@@ -5,21 +5,9 @@ theory Static_Communication_Analysis
     Static_Framework
 begin
 
-inductive may_be_static_send_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
-  Sync: "
-    {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
-    {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
-    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
-    may_be_static_send_node_label V e xC (NLet x)
-  "
+(*
 
-inductive may_be_static_recv_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
-  Sync: "
-    {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
-    {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
-    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
-    may_be_static_recv_node_label V e xC (NLet x)
-  "
+
 
 
 inductive static_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> (var \<Rightarrow> node_label \<Rightarrow> bool) \<Rightarrow> exp \<Rightarrow> bool"  where
@@ -532,13 +520,6 @@ inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow>
   "*)
 
 
-inductive every_two_static_paths  :: "(static_path \<Rightarrow> bool) \<Rightarrow> (static_path \<Rightarrow> static_path \<Rightarrow> bool) \<Rightarrow> bool" where
-  pred: "
-    (\<forall> path1 path2 . P path1 \<longrightarrow> P path2 \<longrightarrow> 
-      R path1 path2) \<Longrightarrow>
-    every_two_static_paths P R
-  "
-
 
 inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
@@ -574,3 +555,5 @@ inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> v
   "
 
 end
+
+*)

@@ -6,7 +6,7 @@ theory Sound_Communication_Analysis
     Static_Framework Sound_Framework
     Dynamic_Communication_Analysis Static_Communication_Analysis
 begin
-
+(*
 (*
 
 
@@ -269,29 +269,6 @@ lemma call_return_balanced: "
    balanced [LCall x, LReturn x]
 "
 using balanced.CallReturn balanced.Empty by fastforce
-
-
-inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
-  Empty: "
-    paths_congruent [] []
-  " |
-  Next: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; (LNext x)) (path @ [(NLet x, ENext)])
-  " |
-  Call: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; (LCall x)) (path @ [(NLet x, ECall x)])
-  " |
-  Spawn: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; (LSpawn x)) (path @ [(NLet x, ESpawn)])
-  " |
-  Return: "
-    paths_congruent (\<pi> @ (LCall x) # \<pi>') path \<Longrightarrow>
-    balanced \<pi>' \<Longrightarrow>
-    paths_congruent (\<pi> @ (LCall x) # \<pi>' ;; (LReturn y)) (path @ [(NResult y, EReturn x)])
-  "
 
 
 inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
@@ -988,3 +965,4 @@ qed
 *)
 
 end
+*)

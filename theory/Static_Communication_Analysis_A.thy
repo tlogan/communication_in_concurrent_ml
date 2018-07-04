@@ -3,11 +3,26 @@ theory Static_Communication_Analysis_A
     Dynamic_Semantics Static_Semantics
     Dynamic_Communication_Analysis
     Static_Framework
-    Static_Communication_Analysis
 begin
 
+inductive may_be_static_send_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
+  Sync: "
+    {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
+    {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
+    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
+    may_be_static_send_node_label V e xC (NLet x)
+  "
 
-inductive simple_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> exp \<Rightarrow> bool"  where
+inductive may_be_static_recv_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
+  Sync: "
+    {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
+    {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
+    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
+    may_be_static_recv_node_label V e xC (NLet x)
+  "
+
+
+inductive simple_flow_set :: "abstract_value_env \<Rightarrow> (node_label * edge_label * node_label) set \<Rightarrow> exp \<Rightarrow> bool"  where
   Result: "
     simple_flow_set V F (RESULT x)
   " |
@@ -103,10 +118,10 @@ inductive simple_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Righta
   Let_Case: "
     \<lbrakk>
       {
-        (NLet x, ECall x, nodeLabel e\<^sub>l),
-        (NLet x, ECall x, nodeLabel e\<^sub>r),
-        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn x, nodeLabel e),
-        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn x, nodeLabel e)
+        (NLet x, ENext, nodeLabel e\<^sub>l),
+        (NLet x, ENext, nodeLabel e\<^sub>r),
+        (NResult (\<lfloor>e\<^sub>l\<rfloor>), ENext, nodeLabel e),
+        (NResult (\<lfloor>e\<^sub>r\<rfloor>), ENext, nodeLabel e)
       } \<subseteq> F;
       simple_flow_set V F e\<^sub>l;
       simple_flow_set V F e\<^sub>r;
@@ -118,8 +133,8 @@ inductive simple_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Righta
     \<lbrakk>
       (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow>
         {
-          (NLet x, ECall x, nodeLabel e\<^sub>b),
-          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn x, nodeLabel e)
+          (NLet x, ENext, nodeLabel e\<^sub>b),
+          (NResult (\<lfloor>e\<^sub>b\<rfloor>), ENext, nodeLabel e)
         } \<subseteq> F);
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
@@ -204,6 +219,15 @@ inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow>
   exclusive: "
     \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow> 
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
+  "
+
+
+
+inductive every_two_static_paths  :: "(static_path \<Rightarrow> bool) \<Rightarrow> (static_path \<Rightarrow> static_path \<Rightarrow> bool) \<Rightarrow> bool" where
+  pred: "
+    (\<forall> path1 path2 . P path1 \<longrightarrow> P path2 \<longrightarrow> 
+      R path1 path2) \<Longrightarrow>
+    every_two_static_paths P R
   "
 
 

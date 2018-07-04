@@ -5,9 +5,23 @@ theory Sound_Communication_Analysis_A
     Dynamic_Semantics Static_Semantics Sound_Semantics
     Static_Framework Sound_Framework
     Dynamic_Communication_Analysis 
-    Static_Communication_Analysis Static_Communication_Analysis_A
-    Sound_Communication_Analysis
+    Static_Communication_Analysis_A
 begin
+
+
+
+inductive paths_congruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  Empty: "
+    paths_congruent [] []
+  " |
+  Next: "
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (\<pi> ;; (LNext x)) (path @ [(NLet x, ENext)])
+  " |
+  Spawn: "
+    paths_congruent \<pi> path \<Longrightarrow>
+    paths_congruent (\<pi> ;; (LSpawn x)) (path @ [(NLet x, ESpawn)])
+  "
 
 lemma static_paths_of_same_run_inclusive_base: "
   E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
@@ -36,15 +50,7 @@ proof -
     then show ?thesis
       using H1 H2 by auto
   next
-    case (Call \<pi> path x)
-    then show ?thesis
-      using H1 H2 by auto
-  next
     case (Spawn \<pi> path x)
-    then show ?thesis
-      using H1 H2 by auto
-  next
-    case (Return \<pi> x \<pi>' path y)
     then show ?thesis
       using H1 H2 by auto
   qed 
@@ -88,15 +94,6 @@ apply (rule allI, rule impI)
 apply (drule_tac x = "butlast \<pi>2" in spec)
 apply (rotate_tac)
 apply (erule paths_congruent.cases; auto)
-apply (rule allI, rule impI)
-apply (drule_tac x = "butlast \<pi>2" in spec)
-apply (rotate_tac)
-apply (erule paths_congruent.cases; auto)
-apply (rule allI, rule impI)
-apply (drule_tac x = "butlast \<pi>2" in spec)
-apply (rotate_tac)
-apply (erule paths_congruent.cases; auto)
-  apply (simp add: butlast_append)+
 done
 
 
@@ -114,7 +111,6 @@ lemma paths_congruent_preserved_under_reduction: "
 "
 apply (erule paths_congruent.cases; auto)
   apply (simp add: paths_congruent.Empty)
-  apply (simp add: butlast_append)
 done
 
 lemma strict_prefix_preserved: "
@@ -128,8 +124,6 @@ apply (erule paths_congruent.cases; auto)
   using prefix_bot.bot.not_eq_extremum apply blast
   using prefix_order.order.strict_implies_order prefix_snocD apply fastforce
   using prefix_order.dual_order.strict_implies_order prefix_snocD apply fastforce
-  apply (metis prefix_snoc prefix_snocD strict_prefixE)
-  apply (metis prefix_snoc prefix_snocD strict_prefixE)
 done
 
 
@@ -144,10 +138,7 @@ prefix \<pi>1 \<pi>2
 apply (erule paths_congruent.induct; auto)
   apply (simp add: equality_abstract_to_concrete paths_congruent.Empty)
   apply (simp add: equality_abstract_to_concrete paths_congruent.Next)
-  apply (simp add: Call equality_abstract_to_concrete)
   apply (simp add: equality_abstract_to_concrete' paths_congruent.Spawn)
-  apply (metis (no_types, hide_lams) append_Cons append_assoc equality_abstract_to_concrete paths_congruent.Return prefix_order.eq_iff)
-  apply (metis append_Cons prefix_append)
 done
 
 lemma prefix_preserved_under_congruent_paths: "
@@ -170,28 +161,9 @@ apply (erule paths_congruent.cases; auto)
 apply (erule paths_congruent.cases; auto)
   using prefix_bot.bot.not_eq_extremum apply blast
   using prefix_bot.bot.not_eq_extremum apply blast
-  using prefix_bot.bot.not_eq_extremum apply blast
-  using prefix_bot.bot.not_eq_extremum apply blast
   apply (smt Nil_is_append_conv append_butlast_last_id paths_congruent.Next paths_congruent_preserved_under_reduction prefix_def prefix_order.dual_order.order_iff_strict prefix_order.less_irrefl prefix_preserved_under_congruent_paths prefix_snoc prefix_snocD)
-  apply (smt Nil_is_append_conv append_butlast_last_id paths_congruent.Call paths_congruent_preserved_under_reduction prefix_def prefix_order.dual_order.order_iff_strict prefix_order.less_irrefl prefix_preserved_under_congruent_paths prefix_snoc prefix_snocD)
-  apply (smt Nil_is_append_conv append_butlast_last_id paths_congruent.Spawn paths_congruent_preserved_under_reduction prefix_def prefix_order.dual_order.order_iff_strict prefix_order.less_irrefl prefix_preserved_under_congruent_paths prefix_snoc prefix_snocD)
-  using Nil_is_append_conv append_butlast_last_id paths_congruent.Return paths_congruent_preserved_under_reduction prefix_def prefix_order.dual_order.order_iff_strict prefix_order.less_irrefl prefix_preserved_under_congruent_paths prefix_snoc prefix_snocD
-proof -
-  fix \<pi> :: "control_label list" and x :: Syntax.var and \<pi>' :: "control_label list" and path :: "(node_label \<times> edge_label) list" and y :: Syntax.var
-  assume a1: "\<pi>1 = \<pi> @ LCall x # (\<pi>' ;; LReturn y)"
-  assume a2: "path1 = path @ [(NResult y, EReturn x)]"
-  assume a3: "paths_congruent (\<pi> @ LCall x # \<pi>') path"
-  assume a4: "balanced \<pi>'"
-  assume a5: "paths_congruent \<pi>2 path2"
-  assume a6: "strict_prefix (path @ [(NResult y, EReturn x)]) path2"
-  assume a7: "\<not> strict_prefix (\<pi> @ LCall x # (\<pi>' ;; LReturn y)) \<pi>2"
-  have f8: "paths_congruent \<pi>1 path1"
-    using a4 a3 a2 a1 paths_congruent.Return by auto
-  have "prefix path1 (butlast path2)"
-    using a6 a2 by (metis (no_types) Nil_is_append_conv append_butlast_last_id append_self_conv list.distinct(1) prefix_order.dual_order.order_iff_strict prefix_snoc strict_prefixE')
-  then show False
-    using f8 a7 a6 a5 a2 a1 by (metis butlast.simps(2) butlast_append list.distinct(1) paths_congruent_preserved_under_reduction prefix_order.antisym prefix_order.dual_order.order_iff_strict prefix_preserved_under_congruent_paths prefixeq_butlast same_append_eq snoc_eq_iff_butlast)
-qed
+ apply (smt Nil_is_append_conv append_butlast_last_id paths_congruent.Spawn paths_congruent_preserved_under_reduction prefix_def prefix_order.dual_order.order_iff_strict prefix_order.less_irrefl prefix_preserved_under_congruent_paths prefix_snoc prefix_snocD)
+done
 
 
 lemma spawn_point: "
@@ -216,33 +188,6 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
 done
 
 
-lemma equality_preserved_under_balanced_reduction': "
-balanced \<pi>1' \<Longrightarrow>
-\<forall> \<pi>1 x1 \<pi>2 x2 \<pi>2' . 
-\<pi>1 @ LCall x1 # \<pi>1' = \<pi>2 @ LCall x2 # \<pi>2' \<longrightarrow>
-balanced \<pi>2' \<longrightarrow>
-x1 = x2
-"
-sorry
-
-
-(*
-
-
-a b c d e
-
-
-
-*)
-
-
-lemma equality_preserved_under_balanced_reduction: "
-\<pi>1 @ LCall x1 # \<pi>1' = \<pi>2 @ LCall x2 # \<pi>2' \<Longrightarrow>
-balanced \<pi>1' \<Longrightarrow>
-balanced \<pi>2' \<Longrightarrow> 
-x1 = x2
-"
-sorry
 
 
 lemma equality_contcrete_to_abstract': "
@@ -260,17 +205,6 @@ apply (rule allI, rule impI)
 apply (drule_tac x = "butlast path2" in spec)
 apply (rotate_tac)
 apply (erule paths_congruent.cases; auto)
-apply (rule allI, rule impI)
-apply (drule_tac x = "butlast path2" in spec)
-apply (rotate_tac)
-apply (erule paths_congruent.cases; auto)
-apply (rule allI, rule impI)
-apply (drule_tac x = "butlast path2" in spec)
-apply (rotate_tac)
-apply auto
-apply (erule paths_congruent.cases; auto)
-apply (erule paths_congruent.cases; auto)
-  using equality_preserved_under_balanced_reduction apply fastforce
 done
 
 lemma equality_contcrete_to_abstract: "
