@@ -1,6 +1,7 @@
 \documentclass{article}
 
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{listings}
 
 
@@ -11,29 +12,29 @@
 \usepackage{color}
  
 \iffalse
-    \definecolor{codegreen}{rgb}{0,0.6,0}
-    \definecolor{codegray}{rgb}{0.5,0.5,0.5}
-    \definecolor{codepurple}{rgb}{0.58,0,0.82}
-    \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-    backgroundcolor=\color{backcolour},   
-    commentstyle=\color{codegreen},
-    keywordstyle=\color{magenta},
-    numberstyle=\small\color{codegray},
-    stringstyle=\color{codepurple},
+  \definecolor{codegreen}{rgb}{0,0.6,0}
+  \definecolor{codegray}{rgb}{0.5,0.5,0.5}
+  \definecolor{codepurple}{rgb}{0.58,0,0.82}
+  \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+  backgroundcolor=\color{backcolour},   
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\small\color{codegray},
+  stringstyle=\color{codepurple},
 \fi
  
 \lstdefinestyle{codestyle1}{
-    basicstyle=\ttfamily\small,
-    breakatwhitespace=false,         
-    breaklines=true,                 
-    captionpos=b,                    
-    keepspaces=true,                 
-    numbers=left,                    
-    numbersep=5pt,                  
-    showspaces=false,                
-    showstringspaces=false,
-    showtabs=false,                  
-    tabsize=2
+  basicstyle=\ttfamily\small,
+  breakatwhitespace=false,     
+  breaklines=true,         
+  captionpos=b,          
+  keepspaces=true,         
+  numbers=left,          
+  numbersep=5pt,          
+  showspaces=false,        
+  showstringspaces=false,
+  showtabs=false,          
+  tabsize=2
 }
  
 
@@ -43,506 +44,571 @@
 \title{Formal Theory of Communication Topology in Concurrent ML}
 \author{Thomas Logan}
 \begin{document}
-    \maketitle
-    \pagenumbering{gobble}
+  \maketitle
+  \pagenumbering{gobble}
 
-    \newpage
-    \pagenumbering{arabic}
+  \newpage
+  \pagenumbering{arabic}
 
-    \section{Mathematical Artifacts}
+  \section{Mathematical Artifacts}
 
-    \begin{equation*}
-        f(x) = x^2
-        \end{equation*}
+  \begin{equation*}
+    f(x) = x^2
+    \end{equation*}
 
-    \begin{lstlisting}[language=ML, style=codestyle1]
-        type thread_id
-        val spawn: (unit -> unit) -> thread_id
+  \begin{lstlisting}[language=ML, style=codestyle1]
+    type thread_id
+    val spawn: (unit -> unit) -> thread_id
 
-        type 'a chan
-        val channel : unit -> 'a chan
-        val recv : 'a chan -> 'a
-        val send : ('a chan * 'a) -> unit
-        \end{lstlisting}
+    type 'a chan
+    val channel : unit -> 'a chan
+    val recv : 'a chan -> 'a
+    val send : ('a chan * 'a) -> unit
+    \end{lstlisting}
 
-    \begin{lstlisting}[language=ML, style=codestyle1]
+  \begin{lstlisting}[language=ML, style=codestyle1]
 
-        signature SERV = sig 
-            type serv
-            val make : unit -> serv
-            val call : serv * int -> int
-        end
+    signature SERV = sig 
+      type serv
+      val make : unit -> serv
+      val call : serv * int -> int
+    end
 
-        structure Serv : SERV = struct 
-            datatype serv = S of (int * int chan) chan 
+    structure Serv : SERV = struct 
+      datatype serv = S of (int * int chan) chan 
 
-            fun make () = let 
-                val reqCh = channel ()
-                fun loop state = let
-                    val (v, replCh) = recv reqCh in 
-                    send (replCh, state);
-                    loop v end in
-                spawn (fn () => loop 0);
-                S reqCh end 
+      fun make () = let 
+        val reqCh = channel ()
+        fun loop state = let
+          val (v, replCh) = recv reqCh in 
+          send (replCh, state);
+          loop v end in
+        spawn (fn () => loop 0);
+        S reqCh end 
 
-            fun call (server, v) = let 
-                val S reqCh = server
-                val replCh = channel () in 
-                send (reqCh, (v, replCh));
-                recv replCh end end
-
-        \end{lstlisting}
-
-    \begin{lstlisting}[language=ML, style=codestyle1]
-
-        type 'a event
-        val sync : 'a event -> 'a
-        val recvEvt : 'a chan -> 'a event
-        val sendEvt : 'a chan * 'a -> unit event
-        val choose: 'a event * 'a event -> 'a event
-
-        fun send (ch, v) = sync (sendEvt (ch, v))
-        fun recv v = sync (recvEvt v)
-
-        val thenEvt: 'a event * ('a -> 'b event) -> 'b event
-
-        \end{lstlisting}
-
-    \begin{lstlisting}[language=ML, style=codestyle1]
-        val server = Serv.make ()
-        val _ = spawn (fn () => Serv.call (server, 35))
-        val _ = spawn (fn () => 
-            Serv.call (server, 12); 
-            Serv.call (server, 13))
-        val _ = spawn (fn () => Serv.call (server, 81))
-        val _ = spawn (fn () => Serv.call (server, 44))
-        \end{lstlisting}
-
-    \begin{lstlisting}[language=ML, style=codestyle1]
-        structure Serv : SERV = struct 
-            datatype serv = S of (int * int chan) chan 
-
-            fun make () = let 
-
-                val reqCh = FanIn.channel()
-
-                fun loop state = let
-                    val (v, replCh) = FanIn.recv reqCh in 
-                    OneShot.send (replCh, state);
-                    loop v end in
-
-                spawn (fn () => loop 0);
-                S reqCh end 
-
-            fun call (server, v) = let 
-                val S reqCh = server
-                val replCh = OneShot.channel () in 
-                FanIn.send (reqCh, (v, replCh));
-                OneShot.recv replCh end
-
-            end
-        \end{lstlisting}
-
-    \begin{lstlisting}[language=ML, style=codestyle1]
-        let
-            val w = 4
-            val x = ref 1
-            val y = ref 2
-            val z = (!x + 1) + (!y + 2) + (w - 3)
-            val w = 1 in
-            y := 0;
-            (!y + 2) - (!x + 1) * (w - 3) end
-        \end{lstlisting}
-
-    \begin{lstlisting}[language=ML, style=codestyle1]
-        let 
-            val x = 1    
-            val y = 2
-            val z = ref (4 * 73)
-            val x = 4 in 
-            z := 1; 
-            x * !z end
-        \end{lstlisting}
-
-    \begin{lstlisting}[language=ML, style=codestyle1]
-
-        let 
-            val f = fn x => x 1
-            val g = fn y => y + 2
-            val h = fn z => z + 3 in 
-            (f g) + (f h) end
+      fun call (server, v) = let 
+        val S reqCh = server
+        val replCh = channel () in 
+        send (reqCh, (v, replCh));
+        recv replCh end end
 
     \end{lstlisting}
 
+  \begin{lstlisting}[language=ML, style=codestyle1]
 
-    \begin{lstlisting}[style=codestyle1, escapechar=\%]
+    type 'a event
+    val sync : 'a event -> 'a
+    val recvEvt : 'a chan -> 'a event
+    val sendEvt : 'a chan * 'a -> unit event
+    val choose: 'a event * 'a event -> 'a event
 
-        datatype 'a list = Nil | Cons 'a ('a list)
+    fun send (ch, v) = sync (sendEvt (ch, v))
+    fun recv v = sync (recvEvt v)
 
-        inductive sorted ::
-            ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$%
-            'a list %$\Rightarrow$% bool where
-            Nil : sorted P Nil |
-            Single : sorted P (Cons x Nil) |
-            Cons :
-                P x y %$\Longrightarrow$%
-                sorted P (Cons y ys) %$\Longrightarrow$%
-                sorted P (Cons x (Cons y ys))
-        \end{lstlisting}
+    val thenEvt: 'a event * ('a -> 'b event) -> 'b event
 
-      
-    \begin{lstlisting}[style=codestyle1, escapechar=\%]
-        datatype nat = Z | S nat 
-
-        inductive lte :: nat %$\Rightarrow$% nat %$\Rightarrow$% bool where
-            Eq : lte n n |
-            Lt : lte n1 n2 %$\Longrightarrow$% lte n1 (S n2)
-
-        theorem "
-            sorted lte
-                (Cons (Z) (Cons (S Z)
-                    (Cons (S Z) (Cons
-                        (S (S (S Z))) Nil))))"
-            apply (rule Cons)
-            apply (rule Lt)
-            apply (rule Eq)
-            apply (rule Cons)
-            apply (rule Eq)
-            apply (rule Cons)
-            apply (rule Lt)
-            apply (rule Lt)
-            apply (rule Eq)
-            apply (rule Single)
-            done
-        \end{lstlisting}
-
-    \begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-        definition True :: bool where 
-            True %$\equiv$% ((%$\lambda$%x::bool. x) = (%$\lambda$%x. x))
-
-        definition False :: bool where 
-            False %$\equiv$% (%$\forall$%P. P)
-
-        \end{lstlisting}
-
-    \begin{lstlisting}[language=ML, style=codestyle1]
-
-        signature CHAN = sig
-            type 'a chan 
-            val channel: unit -> 'a chan
-            val send: 'a chan * 'a -> unit
-            val recv: 'a chan -> 'a
-            end       
     \end{lstlisting}
 
-    \begin{lstlisting}[language=ML, style=codestyle1]
+  \begin{lstlisting}[language=ML, style=codestyle1]
+    val server = Serv.make ()
+    val _ = spawn (fn () => Serv.call (server, 35))
+    val _ = spawn (fn () => 
+      Serv.call (server, 12); 
+      Serv.call (server, 13))
+    val _ = spawn (fn () => Serv.call (server, 81))
+    val _ = spawn (fn () => Serv.call (server, 44))
+    \end{lstlisting}
 
-        structure ManyToManyChan : CHAN = struct
-            type message_queue = 'a option ref queue
+  \begin{lstlisting}[language=ML, style=codestyle1]
+    structure Serv : SERV = struct 
+      datatype serv = S of (int * int chan) chan 
 
-            datatype 'a chan_content = 
-                Send of (condition * 'a) queue | 
-                Recv of (condition * 'a option ref) queue | 
-                Inac
+      fun make () = let 
 
-            datatype 'a chan =
-                Ch of 'a chan_content ref * mutex_lock 
+        val reqCh = FanIn.channel()
 
-            fun channel () = Ch (ref Inac, mutexLock ())
+        fun loop state = let
+          val (v, replCh) = FanIn.recv reqCh in 
+          OneShot.send (replCh, state);
+          loop v end in
 
-            fun send (Ch (conRef, lock)) m = 
-                acquire lock;
-                (case !conRef of
-                    Recv q => let
-                        val (recvCond, mopRef) = dequeue q in
-                        mopRef := Some m;
-                        if (isEmpty q) then conRef := Inac else (); 
-                        release lock; signal recvCond; () end |
-                    Send q => let
-                        val sendCond = condition () in
-                        enqueue (q, (sendCond, m));
-                        release lock; wait sendCond; () end |
-                    Inac => let
-                        val sendCond = condition () in
-                        conRef := Send (queue [(sendCond, m)]);
-                        release lock; wait sendCond; () end)
+        spawn (fn () => loop 0);
+        S reqCh end 
 
-            fun recv (Ch (conRef, lock)) =  
-                acquire lock;
-                (case !conRef of 
-                    Send q => let
-                        val (sendCond, m) = dequeue q in
-                        if (isEmpty q) then
-                            conRef := Inac
-                        else
-                            (); 
-                        release lock; signal sendCond; m end |
-                    Recv q => let
-                        val recvCond = condition ()
-                        val mopRef = ref None in
-                        enqueue (q, (recvCond, mopRef));
-                        release lock; wait recvCond;
-                        valOf (!mopRef) end |
-                    Inac => let
-                        val recvCond = condition ()
-                        val mopRef = ref None in
-                        conRef := Recv (queue [(recvCond, mopRef)]);
-                        release lock; wait recvCond;
-                        valOf (!mopRef) end)
+      fun call (server, v) = let 
+        val S reqCh = server
+        val replCh = OneShot.channel () in 
+        FanIn.send (reqCh, (v, replCh));
+        OneShot.recv replCh end
 
-            end
+      end
+    \end{lstlisting}
 
-        \end{lstlisting}
+  \begin{lstlisting}[language=ML, style=codestyle1]
+    let
+      val w = 4
+      val x = ref 1
+      val y = ref 2
+      val z = (!x + 1) + (!y + 2) + (w - 3)
+      val w = 1 in
+      y := 0;
+      (!y + 2) - (!x + 1) * (w - 3) end
+    \end{lstlisting}
 
-        \begin{lstlisting}[language=ML, style=codestyle1]
+  \begin{lstlisting}[language=ML, style=codestyle1]
+    let 
+      val x = 1  
+      val y = 2
+      val z = ref (4 * 73)
+      val x = 4 in 
+      z := 1; 
+      x * !z end
+    \end{lstlisting}
 
-            structure FanOutChan : CHAN = struct
+  \begin{lstlisting}[language=ML, style=codestyle1]
 
-            datatype 'a chan_content =
-                Send of condition * 'a |
-                Recv of (condition * 'a option ref) queue  |
-                Inac
+    let 
+      val f = fn x => x 1
+      val g = fn y => y + 2
+      val h = fn z => z + 3 in 
+      (f g) + (f h) end
 
-            datatype 'a chan =
-                Ch of 'a chan_content ref * mutex_lock
+  \end{lstlisting}
 
-            fun channel () = Ch (ref Inac, mutexLock ())
 
-            fun send (Ch (conRef, lock)) m = let
-                val sendCond = condition () in
-                case cas (conRef, Inac, Send (sendCond, m)) of
-                    Inac => (* conRef already set *)
-                        wait sendCond; () |
-                    Recv q => 
-                    (* the current thread is
-                     * the only one that updates from this state *)
-                        acquire lock;
-                        (let
-                            val (recvCond, mopRef) = dequeue q in
-                            mopRef := Some m; 
-                            if (isEmpty q) then conRef := Inac else (); 
-                            release lock; signal (recvCond);
-                            () end) |
-                    Send _ => raise NeverHappens end
+  \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-            fun recv (Ch (conRef, lock)) =
-                acquire lock;
-                (case !conRef of
-                    Inac => let
-                        val recvCond = condition ()
-                        val mopRef = ref None in
-                        conRef := Recv (queue [(recvCond, mopRef)]);
-                        release lock; wait recvCond;
-                        valOf (!mopRef) end |
-                    Recv q => let
-                        val recvCond = condition () 
-                        val mopRef = ref None in
-                        enqueue (q, (recvCond, mopRef));
-                        release lock; wait recvCond;
-                        valOf (!mopRef) end |
-                    Send (sendCond, m) =>
-                        conRef := Inac;
-                        release lock;
-                        signal sendCond;
-                        m end) 
+    datatype 'a list = Nil | Cons 'a ('a list)
 
-            end 
-        \end{lstlisting}
+    inductive sorted ::
+      ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$%
+      'a list %$\Rightarrow$% bool where
+      Nil : sorted P Nil |
+      Single : sorted P (Cons x Nil) |
+      Cons :
+        P x y %$\Longrightarrow$%
+        sorted P (Cons y ys) %$\Longrightarrow$%
+        sorted P (Cons x (Cons y ys))
+    \end{lstlisting}
 
-    \begin{lstlisting}[language=ML, style=codestyle1]
-        structure FanInChan : CHAN = struct
+    
+  \begin{lstlisting}[style=codestyle1, escapechar=\%]
+    datatype nat = Z | S nat 
 
-        datatype 'a chan_content =
-            Send of (condition * 'a) queue |
-            Recv of condition * 'a option ref |
-            Inac
+    inductive lte :: nat %$\Rightarrow$% nat %$\Rightarrow$% bool where
+      Eq : lte n n |
+      Lt : lte n1 n2 %$\Longrightarrow$% lte n1 (S n2)
 
-        datatype 'a chan =
-            Ch of 'a chan_content ref * mutex_lock
+    theorem "
+      sorted lte
+        (Cons (Z) (Cons (S Z)
+          (Cons (S Z) (Cons
+            (S (S (S Z))) Nil))))"
+      apply (rule Cons)
+      apply (rule Lt)
+      apply (rule Eq)
+      apply (rule Cons)
+      apply (rule Eq)
+      apply (rule Cons)
+      apply (rule Lt)
+      apply (rule Lt)
+      apply (rule Eq)
+      apply (rule Single)
+      done
+    \end{lstlisting}
 
-        fun channel () = Ch (ref Inac, mutexLock ())
+  \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-        fun send (Ch (conRef, lock)) m = 
-            acquire lock;
-            case !conRef of
-            Recv (recvCond, mopRef) => 
-                mopRef := Some m; conRef := Inac;
-                release lock; signal recvCond;
-                () |
-            Send q => let
-                val sendCond = condition () in
-                enqueue (q, (sendCond, m));
-                release lock; wait sendCond;
-                () end |
-            Inac => let
-                val sendCond = condition () in
-                conRef := Send (queue [(sendCond, m)])
-                release lock; wait sendCond; () end 
+    definition True :: bool where 
+      True %$\equiv$% ((%$\lambda$%x::bool. x) = (%$\lambda$%x. x))
 
-        fun recv (Ch (conRef, lock)) = let
-            val recvCond = condition () 
-            val mopRef = ref None in
-            case cas (conRef, Inac, Recv (recvCond, mopRef)) of
-                Inac => (* conRef already set *)
-                    wait recvCond; valOf (!mopRef) |
-                Send q =>
-                    (* the current thread is the only one
-                    -* that updates the state from this state *)
-                    acquire lock;
-                    (let
-                        val (sendCond, m) = dequeue q in
-                        if (isEmpty q) then conRef := Inac else (); 
-                        release lock; signal sendCond; m end) |
-                Recv _ => raise NeverHappens end end
+    definition False :: bool where 
+      False %$\equiv$% (%$\forall$%P. P)
 
-        \end{lstlisting}
+    \end{lstlisting}
 
-    \begin{lstlisting}[language=ML, style=codestyle1]
+  \begin{lstlisting}[language=ML, style=codestyle1]
 
-    structure OneToOneChan : CHAN = struct
+    signature CHAN = sig
+      type 'a chan 
+      val channel: unit -> 'a chan
+      val send: 'a chan * 'a -> unit
+      val recv: 'a chan -> 'a
+      end     
+  \end{lstlisting}
 
-        datatype 'a chan_content =
-            Send of condition * 'a |
-            Recv of condition * 'a option ref |
-            Inac  
+  \begin{lstlisting}[language=ML, style=codestyle1]
 
-        datatype 'a chan = Ch of 'a chan_content ref
+    structure ManyToManyChan : CHAN = struct
+      type message_queue = 'a option ref queue
 
-        fun channel () = Ch (ref Inac)
+      datatype 'a chan_content = 
+        Send of (condition * 'a) queue | 
+        Recv of (condition * 'a option ref) queue | 
+        Inac
 
-        fun send (Ch conRef) m = let
+      datatype 'a chan =
+        Ch of 'a chan_content ref * mutex_lock 
+
+      fun channel () = Ch (ref Inac, mutexLock ())
+
+      fun send (Ch (conRef, lock)) m = 
+        acquire lock;
+        (case !conRef of
+          Recv q => let
+            val (recvCond, mopRef) = dequeue q in
+            mopRef := Some m;
+            if (isEmpty q) then conRef := Inac else (); 
+            release lock; signal recvCond; () end |
+          Send q => let
             val sendCond = condition () in
-            case cas (conRef, Inac, Send (sendCond, m)) of
-                Inac => 
-                    (* conRef already set to Send *)
-                    wait sendCond; () |
-                Recv (recvCond, mopRef) =>
-                    (* the current thread is the only one
-                    -* that accesses conRef for this state *)
-                    mopRef := Some m; conRef := Inac;
-                    signal recvCond; () |
-                Send _ => raise NeverHappens end end
-
-
-        fun recv (Ch conRef) = let
-            val recvCond = condition ();
-            val mopRef = ref None in
-            case cas (conRef, Inac, Recv (recvCond, mopRef)) of
-                Inac => (* conRef already set to Recv*)
-                    wait recvCond; valOf (!mopRef) |
-                Send (sendCond, m) =>
-                    (* the current thread is the only one
-                    -* that accesses conRef for this state *)
-                    conRef := Inac; signal sendCond; m |
-                Recv _ => raise NeverHappens end end 
-
-        end
-    \end{lstlisting}
-
-    \begin{lstlisting}[language=ML, style=codestyle1]
-        structure OneShotChan : CHAN = struct
-
-        datatype 'a chan_content =
-            Send of condition * 'a |
-            Recv of condition * 'a option ref |
-            Inac  
-
-        datatype 'a chan = Ch of 'a chan_content ref * mutex_lock
-
-        fun channel () = Ch (ref Inac, lock ())
-
-        fun send (Ch (conRef, lock)) m = let
+            enqueue (q, (sendCond, m));
+            release lock; wait sendCond; () end |
+          Inac => let
             val sendCond = condition () in
-            case (conRef, Inac, Send (sendCond, m)) of
-                Inac =>
-                    (* conRef already set to Send*)
-                    wait sendCond; () |
-                Recv (recvCond, mopRef) =>
-                    mopRef := Some m; signal recvCond;
-                    () |
-                Send _ => raise NeverHappens end end
+            conRef := Send (queue [(sendCond, m)]);
+            release lock; wait sendCond; () end)
 
-
-        fun recv (Ch (conRef, lock)) = let
+      fun recv (Ch (conRef, lock)) =  
+        acquire lock;
+        (case !conRef of 
+          Send q => let
+            val (sendCond, m) = dequeue q in
+            if (isEmpty q) then
+              conRef := Inac
+            else
+              (); 
+            release lock; signal sendCond; m end |
+          Recv q => let
             val recvCond = condition ()
             val mopRef = ref None in
-            case (conRef, Inac, Recv (recvCond, mopRef)) of
-                Inac =>
-                    (* conRef already set to Recv*)
-                    wait recvCond; valOf (!mopRef) |
-                Send (sendCond, m) =>
-                    acquire lock; signal sendCond;
-                    (* never relases lock;
-                    -* blocks others forever *)
-                    m |
-                Recv _ =>
-                    acquire lock;
-                    (* never able to acquire lock;
-                    -* blocked forever *)
-                    raise NeverHappens end end
+            enqueue (q, (recvCond, mopRef));
+            release lock; wait recvCond;
+            valOf (!mopRef) end |
+          Inac => let
+            val recvCond = condition ()
+            val mopRef = ref None in
+            conRef := Recv (queue [(recvCond, mopRef)]);
+            release lock; wait recvCond;
+            valOf (!mopRef) end)
 
-        end
-    \end{lstlisting}
+      end
 
-\begin{lstlisting}[language=ML, style=codestyle1]
-    structure OneShotToOneChan : CHAN = struct
-
-        datatype 'a chan =
-            Ch of condition * condition * 'a option ref
-
-        fun channel () =
-            Ch (condition (), condition (), ref None)
-
-        fun send (Ch (sendCond, recvCond, mopRef)) m =
-            mopRef := Some m; signal recvCond;  
-            wait sendCond; ()
-
-        fun recv (Ch (sendCond, recvCond, mopRef)) =
-            wait recvCond; signal sendCond;
-            valOf (!mopRef)
-
-        end
     \end{lstlisting}
 
     \begin{lstlisting}[language=ML, style=codestyle1]
 
-        datatype var = Var string
+      structure FanOutChan : CHAN = struct
 
-        datatype
-        exp = 
-            Let var boundexp exp |
-            Result var
+      datatype 'a chan_content =
+        Send of condition * 'a |
+        Recv of (condition * 'a option ref) queue  |
+        Inac
 
-        boundexp =
-            Unit |
-            Chan |
-            Prim prim |
-            Spawn exp |
-            Sync var |
-            Fst var |
-            Snd var |
-            Case var var exp var exp |
-            App var var and
+      datatype 'a chan =
+        Ch of 'a chan_content ref * mutex_lock
 
-        prim = 
-            SendEvt var var |
-            RecvEvt var |
-            Pair var var |
-            Left var |
-            Right var |
-            Abs var var ex
+      fun channel () = Ch (ref Inac, mutexLock ())
+
+      fun send (Ch (conRef, lock)) m = let
+        val sendCond = condition () in
+        case cas (conRef, Inac, Send (sendCond, m)) of
+          Inac => (* conRef already set *)
+            wait sendCond; () |
+          Recv q => 
+          (* the current thread is
+           * the only one that updates from this state *)
+            acquire lock;
+            (let
+              val (recvCond, mopRef) = dequeue q in
+              mopRef := Some m; 
+              if (isEmpty q) then conRef := Inac else (); 
+              release lock; signal (recvCond);
+              () end) |
+          Send _ => raise NeverHappens end
+
+      fun recv (Ch (conRef, lock)) =
+        acquire lock;
+        (case !conRef of
+          Inac => let
+            val recvCond = condition ()
+            val mopRef = ref None in
+            conRef := Recv (queue [(recvCond, mopRef)]);
+            release lock; wait recvCond;
+            valOf (!mopRef) end |
+          Recv q => let
+            val recvCond = condition () 
+            val mopRef = ref None in
+            enqueue (q, (recvCond, mopRef));
+            release lock; wait recvCond;
+            valOf (!mopRef) end |
+          Send (sendCond, m) =>
+            conRef := Inac;
+            release lock;
+            signal sendCond;
+            m end) 
+
+      end 
+    \end{lstlisting}
+
+  \begin{lstlisting}[language=ML, style=codestyle1]
+    structure FanInChan : CHAN = struct
+
+    datatype 'a chan_content =
+      Send of (condition * 'a) queue |
+      Recv of condition * 'a option ref |
+      Inac
+
+    datatype 'a chan =
+      Ch of 'a chan_content ref * mutex_lock
+
+    fun channel () = Ch (ref Inac, mutexLock ())
+
+    fun send (Ch (conRef, lock)) m = 
+      acquire lock;
+      case !conRef of
+      Recv (recvCond, mopRef) => 
+        mopRef := Some m; conRef := Inac;
+        release lock; signal recvCond;
+        () |
+      Send q => let
+        val sendCond = condition () in
+        enqueue (q, (sendCond, m));
+        release lock; wait sendCond;
+        () end |
+      Inac => let
+        val sendCond = condition () in
+        conRef := Send (queue [(sendCond, m)])
+        release lock; wait sendCond; () end 
+
+    fun recv (Ch (conRef, lock)) = let
+      val recvCond = condition () 
+      val mopRef = ref None in
+      case cas (conRef, Inac, Recv (recvCond, mopRef)) of
+        Inac => (* conRef already set *)
+          wait recvCond; valOf (!mopRef) |
+        Send q =>
+          (* the current thread is the only one
+          -* that updates the state from this state *)
+          acquire lock;
+          (let
+            val (sendCond, m) = dequeue q in
+            if (isEmpty q) then conRef := Inac else (); 
+            release lock; signal sendCond; m end) |
+        Recv _ => raise NeverHappens end end
 
     \end{lstlisting}
 
-\begin{lstlisting}[language=ML, style=codestyle1]
-\end{lstlisting}
+  \begin{lstlisting}[language=ML, style=codestyle1]
 
+  structure OneToOneChan : CHAN = struct
+
+    datatype 'a chan_content =
+      Send of condition * 'a |
+      Recv of condition * 'a option ref |
+      Inac  
+
+    datatype 'a chan = Ch of 'a chan_content ref
+
+    fun channel () = Ch (ref Inac)
+
+    fun send (Ch conRef) m = let
+      val sendCond = condition () in
+      case cas (conRef, Inac, Send (sendCond, m)) of
+        Inac => 
+          (* conRef already set to Send *)
+          wait sendCond; () |
+        Recv (recvCond, mopRef) =>
+          (* the current thread is the only one
+          -* that accesses conRef for this state *)
+          mopRef := Some m; conRef := Inac;
+          signal recvCond; () |
+        Send _ => raise NeverHappens end end
+
+
+    fun recv (Ch conRef) = let
+      val recvCond = condition ();
+      val mopRef = ref None in
+      case cas (conRef, Inac, Recv (recvCond, mopRef)) of
+        Inac => (* conRef already set to Recv*)
+          wait recvCond; valOf (!mopRef) |
+        Send (sendCond, m) =>
+          (* the current thread is the only one
+          -* that accesses conRef for this state *)
+          conRef := Inac; signal sendCond; m |
+        Recv _ => raise NeverHappens end end 
+
+    end
+  \end{lstlisting}
+
+  \begin{lstlisting}[language=ML, style=codestyle1]
+    structure OneShotChan : CHAN = struct
+
+    datatype 'a chan_content =
+      Send of condition * 'a |
+      Recv of condition * 'a option ref |
+      Inac  
+
+    datatype 'a chan = Ch of 'a chan_content ref * mutex_lock
+
+    fun channel () = Ch (ref Inac, lock ())
+
+    fun send (Ch (conRef, lock)) m = let
+      val sendCond = condition () in
+      case (conRef, Inac, Send (sendCond, m)) of
+        Inac =>
+          (* conRef already set to Send*)
+          wait sendCond; () |
+        Recv (recvCond, mopRef) =>
+          mopRef := Some m; signal recvCond;
+          () |
+        Send _ => raise NeverHappens end end
+
+
+    fun recv (Ch (conRef, lock)) = let
+      val recvCond = condition ()
+      val mopRef = ref None in
+      case (conRef, Inac, Recv (recvCond, mopRef)) of
+        Inac =>
+          (* conRef already set to Recv*)
+          wait recvCond; valOf (!mopRef) |
+        Send (sendCond, m) =>
+          acquire lock; signal sendCond;
+          (* never relases lock;
+          -* blocks others forever *)
+          m |
+        Recv _ =>
+          acquire lock;
+          (* never able to acquire lock;
+          -* blocked forever *)
+          raise NeverHappens end end
+
+    end
+  \end{lstlisting}
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+  structure OneShotToOneChan : CHAN = struct
+
+    datatype 'a chan =
+      Ch of condition * condition * 'a option ref
+
+    fun channel () =
+      Ch (condition (), condition (), ref None)
+
+    fun send (Ch (sendCond, recvCond, mopRef)) m =
+      mopRef := Some m; signal recvCond;  
+      wait sendCond; ()
+
+    fun recv (Ch (sendCond, recvCond, mopRef)) =
+      wait recvCond; signal sendCond;
+      valOf (!mopRef)
+
+    end
+  \end{lstlisting}
+
+  \begin{lstlisting}[style=codestyle1]
+
+    datatype var = Var string
+
+    datatype exp = 
+      Let var boundexp exp |
+      Result var
+
+    boundexp =
+      Unit |
+      Chan |
+      Prim prim |
+      Spawn exp |
+      Sync var |
+      Fst var |
+      Snd var |
+      Case var var exp var exp |
+      App var var and
+
+    prim = 
+      SendEvt var var |
+      RecvEvt var |
+      Pair var var |
+      Left var |
+      Right var |
+      Abs var var ex
+
+  \end{lstlisting}
+
+
+  \begin{lstlisting}[style=codestyle1, escapechar=\%]
+    datatype ctrl_label = 
+      LNext var | LSpawn var | LCall var | LReturn var
+
+    type_synonym ctrl_path = (ctrl_label list)
+
+    datatype chan = Ch ctrl_path var
+
+    datatype val = 
+      VUnit | VChan chan | VClsr prim (var %$\rightharpoonup$% val)
+
+    datatype ctn = Ctn var exp (var %$\rightharpoonup$% val)  
+
+    datatype state = State exp (var %$\rightharpoonup$% val) (ctn list) 
+
+    \end{lstlisting}
+
+
+  \begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+    inductive seq_step ::
+      bind * (var %$\rightharpoonup$% val)) %$\Rightarrow$% val %$\Rightarrow$% bool where
+      Let_Unit: 
+        seq_step (Unit, env) VUnit |
+      Let_Prim:
+        seq_step (Prim p, env) (VClsr p env) |
+      Let_Fst:
+        env xp = Some (VClsr (Pair x1 x2) envp) %$\Longrightarrow$%
+        envp x1 = Some v %$\Longrightarrow$% 
+        seq_step (FST xp, env) v |
+      Let_Snd: 
+        env xp = Some (VClsr (Pair x1 x2) envp) %$\Longrightarrow$%  
+        envp x2 = Some v %$\Longrightarrow$% 
+        seq_step (SND xp, env) v
+
+      inductive seq_step_up ::
+        bind * (var %$\rightharpoonup$% val)) %$\Rightarrow$% exp * val_env %$\Rightarrow$% bool where 
+        Let_Case_Left:
+          env xs = Some (VClsr (Left xl') envl) %$\Longrightarrow$%
+          envl xl' = Some vl %$\Longrightarrow$%
+          seq_step_up
+            (Case xs xl el xr er, env)
+            (el, env(xl %$\mapsto$% vl)) |
+        Let_Case_Right: 
+          env xs = Some (VClsr (Right xr') envr) %$\Longrightarrow$% 
+          envr xr' = Some vr %$\Longrightarrow$%
+          seq_step_up
+            (Case xs xl el xr er, env)
+            (er, env(xr %$\mapsto$% vr)) |
+        Let_App:
+          env f = Some (VClsr (Abs fp xp el) envl) %$\Longrightarrow$% 
+          env xa = Some va  %$\Longrightarrow$% 
+          seq_step_up
+            (App f xa, env)
+            (el, envl(
+              fl %$\mapsto$% (VClsr (Abs fp xp el) envl),
+              xl %$\mapsto$% va))
+
+    \end{lstlisting}
+
+
+  \begin{lstlisting}[style=codestyle1, escapechar=\%]
+    type_synonym trace_pool = "control_path %$\rightharpoonup$% state"
+
+    inductive leaf ::
+      trace_pool %$\Rightarrow$% control_path %$\Rightarrow$% bool where
+      Intro:
+        trpl pi %$\neq$% None %$\Longrightarrow$% 
+        (%$\nexists$% pi' . trpl pi' %$\neq$% None %$\land$% strict_prefix pi pi') %$\Longrightarrow$%  
+        leaf trpl pi
+
+    \end{lstlisting}
 
 \end{document}
 \end{document}
 {Document}
-
-
-
-

@@ -27,125 +27,127 @@ datatype state = State exp val_env "cont list" ("\<langle>_;_;_\<rangle>" [0, 0,
 
 inductive seq_step :: "(bind \<times> val_env) \<Rightarrow> val \<Rightarrow> bool" where
   Let_Unit: "
-    seq_step (\<lparr>\<rparr>, \<rho>) VUnit
+    seq_step (\<lparr>\<rparr>, env) VUnit
   " |
   Let_Prim: "
-    seq_step (Prim p, \<rho>) (VClosure p \<rho>)
+    seq_step (Prim p, env) (VClosure p env)
   " |
   Let_Fst: "
     \<lbrakk> 
-      \<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p); 
-      \<rho>\<^sub>p x\<^sub>1 = Some \<omega>
+      env xp = Some (VClosure (Pair x1 x2) envp); 
+      envp x1 = Some v
     \<rbrakk> \<Longrightarrow>
-    seq_step (FST x\<^sub>p, \<rho>) \<omega>
+    seq_step (FST xp, env) v
   " |
   Let_Snd: "
     \<lbrakk> 
-      \<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p); 
-      \<rho>\<^sub>p x\<^sub>2 = Some \<omega>
+      env xp = Some (VClosure (Pair x1 x2) envp); 
+      envp x2 = Some v
     \<rbrakk> \<Longrightarrow>
-    seq_step (SND x\<^sub>p, \<rho>) \<omega>
+    seq_step (SND xp, env) v
   "
 
 
-inductive seq_step_up :: "(bind * val_env) \<Rightarrow> (exp * val_env) \<Rightarrow> bool" where 
+inductive seq_step_up :: "bind * val_env \<Rightarrow> exp * val_env \<Rightarrow> bool" where 
   Let_Case_Left: "
     \<lbrakk> 
-      \<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l); 
-      \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l
+      env xs = Some (VClosure (Left xl') envl); 
+      envl xl' = Some vl
     \<rbrakk> \<Longrightarrow>
-    seq_step_up (CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r, \<rho>) (e\<^sub>l, \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l))
+    seq_step_up (CASE xs LEFT xl |> el RIGHT xr |> er, env) (el, env(xl \<mapsto> vl))
   " |
   Let_Case_Right: "
     \<lbrakk>
-      \<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r); 
-      \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r
+      env xs = Some (VClosure (Right xr') envr); 
+      envr xr' = Some vr
     \<rbrakk> \<Longrightarrow>
-    seq_step_up (CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r, \<rho>) (e\<^sub>r, \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r))
+    seq_step_up (CASE xs LEFT xl |> el RIGHT xr |> er, env) (er, env(xr \<mapsto> vr))
   " |
   Let_App: "
     \<lbrakk>
-      \<rho> f = Some (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l); 
-      \<rho> x\<^sub>a = Some \<omega>\<^sub>a 
+      env f = Some (VClosure (Abs fp xp el) envl); 
+      env xa = Some va 
     \<rbrakk> \<Longrightarrow>
-    seq_step_up (APP f x\<^sub>a, \<rho>) (e\<^sub>l, \<rho>\<^sub>l(f\<^sub>l \<mapsto> (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l), x\<^sub>l \<mapsto> \<omega>\<^sub>a))
+    seq_step_up (APP f xa, env) (el, envl(fl \<mapsto> (VClosure (Abs fp xp el) envl), xl \<mapsto> va))
   "
 
 
 type_synonym trace_pool = "control_path \<rightharpoonup> state"
 
 inductive leaf :: "trace_pool \<Rightarrow> control_path \<Rightarrow> bool" where
-  "\<not>(\<E> \<pi> = None) \<and> (\<nexists> \<pi>' . \<not>(\<E> \<pi>' = None) \<and> strict_prefix \<pi> \<pi>') \<Longrightarrow> leaf \<E> \<pi>"
-
+  Intro: "
+    \<not>(trpl pi = None) \<Longrightarrow> 
+    (\<nexists> pi' . \<not>(trpl pi' = None) \<and> strict_prefix pi pi') \<Longrightarrow> 
+    leaf trpl pi"
 
 abbreviation control_path_append :: "control_path => control_label => control_path" (infixl ";;" 61) where
-  "\<pi>;;lab \<equiv> \<pi> @ [lab]"
+  "pi;;lab \<equiv> pi @ [lab]"
 
 type_synonym com_set = "(control_path * chan * control_path) set"
 
 inductive concur_step :: "trace_pool * com_set \<Rightarrow> trace_pool * com_set \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Seq_Step_Down: "
     \<lbrakk> 
-      leaf \<E> \<pi>;
-      \<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) ;
-      \<rho> x = Some \<omega>
+      leaf trpl pi;
+      trpl pi = Some (\<langle>RESULT x; env; \<langle>xk, ek, envk\<rangle> # k\<rangle>) ;
+      env x = Some v
     \<rbrakk> \<Longrightarrow>
-    (\<E>, H) \<rightarrow> (\<E> ++ [\<pi>;;(LReturn x\<^sub>\<kappa>) \<mapsto> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>], H)
+    (trpl, ys) \<rightarrow> (trpl ++ [pi;;(LReturn xk) \<mapsto> \<langle>ek; envk ++ [xk \<mapsto> v]; k\<rangle>], ys)
   " |
   Seq_Step: "
     \<lbrakk> 
-      leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
-      seq_step (b, \<rho>) \<omega>
+      leaf trpl pi ;
+      trpl pi = Some (\<langle>LET x = b in e; env; k\<rangle>) ;
+      seq_step (b, env) v
     \<rbrakk> \<Longrightarrow>
-    (\<E>, H) \<rightarrow> (\<E> ++ [\<pi>;;(LNext x) \<mapsto> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>], H)
+    (trpl, ys) \<rightarrow> (trpl ++ [pi;;(LNext x) \<mapsto> \<langle>e; env(x \<mapsto> v); k\<rangle>], ys)
   " |
   Seq_Step_Up: "
     \<lbrakk> 
-      leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
-      seq_step_up (b, \<rho>) (e', \<rho>')
+      leaf trpl pi ;
+      trpl pi = Some (\<langle>LET x = b in e; env; k\<rangle>) ;
+      seq_step_up (b, env) (e', env')
     \<rbrakk> \<Longrightarrow>
-    (\<E>, H) \<rightarrow> (\<E> ++ [\<pi>;;(LCall x) \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>], H)
+    (trpl, ys) \<rightarrow> (trpl ++ [pi;;(LCall x) \<mapsto> \<langle>e'; env'; \<langle>x, e, env\<rangle> # k\<rangle>], ys)
   " |
   Let_Chan: "
     \<lbrakk> 
-      leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>)
+      leaf trpl pi ;
+      trpl pi = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; env; k\<rangle>)
     \<rbrakk> \<Longrightarrow>
-    (\<E>, H) \<rightarrow> (\<E> ++ [
-      \<pi>;;(LNext x) \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> (VChan (Ch \<pi> x))]; \<kappa>\<rangle>)], H)
+    (trpl, ys) \<rightarrow> (trpl ++ [
+      pi;;(LNext x) \<mapsto> (\<langle>e; env ++ [x \<mapsto> (VChan (Ch pi x))]; k\<rangle>)], ys)
   " |
   Let_Spawn: "
     \<lbrakk> 
-      leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)
+      leaf trpl pi ;
+      trpl pi = Some (\<langle>LET x = SPAWN ec in e; env; k\<rangle>)
     \<rbrakk> \<Longrightarrow>
-    (\<E>, H) \<rightarrow> (\<E> ++ [
-      \<pi>;;(LNext x) \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> VUnit]; \<kappa>\<rangle>), 
-      \<pi>;;(LSpawn x) \<mapsto> (\<langle>e\<^sub>c; \<rho>; []\<rangle>)], H)
+    (trpl, ys) \<rightarrow> (trpl ++ [
+      pi;;(LNext x) \<mapsto> (\<langle>e; env ++ [x \<mapsto> VUnit]; k\<rangle>), 
+      pi;;(LSpawn x) \<mapsto> (\<langle>ec; env; []\<rangle>)], ys)
   " |
   Let_Sync: "
     \<lbrakk>
    
-      leaf \<E> \<pi>\<^sub>s ;
-      \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>);
-      \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e);
+      leaf trpl pis ;
+      trpl pis = Some (\<langle>LET xs = SYNC xse in es; envs; ks\<rangle>);
+      envs xse = Some (VClosure (Send_Evt xsc xm) envse);
 
-      leaf \<E> \<pi>\<^sub>r ;
-      \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>);
-      \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e);
+      leaf trpl pir ;
+      trpl pir = Some (\<langle>LET xr = SYNC xre in er; envr; kr\<rangle>);
+      envr xre = Some (VClosure (Recv_Evt xrc) envre);
 
-      \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChan c); 
-      \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChan c);      
-      \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m
+      envse xsc = Some (VChan c); 
+      envre xrc = Some (VChan c);      
+      envse xm = Some vm
 
     \<rbrakk> \<Longrightarrow>
-    (\<E>, H) \<rightarrow> (
-      \<E> ++ [
-        \<pi>\<^sub>s;;(LNext x\<^sub>s) \<mapsto> (\<langle>e\<^sub>s; \<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> VUnit]; \<kappa>\<^sub>s\<rangle>), 
-        \<pi>\<^sub>r;;(LNext x\<^sub>r) \<mapsto> (\<langle>e\<^sub>r; \<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m]; \<kappa>\<^sub>r\<rangle>)], 
-      H \<union> {(\<pi>\<^sub>s, c, \<pi>\<^sub>r)})
+    (trpl, ys) \<rightarrow> (
+      trpl ++ [
+        pis;;(LNext xs) \<mapsto> (\<langle>es; envs ++ [xs \<mapsto> VUnit]; ks\<rangle>), 
+        pir;;(LNext xr) \<mapsto> (\<langle>er; envr ++ [xr \<mapsto> vm]; kr\<rangle>)], 
+      H \<union> {(pis, c, pir)})
   "
 
 abbreviation dynamic_eval :: "trace_pool * com_set \<Rightarrow> trace_pool * com_set \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
