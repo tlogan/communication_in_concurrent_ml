@@ -6,9 +6,9 @@ begin
 
 datatype node_label = NLet var | NResult var
 
-fun nodeLabel :: "exp \<Rightarrow> node_label" where
-  "nodeLabel (LET x = b in e) = NLet x" |
-  "nodeLabel (RESULT y) = NResult y"
+fun top_node_label :: "exp \<Rightarrow> node_label" where
+  "top_node_label (LET x = b in e) = NLet x" |
+  "top_node_label (RESULT y) = NResult y"
 
 type_synonym node_set = "node_label set"
 
@@ -66,7 +66,7 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply (smt butlast_snoc exp.inject(1) fun_upd_apply last_snoc leaf.cases option.distinct(1) option.inject state.inject strict_prefixI')
 done
 
-lemma isnt_send_evt_sound: "
+lemma always_send_evt_not_bound_sound: "
   \<lbrakk>
     \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
     ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H');
@@ -78,7 +78,7 @@ lemma isnt_send_evt_sound: "
   apply (drule exp_always_value_not_bound_sound; assumption?; auto)
 done
 
-lemma isnt_recv_evt_sound: "
+lemma always_recv_evt_not_bound_sound: "
   \<lbrakk>
     \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
     ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H');
@@ -90,7 +90,7 @@ lemma isnt_recv_evt_sound: "
   apply (drule exp_always_value_not_bound_sound; assumption?; auto)
 done
 
-lemma isnt_send_chan_sound: "
+lemma always_send_chan_not_bound_sound: "
   \<lbrakk>
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> xC));
     \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
@@ -113,7 +113,7 @@ lemma isnt_send_chan_sound: "
  apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
 done
 
-lemma isnt_recv_chan_sound: "
+lemma always_recv_chan_not_bound_sound: "
   \<lbrakk>
     \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi> xC));
     \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
@@ -136,7 +136,7 @@ lemma isnt_recv_chan_sound: "
  apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
 done
 
-lemma isnt_send_site_sound: "
+lemma node_not_send_site_sound: "
   \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
@@ -146,15 +146,15 @@ lemma isnt_send_site_sound: "
 "
  apply (unfold may_be_static_send_node_label.simps; auto)
  apply (rule exI[of _ x\<^sub>s\<^sub>c]; auto)
- apply (auto simp: isnt_send_chan_sound)
+ apply (auto simp: always_send_chan_not_bound_sound)
  apply (rule exI[of _ x\<^sub>m]; auto?)
  apply (rule exI[of _ x\<^sub>e]; auto?)
- apply (blast dest: isnt_send_evt_sound)
+ apply (blast dest: always_send_evt_not_bound_sound)
  apply (rule exI; auto?)
  apply (erule exp_always_exp_not_reachable_sound; auto)
 done
 
-lemma isnt_recv_site_sound: "
+lemma node_not_recv_site_sound: "
   \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   \<rho> x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
@@ -164,9 +164,9 @@ lemma isnt_recv_site_sound: "
 "
  apply (unfold may_be_static_recv_node_label.simps; auto)
  apply (rule exI[of _ x\<^sub>r\<^sub>c]; auto)
- apply (auto simp: isnt_recv_chan_sound)
+ apply (auto simp: always_recv_chan_not_bound_sound)
  apply (rule exI[of _ x\<^sub>e]; auto?)
- apply (blast dest: isnt_recv_evt_sound)
+ apply (blast dest: always_recv_evt_not_bound_sound)
  apply (rule exI; auto?)
  apply (erule exp_always_exp_not_reachable_sound; auto)
 done

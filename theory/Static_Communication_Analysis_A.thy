@@ -23,56 +23,56 @@ inductive simple_flow_set :: "abstract_env \<Rightarrow> (node_label * edge_labe
   " |
   Let_Unit: "
     \<lbrakk>
-      {(NLet x , ENext, nodeLabel e)} \<subseteq> F;
+      {(NLet x , ENext, top_node_label e)} \<subseteq> F;
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
     simple_flow_set V F (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Chan: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
     simple_flow_set V F (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
     simple_flow_set V F (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
     simple_flow_set V F (LET x = RECV EVT x\<^sub>c in e)
   " |
   Let_Pair: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
     simple_flow_set V F (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
   " |
   Let_Left: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
     simple_flow_set V F (LET x = LEFT x\<^sub>p in e)
   " |
   Let_Right: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
     simple_flow_set V F (LET x = RIGHT x\<^sub>p in e)
   " |
   Let_Abs: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       simple_flow_set V F e\<^sub>b;
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
@@ -81,8 +81,8 @@ inductive simple_flow_set :: "abstract_env \<Rightarrow> (node_label * edge_labe
   Let_Spawn: "
     \<lbrakk>
       {
-        (NLet x, ENext, nodeLabel e),
-        (NLet x, ESpawn, nodeLabel e\<^sub>c)
+        (NLet x, ENext, top_node_label e),
+        (NLet x, ESpawn, top_node_label e\<^sub>c)
       } \<subseteq> F;
       simple_flow_set V F e\<^sub>c;
       simple_flow_set V F e
@@ -91,21 +91,21 @@ inductive simple_flow_set :: "abstract_env \<Rightarrow> (node_label * edge_labe
   " |
   Let_Sync: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
     simple_flow_set V F (LET x = SYNC xSE in e)
   " |
   Let_Fst: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
     simple_flow_set V F (LET x = FST x\<^sub>p in e)
   " |
   Let_Snd: "
     \<lbrakk>
-      {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
+      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
     simple_flow_set V F (LET x = SND x\<^sub>p in e)
@@ -113,10 +113,10 @@ inductive simple_flow_set :: "abstract_env \<Rightarrow> (node_label * edge_labe
   Let_Case: "
     \<lbrakk>
       {
-        (NLet x, ECall, nodeLabel e\<^sub>l),
-        (NLet x, ECall, nodeLabel e\<^sub>r),
-        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn, nodeLabel e),
-        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn, nodeLabel e)
+        (NLet x, ECall, top_node_label e\<^sub>l),
+        (NLet x, ECall, top_node_label e\<^sub>r),
+        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn, top_node_label e),
+        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn, top_node_label e)
       } \<subseteq> F;
       simple_flow_set V F e\<^sub>l;
       simple_flow_set V F e\<^sub>r;
@@ -128,8 +128,8 @@ inductive simple_flow_set :: "abstract_env \<Rightarrow> (node_label * edge_labe
     \<lbrakk>
       (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow>
         {
-          (NLet x, ECall, nodeLabel e\<^sub>b),
-          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn, nodeLabel e)
+          (NLet x, ECall, top_node_label e\<^sub>b),
+          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn, top_node_label e)
         } \<subseteq> F);
       simple_flow_set V F e
     \<rbrakk> \<Longrightarrow>
@@ -218,29 +218,29 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
 
 inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
+    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
 inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
 inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
 inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_fan_in V e xC 
   "
@@ -855,7 +855,7 @@ lemma simple_flow_set_pool_implies_may_be_path: "
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_congruent \<pi> path \<and>
-    may_be_path V F (nodeLabel e) isEnd path
+    may_be_path V F (top_node_label e) isEnd path
 "
 sorry
 
@@ -890,37 +890,37 @@ lemma isnt_path_sound: "
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_congruent \<pi> path \<and>
-    may_be_path V F (nodeLabel e) isEnd path
+    may_be_path V F (top_node_label e) isEnd path
 "
 by (metis lift_simple_flow_set_to_pool simple_flow_set_pool_implies_may_be_path simple_flow_set_pool_preserved_star)
 
 
 
-lemma isnt_send_path_sound: "
+lemma node_not_send_path_sound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   simple_flow_set V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_congruent \<pi>Sync pathSync) \<and> 
-    may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC) pathSync
+    may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
- apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in isnt_send_site_sound; auto?)
+ apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in node_not_send_site_sound; auto?)
  apply (frule isnt_path_sound; auto?)
 done
 
-lemma isnt_recv_path_sound: "
+lemma node_not_recv_path_sound: "
   is_recv_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   simple_flow_set V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_congruent \<pi>Sync pathSync) \<and> 
-    may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC) pathSync
+    may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC) pathSync
 "
  apply (unfold is_recv_path.simps; auto)
- apply (frule_tac x\<^sub>r\<^sub>c = xrc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in isnt_recv_site_sound; auto?)
+ apply (frule_tac x\<^sub>r\<^sub>c = xrc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in node_not_recv_site_sound; auto?)
  apply (frule isnt_path_sound; auto?)
 done
 
@@ -929,16 +929,16 @@ done
 
 
 theorem one_shot_sound': "
-  every_two (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
+  every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
   simple_flow_set V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
  apply (simp add: every_two.simps singular.simps; auto)
- apply (frule_tac \<pi>Sync = \<pi>1 in isnt_send_path_sound; auto)
+ apply (frule_tac \<pi>Sync = \<pi>1 in node_not_send_path_sound; auto)
  apply (drule_tac x = pathSync in spec)
- apply (frule_tac \<pi>Sync = \<pi>2 in isnt_send_path_sound; auto?)
+ apply (frule_tac \<pi>Sync = \<pi>2 in node_not_send_path_sound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
  apply (simp add: equality_abstract_to_concrete send_abstract_paths_of_same_run_inclusive)
@@ -959,14 +959,14 @@ done
 
 
 theorem noncompetitive_send_to_ordered_send: "
-  every_two (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+  every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
   simple_flow_set V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
-  using isnt_send_path_sound abstract_paths_of_same_run_inclusive 
+  using node_not_send_path_sound abstract_paths_of_same_run_inclusive 
   apply (meson is_send_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
@@ -984,14 +984,14 @@ theorem fan_out_sound: "
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+   every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
    simple_flow_set V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
    every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
-  using isnt_recv_path_sound abstract_paths_of_same_run_inclusive 
+  using node_not_recv_path_sound abstract_paths_of_same_run_inclusive 
  apply (meson is_recv_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
