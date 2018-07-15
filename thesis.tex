@@ -78,19 +78,19 @@
       datatype serv = S of (int * int chan) chan 
 
       fun make () = let 
-        val reqCh = channel ()
+        val reqChn = channel ()
         fun loop state = let
-          val (v, replCh) = recv reqCh in 
+          val (v, replCh) = recv reqChn in 
           send (replCh, state);
           loop v end in
         spawn (fn () => loop 0);
-        S reqCh end 
+        S reqChn end 
 
       fun call (server, v) = let 
-        val S reqCh = server
-        val replCh = channel () in 
+        val S reqChn = server
+        val replChn = channel () in 
         send (reqCh, (v, replCh));
-        recv replCh end end
+        recv replChn end end
 
     \end{lstlisting}
 
@@ -125,21 +125,21 @@
 
       fun make () = let 
 
-        val reqCh = FanIn.channel()
+        val reqChn = FanIn.channel()
 
         fun loop state = let
-          val (v, replCh) = FanIn.recv reqCh in 
+          val (v, replCh) = FanIn.recv reqChn in 
           OneShot.send (replCh, state);
           loop v end in
 
         spawn (fn () => loop 0);
-        S reqCh end 
+        S reqChn end 
 
       fun call (server, v) = let 
-        val S reqCh = server
-        val replCh = OneShot.channel () in 
+        val S reqChn = server
+        val replChn = OneShot.channel () in 
         FanIn.send (reqCh, (v, replCh));
-        OneShot.recv replCh end
+        OneShot.recv replChn end
 
       end
     \end{lstlisting}
@@ -181,8 +181,8 @@
     datatype 'a list = Nil | Cons 'a ('a list)
 
     inductive sorted ::
-      ('a %$\Rhtarrow$% 'a %$\Rhtarrow$% bool) %$\Rhtarrow$%
-      'a list %$\Rhtarrow$% bool where
+      ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$%
+      'a list %$\Rightarrow$% bool where
       Nil : sorted P Nil |
       Single : sorted P (Cons x Nil) |
       Cons :
@@ -195,7 +195,7 @@
   \begin{lstlisting}[style=codestyle1, escapechar=\%]
     datatype nat = Z | S nat 
 
-    inductive lte :: nat %$\Rhtarrow$% nat %$\Rhtarrow$% bool where
+    inductive lte :: nat %$\Rightarrow$% nat %$\Rightarrow$% bool where
       Eq : lte n n |
       Lt : lte n1 n2 %$\Longrightarrow$% lte n1 (S n2)
 
@@ -248,11 +248,11 @@
         Inac
 
       datatype 'a chan =
-        Ch of 'a chan_content ref * mutex_lock 
+        Chn of 'a chan_content ref * mutex_lock 
 
-      fun channel () = Ch (ref Inac, mutexLock ())
+      fun channel () = Chn (ref Inac, mutexLock ())
 
-      fun send (Ch (conRef, lock)) m = 
+      fun send (Chn (conRef, lock)) m = 
         acquire lock;
         (case !conRef of
           Recv q => let
@@ -269,7 +269,7 @@
             conRef := Send (queue [(sendCond, m)]);
             release lock; wait sendCond; () end)
 
-      fun recv (Ch (conRef, lock)) =  
+      fun recv (Chn (conRef, lock)) =  
         acquire lock;
         (case !conRef of 
           Send q => let
@@ -306,11 +306,11 @@
         Inac
 
       datatype 'a chan =
-        Ch of 'a chan_content ref * mutex_lock
+        Chn of 'a chan_content ref * mutex_lock
 
-      fun channel () = Ch (ref Inac, mutexLock ())
+      fun channel () = Chn (ref Inac, mutexLock ())
 
-      fun send (Ch (conRef, lock)) m = let
+      fun send (Chn (conRef, lock)) m = let
         val sendCond = condition () in
         case cas (conRef, Inac, Send (sendCond, m)) of
           Inac => (* conRef already set *)
@@ -327,7 +327,7 @@
               () end) |
           Send _ => raise NeverHappens end
 
-      fun recv (Ch (conRef, lock)) =
+      fun recv (Chn (conRef, lock)) =
         acquire lock;
         (case !conRef of
           Inac => let
@@ -360,11 +360,11 @@
       Inac
 
     datatype 'a chan =
-      Ch of 'a chan_content ref * mutex_lock
+      Chn of 'a chan_content ref * mutex_lock
 
-    fun channel () = Ch (ref Inac, mutexLock ())
+    fun channel () = Chn (ref Inac, mutexLock ())
 
-    fun send (Ch (conRef, lock)) m = 
+    fun send (Chn (conRef, lock)) m = 
       acquire lock;
       case !conRef of
       Recv (recvCond, mopRef) => 
@@ -381,7 +381,7 @@
         conRef := Send (queue [(sendCond, m)])
         release lock; wait sendCond; () end 
 
-    fun recv (Ch (conRef, lock)) = let
+    fun recv (Chn (conRef, lock)) = let
       val recvCond = condition () 
       val mopRef = ref None in
       case cas (conRef, Inac, Recv (recvCond, mopRef)) of
@@ -408,11 +408,11 @@
       Recv of condition * 'a option ref |
       Inac  
 
-    datatype 'a chan = Ch of 'a chan_content ref
+    datatype 'a chan = Chn of 'a chan_content ref
 
-    fun channel () = Ch (ref Inac)
+    fun channel () = Chn (ref Inac)
 
-    fun send (Ch conRef) m = let
+    fun send (Chn conRef) m = let
       val sendCond = condition () in
       case cas (conRef, Inac, Send (sendCond, m)) of
         Inac => 
@@ -426,7 +426,7 @@
         Send _ => raise NeverHappens end end
 
 
-    fun recv (Ch conRef) = let
+    fun recv (Chn conRef) = let
       val recvCond = condition ();
       val mopRef = ref None in
       case cas (conRef, Inac, Recv (recvCond, mopRef)) of
@@ -449,11 +449,11 @@
       Recv of condition * 'a option ref |
       Inac  
 
-    datatype 'a chan = Ch of 'a chan_content ref * mutex_lock
+    datatype 'a chan = Chn of 'a chan_content ref * mutex_lock
 
-    fun channel () = Ch (ref Inac, lock ())
+    fun channel () = Chn (ref Inac, lock ())
 
-    fun send (Ch (conRef, lock)) m = let
+    fun send (Chn (conRef, lock)) m = let
       val sendCond = condition () in
       case (conRef, Inac, Send (sendCond, m)) of
         Inac =>
@@ -465,7 +465,7 @@
         Send _ => raise NeverHappens end end
 
 
-    fun recv (Ch (conRef, lock)) = let
+    fun recv (Chn (conRef, lock)) = let
       val recvCond = condition ()
       val mopRef = ref None in
       case (conRef, Inac, Recv (recvCond, mopRef)) of
@@ -490,16 +490,16 @@
   structure OneShotToOneChan : CHAN = struct
 
     datatype 'a chan =
-      Ch of condition * condition * 'a option ref
+      Chn of condition * condition * 'a option ref
 
     fun channel () =
-      Ch (condition (), condition (), ref None)
+      Chn (condition (), condition (), ref None)
 
-    fun send (Ch (sendCond, recvCond, mopRef)) m =
+    fun send (Chn (sendCond, recvCond, mopRef)) m =
       mopRef := Some m; signal recvCond;  
       wait sendCond; ()
 
-    fun recv (Ch (sendCond, recvCond, mopRef)) =
+    fun recv (Chn (sendCond, recvCond, mopRef)) =
       wait recvCond; signal sendCond;
       valOf (!mopRef)
 
@@ -516,7 +516,7 @@
 
     boundexp =
       Unit |
-      MkCh |
+      MkChn |
       Prim prim |
       Spwn exp |
       Sync var |
@@ -542,10 +542,10 @@
 
     type_synonym ctrl_path = (ctrl_label list)
 
-    datatype chan = Ch ctrl_path var
+    datatype chan = Chn ctrl_path var
 
     datatype val = 
-      VUnit | VCh chan | VClsr prim (var %$\rightharpoonup$% val)
+      VUnit | VChn chan | VClsr prim (var %$\rightharpoonup$% val)
 
     datatype ctn = Ctn var exp (var %$\rightharpoonup$% val)  
 
@@ -557,35 +557,35 @@
   \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
     inductive seq_step ::
-      bind * (var %$\rightharpoonup$% val)) %$\Rhtarrow$% val %$\Rhtarrow$% bool where
-      Let_Unit: 
+      bind * (var %$\rightharpoonup$% val)) %$\Rightarrow$% val %$\Rightarrow$% bool where
+      LetUnit: 
         seq_step (Unit, env) VUnit |
-      Let_Prim:
+      LetPrim:
         seq_step (Prim p, env) (VClsr p env) |
-      Let_Fst:
+      LetFst:
         env xp = Some (VClsr (Pair x1 x2) envp) %$\Longrightarrow$%
         envp x1 = Some v %$\Longrightarrow$% 
-        seq_step (FST xp, env) v |
-      Let_Snd: 
+        seq_step (Fst xp, env) v |
+      LetSnd: 
         env xp = Some (VClsr (Pair x1 x2) envp) %$\Longrightarrow$%  
         envp x2 = Some v %$\Longrightarrow$% 
-        seq_step (SND xp, env) v
+        seq_step (Snd xp, env) v
 
     inductive seq_step_up ::
-      bind * (var %$\rightharpoonup$% val)) %$\Rhtarrow$% exp * val_env %$\Rhtarrow$% bool where 
-      Let_Case_Lft:
+      bind * (var %$\rightharpoonup$% val)) %$\Rightarrow$% exp * val_env %$\Rightarrow$% bool where 
+      LetCaseLft:
         env xs = Some (VClsr (Lft xl') envl) %$\Longrightarrow$%
         envl xl' = Some vl %$\Longrightarrow$%
         seq_step_up
           (Case xs xl el xr er, env)
           (el, env(xl %$\mapsto$% vl)) |
-      Let_Case_Rht: 
+      LetCaseRht: 
         env xs = Some (VClsr (Rht xr') envr) %$\Longrightarrow$% 
         envr xr' = Some vr %$\Longrightarrow$%
         seq_step_up
           (Case xs xl el xr er, env)
           (er, env(xr %$\mapsto$% vr)) |
-      Let_App:
+      LetApp:
         env f = Some (VClsr (Abs fp xp el) envl) %$\Longrightarrow$% 
         env xa = Some va  %$\Longrightarrow$% 
         seq_step_up
@@ -600,15 +600,15 @@
     type_synonym trace_pool = ctrl_path %$\rightharpoonup$% state
 
     inductive leaf ::
-      trace_pool %$\Rhtarrow$% ctrl_path %$\Rhtarrow$% bool where
+      trace_pool %$\Rightarrow$% ctrl_path %$\Rightarrow$% bool where
       Intro:
         trpl pi %$\neq$% None %$\Longrightarrow$% 
         (%$\nexists$% pi' . trpl pi' %$\neq$% None %$\land$% strict_prefix pi pi') %$\Longrightarrow$%  
         leaf trpl pi
 
     inductive concur_step ::
-      trace_pool * cmmn_set %$\Rhtarrow$%
-      trace_pool * cmmn_set %$\Rhtarrow$%
+      trace_pool * cmmn_set %$\Rightarrow$%
+      trace_pool * cmmn_set %$\Rightarrow$%
       bool where 
       Seq_Sttep_Down:
         leaf trpl pi %$\Longrightarrow$%
@@ -617,7 +617,7 @@
         env x = Some v %$\Longrightarrow$%
         concur_step
           (trpl, ys)
-          (trpl(pi;;(LRtn xk) %$\mapsto$%
+          (trpl(pi @ [LRtn xk] %$\mapsto$%
             (Stt ek (envk(xk %$\mapsto$% v)) k)), ys) |
       Seq_Step:
         leaf trpl pi %$\Longrightarrow$%
@@ -625,47 +625,48 @@
         seq_step (b, env) v%$\Longrightarrow$%
         concur_step
           (trpl, ys)
-          (trpl(pi;;(LNxt x) %$\mapsto$% (Stt e (env(x %$\mapsto$% v)) k), ys) |
+          (trpl(pi @ [LNxt x] %$\mapsto$% (Stt e (env(x %$\mapsto$% v)) k), ys) |
       Seq_Step_Up: 
         leaf trpl pi %$\Longrightarrow$%
         trpl pi = Some (Stt (Let x b e) env k) %$\Longrightarrow$%
         seq_step_up (b, env) (e', env') %$\Longrightarrow$%
         concur_step
           (trpl, ys)
-          (trpl(pi;;(LCall x) %$\mapsto$%
+          (trpl(pi @ [LCall x] %$\mapsto$%
             (Stt e' env' ((Ctn x e env) # k))), ys) |
-      Let_Chan: 
+      LetMkCh: 
         leaf trpl pi %$\Longrightarrow$%
-        trpl pi = Some (Stt (Let x MkCh e) env k) %$\Longrightarrow$%
+        trpl pi = Some (Stt (Let x MkChn e) env k) %$\Longrightarrow$%
         concur_step
           (trpl, ys)
-          (trpl(pi;;(LNxt x) %$\mapsto$%
-            (Stt e (env(x %$\mapsto$% (VCh (Ch pi x)))) k)), ys) |
-      Let_Spwn:
+          (trpl(pi @ [LNxt x] %$\mapsto$%
+            (Stt e (env(x %$\mapsto$% (VChn (Chn pi x)))) k)), ys) |
+      LetSpwn:
         leaf trpl pi %$\Longrightarrow$%
         trpl pi = Some (Stt (Let x (Spwn ec) e) env k) %$\Longrightarrow$%
         concur_step
           (trpl, ys)
           (trpl(
-            pi;;(LNxt x) %$\mapsto$% (St e (env(x %$\mapsto$% VUnit)) k), 
-            pi;;(LSpwn x) %$\mapsto$% (St ec env []), ys) |
-      Let_Sync:
+            pi @ [LNxt x] %$\mapsto$% (St e (env(x %$\mapsto$% VUnit)) k), 
+            pi @ [LSpwn x] %$\mapsto$% (St ec env []), ys) |
+      LetSync:
         leaf trpl pis %$\Longrightarrow$%
         trpl pis = Some (Stt (Let xs (Sync xse) es) envs ks) %$\Longrightarrow$%
         envs xse = Some (VClsr (SendEvt xsc xm) envse) %$\Longrightarrow$%
         leaf trpl pir  %$\Longrightarrow$%
         trpl pir = Some (Stt (Let xr (Sync xre) er) envr kr) %$\Longrightarrow$%
         envr xre = Some (VClsr (RecvEvt xrc) envre) %$\Longrightarrow$%
-        envse xsc = Some (VCh c) %$\Longrightarrow$%
-        envre xrc = Some (VCh c) %$\Longrightarrow$%
+        envse xsc = Some (VChn c) %$\Longrightarrow$%
+        envre xrc = Some (VChn c) %$\Longrightarrow$%
         envse xm = Some vm %$\Longrightarrow$%
         concur_step
           (trpl, ys)
           (trpl(
-            pis;;(LNxt xs) %$\mapsto$% (Stt es (envs(xs %$\mapsto$% VUnit)) ks), 
-            pir;;(LNxt xr) %$\mapsto$% (Stt er (envr(xr %$\mapsto$% vm)) kr)), 
+            pis @ [LNxt xs] %$\mapsto$%
+              (Stt es (envs(xs %$\mapsto$% VUnit)) ks), 
+            pir @ [LNxt xr] %$\mapsto$%
+              (Stt er (envr(xr %$\mapsto$% vm)) kr)), 
             ys %$\cup$% {(pis, c, pir)})
-
 
     \end{lstlisting}
 
