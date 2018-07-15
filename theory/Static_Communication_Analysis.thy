@@ -15,7 +15,7 @@ type_synonym node_set = "node_label set"
 type_synonym node_map = "node_label \<Rightarrow> var set"
 
 inductive may_be_static_send_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
-  Sync: "
+  intro: "
     {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
     {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
     is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
@@ -23,7 +23,7 @@ inductive may_be_static_send_node_label :: "abstract_env \<Rightarrow> exp \<Rig
   "
 
 inductive may_be_static_recv_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
-  Sync: "
+  intro: "
     {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
     {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
     is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
