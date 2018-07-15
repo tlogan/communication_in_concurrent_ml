@@ -689,6 +689,71 @@
       step: r x y %$\Longrightarrow$% star r y z %$\Longrightarrow$% star r x z
     \end{lstlisting}
 
+
+  
+  \begin{lstlisting}[style=codestyle1, escapechar=\%]
+    inductive is_send_path ::
+      trace_pool %$\Rightarrow$% chan %$\Rightarrow$%
+      control_path %$\Rightarrow$% bool where
+      intro:
+        trpl piy = Some
+          (Stt (Let xy (Sync xe) en) env k) %$\Longrightarrow$%
+        env xe = Some
+          (VClsr (SendEvt xsc xm) enve) %$\Longrightarrow$%
+        enve xsc = Some (VChn c) %$\Longrightarrow$%
+        is_send_path trpl c piy
+
+    inductive is_recv_path ::
+      trace_pool %$\Rightarrow$% chan %$\Rightarrow$%
+      control_path %$\Rightarrow$% bool where
+      intro:
+        trpl piy = Some
+          (Stt (Let xy (Sync xe) en) env k) %$\Longrightarrow$%
+        env xe = Some
+          (VClsr (RecvEvt xrc) enve) %$\Longrightarrow$%
+        enve xrc = Some (VChan c) %$\Longrightarrow$%
+        is_recv_path trpl c piy
+
+    inductive all_two_dyn_paths ::
+      (control_path %$\Rightarrow$% bool) %$\Rightarrow$%
+      (control_path %$\Rightarrow$% control_path %$\Rightarrow$% bool) %$\Rightarrow$%
+      bool where
+      intro: (%$\forall$% pi1 pi2 .
+          p pi1 %$\longrightarrow$%
+          p pi2 %$\longrightarrow$%
+          r pi1 pi2) %$\Longrightarrow$%
+        all_two_dyn_paths p r
+
+    inductive ordered :: 'a list %$\Rightarrow$% 'a list %$\Rightarrow$% bool where
+      left: prefix pi1 pi2 %$\Longrightarrow$% ordered pi1 pi2 |
+      right: prefix pi2 pi1 %$\Longrightarrow$% ordered pi1 pi2
+
+    inductive one_shot :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
+      intro:
+        all_two_dyn_paths
+          (is_send_path trpl c) op= %$\Longrightarrow$% 
+        one_shot trpl c
+
+    inductive fan_out :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
+      intro:
+        all_two_dyn_paths
+          (is_send_path trpl c) ordered %$\Longrightarrow$%
+        fan_out trpl c
+  
+    inductive fan_in :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
+      intro:
+        all_two_dyn_paths
+          (is_recv_path trpl c) ordered %$\Longrightarrow$% 
+        fan_in trpl c
+
+    inductive one_to_one :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
+      intro:
+        fan_out trpl c %$\Longrightarrow$%
+        fan_in trpl c %$\Longrightarrow$% 
+        one_to_one trpl c
+
+    \end{lstlisting}
+
 \end{document}
 \end{document}
 {Document}
