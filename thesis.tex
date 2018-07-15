@@ -55,7 +55,7 @@
 
 \begin{lstlisting}[language=ML, style=codestyle1]
   type thread_id
-  val spawn: (unit -> unit) -> thread_id
+  val spawn : (unit -> unit) -> thread_id
 
   type 'a chan
   val channel : unit -> 'a chan
@@ -97,12 +97,12 @@
   val sync : 'a event -> 'a
   val recvEvt : 'a chan -> 'a event
   val sendEvt : 'a chan * 'a -> unit event
-  val choose: 'a event * 'a event -> 'a event
+  val choose : 'a event * 'a event -> 'a event
 
   fun send (ch, v) = sync (sendEvt (ch, v))
   fun recv v = sync (recvEvt v)
 
-  val thenEvt: 'a event * ('a -> 'b event) -> 'b event
+  val thenEvt : 'a event * ('a -> 'b event) -> 'b event
 
   \end{lstlisting}
 
@@ -177,7 +177,7 @@
 
   datatype 'a list = Nil | Cons 'a ('a list)
 
-  inductive sorted ::
+  inductive sorted : :
     ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$%
     'a list %$\Rightarrow$% bool where
     Nil : sorted P Nil |
@@ -192,7 +192,7 @@
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   datatype nat = Z | S nat 
 
-  inductive lte :: nat %$\Rightarrow$% nat %$\Rightarrow$% bool where
+  inductive lte : : nat %$\Rightarrow$% nat %$\Rightarrow$% bool where
     Eq : lte n n |
     Lt : lte n1 n2 %$\Longrightarrow$% lte n1 (S n2)
 
@@ -215,10 +215,10 @@
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-  definition True :: bool where 
-    True %$\equiv$% ((%$\lambda$%x::bool. x) = (%$\lambda$%x. x))
+  definition True : : bool where 
+    True %$\equiv$% ((%$\lambda$%x : :bool. x) = (%$\lambda$%x. x))
 
-  definition False :: bool where 
+  definition False : : bool where 
     False %$\equiv$% (%$\forall$%P. P)
 
   \end{lstlisting}
@@ -226,9 +226,9 @@
 \begin{lstlisting}[language=ML, style=codestyle1]
   signature CHAN = sig
     type 'a chan 
-    val channel: unit -> 'a chan
-    val send: 'a chan * 'a -> unit
-    val recv: 'a chan -> 'a
+    val channel : unit -> 'a chan
+    val send : 'a chan * 'a -> unit
+    val recv : 'a chan -> 'a
     end     
 \end{lstlisting}
 
@@ -558,17 +558,17 @@ structure OneShotToOneChan : CHAN = struct
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  inductive seq_step ::
+  inductive seq_step : :
     bind * (var %$\rightharpoonup$% val)) %$\Rightarrow$% val %$\Rightarrow$% bool where
-    LetUnt: 
+    LetUnt : 
       seq_step (Unt, env) VUnt |
-    LetPrim:
+    LetPrim :
       seq_step (Prim p, env) (VClsr p env) |
-    LetFst:
+    LetFst :
       env xp = Some (VClsr (Pair x1 x2) envp) %$\Longrightarrow$%
       envp x1 = Some v %$\Longrightarrow$% 
       seq_step (Fst xp, env) v |
-    LetSnd: 
+    LetSnd : 
       env xp = Some (VClsr (Pair x1 x2) envp) %$\Longrightarrow$%  
       envp x2 = Some v %$\Longrightarrow$% 
       seq_step (Snd xp, env) v
@@ -578,21 +578,21 @@ structure OneShotToOneChan : CHAN = struct
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 
-  inductive seq_step_up ::
+  inductive seq_step_up : :
     bind * (var %$\rightharpoonup$% val)) %$\Rightarrow$% exp * val_env %$\Rightarrow$% bool where 
-    LetCaseLft:
+    LetCaseLft :
       env xs = Some (VClsr (Lft xl') envl) %$\Longrightarrow$%
       envl xl' = Some vl %$\Longrightarrow$%
       seq_step_up
         (Case xs xl el xr er, env)
         (el, env(xl %$\mapsto$% vl)) |
-    LetCaseRht: 
+    LetCaseRht : 
       env xs = Some (VClsr (Rht xr') envr) %$\Longrightarrow$% 
       envr xr' = Some vr %$\Longrightarrow$%
       seq_step_up
         (Case xs xl el xr er, env)
         (er, env(xr %$\mapsto$% vr)) |
-    LetApp:
+    LetApp :
       env f = Some (VClsr (Abs fp xp el) envl) %$\Longrightarrow$% 
       env xa = Some va  %$\Longrightarrow$% 
       seq_step_up
@@ -609,9 +609,9 @@ structure OneShotToOneChan : CHAN = struct
 
   type_synonym trace_pool = ctrl_path %$\rightharpoonup$% state
 
-  inductive leaf ::
+  inductive leaf : :
     trace_pool %$\Rightarrow$% ctrl_path %$\Rightarrow$% bool where
-    intro:
+    intro :
       trpl pi %$\neq$% None %$\Longrightarrow$% 
       (%$\nexists$% pi' . trpl pi' %$\neq$% None %$\land$% strict_prefix pi pi') %$\Longrightarrow$%  
       leaf trpl pi
@@ -619,11 +619,11 @@ structure OneShotToOneChan : CHAN = struct
   \end{lstlisting}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  inductive concur_step ::
+  inductive concur_step : :
     trace_pool * cmmn_set %$\Rightarrow$%
     trace_pool * cmmn_set %$\Rightarrow$%
     bool where 
-    Seq_Sttep_Down:
+    Seq_Sttep_Down :
       leaf trpl pi %$\Longrightarrow$%
       trpl pi = Some
         (Stt (Rslt x) env
@@ -633,7 +633,7 @@ structure OneShotToOneChan : CHAN = struct
         (trpl, ys)
         (trpl(pi @ [LRtn xk] %$\mapsto$%
           (Stt ek (envk(xk %$\mapsto$% v)) k)), ys) |
-    Seq_Step:
+    Seq_Step :
       leaf trpl pi %$\Longrightarrow$%
       trpl pi = Some
         (Stt (Let x  b e) env k) %$\Longrightarrow$%
@@ -642,7 +642,7 @@ structure OneShotToOneChan : CHAN = struct
         (trpl, ys)
         (trpl(pi @ [LNxt x] %$\mapsto$%
           (Stt e (env(x %$\mapsto$% v)) k), ys) |
-    Seq_Step_Up: 
+    Seq_Step_Up : 
       leaf trpl pi %$\Longrightarrow$%
       trpl pi = Some
         (Stt (Let x b e) env k) %$\Longrightarrow$%
@@ -652,14 +652,14 @@ structure OneShotToOneChan : CHAN = struct
         (trpl(pi @ [LCall x] %$\mapsto$%
           (Stt e' env'
             ((Ctn x e env) # k))), ys) |
-    LetMkCh: 
+    LetMkCh : 
       leaf trpl pi %$\Longrightarrow$%
       trpl pi = Some (Stt (Let x MkChn e) env k) %$\Longrightarrow$%
       concur_step
         (trpl, ys)
         (trpl(pi @ [LNxt x] %$\mapsto$%
           (Stt e (env(x %$\mapsto$% (VChn (Chn pi x)))) k)), ys) |
-    LetSpwn:
+    LetSpwn :
       leaf trpl pi %$\Longrightarrow$%
       trpl pi = Some
         (Stt (Let x (Spwn ec) e) env k) %$\Longrightarrow$%
@@ -670,7 +670,7 @@ structure OneShotToOneChan : CHAN = struct
               (St e (env(x %$\mapsto$% VUnt)) k), 
           pi @ [LSpwn x] %$\mapsto$%
               (St ec env []), ys) |
-    LetSync:
+    LetSync :
       leaf trpl pis %$\Longrightarrow$%
       trpl pis = Some
         (Stt (Let xs (Sync xse) es) envs ks) %$\Longrightarrow$%
@@ -696,10 +696,10 @@ structure OneShotToOneChan : CHAN = struct
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive star :: ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$% 'a %$\Rightarrow$% 'a %$\Rightarrow$% bool
+  inductive star : : ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$% 'a %$\Rightarrow$% 'a %$\Rightarrow$% bool
     for r where
-    refl: star r x x |
-    step: r x y %$\Longrightarrow$% star r y z %$\Longrightarrow$% star r x z
+    refl : star r x x |
+    step : r x y %$\Longrightarrow$% star r y z %$\Longrightarrow$% star r x z
   \end{lstlisting}
 
 
@@ -707,10 +707,10 @@ structure OneShotToOneChan : CHAN = struct
 \section{Dynamic Communication}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive is_send_path ::
+  inductive is_send_path : :
     trace_pool %$\Rightarrow$% chan %$\Rightarrow$%
     control_path %$\Rightarrow$% bool where
-    intro:
+    intro :
       trpl piy = Some
         (Stt (Let xy (Sync xe) en) env k) %$\Longrightarrow$%
       env xe = Some
@@ -718,10 +718,10 @@ structure OneShotToOneChan : CHAN = struct
       enve xsc = Some (VChn c) %$\Longrightarrow$%
       is_send_path trpl c piy
 
-  inductive is_recv_path ::
+  inductive is_recv_path : :
     trace_pool %$\Rightarrow$% chan %$\Rightarrow$%
     control_path %$\Rightarrow$% bool where
-    intro:
+    intro :
       trpl piy = Some
         (Stt (Let xy (Sync xe) en) env k) %$\Longrightarrow$%
       env xe = Some
@@ -732,43 +732,43 @@ structure OneShotToOneChan : CHAN = struct
   \end{lstlisting}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  inductive every_two ::
+  inductive every_two : :
     ('a %$\Rightarrow$% bool) %$\Rightarrow$%
     ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$%
     bool where
-    intro: (%$\forall$% pi1 pi2 .
+    intro : (%$\forall$% pi1 pi2 .
         p x1 %$\longrightarrow$%
         p x2 %$\longrightarrow$%
         r x1 x2) %$\Longrightarrow$%
       every_two p r
 
-  inductive ordered :: 'a list %$\Rightarrow$% 'a list %$\Rightarrow$% bool where
-    left: prefix pi1 pi2 %$\Longrightarrow$% ordered pi1 pi2 |
-    right: prefix pi2 pi1 %$\Longrightarrow$% ordered pi1 pi2
+  inductive ordered : : 'a list %$\Rightarrow$% 'a list %$\Rightarrow$% bool where
+    left : prefix pi1 pi2 %$\Longrightarrow$% ordered pi1 pi2 |
+    right : prefix pi2 pi1 %$\Longrightarrow$% ordered pi1 pi2
 
   \end{lstlisting}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  inductive one_shot :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
-    intro:
+  inductive one_shot : : trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
+    intro :
       every_two
         (is_send_path trpl c) op= %$\Longrightarrow$% 
       one_shot trpl c
 
-  inductive fan_out :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
-    intro:
+  inductive fan_out : : trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
+    intro :
       every_two
         (is_send_path trpl c) ordered %$\Longrightarrow$%
       fan_out trpl c
 
-  inductive fan_in :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
-    intro:
+  inductive fan_in : : trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
+    intro :
       every_two
         (is_recv_path trpl c) ordered %$\Longrightarrow$% 
       fan_in trpl c
 
-  inductive one_to_one :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
-    intro:
+  inductive one_to_one : : trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
+    intro :
       fan_out trpl c %$\Longrightarrow$%
       fan_in trpl c %$\Longrightarrow$% 
       one_to_one trpl c
@@ -786,7 +786,7 @@ structure OneShotToOneChan : CHAN = struct
 
   type_synonym abstract_env = var %$\Rightarrow$% abstract_value set
 
-  fun rslt_var :: exp %$\Rightarrow$% var where
+  fun rslt_var : : exp %$\Rightarrow$% var where
     rslt_var (Rslt x) = x |
     rslt_var (Let _ _ e) = (rslt_var e)
 
@@ -794,51 +794,51 @@ structure OneShotToOneChan : CHAN = struct
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 
-  inductive may_be_eval_exp ::
+  inductive may_be_eval_exp : :
     abstract_env * abstract_env %$\Rightarrow$%
     exp %$\Rightarrow$% bool where
-    Result:
+    Result :
       may_be_eval_exp (V, C) (RESULT x) |
-    Let_Unt:
+    let_Unt :
       {AUnt} %$\subseteq$% V x %$\Longrightarrow$%
       may_be_eval_exp (V, C) e %$\Longrightarrow$% 
       may_be_eval_exp (V, C) (Let x Unt e) |
-    Let_Chan: 
+    let_Chan : 
       {AChn x} %$\subseteq$% V x  %$\Longrightarrow$%
       may_be_eval_exp (V, C) e %$\Longrightarrow$%
       may_be_eval_exp (V, C) (Let x (MkChn) e) |
-    Let_SendEvt : 
+    let_SendEvt : 
       {APrim (SendEvt xc xm)} %$\subseteq$% V x %$\Longrightarrow$%
       may_be_eval_exp (V, C) e %$\Longrightarrow$% 
       may_be_eval_exp (V, C) (Let x (Prim (SendEvt xc xm)) e) |
-    Let_RecvEvt :
+    let_RecvEvt :
       {APrim (RecvEvt xc)} %$\subseteq$% V x %$\Longrightarrow$%
       may_be_eval_exp (V, C) e %$\Longrightarrow$% 
       may_be_eval_exp (V, C) (Let x (Prim (RecvEvt xc)) e) |
-    Let_Pair : 
+    let_Pair : 
       {APrim (Pair x1 x2)} %$\subseteq$% V x %$\Longrightarrow$%
       may_be_eval_exp (V, C) e %$\Longrightarrow$% 
       may_be_eval_exp (V, C) (Let x (Pair x1 x2) e) |
-    Let_Left : 
+    let_Left : 
       {APrim (Left xp)} %$\subseteq$% V x %$\Longrightarrow$%
       may_be_eval_exp (V, C) e %$\Longrightarrow$% 
       may_be_eval_exp (V, C) (Let x (Left xp) e) |
-    Let_Right:
+    let_Right :
       {APrim (Right xp)} %$\subseteq$% V x %$\Longrightarrow$%
       may_be_eval_exp (V, C) e %$\Longrightarrow$% 
       may_be_eval_exp (V, C) (Let x (Right xp) e) |
-    Let_Abs : 
+    let_Abs : 
       {APrim (Abs f' x' e')} %$\subseteq$% V f' %$\Longrightarrow$%
       may_be_eval_exp (V, C) e' %$\Longrightarrow$%
       {APrim (Abs f' x' e')} %$\subseteq$% V x %$\Longrightarrow$%
       may_be_eval_exp (V, C) e %$\Longrightarrow$% 
       may_be_eval_exp (V, C) (Let x (Abs f' x' e') e) |
-    Let_Spawn:
+    let_Spawn :
       {AUnt} %$\subseteq$% V x %$\Longrightarrow$%
       may_be_eval_exp (V, C) ec %$\Longrightarrow$% 
       may_be_eval_exp (V, C) e %$\Longrightarrow$%  
       may_be_eval_exp (V, C) (Let x (Spwn ec) e) |
-    Let_Sync  : 
+    let_Sync  : 
       %$\forall$% xsc xm xc . 
         (APrim (SendEvt xsc xm)) %$\in$% V xe %$\longrightarrow$% 
         AChn xc %$\in$% V xsc %$\longrightarrow$%
@@ -849,19 +849,19 @@ structure OneShotToOneChan : CHAN = struct
         C xc %$\subseteq$% V x %$\Longrightarrow$%
       may_be_eval_exp (V, C) e %$\Longrightarrow$%  
       may_be_eval_exp (V, C) (Let x (Syync xe) e) |
-    Let_Fst: 
+    let_Fst : 
       %$\forall$% x1 x2.
         (APrim (Pair x1 x2)) %$\in$% V xp %$\longrightarrow$%
         V x1 %$\subseteq$% V x %$\Longrightarrow$% 
       may_be_eval_exp (V, C) e %$\Longrightarrow$% 
       may_be_eval_exp (V, C) (Let x (Fst xp) e) |
-    Let_Snd: 
+    let_Snd : 
     %$\forall$% x1 x2 .
       (APrim (Pair x1 x2) %$\in$% V xp %$\longrightarrow$%
       V x2 %$\subseteq$% V x %$\Longrightarrow$% 
     may_be_eval_exp (V, C) e %$\Longrightarrow$% 
     may_be_eval_exp (V, C) (Let x (Snd xp) e) |
-  Let_Case:
+  let_Case :
     %$\forall$% xl' .
       (APrim (Left xl')) %$\in$% V xs %$\longrightarrow$%
         V xl' %$\subseteq$% V xl %$\land$% V (rslt_var el) %$\subseteq$% V x %$\land$%
@@ -872,7 +872,7 @@ structure OneShotToOneChan : CHAN = struct
         may_be_eval_exp (V, C) er %$\Longrightarrow$%
         may_be_eval_exp (V, C) e %$\Longrightarrow$% 
       may_be_eval_exp (V, C) (Let x (Case xs xl el xr er) e) |
-  Let_App:
+  let_App :
     %$\forall$% f' x' e' .
       (APrim (Abs f' x' e') %$\in$% V f %$\longrightarrow$%
       V xa %$\subseteq$% V x' %$\land$%
@@ -884,7 +884,7 @@ structure OneShotToOneChan : CHAN = struct
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 
-  fun abstract :: val %$\Rightarrow$% abstract_value where
+  fun abstract : : val %$\Rightarrow$% abstract_value where
     abstract VUnt = AUnt |
     abstract VChn (Chn pi x) = AChn x |
     abstract VClsr p env = APrim p
@@ -895,35 +895,35 @@ structure OneShotToOneChan : CHAN = struct
 
 
   inductive 
-    may_be_eval_val ::
+    may_be_eval_val : :
       abstract_env * abstract_env %$\Rightarrow$% val %$\Rightarrow$% bool and  
-    may_be_eval_env ::
+    may_be_eval_env : :
       abstract_env * abstract_env %$\Rightarrow$% val_env %$\Rightarrow$% bool where
-    Unt:
+    Unt :
       may_be_eval_val (V, C) VUnt |
-    Chan:
+    Chan :
       may_be_eval_val (V, C) VChn c |
-    SendEvt:
+    SendEvt :
       may_be_eval_env (V, C) env %$\Longrightarrow$%
       may_be_eval_val (V, C) (VClsr (SendEvt _ _) env) |
-    RecvEvt:
+    RecvEvt :
       may_be_eval_env (V, C) env %$\Longrightarrow$%
       may_be_eval_val (V, C) (VClsr (RecvEvt _) env) |
-    Left:
+    Left :
       may_be_eval_env (V, C) env %$\Longrightarrow$%
       may_be_eval_val (V, C) (VClsr (Left _) env) |
-    Right:
+    Right :
       may_be_eval_env (V, C) env %$\Longrightarrow$%
       may_be_eval_val (V, C) (VClsr (Right _) env) |
-    Abs:
+    Abs :
       {(APrim (Abs f x e)} %$\subseteq$% V f %$\Longrightarrow$% 
       may_be_eval_exp (V, C) e %$\Longrightarrow$% 
       may_be_eval_env (V, C) env %$\Longrightarrow$%
       may_be_eval_val (V, C) (VClsr (Abs f x e) env) |
-    Pair:
+    Pair :
       may_be_eval_env (V, C) env %$\Longrightarrow$%
       may_be_eval_val (V, C) (VClsr (Pair _ _) env) |
-    intro:  
+    intro :  
       %$\forall$% x v .
         env x = Some v %$\longrightarrow$%
         {abstract v} %$\subseteq$% V x %$\land$% may_be_eval_val (V, C) v %$\Longrightarrow$%
@@ -932,12 +932,12 @@ structure OneShotToOneChan : CHAN = struct
   \end{lstlisting}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  inductive may_be_eval_stack ::
+  inductive may_be_eval_stack : :
     abstract_env * abstract_env %$\Rightarrow$%
     abstract_value set %$\Rightarrow$% cont list %$\Rightarrow$% bool where
-    Empty:
+    Empty :
       may_be_eval_stack (V, C) valset [] |
-    Nonempty: 
+    Nonempty : 
       valset %$\subseteq$% V x %$\Longrightarrow$%
       may_be_eval_exp (V, C) e %$\Longrightarrow$%
       may_be_eval_env (V, C) env %$\Longrightarrow$%
@@ -945,19 +945,19 @@ structure OneShotToOneChan : CHAN = struct
       may_be_eval_stack (V, C) valset ((Ctn x e env) # k)
 
 
-  inductive may_be_eval_state ::
+  inductive may_be_eval_state : :
     abstract_env * abstract_env %$\Rightarrow$%
     state %$\Rightarrow$% bool where
-    intro:
+    intro :
       may_be_eval_exp (V, C) e %$\Longrightarrow$%
       may_be_eval_env (V, C) env %$\Longrightarrow$%
       may_be_eval_stack (V, C) (V (rslt_var e)) k %$\Longrightarrow$%
       may_be_eval_state (V, C) (Stt e env k)
 
-  inductive may_be_eval_pool ::
+  inductive may_be_eval_pool : :
     abstract_env * abstract_env %$\Rightarrow$%
     trace_pool %$\Rightarrow$% bool where
-    intro:
+    intro :
       %$\forall$% pi st .
         trpl pi = Some st %$\longrightarrow$%
         may_be_eval_state (V, C) st %$\Longrightarrow$% 
@@ -1019,152 +1019,134 @@ structure OneShotToOneChan : CHAN = struct
 
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-inductive is_super_exp :: "exp ⇒ exp ⇒ bool"  where
-  Refl : "
-    is_super_exp e e
-  " | 
-  Let_Spawn_Child: "
-    is_super_exp e⇩c e ⟹
-    is_super_exp (LET x = SPAWN e⇩c in e⇩n) e
-  " |
-  Let_Case_Left: "
-    is_super_exp e⇩l e ⟹
-    is_super_exp (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e⇩n) e
-  " |
-  Let_Case_Right: "
-    is_super_exp e⇩r e ⟹
-    is_super_exp (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e⇩n) e
-  " |
-  Let_Abs_Body: "
-    is_super_exp e⇩b e ⟹
-    is_super_exp (LET x = FN f x⇩p . e⇩b in e⇩n) e
-  " | 
-  Let: "
-    is_super_exp e⇩n e ⟹
-    is_super_exp (LET x = b in e⇩n) e
-  "
+  inductive is_super_exp : : exp %$\Rightarrow$% exp %$\Rightarrow$% bool  where
+    Refl :
+      is_super_exp e e | 
+    let_Spawn_Child
+      is_super_exp ec e %$\Longrightarrow$%
+      is_super_exp (Let x (Spwn ec) en) e |
+    let_Case_Left :
+      is_super_exp el e %$\Longrightarrow$%
+      is_super_exp (Let x (case xs xl el xr er) en) e |
+    let_Case_Right :
+      is_super_exp er e %$\Longrightarrow$%
+      is_super_exp (Let x (case xs xl el xr er) en) e |
+    let_Abs_Body : "
+      is_super_exp eb e %$\Longrightarrow$%
+      is_super_exp (Let x (Abs f xp eb) en) e | 
+    Let :
+      is_super_exp en e %$\Longrightarrow$%
+      is_super_exp (Let x b en) e
 
-inductive is_super_exp_left :: "exp ⇒ exp ⇒ bool"  where
-  Refl : "
-    is_super_exp_left e0 e0
-  " | 
-  Let_Spawn_Child: "
-    is_super_exp_left e0 (LET x = SPAWN e⇩c in e⇩n)⟹
-    is_super_exp_left e0 e⇩c
-  " |
-  Let_Case_Left: "
-    is_super_exp_left e0 (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e⇩n) ⟹
-    is_super_exp_left e0 e⇩l
-  " |
-  Let_Case_Right: "
-    is_super_exp_left e0 (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e⇩n) ⟹
-    is_super_exp_left e0 e⇩r
-  " |
-  Let_Abs_Body: "
-    is_super_exp_left e0 (LET x = FN f x⇩p . e⇩b in e⇩n) ⟹
-    is_super_exp_left e0 e⇩b
-  " | 
-  Let: "
-    is_super_exp_left e0 (LET x = b in e⇩n) ⟹
-    is_super_exp_left e0 e⇩n
-  "
+  inductive is_super_exp_left : : exp %$\Rightarrow$% exp %$\Rightarrow$% bool  where
+    Refl :
+      is_super_exp_left e0 e0 | 
+    let_Spawn_Child :
+      is_super_exp_left e0 (Let x (Spwn ec) en)%$\Longrightarrow$%
+      is_super_exp_left e0 ec |
+    let_Case_Left :
+      is_super_exp_left e0 (Let x (case xs xl el xr er) en) %$\Longrightarrow$%
+      is_super_exp_left e0 el |
+    let_Case_Right : "
+      is_super_exp_left e0 (Let x (case xs xl el xr er) en) %$\Longrightarrow$%
+      is_super_exp_left e0 er |
+    let_Abs_Body :
+      is_super_exp_left e0 (Let x (Abs f xp eb) en) %$\Longrightarrow$%
+      is_super_exp_left e0 eb | 
+    Let :
+      is_super_exp_left e0 (Let x b en) %$\Longrightarrow$%
+      is_super_exp_left e0 en
 
-    inductive is_super_exp_over_prim :: "exp ⇒ prim ⇒ bool" where
-  Send_Evt: "
-    is_super_exp_over_prim e0 (Send_Evt xC xM)
-  " |
-  Recv_Evt: "
-    is_super_exp_over_prim e0 (Recv_Evt xC)
-  " |
-  Pair: "
-    is_super_exp_over_prim e0 (Pair x1 x2)
-  " |
-  Left: "
-    is_super_exp_over_prim e0 (Left x)
-  " |
-  Right: "
-    is_super_exp_over_prim e0 (Right x)
-  " |
-  Abs: "
-    is_super_exp_left e0 e⇩b ⟹
-    is_super_exp_over_prim e0 (Abs f⇩p x⇩p e⇩b)
-  " 
+  inductive is_super_exp_over_prim : : exp %$\Rightarrow$% prim %$\Rightarrow$% bool where
+    SendEvt :
+      is_super_exp_over_prim e0 (SendEvt xC xM) |
+    RecvEvt :
+      is_super_exp_over_prim e0 (RecvEvt xC) |
+    Pair :
+      is_super_exp_over_prim e0 (Pair x1 x2) |
+    Left :
+      is_super_exp_over_prim e0 (Left x) |
+    Right : "
+      is_super_exp_over_prim e0 (Right x) |
+    Abs :
+      is_super_exp_left e0 eb %$\Longrightarrow$%
+      is_super_exp_over_prim e0 (Abs fp xp eb) 
 
-inductive 
-  is_super_exp_over_env :: "exp ⇒ env ⇒ bool" and
-  is_super_exp_over_val :: "exp ⇒ val ⇒ bool"
-where
-  VUnit: "
-    is_super_exp_over_val e0 VUnit
-  " |
-  VChan: "
-    is_super_exp_over_val e0 (VChan c)
-  " |
-  VClosure: "
-    is_super_exp_over_prim e0 p ⟹
-    is_super_exp_over_env e0 ρ' ⟹
-    is_super_exp_over_val e0 (VClosure p ρ')
-  " |
+  inductive 
+    is_super_exp_over_env : : exp %$\Rightarrow$% env %$\Rightarrow$% bool and
+    is_super_exp_over_val : : exp %$\Rightarrow$% val %$\Rightarrow$% bool where
+    VUnt :
+      is_super_exp_over_val e0 VUnt |
+    VChn :
+      is_super_exp_over_val e0 (VChn c) |
+    VClsr : "
+      is_super_exp_over_prim e0 p %$\Longrightarrow$%
+      is_super_exp_over_env e0 env' %$\Longrightarrow$%
+      is_super_exp_over_val e0 (VClsr p env') |
+    intro : "
+      %$\forall$% x v .
+        env x = Some v %$\longrightarrow$%
+        is_super_exp_over_val e0 v %$\Longrightarrow$%
+      is_super_exp_over_env e0 env
 
-  Intro: "
-    ∀ x ω . ρ x = Some ω ⟶ is_super_exp_over_val e0 ω ⟹
-    is_super_exp_over_env e0 ρ
-  "
+  inductive is_super_exp_over_stack : : exp %$\Rightarrow$% cont list %$\Rightarrow$% bool where
+    Empty :
+      is_super_exp_over_stack e0 [] |
+    Nonempty :
+      is_super_exp_left e0 ek %$\Longrightarrow$%
+      is_super_exp_over_env e0 envk %$\Longrightarrow$%
+      is_super_exp_over_stack e0 k %$\Longrightarrow$%
+      is_super_exp_over_stack e0 ((Ctn xk ek envk) # k)
 
-inductive is_super_exp_over_stack :: "exp ⇒ cont list ⇒ bool" where
-  Empty: "
-    is_super_exp_over_stack e0 []
-  " |
-  Nonempty: "
-    is_super_exp_left e0 e⇩κ ⟹
-    is_super_exp_over_env e0 ρ⇩κ ⟹
-    is_super_exp_over_stack e0 κ ⟹
-    is_super_exp_over_stack e0 (⟨x⇩κ,e⇩κ,ρ⇩κ⟩ # κ)
-  "
-
-inductive is_super_exp_over_state :: "exp ⇒ state ⇒ bool" where
-  Intro: "
-    is_super_exp_left e0 e ⟹
-    is_super_exp_over_env e0 ρ ⟹
-    is_super_exp_over_stack e0 κ ⟹
-    is_super_exp_over_state e0 (⟨e;ρ;κ⟩)
-  "
+  inductive is_super_exp_over_state : : exp %$\Rightarrow$% state %$\Rightarrow$% bool where
+    intro :
+      is_super_exp_left e0 e %$\Longrightarrow$%
+      is_super_exp_over_env e0 env %$\Longrightarrow$%
+      is_super_exp_over_stack e0 k %$\Longrightarrow$%
+      is_super_exp_over_state e0 (Ctn e env k)
 
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-lemma is_super_exp_trans: "
-  is_super_exp e⇩z e⇩y ⟹ is_super_exp e⇩y e⇩x ⟹ is_super_exp e⇩z e⇩x
-"
-proof outline 
-qed
+  lemma is_super_exp_trans : "
+    is_super_exp ez ey %$\Longrightarrow$%
+    is_super_exp ey ex %$\Longrightarrow$%
+    is_super_exp ez ex"
+  proof outline 
+  qed
 
 
-lemma is_super_exp_over_state_preserved: "
-  (E, H) → (E', H') ⟹
-  ∀π σ. E π = Some σ ⟶ is_super_exp_over_state e⇩0 σ ⟹
-  E' π' = Some σ' ⟹
-  is_super_exp_over_state e⇩0 σ'
-"
-proof outline 
-qed
+  lemma is_super_exp_over_state_preserved : "
+    concur_step (trpl, ys) (trpl', ys') %$\Longrightarrow$%
+    %$\forall$% pi st.
+      trpl pi = Some st %$\longrightarrow$%
+      is_super_exp_over_state e0 st %$\Longrightarrow$%
+    trpl' pi' = Some st' %$\Longrightarrow$%
+    is_super_exp_over_state e0 st'"
+  proof outline 
+  qed
   \end{lstlisting}
 
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-lemma state_always_exp_not_reachable_sound: "
-  (ℰ0, H0) →* (ℰ', H') ⟹
-  ℰ0 = [[] ↦ ⟨e⇩0;Map.empty;[]⟩] ⟹
-  ℰ' π' = Some σ' ⟹
-  is_super_exp_over_state e⇩0 σ'
-"
+  lemma state_always_exp_not_reachable_sound : "
+    star concur_step (trpl0, ys0) (trpl', ys') %$\Longrightarrow$%
+    trpl0 = [[] %$\mapsto$% (Stt e0 (%$\lambda$% _ . None) [])] %$\Longrightarrow$%
+    trpl' pi' = Some st' %$\Longrightarrow$%
+    is_super_exp_over_state e0 st' "
+  proof outline
+  qed
 
-lemma exp_always_exp_not_reachable_sound: "
-  ([[] ↦ ⟨e⇩0;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹
-  ℰ' π' = Some (⟨e';ρ';κ'⟩) ⟹
-  is_super_exp e⇩0 e'
-" 
+  lemma exp_always_exp_not_reachable_sound : "
+    star concur_step
+    ([[] %$\mapsto$% (Stt e0 (%$\lambda$% _ . None) [])], {})
+      (trpl', H') %$\Longrightarrow$%
+    trpl' pi' = Some (Stt e' env' k')) %$\Longrightarrow$%
+    is_super_exp e0 e' " 
+  proof outline
+  qed
+
   \end{lstlisting}
 
 
