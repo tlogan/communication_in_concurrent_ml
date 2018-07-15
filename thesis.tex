@@ -767,6 +767,192 @@
 
 \section{Static Semantics}
   \begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+    datatype abstract_value =
+      AChn var |
+      AUnit |
+      APrim prim
+
+    type_synonym abstract_env = var %$\Rightarrow$% abstract_value set
+
+    fun rslt_var :: exp %$\Rightarrow$% var where
+      rslt_var (Rslt x) = x |
+      rslt_var (Let _ _ e) = (rslt_var e)
+
+
+    inductive may_be_eval ::
+      abstract_env * abstract_env %$\Rightarrow$%
+      exp %$\Rightarrow$% bool where
+      Result:
+        may_be_eval (V, C) (RESULT x) |
+      Let_Unit:
+        {AUnit} %$subset$% V x %$\Longrightarrow$%
+        may_be_eval (V, C) e %$\Longrightarrow$% 
+        may_be_eval (V, C) (Let x Unit e) |
+      Let_Chan: 
+        {AChn x} %$subset$% V x  %$\Longrightarrow$%
+        may_be_eval (V, C) e %$\Longrightarrow$%
+        may_be_eval (V, C) (Let x (MkChn) e) |
+      Let_SendEvt : 
+        {APrim (SendEvt xc xm)} %$subset$% V x %$\Longrightarrow$%
+        may_be_eval (V, C) e %$\Longrightarrow$% 
+        may_be_eval (V, C) (Let x (Prim (SendEvt xc xm)) e) |
+      Let_RecvEvt :
+        {APrim (RecvEvt xc)} %$subset$% V x %$\Longrightarrow$%
+        may_be_eval (V, C) e %$\Longrightarrow$% 
+        may_be_eval (V, C) (Let x (Prim (RecvEvt xc)) e) |
+      Let_Pair : 
+        {APrim (Pair x1 x2)} %$subset$% V x %$\Longrightarrow$%
+        may_be_eval (V, C) e %$\Longrightarrow$% 
+        may_be_eval (V, C) (Let x (Pair x1 x2) e) |
+      Let_Left : 
+        {APrim (Left xp)} %$subset$% V x %$\Longrightarrow$%
+        may_be_eval (V, C) e %$\Longrightarrow$% 
+        may_be_eval (V, C) (Let x (Left xp) e) |
+      Let_Right:
+        {APrim (Right xp)} %$subset$% V x %$\Longrightarrow$%
+        may_be_eval (V, C) e %$\Longrightarrow$% 
+        may_be_eval (V, C) (Let x (Right xp) e) |
+      Let_Abs : 
+        {APrim (Abs f' x' e')} %$subset$% V f' %$\Longrightarrow$%
+        may_be_eval (V, C) e' %$\Longrightarrow$%
+        {APrim (Abs f' x' e')} %$subset$% V x %$\Longrightarrow$%
+        may_be_eval (V, C) e %$\Longrightarrow$% 
+        may_be_eval (V, C) (Let x (Abs f' x' e') e) |
+      Let_Spawn:
+        {AUnit} %$subset$% V x %$\Longrightarrow$%
+        may_be_eval (V, C) ec %$\Longrightarrow$% 
+        may_be_eval (V, C) e %$\Longrightarrow$%  
+        may_be_eval (V, C) (Let x (Spwn ec) e) |
+      Let_Sync  : 
+        %$\forall$% xsc xm xc . 
+          (APrim (SendEvt xsc xm)) %$\in$% V xe %$\longrightarrow$% 
+          AChn xc %$\in$% V xsc %$\longrightarrow$%
+          {AUnit} %$subset$% V x %$\land$% V xm %$subset$% C xc %$\Longrightarrow$%
+        %$\forall$% xrc xc . 
+          (APrim (RecvEvt xrc)) %$\in$% V xe %$\longrightarrow$%
+          AChn xc %$\in$% V xrc %$\longrightarrow$%
+          C xc %$subset$% V x %$\Longrightarrow$%
+        may_be_eval (V, C) e %$\Longrightarrow$%  
+        may_be_eval (V, C) (Let x (Syync xe) e) |
+      Let_Fst: 
+        %$\forall$% x1 x2.
+          (APrim (Pair x1 x2)) %$\in$% V xp %$\longrightarrow$%
+          V x1 %$subset$% V x %$\Longrightarrow$% 
+        may_be_eval (V, C) e %$\Longrightarrow$% 
+        may_be_eval (V, C) (Let x (Fst xp) e) |
+      Let_Snd: 
+      %$\forall$% x1 x2 .
+        (APrim (Pair x1 x2) %$\in$% V xp %$\longrightarrow$%
+        V x2 %$subset$% V x %$\Longrightarrow$% 
+      may_be_eval (V, C) e %$\Longrightarrow$% 
+      may_be_eval (V, C) (Let x (Snd xp) e) |
+    Let_Case:
+      %$\forall$% xl' .
+        (APrim (Left xl')) %$\in$% V xs %$\longrightarrow$%
+          V xl' %$subset$% V xl %$\land$% V (rslt_var el) %$subset$% V x %$\land$%
+          may_be_eval (V, C) el %$\Longrightarrow$%
+      %$\forall$% xr' .
+        (APrim (Right xr')) %$\in$% V xs %$\longrightarrow$%
+          V xr' %$subset$% V xr %$\land$% V (rslt_var er) %$subset$% V x %$\land$%
+          may_be_eval (V, C) er %$\Longrightarrow$%
+          may_be_eval (V, C) e %$\Longrightarrow$% 
+        may_be_eval (V, C) (Let x (Case xs xl el xr er) e) |
+    Let_App:
+      %$\forall$% f' x' e' .
+        (APrim (Abs f' x' e') %$\in$% V f %$\longrightarrow$%
+        V xa %$subset$% V x' %$\land$%
+        V (⌊e'⌋) %$subset$% V x %$\Longrightarrow$% 
+      may_be_eval (V, C) e %$\Longrightarrow$% 
+      may_be_eval (V, C) (Let x (App f xa) e)
+
+
+    fun abstract :: val %$\Rightarrow$% abstract_value where
+      abstract VUnit = AUnit |
+      abstract VChan (Chn pi x) = AChn x" |
+      abstract VClosure p env = APrim p
+
+
+
+inductive 
+  may_be_eval_value :: "abstract_env × abstract_env %$\Rightarrow$% val %$\Rightarrow$% bool" (infix "⊨ω" 55) and  
+  may_be_eval_env :: "abstract_env × abstract_env %$\Rightarrow$% val_env %$\Rightarrow$% bool" (infix "⊨env" 55) 
+where
+  Unit: "
+    (V, C) ⊨ω VUnit
+  " |
+
+  Chan: "
+    (V, C) ⊨ω VChan c
+  " |
+
+  SendEvt: "
+    (V, C) ⊨env env %$\Longrightarrow$%
+    (V, C) ⊨ω (VClosure (SendEvt _ _) env)
+  " |
+
+  RecvEvt: "
+    (V, C) ⊨env env %$\Longrightarrow$%
+    (V, C) ⊨ω (VClosure (RecvEvt _) env)
+  " |
+
+  Left: "
+    (V, C) ⊨env env %$\Longrightarrow$%
+    (V, C) ⊨ω (VClosure (Left _) env)
+  " |
+
+  Right: "
+    (V, C) ⊨env env %$\Longrightarrow$%
+    (V, C) ⊨ω (VClosure (Right _) env)
+  " |
+
+  Abs: "
+    {^Abs f x e} %$subset$% V f %$\Longrightarrow$% 
+    (V, C) may_be_eval e %$\Longrightarrow$% 
+    (V, C) ⊨env env %$\Longrightarrow$%
+    (V, C) ⊨ω (VClosure (Abs f x e) env)
+  " |
+
+  Pair: "
+    (V, C) ⊨env env %$\Longrightarrow$%
+    (V, C) ⊨ω (VClosure (Pair _ _) env)
+  " |
+
+  Intro: " 
+    %$\forall$% x ω . env x = Some ω %$\longrightarrow$% {|ω|} %$subset$% V x %$\land$% (V, C) ⊨ω ω %$\Longrightarrow$%
+    (V, C) ⊨env env
+  "
+
+
+inductive may_be_eval_stack :: "abstract_env × abstract_env %$\Rightarrow$% abstract_value set %$\Rightarrow$% cont list %$\Rightarrow$% bool" ("_ ⊨κ _ ⇛ _" [56,0,56]55) where
+  Empty: "(V, C) ⊨κ 𝒲 ⇛ []" |
+  Nonempty: "
+    ⟦ 
+      𝒲 %$subset$% V x %$\Longrightarrow$%
+      (V, C) may_be_eval e;
+      (V, C) ⊨env env;
+      (V, C) ⊨κ V (⌊e⌋) ⇛ κ
+    ⟧ %$\Longrightarrow$% 
+    (V, C) ⊨κ 𝒲 ⇛ (⟨x, e, env⟩ # κ)
+  "
+
+
+inductive may_be_eval_state :: "abstract_env × abstract_env %$\Rightarrow$% state %$\Rightarrow$% bool" (infix "⊨σ" 55)  where
+  Intro: "
+    ⟦
+      (V, C) may_be_eval e;
+      (V, C) ⊨env env;
+      (V, C) ⊨κ V (⌊e⌋) ⇛ κ
+    ⟧ %$\Longrightarrow$%
+    (V, C) ⊨σ ⟨e; env; κ⟩
+  "
+
+inductive may_be_eval_pool :: "abstract_env × abstract_env %$\Rightarrow$% trace_pool %$\Rightarrow$% bool" (infix "⊨ℰ" 55) where
+  Intro: "
+    (%$\forall$% pi σ . ℰ pi = Some σ %$\longrightarrow$% (V, C) ⊨σ σ) %$\Longrightarrow$% 
+    (V, C) ⊨ℰ ℰ
+  "
+    
     \end{lstlisting}
 
 \end{document}

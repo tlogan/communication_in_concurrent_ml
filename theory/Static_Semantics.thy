@@ -150,8 +150,6 @@ fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) 
 
 
 
-
-
 inductive 
   may_be_static_eval_value :: "abstract_env \<times> abstract_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55) and  
   may_be_static_eval_env :: "abstract_env \<times> abstract_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
