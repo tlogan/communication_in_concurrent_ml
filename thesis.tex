@@ -612,8 +612,9 @@
       bool where 
       Seq_Sttep_Down:
         leaf trpl pi %$\Longrightarrow$%
-        trpl pi = Some (
-          Stt (Rslt x) env ((Ctn xk ek envk) # k)) %$\Longrightarrow$%
+        trpl pi = Some
+          (Stt (Rslt x) env
+            ((Ctn xk ek envk) # k)) %$\Longrightarrow$%
         env x = Some v %$\Longrightarrow$%
         concur_step
           (trpl, ys)
@@ -621,19 +622,23 @@
             (Stt ek (envk(xk %$\mapsto$% v)) k)), ys) |
       Seq_Step:
         leaf trpl pi %$\Longrightarrow$%
-        trpl pi = Some (Stt (Let x  b e) env k) %$\Longrightarrow$%
+        trpl pi = Some
+          (Stt (Let x  b e) env k) %$\Longrightarrow$%
         seq_step (b, env) v%$\Longrightarrow$%
         concur_step
           (trpl, ys)
-          (trpl(pi @ [LNxt x] %$\mapsto$% (Stt e (env(x %$\mapsto$% v)) k), ys) |
+          (trpl(pi @ [LNxt x] %$\mapsto$%
+            (Stt e (env(x %$\mapsto$% v)) k), ys) |
       Seq_Step_Up: 
         leaf trpl pi %$\Longrightarrow$%
-        trpl pi = Some (Stt (Let x b e) env k) %$\Longrightarrow$%
+        trpl pi = Some
+          (Stt (Let x b e) env k) %$\Longrightarrow$%
         seq_step_up (b, env) (e', env') %$\Longrightarrow$%
         concur_step
           (trpl, ys)
           (trpl(pi @ [LCall x] %$\mapsto$%
-            (Stt e' env' ((Ctn x e env) # k))), ys) |
+            (Stt e' env'
+              ((Ctn x e env) # k))), ys) |
       LetMkCh: 
         leaf trpl pi %$\Longrightarrow$%
         trpl pi = Some (Stt (Let x MkChn e) env k) %$\Longrightarrow$%
@@ -643,19 +648,26 @@
             (Stt e (env(x %$\mapsto$% (VChn (Chn pi x)))) k)), ys) |
       LetSpwn:
         leaf trpl pi %$\Longrightarrow$%
-        trpl pi = Some (Stt (Let x (Spwn ec) e) env k) %$\Longrightarrow$%
+        trpl pi = Some
+          (Stt (Let x (Spwn ec) e) env k) %$\Longrightarrow$%
         concur_step
           (trpl, ys)
           (trpl(
-            pi @ [LNxt x] %$\mapsto$% (St e (env(x %$\mapsto$% VUnit)) k), 
-            pi @ [LSpwn x] %$\mapsto$% (St ec env []), ys) |
+            pi @ [LNxt x] %$\mapsto$%
+                (St e (env(x %$\mapsto$% VUnit)) k), 
+            pi @ [LSpwn x] %$\mapsto$%
+                (St ec env []), ys) |
       LetSync:
         leaf trpl pis %$\Longrightarrow$%
-        trpl pis = Some (Stt (Let xs (Sync xse) es) envs ks) %$\Longrightarrow$%
-        envs xse = Some (VClsr (SendEvt xsc xm) envse) %$\Longrightarrow$%
+        trpl pis = Some
+          (Stt (Let xs (Sync xse) es) envs ks) %$\Longrightarrow$%
+        envs xse = Some
+          (VClsr (SendEvt xsc xm) envse) %$\Longrightarrow$%
         leaf trpl pir  %$\Longrightarrow$%
-        trpl pir = Some (Stt (Let xr (Sync xre) er) envr kr) %$\Longrightarrow$%
-        envr xre = Some (VClsr (RecvEvt xrc) envre) %$\Longrightarrow$%
+        trpl pir = Some
+          (Stt (Let xr (Sync xre) er) envr kr) %$\Longrightarrow$%
+        envr xre = Some
+          (VClsr (RecvEvt xrc) envre) %$\Longrightarrow$%
         envse xsc = Some (VChn c) %$\Longrightarrow$%
         envre xrc = Some (VChn c) %$\Longrightarrow$%
         envse xm = Some vm %$\Longrightarrow$%
@@ -668,6 +680,13 @@
               (Stt er (envr(xr %$\mapsto$% vm)) kr)), 
             ys %$\cup$% {(pis, c, pir)})
 
+    \end{lstlisting}
+
+  \begin{lstlisting}[style=codestyle1, escapechar=\%]
+    inductive star :: ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$% 'a %$\Rightarrow$% 'a %$\Rightarrow$% bool
+      for r where
+      refl: star r x x |
+      step: r x y %$\Longrightarrow$% star r y z %$\Longrightarrow$% star r x z
     \end{lstlisting}
 
 \end{document}

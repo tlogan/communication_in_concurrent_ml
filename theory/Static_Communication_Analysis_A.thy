@@ -906,7 +906,7 @@ lemma isnt_send_path_sound: "
     may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
- apply (frule_tac x\<^sub>s\<^sub>c = x\<^sub>s\<^sub>c and \<pi>C = \<pi>C and \<rho>\<^sub>e = \<rho>\<^sub>e in isnt_send_site_sound; auto?)
+ apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in isnt_send_site_sound; auto?)
  apply (frule isnt_path_sound; auto?)
 done
 
@@ -920,7 +920,7 @@ lemma isnt_recv_path_sound: "
     may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC) pathSync
 "
  apply (unfold is_recv_path.simps; auto)
- apply (frule_tac x\<^sub>r\<^sub>c = x\<^sub>r\<^sub>c and \<pi>C = \<pi>C and \<rho>\<^sub>e = \<rho>\<^sub>e in isnt_recv_site_sound; auto?)
+ apply (frule_tac x\<^sub>r\<^sub>c = xrc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in isnt_recv_site_sound; auto?)
  apply (frule isnt_path_sound; auto?)
 done
 
@@ -937,9 +937,9 @@ theorem one_shot_sound': "
 "
  apply (simp add: every_two_dynamic_paths.simps every_two.simps singular.simps; auto)
 
- apply (frule_tac \<pi>Sync = \<pi>\<^sub>1 in isnt_send_path_sound; auto)
+ apply (frule_tac \<pi>Sync = \<pi>1 in isnt_send_path_sound; auto)
  apply (drule_tac x = pathSync in spec)
- apply (frule_tac \<pi>Sync = \<pi>\<^sub>2 in isnt_send_path_sound; auto?)
+ apply (frule_tac \<pi>Sync = \<pi>2 in isnt_send_path_sound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
  apply (simp add: equality_abstract_to_concrete send_abstract_paths_of_same_run_inclusive)
@@ -969,7 +969,7 @@ theorem noncompetitive_send_to_ordered_send: "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
 apply (simp add: every_two_dynamic_paths.simps; auto)
   using isnt_send_path_sound abstract_paths_of_same_run_inclusive 
-  apply (meson is_send_path_implies_nonempty_pool prefix_abstract_to_concrete)
+  apply (meson is_send_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
 theorem fan_out_sound: "
@@ -995,7 +995,7 @@ lemma noncompetitive_recv_to_ordered_recv: "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
 apply (simp add: every_two_dynamic_paths.simps; auto)
   using isnt_recv_path_sound abstract_paths_of_same_run_inclusive 
-apply (meson is_recv_path_implies_nonempty_pool prefix_abstract_to_concrete)
+ apply (meson is_recv_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
 
@@ -1023,7 +1023,7 @@ theorem one_to_one_sound: "
 "
  apply (erule static_one_to_one.cases; auto)
  apply (unfold one_to_one.simps)
- apply (simp add: noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
+ apply (simp add: fan_in.simps fan_out.simps noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
 done
 
 end

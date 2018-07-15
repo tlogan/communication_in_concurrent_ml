@@ -1100,7 +1100,7 @@ lemma isnt_send_path_sound: "
     may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
- apply (frule_tac x\<^sub>s\<^sub>c = x\<^sub>s\<^sub>c and \<pi>C = \<pi>C and \<rho>\<^sub>e = \<rho>\<^sub>e in isnt_send_site_sound; auto?)
+ apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in isnt_send_site_sound; auto?)
  apply (frule isnt_path_sound; auto?)
   apply (auto simp: 
     dynamic_built_on_chan_var.simps 
@@ -1120,9 +1120,9 @@ theorem one_shot_sound': "
   every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
  apply (simp add: every_two_dynamic_paths.simps every_two.simps singular.simps; auto)
- apply (frule_tac \<pi>Sync = \<pi>\<^sub>1 in isnt_send_path_sound; auto)
+ apply (frule_tac \<pi>Sync = \<pi>1 in isnt_send_path_sound; auto)
  apply (drule_tac x = pathSync in spec)
- apply (frule_tac \<pi>Sync = \<pi>\<^sub>2 in isnt_send_path_sound; auto?)
+ apply (frule_tac \<pi>Sync = \<pi>2 in isnt_send_path_sound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
  apply (simp add: send_abstract_paths_equal_exclusive_implies_dynamic_paths_equal)
@@ -1207,10 +1207,8 @@ theorem one_to_one_sound: "
 "
  apply (erule static_one_to_one.cases; auto)
  apply (unfold one_to_one.simps)
- apply (simp add: noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
+ apply (metis fan_in_sound fan_out.intros noncompetitive_send_to_ordered_send static_fan_in.intros)
 done
-
-
 
 
 (*
