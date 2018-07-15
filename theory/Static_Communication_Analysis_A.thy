@@ -767,7 +767,7 @@ by (simp add: equality_abstract_to_concrete send_abstract_paths_of_same_run_incl
 (* PATH SOUND *)
 
 inductive 
-  simple_flow_set_env :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> val_env \<Rightarrow> bool"  and
+  simple_flow_set_env :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> env \<Rightarrow> bool"  and
   simple_flow_set_val :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> val \<Rightarrow> bool"
 where
   Intro: "

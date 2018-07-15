@@ -18,14 +18,14 @@ datatype val =
   VChan chan |
   VClosure prim "var \<rightharpoonup> val"
 
-type_synonym val_env = "var \<rightharpoonup> val"
+type_synonym env = "var \<rightharpoonup> val"
   
-datatype cont = Cont var exp val_env ("\<langle>_,_,_\<rangle>" [0, 0, 0] 70) 
+datatype cont = Cont var exp env ("\<langle>_,_,_\<rangle>" [0, 0, 0] 70) 
 
-datatype state = State exp val_env "cont list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
+datatype state = State exp env "cont list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
 
 
-inductive seq_step :: "(bind \<times> val_env) \<Rightarrow> val \<Rightarrow> bool" where
+inductive seq_step :: "(bind \<times> env) \<Rightarrow> val \<Rightarrow> bool" where
   Let_Unit: "
     seq_step (\<lparr>\<rparr>, env) VUnit
   " |
@@ -48,7 +48,7 @@ inductive seq_step :: "(bind \<times> val_env) \<Rightarrow> val \<Rightarrow> b
   "
 
 
-inductive seq_step_up :: "bind * val_env \<Rightarrow> exp * val_env \<Rightarrow> bool" where 
+inductive seq_step_up :: "bind * env \<Rightarrow> exp * env \<Rightarrow> bool" where 
   Let_Case_Left: "
     \<lbrakk> 
       env xs = Some (VClosure (Left xl') envl); 

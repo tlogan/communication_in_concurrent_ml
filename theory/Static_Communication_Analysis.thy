@@ -75,7 +75,7 @@ lemma isnt_send_evt_sound: "
   \<rbrakk> \<Longrightarrow>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> V x\<^sub>e
 "
-  apply (drule values_not_bound_sound; assumption?; auto)
+  apply (drule exp_always_not_value_sound; assumption?; auto)
 done
 
 lemma isnt_recv_evt_sound: "
@@ -87,7 +87,7 @@ lemma isnt_recv_evt_sound: "
   \<rbrakk> \<Longrightarrow>
   {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> V x\<^sub>e
 "
-  apply (drule values_not_bound_sound; assumption?; auto)
+  apply (drule exp_always_not_value_sound; assumption?; auto)
 done
 
 lemma isnt_send_chan_sound: "

@@ -152,7 +152,7 @@ fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) 
 
 inductive 
   may_be_static_eval_value :: "abstract_env \<times> abstract_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55) and  
-  may_be_static_eval_env :: "abstract_env \<times> abstract_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
+  may_be_static_eval_env :: "abstract_env \<times> abstract_env \<Rightarrow> env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
 where
   Unit: "
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnit
@@ -733,8 +733,6 @@ proof
   assume "\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" and "\<rho>\<^sub>p x\<^sub>1 = Some \<omega>"
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle>" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FST x\<^sub>p in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps)+
-
-  thm may_be_static_eval_state.simps
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" by (blast intro: may_be_static_eval_env.cases) then
@@ -1567,20 +1565,11 @@ proof -
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by simp
 qed
 
-theorem may_be_static_eval_env_to_precise : "
-  \<rho> x = Some \<omega> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho> \<Longrightarrow>
-  {|\<omega>|} \<subseteq> \<V> x
-"
-proof -
-  assume "\<rho> x = Some \<omega>" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" then
-  show "{|\<omega>|} \<subseteq> \<V> x" by (simp add: may_be_static_eval_env.simps)
-qed
 
-theorem may_be_static_eval_pool_to_precise : "
+theorem trace_pool_snapshot_not_value_sound : "
   \<rho> x = Some \<omega> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>  
   {|\<omega>|} \<subseteq> \<V> x
 "
 proof -
@@ -1596,7 +1585,7 @@ proof -
   show "{|\<omega>|} \<subseteq> \<V> x" by (simp add: may_be_static_eval_env.simps)
 qed
 
-theorem values_not_bound_pool_sound : "
+theorem trace_pool_always_not_value_sound : "
   \<rho>' x = Some \<omega> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> 
   (\<E>, H) \<rightarrow>* (\<E>', H') \<Longrightarrow>
@@ -1614,7 +1603,7 @@ proof -
   have H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: may_be_static_eval_preserved_under_concur_step_star)
 
   from H1 H4 H5
-  show "{|\<omega>|} \<subseteq> \<V> x" using may_be_static_eval_pool_to_precise by auto
+  show "{|\<omega>|} \<subseteq> \<V> x" using trace_pool_snapshot_not_value_sound by auto
 qed
 
 
@@ -1639,7 +1628,7 @@ proof -
 qed
 
 
-theorem values_not_bound_sound : "
+theorem exp_always_not_value_sound : "
   \<rho>' x = Some \<omega> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) \<rightarrow>* (\<E>', H') \<Longrightarrow>
@@ -1657,7 +1646,7 @@ proof -
     H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: may_be_static_eval_to_pool)
 
   from H1 H3 H4 H5
-  show " {|\<omega>|} \<subseteq> \<V> x" using values_not_bound_pool_sound by blast
+  show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_not_value_sound by blast
 qed
 
 
@@ -1829,7 +1818,7 @@ inductive is_super_exp_over_prim :: "exp \<Rightarrow> prim \<Rightarrow> bool" 
   " 
 
 inductive 
-  is_super_exp_over_env :: "exp \<Rightarrow> val_env \<Rightarrow> bool" and
+  is_super_exp_over_env :: "exp \<Rightarrow> env \<Rightarrow> bool" and
   is_super_exp_over_val :: "exp \<Rightarrow> val \<Rightarrow> bool"
 where
   VUnit: "
