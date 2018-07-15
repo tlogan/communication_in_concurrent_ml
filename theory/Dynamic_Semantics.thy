@@ -68,7 +68,7 @@ inductive seq_step_up :: "bind * val_env \<Rightarrow> exp * val_env \<Rightarro
       env f = Some (VClosure (Abs fp xp el) envl); 
       env xa = Some va 
     \<rbrakk> \<Longrightarrow>
-    seq_step_up (APP f xa, env) (el, envl(fl \<mapsto> (VClosure (Abs fp xp el) envl), xl \<mapsto> va))
+    seq_step_up (APP f xa, env) (el, envl(fp \<mapsto> (VClosure (Abs fp xp el) envl), xp \<mapsto> va))
   "
 
 
@@ -83,16 +83,16 @@ inductive leaf :: "trace_pool \<Rightarrow> control_path \<Rightarrow> bool" whe
 abbreviation control_path_append :: "control_path => control_label => control_path" (infixl ";;" 61) where
   "pi;;lab \<equiv> pi @ [lab]"
 
-type_synonym com_set = "(control_path * chan * control_path) set"
+type_synonym cmmn_set = "(control_path * chan * control_path) set"
 
-inductive concur_step :: "trace_pool * com_set \<Rightarrow> trace_pool * com_set \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
+inductive concur_step :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_set \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
   Seq_Step_Down: "
     \<lbrakk> 
       leaf trpl pi;
       trpl pi = Some (\<langle>RESULT x; env; \<langle>xk, ek, envk\<rangle> # k\<rangle>) ;
       env x = Some v
     \<rbrakk> \<Longrightarrow>
-    (trpl, ys) \<rightarrow> (trpl ++ [pi;;(LReturn xk) \<mapsto> \<langle>ek; envk ++ [xk \<mapsto> v]; k\<rangle>], ys)
+    (trpl, ys) \<rightarrow> (trpl(pi;;(LReturn xk) \<mapsto> \<langle>ek; envk(xk \<mapsto> v); k\<rangle>), ys)
   " |
   Seq_Step: "
     \<lbrakk> 
@@ -100,7 +100,7 @@ inductive concur_step :: "trace_pool * com_set \<Rightarrow> trace_pool * com_se
       trpl pi = Some (\<langle>LET x = b in e; env; k\<rangle>) ;
       seq_step (b, env) v
     \<rbrakk> \<Longrightarrow>
-    (trpl, ys) \<rightarrow> (trpl ++ [pi;;(LNext x) \<mapsto> \<langle>e; env(x \<mapsto> v); k\<rangle>], ys)
+    (trpl, ys) \<rightarrow> (trpl(pi;;(LNext x) \<mapsto> \<langle>e; env(x \<mapsto> v); k\<rangle>), ys)
   " |
   Seq_Step_Up: "
     \<lbrakk> 
@@ -108,24 +108,24 @@ inductive concur_step :: "trace_pool * com_set \<Rightarrow> trace_pool * com_se
       trpl pi = Some (\<langle>LET x = b in e; env; k\<rangle>) ;
       seq_step_up (b, env) (e', env')
     \<rbrakk> \<Longrightarrow>
-    (trpl, ys) \<rightarrow> (trpl ++ [pi;;(LCall x) \<mapsto> \<langle>e'; env'; \<langle>x, e, env\<rangle> # k\<rangle>], ys)
+    (trpl, ys) \<rightarrow> (trpl(pi;;(LCall x) \<mapsto> \<langle>e'; env'; \<langle>x, e, env\<rangle> # k\<rangle>), ys)
   " |
   Let_Chan: "
     \<lbrakk> 
       leaf trpl pi ;
       trpl pi = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; env; k\<rangle>)
     \<rbrakk> \<Longrightarrow>
-    (trpl, ys) \<rightarrow> (trpl ++ [
-      pi;;(LNext x) \<mapsto> (\<langle>e; env ++ [x \<mapsto> (VChan (Ch pi x))]; k\<rangle>)], ys)
+    (trpl, ys) \<rightarrow> (trpl(
+      pi;;(LNext x) \<mapsto> (\<langle>e; env(x \<mapsto> (VChan (Ch pi x))); k\<rangle>)), ys)
   " |
   Let_Spawn: "
     \<lbrakk> 
       leaf trpl pi ;
       trpl pi = Some (\<langle>LET x = SPAWN ec in e; env; k\<rangle>)
     \<rbrakk> \<Longrightarrow>
-    (trpl, ys) \<rightarrow> (trpl ++ [
-      pi;;(LNext x) \<mapsto> (\<langle>e; env ++ [x \<mapsto> VUnit]; k\<rangle>), 
-      pi;;(LSpawn x) \<mapsto> (\<langle>ec; env; []\<rangle>)], ys)
+    (trpl, ys) \<rightarrow> (trpl(
+      pi;;(LNext x) \<mapsto> (\<langle>e; env(x \<mapsto> VUnit); k\<rangle>), 
+      pi;;(LSpawn x) \<mapsto> (\<langle>ec; env; []\<rangle>)), ys)
   " |
   Let_Sync: "
     \<lbrakk>
@@ -144,13 +144,13 @@ inductive concur_step :: "trace_pool * com_set \<Rightarrow> trace_pool * com_se
 
     \<rbrakk> \<Longrightarrow>
     (trpl, ys) \<rightarrow> (
-      trpl ++ [
-        pis;;(LNext xs) \<mapsto> (\<langle>es; envs ++ [xs \<mapsto> VUnit]; ks\<rangle>), 
-        pir;;(LNext xr) \<mapsto> (\<langle>er; envr ++ [xr \<mapsto> vm]; kr\<rangle>)], 
-      H \<union> {(pis, c, pir)})
+      trpl(
+        pis;;(LNext xs) \<mapsto> (\<langle>es; envs(xs \<mapsto> VUnit); ks\<rangle>), 
+        pir;;(LNext xr) \<mapsto> (\<langle>er; envr(xr \<mapsto> vm); kr\<rangle>)), 
+      ys \<union> {(pis, c, pir)})
   "
 
-abbreviation dynamic_eval :: "trace_pool * com_set \<Rightarrow> trace_pool * com_set \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
+abbreviation dynamic_eval :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_set \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
   "X \<rightarrow>* X' \<equiv> star concur_step X X'"
 
 end

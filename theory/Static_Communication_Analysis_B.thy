@@ -670,7 +670,7 @@ inductive paths_congruent :: "control_path \<Rightarrow> abstract_path \<Rightar
     paths_congruent (\<pi> ;; (LReturn y)) (path @ (NLet x, ECall) # path' @ [(NResult y, EReturn x)])
   " 
 
-inductive paths_congruent_mod_chan :: "trace_pool * com_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive paths_congruent_mod_chan :: "trace_pool * cmmn_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Unordered: "
     paths_congruent \<pi> pathx \<Longrightarrow>
     \<not> (prefix pathx path) \<Longrightarrow>
