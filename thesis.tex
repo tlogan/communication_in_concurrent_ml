@@ -794,50 +794,50 @@ structure OneShotToOneChan : CHAN = struct
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 
-  inductive may_be_eval ::
+  inductive may_be_eval_exp ::
     abstract_env * abstract_env %$\Rightarrow$%
     exp %$\Rightarrow$% bool where
     Result:
-      may_be_eval (V, C) (RESULT x) |
+      may_be_eval_exp (V, C) (RESULT x) |
     Let_Unt:
       {AUnt} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval (V, C) e %$\Longrightarrow$% 
-      may_be_eval (V, C) (Let x Unt e) |
+      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
+      may_be_eval_exp (V, C) (Let x Unt e) |
     Let_Chan: 
       {AChn x} %$\subseteq$% V x  %$\Longrightarrow$%
-      may_be_eval (V, C) e %$\Longrightarrow$%
-      may_be_eval (V, C) (Let x (MkChn) e) |
+      may_be_eval_exp (V, C) e %$\Longrightarrow$%
+      may_be_eval_exp (V, C) (Let x (MkChn) e) |
     Let_SendEvt : 
       {APrim (SendEvt xc xm)} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval (V, C) e %$\Longrightarrow$% 
-      may_be_eval (V, C) (Let x (Prim (SendEvt xc xm)) e) |
+      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
+      may_be_eval_exp (V, C) (Let x (Prim (SendEvt xc xm)) e) |
     Let_RecvEvt :
       {APrim (RecvEvt xc)} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval (V, C) e %$\Longrightarrow$% 
-      may_be_eval (V, C) (Let x (Prim (RecvEvt xc)) e) |
+      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
+      may_be_eval_exp (V, C) (Let x (Prim (RecvEvt xc)) e) |
     Let_Pair : 
       {APrim (Pair x1 x2)} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval (V, C) e %$\Longrightarrow$% 
-      may_be_eval (V, C) (Let x (Pair x1 x2) e) |
+      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
+      may_be_eval_exp (V, C) (Let x (Pair x1 x2) e) |
     Let_Left : 
       {APrim (Left xp)} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval (V, C) e %$\Longrightarrow$% 
-      may_be_eval (V, C) (Let x (Left xp) e) |
+      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
+      may_be_eval_exp (V, C) (Let x (Left xp) e) |
     Let_Right:
       {APrim (Right xp)} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval (V, C) e %$\Longrightarrow$% 
-      may_be_eval (V, C) (Let x (Right xp) e) |
+      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
+      may_be_eval_exp (V, C) (Let x (Right xp) e) |
     Let_Abs : 
       {APrim (Abs f' x' e')} %$\subseteq$% V f' %$\Longrightarrow$%
-      may_be_eval (V, C) e' %$\Longrightarrow$%
+      may_be_eval_exp (V, C) e' %$\Longrightarrow$%
       {APrim (Abs f' x' e')} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval (V, C) e %$\Longrightarrow$% 
-      may_be_eval (V, C) (Let x (Abs f' x' e') e) |
+      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
+      may_be_eval_exp (V, C) (Let x (Abs f' x' e') e) |
     Let_Spawn:
       {AUnt} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval (V, C) ec %$\Longrightarrow$% 
-      may_be_eval (V, C) e %$\Longrightarrow$%  
-      may_be_eval (V, C) (Let x (Spwn ec) e) |
+      may_be_eval_exp (V, C) ec %$\Longrightarrow$% 
+      may_be_eval_exp (V, C) e %$\Longrightarrow$%  
+      may_be_eval_exp (V, C) (Let x (Spwn ec) e) |
     Let_Sync  : 
       %$\forall$% xsc xm xc . 
         (APrim (SendEvt xsc xm)) %$\in$% V xe %$\longrightarrow$% 
@@ -847,38 +847,38 @@ structure OneShotToOneChan : CHAN = struct
         (APrim (RecvEvt xrc)) %$\in$% V xe %$\longrightarrow$%
         AChn xc %$\in$% V xrc %$\longrightarrow$%
         C xc %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval (V, C) e %$\Longrightarrow$%  
-      may_be_eval (V, C) (Let x (Syync xe) e) |
+      may_be_eval_exp (V, C) e %$\Longrightarrow$%  
+      may_be_eval_exp (V, C) (Let x (Syync xe) e) |
     Let_Fst: 
       %$\forall$% x1 x2.
         (APrim (Pair x1 x2)) %$\in$% V xp %$\longrightarrow$%
         V x1 %$\subseteq$% V x %$\Longrightarrow$% 
-      may_be_eval (V, C) e %$\Longrightarrow$% 
-      may_be_eval (V, C) (Let x (Fst xp) e) |
+      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
+      may_be_eval_exp (V, C) (Let x (Fst xp) e) |
     Let_Snd: 
     %$\forall$% x1 x2 .
       (APrim (Pair x1 x2) %$\in$% V xp %$\longrightarrow$%
       V x2 %$\subseteq$% V x %$\Longrightarrow$% 
-    may_be_eval (V, C) e %$\Longrightarrow$% 
-    may_be_eval (V, C) (Let x (Snd xp) e) |
+    may_be_eval_exp (V, C) e %$\Longrightarrow$% 
+    may_be_eval_exp (V, C) (Let x (Snd xp) e) |
   Let_Case:
     %$\forall$% xl' .
       (APrim (Left xl')) %$\in$% V xs %$\longrightarrow$%
         V xl' %$\subseteq$% V xl %$\land$% V (rslt_var el) %$\subseteq$% V x %$\land$%
-        may_be_eval (V, C) el %$\Longrightarrow$%
+        may_be_eval_exp (V, C) el %$\Longrightarrow$%
     %$\forall$% xr' .
       (APrim (Right xr')) %$\in$% V xs %$\longrightarrow$%
         V xr' %$\subseteq$% V xr %$\land$% V (rslt_var er) %$\subseteq$% V x %$\land$%
-        may_be_eval (V, C) er %$\Longrightarrow$%
-        may_be_eval (V, C) e %$\Longrightarrow$% 
-      may_be_eval (V, C) (Let x (Case xs xl el xr er) e) |
+        may_be_eval_exp (V, C) er %$\Longrightarrow$%
+        may_be_eval_exp (V, C) e %$\Longrightarrow$% 
+      may_be_eval_exp (V, C) (Let x (Case xs xl el xr er) e) |
   Let_App:
     %$\forall$% f' x' e' .
       (APrim (Abs f' x' e') %$\in$% V f %$\longrightarrow$%
       V xa %$\subseteq$% V x' %$\land$%
       V (rslt_var e') %$\subseteq$% V x %$\Longrightarrow$% 
-    may_be_eval (V, C) e %$\Longrightarrow$% 
-    may_be_eval (V, C) (Let x (App f xa) e)
+    may_be_eval_exp (V, C) e %$\Longrightarrow$% 
+    may_be_eval_exp (V, C) (Let x (App f xa) e)
 
   \end{lstlisting}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
@@ -917,7 +917,7 @@ structure OneShotToOneChan : CHAN = struct
       may_be_eval_val (V, C) (VClsr (Right _) env) |
     Abs:
       {(APrim (Abs f x e)} %$\subseteq$% V f %$\Longrightarrow$% 
-      may_be_eval (V, C) e %$\Longrightarrow$% 
+      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
       may_be_eval_env (V, C) env %$\Longrightarrow$%
       may_be_eval_val (V, C) (VClsr (Abs f x e) env) |
     Pair:
@@ -939,7 +939,7 @@ structure OneShotToOneChan : CHAN = struct
       may_be_eval_stack (V, C) valset [] |
     Nonempty: 
       valset %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval (V, C) e %$\Longrightarrow$%
+      may_be_eval_exp (V, C) e %$\Longrightarrow$%
       may_be_eval_env (V, C) env %$\Longrightarrow$%
       may_be_eval_stack (V, C) (V (rslt_var e)) k %$\Longrightarrow$%
       may_be_eval_stack (V, C) valset ((Ctn x e env) # k)
@@ -949,7 +949,7 @@ structure OneShotToOneChan : CHAN = struct
     abstract_env * abstract_env %$\Rightarrow$%
     state %$\Rightarrow$% bool where
     intro:
-      may_be_eval (V, C) e %$\Longrightarrow$%
+      may_be_eval_exp (V, C) e %$\Longrightarrow$%
       may_be_eval_env (V, C) env %$\Longrightarrow$%
       may_be_eval_stack (V, C) (V (rslt_var e)) k %$\Longrightarrow$%
       may_be_eval_state (V, C) (Stt e env k)
@@ -967,52 +967,53 @@ structure OneShotToOneChan : CHAN = struct
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  theorem may_be_static_eval_preserved_under_concur_step : "
-  ⟦
-    (𝒱, 𝒞) ⊨⇩ℰ ℰ; 
-    (ℰ, H) → (ℰ', H')
-  ⟧ ⟹
-  (𝒱, 𝒞) ⊨⇩ℰ ℰ'
-  "
+  theorem may_be_eval_preserved_under_concur_step : "
+    may_be_eval_pool (V, C) trpl %$\Longrightarrow$% 
+    concur_step (trpl, ys) (trpl', ys') %$\Longrightarrow$%
+    may_be_stati_eval_pool (V, C) trpl'"
+  proof outline
+  qed
 
-  theorem may_be_static_eval_preserved_under_concur_step_star : "
-  ⟦
-    (𝒱, 𝒞) ⊨⇩ℰ ℰ;  
-    (ℰ, H) →* (ℰ', H')
-  ⟧ ⟹
-  (𝒱, 𝒞) ⊨⇩ℰ ℰ'
-"
-
-
-theorem may_be_static_eval_pool_precise : "
-ρ x = Some ω ⟹
-ℰ π = Some (⟨e; ρ; κ⟩) ⟹
-(𝒱, 𝒞) ⊨⇩ℰ ℰ ⟹
-{|ω|} ⊆ 𝒱 x
-"
-proof
-qed
-
-
+  theorem may_be_eval_preserved_under_concur_step_star : "
+    may_be_eval_pool (V, C) trpl %$\Longrightarrow$% 
+    star concur_step (trpl, ys) (trpl', ys')  %$\Longrightarrow$% 
+    may_be_concur_step (V, C) trpl'"
+  proof outline
+  qed
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-theorem values_not_bound_pool_sound : "
-  ρ' x = Some ω ⟹
-  (𝒱, 𝒞) ⊨⇩ℰ ℰ ⟹ 
-  (ℰ, H) →* (ℰ', H') ⟹
-  ℰ' π = Some (⟨e'; ρ'; κ'⟩) ⟹
-  {|ω|} ⊆ 𝒱 x
-"
+  theorem trace_pool_snapshot_not_value_sound : "
+    env x = Some v %$\Longrightarrow$%
+    trpl pi = Some (Stt e env k) %$\Longrightarrow$%
+    may_be_eval_pool (V, C) trpl %$\Longrightarrow$%
+    {abstract v} %$\subseteq$% V x "
+  proof outline
+  qed
+  \end{lstlisting}
 
-  theorem values_not_bound_sound : "
-  ρ' x = Some ω ⟹
-  (𝒱, 𝒞) ⊨⇩e e ⟹
-  ([[] ↦ ⟨e; empty; []⟩], H) →* (ℰ', H') ⟹
-  ℰ' π = Some (⟨e'; ρ'; κ'⟩) ⟹
-  {|ω|} ⊆ 𝒱 x
-"
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+  theorem trace_pool_always_not_value_sound : "
+    env' x = Some v %$\Longrightarrow$%
+    may_be_eval_pool (V, C) trpl %$\Longrightarrow$% 
+    star concur_step (trpl, ys) (trpl', ys') %$\Longrightarrow$%
+    trpl' pi = Some (Stt e' env' k') %$\Longrightarrow$%
+    {abstract v} %$\subseteq$% V x"
+  proof outline
+  qed
+
+  theorem exp_always_not_value_sound : "
+    env' x = Some v %$\Longrightarrow$%
+    may_be_eval_exp (V, C) e %$\Longrightarrow$%
+    star concur_step
+      ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], ys)
+      (trpl', ys') %$\Longrightarrow$%
+    trpl' pi = Some (Stt e' env' k') %$\Longrightarrow$%
+    {abstract v} %$\subseteq$% V x"
+  proof outline
+  qed
 
   \end{lstlisting}
 
