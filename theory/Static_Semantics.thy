@@ -1566,7 +1566,7 @@ proof -
 qed
 
 
-theorem trace_pool_snapshot_not_value_sound : "
+theorem trace_pool_snapshot_value_not_bound_sound : "
   \<rho> x = Some \<omega> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>  
@@ -1585,7 +1585,7 @@ proof -
   show "{|\<omega>|} \<subseteq> \<V> x" by (simp add: may_be_static_eval_env.simps)
 qed
 
-theorem trace_pool_always_not_value_sound : "
+theorem trace_pool_always_value_not_bound_sound : "
   \<rho>' x = Some \<omega> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> 
   (\<E>, H) \<rightarrow>* (\<E>', H') \<Longrightarrow>
@@ -1603,7 +1603,7 @@ proof -
   have H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: may_be_static_eval_preserved_under_concur_step_star)
 
   from H1 H4 H5
-  show "{|\<omega>|} \<subseteq> \<V> x" using trace_pool_snapshot_not_value_sound by auto
+  show "{|\<omega>|} \<subseteq> \<V> x" using trace_pool_snapshot_value_not_bound_sound by auto
 qed
 
 
@@ -1628,7 +1628,7 @@ proof -
 qed
 
 
-theorem exp_always_not_value_sound : "
+theorem exp_always_value_not_bound_sound : "
   \<rho>' x = Some \<omega> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) \<rightarrow>* (\<E>', H') \<Longrightarrow>
@@ -1646,7 +1646,7 @@ proof -
     H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: may_be_static_eval_to_pool)
 
   from H1 H3 H4 H5
-  show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_not_value_sound by blast
+  show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_value_not_bound_sound by blast
 qed
 
 
@@ -1751,10 +1751,6 @@ proof -
   show "is_super_exp e\<^sub>z e\<^sub>x" by blast
 qed
 
-lemma is_super_exp1: "
-  is_super_exp (LET x = b in e\<^sub>n) e\<^sub>n
-"
-by (simp add: is_super_exp.Let is_super_exp.Refl)
 
 lemma is_super_exp_left_implies_is_super_exp: "
   is_super_exp_left e e' \<Longrightarrow> is_super_exp e e'
@@ -1791,7 +1787,7 @@ proof -
     case (Let e0 x b e\<^sub>n)
     from Let.IH show
       "is_super_exp e0 e\<^sub>n"
-    using is_super_exp1 is_super_exp_trans by blast
+    using is_super_exp.Let is_super_exp.Refl is_super_exp_trans by blast
   qed
 qed
 
@@ -2147,7 +2143,7 @@ proof -
   qed
 qed
 
-lemma isnt_exp_sound_generalized: "
+lemma state_always_exp_not_reachable_sound: "
   (\<E>0, H0) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   \<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<Longrightarrow>
   \<E>' \<pi>' = Some \<sigma>' \<Longrightarrow>
@@ -2225,12 +2221,12 @@ proof -
     "is_super_exp_over_state e\<^sub>0 \<sigma>'" by blast
 qed
 
-lemma isnt_exp_sound: "
+lemma exp_always_exp_not_reachable_sound: "
   ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   is_super_exp e\<^sub>0 e'
 " 
-using is_super_exp_left_implies_is_super_exp is_super_exp_over_state.simps isnt_exp_sound_generalized by fastforce
+using is_super_exp_left_implies_is_super_exp is_super_exp_over_state.simps state_always_exp_not_reachable_sound by fastforce
 
 
 

@@ -75,7 +75,7 @@ lemma isnt_send_evt_sound: "
   \<rbrakk> \<Longrightarrow>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> V x\<^sub>e
 "
-  apply (drule exp_always_not_value_sound; assumption?; auto)
+  apply (drule exp_always_value_not_bound_sound; assumption?; auto)
 done
 
 lemma isnt_recv_evt_sound: "
@@ -87,7 +87,7 @@ lemma isnt_recv_evt_sound: "
   \<rbrakk> \<Longrightarrow>
   {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> V x\<^sub>e
 "
-  apply (drule exp_always_not_value_sound; assumption?; auto)
+  apply (drule exp_always_value_not_bound_sound; assumption?; auto)
 done
 
 lemma isnt_send_chan_sound: "
@@ -151,7 +151,7 @@ lemma isnt_send_site_sound: "
  apply (rule exI[of _ x\<^sub>e]; auto?)
  apply (blast dest: isnt_send_evt_sound)
  apply (rule exI; auto?)
- apply (erule isnt_exp_sound; auto)
+ apply (erule exp_always_exp_not_reachable_sound; auto)
 done
 
 lemma isnt_recv_site_sound: "
@@ -168,7 +168,7 @@ lemma isnt_recv_site_sound: "
  apply (rule exI[of _ x\<^sub>e]; auto?)
  apply (blast dest: isnt_recv_evt_sound)
  apply (rule exI; auto?)
- apply (erule isnt_exp_sound; auto)
+ apply (erule exp_always_exp_not_reachable_sound; auto)
 done
 
 end

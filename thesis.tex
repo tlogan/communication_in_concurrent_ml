@@ -984,7 +984,7 @@ structure OneShotToOneChan : CHAN = struct
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  theorem trace_pool_snapshot_not_value_sound : "
+  theorem trace_pool_snapshot_value_not_bound_sound : "
     env x = Some v %$\Longrightarrow$%
     trpl pi = Some (Stt e env k) %$\Longrightarrow$%
     may_be_eval_pool (V, C) trpl %$\Longrightarrow$%
@@ -995,7 +995,7 @@ structure OneShotToOneChan : CHAN = struct
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  theorem trace_pool_always_not_value_sound : "
+  theorem trace_pool_always_value_not_bound_sound : "
     env' x = Some v %$\Longrightarrow$%
     may_be_eval_pool (V, C) trpl %$\Longrightarrow$% 
     star concur_step (trpl, ys) (trpl', ys') %$\Longrightarrow$%
@@ -1004,7 +1004,7 @@ structure OneShotToOneChan : CHAN = struct
   proof outline
   qed
 
-  theorem exp_always_not_value_sound : "
+  theorem exp_always_value_not_bound_sound : "
     env' x = Some v %$\Longrightarrow$%
     may_be_eval_exp (V, C) e %$\Longrightarrow$%
     star concur_step
@@ -1016,6 +1016,157 @@ structure OneShotToOneChan : CHAN = struct
   qed
 
   \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+inductive is_super_exp :: "exp ⇒ exp ⇒ bool"  where
+  Refl : "
+    is_super_exp e e
+  " | 
+  Let_Spawn_Child: "
+    is_super_exp e⇩c e ⟹
+    is_super_exp (LET x = SPAWN e⇩c in e⇩n) e
+  " |
+  Let_Case_Left: "
+    is_super_exp e⇩l e ⟹
+    is_super_exp (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e⇩n) e
+  " |
+  Let_Case_Right: "
+    is_super_exp e⇩r e ⟹
+    is_super_exp (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e⇩n) e
+  " |
+  Let_Abs_Body: "
+    is_super_exp e⇩b e ⟹
+    is_super_exp (LET x = FN f x⇩p . e⇩b in e⇩n) e
+  " | 
+  Let: "
+    is_super_exp e⇩n e ⟹
+    is_super_exp (LET x = b in e⇩n) e
+  "
+
+inductive is_super_exp_left :: "exp ⇒ exp ⇒ bool"  where
+  Refl : "
+    is_super_exp_left e0 e0
+  " | 
+  Let_Spawn_Child: "
+    is_super_exp_left e0 (LET x = SPAWN e⇩c in e⇩n)⟹
+    is_super_exp_left e0 e⇩c
+  " |
+  Let_Case_Left: "
+    is_super_exp_left e0 (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e⇩n) ⟹
+    is_super_exp_left e0 e⇩l
+  " |
+  Let_Case_Right: "
+    is_super_exp_left e0 (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e⇩n) ⟹
+    is_super_exp_left e0 e⇩r
+  " |
+  Let_Abs_Body: "
+    is_super_exp_left e0 (LET x = FN f x⇩p . e⇩b in e⇩n) ⟹
+    is_super_exp_left e0 e⇩b
+  " | 
+  Let: "
+    is_super_exp_left e0 (LET x = b in e⇩n) ⟹
+    is_super_exp_left e0 e⇩n
+  "
+
+    inductive is_super_exp_over_prim :: "exp ⇒ prim ⇒ bool" where
+  Send_Evt: "
+    is_super_exp_over_prim e0 (Send_Evt xC xM)
+  " |
+  Recv_Evt: "
+    is_super_exp_over_prim e0 (Recv_Evt xC)
+  " |
+  Pair: "
+    is_super_exp_over_prim e0 (Pair x1 x2)
+  " |
+  Left: "
+    is_super_exp_over_prim e0 (Left x)
+  " |
+  Right: "
+    is_super_exp_over_prim e0 (Right x)
+  " |
+  Abs: "
+    is_super_exp_left e0 e⇩b ⟹
+    is_super_exp_over_prim e0 (Abs f⇩p x⇩p e⇩b)
+  " 
+
+inductive 
+  is_super_exp_over_env :: "exp ⇒ env ⇒ bool" and
+  is_super_exp_over_val :: "exp ⇒ val ⇒ bool"
+where
+  VUnit: "
+    is_super_exp_over_val e0 VUnit
+  " |
+  VChan: "
+    is_super_exp_over_val e0 (VChan c)
+  " |
+  VClosure: "
+    is_super_exp_over_prim e0 p ⟹
+    is_super_exp_over_env e0 ρ' ⟹
+    is_super_exp_over_val e0 (VClosure p ρ')
+  " |
+
+  Intro: "
+    ∀ x ω . ρ x = Some ω ⟶ is_super_exp_over_val e0 ω ⟹
+    is_super_exp_over_env e0 ρ
+  "
+
+inductive is_super_exp_over_stack :: "exp ⇒ cont list ⇒ bool" where
+  Empty: "
+    is_super_exp_over_stack e0 []
+  " |
+  Nonempty: "
+    is_super_exp_left e0 e⇩κ ⟹
+    is_super_exp_over_env e0 ρ⇩κ ⟹
+    is_super_exp_over_stack e0 κ ⟹
+    is_super_exp_over_stack e0 (⟨x⇩κ,e⇩κ,ρ⇩κ⟩ # κ)
+  "
+
+inductive is_super_exp_over_state :: "exp ⇒ state ⇒ bool" where
+  Intro: "
+    is_super_exp_left e0 e ⟹
+    is_super_exp_over_env e0 ρ ⟹
+    is_super_exp_over_stack e0 κ ⟹
+    is_super_exp_over_state e0 (⟨e;ρ;κ⟩)
+  "
+
+  \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+lemma is_super_exp_trans: "
+  is_super_exp e⇩z e⇩y ⟹ is_super_exp e⇩y e⇩x ⟹ is_super_exp e⇩z e⇩x
+"
+proof outline 
+qed
+
+
+lemma is_super_exp_over_state_preserved: "
+  (E, H) → (E', H') ⟹
+  ∀π σ. E π = Some σ ⟶ is_super_exp_over_state e⇩0 σ ⟹
+  E' π' = Some σ' ⟹
+  is_super_exp_over_state e⇩0 σ'
+"
+proof outline 
+qed
+  \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+lemma state_always_exp_not_reachable_sound: "
+  (ℰ0, H0) →* (ℰ', H') ⟹
+  ℰ0 = [[] ↦ ⟨e⇩0;Map.empty;[]⟩] ⟹
+  ℰ' π' = Some σ' ⟹
+  is_super_exp_over_state e⇩0 σ'
+"
+
+lemma exp_always_exp_not_reachable_sound: "
+  ([[] ↦ ⟨e⇩0;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹
+  ℰ' π' = Some (⟨e';ρ';κ'⟩) ⟹
+  is_super_exp e⇩0 e'
+" 
+  \end{lstlisting}
+
 
 \end{document}
 \end{document}
