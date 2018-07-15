@@ -16,7 +16,7 @@ type_synonym step_label = "(node_label \<times> edge_label)"
 type_synonym abstract_path = "step_label list"
 
 
-inductive static_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> (var \<Rightarrow> node_label \<Rightarrow> bool) \<Rightarrow> exp \<Rightarrow> bool"  where
+inductive static_flow_set :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> (var \<Rightarrow> node_label \<Rightarrow> bool) \<Rightarrow> exp \<Rightarrow> bool"  where
   Result: "
     static_flow_set V F may_be_recv_site (RESULT x)
   " |
@@ -142,7 +142,7 @@ inductive static_flow_set :: "abstract_value_env \<Rightarrow> flow_set \<Righta
   "
 
 inductive 
-  may_be_built_on_abstract_chan :: "abstract_value_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"
+  may_be_built_on_abstract_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"
 where
   Chan: "
     \<lbrakk>
@@ -204,11 +204,11 @@ where
   "
 *)
 
-fun chan_set :: "abstract_value_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> var set" where
+fun chan_set :: "abstract_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> var set" where
   "chan_set V Ln x\<^sub>c x = (if (may_be_built_on_abstract_chan V Ln x\<^sub>c x) then {x} else {})"
 
 
-inductive static_chan_liveness :: "abstract_value_env \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
+inductive static_chan_liveness :: "abstract_env \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "
     \<lbrakk>
       chan_set V Ln x\<^sub>c y = Ln (NResult y)
@@ -414,7 +414,7 @@ inductive may_be_static_live_flow :: "flow_set \<Rightarrow> node_map \<Rightarr
     may_be_static_live_flow F Ln Lx ((NLet xSend), ESend xE, (NLet xRecv))
   "
 
-inductive may_be_static_live_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive may_be_static_live_path :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
     may_be_static_live_path V F Ln Lx start isEnd []
@@ -512,7 +512,7 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
   "
 
 
-inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
@@ -520,7 +520,7 @@ inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow>
     static_one_shot V e xC 
   "
 
-inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
@@ -529,7 +529,7 @@ inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarro
     static_one_to_one V e xC 
   "
 
-inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
@@ -537,7 +537,7 @@ inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> 
     static_fan_out V e xC 
   "
 
-inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
@@ -1117,9 +1117,9 @@ theorem one_shot_sound': "
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
-  every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) op =
+  every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
- apply (simp add: every_two_dynamic_paths.simps every_two.simps singular.simps; auto)
+ apply (simp add: every_two.simps singular.simps; auto)
  apply (frule_tac \<pi>Sync = \<pi>1 in isnt_send_path_sound; auto)
  apply (drule_tac x = pathSync in spec)
  apply (frule_tac \<pi>Sync = \<pi>2 in isnt_send_path_sound; auto?)
@@ -1152,11 +1152,11 @@ theorem noncompetitive_send_to_ordered_send: "
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
-  every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) ordered
+  every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
 (*
-apply (simp add: every_two_dynamic_paths.simps noncompetitive.simps; auto)
+apply (simp add: every_two.simps noncompetitive.simps; auto)
 using isnt_send_path_sound runtime_send_paths_are_inclusive by blast
 *)
 
@@ -1178,7 +1178,7 @@ lemma noncompetitive_recv_to_ordered_recv: "
    static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
-   every_two_dynamic_paths (is_recv_path \<E>' (Ch \<pi> xC)) ordered
+   every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
 
@@ -1347,7 +1347,7 @@ lemma  paths_cong_mod_chan_preserved_under_reduction_sync: "
   \<E> \<pi>S = Some (\<langle>LET xS = SYNC xSE in eSY;\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
   \<E> \<pi>R = Some (\<langle>LET xR = SYNC xRE in eRY;\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
   {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>, H) c \<pi>S pathPre \<Longrightarrow>
+  paths_congruent_mod_chan (\<E>, H) c \<pi>Severy_two pathPre \<Longrightarrow>
   paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)"
 by (meson paths_cong_preserved_under_reduction paths_congruent_mod_chan.Sync)
 *)

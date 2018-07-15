@@ -17,7 +17,7 @@ type_synonym step_label = "(node_label \<times> edge_label)"
 type_synonym abstract_path = "step_label list"
 
 
-inductive simple_flow_set :: "abstract_value_env \<Rightarrow> (node_label * edge_label * node_label) set \<Rightarrow> exp \<Rightarrow> bool"  where
+inductive simple_flow_set :: "abstract_env \<Rightarrow> (node_label * edge_label * node_label) set \<Rightarrow> exp \<Rightarrow> bool"  where
   Result: "
     simple_flow_set V F (RESULT x)
   " |
@@ -138,7 +138,7 @@ inductive simple_flow_set :: "abstract_value_env \<Rightarrow> (node_label * edg
 
 
 
-inductive may_be_path :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive may_be_path :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
     may_be_path V F start isEnd []
@@ -216,14 +216,14 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
-inductive static_one_shot :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
-inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     every_two (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
@@ -231,14 +231,14 @@ inductive static_one_to_one :: "abstract_value_env \<Rightarrow> exp \<Rightarro
     static_one_to_one V e xC 
   "
 
-inductive static_fan_out :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (may_be_path V F (nodeLabel e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
-inductive static_fan_in :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (may_be_path V F (nodeLabel e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     simple_flow_set V F e \<Longrightarrow>
@@ -767,8 +767,8 @@ by (simp add: equality_abstract_to_concrete send_abstract_paths_of_same_run_incl
 (* PATH SOUND *)
 
 inductive 
-  simple_flow_set_env :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> val_env \<Rightarrow> bool"  and
-  simple_flow_set_val :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> val \<Rightarrow> bool"
+  simple_flow_set_env :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> val_env \<Rightarrow> bool"  and
+  simple_flow_set_val :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> val \<Rightarrow> bool"
 where
   Intro: "
     \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> simple_flow_set_val V F \<omega> \<Longrightarrow>
@@ -814,7 +814,7 @@ where
     simple_flow_set_val V F (VClosure (Pair _ _) \<rho>)
   " 
 
-inductive simple_flow_set_stack :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> cont list \<Rightarrow> bool" where
+inductive simple_flow_set_stack :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> cont list \<Rightarrow> bool" where
   Empty: "simple_flow_set_stack V F []" |
   Nonempty: "
     \<lbrakk> 
@@ -826,7 +826,7 @@ inductive simple_flow_set_stack :: "abstract_value_env \<Rightarrow> flow_set \<
   "
 
 
-inductive simple_flow_set_pool :: "abstract_value_env \<Rightarrow> flow_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
+inductive simple_flow_set_pool :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
   Intro: "
     (\<forall> \<pi> e \<rho> \<kappa> . E \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
       simple_flow_set V F e \<and>
@@ -933,10 +933,9 @@ theorem one_shot_sound': "
   simple_flow_set V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
-  every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) op =
+  every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
- apply (simp add: every_two_dynamic_paths.simps every_two.simps singular.simps; auto)
-
+ apply (simp add: every_two.simps singular.simps; auto)
  apply (frule_tac \<pi>Sync = \<pi>1 in isnt_send_path_sound; auto)
  apply (drule_tac x = pathSync in spec)
  apply (frule_tac \<pi>Sync = \<pi>2 in isnt_send_path_sound; auto?)
@@ -964,10 +963,9 @@ theorem noncompetitive_send_to_ordered_send: "
   simple_flow_set V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
-  every_two_dynamic_paths (is_send_path \<E>' (Ch \<pi> xC)) ordered
+  every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
-apply (simp add: every_two_dynamic_paths.simps; auto)
   using isnt_send_path_sound abstract_paths_of_same_run_inclusive 
   apply (meson is_send_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
@@ -990,10 +988,9 @@ lemma noncompetitive_recv_to_ordered_recv: "
    simple_flow_set V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
-   every_two_dynamic_paths (is_recv_path \<E>' (Ch \<pi> xC)) ordered
+   every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
-apply (simp add: every_two_dynamic_paths.simps; auto)
   using isnt_recv_path_sound abstract_paths_of_same_run_inclusive 
  apply (meson is_recv_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done

@@ -3,16 +3,16 @@ theory Static_Semantics
     "~~/src/HOL/Library/List"
 begin
 
-datatype abstract_value = A_Chan var ("^Chan _" [61] 61) | A_Unit ("^\<lparr>\<rparr>") | A_Prim prim ("^_" [61] 61 )
+datatype abstract_value = AChn var ("^Chan _" [61] 61) | AUnit ("^\<lparr>\<rparr>") | APrim prim ("^_" [61] 61 )
 
-type_synonym abstract_value_env = "var \<Rightarrow> abstract_value set"
+type_synonym abstract_env = "var \<Rightarrow> abstract_value set"
 
-fun result_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
+fun rslt_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
   "\<lfloor>RESULT x\<rfloor> = x" |
   "\<lfloor>LET _ = _ in e\<rfloor> = \<lfloor>e\<rfloor>"
 
 
-inductive may_be_static_eval :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>e" 55) where
+inductive may_be_static_eval :: "abstract_env \<times> abstract_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>e" 55) where
   Result: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e (RESULT x)
   " |
@@ -149,9 +149,12 @@ fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) 
   "|VClosure p \<rho>| = ^p"
 
 
+
+
+
 inductive 
-  may_be_static_eval_value :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55) and  
-  may_be_static_eval_env :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
+  may_be_static_eval_value :: "abstract_env \<times> abstract_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55) and  
+  may_be_static_eval_env :: "abstract_env \<times> abstract_env \<Rightarrow> val_env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
 where
   Unit: "
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnit
@@ -199,7 +202,7 @@ where
   "
 
 
-inductive may_be_static_eval_stack :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile>\<^sub>\<kappa> _ \<Rrightarrow> _" [56,0,56]55) where
+inductive may_be_static_eval_stack :: "abstract_env \<times> abstract_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile>\<^sub>\<kappa> _ \<Rrightarrow> _" [56,0,56]55) where
   Empty: "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<W> \<Rrightarrow> []" |
   Nonempty: "
     \<lbrakk> 
@@ -212,7 +215,7 @@ inductive may_be_static_eval_stack :: "abstract_value_env \<times> abstract_valu
   "
 
 
-inductive may_be_static_eval_state :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<sigma>" 55)  where
+inductive may_be_static_eval_state :: "abstract_env \<times> abstract_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<sigma>" 55)  where
   Intro: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile>\<^sub>e e;
@@ -222,7 +225,7 @@ inductive may_be_static_eval_state :: "abstract_value_env \<times> abstract_valu
     (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>
   "
 
-inductive may_be_static_eval_pool :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<E>" 55) where
+inductive may_be_static_eval_pool :: "abstract_env \<times> abstract_env \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<E>" 55) where
   Intro: "
     (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>) \<Longrightarrow> 
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>

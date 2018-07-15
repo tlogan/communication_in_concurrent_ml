@@ -506,6 +506,9 @@
     end
   \end{lstlisting}
 
+
+\section{Syntax}
+
   \begin{lstlisting}[style=codestyle1]
 
     datatype var = Var string
@@ -534,6 +537,10 @@
       Abs var var ex
 
   \end{lstlisting}
+
+
+
+\section{Dynamic Semantics}
 
 
   \begin{lstlisting}[style=codestyle1, escapechar=\%]
@@ -690,6 +697,8 @@
     \end{lstlisting}
 
 
+
+\section{Dynamic Communication}
   
   \begin{lstlisting}[style=codestyle1, escapechar=\%]
     inductive is_send_path ::
@@ -711,18 +720,18 @@
           (Stt (Let xy (Sync xe) en) env k) %$\Longrightarrow$%
         env xe = Some
           (VClsr (RecvEvt xrc) enve) %$\Longrightarrow$%
-        enve xrc = Some (VChan c) %$\Longrightarrow$%
+        enve xrc = Some (VChn c) %$\Longrightarrow$%
         is_recv_path trpl c piy
 
-    inductive all_two_dyn_paths ::
-      (control_path %$\Rightarrow$% bool) %$\Rightarrow$%
-      (control_path %$\Rightarrow$% control_path %$\Rightarrow$% bool) %$\Rightarrow$%
+    inductive every_two ::
+      ('a %$\Rightarrow$% bool) %$\Rightarrow$%
+      ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$%
       bool where
       intro: (%$\forall$% pi1 pi2 .
-          p pi1 %$\longrightarrow$%
-          p pi2 %$\longrightarrow$%
-          r pi1 pi2) %$\Longrightarrow$%
-        all_two_dyn_paths p r
+          p x1 %$\longrightarrow$%
+          p x2 %$\longrightarrow$%
+          r x1 x2) %$\Longrightarrow$%
+        every_two p r
 
     inductive ordered :: 'a list %$\Rightarrow$% 'a list %$\Rightarrow$% bool where
       left: prefix pi1 pi2 %$\Longrightarrow$% ordered pi1 pi2 |
@@ -730,19 +739,19 @@
 
     inductive one_shot :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
       intro:
-        all_two_dyn_paths
+        every_two
           (is_send_path trpl c) op= %$\Longrightarrow$% 
         one_shot trpl c
 
     inductive fan_out :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
       intro:
-        all_two_dyn_paths
+        every_two
           (is_send_path trpl c) ordered %$\Longrightarrow$%
         fan_out trpl c
   
     inductive fan_in :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
       intro:
-        all_two_dyn_paths
+        every_two
           (is_recv_path trpl c) ordered %$\Longrightarrow$% 
         fan_in trpl c
 
@@ -752,6 +761,12 @@
         fan_in trpl c %$\Longrightarrow$% 
         one_to_one trpl c
 
+    \end{lstlisting}
+
+
+
+\section{Static Semantics}
+  \begin{lstlisting}[style=codestyle1, escapechar=\%]
     \end{lstlisting}
 
 \end{document}

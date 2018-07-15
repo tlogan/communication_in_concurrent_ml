@@ -4,13 +4,6 @@ theory Static_Communication_Analysis
     Dynamic_Communication_Analysis
 begin
 
-inductive every_two :: "('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool" where
-  pred: "
-    (\<forall> path1 path2 . P path1 \<longrightarrow> P path2 \<longrightarrow> 
-      R path1 path2) \<Longrightarrow>
-    every_two P R
-  "
-
 datatype node_label = NLet var | NResult var
 
 fun nodeLabel :: "exp \<Rightarrow> node_label" where
@@ -21,7 +14,7 @@ type_synonym node_set = "node_label set"
 
 type_synonym node_map = "node_label \<Rightarrow> var set"
 
-inductive may_be_static_send_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
+inductive may_be_static_send_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
   Sync: "
     {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
     {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
@@ -29,7 +22,7 @@ inductive may_be_static_send_node_label :: "abstract_value_env \<Rightarrow> exp
     may_be_static_send_node_label V e xC (NLet x)
   "
 
-inductive may_be_static_recv_node_label :: "abstract_value_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
+inductive may_be_static_recv_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
   Sync: "
     {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
     {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
