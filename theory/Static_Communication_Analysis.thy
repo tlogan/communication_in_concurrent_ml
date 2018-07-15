@@ -41,9 +41,9 @@ inductive may_be_static_recv_node_label :: "abstract_value_env \<Rightarrow> exp
 
 lemma path_state_preserved_for_non_leaf: "
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
-E' (\<pi> ;; l) = Some \<sigma> \<Longrightarrow>
+E' (\<pi> @ [l]) = Some \<sigma> \<Longrightarrow>
 \<not> leaf E \<pi> \<Longrightarrow>
-E (\<pi> ;; l) = Some \<sigma>
+E (\<pi> @ [l]) = Some \<sigma>
 "
 apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply presburger+
@@ -55,8 +55,8 @@ done
 lemma spawn_point: "
   (E, H) \<rightarrow> (E', H') \<Longrightarrow>
   leaf E \<pi> \<Longrightarrow>
-  E' (\<pi> ;; l1) = Some \<sigma>1 \<Longrightarrow>
-  E' (\<pi> ;; l2) = Some \<sigma>2 \<Longrightarrow>
+  E' (\<pi> @ [l1]) = Some \<sigma>1 \<Longrightarrow>
+  E' (\<pi> @ [l2]) = Some \<sigma>2 \<Longrightarrow>
   l1 = l2 \<or> 
   (\<exists> x . l1 = (LNext x) \<and> l2 = (LSpawn x)) \<or>
   (\<exists> x . l1 = (LSpawn x) \<and> l2 = (LNext x))

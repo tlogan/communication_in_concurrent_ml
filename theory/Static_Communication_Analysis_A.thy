@@ -253,19 +253,19 @@ inductive paths_congruent :: "control_path \<Rightarrow> abstract_path \<Rightar
   " |
   Next: "
     paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; (LNext x)) (path @ [(NLet x, ENext)])
+    paths_congruent (\<pi> @ [LNext x]) (path @ [(NLet x, ENext)])
   " |
   Spawn: "
     paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; (LSpawn x)) (path @ [(NLet x, ESpawn)])
+    paths_congruent (\<pi> @ [LSpawn x]) (path @ [(NLet x, ESpawn)])
   " |
   Call: "
     paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; (LCall x)) (path @ [(NLet x, ECall)])
+    paths_congruent (\<pi> @ [LCall x]) (path @ [(NLet x, ECall)])
   "  |
   Return: "
     paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; (LReturn x)) (path @ [(NResult x, EReturn)])
+    paths_congruent (\<pi> @ [LReturn x]) (path @ [(NResult x, EReturn)])
   " 
 
 lemma abstract_paths_of_same_run_inclusive_base: "
@@ -317,7 +317,7 @@ lemma paths_equal_implies_paths_inclusive: "
 by (simp add: Prefix2)
 
 lemma paths_cong_preserved_under_reduction: "
-  paths_congruent (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
+  paths_congruent (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
   paths_congruent \<pi> path"
 using paths_congruent.cases by fastforce
 
@@ -367,7 +367,7 @@ lemma strict_prefix_preserved: "
 paths_congruent \<pi>1 path1 \<Longrightarrow>
 paths_congruent \<pi> path \<Longrightarrow>
 strict_prefix path1 (path @ [n]) \<Longrightarrow>
-\<not> strict_prefix \<pi>1 (\<pi> ;; l) \<Longrightarrow>
+\<not> strict_prefix \<pi>1 (\<pi> @ [l]) \<Longrightarrow>
 strict_prefix (butlast path1) path
 "
 apply (erule paths_congruent.cases; auto)
@@ -464,8 +464,8 @@ by (simp add: equality_contcrete_to_abstract')
 
 lemma spawn_point_preserved_under_congruent_paths: " 
 l1 = (LNext x) \<Longrightarrow> l2 = (LSpawn x) \<Longrightarrow>
-paths_congruent (\<pi> ;; l1) (path @ [n1]) \<Longrightarrow>
-paths_congruent (\<pi> ;; l2) (path @ [n2]) \<Longrightarrow>
+paths_congruent (\<pi> @ [l1]) (path @ [n1]) \<Longrightarrow>
+paths_congruent (\<pi> @ [l2]) (path @ [n2]) \<Longrightarrow>
 n1 = (NLet x, ENext) \<and> n2 = (NLet x, ESpawn)
 "
 apply (erule paths_congruent.cases; auto)
@@ -514,7 +514,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 
   from H6
   obtain \<pi>1x l1 path1x n1 where
-    H12: "\<pi>1x ;; l1 = \<pi>1" and
+    H12: "\<pi>1x @ [l1] = \<pi>1" and
     H13: "path1x @ [n1] = path1" and
     H14: "paths_congruent \<pi>1x path1x"
     apply (rule paths_congruent.cases)
@@ -522,16 +522,16 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 
   from H7
   obtain \<pi>2x l2 path2x n2 where
-    H15: "\<pi>2x ;; l2 = \<pi>2" and
+    H15: "\<pi>2x @ [l2] = \<pi>2" and
     H16: "path2x @ [n2] = path2" and
     H17: "paths_congruent \<pi>2x path2x"
     apply (rule paths_congruent.cases)
     using H9 by blast+
  
-  have H22: "paths_congruent (\<pi>1x ;; l1) (path1x @ [n1])"
+  have H22: "paths_congruent (\<pi>1x @ [l1]) (path1x @ [n1])"
     by (simp add: H12 H13 H6)
 
-  have H23: "paths_congruent (\<pi>2x ;; l2) (path2x @ [n2])"
+  have H23: "paths_congruent (\<pi>2x @ [l2]) (path2x @ [n2])"
     by (simp add: H15 H16 H7)
 
   show "path1 \<asymp> path2"

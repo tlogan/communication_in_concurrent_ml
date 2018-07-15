@@ -636,7 +636,7 @@ inductive balanced :: "control_path \<Rightarrow> bool" where
   " |
   CallReturn: "
     balanced \<pi> \<Longrightarrow>
-    balanced ((LCall x) # (\<pi> ;; (LReturn x)))
+    balanced ((LCall x) # (\<pi> @ [LReturn x]))
   " |
   Append: "
     balanced \<pi> \<Longrightarrow> balanced \<pi>' \<Longrightarrow>
@@ -654,20 +654,20 @@ inductive paths_congruent :: "control_path \<Rightarrow> abstract_path \<Rightar
   " |
   Next: "
     paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; (LNext x)) (path @ [(NLet x, ENext)])
+    paths_congruent (\<pi> @ [LNext x]) (path @ [(NLet x, ENext)])
   " |
   Spawn: "
     paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; (LSpawn x)) (path @ [(NLet x, ESpawn)])
+    paths_congruent (\<pi> @ [LSpawn x]) (path @ [(NLet x, ESpawn)])
   " |
   Call: "
     paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> ;; (LCall x)) (path @ [(NLet x, ECall)])
+    paths_congruent (\<pi> @ [LCall x]) (path @ [(NLet x, ECall)])
   "  |
   Return: "
     paths_congruent \<pi> (path @ (NLet x, ECall) # path') \<Longrightarrow>
     abstract_balanced path' \<Longrightarrow>
-    paths_congruent (\<pi> ;; (LReturn y)) (path @ (NLet x, ECall) # path' @ [(NResult y, EReturn x)])
+    paths_congruent (\<pi> @ [LReturn y]) (path @ (NLet x, ECall) # path' @ [(NResult y, EReturn x)])
   " 
 
 inductive paths_congruent_mod_chan :: "trace_pool * cmmn_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
@@ -735,7 +735,7 @@ path1 = path2 \<or> (\<not> prefix path1 path2 \<and> \<not> prefix path2 path1)
 sorry
 
 lemma paths_cong_mod_chan_preserved_under_reduction: "
-paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
+paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
 paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path
 "
@@ -743,7 +743,7 @@ sorry
 
 
 lemma leaf_prefix_exists: "
-  leaf E' (\<pi> ;; l) \<Longrightarrow>
+  leaf E' (\<pi> @ [l]) \<Longrightarrow>
   (E, H) \<rightarrow> (E', H') \<Longrightarrow>
   E \<pi> \<noteq> None
 "
@@ -752,9 +752,9 @@ sorry
 
 lemma path_state_preserved_for_non_leaf: "
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
-E' (\<pi> ;; l) = Some \<sigma> \<Longrightarrow>
+E' (\<pi> @ [l]) = Some \<sigma> \<Longrightarrow>
 \<not> leaf E \<pi> \<Longrightarrow>
-E (\<pi> ;; l) = Some \<sigma>
+E (\<pi> @ [l]) = Some \<sigma>
 "
 apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply presburger+
@@ -804,13 +804,13 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
     using H5 by blast
 
   obtain \<pi>1x l1 path1x n1 where
-    H12: "\<pi>1x ;; l1 = \<pi>1" and
+    H12: "\<pi>1x @ [l1] = \<pi>1" and
     H13: "path1x @ [n1] = path1" and
     H14: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1x path1x" 
   by (metis H3 H6 H8 append_butlast_last_id paths_cong_mod_chan_preserved_under_reduction no_empty_paths_congruent_mod_chan)
 
   obtain \<pi>2x l2 path2x n2 where
-    H15: "\<pi>2x ;; l2 = \<pi>2" and
+    H15: "\<pi>2x @ [l2] = \<pi>2" and
     H16: "path2x @ [n2] = path2" and
     H17: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2x path2x"
   by (metis H3 H7 H9 append_butlast_last_id paths_cong_mod_chan_preserved_under_reduction no_empty_paths_congruent_mod_chan)
@@ -1218,22 +1218,22 @@ done
 
 
 lemma paths_cong_preserved_under_reduction: "
-  paths_congruent (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
+  paths_congruent (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
   paths_congruent \<pi> path"
 using paths_congruent.cases by fastforce
 
 
 lemma paths_cong_mod_chan_preserved_under_reduction: "
-(suffix \<pi> (\<pi>C ;; (LNext xC)) \<and> suffix path [(NLet xC, ENext)] \<or>
+(suffix \<pi> (\<pi>C @ [LNext xC)) \<and> suffix path [(NLet xC, ENext)] \<or>
   True) \<Longrightarrow>
-paths_congruent_mod_chan EH' (Ch \<pi>C xC) (\<pi> ;; l) (path @ [n]) \<Longrightarrow>
+paths_congruent_mod_chan EH' (Ch \<pi>C xC) (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
 E \<pi> \<noteq> None \<Longrightarrow>
 paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
 proof -
   assume
     H1: "E \<pi> \<noteq> None" and
     H2: "\<pi> \<noteq> []" "path \<noteq> []" and
-    H3: "paths_congruent_mod_chan EH' c (\<pi> ;; l) (path @ [n])"
+    H3: "paths_congruent_mod_chan EH' c (\<pi> @ [l) (path @ [n])"
 
   from H3
   show "paths_congruent_mod_chan (E, H) c \<pi> path"
@@ -1242,11 +1242,11 @@ proof -
     case (Chan xC \<pi>X E' \<pi>C H')
 
     have 
-      H4: "\<pi> ;; l = \<pi>C @ (butlast (LNext xC # \<pi>X)) ;; l"
+      H4: "\<pi> @ [l = \<pi>C @ (butlast (LNext xC # \<pi>X)) @ [l"
       by (metis butlast_append butlast_snoc list.simps(3) local.Chan(3))
     
     have 
-      H5: "paths_congruent ((butlast (LNext xC # \<pi>X)) ;; l) (path @ [n])"
+      H5: "paths_congruent ((butlast (LNext xC # \<pi>X)) @ [l) (path @ [n])"
       by (metis append_butlast_last_id last_ConsL last_appendR list.simps(3) local.Chan(3) local.Chan(4))
 
     have 
@@ -1337,13 +1337,13 @@ qed
 
 (*
 lemma paths_cong_mod_chan_preserved_under_reduction_chan: "
-  paths_congruent ((LNext xC) # \<pi>Suff ;; l) (path @ [n]) \<Longrightarrow>
+  paths_congruent ((LNext xC) # \<pi>Suff @ [l) (path @ [n]) \<Longrightarrow>
   E (\<pi>C @ (LNext xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
   paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) (\<pi>C @ (LNext xC) # \<pi>Suff) path"
 using paths_cong_preserved_under_reduction paths_congruent_mod_chan.Chan by blast
 
 lemma  paths_cong_mod_chan_preserved_under_reduction_sync: "
-  paths_congruent (\<pi>Suffix ;; l) (pathSuffix @ [n]) \<Longrightarrow>
+  paths_congruent (\<pi>Suffix @ [l) (pathSuffix @ [n]) \<Longrightarrow>
   \<E> (\<pi>R @ (LNext xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
   dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
   \<E> \<pi>S = Some (\<langle>LET xS = SYNC xSE in eSY;\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>

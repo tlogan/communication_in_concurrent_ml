@@ -181,8 +181,8 @@
     datatype 'a list = Nil | Cons 'a ('a list)
 
     inductive sorted ::
-      ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$%
-      'a list %$\Rightarrow$% bool where
+      ('a %$\Rhtarrow$% 'a %$\Rhtarrow$% bool) %$\Rhtarrow$%
+      'a list %$\Rhtarrow$% bool where
       Nil : sorted P Nil |
       Single : sorted P (Cons x Nil) |
       Cons :
@@ -195,7 +195,7 @@
   \begin{lstlisting}[style=codestyle1, escapechar=\%]
     datatype nat = Z | S nat 
 
-    inductive lte :: nat %$\Rightarrow$% nat %$\Rightarrow$% bool where
+    inductive lte :: nat %$\Rhtarrow$% nat %$\Rhtarrow$% bool where
       Eq : lte n n |
       Lt : lte n1 n2 %$\Longrightarrow$% lte n1 (S n2)
 
@@ -516,9 +516,9 @@
 
     boundexp =
       Unit |
-      Chan |
+      MkCh |
       Prim prim |
-      Spawn exp |
+      Spwn exp |
       Sync var |
       Fst var |
       Snd var |
@@ -529,8 +529,8 @@
       SendEvt var var |
       RecvEvt var |
       Pair var var |
-      Left var |
-      Right var |
+      Lft var |
+      Rht var |
       Abs var var ex
 
   \end{lstlisting}
@@ -545,7 +545,7 @@
     datatype chan = Ch ctrl_path var
 
     datatype val = 
-      VUnit | VChan chan | VClsr prim (var %$\rightharpoonup$% val)
+      VUnit | VCh chan | VClsr prim (var %$\rightharpoonup$% val)
 
     datatype ctn = Ctn var exp (var %$\rightharpoonup$% val)  
 
@@ -557,7 +557,7 @@
   \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
     inductive seq_step ::
-      bind * (var %$\rightharpoonup$% val)) %$\Rightarrow$% val %$\Rightarrow$% bool where
+      bind * (var %$\rightharpoonup$% val)) %$\Rhtarrow$% val %$\Rhtarrow$% bool where
       Let_Unit: 
         seq_step (Unit, env) VUnit |
       Let_Prim:
@@ -572,15 +572,15 @@
         seq_step (SND xp, env) v
 
     inductive seq_step_up ::
-      bind * (var %$\rightharpoonup$% val)) %$\Rightarrow$% exp * val_env %$\Rightarrow$% bool where 
-      Let_Case_Left:
-        env xs = Some (VClsr (Left xl') envl) %$\Longrightarrow$%
+      bind * (var %$\rightharpoonup$% val)) %$\Rhtarrow$% exp * val_env %$\Rhtarrow$% bool where 
+      Let_Case_Lft:
+        env xs = Some (VClsr (Lft xl') envl) %$\Longrightarrow$%
         envl xl' = Some vl %$\Longrightarrow$%
         seq_step_up
           (Case xs xl el xr er, env)
           (el, env(xl %$\mapsto$% vl)) |
-      Let_Case_Right: 
-        env xs = Some (VClsr (Right xr') envr) %$\Longrightarrow$% 
+      Let_Case_Rht: 
+        env xs = Some (VClsr (Rht xr') envr) %$\Longrightarrow$% 
         envr xr' = Some vr %$\Longrightarrow$%
         seq_step_up
           (Case xs xl el xr er, env)
@@ -600,15 +600,15 @@
     type_synonym trace_pool = ctrl_path %$\rightharpoonup$% state
 
     inductive leaf ::
-      trace_pool %$\Rightarrow$% ctrl_path %$\Rightarrow$% bool where
+      trace_pool %$\Rhtarrow$% ctrl_path %$\Rhtarrow$% bool where
       Intro:
         trpl pi %$\neq$% None %$\Longrightarrow$% 
         (%$\nexists$% pi' . trpl pi' %$\neq$% None %$\land$% strict_prefix pi pi') %$\Longrightarrow$%  
         leaf trpl pi
 
     inductive concur_step ::
-      trace_pool * cmmn_set %$\Rightarrow$%
-      trace_pool * cmmn_set %$\Rightarrow$%
+      trace_pool * cmmn_set %$\Rhtarrow$%
+      trace_pool * cmmn_set %$\Rhtarrow$%
       bool where 
       Seq_Sttep_Down:
         leaf trpl pi %$\Longrightarrow$%
@@ -625,7 +625,7 @@
         seq_step (b, env) v%$\Longrightarrow$%
         concur_step
           (trpl, ys)
-          (trpl(pi;;(LNext x) %$\mapsto$% (Stt e (env(x %$\mapsto$% v)) k), ys) |
+          (trpl(pi;;(LNxt x) %$\mapsto$% (Stt e (env(x %$\mapsto$% v)) k), ys) |
       Seq_Step_Up: 
         leaf trpl pi %$\Longrightarrow$%
         trpl pi = Some (Stt (Let x b e) env k) %$\Longrightarrow$%
@@ -636,34 +636,34 @@
             (Stt e' env' ((Ctn x e env) # k))), ys) |
       Let_Chan: 
         leaf trpl pi %$\Longrightarrow$%
-        trpl pi = Some (Stt (Let x Chan e) env k) %$\Longrightarrow$%
+        trpl pi = Some (Stt (Let x MkCh e) env k) %$\Longrightarrow$%
         concur_step
           (trpl, ys)
-          (trpl(pi;;(LNext x) %$\mapsto$%
-            (Stt e (env(x %$\mapsto$% (VChan (Ch pi x)))) k)), ys) |
-      Let_Spawn:
+          (trpl(pi;;(LNxt x) %$\mapsto$%
+            (Stt e (env(x %$\mapsto$% (VCh (Ch pi x)))) k)), ys) |
+      Let_Spwn:
         leaf trpl pi %$\Longrightarrow$%
-        trpl pi = Some (Stt (Let x (Spawn ec) e) env k) %$\Longrightarrow$%
+        trpl pi = Some (Stt (Let x (Spwn ec) e) env k) %$\Longrightarrow$%
         concur_step
           (trpl, ys)
           (trpl(
-            pi;;(LNext x) %$\mapsto$% (St e (env(x %$\mapsto$% VUnit)) k), 
-            pi;;(LSpawn x) %$\mapsto$% (St ec env []), ys) |
+            pi;;(LNxt x) %$\mapsto$% (St e (env(x %$\mapsto$% VUnit)) k), 
+            pi;;(LSpwn x) %$\mapsto$% (St ec env []), ys) |
       Let_Sync:
         leaf trpl pis %$\Longrightarrow$%
         trpl pis = Some (Stt (Let xs (Sync xse) es) envs ks) %$\Longrightarrow$%
-        envs xse = Some (VClsr (Send_Evt xsc xm) envse) %$\Longrightarrow$%
+        envs xse = Some (VClsr (SendEvt xsc xm) envse) %$\Longrightarrow$%
         leaf trpl pir  %$\Longrightarrow$%
         trpl pir = Some (Stt (Let xr (Sync xre) er) envr kr) %$\Longrightarrow$%
-        envr xre = Some (VClsr (Recv_Evt xrc) envre) %$\Longrightarrow$%
-        envse xsc = Some (VChan c) %$\Longrightarrow$%
-        envre xrc = Some (VChan c) %$\Longrightarrow$%
+        envr xre = Some (VClsr (RecvEvt xrc) envre) %$\Longrightarrow$%
+        envse xsc = Some (VCh c) %$\Longrightarrow$%
+        envre xrc = Some (VCh c) %$\Longrightarrow$%
         envse xm = Some vm %$\Longrightarrow$%
         concur_step
           (trpl, ys)
           (trpl(
-            pis;;(LNext xs) %$\mapsto$% (Stt es (envs(xs %$\mapsto$% VUnit)) ks), 
-            pir;;(LNext xr) %$\mapsto$% (Stt er (envr(xr %$\mapsto$% vm)) kr)), 
+            pis;;(LNxt xs) %$\mapsto$% (Stt es (envs(xs %$\mapsto$% VUnit)) ks), 
+            pir;;(LNxt xr) %$\mapsto$% (Stt er (envr(xr %$\mapsto$% vm)) kr)), 
             ys %$\cup$% {(pis, c, pir)})
 
 
