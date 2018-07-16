@@ -1192,18 +1192,473 @@ structure OneShotToOneChan : CHAN = struct
       is_super_exp e (Let x (Sync xE) e') %$\Longrightarrow$%
       may_be_static_send_node_label V e xC (NLet x)
 
-    inductive
-      may_be_static_recv_node_label ::
-        abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
-        var %$\Rightarrow$% node_label %$\Rightarrow$% bool where
-      intro:
-        {AChn xC} %$\subseteq$% V xRC %$\Longrightarrow$%
-        {APrim (RecvEvt xRC)} %$\subseteq$% V xE %$\Longrightarrow$%
-        is_super_exp e (Let x (Sync xE) e') %$\Longrightarrow$%
-        may_be_static_recv_node_label V e xC (NLet x)
+  inductive
+    may_be_static_recv_node_label ::
+      abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
+      var %$\Rightarrow$% node_label %$\Rightarrow$% bool where
+    intro:
+      {AChn xC} %$\subseteq$% V xRC %$\Longrightarrow$%
+      {APrim (RecvEvt xRC)} %$\subseteq$% V xE %$\Longrightarrow$%
+      is_super_exp e (Let x (Sync xE) e') %$\Longrightarrow$%
+      may_be_static_recv_node_label V e xC (NLet x)
 
   \end{lstlisting}
 
+\section{Static Communication part A}
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+  datatype edge_label = ENext | ESpawn | ECall | EReturn
+
+  type_synonym flow_label = node_label * edge_label * node_label
+
+  type_synonym flow_set = flow_label set
+
+  type_synonym step_label = node_label * edge_label
+
+  type_synonym abstract_path = step_label list
+  \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+
+inductive simple_flow_set :: "abstract_env ⇒ (node_label * edge_label * node_label) set ⇒ exp ⇒ bool"  where
+  Result: "
+    simple_flow_set V F (RESULT x)
+  " |
+  Let_Unit: "
+    ⟦
+      {(NLet x , ENext, top_node_label e)} ⊆ F;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = ⦇⦈ in e)
+  " |
+  Let_Chan: "
+    ⟦
+      {(NLet x, ENext, top_node_label e)} ⊆ F;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = CHAN ⦇⦈ in e)
+  " |
+  Let_Send_Evt: "
+    ⟦
+      {(NLet x, ENext, top_node_label e)} ⊆ F;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = SEND EVT x⇩c x⇩m in e)
+  " |
+  Let_Recv_Evt: "
+    ⟦
+      {(NLet x, ENext, top_node_label e)} ⊆ F;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = RECV EVT x⇩c in e)
+  " |
+  Let_Pair: "
+    ⟦
+      {(NLet x, ENext, top_node_label e)} ⊆ F;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = ⦇x⇩1, x⇩2⦈ in e)
+  " |
+  Let_Left: "
+    ⟦
+      {(NLet x, ENext, top_node_label e)} ⊆ F;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = LEFT x⇩p in e)
+  " |
+  Let_Right: "
+    ⟦
+      {(NLet x, ENext, top_node_label e)} ⊆ F;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = RIGHT x⇩p in e)
+  " |
+  Let_Abs: "
+    ⟦
+      {(NLet x, ENext, top_node_label e)} ⊆ F;
+      simple_flow_set V F e⇩b;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = FN f x⇩p . e⇩b  in e)
+  " |
+  Let_Spawn: "
+    ⟦
+      {
+        (NLet x, ENext, top_node_label e),
+        (NLet x, ESpawn, top_node_label e⇩c)
+      } ⊆ F;
+      simple_flow_set V F e⇩c;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = SPAWN e⇩c in e)
+  " |
+  Let_Sync: "
+    ⟦
+      {(NLet x, ENext, top_node_label e)} ⊆ F;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = SYNC xSE in e)
+  " |
+  Let_Fst: "
+    ⟦
+      {(NLet x, ENext, top_node_label e)} ⊆ F;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = FST x⇩p in e)
+  " |
+  Let_Snd: "
+    ⟦
+      {(NLet x, ENext, top_node_label e)} ⊆ F;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = SND x⇩p in e)
+  " |
+  Let_Case: "
+    ⟦
+      {
+        (NLet x, ECall, top_node_label e⇩l),
+        (NLet x, ECall, top_node_label e⇩r),
+        (NResult (⌊e⇩l⌋), EReturn, top_node_label e),
+        (NResult (⌊e⇩r⌋), EReturn, top_node_label e)
+      } ⊆ F;
+      simple_flow_set V F e⇩l;
+      simple_flow_set V F e⇩r;
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e)
+  " |
+  Let_App: "
+    ⟦
+      (∀ f' x⇩p e⇩b . ^Abs f' x⇩p e⇩b ∈ V f ⟶
+        {
+          (NLet x, ECall, top_node_label e⇩b),
+          (NResult (⌊e⇩b⌋), EReturn, top_node_label e)
+        } ⊆ F);
+      simple_flow_set V F e
+    ⟧ ⟹
+    simple_flow_set V F (LET x = APP f x⇩a in e)
+  "
+
+  \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+  
+inductive may_be_path :: "abstract_env ⇒ flow_set ⇒ node_label ⇒ (node_label ⇒ bool) ⇒ abstract_path ⇒ bool" where
+  Empty: "
+    isEnd start ⟹
+    may_be_path V F start isEnd []
+  " |
+  Edge: "
+    isEnd end ⟹
+    {(start, edge, end)} ⊆ F ⟹
+    may_be_path V F start isEnd [(start, edge)]
+  " |
+  Step: "
+    may_be_path V F middle isEnd ((middle, edge') # path) ⟹
+    {(start, edge, middle)} ⊆ F ⟹
+    may_be_path V F start isEnd ((start, edge) # (middle, edge') # path)
+  "
+  \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+  inductive may_be_inclusive :: "abstract_path ⇒ abstract_path ⇒ bool" (infix "≍" 55) where
+  Prefix1: "
+    prefix π⇩1 π⇩2 ⟹
+    π⇩1 ≍ π⇩2
+  " |
+  Prefix2: "
+    prefix π⇩2 π⇩1 ⟹
+    π⇩1 ≍ π⇩2
+  " |
+  Spawn1: "
+    π @ (NLet x, ESpawn) # π⇩1 ≍ π @ (NLet x, ENext) # π⇩2
+  " |
+  Spawn2: "
+    π @ (NLet x, ENext) # π⇩1 ≍ π @ (NLet x, ESpawn) # π⇩2
+  "
+  \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+  inductive singular :: "abstract_path ⇒ abstract_path ⇒ bool" where
+  equal: "
+    π⇩1 = π⇩2 ⟹ 
+    singular π⇩1 π⇩2
+  " |
+  exclusive: "
+    ¬ (π⇩1 ≍ π⇩2) ⟹ 
+    singular π⇩1 π⇩2
+  "
+
+inductive noncompetitive :: "abstract_path ⇒ abstract_path ⇒ bool" where
+  ordered: "
+    ordered π⇩1 π⇩2 ⟹ 
+    noncompetitive π⇩1 π⇩2
+  " |
+  exclusive: "
+    ¬ (π⇩1 ≍ π⇩2) ⟹ 
+    noncompetitive π⇩1 π⇩2
+  "
+  \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+inductive static_one_shot :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) singular ⟹
+    simple_flow_set V F e ⟹
+    static_one_shot V e xC 
+  "
+
+inductive static_one_to_one :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive ⟹
+    every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive ⟹
+    simple_flow_set V F e ⟹
+    static_one_to_one V e xC 
+  "
+
+inductive static_fan_out :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive ⟹
+    simple_flow_set V F e ⟹
+    static_fan_out V e xC 
+  "
+
+inductive static_fan_in :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive ⟹
+    simple_flow_set V F e ⟹
+    static_fan_in V e xC 
+  "
+
+  \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+  inductive paths_correspond :: "control_path ⇒ abstract_path ⇒ bool" where
+  Empty: "
+    paths_correspond [] []
+  " |
+  Next: "
+    paths_correspond π path ⟹
+    paths_correspond (π @ [LNext x]) (path @ [(NLet x, ENext)])
+  " |
+  Spawn: "
+    paths_correspond π path ⟹
+    paths_correspond (π @ [LSpawn x]) (path @ [(NLet x, ESpawn)])
+  " |
+  Call: "
+    paths_correspond π path ⟹
+    paths_correspond (π @ [LCall x]) (path @ [(NLet x, ECall)])
+  "  |
+  Return: "
+    paths_correspond π path ⟹
+    paths_correspond (π @ [LReturn x]) (path @ [(NResult x, EReturn)])
+  " 
+  \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+  lemma abstract_paths_of_same_run_inclusive: "
+  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹ 
+  ℰ' π1 ≠ None ⟹ 
+  ℰ' π2 ≠ None ⟹ 
+  paths_congruent π1 path1 ⟹
+  paths_congruent π2 path2 ⟹
+  path1 ≍ path2
+"
+
+  lemma equality_abstract_to_concrete: "
+  path1 = path2 ⟹
+  paths_correspond π1 path1 ⟹
+  paths_correspond π2 path2 ⟹
+  π1 = π2
+"
+
+  lemma abstract_paths_equal_or_exclusive_implies_dynamic_paths_equal: "
+pathSync = pathSynca ∨ (¬ pathSynca ≍ pathSync) ⟹ 
+
+([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹
+ℰ' π⇩1 ≠ None ⟹ 
+ℰ' π⇩2 ≠ None ⟹ 
+
+paths_correspond π⇩1 pathSync ⟹
+paths_correspond π⇩2 pathSynca ⟹
+
+π⇩1 = π⇩2
+"
+
+
+  \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+inductive 
+  simple_flow_set_env :: "abstract_env ⇒ flow_set ⇒ env ⇒ bool"  and
+  simple_flow_set_val :: "abstract_env ⇒ flow_set ⇒ val ⇒ bool"
+where
+  Intro: "
+    ∀ x ω . ρ x = Some ω ⟶ {|ω|} ⊆ 𝒱 x ∧ simple_flow_set_val V F ω ⟹
+    simple_flow_set_env V F ρ
+  " |
+
+  Unit: "
+    simple_flow_set_val V F VUnit
+  " |
+
+  Chan: "
+    simple_flow_set_val V F (VChan c)
+  " |
+
+  Send_Evt: "
+    simple_flow_set_env V F ρ ⟹
+    simple_flow_set_val V F (VClosure (Send_Evt _ _) ρ)
+  " |
+
+  Recv_Evt: "
+    simple_flow_set_env V F ρ ⟹
+    simple_flow_set_val V F (VClosure (Recv_Evt _) ρ)
+  " |
+
+  Left: "
+    simple_flow_set_env V F ρ ⟹
+    simple_flow_set_val V F (VClosure (Left _) ρ)
+  " |
+
+  Right: "
+    simple_flow_set_env V F ρ ⟹
+    simple_flow_set_val V F (VClosure (Right _) ρ)
+  " |
+
+  Abs: "
+    simple_flow_set V F e ⟹ 
+    simple_flow_set_env V F  ρ ⟹
+    simple_flow_set_val V F (VClosure (Abs f x e) ρ)
+  " |
+
+  Pair: "
+    simple_flow_set_env V F ρ ⟹
+    simple_flow_set_val V F (VClosure (Pair _ _) ρ)
+  " 
+
+inductive simple_flow_set_stack :: "abstract_env ⇒ flow_set ⇒ cont list ⇒ bool" where
+  Empty: "simple_flow_set_stack V F []" |
+  Nonempty: "
+    ⟦ 
+      simple_flow_set V F e;
+      simple_flow_set_env V F ρ;
+      simple_flow_set_stack V F κ
+    ⟧ ⟹ 
+    simple_flow_set_stack V F (⟨x, e, ρ⟩ # κ)
+  "
+
+
+inductive simple_flow_set_pool :: "abstract_env ⇒ flow_set ⇒ trace_pool ⇒ bool"  where
+  Intro: "
+    (∀ π e ρ κ . E π = Some (⟨e;ρ;κ⟩) ⟶ 
+      simple_flow_set V F e ∧
+      simple_flow_set_env V F ρ ∧
+      simple_flow_set_stack V F κ
+      ) ⟹ 
+    simple_flow_set_pool V F E
+  "
+
+  \end{lstlisting}
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+
+  lemma simple_flow_set_pool_preserved_star: "
+  simple_flow_set_pool V F ([[] ↦ ⟨e;Map.empty;[]⟩]) ⟹
+  (V, C) ⊨⇩e e ⟹
+  ℰ' π = Some (⟨LET x = b in e⇩n;ρ;κ⟩) ⟹
+  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹
+  isEnd (NLet x) ⟹
+  simple_flow_set_pool V F ℰ'
+"
+sorry
+
+lemma simple_flow_set_pool_implies_may_be_path: "
+  ℰ' π = Some (⟨LET x = b in e⇩n;ρ;κ⟩) ⟹
+  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹ 
+  (V, C) ⊨⇩e e ⟹
+  simple_flow_set_pool V F ℰ' ⟹
+  isEnd (NLet x) ⟹
+  ∃ path . 
+    paths_correspond π path ∧
+    may_be_path V F (top_node_label e) isEnd path
+"
+sorry
+
+  \end{lstlisting}
+
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+  lemma path_not_traceable_sound: "
+  ℰ' π = Some (⟨LET x = b in e⇩n;ρ;κ⟩) ⟹
+  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹ 
+  (V, C) ⊨⇩e e ⟹
+  simple_flow_set V F e ⟹
+  isEnd (NLet x) ⟹
+  ∃ path . 
+    paths_correspond π path ∧
+    may_be_path V F (top_node_label e) isEnd path
+"
+by (metis lift_simple_flow_set_to_pool simple_flow_set_pool_implies_may_be_path simple_flow_set_pool_preserved_star)
+
+  \end{lstlisting}
+
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+theorem one_shot_sound: "
+  ⟦
+    static_one_shot V e xC;
+    (V, C) ⊨⇩e e;
+    ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H')
+  ⟧ ⟹
+  one_shot ℰ' (Ch π xC)
+"
+
+
+  theorem fan_out_sound: "
+  ⟦
+    static_fan_out V e xC;
+    (V, C) ⊨⇩e e;
+    ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H')
+  ⟧ ⟹
+  fan_out ℰ' (Ch π xC)
+"
+  theorem fan_in_sound: "
+  ⟦
+    static_fan_in V e xC;
+    (V, C) ⊨⇩e e;
+    ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H')
+  ⟧ ⟹
+  fan_in ℰ' (Ch π xC)
+"
+
+  theorem one_to_one_sound: "
+  ⟦
+    static_one_to_one V e xC;
+    (V, C) ⊨⇩e e;
+    ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H')
+  ⟧ ⟹
+  one_to_one ℰ' (Ch π xC)
+"
+
+
+  \end{lstlisting}
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+  \end{lstlisting}
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+  \end{lstlisting}
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+  \end{lstlisting}
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+  \end{lstlisting}
 
 \end{document}
 \end{document}

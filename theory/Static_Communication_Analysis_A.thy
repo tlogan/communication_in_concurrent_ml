@@ -247,33 +247,33 @@ inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<R
 
 
 
-inductive paths_congruent :: "control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive paths_correspond :: "control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
-    paths_congruent [] []
+    paths_correspond [] []
   " |
   Next: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> @ [LNext x]) (path @ [(NLet x, ENext)])
+    paths_correspond \<pi> path \<Longrightarrow>
+    paths_correspond (\<pi> @ [LNext x]) (path @ [(NLet x, ENext)])
   " |
   Spawn: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> @ [LSpawn x]) (path @ [(NLet x, ESpawn)])
+    paths_correspond \<pi> path \<Longrightarrow>
+    paths_correspond (\<pi> @ [LSpawn x]) (path @ [(NLet x, ESpawn)])
   " |
   Call: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> @ [LCall x]) (path @ [(NLet x, ECall)])
+    paths_correspond \<pi> path \<Longrightarrow>
+    paths_correspond (\<pi> @ [LCall x]) (path @ [(NLet x, ECall)])
   "  |
   Return: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> @ [LReturn x]) (path @ [(NResult x, EReturn)])
+    paths_correspond \<pi> path \<Longrightarrow>
+    paths_correspond (\<pi> @ [LReturn x]) (path @ [(NResult x, EReturn)])
   " 
 
 lemma abstract_paths_of_same_run_inclusive_base: "
   E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
-  paths_congruent \<pi>1 path1 \<Longrightarrow>
-  paths_congruent \<pi>2 path2 \<Longrightarrow>
+  paths_correspond \<pi>1 path1 \<Longrightarrow>
+  paths_correspond \<pi>2 path2 \<Longrightarrow>
   path1 \<asymp> path2
 "
 proof -
@@ -281,8 +281,8 @@ proof -
     H1: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
     H2: "E0 \<pi>1 \<noteq> None" and
     H3: "E0 \<pi>2 \<noteq> None" and
-    H4: "paths_congruent \<pi>1 path1" and
-    H5: "paths_congruent \<pi>2 path2"
+    H4: "paths_correspond \<pi>1 path1" and
+    H5: "paths_correspond \<pi>2 path2"
   
   from H4
   show "path1 \<asymp> path2"
@@ -317,60 +317,60 @@ lemma paths_equal_implies_paths_inclusive: "
 by (simp add: Prefix2)
 
 lemma paths_cong_preserved_under_reduction: "
-  paths_congruent (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
-  paths_congruent \<pi> path"
-using paths_congruent.cases by fastforce
+  paths_correspond (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
+  paths_correspond \<pi> path"
+using paths_correspond.cases by fastforce
 
 
 lemma equality_abstract_to_concrete': "
-  paths_congruent \<pi>1 path \<Longrightarrow>
-  \<forall> \<pi>2 .  paths_congruent \<pi>2 path \<longrightarrow> \<pi>1 = \<pi>2
+  paths_correspond \<pi>1 path \<Longrightarrow>
+  \<forall> \<pi>2 .  paths_correspond \<pi>2 path \<longrightarrow> \<pi>1 = \<pi>2
 "
-apply (erule paths_congruent.induct)
-  using paths_congruent.cases apply blast
+apply (erule paths_correspond.induct)
+  using paths_correspond.cases apply blast
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast \<pi>2" in spec)
 apply (rotate_tac)
-apply (erule paths_congruent.cases; auto)
+apply (erule paths_correspond.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast \<pi>2" in spec)
 apply (rotate_tac)
-apply (erule paths_congruent.cases; auto)
+apply (erule paths_correspond.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast \<pi>2" in spec)
 apply (rotate_tac)
-apply (erule paths_congruent.cases; auto)
+apply (erule paths_correspond.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast \<pi>2" in spec)
 apply (rotate_tac)
-apply (erule paths_congruent.cases; auto)
+apply (erule paths_correspond.cases; auto)
 done
 
 
 lemma equality_abstract_to_concrete: "
   path1 = path2 \<Longrightarrow>
-  paths_congruent \<pi>1 path1 \<Longrightarrow>
-  paths_congruent \<pi>2 path2 \<Longrightarrow>
+  paths_correspond \<pi>1 path1 \<Longrightarrow>
+  paths_correspond \<pi>2 path2 \<Longrightarrow>
   \<pi>1 = \<pi>2
 "
 by (simp add: equality_abstract_to_concrete')
 
-lemma paths_congruent_preserved_under_reduction: "
-  paths_congruent \<pi>1 path1 \<Longrightarrow>
-  paths_congruent (butlast \<pi>1) (butlast path1) 
+lemma paths_correspond_preserved_under_reduction: "
+  paths_correspond \<pi>1 path1 \<Longrightarrow>
+  paths_correspond (butlast \<pi>1) (butlast path1) 
 "
-apply (erule paths_congruent.cases; auto)
-  apply (simp add: paths_congruent.Empty)
+apply (erule paths_correspond.cases; auto)
+  apply (simp add: paths_correspond.Empty)
 done
 
 lemma strict_prefix_preserved: "
-paths_congruent \<pi>1 path1 \<Longrightarrow>
-paths_congruent \<pi> path \<Longrightarrow>
+paths_correspond \<pi>1 path1 \<Longrightarrow>
+paths_correspond \<pi> path \<Longrightarrow>
 strict_prefix path1 (path @ [n]) \<Longrightarrow>
 \<not> strict_prefix \<pi>1 (\<pi> @ [l]) \<Longrightarrow>
 strict_prefix (butlast path1) path
 "
-apply (erule paths_congruent.cases; auto)
+apply (erule paths_correspond.cases; auto)
   using prefix_bot.bot.not_eq_extremum apply blast
   using prefix_order.order.strict_implies_order prefix_snocD apply fastforce
   using prefix_order.dual_order.strict_implies_order prefix_snocD apply fastforce
@@ -381,23 +381,23 @@ done
 
 lemma prefix_abstract_to_concrete': "
 
-paths_congruent \<pi>2 path2 \<Longrightarrow>
+paths_correspond \<pi>2 path2 \<Longrightarrow>
 \<forall> \<pi>1 path1 .
-paths_congruent \<pi>1 path1 \<longrightarrow>
+paths_correspond \<pi>1 path1 \<longrightarrow>
 prefix path1 path2 \<longrightarrow>
 prefix \<pi>1 \<pi>2
 "
-apply (erule paths_congruent.induct; auto)
-  apply (simp add: equality_abstract_to_concrete paths_congruent.Empty)
-  apply (simp add: equality_abstract_to_concrete paths_congruent.Next)
-  apply (simp add: equality_abstract_to_concrete' paths_congruent.Spawn)
-  apply (simp add: equality_abstract_to_concrete' paths_congruent.Call)
-  apply (simp add: equality_abstract_to_concrete' paths_congruent.Return)
+apply (erule paths_correspond.induct; auto)
+  apply (simp add: equality_abstract_to_concrete paths_correspond.Empty)
+  apply (simp add: equality_abstract_to_concrete paths_correspond.Next)
+  apply (simp add: equality_abstract_to_concrete' paths_correspond.Spawn)
+  apply (simp add: equality_abstract_to_concrete' paths_correspond.Call)
+  apply (simp add: equality_abstract_to_concrete' paths_correspond.Return)
 done
 
 lemma prefix_abstract_to_concrete: "
-paths_congruent \<pi>2 path2 \<Longrightarrow>
-paths_congruent \<pi>1 path1 \<Longrightarrow>
+paths_correspond \<pi>2 path2 \<Longrightarrow>
+paths_correspond \<pi>1 path1 \<Longrightarrow>
 prefix path1 path2 \<Longrightarrow>
 prefix \<pi>1 \<pi>2
 "
@@ -405,55 +405,55 @@ by (simp add: prefix_abstract_to_concrete')
 
 
 lemma strict_prefix_abstract_to_concrete': "
-paths_congruent \<pi>2 path2 \<Longrightarrow>
+paths_correspond \<pi>2 path2 \<Longrightarrow>
 \<forall> \<pi>1 path1 .
 strict_prefix path1 path2 \<longrightarrow>
-paths_congruent \<pi>1 path1 \<longrightarrow>
+paths_correspond \<pi>1 path1 \<longrightarrow>
 strict_prefix \<pi>1 \<pi>2
 "
-apply (erule paths_congruent.induct; auto)
+apply (erule paths_correspond.induct; auto)
   apply (metis not_Cons_self2 prefix_abstract_to_concrete prefix_snoc same_prefix_nil strict_prefix_def)+
 done
 
 
 lemma strict_prefix_abstract_to_concrete: "
 strict_prefix path1 path2 \<Longrightarrow>
-paths_congruent \<pi>1 path1 \<Longrightarrow>
-paths_congruent \<pi>2 path2 \<Longrightarrow>
+paths_correspond \<pi>1 path1 \<Longrightarrow>
+paths_correspond \<pi>2 path2 \<Longrightarrow>
 strict_prefix \<pi>1 \<pi>2
 "
 by (simp add: strict_prefix_abstract_to_concrete')
 
 
 lemma equality_contcrete_to_abstract': "
-  paths_congruent \<pi> path1 \<Longrightarrow>
-  \<forall> path2 .  paths_congruent \<pi> path2 \<longrightarrow> path1 = path2
+  paths_correspond \<pi> path1 \<Longrightarrow>
+  \<forall> path2 .  paths_correspond \<pi> path2 \<longrightarrow> path1 = path2
 "
-apply (erule paths_congruent.induct)
+apply (erule paths_correspond.induct)
 apply auto[1]
-apply (erule paths_congruent.cases; auto)
+apply (erule paths_correspond.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast path2" in spec)
 apply (rotate_tac)
-apply (erule paths_congruent.cases; auto)
+apply (erule paths_correspond.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast path2" in spec)
 apply (rotate_tac)
-apply (erule paths_congruent.cases; auto)
+apply (erule paths_correspond.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast path2" in spec)
 apply (rotate_tac)
-apply (erule paths_congruent.cases; auto)
+apply (erule paths_correspond.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast path2" in spec)
 apply (rotate_tac)
-apply (erule paths_congruent.cases; auto)
+apply (erule paths_correspond.cases; auto)
 done
 
 lemma equality_contcrete_to_abstract: "
   \<pi>1 = \<pi>2 \<Longrightarrow>
-  paths_congruent \<pi>1 path1 \<Longrightarrow>
-  paths_congruent \<pi>2 path2 \<Longrightarrow>
+  paths_correspond \<pi>1 path1 \<Longrightarrow>
+  paths_correspond \<pi>2 path2 \<Longrightarrow>
   path1 = path2
 
 "
@@ -464,27 +464,27 @@ by (simp add: equality_contcrete_to_abstract')
 
 lemma spawn_point_preserved_under_congruent_paths: " 
 l1 = (LNext x) \<Longrightarrow> l2 = (LSpawn x) \<Longrightarrow>
-paths_congruent (\<pi> @ [l1]) (path @ [n1]) \<Longrightarrow>
-paths_congruent (\<pi> @ [l2]) (path @ [n2]) \<Longrightarrow>
+paths_correspond (\<pi> @ [l1]) (path @ [n1]) \<Longrightarrow>
+paths_correspond (\<pi> @ [l2]) (path @ [n2]) \<Longrightarrow>
 n1 = (NLet x, ENext) \<and> n2 = (NLet x, ESpawn)
 "
-apply (erule paths_congruent.cases; auto)
-using equality_contcrete_to_abstract paths_congruent.Spawn apply blast
+apply (erule paths_correspond.cases; auto)
+using equality_contcrete_to_abstract paths_correspond.Spawn apply blast
 done
 
 lemma abstract_paths_of_same_run_inclusive_step: "
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
   E \<pi>2 \<noteq> None \<longrightarrow>
-  paths_congruent \<pi>1 path1 \<longrightarrow> 
-  paths_congruent \<pi>2 path2 \<longrightarrow> 
+  paths_correspond \<pi>1 path1 \<longrightarrow> 
+  paths_correspond \<pi>2 path2 \<longrightarrow> 
   path1 \<asymp> path2 \<Longrightarrow>
 star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
-paths_congruent \<pi>1 path1 \<Longrightarrow> 
-paths_congruent \<pi>2 path2 \<Longrightarrow>
+paths_correspond \<pi>1 path1 \<Longrightarrow> 
+paths_correspond \<pi>2 path2 \<Longrightarrow>
 path1 \<asymp> path2 
 "
 proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (simp add: Prefix2)))
@@ -492,15 +492,15 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
     H1: "
       \<forall>\<pi>1. (\<exists>y. E \<pi>1 = Some y) \<longrightarrow>
       (\<forall>\<pi>2. (\<exists>y. E \<pi>2 = Some y) \<longrightarrow>
-      (\<forall>path1. paths_congruent \<pi>1 path1 \<longrightarrow>
-      (\<forall>path2. paths_congruent \<pi>2 path2 \<longrightarrow> 
+      (\<forall>path1. paths_correspond \<pi>1 path1 \<longrightarrow>
+      (\<forall>path2. paths_correspond \<pi>2 path2 \<longrightarrow> 
         path1 \<asymp> path2)))" and
     H2: "star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H)" and
     H3: "(E, H) \<rightarrow> (E', H')" and
     H4: "\<exists>y. E' \<pi>1 = Some y" and
     H5: "\<exists>y. E' \<pi>2 = Some y " and
-    H6: "paths_congruent \<pi>1 path1" and
-    H7: "paths_congruent \<pi>2 path2" and
+    H6: "paths_correspond \<pi>1 path1" and
+    H7: "paths_correspond \<pi>2 path2" and
     H8: "path1 \<noteq> []" and 
     H9: "path2 \<noteq> []"
 
@@ -516,22 +516,22 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
   obtain \<pi>1x l1 path1x n1 where
     H12: "\<pi>1x @ [l1] = \<pi>1" and
     H13: "path1x @ [n1] = path1" and
-    H14: "paths_congruent \<pi>1x path1x"
-    apply (rule paths_congruent.cases)
+    H14: "paths_correspond \<pi>1x path1x"
+    apply (rule paths_correspond.cases)
     using H8 by blast+
 
   from H7
   obtain \<pi>2x l2 path2x n2 where
     H15: "\<pi>2x @ [l2] = \<pi>2" and
     H16: "path2x @ [n2] = path2" and
-    H17: "paths_congruent \<pi>2x path2x"
-    apply (rule paths_congruent.cases)
+    H17: "paths_correspond \<pi>2x path2x"
+    apply (rule paths_correspond.cases)
     using H9 by blast+
  
-  have H22: "paths_congruent (\<pi>1x @ [l1]) (path1x @ [n1])"
+  have H22: "paths_correspond (\<pi>1x @ [l1]) (path1x @ [n1])"
     by (simp add: H12 H13 H6)
 
-  have H23: "paths_congruent (\<pi>2x @ [l2]) (path2x @ [n2])"
+  have H23: "paths_correspond (\<pi>2x @ [l2]) (path2x @ [n2])"
     by (simp add: H15 H16 H7)
 
   show "path1 \<asymp> path2"
@@ -633,8 +633,8 @@ lemma abstract_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
-  paths_congruent \<pi>1 path1 \<Longrightarrow>
-  paths_congruent \<pi>2 path2 \<Longrightarrow>
+  paths_correspond \<pi>1 path1 \<Longrightarrow>
+  paths_correspond \<pi>2 path2 \<Longrightarrow>
   path1 \<asymp> path2
 "
 proof -
@@ -642,8 +642,8 @@ proof -
     H1: "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')" and
     H2: "\<E>' \<pi>1 \<noteq> None" and
     H3: "\<E>' \<pi>2 \<noteq> None" and
-    H4: "paths_congruent \<pi>1 path1" and
-    H5: "paths_congruent \<pi>2 path2"
+    H4: "paths_correspond \<pi>1 path1" and
+    H5: "paths_correspond \<pi>2 path2"
 
   from H1 have
     "star_left (op \<rightarrow>) ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" by (simp add: star_implies_star_left)
@@ -659,8 +659,8 @@ proof -
       X0 = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> X' = (\<E>', H') \<longrightarrow>
       \<E>' \<pi>1 \<noteq> None \<longrightarrow>
       \<E>' \<pi>2 \<noteq> None \<longrightarrow>
-      paths_congruent \<pi>1 path1 \<longrightarrow>
-      paths_congruent \<pi>2 path2 \<longrightarrow>
+      paths_correspond \<pi>1 path1 \<longrightarrow>
+      paths_correspond \<pi>2 path2 \<longrightarrow>
       path1 \<asymp> path2
     "
   proof induction
@@ -677,8 +677,8 @@ proof -
         L2H2: "z = (\<E>', H')" and
         L2H3: "\<E>' \<pi>1 \<noteq> None" and
         L2H4: "\<E>' \<pi>2 \<noteq> None" and
-        L2H5: "paths_congruent \<pi>1 path1" and
-        L2H6: "paths_congruent \<pi>2 path2"
+        L2H5: "paths_correspond \<pi>1 path1" and
+        L2H6: "paths_correspond \<pi>2 path2"
 
       obtain \<E> H where 
         L2H7: "y = (\<E>, H)" by (meson surj_pair)
@@ -688,8 +688,8 @@ proof -
           \<forall> \<pi>1 \<pi>2 path1 path2 . 
           \<E> \<pi>1 \<noteq> None \<longrightarrow>
           \<E> \<pi>2 \<noteq> None \<longrightarrow>
-          paths_congruent \<pi>1 path1 \<longrightarrow> 
-          paths_congruent \<pi>2 path2 \<longrightarrow> 
+          paths_correspond \<pi>1 path1 \<longrightarrow> 
+          paths_correspond \<pi>2 path2 \<longrightarrow> 
           path1 \<asymp> path2 "
         by blast
 
@@ -703,6 +703,21 @@ proof -
   from H2 H3 H4 H5 H6(1) H6(2) H8 show 
     "path1 \<asymp> path2" by blast
 qed
+
+
+lemma abstract_paths_equal_or_exclusive_implies_dynamic_paths_equal: "
+pathSync = pathSynca \<or> (\<not> pathSynca \<asymp> pathSync) \<Longrightarrow> 
+
+([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+\<E>' \<pi>\<^sub>1 \<noteq> None \<Longrightarrow> 
+\<E>' \<pi>\<^sub>2 \<noteq> None \<Longrightarrow> 
+
+paths_correspond \<pi>\<^sub>1 pathSync \<Longrightarrow>
+paths_correspond \<pi>\<^sub>2 pathSynca \<Longrightarrow>
+
+\<pi>\<^sub>1 = \<pi>\<^sub>2
+"
+using abstract_paths_of_same_run_inclusive equality_abstract_to_concrete by blast
 
 lemma is_send_path_implies_nonempty_pool: "
   is_send_path \<E> (Ch \<pi>C xC) \<pi> \<Longrightarrow> 
@@ -736,30 +751,6 @@ proof -
     "\<E> \<pi> \<noteq> None" by blast
 qed
 
-lemma send_abstract_paths_of_same_run_inclusive: "
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
-  paths_congruent \<pi>1 path1 \<Longrightarrow>
-  paths_congruent \<pi>2 path2 \<Longrightarrow>
-  path1 \<asymp> path2
-"
-using is_send_path_implies_nonempty_pool abstract_paths_of_same_run_inclusive by fastforce
-
-
-lemma send_abstract_paths_equal_exclusive_implies_dynamic_paths_equal: "
-pathSync = pathSynca \<or> (\<not> pathSynca \<asymp> pathSync) \<Longrightarrow> 
-
-([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
-is_send_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>1 \<Longrightarrow>
-is_send_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>2 \<Longrightarrow>
-
-paths_congruent \<pi>\<^sub>1 pathSync \<Longrightarrow>
-paths_congruent \<pi>\<^sub>2 pathSynca \<Longrightarrow>
-
-\<pi>\<^sub>1 = \<pi>\<^sub>2
-"
-by (simp add: equality_abstract_to_concrete send_abstract_paths_of_same_run_inclusive)
 
 (* END *)
 
@@ -854,7 +845,7 @@ lemma simple_flow_set_pool_implies_may_be_path: "
   simple_flow_set_pool V F \<E>' \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
-    paths_congruent \<pi> path \<and>
+    paths_correspond \<pi> path \<and>
     may_be_path V F (top_node_label e) isEnd path
 "
 sorry
@@ -882,46 +873,46 @@ apply (erule simple_flow_set.cases; auto)
   apply (simp add: simple_flow_set.Let_App simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
 done
 
-lemma isnt_path_sound: "
+lemma path_not_traceable_sound: "
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   simple_flow_set V F e \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
-    paths_congruent \<pi> path \<and>
+    paths_correspond \<pi> path \<and>
     may_be_path V F (top_node_label e) isEnd path
 "
 by (metis lift_simple_flow_set_to_pool simple_flow_set_pool_implies_may_be_path simple_flow_set_pool_preserved_star)
 
 
 
-lemma node_not_send_path_sound: "
+lemma send_path_not_traceable_sound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   simple_flow_set V F e \<Longrightarrow>
   \<exists> pathSync .
-    (paths_congruent \<pi>Sync pathSync) \<and> 
+    (paths_correspond \<pi>Sync pathSync) \<and> 
     may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in node_not_send_site_sound; auto?)
- apply (frule isnt_path_sound; auto?)
+ apply (frule path_not_traceable_sound; auto?)
 done
 
-lemma node_not_recv_path_sound: "
+lemma recv_path_not_traceable_sound: "
   is_recv_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   simple_flow_set V F e \<Longrightarrow>
   \<exists> pathSync .
-    (paths_congruent \<pi>Sync pathSync) \<and> 
+    (paths_correspond \<pi>Sync pathSync) \<and> 
     may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC) pathSync
 "
  apply (unfold is_recv_path.simps; auto)
  apply (frule_tac x\<^sub>r\<^sub>c = xrc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in node_not_recv_site_sound; auto?)
- apply (frule isnt_path_sound; auto?)
+ apply (frule path_not_traceable_sound; auto?)
 done
 
 (* END PATH SOUND *)
@@ -936,12 +927,12 @@ theorem one_shot_sound': "
   every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
  apply (simp add: every_two.simps singular.simps; auto)
- apply (frule_tac \<pi>Sync = \<pi>1 in node_not_send_path_sound; auto)
+ apply (frule_tac \<pi>Sync = \<pi>1 in send_path_not_traceable_sound; auto)
  apply (drule_tac x = pathSync in spec)
- apply (frule_tac \<pi>Sync = \<pi>2 in node_not_send_path_sound; auto?)
+ apply (frule_tac \<pi>Sync = \<pi>2 in send_path_not_traceable_sound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (simp add: equality_abstract_to_concrete send_abstract_paths_of_same_run_inclusive)
+ apply (metis abstract_paths_of_same_run_inclusive equality_abstract_to_concrete is_send_path_implies_nonempty_pool)
 done
 
 theorem one_shot_sound: "
@@ -966,7 +957,7 @@ theorem noncompetitive_send_to_ordered_send: "
   every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
-  using node_not_send_path_sound abstract_paths_of_same_run_inclusive 
+  using send_path_not_traceable_sound abstract_paths_of_same_run_inclusive 
   apply (meson is_send_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
@@ -991,7 +982,7 @@ lemma noncompetitive_recv_to_ordered_recv: "
    every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
-  using node_not_recv_path_sound abstract_paths_of_same_run_inclusive 
+  using recv_path_not_traceable_sound abstract_paths_of_same_run_inclusive 
  apply (meson is_recv_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 

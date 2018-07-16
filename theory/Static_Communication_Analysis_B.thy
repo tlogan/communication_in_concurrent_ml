@@ -648,56 +648,56 @@ lemma call_return_balanced: "
 "
 using balanced.CallReturn balanced.Empty by fastforce
 
-inductive paths_congruent :: "control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive paths_correspond :: "control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
-    paths_congruent [] []
+    paths_correspond [] []
   " |
   Next: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> @ [LNext x]) (path @ [(NLet x, ENext)])
+    paths_correspond \<pi> path \<Longrightarrow>
+    paths_correspond (\<pi> @ [LNext x]) (path @ [(NLet x, ENext)])
   " |
   Spawn: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> @ [LSpawn x]) (path @ [(NLet x, ESpawn)])
+    paths_correspond \<pi> path \<Longrightarrow>
+    paths_correspond (\<pi> @ [LSpawn x]) (path @ [(NLet x, ESpawn)])
   " |
   Call: "
-    paths_congruent \<pi> path \<Longrightarrow>
-    paths_congruent (\<pi> @ [LCall x]) (path @ [(NLet x, ECall)])
+    paths_correspond \<pi> path \<Longrightarrow>
+    paths_correspond (\<pi> @ [LCall x]) (path @ [(NLet x, ECall)])
   "  |
   Return: "
-    paths_congruent \<pi> (path @ (NLet x, ECall) # path') \<Longrightarrow>
+    paths_correspond \<pi> (path @ (NLet x, ECall) # path') \<Longrightarrow>
     abstract_balanced path' \<Longrightarrow>
-    paths_congruent (\<pi> @ [LReturn y]) (path @ (NLet x, ECall) # path' @ [(NResult y, EReturn x)])
+    paths_correspond (\<pi> @ [LReturn y]) (path @ (NLet x, ECall) # path' @ [(NResult y, EReturn x)])
   " 
 
-inductive paths_congruent_mod_chan :: "trace_pool * cmmn_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive paths_correspond_mod_chan :: "trace_pool * cmmn_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Unordered: "
-    paths_congruent \<pi> pathx \<Longrightarrow>
+    paths_correspond \<pi> pathx \<Longrightarrow>
     \<not> (prefix pathx path) \<Longrightarrow>
     \<not> (prefix path pathx) \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) c \<pi> path
+    paths_correspond_mod_chan (\<E>, H) c \<pi> path
   " |
   Chan: "
-    paths_congruent ((LNext xC) # \<pi>Suff) path \<Longrightarrow>
+    paths_correspond ((LNext xC) # \<pi>Suff) path \<Longrightarrow>
     \<E> (\<pi>C @ (LNext xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) (Ch \<pi>C xC) (\<pi>C @ (LNext xC) # \<pi>Suff) path
+    paths_correspond_mod_chan (\<E>, H) (Ch \<pi>C xC) (\<pi>C @ (LNext xC) # \<pi>Suff) path
   " |
   Sync: "
-    paths_congruent \<pi>Suffix pathSuffix \<Longrightarrow>
+    paths_correspond \<pi>Suffix pathSuffix \<Longrightarrow>
     \<E> (\<pi>R @ (LNext xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
     dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
     \<E> \<pi>S = Some (\<langle>LET xS = SYNC xSE in eSY;\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
     \<E> \<pi>R = Some (\<langle>LET xR = SYNC xRE in eRY;\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
     {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) c \<pi>S pathPre \<Longrightarrow>
-    paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
+    paths_correspond_mod_chan (\<E>, H) c \<pi>S pathPre \<Longrightarrow>
+    paths_correspond_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
   " 
 
-lemma no_empty_paths_congruent_mod_chan: "
-  \<not> (paths_congruent_mod_chan EH c [] path)"
+lemma no_empty_paths_correspond_mod_chan: "
+  \<not> (paths_correspond_mod_chan EH c [] path)"
   apply (rule notI)
-  apply (erule paths_congruent_mod_chan.cases; auto)
-  apply (erule paths_congruent.cases; auto)
+  apply (erule paths_correspond_mod_chan.cases; auto)
+  apply (erule paths_correspond.cases; auto)
 done
 
 
@@ -705,8 +705,8 @@ lemma abstract_paths_of_same_run_inclusive_base: "
   E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
-  paths_congruent_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
-  paths_congruent_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  paths_correspond_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
+  paths_correspond_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
   path1 \<asymp> path2
 "
 proof -
@@ -714,11 +714,11 @@ proof -
     H1: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
     H2: "E0 \<pi>1 \<noteq> None" and
     H3: "E0 \<pi>2 \<noteq> None" and
-    H4: "paths_congruent_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>1 path1" and
-    H5: "paths_congruent_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>2 path2"
+    H4: "paths_correspond_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>1 path1" and
+    H5: "paths_correspond_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>2 path2"
   from H1 H2 H4 show 
     "path1 \<asymp> path2" 
-    by (metis fun_upd_apply no_empty_paths_congruent_mod_chan)
+    by (metis fun_upd_apply no_empty_paths_correspond_mod_chan)
 qed
 
 lemma paths_equal_implies_paths_inclusive: "
@@ -728,16 +728,16 @@ by (simp add: Prefix2)
 
 
 lemma equal_concrete_paths_implies_unordered_or_equal_abstract_paths: "
-paths_congruent_mod_chan EH c \<pi> path1 \<Longrightarrow>
-paths_congruent_mod_chan EH c \<pi> path2 \<Longrightarrow>
+paths_correspond_mod_chan EH c \<pi> path1 \<Longrightarrow>
+paths_correspond_mod_chan EH c \<pi> path2 \<Longrightarrow>
 path1 = path2 \<or> (\<not> prefix path1 path2 \<and> \<not> prefix path2 path1)
 "
 sorry
 
 lemma paths_cong_mod_chan_preserved_under_reduction: "
-paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
+paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
-paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path
+paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path
 "
 sorry
 
@@ -767,15 +767,15 @@ lemma abstract_paths_of_same_run_inclusive_step: "
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
   E \<pi>2 \<noteq> None \<longrightarrow>
-  paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1 \<longrightarrow> 
-  paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2 \<longrightarrow> 
+  paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1 \<longrightarrow> 
+  paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2 \<longrightarrow> 
   path1 \<asymp> path2 \<Longrightarrow>
 star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
-paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>1 path1 \<Longrightarrow> 
-paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>2 path2 \<Longrightarrow>
+paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>1 path1 \<Longrightarrow> 
+paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>2 path2 \<Longrightarrow>
 path1 \<asymp> path2 
 "
 proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (simp add: Prefix2)))
@@ -783,15 +783,15 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
     H1: "
       \<forall>\<pi>1. (\<exists>y. E \<pi>1 = Some y) \<longrightarrow>
       (\<forall>\<pi>2. (\<exists>y. E \<pi>2 = Some y) \<longrightarrow>
-      (\<forall>path1. paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1 \<longrightarrow>
-      (\<forall>path2. paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2 \<longrightarrow> 
+      (\<forall>path1. paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1 \<longrightarrow>
+      (\<forall>path2. paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2 \<longrightarrow> 
         path1 \<asymp> path2)))" and
     H2: "star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H)" and
     H3: "(E, H) \<rightarrow> (E', H')" and
     H4: "\<exists>y. E' \<pi>1 = Some y" and
     H5: "\<exists>y. E' \<pi>2 = Some y " and
-    H6: "paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>1 path1" and
-    H7: "paths_congruent_mod_chan (E', H') (Ch \<pi>C xC) \<pi>2 path2" and
+    H6: "paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>1 path1" and
+    H7: "paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>2 path2" and
     H8: "path1 \<noteq> []" and 
     H9: "path2 \<noteq> []"
 
@@ -806,19 +806,19 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
   obtain \<pi>1x l1 path1x n1 where
     H12: "\<pi>1x @ [l1] = \<pi>1" and
     H13: "path1x @ [n1] = path1" and
-    H14: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1x path1x" 
-  by (metis H3 H6 H8 append_butlast_last_id paths_cong_mod_chan_preserved_under_reduction no_empty_paths_congruent_mod_chan)
+    H14: "paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1x path1x" 
+  by (metis H3 H6 H8 append_butlast_last_id paths_cong_mod_chan_preserved_under_reduction no_empty_paths_correspond_mod_chan)
 
   obtain \<pi>2x l2 path2x n2 where
     H15: "\<pi>2x @ [l2] = \<pi>2" and
     H16: "path2x @ [n2] = path2" and
-    H17: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2x path2x"
-  by (metis H3 H7 H9 append_butlast_last_id paths_cong_mod_chan_preserved_under_reduction no_empty_paths_congruent_mod_chan)
+    H17: "paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2x path2x"
+  by (metis H3 H7 H9 append_butlast_last_id paths_cong_mod_chan_preserved_under_reduction no_empty_paths_correspond_mod_chan)
 
 
-  have H18: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1" sorry
+  have H18: "paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1" sorry
 
-  have H19: "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2" sorry
+  have H19: "paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2" sorry
 
   show "path1 \<asymp> path2"
   proof cases
@@ -892,8 +892,8 @@ lemma abstract_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
-  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
+  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
   path1 \<asymp> path2
 "
 proof -
@@ -901,8 +901,8 @@ proof -
     H1: "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')" and
     H2: "\<E>' \<pi>1 \<noteq> None" and
     H3: "\<E>' \<pi>2 \<noteq> None" and
-    H4: "paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1" and
-    H5: "paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2"
+    H4: "paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1" and
+    H5: "paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2"
 
   from H1 have
     "star_left (op \<rightarrow>) ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" by (simp add: star_implies_star_left)
@@ -918,8 +918,8 @@ proof -
       X0 = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> X' = (\<E>', H') \<longrightarrow>
       \<E>' \<pi>1 \<noteq> None \<longrightarrow>
       \<E>' \<pi>2 \<noteq> None \<longrightarrow>
-      paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow>
-      paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow>
+      paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow>
+      paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow>
       path1 \<asymp> path2
     "
   proof induction
@@ -936,8 +936,8 @@ proof -
         L2H2: "z = (\<E>', H')" and
         L2H3: "\<E>' \<pi>1 \<noteq> None" and
         L2H4: "\<E>' \<pi>2 \<noteq> None" and
-        L2H5: "paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1" and
-        L2H6: "paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2"
+        L2H5: "paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1" and
+        L2H6: "paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2"
 
       obtain \<E> H where 
         L2H7: "y = (\<E>, H)" by (meson surj_pair)
@@ -947,8 +947,8 @@ proof -
           \<forall> \<pi>1 \<pi>2 path1 path2 . 
           \<E> \<pi>1 \<noteq> None \<longrightarrow>
           \<E> \<pi>2 \<noteq> None \<longrightarrow>
-          paths_congruent_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
-          paths_congruent_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
+          paths_correspond_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
+          paths_correspond_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
           path1 \<asymp> path2 "
         by blast
 
@@ -983,8 +983,8 @@ lemma send_abstract_paths_of_same_run_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
-  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
+  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
   path1 \<asymp> path2
 "
 using is_send_path_implies_nonempty_pool abstract_paths_of_same_run_inclusive by fastforce
@@ -993,8 +993,8 @@ using is_send_path_implies_nonempty_pool abstract_paths_of_same_run_inclusive by
 
 lemma send_path_equality_sound: "
   path1 = path2 \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
+  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
   is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
@@ -1010,8 +1010,8 @@ pathSync = pathSynca \<or> \<not> pathSync \<asymp> pathSynca \<Longrightarrow>
 is_send_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>1 \<Longrightarrow>
 is_send_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>2 \<Longrightarrow>
 
-paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>1 pathSync \<Longrightarrow>
-paths_congruent_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>2 pathSynca \<Longrightarrow>
+paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>1 pathSync \<Longrightarrow>
+paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>2 pathSynca \<Longrightarrow>
 
 \<pi>\<^sub>1 = \<pi>\<^sub>2
 "
@@ -1029,7 +1029,7 @@ lemma isnt_path_sound: "
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
-    paths_congruent_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
+    paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
     may_be_static_live_path V F Ln Lx (NLet xC) isEnd path
 "
 sorry
@@ -1042,7 +1042,7 @@ lemma node_not_send_path_sound: "
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
   \<exists> pathSync .
-    (paths_congruent_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
+    (paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
     may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
@@ -1162,25 +1162,25 @@ done
 
 
 lemma paths_cong_preserved_under_reduction: "
-  paths_congruent (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
-  paths_congruent \<pi> path"
-using paths_congruent.cases by fastforce
+  paths_correspond (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
+  paths_correspond \<pi> path"
+using paths_correspond.cases by fastforce
 
 
 lemma paths_cong_mod_chan_preserved_under_reduction: "
 (suffix \<pi> (\<pi>C @ [LNext xC)) \<and> suffix path [(NLet xC, ENext)] \<or>
   True) \<Longrightarrow>
-paths_congruent_mod_chan EH' (Ch \<pi>C xC) (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
+paths_correspond_mod_chan EH' (Ch \<pi>C xC) (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
 E \<pi> \<noteq> None \<Longrightarrow>
-paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
+paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
 proof -
   assume
     H1: "E \<pi> \<noteq> None" and
     H2: "\<pi> \<noteq> []" "path \<noteq> []" and
-    H3: "paths_congruent_mod_chan EH' c (\<pi> @ [l) (path @ [n])"
+    H3: "paths_correspond_mod_chan EH' c (\<pi> @ [l) (path @ [n])"
 
   from H3
-  show "paths_congruent_mod_chan (E, H) c \<pi> path"
+  show "paths_correspond_mod_chan (E, H) c \<pi> path"
   proof cases
 
     case (Chan xC \<pi>X E' \<pi>C H')
@@ -1190,35 +1190,35 @@ proof -
       by (metis butlast_append butlast_snoc list.simps(3) local.Chan(3))
     
     have 
-      H5: "paths_congruent ((butlast (LNext xC # \<pi>X)) @ [l) (path @ [n])"
+      H5: "paths_correspond ((butlast (LNext xC # \<pi>X)) @ [l) (path @ [n])"
       by (metis append_butlast_last_id last_ConsL last_appendR list.simps(3) local.Chan(3) local.Chan(4))
 
     have 
       H6: "butlast (LNext xC # \<pi>X) \<noteq> []"
-      by (metis H2(2) H5 paths_congruent.cases snoc_eq_iff_butlast)
+      by (metis H2(2) H5 paths_correspond.cases snoc_eq_iff_butlast)
 
     have 
-      H7: "paths_congruent (butlast (LNext xC # \<pi>X)) path"
+      H7: "paths_correspond (butlast (LNext xC # \<pi>X)) path"
       using H2(2) H5 H6 paths_cong_preserved_under_reduction by blast
 
     have 
-      H8: "paths_congruent (LNext xC # (butlast \<pi>X)) path"
+      H8: "paths_correspond (LNext xC # (butlast \<pi>X)) path"
       by (metis H6 H7 butlast.simps(2))
 
     have L2H10: "\<pi> = \<pi>C @ butlast (LNext xC # \<pi>X)"
     using H4 by blast
 
-    have "paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
-    using H1 H6 H8 L2H10 paths_congruent_mod_chan.Chan by auto
+    have "paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
+    using H1 H6 H8 L2H10 paths_correspond_mod_chan.Chan by auto
      
-    then show "paths_congruent_mod_chan (E, H) c \<pi> path"
+    then show "paths_correspond_mod_chan (E, H) c \<pi> path"
     by (simp add: local.Chan(2))
 
   next
     case (Sync \<pi>Suffix pathSuffix E' \<pi>R xR \<rho>RY \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY H' pathPre)
 
     
-    then show "paths_congruent_mod_chan (E, H) c \<pi> path"
+    then show "paths_correspond_mod_chan (E, H) c \<pi> path"
     proof cases
       assume L1H1: "pathSuffix = []"
 
@@ -1226,12 +1226,12 @@ proof -
         using L1H1 local.Sync(3) by auto
 
       have L1H3: "\<pi>Suffix = []"
-        using L1H1 local.Sync(4) paths_congruent.cases by blast
+        using L1H1 local.Sync(4) paths_correspond.cases by blast
 
       have L1H3: "\<pi> = \<pi>R"
         using L1H3 local.Sync(2) by blast
 
-      have "paths_congruent_mod_chan (E, H) c \<pi>R (pathPre @ [(NLet xS, ESend xSE)])" sorry
+      have "paths_correspond_mod_chan (E, H) c \<pi>R (pathPre @ [(NLet xS, ESend xSE)])" sorry
 
       then show ?thesis sorry
     next
@@ -1242,7 +1242,7 @@ proof -
         by (metis L1H1 butlast.simps(2) butlast_append butlast_snoc list.simps(3) local.Sync(3))
       
       have L1H3: "\<pi>Suffix \<noteq> []"
-        using local.Sync(4) paths_congruent.cases sorry
+        using local.Sync(4) paths_correspond.cases sorry
 
       have L1H4: "\<pi> = \<pi>R @ LNext xR # (butlast \<pi>Suffix)"
         by (metis L1H3 butlast.simps(2) butlast_append butlast_snoc list.distinct(1) local.Sync(2))
@@ -1262,7 +1262,7 @@ proof -
         have L2H4: "\<pi> = \<pi>R @ [LNext xR]" by (simp add: L1H4 L2H3)
 
         have 
-          "paths_congruent_mod_chan (E, H) c (\<pi>R @ [LNext xR]) (pathPre @ [(NLet xS, ESend xSE), (NLet xR, ENext)])" sorry
+          "paths_correspond_mod_chan (E, H) c (\<pi>R @ [LNext xR]) (pathPre @ [(NLet xS, ESend xSE), (NLet xR, ENext)])" sorry
 
         then show ?thesis
           by (simp add: L2H2 L2H4)
@@ -1281,21 +1281,21 @@ qed
 
 (*
 lemma paths_cong_mod_chan_preserved_under_reduction_chan: "
-  paths_congruent ((LNext xC) # \<pi>Suff @ [l) (path @ [n]) \<Longrightarrow>
+  paths_correspond ((LNext xC) # \<pi>Suff @ [l) (path @ [n]) \<Longrightarrow>
   E (\<pi>C @ (LNext xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
-  paths_congruent_mod_chan (E, H) (Ch \<pi>C xC) (\<pi>C @ (LNext xC) # \<pi>Suff) path"
-using paths_cong_preserved_under_reduction paths_congruent_mod_chan.Chan by blast
+  paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) (\<pi>C @ (LNext xC) # \<pi>Suff) path"
+using paths_cong_preserved_under_reduction paths_correspond_mod_chan.Chan by blast
 
 lemma  paths_cong_mod_chan_preserved_under_reduction_sync: "
-  paths_congruent (\<pi>Suffix @ [l) (pathSuffix @ [n]) \<Longrightarrow>
+  paths_correspond (\<pi>Suffix @ [l) (pathSuffix @ [n]) \<Longrightarrow>
   \<E> (\<pi>R @ (LNext xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
   dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
   \<E> \<pi>S = Some (\<langle>LET xS = SYNC xSE in eSY;\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
   \<E> \<pi>R = Some (\<langle>LET xR = SYNC xRE in eRY;\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
   {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>, H) c \<pi>Severy_two pathPre \<Longrightarrow>
-  paths_congruent_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)"
-by (meson paths_cong_preserved_under_reduction paths_congruent_mod_chan.Sync)
+  paths_correspond_mod_chan (\<E>, H) c \<pi>Severy_two pathPre \<Longrightarrow>
+  paths_correspond_mod_chan (\<E>, H) c (\<pi>R @ (LNext xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)"
+by (meson paths_cong_preserved_under_reduction paths_correspond_mod_chan.Sync)
 *)
 
 
