@@ -809,52 +809,52 @@ structure OneShotToOneChan : CHAN = struct
 
 
   inductive
-    may_be_eval_exp ::
+    static_eval_exp ::
       abstract_env * abstract_env %$\Rightarrow$%
       exp %$\Rightarrow$% bool where
-    Result :
-      may_be_eval_exp (V, C) (RESULT x) |
+    Rslt :
+      static_eval_exp (V, C) (RESULT x) |
     let_unt :
       {AUnt} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-      may_be_eval_exp (V, C) (Let x Unt e) |
+      static_eval_exp (V, C) e %$\Longrightarrow$% 
+      static_eval_exp (V, C) (Let x Unt e) |
     let_chan : 
       {AChn x} %$\subseteq$% V x  %$\Longrightarrow$%
-      may_be_eval_exp (V, C) e %$\Longrightarrow$%
-      may_be_eval_exp (V, C) (Let x (MkChn) e) |
+      static_eval_exp (V, C) e %$\Longrightarrow$%
+      static_eval_exp (V, C) (Let x (MkChn) e) |
     let_send_evt : 
       {APrim (SendEvt xc xm)} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-      may_be_eval_exp (V, C)
+      static_eval_exp (V, C) e %$\Longrightarrow$% 
+      static_eval_exp (V, C)
         (Let x (Prim (SendEvt xc xm)) e) |
     let_recv_evt :
       {APrim (RecvEvt xc)} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-      may_be_eval_exp (V, C)
+      static_eval_exp (V, C) e %$\Longrightarrow$% 
+      static_eval_exp (V, C)
         (Let x (Prim (RecvEvt xc)) e) |
     let_pair : 
       {APrim (Pair x1 x2)} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-      may_be_eval_exp (V, C) (Let x (Pair x1 x2) e) |
+      static_eval_exp (V, C) e %$\Longrightarrow$% 
+      static_eval_exp (V, C) (Let x (Pair x1 x2) e) |
     let_left : 
       {APrim (Left xp)} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-      may_be_eval_exp (V, C) (Let x (Left xp) e) |
+      static_eval_exp (V, C) e %$\Longrightarrow$% 
+      static_eval_exp (V, C) (Let x (Left xp) e) |
     let_right :
       {APrim (Right xp)} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-      may_be_eval_exp (V, C) (Let x (Right xp) e) |
+      static_eval_exp (V, C) e %$\Longrightarrow$% 
+      static_eval_exp (V, C) (Let x (Right xp) e) |
     let_abs : 
       {APrim (Abs f' x' e')} %$\subseteq$% V f' %$\Longrightarrow$%
-      may_be_eval_exp (V, C) e' %$\Longrightarrow$%
+      static_eval_exp (V, C) e' %$\Longrightarrow$%
       {APrim (Abs f' x' e')} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-      may_be_eval_exp (V, C) (Let x (Abs f' x' e') e) |
+      static_eval_exp (V, C) e %$\Longrightarrow$% 
+      static_eval_exp (V, C) (Let x (Abs f' x' e') e) |
     let_spawn :
       {AUnt} %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval_exp (V, C) ec %$\Longrightarrow$% 
-      may_be_eval_exp (V, C) e %$\Longrightarrow$%  
-      may_be_eval_exp (V, C) (Let x (Spwn ec) e) |
+      static_eval_exp (V, C) ec %$\Longrightarrow$% 
+      static_eval_exp (V, C) e %$\Longrightarrow$%  
+      static_eval_exp (V, C) (Let x (Spwn ec) e) |
     let_sync  : 
       %$\forall$% xsc xm xc . 
         (APrim (SendEvt xsc xm)) %$\in$% V xe %$\longrightarrow$% 
@@ -864,38 +864,38 @@ structure OneShotToOneChan : CHAN = struct
         (APrim (RecvEvt xrc)) %$\in$% V xe %$\longrightarrow$%
         AChn xc %$\in$% V xrc %$\longrightarrow$%
         C xc %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval_exp (V, C) e %$\Longrightarrow$%  
-      may_be_eval_exp (V, C) (Let x (Syync xe) e) |
+      static_eval_exp (V, C) e %$\Longrightarrow$%  
+      static_eval_exp (V, C) (Let x (Syync xe) e) |
     let_fst : 
       %$\forall$% x1 x2.
         (APrim (Pair x1 x2)) %$\in$% V xp %$\longrightarrow$%
         V x1 %$\subseteq$% V x %$\Longrightarrow$% 
-      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-      may_be_eval_exp (V, C) (Let x (Fst xp) e) |
+      static_eval_exp (V, C) e %$\Longrightarrow$% 
+      static_eval_exp (V, C) (Let x (Fst xp) e) |
     let_snd : 
     %$\forall$% x1 x2 .
       (APrim (Pair x1 x2) %$\in$% V xp %$\longrightarrow$%
       V x2 %$\subseteq$% V x %$\Longrightarrow$% 
-    may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-    may_be_eval_exp (V, C) (Let x (Snd xp) e) |
+    static_eval_exp (V, C) e %$\Longrightarrow$% 
+    static_eval_exp (V, C) (Let x (Snd xp) e) |
   let_case :
     %$\forall$% xl' .
       (APrim (Left xl')) %$\in$% V xs %$\longrightarrow$%
         V xl' %$\subseteq$% V xl %$\land$% V (rslt_var el) %$\subseteq$% V x %$\land$%
-        may_be_eval_exp (V, C) el %$\Longrightarrow$%
+        static_eval_exp (V, C) el %$\Longrightarrow$%
     %$\forall$% xr' .
       (APrim (Right xr')) %$\in$% V xs %$\longrightarrow$%
         V xr' %$\subseteq$% V xr %$\land$% V (rslt_var er) %$\subseteq$% V x %$\land$%
-        may_be_eval_exp (V, C) er %$\Longrightarrow$%
-        may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-      may_be_eval_exp (V, C) (Let x (Case xs xl el xr er) e) |
+        static_eval_exp (V, C) er %$\Longrightarrow$%
+        static_eval_exp (V, C) e %$\Longrightarrow$% 
+      static_eval_exp (V, C) (Let x (Case xs xl el xr er) e) |
   let_app :
     %$\forall$% f' x' e' .
       (APrim (Abs f' x' e') %$\in$% V f %$\longrightarrow$%
       V xa %$\subseteq$% V x' %$\land$%
       V (rslt_var e') %$\subseteq$% V x %$\Longrightarrow$% 
-    may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-    may_be_eval_exp (V, C) (Let x (App f xa) e)
+    static_eval_exp (V, C) e %$\Longrightarrow$% 
+    static_eval_exp (V, C) (Let x (App f xa) e)
 
   \end{lstlisting}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
@@ -910,89 +910,89 @@ structure OneShotToOneChan : CHAN = struct
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
   inductive 
-    may_be_eval_val ::
+    static_eval_val ::
       abstract_env * abstract_env %$\Rightarrow$% val %$\Rightarrow$% bool and  
-    may_be_eval_env ::
+    static_eval_env ::
       abstract_env * abstract_env %$\Rightarrow$% val_env %$\Rightarrow$% bool where
     Unt :
-      may_be_eval_val (V, C) VUnt |
+      static_eval_val (V, C) VUnt |
     Chan :
-      may_be_eval_val (V, C) VChn c |
+      static_eval_val (V, C) VChn c |
     SendEvt :
-      may_be_eval_env (V, C) env %$\Longrightarrow$%
-      may_be_eval_val (V, C) (VClsr (SendEvt _ _) env) |
+      static_eval_env (V, C) env %$\Longrightarrow$%
+      static_eval_val (V, C) (VClsr (SendEvt _ _) env) |
     RecvEvt :
-      may_be_eval_env (V, C) env %$\Longrightarrow$%
-      may_be_eval_val (V, C) (VClsr (RecvEvt _) env) |
+      static_eval_env (V, C) env %$\Longrightarrow$%
+      static_eval_val (V, C) (VClsr (RecvEvt _) env) |
     Left :
-      may_be_eval_env (V, C) env %$\Longrightarrow$%
-      may_be_eval_val (V, C) (VClsr (Left _) env) |
+      static_eval_env (V, C) env %$\Longrightarrow$%
+      static_eval_val (V, C) (VClsr (Left _) env) |
     Right :
-      may_be_eval_env (V, C) env %$\Longrightarrow$%
-      may_be_eval_val (V, C) (VClsr (Right _) env) |
+      static_eval_env (V, C) env %$\Longrightarrow$%
+      static_eval_val (V, C) (VClsr (Right _) env) |
     Abs :
       {(APrim (Abs f x e)} %$\subseteq$% V f %$\Longrightarrow$% 
-      may_be_eval_exp (V, C) e %$\Longrightarrow$% 
-      may_be_eval_env (V, C) env %$\Longrightarrow$%
-      may_be_eval_val (V, C) (VClsr (Abs f x e) env) |
+      static_eval_exp (V, C) e %$\Longrightarrow$% 
+      static_eval_env (V, C) env %$\Longrightarrow$%
+      static_eval_val (V, C) (VClsr (Abs f x e) env) |
     Pair :
-      may_be_eval_env (V, C) env %$\Longrightarrow$%
-      may_be_eval_val (V, C) (VClsr (Pair _ _) env) |
+      static_eval_env (V, C) env %$\Longrightarrow$%
+      static_eval_val (V, C) (VClsr (Pair _ _) env) |
     intro :  
       %$\forall$% x v .
         env x = Some v %$\longrightarrow$%
-        {abstract v} %$\subseteq$% V x %$\land$% may_be_eval_val (V, C) v %$\Longrightarrow$%
-      may_be_eval_env (V, C) env
+        {abstract v} %$\subseteq$% V x %$\land$% static_eval_val (V, C) v %$\Longrightarrow$%
+      static_eval_env (V, C) env
 
   \end{lstlisting}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  inductive may_be_eval_stack ::
+  inductive static_eval_stack ::
     abstract_env * abstract_env %$\Rightarrow$%
     abstract_value set %$\Rightarrow$% cont list %$\Rightarrow$% bool where
     Empty :
-      may_be_eval_stack (V, C) valset [] |
+      static_eval_stack (V, C) valset [] |
     Nonempty : 
       valset %$\subseteq$% V x %$\Longrightarrow$%
-      may_be_eval_exp (V, C) e %$\Longrightarrow$%
-      may_be_eval_env (V, C) env %$\Longrightarrow$%
-      may_be_eval_stack (V, C) (V (rslt_var e)) k %$\Longrightarrow$%
-      may_be_eval_stack (V, C) valset ((Ctn x e env) # k)
+      static_eval_exp (V, C) e %$\Longrightarrow$%
+      static_eval_env (V, C) env %$\Longrightarrow$%
+      static_eval_stack (V, C) (V (rslt_var e)) k %$\Longrightarrow$%
+      static_eval_stack (V, C) valset ((Ctn x e env) # k)
 
 
-  inductive may_be_eval_state ::
+  inductive static_eval_state ::
     abstract_env * abstract_env %$\Rightarrow$%
     state %$\Rightarrow$% bool where
     intro :
-      may_be_eval_exp (V, C) e %$\Longrightarrow$%
-      may_be_eval_env (V, C) env %$\Longrightarrow$%
-      may_be_eval_stack (V, C) (V (rslt_var e)) k %$\Longrightarrow$%
-      may_be_eval_state (V, C) (Stt e env k)
+      static_eval_exp (V, C) e %$\Longrightarrow$%
+      static_eval_env (V, C) env %$\Longrightarrow$%
+      static_eval_stack (V, C) (V (rslt_var e)) k %$\Longrightarrow$%
+      static_eval_state (V, C) (Stt e env k)
 
-  inductive may_be_eval_pool ::
+  inductive static_eval_pool ::
     abstract_env * abstract_env %$\Rightarrow$%
     trace_pool %$\Rightarrow$% bool where
     intro :
       %$\forall$% pi st .
         trpl pi = Some st %$\longrightarrow$%
-        may_be_eval_state (V, C) st %$\Longrightarrow$% 
-      may_be_eval_pool (V, C) trpl
+        static_eval_state (V, C) st %$\Longrightarrow$% 
+      static_eval_pool (V, C) trpl
 
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  theorem may_be_eval_preserved_under_concur_step : "
-    may_be_eval_pool (V, C) trpl %$\Longrightarrow$% 
+  theorem static_eval_preserved_under_concur_step : "
+    static_eval_pool (V, C) trpl %$\Longrightarrow$% 
     concur_step (trpl, ys) (trpl', ys') %$\Longrightarrow$%
-    may_be_stati_eval_pool (V, C) trpl'"
+    static_stati_eval_pool (V, C) trpl'"
   proof outline
   qed
 
-  theorem may_be_eval_preserved_under_concur_step_star : "
-    may_be_eval_pool (V, C) trpl %$\Longrightarrow$% 
+  theorem static_eval_preserved_under_concur_step_star : "
+    static_eval_pool (V, C) trpl %$\Longrightarrow$% 
     star concur_step (trpl, ys) (trpl', ys')  %$\Longrightarrow$% 
-    may_be_concur_step (V, C) trpl'"
+    static_concur_step (V, C) trpl'"
   proof outline
   qed
   \end{lstlisting}
@@ -1002,7 +1002,7 @@ structure OneShotToOneChan : CHAN = struct
   theorem trace_pool_snapshot_value_not_bound_sound : "
     env x = Some v %$\Longrightarrow$%
     trpl pi = Some (Stt e env k) %$\Longrightarrow$%
-    may_be_eval_pool (V, C) trpl %$\Longrightarrow$%
+    static_eval_pool (V, C) trpl %$\Longrightarrow$%
     {abstract v} %$\subseteq$% V x "
   proof outline
   qed
@@ -1012,7 +1012,7 @@ structure OneShotToOneChan : CHAN = struct
 
   theorem trace_pool_always_value_not_bound_sound : "
     env' x = Some v %$\Longrightarrow$%
-    may_be_eval_pool (V, C) trpl %$\Longrightarrow$% 
+    static_eval_pool (V, C) trpl %$\Longrightarrow$% 
     star concur_step (trpl, ys) (trpl', ys') %$\Longrightarrow$%
     trpl' pi = Some (Stt e' env' k') %$\Longrightarrow$%
     {abstract v} %$\subseteq$% V x"
@@ -1021,7 +1021,7 @@ structure OneShotToOneChan : CHAN = struct
 
   theorem exp_always_value_not_bound_sound : "
     env' x = Some v %$\Longrightarrow$%
-    may_be_eval_exp (V, C) e %$\Longrightarrow$%
+    static_eval_exp (V, C) e %$\Longrightarrow$%
     star concur_step
       ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], ys)
       (trpl', ys') %$\Longrightarrow$%
@@ -1183,31 +1183,31 @@ structure OneShotToOneChan : CHAN = struct
   type_synonym node_map = node_label %$\Rightarrow$% var set
 
   inductive
-    may_be_static_send_node_label ::
+    static_static_send_node_label ::
       abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
       var %$\Rightarrow$% node_label %$\Rightarrow$% bool where
     intro:
       {AChn xC} %$\subseteq$% V xSC %$\Longrightarrow$%
       {APrim (SendEvt xSC xM)} %$\subseteq$% V xE %$\Longrightarrow$%
       is_super_exp e (Let x (Sync xE) e') %$\Longrightarrow$%
-      may_be_static_send_node_label V e xC (NLet x)
+      static_static_send_node_label V e xC (NLet x)
 
   inductive
-    may_be_static_recv_node_label ::
+    static_static_recv_node_label ::
       abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
       var %$\Rightarrow$% node_label %$\Rightarrow$% bool where
     intro:
       {AChn xC} %$\subseteq$% V xRC %$\Longrightarrow$%
       {APrim (RecvEvt xRC)} %$\subseteq$% V xE %$\Longrightarrow$%
       is_super_exp e (Let x (Sync xE) e') %$\Longrightarrow$%
-      may_be_static_recv_node_label V e xC (NLet x)
+      static_static_recv_node_label V e xC (NLet x)
 
   \end{lstlisting}
 
 \section{Static Communication part A}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  datatype edge_label = ENext | ESpawn | ECall | EReturn
+  datatype edge_label = ENext | ESpawn | ECall | ERtn
 
   type_synonym flow_label = node_label * edge_label * node_label
 
@@ -1219,275 +1219,249 @@ structure OneShotToOneChan : CHAN = struct
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-
-inductive simple_flow_set :: "abstract_env ⇒ (node_label * edge_label * node_label) set ⇒ exp ⇒ bool"  where
-  Result: "
-    simple_flow_set V F (RESULT x)
-  " |
-  Let_Unit: "
-    ⟦
-      {(NLet x , ENext, top_node_label e)} ⊆ F;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = ⦇⦈ in e)
-  " |
-  Let_Chan: "
-    ⟦
-      {(NLet x, ENext, top_node_label e)} ⊆ F;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = CHAN ⦇⦈ in e)
-  " |
-  Let_Send_Evt: "
-    ⟦
-      {(NLet x, ENext, top_node_label e)} ⊆ F;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = SEND EVT x⇩c x⇩m in e)
-  " |
-  Let_Recv_Evt: "
-    ⟦
-      {(NLet x, ENext, top_node_label e)} ⊆ F;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = RECV EVT x⇩c in e)
-  " |
-  Let_Pair: "
-    ⟦
-      {(NLet x, ENext, top_node_label e)} ⊆ F;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = ⦇x⇩1, x⇩2⦈ in e)
-  " |
-  Let_Left: "
-    ⟦
-      {(NLet x, ENext, top_node_label e)} ⊆ F;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = LEFT x⇩p in e)
-  " |
-  Let_Right: "
-    ⟦
-      {(NLet x, ENext, top_node_label e)} ⊆ F;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = RIGHT x⇩p in e)
-  " |
-  Let_Abs: "
-    ⟦
-      {(NLet x, ENext, top_node_label e)} ⊆ F;
-      simple_flow_set V F e⇩b;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = FN f x⇩p . e⇩b  in e)
-  " |
-  Let_Spawn: "
-    ⟦
+  inductive
+    flows_passable ::
+      abstract_env %$\Rightarrow$%
+      (node_label * edge_label * node_label) set %$\Rightarrow$%
+      exp %$\Rightarrow$% bool  where
+    Rslt:
+      flows_passable V F (Rslt x) |
+    let_Unit:
+      {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F e  %$\Longrightarrow$%
+      flows_passable V F (Let x Unt e) |
+    let_Chan:
+      {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x MkChn e) |
+    let_Send_Evt:
+      {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x = (SendEvt xc xm) e) |
+    let_Recv_Evt:
+      {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x = (RecvEvt xc) in e) |
+    let_Pair:
+      {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x (Pair x1 x2) e) |
+    let_Left:
+      {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x (Lft xp) e) |
+    let_Right:
+      {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x (Rht xp) e)" |
+    let_Abs:
+      {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F eb %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x (Abs f xp eb) e) |
+    let_Spawn:
       {
         (NLet x, ENext, top_node_label e),
-        (NLet x, ESpawn, top_node_label e⇩c)
-      } ⊆ F;
-      simple_flow_set V F e⇩c;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = SPAWN e⇩c in e)
-  " |
-  Let_Sync: "
-    ⟦
-      {(NLet x, ENext, top_node_label e)} ⊆ F;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = SYNC xSE in e)
-  " |
-  Let_Fst: "
-    ⟦
-      {(NLet x, ENext, top_node_label e)} ⊆ F;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = FST x⇩p in e)
-  " |
-  Let_Snd: "
-    ⟦
-      {(NLet x, ENext, top_node_label e)} ⊆ F;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = SND x⇩p in e)
-  " |
-  Let_Case: "
-    ⟦
+        (NLet x, ESpawn, top_node_label ec)}
+        %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F ec %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x (Spwn ec)  e) |
+    let_Sync:
+      {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x (Sync xSE) e) |
+    let_Fst:
+      {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x (Fst xp) e) |
+    let_Snd:
+      {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x (Snd xp) e) |
+    let_Case:
       {
-        (NLet x, ECall, top_node_label e⇩l),
-        (NLet x, ECall, top_node_label e⇩r),
-        (NResult (⌊e⇩l⌋), EReturn, top_node_label e),
-        (NResult (⌊e⇩r⌋), EReturn, top_node_label e)
-      } ⊆ F;
-      simple_flow_set V F e⇩l;
-      simple_flow_set V F e⇩r;
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e)
-  " |
-  Let_App: "
-    ⟦
-      (∀ f' x⇩p e⇩b . ^Abs f' x⇩p e⇩b ∈ V f ⟶
+        (NLet x, ECall, top_node_label el),
+        (NLet x, ECall, top_node_label er),
+        (NRslt (rslt_var el), ERtn, top_node_label e),
+        (NRslt (rslt_var er), ERtn, top_node_label e)}
+        %$\subseteq$% F %$\Longrightarrow$%
+      flows_passable V F el %$\Longrightarrow$%
+      flows_passable V F er %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable V F (Let x (Case xs xl el xr er) e) |
+    let_App:
+      %$\forall$% fp xp eb .
+        APrim (Abs fp xp eb) %$\in$% V f %$\longrightarrow$%
         {
-          (NLet x, ECall, top_node_label e⇩b),
-          (NResult (⌊e⇩b⌋), EReturn, top_node_label e)
-        } ⊆ F);
-      simple_flow_set V F e
-    ⟧ ⟹
-    simple_flow_set V F (LET x = APP f x⇩a in e)
-  "
+          (NLet x, ECall, top_node_label eb),
+          (NRslt (rslt_var eb), ERtn, top_node_label e)}
+          %$\subseteq$% F %$\Longrightarrow$%
+        flows_passable V F e %$\Longrightarrow$%
+        flows_passable V F (Let x (App f xa) e)
 
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  
-inductive may_be_path :: "abstract_env ⇒ flow_set ⇒ node_label ⇒ (node_label ⇒ bool) ⇒ abstract_path ⇒ bool" where
-  Empty: "
-    isEnd start ⟹
-    may_be_path V F start isEnd []
-  " |
-  Edge: "
-    isEnd end ⟹
-    {(start, edge, end)} ⊆ F ⟹
-    may_be_path V F start isEnd [(start, edge)]
-  " |
-  Step: "
-    may_be_path V F middle isEnd ((middle, edge') # path) ⟹
-    {(start, edge, middle)} ⊆ F ⟹
-    may_be_path V F start isEnd ((start, edge) # (middle, edge') # path)
-  "
+  inductive static_traceable ::
+    abstract_env %$\Rightarrow$%
+      flow_set %$\Rightarrow$% node_label %$\Rightarrow$%
+      (node_label %$\Rightarrow$% bool) %$\Rightarrow$%
+      abstract_path %$\Rightarrow$% bool where
+  Empty:
+    isEnd start %$\Longrightarrow$%
+    static_traceable V F start isEnd [] |
+  Edge:
+    isEnd end %$\Longrightarrow$%
+    {(start, edge, end)} %$\subseteq$% F %$\Longrightarrow$%
+    static_traceable V F start isEnd [(start, edge)] |
+  Step:
+    static_traceable V F middle isEnd ((middle, edge') # path) %$\Longrightarrow$%
+    {(start, edge, middle)} %$\subseteq$% F %$\Longrightarrow$%
+    static_traceable V F start isEnd ((start, edge) # (middle, edge') # path)
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  inductive may_be_inclusive :: "abstract_path ⇒ abstract_path ⇒ bool" (infix "≍" 55) where
-  Prefix1: "
-    prefix π⇩1 π⇩2 ⟹
-    π⇩1 ≍ π⇩2
-  " |
-  Prefix2: "
-    prefix π⇩2 π⇩1 ⟹
-    π⇩1 ≍ π⇩2
-  " |
-  Spawn1: "
-    π @ (NLet x, ESpawn) # π⇩1 ≍ π @ (NLet x, ENext) # π⇩2
-  " |
-  Spawn2: "
-    π @ (NLet x, ENext) # π⇩1 ≍ π @ (NLet x, ESpawn) # π⇩2
-  "
+  inductive static_inclusive ::
+    abstract_path %$\Rightarrow$% abstract_path %$\Rightarrow$% bool where
+  Prefix1:
+    prefix pi1 pi2 %$\Longrightarrow$%
+    static_inclusive pi1 pi2 |
+  Prefix2:
+    prefix pi2 pi1 %$\Longrightarrow$%
+    static_inclusive pi1 pi2 |
+  Spawn1:
+    pi @ (NLet x, ESpawn) # pi1 ≍ pi @ (NLet x, ENext) # pi2 |
+  Spawn2:
+    pi @ (NLet x, ENext) # pi1 ≍ pi @ (NLet x, ESpawn) # pi2
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive singular :: "abstract_path ⇒ abstract_path ⇒ bool" where
-  equal: "
-    π⇩1 = π⇩2 ⟹ 
-    singular π⇩1 π⇩2
-  " |
-  exclusive: "
-    ¬ (π⇩1 ≍ π⇩2) ⟹ 
-    singular π⇩1 π⇩2
-  "
+  inductive
+    singular ::
+      abstract_path %$\Rightarrow$%
+      abstract_path %$\Rightarrow$% bool where
+  equal:
+    pi1 = pi2 %$\Longrightarrow$% 
+    singular pi1 pi2 |
+  exclusive:
+    ¬ (static_inclusive pi1 pi2) %$\Longrightarrow$% 
+    singular pi1 pi2
 
-inductive noncompetitive :: "abstract_path ⇒ abstract_path ⇒ bool" where
-  ordered: "
-    ordered π⇩1 π⇩2 ⟹ 
-    noncompetitive π⇩1 π⇩2
-  " |
-  exclusive: "
-    ¬ (π⇩1 ≍ π⇩2) ⟹ 
-    noncompetitive π⇩1 π⇩2
-  "
+  inductive
+    noncompetitive ::
+      abstract_path %$\Rightarrow$% abstract_path %$\Rightarrow$% bool where
+    ordered:
+      ordered pi1 pi2 %$\Longrightarrow$% 
+      noncompetitive pi1 pi2 |
+    exclusive:
+      ¬ (not_inclusive pi1 pi2) %$\Longrightarrow$% 
+      noncompetitive pi1 pi2
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
+  inductive
+    static_one_shot ::
+      abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
+      var %$\Rightarrow$% bool where
+    Sync:
+      every_two
+        (static_traceable V F (top_node_label e)
+          (static_static_send_node_label V e xC))
+        singular %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      static_one_shot V e xC 
 
-inductive static_one_shot :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
-  Sync: "
-    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) singular ⟹
-    simple_flow_set V F e ⟹
-    static_one_shot V e xC 
-  "
+    inductive
+      static_one_to_one ::
+        abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
+        var %$\Rightarrow$% bool where
+      Sync:
+        every_two
+          (static_traceable V F
+            (top_node_label e) (static_static_send_node_label V e xC))
+          noncompetitive %$\Longrightarrow$%
+        every_two
+          (static_traceable V F
+            (top_node_label e) (static_static_recv_node_label V e xC))
+          noncompetitive %$\Longrightarrow$%
+        flows_passable V F e %$\Longrightarrow$%
+        static_one_to_one V e xC 
 
-inductive static_one_to_one :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
-  Sync: "
-    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive ⟹
-    every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive ⟹
-    simple_flow_set V F e ⟹
-    static_one_to_one V e xC 
-  "
+  inductive
+    static_fan_out ::
+      abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
+      var %$\Rightarrow$% bool where
+    Sync:
+      every_two
+        (static_traceable V F
+          (top_node_label e) (static_static_send_node_label V e xC))
+        noncompetitive %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      static_fan_out V e xC 
 
-inductive static_fan_out :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
-  Sync: "
-    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive ⟹
-    simple_flow_set V F e ⟹
-    static_fan_out V e xC 
-  "
-
-inductive static_fan_in :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
-  Sync: "
-    every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive ⟹
-    simple_flow_set V F e ⟹
-    static_fan_in V e xC 
-  "
-
-  \end{lstlisting}
+  inductive
+    static_fan_in ::
+      abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
+      var %$\Rightarrow$% bool where
+    Sync:
+      every_two (static_traceable V F (top_node_label e) (static_static_recv_node_label V e xC)) noncompetitive %$\Longrightarrow$%
+      flows_passable V F e %$\Longrightarrow$%
+      static_fan_in V e xC
+    \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive paths_correspond :: "control_path ⇒ abstract_path ⇒ bool" where
+  inductive paths_correspond :: "control_path %$\Rightarrow$% abstract_path %$\Rightarrow$% bool" where
   Empty: "
     paths_correspond [] []
   " |
   Next: "
-    paths_correspond π path ⟹
-    paths_correspond (π @ [LNext x]) (path @ [(NLet x, ENext)])
+    paths_correspond pi path %$\Longrightarrow$%
+    paths_correspond (pi @ [LNext x]) (path @ [(NLet x, ENext)])
   " |
   Spawn: "
-    paths_correspond π path ⟹
-    paths_correspond (π @ [LSpawn x]) (path @ [(NLet x, ESpawn)])
+    paths_correspond pi path %$\Longrightarrow$%
+    paths_correspond (pi @ [LSpawn x]) (path @ [(NLet x, ESpawn)])
   " |
   Call: "
-    paths_correspond π path ⟹
-    paths_correspond (π @ [LCall x]) (path @ [(NLet x, ECall)])
+    paths_correspond pi path %$\Longrightarrow$%
+    paths_correspond (pi @ [LCall x]) (path @ [(NLet x, ECall)])
   "  |
-  Return: "
-    paths_correspond π path ⟹
-    paths_correspond (π @ [LReturn x]) (path @ [(NResult x, EReturn)])
+  Rtn: "
+    paths_correspond pi path %$\Longrightarrow$%
+    paths_correspond (pi @ [LRtn x]) (path @ [(NRslt x, ERtn)])
   " 
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
   lemma abstract_paths_of_same_run_inclusive: "
-  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹ 
-  ℰ' π1 ≠ None ⟹ 
-  ℰ' π2 ≠ None ⟹ 
-  paths_congruent π1 path1 ⟹
-  paths_congruent π2 path2 ⟹
+  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') %$\Longrightarrow$% 
+  ℰ' pi1 ≠ None %$\Longrightarrow$% 
+  ℰ' pi2 ≠ None %$\Longrightarrow$% 
+  paths_congruent pi1 path1 %$\Longrightarrow$%
+  paths_congruent pi2 path2 %$\Longrightarrow$%
   path1 ≍ path2
 "
 
   lemma equality_abstract_to_concrete: "
-  path1 = path2 ⟹
-  paths_correspond π1 path1 ⟹
-  paths_correspond π2 path2 ⟹
-  π1 = π2
+  path1 = path2 %$\Longrightarrow$%
+  paths_correspond pi1 path1 %$\Longrightarrow$%
+  paths_correspond pi2 path2 %$\Longrightarrow$%
+  pi1 = pi2
 "
 
   lemma abstract_paths_equal_or_exclusive_implies_dynamic_paths_equal: "
-pathSync = pathSynca ∨ (¬ pathSynca ≍ pathSync) ⟹ 
+pathSync = pathSynca ∨ (¬ pathSynca ≍ pathSync) %$\Longrightarrow$% 
 
-([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹
-ℰ' π⇩1 ≠ None ⟹ 
-ℰ' π⇩2 ≠ None ⟹ 
+([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') %$\Longrightarrow$%
+ℰ' pi1 ≠ None %$\Longrightarrow$% 
+ℰ' pi2 ≠ None %$\Longrightarrow$% 
 
-paths_correspond π⇩1 pathSync ⟹
-paths_correspond π⇩2 pathSynca ⟹
+paths_correspond pi1 pathSync %$\Longrightarrow$%
+paths_correspond pi2 pathSynca %$\Longrightarrow$%
 
-π⇩1 = π⇩2
+pi1 = pi2
 "
 
 
@@ -1495,98 +1469,98 @@ paths_correspond π⇩2 pathSynca ⟹
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 inductive 
-  simple_flow_set_env :: "abstract_env ⇒ flow_set ⇒ env ⇒ bool"  and
-  simple_flow_set_val :: "abstract_env ⇒ flow_set ⇒ val ⇒ bool"
+  flows_passable_env :: "abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% env %$\Rightarrow$% bool"  and
+  flows_passable_val :: "abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% val %$\Rightarrow$% bool"
 where
   Intro: "
-    ∀ x ω . ρ x = Some ω ⟶ {|ω|} ⊆ 𝒱 x ∧ simple_flow_set_val V F ω ⟹
-    simple_flow_set_env V F ρ
+    %$\forall$% x ω . ρ x = Some ω %$\longrightarrow$% {|ω|} %$\subseteq$% 𝒱 x ∧ flows_passable_val V F ω %$\Longrightarrow$%
+    flows_passable_env V F ρ
   " |
 
   Unit: "
-    simple_flow_set_val V F VUnit
+    flows_passable_val V F VUnit
   " |
 
   Chan: "
-    simple_flow_set_val V F (VChan c)
+    flows_passable_val V F (VChan c)
   " |
 
   Send_Evt: "
-    simple_flow_set_env V F ρ ⟹
-    simple_flow_set_val V F (VClosure (Send_Evt _ _) ρ)
+    flows_passable_env V F ρ %$\Longrightarrow$%
+    flows_passable_val V F (VClosure (Send_Evt _ _) ρ)
   " |
 
   Recv_Evt: "
-    simple_flow_set_env V F ρ ⟹
-    simple_flow_set_val V F (VClosure (Recv_Evt _) ρ)
+    flows_passable_env V F ρ %$\Longrightarrow$%
+    flows_passable_val V F (VClosure (Recv_Evt _) ρ)
   " |
 
   Left: "
-    simple_flow_set_env V F ρ ⟹
-    simple_flow_set_val V F (VClosure (Left _) ρ)
+    flows_passable_env V F ρ %$\Longrightarrow$%
+    flows_passable_val V F (VClosure (Left _) ρ)
   " |
 
   Right: "
-    simple_flow_set_env V F ρ ⟹
-    simple_flow_set_val V F (VClosure (Right _) ρ)
+    flows_passable_env V F ρ %$\Longrightarrow$%
+    flows_passable_val V F (VClosure (Right _) ρ)
   " |
 
   Abs: "
-    simple_flow_set V F e ⟹ 
-    simple_flow_set_env V F  ρ ⟹
-    simple_flow_set_val V F (VClosure (Abs f x e) ρ)
+    flows_passable V F e %$\Longrightarrow$% 
+    flows_passable_env V F  ρ %$\Longrightarrow$%
+    flows_passable_val V F (VClosure (Abs f x e) ρ)
   " |
 
   Pair: "
-    simple_flow_set_env V F ρ ⟹
-    simple_flow_set_val V F (VClosure (Pair _ _) ρ)
+    flows_passable_env V F ρ %$\Longrightarrow$%
+    flows_passable_val V F (VClosure (Pair _ _) ρ)
   " 
 
-inductive simple_flow_set_stack :: "abstract_env ⇒ flow_set ⇒ cont list ⇒ bool" where
-  Empty: "simple_flow_set_stack V F []" |
+inductive flows_passable_stack :: "abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% cont list %$\Rightarrow$% bool" where
+  Empty: "flows_passable_stack V F []" |
   Nonempty: "
     ⟦ 
-      simple_flow_set V F e;
-      simple_flow_set_env V F ρ;
-      simple_flow_set_stack V F κ
-    ⟧ ⟹ 
-    simple_flow_set_stack V F (⟨x, e, ρ⟩ # κ)
+      flows_passable V F e %$\Longrightarrow$%
+      flows_passable_env V F ρ %$\Longrightarrow$%
+      flows_passable_stack V F κ
+    ⟧ %$\Longrightarrow$% 
+    flows_passable_stack V F (⟨x, e, ρ⟩ # κ)
   "
 
 
-inductive simple_flow_set_pool :: "abstract_env ⇒ flow_set ⇒ trace_pool ⇒ bool"  where
+inductive flows_passable_pool :: "abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% trace_pool %$\Rightarrow$% bool"  where
   Intro: "
-    (∀ π e ρ κ . E π = Some (⟨e;ρ;κ⟩) ⟶ 
-      simple_flow_set V F e ∧
-      simple_flow_set_env V F ρ ∧
-      simple_flow_set_stack V F κ
-      ) ⟹ 
-    simple_flow_set_pool V F E
+    (%$\forall$% pi e ρ κ . E pi = Some (⟨e;ρ;κ⟩) %$\longrightarrow$% 
+      flows_passable V F e ∧
+      flows_passable_env V F ρ ∧
+      flows_passable_stack V F κ
+      ) %$\Longrightarrow$% 
+    flows_passable_pool V F E
   "
 
   \end{lstlisting}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 
-  lemma simple_flow_set_pool_preserved_star: "
-  simple_flow_set_pool V F ([[] ↦ ⟨e;Map.empty;[]⟩]) ⟹
-  (V, C) ⊨⇩e e ⟹
-  ℰ' π = Some (⟨LET x = b in e⇩n;ρ;κ⟩) ⟹
-  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹
-  isEnd (NLet x) ⟹
-  simple_flow_set_pool V F ℰ'
+  lemma flows_passable_pool_preserved_star: "
+  flows_passable_pool V F ([[] ↦ ⟨e;Map.empty;[]⟩]) %$\Longrightarrow$%
+  (V, C) ⊨e e %$\Longrightarrow$%
+  ℰ' pi = Some (⟨Let x = b in en;ρ;κ⟩) %$\Longrightarrow$%
+  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') %$\Longrightarrow$%
+  isEnd (NLet x) %$\Longrightarrow$%
+  flows_passable_pool V F ℰ'
 "
 sorry
 
-lemma simple_flow_set_pool_implies_may_be_path: "
-  ℰ' π = Some (⟨LET x = b in e⇩n;ρ;κ⟩) ⟹
-  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹ 
-  (V, C) ⊨⇩e e ⟹
-  simple_flow_set_pool V F ℰ' ⟹
-  isEnd (NLet x) ⟹
+lemma flows_passable_pool_implies_static_traceable: "
+  ℰ' pi = Some (⟨Let x = b in en;ρ;κ⟩) %$\Longrightarrow$%
+  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') %$\Longrightarrow$% 
+  (V, C) ⊨e e %$\Longrightarrow$%
+  flows_passable_pool V F ℰ' %$\Longrightarrow$%
+  isEnd (NLet x) %$\Longrightarrow$%
   ∃ path . 
-    paths_correspond π path ∧
-    may_be_path V F (top_node_label e) isEnd path
+    paths_correspond pi path ∧
+    static_traceable V F (top_node_label e) isEnd path
 "
 sorry
 
@@ -1597,16 +1571,16 @@ sorry
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
   lemma path_not_traceable_sound: "
-  ℰ' π = Some (⟨LET x = b in e⇩n;ρ;κ⟩) ⟹
-  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹ 
-  (V, C) ⊨⇩e e ⟹
-  simple_flow_set V F e ⟹
-  isEnd (NLet x) ⟹
+  ℰ' pi = Some (⟨Let x = b in en;ρ;κ⟩) %$\Longrightarrow$%
+  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') %$\Longrightarrow$% 
+  (V, C) ⊨e e %$\Longrightarrow$%
+  flows_passable V F e %$\Longrightarrow$%
+  isEnd (NLet x) %$\Longrightarrow$%
   ∃ path . 
-    paths_correspond π path ∧
-    may_be_path V F (top_node_label e) isEnd path
+    paths_correspond pi path ∧
+    static_traceable V F (top_node_label e) isEnd path
 "
-by (metis lift_simple_flow_set_to_pool simple_flow_set_pool_implies_may_be_path simple_flow_set_pool_preserved_star)
+by (metis lift_flows_passable_to_pool flows_passable_pool_implies_static_traceable flows_passable_pool_preserved_star)
 
   \end{lstlisting}
 
@@ -1615,38 +1589,38 @@ by (metis lift_simple_flow_set_to_pool simple_flow_set_pool_implies_may_be_path 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 theorem one_shot_sound: "
   ⟦
-    static_one_shot V e xC;
-    (V, C) ⊨⇩e e;
+    static_one_shot V e xC %$\Longrightarrow$%
+    (V, C) ⊨e e %$\Longrightarrow$%
     ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H')
-  ⟧ ⟹
-  one_shot ℰ' (Ch π xC)
+  ⟧ %$\Longrightarrow$%
+  one_shot ℰ' (Ch pi xC)
 "
 
 
   theorem fan_out_sound: "
   ⟦
-    static_fan_out V e xC;
-    (V, C) ⊨⇩e e;
+    static_fan_out V e xC %$\Longrightarrow$%
+    (V, C) ⊨e e %$\Longrightarrow$%
     ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H')
-  ⟧ ⟹
-  fan_out ℰ' (Ch π xC)
+  ⟧ %$\Longrightarrow$%
+  fan_out ℰ' (Ch pi xC)
 "
   theorem fan_in_sound: "
   ⟦
-    static_fan_in V e xC;
-    (V, C) ⊨⇩e e;
+    static_fan_in V e xC %$\Longrightarrow$%
+    (V, C) ⊨e e %$\Longrightarrow$%
     ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H')
-  ⟧ ⟹
-  fan_in ℰ' (Ch π xC)
+  ⟧ %$\Longrightarrow$%
+  fan_in ℰ' (Ch pi xC)
 "
 
   theorem one_to_one_sound: "
   ⟦
-    static_one_to_one V e xC;
-    (V, C) ⊨⇩e e;
+    static_one_to_one V e xC %$\Longrightarrow$%
+    (V, C) ⊨e e %$\Longrightarrow$%
     ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H')
-  ⟧ ⟹
-  one_to_one ℰ' (Ch π xC)
+  ⟧ %$\Longrightarrow$%
+  one_to_one ℰ' (Ch pi xC)
 "
 
 

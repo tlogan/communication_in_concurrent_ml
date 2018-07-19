@@ -17,66 +17,66 @@ type_synonym step_label = "(node_label \<times> edge_label)"
 type_synonym abstract_path = "step_label list"
 
 
-inductive simple_flow_set :: "abstract_env \<Rightarrow> (node_label * edge_label * node_label) set \<Rightarrow> exp \<Rightarrow> bool"  where
+inductive flows_passable :: "abstract_env \<Rightarrow> (node_label * edge_label * node_label) set \<Rightarrow> exp \<Rightarrow> bool"  where
   Result: "
-    simple_flow_set V F (RESULT x)
+    flows_passable V F (RESULT x)
   " |
   Let_Unit: "
     \<lbrakk>
       {(NLet x , ENext, top_node_label e)} \<subseteq> F;
-      simple_flow_set V F e
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = \<lparr>\<rparr> in e)
+    flows_passable V F (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Chan: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
-      simple_flow_set V F e
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = CHAN \<lparr>\<rparr> in e)
+    flows_passable V F (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
-      simple_flow_set V F e
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
+    flows_passable V F (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
-      simple_flow_set V F e
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = RECV EVT x\<^sub>c in e)
+    flows_passable V F (LET x = RECV EVT x\<^sub>c in e)
   " |
   Let_Pair: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
-      simple_flow_set V F e
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
+    flows_passable V F (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
   " |
   Let_Left: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
-      simple_flow_set V F e
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = LEFT x\<^sub>p in e)
+    flows_passable V F (LET x = LEFT x\<^sub>p in e)
   " |
   Let_Right: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
-      simple_flow_set V F e
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = RIGHT x\<^sub>p in e)
+    flows_passable V F (LET x = RIGHT x\<^sub>p in e)
   " |
   Let_Abs: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
-      simple_flow_set V F e\<^sub>b;
-      simple_flow_set V F e
+      flows_passable V F e\<^sub>b;
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
+    flows_passable V F (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
   " |
   Let_Spawn: "
     \<lbrakk>
@@ -84,31 +84,31 @@ inductive simple_flow_set :: "abstract_env \<Rightarrow> (node_label * edge_labe
         (NLet x, ENext, top_node_label e),
         (NLet x, ESpawn, top_node_label e\<^sub>c)
       } \<subseteq> F;
-      simple_flow_set V F e\<^sub>c;
-      simple_flow_set V F e
+      flows_passable V F e\<^sub>c;
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = SPAWN e\<^sub>c in e)
+    flows_passable V F (LET x = SPAWN e\<^sub>c in e)
   " |
   Let_Sync: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
-      simple_flow_set V F e
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = SYNC xSE in e)
+    flows_passable V F (LET x = SYNC xSE in e)
   " |
   Let_Fst: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
-      simple_flow_set V F e
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = FST x\<^sub>p in e)
+    flows_passable V F (LET x = FST x\<^sub>p in e)
   " |
   Let_Snd: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
-      simple_flow_set V F e
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = SND x\<^sub>p in e)
+    flows_passable V F (LET x = SND x\<^sub>p in e)
   " |
   Let_Case: "
     \<lbrakk>
@@ -118,11 +118,11 @@ inductive simple_flow_set :: "abstract_env \<Rightarrow> (node_label * edge_labe
         (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn, top_node_label e),
         (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn, top_node_label e)
       } \<subseteq> F;
-      simple_flow_set V F e\<^sub>l;
-      simple_flow_set V F e\<^sub>r;
-      simple_flow_set V F e
+      flows_passable V F e\<^sub>l;
+      flows_passable V F e\<^sub>r;
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
+    flows_passable V F (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
   " |
   Let_App: "
     \<lbrakk>
@@ -131,9 +131,9 @@ inductive simple_flow_set :: "abstract_env \<Rightarrow> (node_label * edge_labe
           (NLet x, ECall, top_node_label e\<^sub>b),
           (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn, top_node_label e)
         } \<subseteq> F);
-      simple_flow_set V F e
+      flows_passable V F e
     \<rbrakk> \<Longrightarrow>
-    simple_flow_set V F (LET x = APP f x\<^sub>a in e)
+    flows_passable V F (LET x = APP f x\<^sub>a in e)
   "
 
 
@@ -219,7 +219,7 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
 inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
-    simple_flow_set V F e \<Longrightarrow>
+    flows_passable V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
@@ -227,21 +227,21 @@ inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var
   Sync: "
     every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
-    simple_flow_set V F e \<Longrightarrow>
+    flows_passable V F e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
 inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    simple_flow_set V F e \<Longrightarrow>
+    flows_passable V F e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
 inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
-    simple_flow_set V F e \<Longrightarrow>
+    flows_passable V F e \<Longrightarrow>
     static_fan_in V e xC 
   "
 
@@ -758,91 +758,91 @@ qed
 (* PATH SOUND *)
 
 inductive 
-  simple_flow_set_env :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> env \<Rightarrow> bool"  and
-  simple_flow_set_val :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> val \<Rightarrow> bool"
+  flows_passable_env :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> env \<Rightarrow> bool"  and
+  flows_passable_val :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> val \<Rightarrow> bool"
 where
   Intro: "
-    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> simple_flow_set_val V F \<omega> \<Longrightarrow>
-    simple_flow_set_env V F \<rho>
+    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> flows_passable_val V F \<omega> \<Longrightarrow>
+    flows_passable_env V F \<rho>
   " |
 
   Unit: "
-    simple_flow_set_val V F VUnit
+    flows_passable_val V F VUnit
   " |
 
   Chan: "
-    simple_flow_set_val V F (VChan c)
+    flows_passable_val V F (VChan c)
   " |
 
   Send_Evt: "
-    simple_flow_set_env V F \<rho> \<Longrightarrow>
-    simple_flow_set_val V F (VClosure (Send_Evt _ _) \<rho>)
+    flows_passable_env V F \<rho> \<Longrightarrow>
+    flows_passable_val V F (VClosure (Send_Evt _ _) \<rho>)
   " |
 
   Recv_Evt: "
-    simple_flow_set_env V F \<rho> \<Longrightarrow>
-    simple_flow_set_val V F (VClosure (Recv_Evt _) \<rho>)
+    flows_passable_env V F \<rho> \<Longrightarrow>
+    flows_passable_val V F (VClosure (Recv_Evt _) \<rho>)
   " |
 
   Left: "
-    simple_flow_set_env V F \<rho> \<Longrightarrow>
-    simple_flow_set_val V F (VClosure (Left _) \<rho>)
+    flows_passable_env V F \<rho> \<Longrightarrow>
+    flows_passable_val V F (VClosure (Left _) \<rho>)
   " |
 
   Right: "
-    simple_flow_set_env V F \<rho> \<Longrightarrow>
-    simple_flow_set_val V F (VClosure (Right _) \<rho>)
+    flows_passable_env V F \<rho> \<Longrightarrow>
+    flows_passable_val V F (VClosure (Right _) \<rho>)
   " |
 
   Abs: "
-    simple_flow_set V F e \<Longrightarrow> 
-    simple_flow_set_env V F  \<rho> \<Longrightarrow>
-    simple_flow_set_val V F (VClosure (Abs f x e) \<rho>)
+    flows_passable V F e \<Longrightarrow> 
+    flows_passable_env V F  \<rho> \<Longrightarrow>
+    flows_passable_val V F (VClosure (Abs f x e) \<rho>)
   " |
 
   Pair: "
-    simple_flow_set_env V F \<rho> \<Longrightarrow>
-    simple_flow_set_val V F (VClosure (Pair _ _) \<rho>)
+    flows_passable_env V F \<rho> \<Longrightarrow>
+    flows_passable_val V F (VClosure (Pair _ _) \<rho>)
   " 
 
-inductive simple_flow_set_stack :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> cont list \<Rightarrow> bool" where
-  Empty: "simple_flow_set_stack V F []" |
+inductive flows_passable_stack :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> cont list \<Rightarrow> bool" where
+  Empty: "flows_passable_stack V F []" |
   Nonempty: "
     \<lbrakk> 
-      simple_flow_set V F e;
-      simple_flow_set_env V F \<rho>;
-      simple_flow_set_stack V F \<kappa>
+      flows_passable V F e;
+      flows_passable_env V F \<rho>;
+      flows_passable_stack V F \<kappa>
     \<rbrakk> \<Longrightarrow> 
-    simple_flow_set_stack V F (\<langle>x, e, \<rho>\<rangle> # \<kappa>)
+    flows_passable_stack V F (\<langle>x, e, \<rho>\<rangle> # \<kappa>)
   "
 
 
-inductive simple_flow_set_pool :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
+inductive flows_passable_pool :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
   Intro: "
     (\<forall> \<pi> e \<rho> \<kappa> . E \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
-      simple_flow_set V F e \<and>
-      simple_flow_set_env V F \<rho> \<and>
-      simple_flow_set_stack V F \<kappa>
+      flows_passable V F e \<and>
+      flows_passable_env V F \<rho> \<and>
+      flows_passable_stack V F \<kappa>
       ) \<Longrightarrow> 
-    simple_flow_set_pool V F E
+    flows_passable_pool V F E
   "
 
 
-lemma simple_flow_set_pool_preserved_star: "
-  simple_flow_set_pool V F ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]) \<Longrightarrow>
+lemma flows_passable_pool_preserved_star: "
+  flows_passable_pool V F ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]) \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
-  simple_flow_set_pool V F \<E>'
+  flows_passable_pool V F \<E>'
 "
 sorry
 
-lemma simple_flow_set_pool_implies_may_be_path: "
+lemma flows_passable_pool_implies_may_be_path: "
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  simple_flow_set_pool V F \<E>' \<Longrightarrow>
+  flows_passable_pool V F \<E>' \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond \<pi> path \<and>
@@ -851,39 +851,39 @@ lemma simple_flow_set_pool_implies_may_be_path: "
 sorry
 
 
-lemma lift_simple_flow_set_to_pool: "
-  simple_flow_set V F e \<Longrightarrow>
-  simple_flow_set_pool V F [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]
+lemma lift_flows_passable_to_pool: "
+  flows_passable V F e \<Longrightarrow>
+  flows_passable_pool V F [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]
 "
-apply (erule simple_flow_set.cases; auto)
-  apply (simp add: simple_flow_set.Result simple_flow_set_env.simps simple_flow_set_pool.Intro simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Unit simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Chan simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Send_Evt simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Recv_Evt simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Pair simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Left simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Right simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Abs simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Spawn simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Sync simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Fst simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Snd simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_Case simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
-  apply (simp add: simple_flow_set.Let_App simple_flow_set_env.simps simple_flow_set_pool.intros simple_flow_set_stack.Empty)
+apply (erule flows_passable.cases; auto)
+  apply (simp add: flows_passable.Result flows_passable_env.simps flows_passable_pool.Intro flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Unit flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Chan flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Send_Evt flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Recv_Evt flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Pair flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Left flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Right flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Abs flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Spawn flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Sync flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Fst flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Snd flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_Case flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
+  apply (simp add: flows_passable.Let_App flows_passable_env.simps flows_passable_pool.intros flows_passable_stack.Empty)
 done
 
 lemma path_not_traceable_sound: "
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  simple_flow_set V F e \<Longrightarrow>
+  flows_passable V F e \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond \<pi> path \<and>
     may_be_path V F (top_node_label e) isEnd path
 "
-by (metis lift_simple_flow_set_to_pool simple_flow_set_pool_implies_may_be_path simple_flow_set_pool_preserved_star)
+by (metis lift_flows_passable_to_pool flows_passable_pool_implies_may_be_path flows_passable_pool_preserved_star)
 
 
 
@@ -891,7 +891,7 @@ lemma send_path_not_traceable_sound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  simple_flow_set V F e \<Longrightarrow>
+  flows_passable V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond \<pi>Sync pathSync) \<and> 
     may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC) pathSync
@@ -905,7 +905,7 @@ lemma recv_path_not_traceable_sound: "
   is_recv_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  simple_flow_set V F e \<Longrightarrow>
+  flows_passable V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond \<pi>Sync pathSync) \<and> 
     may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC) pathSync
@@ -921,7 +921,7 @@ done
 
 theorem one_shot_sound': "
   every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
-  simple_flow_set V F e \<Longrightarrow>
+  flows_passable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
@@ -951,7 +951,7 @@ done
 
 theorem noncompetitive_send_to_ordered_send: "
   every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-  simple_flow_set V F e \<Longrightarrow>
+  flows_passable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
@@ -976,7 +976,7 @@ done
 
 lemma noncompetitive_recv_to_ordered_recv: "
    every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
-   simple_flow_set V F e \<Longrightarrow>
+   flows_passable V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
    every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
