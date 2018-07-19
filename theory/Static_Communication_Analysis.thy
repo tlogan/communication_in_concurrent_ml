@@ -14,20 +14,20 @@ type_synonym node_set = "node_label set"
 
 type_synonym node_map = "node_label \<Rightarrow> var set"
 
-inductive may_be_static_send_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
+inductive static_send_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
   intro: "
     {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
     {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
     is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
-    may_be_static_send_node_label V e xC (NLet x)
+    static_send_node_label V e xC (NLet x)
   "
 
-inductive may_be_static_recv_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
+inductive static_recv_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
   intro: "
     {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
     {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
     is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
-    may_be_static_recv_node_label V e xC (NLet x)
+    static_recv_node_label V e xC (NLet x)
   "
 
 
@@ -100,16 +100,16 @@ lemma always_send_chan_not_bound_sound: "
   \<rbrakk> \<Longrightarrow> 
   ^Chan xC \<in> V x\<^sub>s\<^sub>c
 "
- apply (frule may_be_static_eval_to_pool)
- apply (drule may_be_static_eval_preserved_under_concur_step_star[of _ _ _ ]; assumption?)
- apply (erule may_be_static_eval_pool.cases; auto)
+ apply (frule static_eval_to_pool)
+ apply (drule static_eval_preserved_under_concur_step_star[of _ _ _ ]; assumption?)
+ apply (erule static_eval_pool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
- apply (erule may_be_static_eval_state.cases; auto)
- apply (erule may_be_static_eval_env.cases; auto)
+ apply (erule static_eval_state.cases; auto)
+ apply (erule static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e)"]; simp)
  apply (erule conjE)
- apply (erule may_be_static_eval_value.cases; auto)
- apply (erule may_be_static_eval_env.cases; auto)
+ apply (erule static_eval_value.cases; auto)
+ apply (erule static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
 done
 
@@ -123,16 +123,16 @@ lemma always_recv_chan_not_bound_sound: "
   \<rbrakk> \<Longrightarrow> 
   ^Chan xC \<in> V x\<^sub>r\<^sub>c
 "
- apply (frule may_be_static_eval_to_pool)
- apply (drule may_be_static_eval_preserved_under_concur_step_star[of _ _ _ ]; assumption?)
- apply (erule may_be_static_eval_pool.cases; auto)
+ apply (frule static_eval_to_pool)
+ apply (drule static_eval_preserved_under_concur_step_star[of _ _ _ ]; assumption?)
+ apply (erule static_eval_pool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
- apply (erule may_be_static_eval_state.cases; auto)
- apply (erule may_be_static_eval_env.cases; auto)
+ apply (erule static_eval_state.cases; auto)
+ apply (erule static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e)"]; simp)
  apply (erule conjE)
- apply (erule may_be_static_eval_value.cases; auto)
- apply (erule may_be_static_eval_env.cases; auto)
+ apply (erule static_eval_value.cases; auto)
+ apply (erule static_eval_env.cases; auto)
  apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
 done
 
@@ -142,9 +142,9 @@ lemma node_not_send_site_sound: "
   \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  may_be_static_send_node_label V e xC (NLet x\<^sub>y)
+  static_send_node_label V e xC (NLet x\<^sub>y)
 "
- apply (unfold may_be_static_send_node_label.simps; auto)
+ apply (unfold static_send_node_label.simps; auto)
  apply (rule exI[of _ x\<^sub>s\<^sub>c]; auto)
  apply (auto simp: always_send_chan_not_bound_sound)
  apply (rule exI[of _ x\<^sub>m]; auto?)
@@ -160,9 +160,9 @@ lemma node_not_recv_site_sound: "
   \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  may_be_static_recv_node_label V e xC (NLet x\<^sub>y)
+  static_recv_node_label V e xC (NLet x\<^sub>y)
 "
- apply (unfold may_be_static_recv_node_label.simps; auto)
+ apply (unfold static_recv_node_label.simps; auto)
  apply (rule exI[of _ x\<^sub>r\<^sub>c]; auto)
  apply (auto simp: always_recv_chan_not_bound_sound)
  apply (rule exI[of _ x\<^sub>e]; auto?)

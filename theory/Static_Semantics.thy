@@ -12,7 +12,7 @@ fun rslt_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
   "\<lfloor>LET _ = _ in e\<rfloor> = \<lfloor>e\<rfloor>"
 
 
-inductive may_be_static_eval :: "abstract_env \<times> abstract_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>e" 55) where
+inductive static_eval :: "abstract_env \<times> abstract_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>e" 55) where
   Result: "
     (\<V>, \<C>) \<Turnstile>\<^sub>e (RESULT x)
   " |
@@ -151,8 +151,8 @@ fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) 
 
 
 inductive 
-  may_be_static_eval_value :: "abstract_env \<times> abstract_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55) and  
-  may_be_static_eval_env :: "abstract_env \<times> abstract_env \<Rightarrow> env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
+  static_eval_value :: "abstract_env \<times> abstract_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55) and  
+  static_eval_env :: "abstract_env \<times> abstract_env \<Rightarrow> env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
 where
   Unit: "
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnit
@@ -200,7 +200,7 @@ where
   "
 
 
-inductive may_be_static_eval_stack :: "abstract_env \<times> abstract_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile>\<^sub>\<kappa> _ \<Rrightarrow> _" [56,0,56]55) where
+inductive static_eval_stack :: "abstract_env \<times> abstract_env \<Rightarrow> abstract_value set \<Rightarrow> cont list \<Rightarrow> bool" ("_ \<Turnstile>\<^sub>\<kappa> _ \<Rrightarrow> _" [56,0,56]55) where
   Empty: "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<W> \<Rrightarrow> []" |
   Nonempty: "
     \<lbrakk> 
@@ -213,7 +213,7 @@ inductive may_be_static_eval_stack :: "abstract_env \<times> abstract_env \<Righ
   "
 
 
-inductive may_be_static_eval_state :: "abstract_env \<times> abstract_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<sigma>" 55)  where
+inductive static_eval_state :: "abstract_env \<times> abstract_env \<Rightarrow> state \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<sigma>" 55)  where
   Intro: "
     \<lbrakk>
       (\<V>, \<C>) \<Turnstile>\<^sub>e e;
@@ -223,26 +223,26 @@ inductive may_be_static_eval_state :: "abstract_env \<times> abstract_env \<Righ
     (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>
   "
 
-inductive may_be_static_eval_pool :: "abstract_env \<times> abstract_env \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<E>" 55) where
+inductive static_eval_pool :: "abstract_env \<times> abstract_env \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<E>" 55) where
   Intro: "
     (\<forall> \<pi> \<sigma> . \<E> \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>) \<Longrightarrow> 
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>
   "
 
-lemma may_be_static_eval_state_to_exp_result: "
+lemma static_eval_state_to_exp_result: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>
 "
 proof -
   assume 
     "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" 
   then have 
-    "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" by (simp add: may_be_static_eval_state.simps) then
+    "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" by (simp add: static_eval_state.simps) then
   show 
-    "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>" by (rule may_be_static_eval_stack.cases; auto)
+    "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>" by (rule static_eval_stack.cases; auto)
 qed
 
 
-lemma may_be_static_eval_state_to_exp_let_case_left: "
+lemma static_eval_state_to_exp_let_case_left: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l) \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l
@@ -255,9 +255,9 @@ proof -
 
   from H2 have 
     H3: "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" and
-    H4: "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" using may_be_static_eval_state.cases by blast+
+    H4: "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" using static_eval_state.cases by blast+
 
-  from H4 have H5: "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x" using may_be_static_eval_env.simps by auto
+  from H4 have H5: "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x" using static_eval_env.simps by auto
 
   from H1 H5 have 
     H6: "^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s" by fastforce
@@ -273,7 +273,7 @@ proof -
 qed
 
 
-lemma may_be_static_eval_state_to_exp_let_case_right: "
+lemma static_eval_state_to_exp_let_case_right: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r) \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r
@@ -283,8 +283,8 @@ proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e"  
   and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" 
-    by (simp add: may_be_static_eval_state.simps)+ then
-  have "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x" by (simp add: may_be_static_eval_env.simps)
+    by (simp add: static_eval_state.simps)+ then
+  have "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x" by (simp add: static_eval_env.simps)
   with `\<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r)`
   have "^prim.Right x\<^sub>r' \<in> \<V> x\<^sub>s" by fastforce
   with `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e`
@@ -299,17 +299,17 @@ proof -
 qed
 
 
-lemma may_be_static_eval_state_to_exp_let: "
+lemma static_eval_state_to_exp_let: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e
 "
 proof -
  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>" then
- have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = b in e" by (simp add: may_be_static_eval_state.simps) then
- show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (rule may_be_static_eval.cases; auto)
+ have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = b in e" by (simp add: static_eval_state.simps) then
+ show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (rule static_eval.cases; auto)
 qed
 
 
-lemma may_be_static_eval_state_to_exp_let_app: "
+lemma static_eval_state_to_exp_let_app: "
  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
  \<rho> f = Some (VClosure (Abs f' x\<^sub>p e\<^sub>b) \<rho>') \<Longrightarrow>
  (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>b
@@ -318,14 +318,14 @@ lemma may_be_static_eval_state_to_exp_let_app: "
 proof -
   assume "\<rho> f = Some (VClosure (Abs f' x\<^sub>p e\<^sub>b) \<rho>')"
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle>" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps) then
-  have "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (simp add: may_be_static_eval_env.simps)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps) then
+  have "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (simp add: static_eval_env.simps)
   with `\<rho> f = Some (VClosure (Abs f' x\<^sub>p e\<^sub>b) \<rho>')`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Abs f' x\<^sub>p e\<^sub>b) \<rho>')" by simp then
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>b" by (rule may_be_static_eval_value.cases; auto)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>b" by (rule static_eval_value.cases; auto)
 qed
 
-lemma may_be_static_eval_state_to_env_result: "
+lemma static_eval_state_to_env_result: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)
@@ -334,10 +334,10 @@ proof
  assume "\<rho> x = Some \<omega> "
 
  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" then
- have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (rule may_be_static_eval_state.cases; auto)+
+ have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (rule static_eval_state.cases; auto)+
 
  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> x = Some \<omega>`
- have "{|\<omega>|} \<subseteq> \<V> x" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (simp add: may_be_static_eval_env.simps)+
+ have "{|\<omega>|} \<subseteq> \<V> x" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (simp add: static_eval_env.simps)+
 
  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>`
  show "\<forall>x \<omega>'. (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)) x = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'"
@@ -364,7 +364,7 @@ proof
        have "\<rho>\<^sub>\<kappa> x' = Some \<omega>'" by simp 
        with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>\<kappa>`
        
-       show "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: may_be_static_eval_env.simps)+
+       show "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: static_eval_env.simps)+
      qed
    } then
 
@@ -373,7 +373,7 @@ proof
 qed
 
 
-lemma may_be_static_eval_state_to_stack_result: "
+lemma static_eval_state_to_stack_result: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>
@@ -381,37 +381,37 @@ lemma may_be_static_eval_state_to_stack_result: "
 proof -
   assume "\<rho> x = Some \<omega>"
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" by (simp add: may_be_static_eval_state.simps) then
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>" by (rule may_be_static_eval_stack.cases; auto)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" by (simp add: static_eval_state.simps) then
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>" by (rule static_eval_stack.cases; auto)
 qed
 
 
-lemma may_be_static_eval_state_to_state_result: "
+lemma static_eval_state_to_state_result: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>); \<kappa>\<rangle>
 "
 proof
   assume "\<rho> x = Some \<omega>" "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" then
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)" by (blast intro: may_be_static_eval_state_to_env_result)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)" by (blast intro: static_eval_state_to_env_result)
 
   with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>" by (blast intro: may_be_static_eval_state_to_exp_result)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>" by (blast intro: static_eval_state_to_exp_result)
 
   with `\<rho> x = Some \<omega>` `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: may_be_static_eval_state_to_stack_result)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: static_eval_state_to_stack_result)
 qed
 
 
-lemma may_be_static_eval_state_to_env_let_unit: "
+lemma static_eval_state_to_env_let_unit: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnit)
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>" then 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps)+ 
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps)+ 
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e`
-  have "{^\<lparr>\<rparr>} \<subseteq> \<V> x" by (rule may_be_static_eval.cases; auto)+
+  have "{^\<lparr>\<rparr>} \<subseteq> \<V> x" by (rule static_eval.cases; auto)+
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnit" by (simp add: Unit)
 
   {
@@ -431,7 +431,7 @@ proof
 
       from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x' = Some \<omega>'`
 
-      show "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: may_be_static_eval_env.simps)
+      show "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: static_eval_env.simps)
     qed
 
   }
@@ -440,41 +440,41 @@ proof
 qed
 
 
-lemma may_be_static_eval_state_to_stack_let: "
+lemma static_eval_state_to_stack_let: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
 "
-by (erule may_be_static_eval_state.cases; auto)
+by (erule static_eval_state.cases; auto)
 
-lemma may_be_static_eval_state_to_state_let_unit: "
+lemma static_eval_state_to_state_let_unit: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> VUnit); \<kappa>\<rangle>
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>" then
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (auto simp: may_be_static_eval_state_to_exp_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (auto simp: static_eval_state_to_exp_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>` 
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnit)" by (auto simp: may_be_static_eval_state_to_env_let_unit)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnit)" by (auto simp: static_eval_state_to_env_let_unit)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>` 
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (auto simp: may_be_static_eval_state_to_stack_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (auto simp: static_eval_state_to_stack_let)
 
 qed
 
-lemma may_be_static_eval_to_value_let_prim: "
+lemma static_eval_to_value_let_prim: "
   (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = Prim p in e \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure p \<rho>)
 "
-by (erule may_be_static_eval.cases; auto; rule; auto)
+by (erule static_eval.cases; auto; rule; auto)
 
-lemma may_be_static_eval_state_to_env_let_prim: "
+lemma static_eval_state_to_env_let_prim: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VClosure p \<rho>))
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle> " then 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = Prim p in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps)+ then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure p \<rho>)" by (simp add: may_be_static_eval_to_value_let_prim)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = Prim p in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps)+ then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure p \<rho>)" by (simp add: static_eval_to_value_let_prim)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = Prim p in e`
-  have "{^p} \<subseteq> \<V> x" by (rule may_be_static_eval.cases; auto)+
+  have "{^p} \<subseteq> \<V> x" by (rule static_eval.cases; auto)+
  
   {
     fix x' \<omega>'
@@ -491,7 +491,7 @@ proof
       have "\<rho> x' = Some \<omega>'" by simp
       with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` 
   
-      show "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: may_be_static_eval_env.simps)
+      show "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: static_eval_env.simps)
     qed
 
   } then
@@ -499,23 +499,23 @@ proof
   show "\<forall>x' \<omega>'. (\<rho>(x \<mapsto> (VClosure p \<rho>))) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by auto
 qed
 
-lemma may_be_static_eval_state_to_state_let_prim: "
+lemma static_eval_state_to_state_let_prim: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> (VClosure p \<rho>)); \<kappa>\<rangle>
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle>" then
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (auto simp: may_be_static_eval_state_to_exp_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (auto simp: static_eval_state_to_exp_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle>` 
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (auto simp: may_be_static_eval_state_to_stack_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (auto simp: static_eval_state_to_stack_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle>` 
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VClosure p \<rho>))" by (auto simp: may_be_static_eval_state_to_env_let_prim)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VClosure p \<rho>))" by (auto simp: static_eval_state_to_env_let_prim)
 
 qed
 
 
-lemma may_be_static_eval_state_to_env_let_case_left: "
+lemma static_eval_state_to_env_let_case_left: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l) \<Longrightarrow> \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)
@@ -524,17 +524,17 @@ lemma may_be_static_eval_state_to_env_let_case_left: "
 proof
   assume "\<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)" "\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l"
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>" then 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)" by (blast intro: may_be_static_eval_env.cases) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l" by (blast intro: may_be_static_eval_value.cases)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)" by (blast intro: static_eval_env.cases) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l" by (blast intro: static_eval_value.cases)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l` `\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l`
-  have "{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l'" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>l" by (blast intro: may_be_static_eval_env.cases)+
+  have "{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l'" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>l" by (blast intro: static_eval_env.cases)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)`
-  have " | (VClosure (Left x\<^sub>l') \<rho>\<^sub>l) | \<in> \<V> x\<^sub>s" by (blast intro: may_be_static_eval_env.cases) then
+  have " | (VClosure (Left x\<^sub>l') \<rho>\<^sub>l) | \<in> \<V> x\<^sub>s" by (blast intro: static_eval_env.cases) then
   have "^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s" by simp
 
   from  `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e`
@@ -554,7 +554,7 @@ proof
     assume "(\<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)) x' = Some \<omega>'" "x' \<noteq> x\<^sub>l" then
     have "\<rho> x' = Some \<omega>'" by simp
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` 
-    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: may_be_static_eval_env.simps)
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: static_eval_env.simps)
    
   }
   with `{|\<omega>\<^sub>l|} \<subseteq> \<V> x\<^sub>l` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>l`
@@ -562,7 +562,7 @@ proof
 qed
 
 
-lemma may_be_static_eval_state_to_stack_let_case_left: "
+lemma static_eval_state_to_stack_let_case_left: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l) \<Longrightarrow> \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
@@ -573,10 +573,10 @@ proof
   assume "\<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)" "\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l"
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: may_be_static_eval_state.cases)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: static_eval_state.cases)+
   
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)`
-  have " | (VClosure (Left x\<^sub>l') \<rho>\<^sub>l) | \<in> \<V> x\<^sub>s" by (blast intro: may_be_static_eval_env.cases) then
+  have " | (VClosure (Left x\<^sub>l') \<rho>\<^sub>l) | \<in> \<V> x\<^sub>s" by (blast intro: static_eval_env.cases) then
   have "^prim.Left x\<^sub>l' \<in> \<V> x\<^sub>s" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e`
@@ -589,18 +589,18 @@ proof
   qed
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: may_be_static_eval_state_to_exp_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: static_eval_state_to_exp_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: may_be_static_eval_state.cases)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: static_eval_state.cases)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: may_be_static_eval_state_to_stack_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: static_eval_state_to_stack_let)
   
 qed
 
 
-lemma may_be_static_eval_state_to_state_let_case_left: "
+lemma static_eval_state_to_state_let_case_left: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l) \<Longrightarrow> 
   \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
@@ -608,20 +608,20 @@ lemma may_be_static_eval_state_to_state_let_case_left: "
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>" and "\<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)" then
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l" by (simp add: may_be_static_eval_state_to_exp_let_case_left)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l" by (simp add: static_eval_state_to_exp_let_case_left)
 
   assume "\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l"
   with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>` and `\<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)` 
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)" by (simp add: may_be_static_eval_state_to_env_let_case_left)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)" by (simp add: static_eval_state_to_env_let_case_left)
 
   from `\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l`  
   and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>` 
   and `\<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l)` 
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>" by (simp add: may_be_static_eval_state_to_stack_let_case_left)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>" by (simp add: static_eval_state_to_stack_let_case_left)
 qed
 
 
-lemma may_be_static_eval_state_to_env_let_case_right: "
+lemma static_eval_state_to_env_let_case_right: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r) \<Longrightarrow> \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r)
@@ -630,17 +630,17 @@ lemma may_be_static_eval_state_to_env_let_case_right: "
 proof
   assume "\<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r)" "\<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r"
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>" then 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Right x\<^sub>r') \<rho>\<^sub>r)" by (blast intro: may_be_static_eval_env.cases) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r" by (blast intro: may_be_static_eval_value.cases)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Right x\<^sub>r') \<rho>\<^sub>r)" by (blast intro: static_eval_env.cases) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r" by (blast intro: static_eval_value.cases)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r` `\<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r`
-  have "{|\<omega>\<^sub>r|} \<subseteq> \<V> x\<^sub>r'" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>r" by (blast intro: may_be_static_eval_env.cases)+
+  have "{|\<omega>\<^sub>r|} \<subseteq> \<V> x\<^sub>r'" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>r" by (blast intro: static_eval_env.cases)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r)`
-  have " | (VClosure (Right x\<^sub>r') \<rho>\<^sub>r) | \<in> \<V> x\<^sub>s" by (blast intro: may_be_static_eval_env.cases) then
+  have " | (VClosure (Right x\<^sub>r') \<rho>\<^sub>r) | \<in> \<V> x\<^sub>s" by (blast intro: static_eval_env.cases) then
   have "^prim.Right x\<^sub>r' \<in> \<V> x\<^sub>s" by simp
 
   from  `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e`
@@ -660,14 +660,14 @@ proof
     assume "(\<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r)) x' = Some \<omega>'" "x' \<noteq> x\<^sub>r" then
     have "\<rho> x' = Some \<omega>'" by simp
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` 
-    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: may_be_static_eval_env.simps)
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: static_eval_env.simps)
    
   }
   with `{|\<omega>\<^sub>r|} \<subseteq> \<V> x\<^sub>r` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>r`
   show "\<forall>x' \<omega>'. (\<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r)) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by auto
 qed
 
-lemma may_be_static_eval_state_to_stack_let_case_right: "
+lemma static_eval_state_to_stack_let_case_right: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r) \<Longrightarrow> \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa>  \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
@@ -678,10 +678,10 @@ proof
   assume "\<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r)" "\<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r"
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: may_be_static_eval_state.cases)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: static_eval_state.cases)+
   
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r)`
-  have " | (VClosure (Right x\<^sub>r') \<rho>\<^sub>r) | \<in> \<V> x\<^sub>s" by (blast intro: may_be_static_eval_env.cases) then
+  have " | (VClosure (Right x\<^sub>r') \<rho>\<^sub>r) | \<in> \<V> x\<^sub>s" by (blast intro: static_eval_env.cases) then
   have "^prim.Right x\<^sub>r' \<in> \<V> x\<^sub>s" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e`
@@ -694,37 +694,37 @@ proof
   qed
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: may_be_static_eval_state_to_exp_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: static_eval_state_to_exp_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: may_be_static_eval_state.cases)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: static_eval_state.cases)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e;\<rho>;\<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: may_be_static_eval_state_to_stack_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: static_eval_state_to_stack_let)
   
 qed
 
-lemma may_be_static_eval_state_to_state_let_case_right: "
+lemma static_eval_state_to_state_let_case_right: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r) \<Longrightarrow> 
   \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>r; \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r); \<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>" and "\<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r)" then
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r" by (simp add: may_be_static_eval_state_to_exp_let_case_right)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r" by (simp add: static_eval_state_to_exp_let_case_right)
 
   assume "\<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r"
   with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>` and `\<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r)` 
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r)" by (simp add: may_be_static_eval_state_to_env_let_case_right)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r)" by (simp add: static_eval_state_to_env_let_case_right)
 
   from `\<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r`  
   and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle>` 
   and `\<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r)` 
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>" by (simp add: may_be_static_eval_state_to_stack_let_case_right)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>" by (simp add: static_eval_state_to_stack_let_case_right)
 qed
 
 
-lemma may_be_static_eval_state_to_env_let_fst: "
+lemma static_eval_state_to_env_let_fst: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) \<Longrightarrow> \<rho>\<^sub>p x\<^sub>1 = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<omega>)
@@ -732,17 +732,17 @@ lemma may_be_static_eval_state_to_env_let_fst: "
 proof
   assume "\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" and "\<rho>\<^sub>p x\<^sub>1 = Some \<omega>"
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle>" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FST x\<^sub>p in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FST x\<^sub>p in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" by (blast intro: may_be_static_eval_env.cases) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>p" by (blast intro: may_be_static_eval_value.cases)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" by (blast intro: static_eval_env.cases) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>p" by (blast intro: static_eval_value.cases)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>p` `\<rho>\<^sub>p x\<^sub>1 = Some \<omega>`
-  have "{|\<omega>|} \<subseteq> \<V> x\<^sub>1" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (blast intro: may_be_static_eval_env.cases)+
+  have "{|\<omega>|} \<subseteq> \<V> x\<^sub>1" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (blast intro: static_eval_env.cases)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)`
-  have " | (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) | \<in> \<V> x\<^sub>p" by (blast intro: may_be_static_eval_env.cases) then
+  have " | (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) | \<in> \<V> x\<^sub>p" by (blast intro: static_eval_env.cases) then
   have "^prim.Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p" by simp
 
   from  `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FST x\<^sub>p in e`
@@ -762,7 +762,7 @@ proof
     assume "(\<rho>(x \<mapsto> \<omega>)) x' = Some \<omega>'" "x' \<noteq> x" then
     have "\<rho> x' = Some \<omega>'" by simp
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` 
-    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: may_be_static_eval_env.simps)
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: static_eval_env.simps)
   }
   with `{|\<omega>|} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>`
   show "\<forall>x' \<omega>'. (\<rho>(x \<mapsto> \<omega>)) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by auto
@@ -770,42 +770,42 @@ qed
 
 
 
-lemma may_be_static_eval_state_to_state_let_fst: "
+lemma static_eval_state_to_state_let_fst: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) \<Longrightarrow> \<rho>\<^sub>p x\<^sub>1 = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle>" then
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (simp add: may_be_static_eval_state_to_exp_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (simp add: static_eval_state_to_exp_let)
 
   assume "\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" and "\<rho>\<^sub>p x\<^sub>1 = Some \<omega>"
   with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<omega>)"  by (simp add: may_be_static_eval_state_to_env_let_fst)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<omega>)"  by (simp add: static_eval_state_to_env_let_fst)
 
   from `\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)` and `\<rho>\<^sub>p x\<^sub>1 = Some \<omega>`
   and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (simp add: may_be_static_eval_state_to_stack_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (simp add: static_eval_state_to_stack_let)
 qed
 
 
-lemma may_be_static_eval_state_to_env_let_snd: "
+lemma static_eval_state_to_env_let_snd: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SND x\<^sub>p in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> \<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) \<Longrightarrow> \<rho>\<^sub>p x\<^sub>2 = Some \<omega> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<omega>)
 "
 proof
   assume "\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" and "\<rho>\<^sub>p x\<^sub>2 = Some \<omega>"
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SND x\<^sub>p in e; \<rho>; \<kappa>\<rangle>" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SND x\<^sub>p in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SND x\<^sub>p in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" by (blast intro: may_be_static_eval_env.cases) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>p" by (blast intro: may_be_static_eval_value.cases)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" by (blast intro: static_eval_env.cases) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>p" by (blast intro: static_eval_value.cases)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>p` `\<rho>\<^sub>p x\<^sub>2 = Some \<omega>`
-  have "{|\<omega>|} \<subseteq> \<V> x\<^sub>2" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (blast intro: may_be_static_eval_env.cases)+
+  have "{|\<omega>|} \<subseteq> \<V> x\<^sub>2" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (blast intro: static_eval_env.cases)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)`
-  have " | (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) | \<in> \<V> x\<^sub>p" by (blast intro: may_be_static_eval_env.cases) then
+  have " | (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) | \<in> \<V> x\<^sub>p" by (blast intro: static_eval_env.cases) then
   have "^prim.Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p" by simp
 
   from  `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SND x\<^sub>p in e`
@@ -826,33 +826,33 @@ proof
     assume "(\<rho>(x \<mapsto> \<omega>)) x' = Some \<omega>'" "x' \<noteq> x" then
     have "\<rho> x' = Some \<omega>'" by simp
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` 
-    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: may_be_static_eval_env.simps)
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: static_eval_env.simps)
   }
   with \<open>{|\<omega>|} \<subseteq> \<V> x\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<close> 
   show "\<forall>x' \<omega>'. (\<rho>(x \<mapsto> \<omega>)) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by simp
 qed
 
 
-lemma may_be_static_eval_state_to_state_let_snd: "
+lemma static_eval_state_to_state_let_snd: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SND x\<^sub>p in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) \<Longrightarrow> \<rho>\<^sub>p x\<^sub>2 = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SND x\<^sub>p in e; \<rho>; \<kappa>\<rangle>" then
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (simp add: may_be_static_eval_state_to_exp_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (simp add: static_eval_state_to_exp_let)
 
   assume "\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" and "\<rho>\<^sub>p x\<^sub>2 = Some \<omega>"
   with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SND x\<^sub>p in e; \<rho>; \<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<omega>)" by (simp add: may_be_static_eval_state_to_env_let_snd)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<omega>)" by (simp add: static_eval_state_to_env_let_snd)
 
   from `\<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)` and `\<rho>\<^sub>p x\<^sub>2 = Some \<omega>`
   and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SND x\<^sub>p in e; \<rho>; \<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (simp add: may_be_static_eval_state_to_stack_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (simp add: static_eval_state_to_stack_let)
 qed
 
 
-lemma may_be_static_eval_state_to_env_let_app: "
+lemma static_eval_state_to_env_let_app: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> f = Some (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l) \<Longrightarrow> \<rho> x\<^sub>a = Some \<omega>\<^sub>a \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l(f\<^sub>l \<mapsto> (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l), x\<^sub>l \<mapsto> \<omega>\<^sub>a)
@@ -860,19 +860,19 @@ lemma may_be_static_eval_state_to_env_let_app: "
 proof
   assume "\<rho> f = Some (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)" "\<rho> x\<^sub>a = Some \<omega>\<^sub>a"
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle>" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> x\<^sub>a = Some \<omega>\<^sub>a`
-  have "{|\<omega>\<^sub>a|} \<subseteq> \<V> x\<^sub>a" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>a" by (blast intro: may_be_static_eval_env.cases)+
+  have "{|\<omega>\<^sub>a|} \<subseteq> \<V> x\<^sub>a" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>a" by (blast intro: static_eval_env.cases)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> f = Some (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)`
-  have "{|(VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)|} \<subseteq> \<V> f" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)" by (blast intro: may_be_static_eval_env.cases)+
+  have "{|(VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)|} \<subseteq> \<V> f" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)" by (blast intro: static_eval_env.cases)+
 
   from `{|(VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)|} \<subseteq> \<V> f`
   have "^Abs f\<^sub>l x\<^sub>l e\<^sub>l \<in> \<V> f" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)`
-  have "{|(VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)|} \<subseteq> \<V> f\<^sub>l" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l" by (rule may_be_static_eval_value.cases; auto)+
+  have "{|(VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)|} \<subseteq> \<V> f\<^sub>l" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l" by (rule static_eval_value.cases; auto)+
 
 
   with `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e`
@@ -893,14 +893,14 @@ proof
     assume "(\<rho>\<^sub>l(f\<^sub>l \<mapsto> (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l), x\<^sub>l \<mapsto> \<omega>\<^sub>a)) x' = Some \<omega>'" "x' \<noteq> x\<^sub>l" "x' \<noteq> f\<^sub>l" then
     have "\<rho>\<^sub>l x' = Some \<omega>'" by simp
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l` 
-    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: may_be_static_eval_env.simps)
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: static_eval_env.simps)
   }
   with \<open>{|(VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)|} \<subseteq> \<V> f\<^sub>l\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>a\<close> \<open>{|\<omega>\<^sub>a|} \<subseteq> \<V> x\<^sub>l\<close>
   show "\<forall>x \<omega>. (\<rho>\<^sub>l(f\<^sub>l \<mapsto> (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l), x\<^sub>l \<mapsto> \<omega>\<^sub>a)) x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by auto
 
 qed
 
-lemma may_be_static_eval_state_to_stack_let_app: "
+lemma static_eval_state_to_stack_let_app: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> f = Some (VClosure (Abs f' x\<^sub>p e\<^sub>b) \<rho>') \<Longrightarrow> \<rho> x\<^sub>a = Some \<omega>\<^sub>a \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>b\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
@@ -908,10 +908,10 @@ lemma may_be_static_eval_state_to_stack_let_app: "
 proof
   assume "\<rho> f = Some (VClosure (Abs f' x\<^sub>p e\<^sub>b) \<rho>')" and "\<rho> x\<^sub>a = Some \<omega>\<^sub>a"
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle>" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e"  "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: may_be_static_eval_state.cases)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e"  "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: static_eval_state.cases)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> f = Some (VClosure (Abs f' x\<^sub>p e\<^sub>b) \<rho>')`
-  have " {|(VClosure (Abs f' x\<^sub>p e\<^sub>b) \<rho>')|} \<subseteq> \<V> f" by (blast intro: may_be_static_eval_env.cases) then
+  have " {|(VClosure (Abs f' x\<^sub>p e\<^sub>b) \<rho>')|} \<subseteq> \<V> f" by (blast intro: static_eval_env.cases) then
   have " ^Abs f' x\<^sub>p e\<^sub>b \<in> \<V> f" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e`
@@ -924,17 +924,17 @@ proof
   qed
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: may_be_static_eval_state_to_exp_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: static_eval_state_to_exp_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: may_be_static_eval_state.cases)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: static_eval_state.cases)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: may_be_static_eval_state_to_stack_let)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: static_eval_state_to_stack_let)
 qed
 
 
-theorem may_be_static_eval_state_preserved_under_step : "
+theorem static_eval_state_preserved_under_step : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>; 
     seq_step (b, \<rho>) \<omega>
@@ -956,7 +956,7 @@ proof -
 
     from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>" by simp
 
-    then have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho> ++ [x \<mapsto> VUnit]; \<kappa>\<rangle>" by (simp add: may_be_static_eval_state_to_state_let_unit)
+    then have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho> ++ [x \<mapsto> VUnit]; \<kappa>\<rangle>" by (simp add: static_eval_state_to_state_let_unit)
     
     with H4 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>" by simp
   next
@@ -968,7 +968,7 @@ proof -
 
     from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle>" by simp
 
-    then have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho> ++ [x \<mapsto> VClosure p \<rho>]; \<kappa>\<rangle>" by (simp add: may_be_static_eval_state_to_state_let_prim)
+    then have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho> ++ [x \<mapsto> VClosure p \<rho>]; \<kappa>\<rangle>" by (simp add: static_eval_state_to_state_let_prim)
     
     with H4 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>" by simp
   next
@@ -981,7 +981,7 @@ proof -
 
     from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle>" by simp
 
-    with H4 H5 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>" by (simp add: may_be_static_eval_state_to_state_let_fst)
+    with H4 H5 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>" by (simp add: static_eval_state_to_state_let_fst)
   next
     case (Let_Snd x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
 
@@ -992,11 +992,11 @@ proof -
 
     from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SND x\<^sub>p in e; \<rho>; \<kappa>\<rangle>" by simp
 
-    with H4 H5 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>" by (simp add: may_be_static_eval_state_to_state_let_snd)
+    with H4 H5 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>" by (simp add: static_eval_state_to_state_let_snd)
   qed
 qed
 
-theorem may_be_static_eval_state_preserved_under_step_up : "
+theorem static_eval_state_preserved_under_step_up : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>;
     seq_step_up (b, \<rho>) (e', \<rho>')
@@ -1012,19 +1012,19 @@ proof -
   proof cases
     case (Let_Case_Left xs xl' envl vl xl xr er)
     then show ?thesis
-      using H1 may_be_static_eval_state_to_state_let_case_left by blast
+      using H1 static_eval_state_to_state_let_case_left by blast
     next
       case (Let_Case_Right xs xr' envr vr xl el xr)
       then show ?thesis
-        using H1 may_be_static_eval_state_to_state_let_case_right by blast
+        using H1 static_eval_state_to_state_let_case_right by blast
     next
       case (Let_App f fp xp envl xa va)
       then show ?thesis
-        using H1 may_be_static_eval_state.intros may_be_static_eval_state_to_env_let_app may_be_static_eval_state_to_exp_let_app may_be_static_eval_state_to_stack_let_app by auto
+        using H1 static_eval_state.intros static_eval_state_to_env_let_app static_eval_state_to_exp_let_app static_eval_state_to_stack_let_app by auto
     qed
 qed
 
-theorem may_be_static_eval_state_preserved_under_step_down : "
+theorem static_eval_state_preserved_under_step_down : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>; 
     \<rho> x = Some \<omega>
@@ -1037,22 +1037,22 @@ proof -
     H2: "\<rho> x = Some \<omega>"
 
   from H1 H2
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>" by (auto simp: may_be_static_eval_state_to_state_result)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>" by (auto simp: static_eval_state_to_state_result)
 qed
 
-lemma may_be_static_eval_pool_to_exp_let: "
+lemma static_eval_pool_to_exp_let: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e
 "
 proof -
  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>)" then
- have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>" by (simp add: may_be_static_eval_pool.simps) then
- show "(\<V>, \<C>) \<Turnstile>\<^sub>e e " by (blast intro: may_be_static_eval_state_to_exp_let)
+ have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>" by (simp add: static_eval_pool.simps) then
+ show "(\<V>, \<C>) \<Turnstile>\<^sub>e e " by (blast intro: static_eval_state_to_exp_let)
 qed
 
 
-lemma may_be_static_eval_pool_let_sync_send_values_relate: "
+lemma static_eval_pool_let_sync_send_values_relate: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e) \<Longrightarrow>
@@ -1066,19 +1066,19 @@ proof -
   and "\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>\<^sub>c x\<^sub>c))"
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: may_be_static_eval_pool.simps) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: static_eval_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: static_eval_state.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s` and `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)`
-  have "{|(VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)|} \<subseteq> \<V> x\<^sub>s\<^sub>e" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)" by (blast intro: may_be_static_eval_env.cases)+
+  have "{|(VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)|} \<subseteq> \<V> x\<^sub>s\<^sub>e" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)" by (blast intro: static_eval_env.cases)+
 
   from `{|(VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)|} \<subseteq> \<V> x\<^sub>s\<^sub>e`
   have "^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> \<V> x\<^sub>s\<^sub>e" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s\<^sub>e" by (blast intro: may_be_static_eval_value.cases)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s\<^sub>e" by (blast intro: static_eval_value.cases)
   with `\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>\<^sub>c x\<^sub>c))`
-  have "{|(VChan (Ch \<pi>\<^sub>c x\<^sub>c))|} \<subseteq> \<V> x\<^sub>s\<^sub>c" by (blast intro: may_be_static_eval_env.cases) then
+  have "{|(VChan (Ch \<pi>\<^sub>c x\<^sub>c))|} \<subseteq> \<V> x\<^sub>s\<^sub>c" by (blast intro: static_eval_env.cases) then
   have "{^Chan x\<^sub>c} \<subseteq> \<V> x\<^sub>s\<^sub>c" by simp then
   have "^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c" by auto
   
@@ -1093,7 +1093,7 @@ proof -
 
 qed
 
-lemma may_be_static_eval_pool_let_sync_send_message_relate: "
+lemma static_eval_pool_let_sync_send_message_relate: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e) \<Longrightarrow>
@@ -1107,16 +1107,16 @@ proof -
   and "\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m"
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: may_be_static_eval_pool.simps) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: may_be_static_eval_state.simps)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: static_eval_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: static_eval_state.simps)
   with `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)" by (blast intro: may_be_static_eval_env.cases) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s\<^sub>e" by (blast intro: may_be_static_eval_value.cases)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)" by (blast intro: static_eval_env.cases) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s\<^sub>e" by (blast intro: static_eval_value.cases)
   with `\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m`
-  show "{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>m \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>m" by (blast intro: may_be_static_eval_env.cases)
+  show "{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>m \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>m" by (blast intro: static_eval_env.cases)
 qed
 
-lemma may_be_static_eval_pool_to_env_let_sync_send: "
+lemma static_eval_pool_to_env_let_sync_send: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e) \<Longrightarrow>
@@ -1130,8 +1130,8 @@ proof
   and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)"
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: may_be_static_eval_pool.simps) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: static_eval_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: static_eval_state.simps)+
 
   have "{^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s"
   proof (cases c)
@@ -1141,7 +1141,7 @@ proof
     and  `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
     and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
     and `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)`
-    show "{^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s" using may_be_static_eval_pool_let_sync_send_values_relate by simp
+    show "{^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s" using static_eval_pool_let_sync_send_values_relate by simp
   qed
   
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnit" by (simp add: Unit)
@@ -1150,14 +1150,14 @@ proof
     assume "(\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit)) x' = Some \<omega>'" "x' \<noteq> x\<^sub>s" then
     have "\<rho>\<^sub>s x' = Some \<omega>'" by simp
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s` 
-    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: may_be_static_eval_env.simps)
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: static_eval_env.simps)
   }
   with \<open>{^\<lparr>\<rparr>} \<subseteq> \<V> x\<^sub>s\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnit\<close> 
   show "\<forall>x \<omega>. (\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit)) x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by simp
 qed
 
 
-lemma may_be_static_eval_pool_let_sync_recv_values_relate: "
+lemma static_eval_pool_let_sync_recv_values_relate: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
   \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e) \<Longrightarrow>
@@ -1171,19 +1171,19 @@ proof -
   and "\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi>\<^sub>c x\<^sub>c))"
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>" by (simp add: may_be_static_eval_pool.simps) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>" by (simp add: static_eval_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r" by (simp add: static_eval_state.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r` and `\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)`
-  have "{|(VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)|} \<subseteq> \<V> x\<^sub>r\<^sub>e" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)" by (blast intro: may_be_static_eval_env.cases)+
+  have "{|(VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)|} \<subseteq> \<V> x\<^sub>r\<^sub>e" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)" by (blast intro: static_eval_env.cases)+
 
   from `{|(VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)|} \<subseteq> \<V> x\<^sub>r\<^sub>e`
   have "^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>r\<^sub>e" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r\<^sub>e" by (blast intro: may_be_static_eval_value.cases)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r\<^sub>e" by (blast intro: static_eval_value.cases)
   with `\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi>\<^sub>c x\<^sub>c))`
-  have "{|(VChan (Ch \<pi>\<^sub>c x\<^sub>c))|} \<subseteq> \<V> x\<^sub>r\<^sub>c" by (blast intro: may_be_static_eval_env.cases) then
+  have "{|(VChan (Ch \<pi>\<^sub>c x\<^sub>c))|} \<subseteq> \<V> x\<^sub>r\<^sub>c" by (blast intro: static_eval_env.cases) then
   have "{^Chan x\<^sub>c} \<subseteq> \<V> x\<^sub>r\<^sub>c" by simp then
   have "^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c" by auto
   
@@ -1198,18 +1198,18 @@ proof -
 qed
 
 
-lemma may_be_static_eval_pool_to_stack_let: "
+lemma static_eval_pool_to_stack_let: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
 "
 proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>)" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>" by (simp add: may_be_static_eval_pool.simps) then
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (simp add: may_be_static_eval_state_to_stack_let)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>" by (simp add: static_eval_pool.simps) then
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (simp add: static_eval_state_to_stack_let)
 qed
 
-lemma may_be_static_eval_pool_to_env_let_sync_recv: "
+lemma static_eval_pool_to_env_let_sync_recv: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e) \<Longrightarrow>
@@ -1225,7 +1225,7 @@ proof
   and "\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)"
   and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)"
   and "\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m" then
-  have "{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>m" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>m" using may_be_static_eval_pool_let_sync_send_message_relate by auto
+  have "{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>m" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>m" using static_eval_pool_let_sync_send_message_relate by auto
 
   assume "\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChan c)"
   and "\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)"
@@ -1233,8 +1233,8 @@ proof
   and "\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChan c)"
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>" by (simp add: may_be_static_eval_pool.simps) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>" by (simp add: static_eval_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r" by (simp add: static_eval_state.simps)+
 
 
   have "\<V> x\<^sub>m \<subseteq> \<V> x\<^sub>r"
@@ -1248,14 +1248,14 @@ proof
     and `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)`
     and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
     and `\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m`
-    have "\<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c" using \<open>\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChan c)\<close> may_be_static_eval_pool_let_sync_send_values_relate by blast
+    have "\<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c" using \<open>\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChan c)\<close> static_eval_pool_let_sync_send_values_relate by blast
 
     with `c = Ch \<pi>\<^sub>c x\<^sub>c`
     and `\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChan c)`
     and `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
     and `\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)`
     and `\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)`
-    have "\<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r" using  may_be_static_eval_pool_let_sync_recv_values_relate by auto
+    have "\<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r" using  static_eval_pool_let_sync_recv_values_relate by auto
 
     from `\<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c` and `\<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r`
     show "\<V> x\<^sub>m \<subseteq> \<V> x\<^sub>r" by simp
@@ -1265,21 +1265,21 @@ proof
   have "{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>r" by blast
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: may_be_static_eval_pool.simps) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: static_eval_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: static_eval_state.simps)+
   {
     fix x' \<omega>'
     assume "(\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) x' = Some \<omega>'" "x' \<noteq> x\<^sub>r" then
     have "\<rho>\<^sub>r x' = Some \<omega>'" by simp
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r` 
-    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: may_be_static_eval_env.simps)
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: static_eval_env.simps)
   }
   with `{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>r` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>m`
   show "\<forall>x \<omega>. (\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by auto
 qed
 
 
-lemma may_be_static_eval_preserved_under_sync: "
+lemma static_eval_preserved_under_sync: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e) \<Longrightarrow>
@@ -1302,20 +1302,20 @@ proof
 
 
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)\<close> 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>s" by (blast intro: may_be_static_eval_pool_to_exp_let)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>s" by (blast intro: static_eval_pool_to_exp_let)
 
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> \<open>\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)\<close> 
   and \<open>\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)\<close> \<open>\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChan c)\<close> 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit)" by (blast intro: may_be_static_eval_pool_to_env_let_sync_send)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit)" by (blast intro: static_eval_pool_to_env_let_sync_send)
 
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)\<close>
-  have  "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>s\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>s" by (blast intro: may_be_static_eval_pool_to_stack_let)
+  have  "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>s\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>s" by (blast intro: static_eval_pool_to_stack_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>s` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit)` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>s\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>s`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>" by (blast intro: may_be_static_eval_state.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>" by (blast intro: static_eval_state.intros)
 
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)\<close> 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r" by (blast intro: may_be_static_eval_pool_to_exp_let)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r" by (blast intro: static_eval_pool_to_exp_let)
 
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> 
   and \<open>\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)\<close> 
@@ -1323,13 +1323,13 @@ proof
   and \<open>\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m\<close> \<open>\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChan c)\<close>
   and \<open>\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)\<close> 
   and \<open>\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)\<close> \<open>\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChan c)\<close> 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)" by (blast intro: may_be_static_eval_pool_to_env_let_sync_recv)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)" by (blast intro: static_eval_pool_to_env_let_sync_recv)
 
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)\<close>
-  have  "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>r" by (blast intro: may_be_static_eval_pool_to_stack_let)
+  have  "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>r" by (blast intro: static_eval_pool_to_stack_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>r`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>" by (blast intro: may_be_static_eval_state.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>" by (blast intro: static_eval_state.intros)
 
   {
     fix \<pi> \<sigma>
@@ -1337,90 +1337,90 @@ proof
     and "(\<E>(\<pi>\<^sub>s @ [LNext x\<^sub>s] \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r @ [LNext x\<^sub>r] \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) \<pi> = Some \<sigma>" then
     have "\<E> \<pi> = Some \<sigma>" by simp
     with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close>
-    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>" by (blast intro: may_be_static_eval_pool.cases)
+    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>" by (blast intro: static_eval_pool.cases)
   } with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>r;\<rho>\<^sub>r (x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>` `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>s;\<rho>\<^sub>s (x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>`
   show "\<forall>\<pi> \<sigma>. (\<E>(\<pi>\<^sub>s @ [LNext x\<^sub>s] \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r @ [LNext x\<^sub>r] \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>" by simp
 
 qed
 
 
-lemma may_be_static_eval_pool_to_env_let_chan: "
+lemma static_eval_pool_to_env_let_chan: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VChan (Ch \<pi> x)))
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>)" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>" by (blast intro: may_be_static_eval_pool.cases) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CHAN \<lparr>\<rparr> in e" by (blast intro: may_be_static_eval_state.cases) then
-  have "{^Chan x} \<subseteq> \<V> x"  by (blast intro: may_be_static_eval.cases)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>" by (blast intro: static_eval_pool.cases) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CHAN \<lparr>\<rparr> in e" by (blast intro: static_eval_state.cases) then
+  have "{^Chan x} \<subseteq> \<V> x"  by (blast intro: static_eval.cases)
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VChan (Ch \<pi> x))" by (simp add: Chan)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>` 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps)+
   {
     fix x' \<omega>'
     assume "(\<rho>(x \<mapsto> (VChan (Ch \<pi> x)))) x' = Some \<omega>'" and "x \<noteq> x'"then
     have "\<rho> x' = Some \<omega>'" by simp with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>`
-    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: may_be_static_eval_env.simps)
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: static_eval_env.simps)
   } with `{^Chan x} \<subseteq> \<V> x` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VChan (Ch \<pi> x))`
   show "\<forall>x' \<omega>'. (\<rho>(x \<mapsto> (VChan (Ch \<pi> x)))) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by simp
 qed
 
 
-lemma may_be_static_eval_preserved_under_chan: "
+lemma static_eval_preserved_under_chan: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LNext x] \<mapsto> \<langle>e; \<rho>(x \<mapsto> (VChan (Ch \<pi> x))); \<kappa>\<rangle>)
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>)" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: may_be_static_eval_pool_to_exp_let)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: static_eval_pool_to_exp_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VChan (Ch \<pi> x)))" by (blast intro: may_be_static_eval_pool_to_env_let_chan )
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VChan (Ch \<pi> x)))" by (blast intro: static_eval_pool_to_env_let_chan )
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: may_be_static_eval_pool_to_stack_let)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: static_eval_pool_to_stack_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e e` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VChan (Ch \<pi> x)))` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> (VChan (Ch \<pi> x)));\<kappa>\<rangle>" by (blast intro: may_be_static_eval_state.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> (VChan (Ch \<pi> x)));\<kappa>\<rangle>" by (blast intro: static_eval_state.intros)
   {
     fix \<pi>' \<sigma>'
     assume "(\<E>(\<pi> @ [LNext x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> (VChan (Ch \<pi> x)));\<kappa>\<rangle>)) \<pi>' = Some \<sigma>'" 
     and "\<pi>' \<noteq> \<pi> @ [LNext x]" then
     have "\<E> \<pi>' = Some \<sigma>'" by simp with `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
-    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: may_be_static_eval_pool.simps)
+    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: static_eval_pool.simps)
   } with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> (VChan (Ch \<pi> x)));\<kappa>\<rangle>`
   show "\<forall>\<pi>' \<sigma>'. (\<E>(\<pi> @ [LNext x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> (VChan (Ch \<pi> x)));\<kappa>\<rangle>)) \<pi>' = Some \<sigma>' \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by simp
 qed
 
 
-lemma may_be_static_eval_pool_to_env_let_spawn: "
+lemma static_eval_pool_to_env_let_spawn: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnit)"
 proof
 
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>" by (simp add: may_be_static_eval_pool.simps) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SPAWN e\<^sub>c in e" by (blast intro: may_be_static_eval_state.cases) then
-  have "{^\<lparr>\<rparr>} \<subseteq> \<V> x"  by (blast intro: may_be_static_eval.cases) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>" by (simp add: static_eval_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SPAWN e\<^sub>c in e" by (blast intro: static_eval_state.cases) then
+  have "{^\<lparr>\<rparr>} \<subseteq> \<V> x"  by (blast intro: static_eval.cases) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnit" by (simp add: Unit)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>` 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps)
 
   {
     fix x' \<omega>'
     assume "(\<rho>(x \<mapsto> VUnit)) x' = Some \<omega>'" and "x \<noteq> x'" then
     have "\<rho> x' = Some \<omega>'" by simp with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>`
-    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (blast intro: may_be_static_eval_env.cases)
+    have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (blast intro: static_eval_env.cases)
   } with `{^\<lparr>\<rparr>} \<subseteq> \<V> x` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnit`
   show "\<forall>x' \<omega>'. (\<rho>(x \<mapsto> VUnit)) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by simp
 qed
 
-lemma may_be_static_eval_preserved_under_spawn: "
+lemma static_eval_preserved_under_spawn: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LNext x] \<mapsto> \<langle>e; \<rho>(x \<mapsto> VUnit); \<kappa>\<rangle>, \<pi>@ [LSpawn x] \<mapsto> \<langle>e\<^sub>c; \<rho>; []\<rangle>)
@@ -1430,40 +1430,40 @@ proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)"
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: may_be_static_eval_pool_to_exp_let)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: static_eval_pool_to_exp_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnit)" by (blast intro: may_be_static_eval_pool_to_env_let_spawn)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnit)" by (blast intro: static_eval_pool_to_env_let_spawn)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: may_be_static_eval_pool_to_stack_let)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: static_eval_pool_to_stack_let)
 
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnit)\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>e e\<close>
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> VUnit);\<kappa>\<rangle>" by (simp add: may_be_static_eval_state.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> VUnit);\<kappa>\<rangle>" by (simp add: static_eval_state.intros)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>" by (simp add: may_be_static_eval_pool.simps) then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SPAWN e\<^sub>c in e" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps)+
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>" by (simp add: static_eval_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SPAWN e\<^sub>c in e" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps)+
   
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SPAWN e\<^sub>c in e`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>c" by (blast intro: may_be_static_eval.cases)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>c" by (blast intro: static_eval.cases)
 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>c\<rfloor>) \<Rrightarrow> []" by (simp add: may_be_static_eval_stack.Empty)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>c\<rfloor>) \<Rrightarrow> []" by (simp add: static_eval_stack.Empty)
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>c\<rfloor>) \<Rrightarrow> []\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>c\<close> 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>c;\<rho>;[]\<rangle>" by (simp add: may_be_static_eval_state.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>c;\<rho>;[]\<rangle>" by (simp add: static_eval_state.intros)
 
   {
     fix \<pi>' \<sigma>'
     assume "(\<E>(\<pi> @ [LNext x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> VUnit);\<kappa>\<rangle>, \<pi> @ [LSpawn x] \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)) \<pi>' = Some \<sigma>'"
     and "\<pi>' \<noteq> \<pi> @ [LNext x]" and " \<pi>' \<noteq> \<pi> @ [LSpawn x]" then
     have "\<E> \<pi>' = Some \<sigma>'" by simp with `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
-    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (blast intro: may_be_static_eval_pool.cases)
+    have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (blast intro: static_eval_pool.cases)
   } with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> VUnit);\<kappa>\<rangle>` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>c;\<rho>;[]\<rangle>`
   show "\<forall>\<pi>' \<sigma>'. (\<E>(\<pi> @ [LNext x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> VUnit);\<kappa>\<rangle>, \<pi> @ [LSpawn x] \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)) \<pi>' = Some \<sigma>' \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by simp
 qed
 
 
-theorem may_be_static_eval_preserved_under_concur_step : "
+theorem static_eval_preserved_under_concur_step : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>; 
     (\<E>, H) \<rightarrow> (\<E>', H')
@@ -1480,7 +1480,7 @@ proof -
     case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<omega>)
 
     have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LReturn x\<^sub>\<kappa>] \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>)"
-      using H1 local.Seq_Step_Down(4) local.Seq_Step_Down(5) may_be_static_eval_pool.simps may_be_static_eval_state_to_state_result by fastforce
+      using H1 local.Seq_Step_Down(4) local.Seq_Step_Down(5) static_eval_pool.simps static_eval_state_to_state_result by fastforce
 
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
       by (simp add: L1H1 local.Seq_Step_Down(1))
@@ -1488,41 +1488,41 @@ proof -
     case (Seq_Step \<pi> x b e \<rho> \<kappa> \<omega>)
 
     have L1H7:"(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>LET x = b in e;\<rho>;\<kappa>\<rangle>"
-      using H1 local.Seq_Step(4) may_be_static_eval_pool.simps by auto
+      using H1 local.Seq_Step(4) static_eval_pool.simps by auto
 
     have L1H8: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>"
-      using L1H7 local.Seq_Step(5) may_be_static_eval_state_preserved_under_step by blast
+      using L1H7 local.Seq_Step(5) static_eval_state_preserved_under_step by blast
 
     have L1H9: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LNext x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>)"
-      using H1 L1H8 may_be_static_eval_pool.simps by auto
+      using H1 L1H8 static_eval_pool.simps by auto
 
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
       by (simp add: L1H9 local.Seq_Step(1))
   next
     case (Seq_Step_Up \<pi> x b e \<rho> \<kappa> e' \<rho>')
     have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LCall x] \<mapsto> \<langle>e';\<rho>';\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>)"
-      using H1 local.Seq_Step_Up(4) local.Seq_Step_Up(5) may_be_static_eval_pool.simps may_be_static_eval_state_preserved_under_step_up by fastforce
+      using H1 local.Seq_Step_Up(4) local.Seq_Step_Up(5) static_eval_pool.simps static_eval_state_preserved_under_step_up by fastforce
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
       by (simp add: L1H1 local.Seq_Step_Up(1))
   next
     case (Let_Chan \<pi> x e \<rho> \<kappa>)
     show ?thesis
-      by (simp add: H1 local.Let_Chan(1) local.Let_Chan(4) may_be_static_eval_preserved_under_chan)
+      by (simp add: H1 local.Let_Chan(1) local.Let_Chan(4) static_eval_preserved_under_chan)
   next
     case (Let_Spawn \<pi> x e\<^sub>c e \<rho> \<kappa>)
     show ?thesis
-      by (simp add: H1 local.Let_Spawn(1) local.Let_Spawn(4) may_be_static_eval_preserved_under_spawn)
+      by (simp add: H1 local.Let_Spawn(1) local.Let_Spawn(4) static_eval_preserved_under_spawn)
   next
     case (Let_Sync \<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e c \<omega>\<^sub>m)
     have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s @ [LNext x\<^sub>s] \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r @ [LNext x\<^sub>r] \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)" 
-      by (simp add: H1 local.Let_Sync(10) local.Let_Sync(11) local.Let_Sync(4) local.Let_Sync(5) local.Let_Sync(7) local.Let_Sync(8) local.Let_Sync(9) may_be_static_eval_preserved_under_sync)
+      by (simp add: H1 local.Let_Sync(10) local.Let_Sync(11) local.Let_Sync(4) local.Let_Sync(5) local.Let_Sync(7) local.Let_Sync(8) local.Let_Sync(9) static_eval_preserved_under_sync)
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
       by (simp add: L1H1 local.Let_Sync(1))
   qed
 qed
 
 
-theorem may_be_static_eval_preserved_under_concur_step_star : "
+theorem static_eval_preserved_under_concur_step_star : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>;  
     (\<E>, H) \<rightarrow>* (\<E>', H')
@@ -1555,7 +1555,7 @@ proof -
 
       from L1H1 L1H2 L1H3 
       have "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
-      by (metis eq_fst_iff may_be_static_eval_preserved_under_concur_step step.IH step.hyps(1))
+      by (metis eq_fst_iff static_eval_preserved_under_concur_step step.IH step.hyps(1))
     }
     
     then show ?case by blast
@@ -1577,12 +1577,12 @@ proof -
 
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>)" then
 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>" by (simp add: may_be_static_eval_pool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>" by (simp add: static_eval_pool.simps) then
 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: may_be_static_eval_state.simps) 
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: static_eval_state.simps) 
   with `\<rho> x = Some \<omega>`
 
-  show "{|\<omega>|} \<subseteq> \<V> x" by (simp add: may_be_static_eval_env.simps)
+  show "{|\<omega>|} \<subseteq> \<V> x" by (simp add: static_eval_env.simps)
 qed
 
 theorem trace_pool_always_value_not_bound_sound : "
@@ -1600,14 +1600,14 @@ proof -
     H4: "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
 
   from H2 H3
-  have H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: may_be_static_eval_preserved_under_concur_step_star)
+  have H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: static_eval_preserved_under_concur_step_star)
 
   from H1 H4 H5
   show "{|\<omega>|} \<subseteq> \<V> x" using trace_pool_snapshot_value_not_bound_sound by auto
 qed
 
 
-lemma may_be_static_eval_to_pool: "
+lemma static_eval_to_pool: "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
@@ -1616,15 +1616,15 @@ lemma may_be_static_eval_to_pool: "
 proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e"
 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty" by (simp add: may_be_static_eval_value_may_be_static_eval_env.Intro)
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []" by (simp add: may_be_static_eval_stack.Empty)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty" by (simp add: static_eval_value_static_eval_env.Intro)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []" by (simp add: static_eval_stack.Empty)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e e` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; empty; []\<rangle>" by (simp add: may_be_static_eval_state.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; empty; []\<rangle>" by (simp add: static_eval_state.intros)
 
   have "[[] \<mapsto> \<langle>e; empty; []\<rangle>] [] = Some (\<langle>e; empty; []\<rangle>)" by simp
   with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; empty; []\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: may_be_static_eval_pool.intros)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: static_eval_pool.intros)
 qed
 
 
@@ -1643,7 +1643,7 @@ proof -
     H4: "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
 
   from H2 have 
-    H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: may_be_static_eval_to_pool)
+    H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: static_eval_to_pool)
 
   from H1 H3 H4 H5
   show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_value_not_bound_sound by blast

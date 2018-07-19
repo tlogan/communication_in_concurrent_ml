@@ -18,64 +18,64 @@ type_synonym abstract_path = "step_label list"
 
 inductive static_flow_set :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> (var \<Rightarrow> node_label \<Rightarrow> bool) \<Rightarrow> exp \<Rightarrow> bool"  where
   Result: "
-    static_flow_set V F may_be_recv_site (RESULT x)
+    static_flow_set V F static_recv_site (RESULT x)
   " |
   Let_Unit: "
     \<lbrakk>
       {(NLet x , ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = \<lparr>\<rparr> in e)
+    static_flow_set V F static_recv_site (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Chan: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = CHAN \<lparr>\<rparr> in e)
+    static_flow_set V F static_recv_site (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
+    static_flow_set V F static_recv_site (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = RECV EVT x\<^sub>c in e)
+    static_flow_set V F static_recv_site (LET x = RECV EVT x\<^sub>c in e)
   " |
   Let_Pair: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
+    static_flow_set V F static_recv_site (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
   " |
   Let_Left: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = LEFT x\<^sub>p in e)
+    static_flow_set V F static_recv_site (LET x = LEFT x\<^sub>p in e)
   " |
   Let_Right: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = RIGHT x\<^sub>p in e)
+    static_flow_set V F static_recv_site (LET x = RIGHT x\<^sub>p in e)
   " |
   Let_Abs: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F may_be_recv_site e\<^sub>b;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e\<^sub>b;
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
+    static_flow_set V F static_recv_site (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
   " |
   Let_Spawn: "
     \<lbrakk>
@@ -83,10 +83,10 @@ inductive static_flow_set :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> 
         (NLet x, ENext, nodeLabel e),
         (NLet x, ESpawn, nodeLabel e\<^sub>c)
       } \<subseteq> F;
-      static_flow_set V F may_be_recv_site e\<^sub>c;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e\<^sub>c;
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = SPAWN e\<^sub>c in e)
+    static_flow_set V F static_recv_site (LET x = SPAWN e\<^sub>c in e)
   " |
   Let_Sync: "
     \<lbrakk>
@@ -94,26 +94,26 @@ inductive static_flow_set :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> 
       (\<forall> xSC xM xC y.
         {^Send_Evt xSC xM} \<subseteq> V xSE \<longrightarrow>
         {^Chan xC} \<subseteq> V xSC \<longrightarrow>
-        may_be_recv_site xC (NLet y) \<longrightarrow>
+        static_recv_site xC (NLet y) \<longrightarrow>
         {(NLet x, ESend xSE, NLet y)} \<subseteq> F
       );
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = SYNC xSE in e)
+    static_flow_set V F static_recv_site (LET x = SYNC xSE in e)
   " |
   Let_Fst: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = FST x\<^sub>p in e)
+    static_flow_set V F static_recv_site (LET x = FST x\<^sub>p in e)
   " |
   Let_Snd: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = SND x\<^sub>p in e)
+    static_flow_set V F static_recv_site (LET x = SND x\<^sub>p in e)
   " |
   Let_Case: "
     \<lbrakk>
@@ -123,11 +123,11 @@ inductive static_flow_set :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> 
         (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn x, nodeLabel e),
         (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn x, nodeLabel e)
       } \<subseteq> F;
-      static_flow_set V F may_be_recv_site e\<^sub>l;
-      static_flow_set V F may_be_recv_site e\<^sub>r;
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e\<^sub>l;
+      static_flow_set V F static_recv_site e\<^sub>r;
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
+    static_flow_set V F static_recv_site (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
   " |
   Let_App: "
     \<lbrakk>
@@ -136,76 +136,76 @@ inductive static_flow_set :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> 
           (NLet x, ECall, nodeLabel e\<^sub>b),
           (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn x, nodeLabel e)
         } \<subseteq> F);
-      static_flow_set V F may_be_recv_site e
+      static_flow_set V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F may_be_recv_site (LET x = APP f x\<^sub>a in e)
+    static_flow_set V F static_recv_site (LET x = APP f x\<^sub>a in e)
   "
 
 inductive 
-  may_be_built_on_abstract_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"
+  static_built_on_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"
 where
   Chan: "
     \<lbrakk>
       ^Chan x\<^sub>c \<in> V x 
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Send_Evt: "
     \<lbrakk>
       ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> V x;
-      may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>s\<^sub>c \<or> may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>m 
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>s\<^sub>c \<or> static_built_on_chan V Ln x\<^sub>c x\<^sub>m 
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Recv_Evt: "
     \<lbrakk>
       ^Recv_Evt x\<^sub>r\<^sub>c \<in> V x;
-      may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>r\<^sub>c
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>r\<^sub>c
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Pair: "
     \<lbrakk>
       ^(Pair x\<^sub>1 x\<^sub>2) \<in> V x;
-      may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>1 \<or> may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>2
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>1 \<or> static_built_on_chan V Ln x\<^sub>c x\<^sub>2
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Left: "
     \<lbrakk>
       ^(Left x\<^sub>a) \<in> V x;
-      may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>a
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>a
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Right: "
     \<lbrakk>
       ^(Right x\<^sub>a) \<in> V x;
-      may_be_built_on_abstract_chan V Ln x\<^sub>c x\<^sub>a
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>a
     \<rbrakk> \<Longrightarrow> 
-    may_be_built_on_abstract_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " |
   Abs: "
     ^Abs f x\<^sub>p e\<^sub>b \<in> V x \<Longrightarrow> 
     \<not> Set.is_empty (Ln (nodeLabel e\<^sub>b) - {x\<^sub>p}) \<Longrightarrow>
-    may_be_built_on_abstract_chan V Ln x\<^sub>c x
+    static_built_on_chan V Ln x\<^sub>c x
   " 
 (*
   |
 
   Result: "
-    may_be_built_on_abstract_chan V Ln x\<^sub>c x \<Longrightarrow>
-    may_be_built_on_abstract_chan_exp V x\<^sub>c (RESULT x)
+    static_built_on_chan V Ln x\<^sub>c x \<Longrightarrow>
+    static_built_on_chan_exp V x\<^sub>c (RESULT x)
   " |
   Let: "
-    may_be_built_on_abstract_chan V Ln x\<^sub>c x \<or> 
-    may_be_built_on_abstract_chan_exp V x\<^sub>c e \<Longrightarrow>
-    may_be_built_on_abstract_chan_exp V x\<^sub>c (LET x = b in e)
+    static_built_on_chan V Ln x\<^sub>c x \<or> 
+    static_built_on_chan_exp V x\<^sub>c e \<Longrightarrow>
+    static_built_on_chan_exp V x\<^sub>c (LET x = b in e)
   "
 *)
 
 fun chan_set :: "abstract_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> var set" where
-  "chan_set V Ln x\<^sub>c x = (if (may_be_built_on_abstract_chan V Ln x\<^sub>c x) then {x} else {})"
+  "chan_set V Ln x\<^sub>c x = (if (static_built_on_chan V Ln x\<^sub>c x) then {x} else {})"
 
 
 inductive static_chan_liveness :: "abstract_env \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
@@ -336,19 +336,19 @@ inductive static_chan_liveness :: "abstract_env \<Rightarrow> node_map \<Rightar
 
 
 
-inductive may_be_abstract_path :: "flow_set \<Rightarrow> node_label \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive static_traceable :: "flow_set \<Rightarrow> node_label \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
-    may_be_abstract_path F end []
+    static_traceable F end []
   " |
   Edge: "
     (start, edge, end) \<in> F \<Longrightarrow>
-    may_be_abstract_path F end [(start, edge)]
+    static_traceable F end [(start, edge)]
   " |
   Step: "
-    may_be_abstract_path F end ((middle, edge') # post) \<Longrightarrow>
+    static_traceable F end ((middle, edge') # post) \<Longrightarrow>
     (start, edge, middle) \<in> F \<Longrightarrow>
     path = [(start, edge), (middle, edge')] @ post \<Longrightarrow>
-    may_be_abstract_path F end path
+    static_traceable F end path
   "
 
 inductive abstract_balanced :: "abstract_path \<Rightarrow> bool" where
@@ -380,68 +380,68 @@ inductive static_unbalanced :: "abstract_path \<Rightarrow> bool" where
   "
 
 
-inductive may_be_static_live_flow :: "flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> flow_label \<Rightarrow> bool"  where
+inductive static_live_flow :: "flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> flow_label \<Rightarrow> bool"  where
   Next: "
     (l, ENext, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Lx l) \<Longrightarrow>
     \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    may_be_static_live_flow F Ln Lx (l, ENext, l')
+    static_live_flow F Ln Lx (l, ENext, l')
   " |
   Spawn: "
     (l, ESpawn, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Lx l) \<Longrightarrow>
     \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    may_be_static_live_flow F Ln Lx (l, ESpawn, l')
+    static_live_flow F Ln Lx (l, ESpawn, l')
   " |
   Call_Live_Outer: "
     (l, ECall, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Lx l) \<Longrightarrow>
-    may_be_static_live_flow F Ln Lx (l, ECall, l')
+    static_live_flow F Ln Lx (l, ECall, l')
   " |
   Call_Live_Inner: "
     (l, ECall, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    may_be_static_live_flow F Ln Lx (l, ECall, l')
+    static_live_flow F Ln Lx (l, ECall, l')
   " |
   Return: "
     (l, EReturn x, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    may_be_static_live_flow F Ln Lx (l, EReturn x, l')
+    static_live_flow F Ln Lx (l, EReturn x, l')
   " |
   Send: "
     ((NLet xSend), ESend xE, (NLet xRecv)) \<in> F \<Longrightarrow>
     {xE} \<subseteq> (Ln (NLet xSend)) \<Longrightarrow>
-    may_be_static_live_flow F Ln Lx ((NLet xSend), ESend xE, (NLet xRecv))
+    static_live_flow F Ln Lx ((NLet xSend), ESend xE, (NLet xRecv))
   "
 
-inductive may_be_static_live_path :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive static_live_path :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
-    may_be_static_live_path V F Ln Lx start isEnd []
+    static_live_path V F Ln Lx start isEnd []
   " |
   Edge: "
     isEnd end \<Longrightarrow>
-    may_be_static_live_flow F Ln Lx (start, edge, end) \<Longrightarrow>
-    may_be_static_live_path V F Ln Lx start isEnd [(start, edge)]
+    static_live_flow F Ln Lx (start, edge, end) \<Longrightarrow>
+    static_live_path V F Ln Lx start isEnd [(start, edge)]
   " |
   Step: "
-    may_be_static_live_path V F Ln Lx middle isEnd ((middle, edge') # path) \<Longrightarrow>
-    may_be_static_live_flow F Ln Lx (start, edge, middle) \<Longrightarrow>
-    may_be_static_live_path V F Ln Lx start isEnd ((start, edge) # (middle, edge') # path)
+    static_live_path V F Ln Lx middle isEnd ((middle, edge') # path) \<Longrightarrow>
+    static_live_flow F Ln Lx (start, edge, middle) \<Longrightarrow>
+    static_live_path V F Ln Lx start isEnd ((start, edge) # (middle, edge') # path)
   " |
 
   Pre_Return: "
-    may_be_static_live_path V F Ln Lx (NResult y) isEnd ((NResult y, EReturn x) # post) \<Longrightarrow>
-    may_be_abstract_path  F (NResult y) pre \<Longrightarrow>
+    static_live_path V F Ln Lx (NResult y) isEnd ((NResult y, EReturn x) # post) \<Longrightarrow>
+    static_traceable  F (NResult y) pre \<Longrightarrow>
     \<not> abstract_balanced (pre @ [(NResult y, EReturn x)]) \<Longrightarrow>
     \<not> Set.is_empty (Lx (NLet x)) \<Longrightarrow>
     path = pre @ (NResult y, EReturn x) # post \<Longrightarrow>
-    may_be_static_live_path V F Ln Lx start isEnd path
+    static_live_path V F Ln Lx start isEnd path
   "
 
 
 
-inductive may_be_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
+inductive static_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
   Prefix1: "
     prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>
     \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
@@ -463,10 +463,10 @@ inductive may_be_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Right
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>2
   "
 
-lemma may_be_inclusive_commut: "
+lemma static_inclusive_commut: "
   path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>2 \<asymp> path\<^sub>1
 "
- apply (erule may_be_inclusive.cases; auto)
+ apply (erule static_inclusive.cases; auto)
   apply (simp add: Prefix2)
   apply (simp add: Prefix1)
   apply (simp add: Spawn2)
@@ -476,20 +476,20 @@ lemma may_be_inclusive_commut: "
 done
 
 
-lemma may_be_inclusive_preserved_under_unordered_extension: "
+lemma static_inclusive_preserved_under_unordered_extension: "
   \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l] \<asymp> path\<^sub>2
 "
- apply (erule may_be_inclusive.cases; auto)
+ apply (erule static_inclusive.cases; auto)
   apply (simp add: Spawn1)
   apply (simp add: Spawn2)
   apply (simp add: Send1)
   apply (simp add: Send2)
 done
 
-lemma may_be_inclusive_preserved_under_unordered_double_extension: "
+lemma static_inclusive_preserved_under_unordered_double_extension: "
   path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 @ [l1] \<asymp> path\<^sub>2 @ [l2]
 "
-by (metis may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
+by (metis static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
 
 inductive singular :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   equal: "
@@ -514,34 +514,34 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
 
 inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
+    every_two (static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC)) singular \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+    static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
 inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_path V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+    static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
 inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+    static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
 inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_path V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+    static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
     static_fan_in V e xC 
   "
 
@@ -850,7 +850,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       next
         assume L3H1: "\<not> prefix path1x path2"
         show "path1 \<asymp> path2"
-          by (metis H13 L2H3 L3H1 Prefix2 may_be_inclusive_preserved_under_unordered_extension prefix_prefix)
+          by (metis H13 L2H3 L3H1 Prefix2 static_inclusive_preserved_under_unordered_extension prefix_prefix)
       qed
     qed
 
@@ -873,7 +873,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       next
         assume L3H1: "\<not> prefix path2x path1"
         show "path1 \<asymp> path2"
-          by (metis H16 L2H3 L3H1 Prefix1 may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_prefix)
+          by (metis H16 L2H3 L3H1 Prefix1 static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_prefix)
       qed
     next
       assume L2H1: "\<not> leaf E \<pi>2x"
@@ -1026,11 +1026,11 @@ lemma isnt_path_sound: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-  static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+  static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
-    may_be_static_live_path V F Ln Lx (NLet xC) isEnd path
+    static_live_path V F Ln Lx (NLet xC) isEnd path
 "
 sorry
 
@@ -1040,10 +1040,10 @@ lemma node_not_send_path_sound: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-  static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+  static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
-    may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC) pathSync
+    static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in node_not_send_site_sound; auto?)
@@ -1058,9 +1058,9 @@ done
 
 
 theorem one_shot_sound': "
-  every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
+  every_two (static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC)) singular \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-  static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+  static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
@@ -1093,9 +1093,9 @@ TO DO LATER:
 *)
 
 theorem noncompetitive_send_to_ordered_send: "
-  every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+  every_two (static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
   static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-  static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+  static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
@@ -1120,8 +1120,8 @@ theorem fan_out_sound: "
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two (may_be_static_live_path V F Ln Lx (NLet xC) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
-   static_flow_set V F (may_be_static_recv_node_label V e) e \<Longrightarrow>
+   every_two (static_live_path V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+   static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
    every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered

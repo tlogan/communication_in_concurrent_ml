@@ -138,24 +138,24 @@ inductive flows_passable :: "abstract_env \<Rightarrow> (node_label * edge_label
 
 
 
-inductive may_be_path :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive static_traceable :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
-    may_be_path V F start isEnd []
+    static_traceable V F start isEnd []
   " |
   Edge: "
     isEnd end \<Longrightarrow>
     {(start, edge, end)} \<subseteq> F \<Longrightarrow>
-    may_be_path V F start isEnd [(start, edge)]
+    static_traceable V F start isEnd [(start, edge)]
   " |
   Step: "
-    may_be_path V F middle isEnd ((middle, edge') # path) \<Longrightarrow>
+    static_traceable V F middle isEnd ((middle, edge') # path) \<Longrightarrow>
     {(start, edge, middle)} \<subseteq> F \<Longrightarrow>
-    may_be_path V F start isEnd ((start, edge) # (middle, edge') # path)
+    static_traceable V F start isEnd ((start, edge) # (middle, edge') # path)
   "
 
 
-inductive may_be_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
+inductive static_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
   Prefix1: "
     prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>
     \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
@@ -171,10 +171,10 @@ inductive may_be_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Right
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>2
   "
 
-lemma may_be_inclusive_commut: "
+lemma static_inclusive_commut: "
   path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>2 \<asymp> path\<^sub>1
 "
- apply (erule may_be_inclusive.cases; auto)
+ apply (erule static_inclusive.cases; auto)
   apply (simp add: Prefix2)
   apply (simp add: Prefix1)
   apply (simp add: Spawn2)
@@ -182,18 +182,18 @@ lemma may_be_inclusive_commut: "
 done
 
 
-lemma may_be_inclusive_preserved_under_unordered_extension: "
+lemma static_inclusive_preserved_under_unordered_extension: "
   \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l] \<asymp> path\<^sub>2
 "
- apply (erule may_be_inclusive.cases; auto)
+ apply (erule static_inclusive.cases; auto)
   apply (simp add: Spawn1)
   apply (simp add: Spawn2)
 done
 
-lemma may_be_inclusive_preserved_under_unordered_double_extension: "
+lemma static_inclusive_preserved_under_unordered_double_extension: "
   path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 @ [l1] \<asymp> path\<^sub>2 @ [l2]
 "
-by (metis may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
+by (metis static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
 
 
 inductive singular :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
@@ -218,29 +218,29 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
 
 inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
+    every_two (static_traceable V F (top_node_label e) (static_send_node_label V e xC)) singular \<Longrightarrow>
     flows_passable V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
 inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_traceable V F (top_node_label e) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_traceable V F (top_node_label e) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     flows_passable V F e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
 inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_traceable V F (top_node_label e) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
     flows_passable V F e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
 inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_traceable V F (top_node_label e) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
     flows_passable V F e \<Longrightarrow>
     static_fan_in V e xC 
   "
@@ -576,13 +576,13 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
           by (metis H12 H13 H14 H15 H16 H17 H6 H7 L3H1 L3H3 append1_eq_conv equality_abstract_to_concrete equality_contcrete_to_abstract spawn_point_preserved_under_congruent_paths)
 
         have L3H5: "path1x @ [n1] \<asymp> path1x @ [n2]"
-          using L3H4 may_be_inclusive.intros(3) may_be_inclusive.intros(4) paths_equal_implies_paths_inclusive by blast
+          using L3H4 static_inclusive.intros(3) static_inclusive.intros(4) paths_equal_implies_paths_inclusive by blast
         show "path1 \<asymp> path2"
           using H13 H16 L3H1 L3H5 by auto
       next
         assume L3H1: "path1x \<noteq> path2x"
         show "path1 \<asymp> path2"
-          using H13 H16 L2H6 L2H7 L2H8 L3H1 may_be_inclusive_preserved_under_unordered_double_extension strict_prefixI by blast
+          using H13 H16 L2H6 L2H7 L2H8 L3H1 static_inclusive_preserved_under_unordered_double_extension strict_prefixI by blast
       qed
     next
       assume L2H1: "\<not> leaf E \<pi>2x"
@@ -596,7 +596,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       have L2H9: "\<not> strict_prefix path1x path2"
         using H14 H7 L2H8 strict_prefix_abstract_to_concrete by blast
       show "path1 \<asymp> path2"
-        by (metis H13 L2H3 L2H9 Prefix2 may_be_inclusive_preserved_under_unordered_extension prefix_prefix strict_prefix_def)
+        by (metis H13 L2H3 L2H9 Prefix2 static_inclusive_preserved_under_unordered_extension prefix_prefix strict_prefix_def)
     qed
 
   next
@@ -616,7 +616,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       have L2H9: "\<not> strict_prefix path2x path1"
         using H17 H6 L2H8 strict_prefix_abstract_to_concrete by auto
       show "path1 \<asymp> path2"
-        by (metis H16 L2H3 L2H9 Prefix1 may_be_inclusive_commut may_be_inclusive_preserved_under_unordered_extension prefix_order.dual_order.not_eq_order_implies_strict prefix_prefix)
+        by (metis H16 L2H3 L2H9 Prefix1 static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_order.dual_order.not_eq_order_implies_strict prefix_prefix)
     next
       assume L2H1: "\<not> leaf E \<pi>2x"
       have L2H2: "E \<pi>2 = Some \<sigma>2"
@@ -838,7 +838,7 @@ lemma flows_passable_pool_preserved_star: "
 "
 sorry
 
-lemma flows_passable_pool_implies_may_be_path: "
+lemma flows_passable_pool_implies_static_traceable: "
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -846,7 +846,7 @@ lemma flows_passable_pool_implies_may_be_path: "
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond \<pi> path \<and>
-    may_be_path V F (top_node_label e) isEnd path
+    static_traceable V F (top_node_label e) isEnd path
 "
 sorry
 
@@ -881,9 +881,9 @@ lemma path_not_traceable_sound: "
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond \<pi> path \<and>
-    may_be_path V F (top_node_label e) isEnd path
+    static_traceable V F (top_node_label e) isEnd path
 "
-by (metis lift_flows_passable_to_pool flows_passable_pool_implies_may_be_path flows_passable_pool_preserved_star)
+by (metis lift_flows_passable_to_pool flows_passable_pool_implies_static_traceable flows_passable_pool_preserved_star)
 
 
 
@@ -894,7 +894,7 @@ lemma send_path_not_traceable_sound: "
   flows_passable V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond \<pi>Sync pathSync) \<and> 
-    may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC) pathSync
+    static_traceable V F (top_node_label e) (static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in node_not_send_site_sound; auto?)
@@ -908,7 +908,7 @@ lemma recv_path_not_traceable_sound: "
   flows_passable V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond \<pi>Sync pathSync) \<and> 
-    may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC) pathSync
+    static_traceable V F (top_node_label e) (static_recv_node_label V e xC) pathSync
 "
  apply (unfold is_recv_path.simps; auto)
  apply (frule_tac x\<^sub>r\<^sub>c = xrc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in node_not_recv_site_sound; auto?)
@@ -920,7 +920,7 @@ done
 
 
 theorem one_shot_sound': "
-  every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) singular \<Longrightarrow>
+  every_two (static_traceable V F (top_node_label e) (static_send_node_label V e xC)) singular \<Longrightarrow>
   flows_passable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
@@ -950,7 +950,7 @@ done
 
 
 theorem noncompetitive_send_to_ordered_send: "
-  every_two (may_be_path V F (top_node_label e) (may_be_static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+  every_two (static_traceable V F (top_node_label e) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
   flows_passable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
@@ -975,7 +975,7 @@ theorem fan_out_sound: "
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two (may_be_path V F (top_node_label e) (may_be_static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+   every_two (static_traceable V F (top_node_label e) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
    flows_passable V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
