@@ -1220,65 +1220,65 @@ structure OneShotToOneChan : CHAN = struct
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   inductive
-    flows_passable ::
+    static_connectable ::
       abstract_env %$\Rightarrow$%
       (node_label * edge_label * node_label) set %$\Rightarrow$%
       exp %$\Rightarrow$% bool  where
     Rslt:
-      flows_passable V F (Rslt x) |
+      static_connectable V F (Rslt x) |
     let_Unit:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F e  %$\Longrightarrow$%
-      flows_passable V F (Let x Unt e) |
+      static_connectable V F e  %$\Longrightarrow$%
+      static_connectable V F (Let x Unt e) |
     let_Chan:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x MkChn e) |
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x MkChn e) |
     let_Send_Evt:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x = (SendEvt xc xm) e) |
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x = (SendEvt xc xm) e) |
     let_Recv_Evt:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x = (RecvEvt xc) in e) |
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x = (RecvEvt xc) in e) |
     let_Pair:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x (Pair x1 x2) e) |
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x (Pair x1 x2) e) |
     let_Left:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x (Lft xp) e) |
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x (Lft xp) e) |
     let_Right:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x (Rht xp) e)" |
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x (Rht xp) e)" |
     let_Abs:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F eb %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x (Abs f xp eb) e) |
+      static_connectable V F eb %$\Longrightarrow$%
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x (Abs f xp eb) e) |
     let_Spawn:
       {
         (NLet x, ENext, top_node_label e),
         (NLet x, ESpawn, top_node_label ec)}
         %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F ec %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x (Spwn ec)  e) |
+      static_connectable V F ec %$\Longrightarrow$%
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x (Spwn ec)  e) |
     let_Sync:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x (Sync xSE) e) |
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x (Sync xSE) e) |
     let_Fst:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x (Fst xp) e) |
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x (Fst xp) e) |
     let_Snd:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x (Snd xp) e) |
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x (Snd xp) e) |
     let_Case:
       {
         (NLet x, ECall, top_node_label el),
@@ -1286,10 +1286,10 @@ structure OneShotToOneChan : CHAN = struct
         (NRslt (rslt_var el), ERtn, top_node_label e),
         (NRslt (rslt_var er), ERtn, top_node_label e)}
         %$\subseteq$% F %$\Longrightarrow$%
-      flows_passable V F el %$\Longrightarrow$%
-      flows_passable V F er %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable V F (Let x (Case xs xl el xr er) e) |
+      static_connectable V F el %$\Longrightarrow$%
+      static_connectable V F er %$\Longrightarrow$%
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable V F (Let x (Case xs xl el xr er) e) |
     let_App:
       %$\forall$% fp xp eb .
         APrim (Abs fp xp eb) %$\in$% V f %$\longrightarrow$%
@@ -1297,8 +1297,8 @@ structure OneShotToOneChan : CHAN = struct
           (NLet x, ECall, top_node_label eb),
           (NRslt (rslt_var eb), ERtn, top_node_label e)}
           %$\subseteq$% F %$\Longrightarrow$%
-        flows_passable V F e %$\Longrightarrow$%
-        flows_passable V F (Let x (App f xa) e)
+        static_connectable V F e %$\Longrightarrow$%
+        static_connectable V F (Let x (App f xa) e)
 
   \end{lstlisting}
 
@@ -1369,7 +1369,7 @@ structure OneShotToOneChan : CHAN = struct
         (static_traceable V F (top_node_label e)
           (static_static_send_node_label V e xC))
         singular %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
+      static_connectable V F e %$\Longrightarrow$%
       static_one_shot V e xC 
 
     inductive
@@ -1385,7 +1385,7 @@ structure OneShotToOneChan : CHAN = struct
           (static_traceable V F
             (top_node_label e) (static_static_recv_node_label V e xC))
           noncompetitive %$\Longrightarrow$%
-        flows_passable V F e %$\Longrightarrow$%
+        static_connectable V F e %$\Longrightarrow$%
         static_one_to_one V e xC 
 
   inductive
@@ -1397,7 +1397,7 @@ structure OneShotToOneChan : CHAN = struct
         (static_traceable V F
           (top_node_label e) (static_static_send_node_label V e xC))
         noncompetitive %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
+      static_connectable V F e %$\Longrightarrow$%
       static_fan_out V e xC 
 
   inductive
@@ -1406,7 +1406,7 @@ structure OneShotToOneChan : CHAN = struct
       var %$\Rightarrow$% bool where
     Sync:
       every_two (static_traceable V F (top_node_label e) (static_static_recv_node_label V e xC)) noncompetitive %$\Longrightarrow$%
-      flows_passable V F e %$\Longrightarrow$%
+      static_connectable V F e %$\Longrightarrow$%
       static_fan_in V e xC
     \end{lstlisting}
 
@@ -1430,7 +1430,7 @@ structure OneShotToOneChan : CHAN = struct
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-  lemma abstract_paths_of_same_run_inclusive: "
+  lemma not_static_inclusive_sound: "
     star concur_step
       ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
       (trpl', ys') %$\Longrightarrow$% 
@@ -1461,70 +1461,70 @@ structure OneShotToOneChan : CHAN = struct
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   inductive 
-    flows_passable_env ::
+    static_connectable_env ::
       abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% env %$\Rightarrow$% bool and
-    flows_passable_val ::
+    static_connectable_val ::
       abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% val %$\Rightarrow$% bool where
     Intro:
       %$\forall$% x v .
         env x = Some v %$\longrightarrow$%
-        {rslt_var v} %$\subseteq$% V x %$\land$% flows_passable_val V F v %$\Longrightarrow$%
-      flows_passable_env V F env |
+        {rslt_var v} %$\subseteq$% V x %$\land$% static_connectable_val V F v %$\Longrightarrow$%
+      static_connectable_env V F env |
 
     Unit:
-      flows_passable_val V F VUnit |
+      static_connectable_val V F VUnit |
     Chan:
-      flows_passable_val V F (VChan c) |
+      static_connectable_val V F (VChan c) |
     Send_Evt:
-      flows_passable_env V F env %$\Longrightarrow$%
-      flows_passable_val V F (VClsr (Send_Evt _ _) env) |
+      static_connectable_env V F env %$\Longrightarrow$%
+      static_connectable_val V F (VClsr (Send_Evt _ _) env) |
     Recv_Evt:
-      flows_passable_env V F env %$\Longrightarrow$%
-      flows_passable_val V F (VClsr (Recv_Evt _) env) |
+      static_connectable_env V F env %$\Longrightarrow$%
+      static_connectable_val V F (VClsr (Recv_Evt _) env) |
     Left:
-      flows_passable_env V F env %$\Longrightarrow$%
-      flows_passable_val V F (VClsr (Left _) env) |
+      static_connectable_env V F env %$\Longrightarrow$%
+      static_connectable_val V F (VClsr (Left _) env) |
     Right:
-      flows_passable_env V F env %$\Longrightarrow$%
-      flows_passable_val V F (VClsr (Right _) env) |
+      static_connectable_env V F env %$\Longrightarrow$%
+      static_connectable_val V F (VClsr (Right _) env) |
     Abs:
-      flows_passable V F e %$\Longrightarrow$% 
-      flows_passable_env V F  env %$\Longrightarrow$%
-      flows_passable_val V F (VClsr (Abs f x e) env) |
+      static_connectable V F e %$\Longrightarrow$% 
+      static_connectable_env V F  env %$\Longrightarrow$%
+      static_connectable_val V F (VClsr (Abs f x e) env) |
   Pair:
-    flows_passable_env V F env %$\Longrightarrow$%
-    flows_passable_val V F (VClsr (Pair _ _) env) 
+    static_connectable_env V F env %$\Longrightarrow$%
+    static_connectable_val V F (VClsr (Pair _ _) env) 
 
 
 
-  inductive flows_passable_stack ::
+  inductive static_connectable_stack ::
     abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% cont list %$\Rightarrow$% bool where
     Empty:
-      flows_passable_stack V F [] |
+      static_connectable_stack V F [] |
     Nonempty:
-      flows_passable V F e %$\Longrightarrow$%
-      flows_passable_env V F env %$\Longrightarrow$%
-      flows_passable_stack V F k %$\Longrightarrow$% 
-      flows_passable_stack V F ((Ctn x e env) # k))
+      static_connectable V F e %$\Longrightarrow$%
+      static_connectable_env V F env %$\Longrightarrow$%
+      static_connectable_stack V F k %$\Longrightarrow$% 
+      static_connectable_stack V F ((Ctn x e env) # k))
 
   inductive
-    flows_passable_pool ::
+    static_connectable_pool ::
       abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$%
       trace_pool %$\Rightarrow$% bool  where
     Intro:
       %$\forall$% pi e env k .
         E pi = Some (Stt e env k) %$\longrightarrow$% 
-        flows_passable V F e %$\land$%
-        flows_passable_env V F env %$\land$%
-        flows_passable_stack V F k %$\Longrightarrow$% 
-      flows_passable_pool V F E
+        static_connectable V F e %$\land$%
+        static_connectable_env V F env %$\land$%
+        static_connectable_stack V F k %$\Longrightarrow$% 
+      static_connectable_pool V F E
 
   \end{lstlisting}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 
-  lemma flows_passable_pool_preserved_star: "
-    flows_passable_pool V F
+  lemma static_connectable_pool_preserved_star: "
+    static_connectable_pool V F
       ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])]) %$\Longrightarrow$%
     static_eval (V, C) e %$\Longrightarrow$%
     trpl' pi = Some (Stt (Let x b en) envk) %$\Longrightarrow$%
@@ -1532,17 +1532,17 @@ structure OneShotToOneChan : CHAN = struct
       ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
       (trpl', ys') %$\Longrightarrow$%
     isEnd (NLet x) %$\Longrightarrow$%
-    flows_passable_pool V F trpl' "
+    static_connectable_pool V F trpl' "
   proof sketch
   qed
 
-lemma flows_passable_pool_implies_static_traceable: "
+lemma static_connectable_pool_implies_static_traceable: "
   trpl' pi = Some (Stt (Let x b in en) env k) %$\Longrightarrow$%
   concur_step
     ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
     (trpl', ys') %$\Longrightarrow$% 
   static_eval (V, C) e %$\Longrightarrow$%
-  flows_passable_pool V F trpl' %$\Longrightarrow$%
+  static_connectable_pool V F trpl' %$\Longrightarrow$%
   isEnd (NLet x) %$\Longrightarrow$%
   %$\exists$% path . 
     paths_correspond pi path %$\land$%
@@ -1560,7 +1560,7 @@ lemma flows_passable_pool_implies_static_traceable: "
     ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
     (trpl', ys') %$\Longrightarrow$% 
   static_eval (V, C) e %$\Longrightarrow$%
-  flows_passable V F e %$\Longrightarrow$%
+  static_connectable V F e %$\Longrightarrow$%
   isEnd (NLet x) %$\Longrightarrow$%
   %$\exists$% path . 
     paths_correspond pi path %$\land$%

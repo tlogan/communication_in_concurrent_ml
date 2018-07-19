@@ -268,7 +268,7 @@ inductive paths_correspond :: "control_path \<Rightarrow> abstract_path \<Righta
     paths_correspond (\<pi> @ [LReturn x]) (path @ [(NResult x, EReturn)])
   " 
 
-lemma abstract_paths_of_same_run_inclusive_base: "
+lemma not_static_inclusive_sound: "
   E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
@@ -311,10 +311,6 @@ proof -
   qed 
 qed
 
-lemma paths_equal_implies_paths_inclusive: "
-  path1 = path2 \<Longrightarrow> path1 \<asymp> path2 
-"
-by (simp add: Prefix2)
 
 lemma paths_cong_preserved_under_reduction: "
   paths_correspond (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
@@ -472,7 +468,7 @@ apply (erule paths_correspond.cases; auto)
 using equality_contcrete_to_abstract paths_correspond.Spawn apply blast
 done
 
-lemma abstract_paths_of_same_run_inclusive_step: "
+lemma not_static_inclusive_step: "
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
   E \<pi>2 \<noteq> None \<longrightarrow>
@@ -576,7 +572,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
           by (metis H12 H13 H14 H15 H16 H17 H6 H7 L3H1 L3H3 append1_eq_conv equality_abstract_to_concrete equality_contcrete_to_abstract spawn_point_preserved_under_congruent_paths)
 
         have L3H5: "path1x @ [n1] \<asymp> path1x @ [n2]"
-          using L3H4 static_inclusive.intros(3) static_inclusive.intros(4) paths_equal_implies_paths_inclusive by blast
+          using L3H4 static_inclusive.intros(3) static_inclusive.intros(4) Prefix1 by blast
         show "path1 \<asymp> path2"
           using H13 H16 L3H1 L3H5 by auto
       next
@@ -629,7 +625,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 
 qed
 
-lemma abstract_paths_of_same_run_inclusive: "
+lemma not_static_inclusive: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
@@ -666,7 +662,7 @@ proof -
   proof induction
     case (refl z)
     then show ?case
-      using abstract_paths_of_same_run_inclusive_base by blast
+      using not_static_inclusive_sound by blast
   next
     case (step x y z)
 
@@ -695,7 +691,7 @@ proof -
 
       have 
         "path1 \<asymp> path2"
-        using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 abstract_paths_of_same_run_inclusive_step step.hyps(1) step.hyps(2) by blast
+        using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 not_static_inclusive_step step.hyps(1) step.hyps(2) by blast
     }
     then show ?case by blast
   qed
@@ -704,20 +700,6 @@ proof -
     "path1 \<asymp> path2" by blast
 qed
 
-
-lemma abstract_paths_equal_or_exclusive_implies_dynamic_paths_equal: "
-pathSync = pathSynca \<or> (\<not> pathSynca \<asymp> pathSync) \<Longrightarrow> 
-
-([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
-\<E>' \<pi>\<^sub>1 \<noteq> None \<Longrightarrow> 
-\<E>' \<pi>\<^sub>2 \<noteq> None \<Longrightarrow> 
-
-paths_correspond \<pi>\<^sub>1 pathSync \<Longrightarrow>
-paths_correspond \<pi>\<^sub>2 pathSynca \<Longrightarrow>
-
-\<pi>\<^sub>1 = \<pi>\<^sub>2
-"
-using abstract_paths_of_same_run_inclusive equality_abstract_to_concrete by blast
 
 lemma is_send_path_implies_nonempty_pool: "
   is_send_path \<E> (Ch \<pi>C xC) \<pi> \<Longrightarrow> 
@@ -919,7 +901,7 @@ done
 
 
 
-theorem one_shot_sound': "
+theorem static_one_shot_sound': "
   every_two (static_traceable V F (top_node_label e) (static_send_node_label V e xC)) singular \<Longrightarrow>
   flows_passable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -932,10 +914,10 @@ theorem one_shot_sound': "
  apply (frule_tac \<pi>Sync = \<pi>2 in send_path_not_traceable_sound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (metis abstract_paths_of_same_run_inclusive equality_abstract_to_concrete is_send_path_implies_nonempty_pool)
+ apply (metis not_static_inclusive equality_abstract_to_concrete is_send_path_implies_nonempty_pool)
 done
 
-theorem one_shot_sound: "
+theorem static_one_shot_sound: "
   \<lbrakk>
     static_one_shot V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
@@ -945,7 +927,7 @@ theorem one_shot_sound: "
 "
  apply (erule static_one_shot.cases; auto)
  apply (unfold one_shot.simps)
- apply (simp add: one_shot_sound')
+ apply (simp add: static_one_shot_sound')
 done
 
 
@@ -957,11 +939,11 @@ theorem noncompetitive_send_to_ordered_send: "
   every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
-  using send_path_not_traceable_sound abstract_paths_of_same_run_inclusive 
+  using send_path_not_traceable_sound not_static_inclusive 
   apply (meson is_send_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
-theorem fan_out_sound: "
+theorem static_fan_out_sound: "
   \<lbrakk>
     static_fan_out V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
@@ -982,12 +964,12 @@ lemma noncompetitive_recv_to_ordered_recv: "
    every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
-  using recv_path_not_traceable_sound abstract_paths_of_same_run_inclusive 
+  using recv_path_not_traceable_sound not_static_inclusive 
  apply (meson is_recv_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
 
-theorem fan_in_sound: "
+theorem static_fan_in_sound: "
   \<lbrakk>
     static_fan_in V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
@@ -1001,7 +983,7 @@ theorem fan_in_sound: "
 done
 
 
-theorem one_to_one_sound: "
+theorem static_one_to_one_sound: "
   \<lbrakk>
     static_one_to_one V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
