@@ -155,20 +155,20 @@ inductive static_traceable :: "abstract_env \<Rightarrow> flow_set \<Rightarrow>
   "
 
 
-inductive static_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" (infix "\<asymp>" 55) where
+inductive static_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Prefix1: "
     prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>
-    \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
+    static_inclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   Prefix2: "
     prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<Longrightarrow>
-    \<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2
+    static_inclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   Spawn1: "
-    \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ENext) # \<pi>\<^sub>2
+    static_inclusive (\<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>1) (\<pi> @ (NLet x, ENext) # \<pi>\<^sub>2)
   " |
   Spawn2: "
-    \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>2
+    static_inclusive (\<pi> @ (NLet x, ENext) # \<pi>\<^sub>1) (\<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>2)
   "
 
 
@@ -178,7 +178,7 @@ inductive singular :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> b
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   exclusive: "
-    \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow> 
+    \<not> (static_inclusive \<pi>\<^sub>1 \<pi>\<^sub>2) \<Longrightarrow> 
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
@@ -188,7 +188,7 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   exclusive: "
-    \<not> (\<pi>\<^sub>1 \<asymp> \<pi>\<^sub>2) \<Longrightarrow> 
+    \<not> (static_inclusive \<pi>\<^sub>1 \<pi>\<^sub>2) \<Longrightarrow>
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
@@ -227,7 +227,7 @@ locale communication_sound_A =
 
 
 lemma static_inclusive_commut: "
-  path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>2 \<asymp> path\<^sub>1
+  static_inclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> static_inclusive path\<^sub>2 path\<^sub>1
 "
  apply (erule static_inclusive.cases; auto)
   apply (simp add: Prefix2)
@@ -238,7 +238,8 @@ done
 
 
 lemma static_inclusive_preserved_under_unordered_extension: "
-  \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l] \<asymp> path\<^sub>2
+  \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> 
+  static_inclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> static_inclusive (path\<^sub>1 @ [l]) path\<^sub>2
 "
  apply (erule static_inclusive.cases; auto)
   apply (simp add: Spawn1)
@@ -246,7 +247,8 @@ lemma static_inclusive_preserved_under_unordered_extension: "
 done
 
 lemma static_inclusive_preserved_under_unordered_double_extension: "
-  path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 @ [l1] \<asymp> path\<^sub>2 @ [l2]
+  static_inclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> 
+  \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> static_inclusive (path\<^sub>1 @ [l1]) (path\<^sub>2 @ [l2])
 "
 by (metis static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
 
@@ -279,7 +281,7 @@ lemma not_static_inclusive_sound: "
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
   paths_correspond \<pi>1 path1 \<Longrightarrow>
   paths_correspond \<pi>2 path2 \<Longrightarrow>
-  path1 \<asymp> path2
+  static_inclusive path1 path2
 "
 proof -
   assume 
@@ -290,7 +292,7 @@ proof -
     H5: "paths_correspond \<pi>2 path2"
   
   from H4
-  show "path1 \<asymp> path2"
+  show "static_inclusive path1 path2"
   proof cases
 
     case Empty
@@ -479,14 +481,14 @@ lemma not_static_inclusive_step: "
   E \<pi>2 \<noteq> None \<longrightarrow>
   paths_correspond \<pi>1 path1 \<longrightarrow> 
   paths_correspond \<pi>2 path2 \<longrightarrow> 
-  path1 \<asymp> path2 \<Longrightarrow>
+  static_inclusive path1 path2 \<Longrightarrow>
 star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
 (E, H) \<rightarrow> (E', H') \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
 paths_correspond \<pi>1 path1 \<Longrightarrow> 
 paths_correspond \<pi>2 path2 \<Longrightarrow>
-path1 \<asymp> path2 
+static_inclusive path1 path2 
 "
 proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (simp add: Prefix2)))
   assume 
@@ -495,7 +497,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       (\<forall>\<pi>2. (\<exists>y. E \<pi>2 = Some y) \<longrightarrow>
       (\<forall>path1. paths_correspond \<pi>1 path1 \<longrightarrow>
       (\<forall>path2. paths_correspond \<pi>2 path2 \<longrightarrow> 
-        path1 \<asymp> path2)))" and
+        static_inclusive path1 path2)))" and
     H2: "star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H)" and
     H3: "(E, H) \<rightarrow> (E', H')" and
     H4: "\<exists>y. E' \<pi>1 = Some y" and
@@ -535,12 +537,12 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
   have H23: "paths_correspond (\<pi>2x @ [l2]) (path2x @ [n2])"
     by (simp add: H15 H16 H7)
 
-  show "path1 \<asymp> path2"
+  show "static_inclusive path1 path2"
   proof cases
     assume L1H1: "leaf E \<pi>1x"
     obtain \<sigma>1x where
       L1H2: "E \<pi>1x = Some \<sigma>1x" using L1H1 leaf.simps by auto
-    show "path1 \<asymp> path2"
+    show "static_inclusive path1 path2"
     proof cases
       assume L2H1: "leaf E \<pi>2x"
       obtain \<sigma>2x where
@@ -557,10 +559,10 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       have L2H7: "\<not> strict_prefix path2x path1x"
         using H14 H17 L2H5 strict_prefix_abstract_to_concrete by blast
 
-      have L2H8: "path1x \<asymp> path2x"
+      have L2H8: "static_inclusive path1x path2x"
         using H1 H14 H17 L1H2 L2H2 by blast
 
-      show "path1 \<asymp> path2"
+      show "static_inclusive path1 path2"
       proof cases
         assume L3H1: "path1x = path2x"
 
@@ -576,27 +578,27 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
           (\<exists> x . n1 = (NLet x, ESpawn ) \<and> n2 = (NLet x, ENext))" 
           by (metis H12 H13 H14 H15 H16 H17 H6 H7 L3H1 L3H3 append1_eq_conv equality_abstract_to_concrete equality_contcrete_to_abstract spawn_point_preserved_under_congruent_paths)
 
-        have L3H5: "path1x @ [n1] \<asymp> path1x @ [n2]"
+        have L3H5: "static_inclusive (path1x @ [n1]) (path1x @ [n2])"
           using L3H4 static_inclusive.intros(3) static_inclusive.intros(4) Prefix1 by blast
-        show "path1 \<asymp> path2"
+        show "static_inclusive path1 path2"
           using H13 H16 L3H1 L3H5 by auto
       next
         assume L3H1: "path1x \<noteq> path2x"
-        show "path1 \<asymp> path2"
+        show "static_inclusive path1 path2"
           using H13 H16 L2H6 L2H7 L2H8 L3H1 static_inclusive_preserved_under_unordered_double_extension strict_prefixI by blast
       qed
     next
       assume L2H1: "\<not> leaf E \<pi>2x"
       have L2H2: "E \<pi>2 = Some \<sigma>2"
         using H11 H15 H3 L2H1 path_state_preserved_for_non_leaf by blast
-      have L2H3: "path1x \<asymp> path2"
+      have L2H3: "static_inclusive path1x path2"
         using H1 H14 H7 L1H2 L2H2 by blast
 
       have L2H8: "\<not> strict_prefix \<pi>1x \<pi>2"
         by (metis L1H1 L2H2 leaf.cases option.distinct(1))
       have L2H9: "\<not> strict_prefix path1x path2"
         using H14 H7 L2H8 strict_prefix_abstract_to_concrete by blast
-      show "path1 \<asymp> path2"
+      show "static_inclusive path1 path2"
         by (metis H13 L2H3 L2H9 Prefix2 static_inclusive_preserved_under_unordered_extension prefix_prefix strict_prefix_def)
     qed
 
@@ -604,25 +606,25 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
     assume L1H1: "\<not> leaf E \<pi>1x"
       have L1H2: "E \<pi>1 = Some \<sigma>1"
         using H10 H12 H3 L1H1 path_state_preserved_for_non_leaf by blast
-    show "path1 \<asymp> path2"
+    show "static_inclusive path1 path2"
 
     proof cases
       assume L2H1: "leaf E \<pi>2x"
       obtain \<sigma>2x where
         L2H2: "E \<pi>2x = Some \<sigma>2x" using L2H1 leaf.simps by auto
-      have L2H3: "path1 \<asymp> path2x"
+      have L2H3: "static_inclusive path1 path2x"
         using H1 H17 H6 L1H2 L2H2 by blast
       have L2H8: "\<not> strict_prefix \<pi>2x \<pi>1"
         by (metis L1H2 L2H1 leaf.cases option.distinct(1))
       have L2H9: "\<not> strict_prefix path2x path1"
         using H17 H6 L2H8 strict_prefix_abstract_to_concrete by auto
-      show "path1 \<asymp> path2"
+      show "static_inclusive path1 path2"
         by (metis H16 L2H3 L2H9 Prefix1 static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_order.dual_order.not_eq_order_implies_strict prefix_prefix)
     next
       assume L2H1: "\<not> leaf E \<pi>2x"
       have L2H2: "E \<pi>2 = Some \<sigma>2"
         using H11 H15 H3 L2H1 path_state_preserved_for_non_leaf by blast
-      show "path1 \<asymp> path2"
+      show "static_inclusive path1 path2"
         using H1 H6 H7 L1H2 L2H2 by blast
     qed
 
@@ -636,7 +638,7 @@ lemma not_static_inclusive: "
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
   paths_correspond \<pi>1 path1 \<Longrightarrow>
   paths_correspond \<pi>2 path2 \<Longrightarrow>
-  path1 \<asymp> path2
+  static_inclusive path1 path2
 "
 proof -
   assume
@@ -662,7 +664,7 @@ proof -
       \<E>' \<pi>2 \<noteq> None \<longrightarrow>
       paths_correspond \<pi>1 path1 \<longrightarrow>
       paths_correspond \<pi>2 path2 \<longrightarrow>
-      path1 \<asymp> path2
+      static_inclusive path1 path2
     "
   proof induction
     case (refl z)
@@ -691,18 +693,18 @@ proof -
           \<E> \<pi>2 \<noteq> None \<longrightarrow>
           paths_correspond \<pi>1 path1 \<longrightarrow> 
           paths_correspond \<pi>2 path2 \<longrightarrow> 
-          path1 \<asymp> path2 "
+          static_inclusive path1 path2 "
         by blast
 
       have 
-        "path1 \<asymp> path2"
+        "static_inclusive path1 path2"
         using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 not_static_inclusive_step step.hyps(1) step.hyps(2) by blast
     }
     then show ?case by blast
   qed
 
   from H2 H3 H4 H5 H6(1) H6(2) H8 show 
-    "path1 \<asymp> path2" by blast
+    "static_inclusive path1 path2" by blast
 qed
 
 
