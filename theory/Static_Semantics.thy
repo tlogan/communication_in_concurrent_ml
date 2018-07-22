@@ -142,12 +142,57 @@ inductive static_eval :: "abstract_env \<times> abstract_env \<Rightarrow> exp \
     (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e
   "
 
-
 fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) where
   "|VUnit| = ^\<lparr>\<rparr>" |
   "|VChan (Ch \<pi> x)| = ^Chan x" |
   "|VClosure p \<rho>| = ^p"
 
+
+
+
+inductive is_super_exp :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
+  Refl : "
+    is_super_exp e e
+  " | 
+  Let_Spawn_Child: "
+    is_super_exp e\<^sub>c e \<Longrightarrow>
+    is_super_exp (LET x = SPAWN e\<^sub>c in e\<^sub>n) e
+  " |
+  Let_Case_Left: "
+    is_super_exp e\<^sub>l e \<Longrightarrow>
+    is_super_exp (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n) e
+  " |
+  Let_Case_Right: "
+    is_super_exp e\<^sub>r e \<Longrightarrow>
+    is_super_exp (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n) e
+  " |
+  Let_Abs_Body: "
+    is_super_exp e\<^sub>b e \<Longrightarrow>
+    is_super_exp (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n) e
+  " | 
+  Let: "
+    is_super_exp e\<^sub>n e \<Longrightarrow>
+    is_super_exp (LET x = b in e\<^sub>n) e
+  "
+
+
+locale semantics_sound =
+
+  assumes
+    exp_always_value_not_bound_sound : "
+      \<rho>' x = Some \<omega> \<Longrightarrow>
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+      ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+      \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
+      {|\<omega>|} \<subseteq> \<V> x" and
+
+    exp_always_exp_not_reachable_sound: "
+      ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+      \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+      is_super_exp e\<^sub>0 e'" 
+
+begin
+end
 
 
 inductive 
@@ -1628,52 +1673,6 @@ proof -
 qed
 
 
-theorem exp_always_value_not_bound_sound : "
-  \<rho>' x = Some \<omega> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) \<rightarrow>* (\<E>', H') \<Longrightarrow>
-  \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
-  {|\<omega>|} \<subseteq> \<V> x
-"
-proof -
-  assume 
-    H1: "\<rho>' x = Some \<omega>" and
-    H2: "(\<V>, \<C>) \<Turnstile>\<^sub>e e" and 
-    H3: "([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) \<rightarrow>* (\<E>', H')" and 
-    H4: "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
-
-  from H2 have 
-    H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: static_eval_to_pool)
-
-  from H1 H3 H4 H5
-  show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_value_not_bound_sound by blast
-qed
-
-
-inductive is_super_exp :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
-  Refl : "
-    is_super_exp e e
-  " | 
-  Let_Spawn_Child: "
-    is_super_exp e\<^sub>c e \<Longrightarrow>
-    is_super_exp (LET x = SPAWN e\<^sub>c in e\<^sub>n) e
-  " |
-  Let_Case_Left: "
-    is_super_exp e\<^sub>l e \<Longrightarrow>
-    is_super_exp (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n) e
-  " |
-  Let_Case_Right: "
-    is_super_exp e\<^sub>r e \<Longrightarrow>
-    is_super_exp (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e\<^sub>n) e
-  " |
-  Let_Abs_Body: "
-    is_super_exp e\<^sub>b e \<Longrightarrow>
-    is_super_exp (LET x = FN f x\<^sub>p . e\<^sub>b in e\<^sub>n) e
-  " | 
-  Let: "
-    is_super_exp e\<^sub>n e \<Longrightarrow>
-    is_super_exp (LET x = b in e\<^sub>n) e
-  "
 
 inductive is_super_exp_left :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
   Refl : "
@@ -2221,13 +2220,33 @@ proof -
     "is_super_exp_over_state e\<^sub>0 \<sigma>'" by blast
 qed
 
-lemma exp_always_exp_not_reachable_sound: "
-  ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
-  \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
-  is_super_exp e\<^sub>0 e'
-" 
-using is_super_exp_left_implies_is_super_exp is_super_exp_over_state.simps state_always_exp_not_reachable_sound by fastforce
+interpretation semantics_sound
+proof 
+  fix \<rho>' x \<omega> \<V> \<C> e H \<E>' H' \<pi> e' \<kappa>'
+  assume 
+    H1: "\<rho>' x = Some \<omega>" and
+    H2: "(\<V>, \<C>) \<Turnstile>\<^sub>e e" and 
+    H3: "([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) \<rightarrow>* (\<E>', H')" and 
+    H4: "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
 
+  from H2 have 
+    H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: static_eval_to_pool)
+
+  from H1 H3 H4 H5
+  show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_value_not_bound_sound by blast
+next
+  fix e\<^sub>0 \<E>' H' \<pi>' e' \<rho>' \<kappa>'
+  assume 
+    L1H1: "([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')" and
+    L1H2: "\<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
+
+   show "is_super_exp e\<^sub>0 e'" 
+    using L1H1 L1H2 
+      is_super_exp_left_implies_is_super_exp 
+      is_super_exp_over_state.simps 
+      state_always_exp_not_reachable_sound
+    by fastforce
+qed
 
 
 end

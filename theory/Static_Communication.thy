@@ -1,8 +1,43 @@
-theory Static_Communication_Analysis
+theory Static_Communication
   imports Main Syntax 
     Dynamic_Semantics Static_Semantics
-    Dynamic_Communication_Analysis
+    Dynamic_Communication
 begin
+
+locale communication_sound =
+  fixes 
+    static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" and
+    static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" and 
+    static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" and
+    static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool"
+
+  assumes 
+    static_one_shot_sound: "
+      static_one_shot V e xC \<Longrightarrow>
+      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+      ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+      one_shot \<E>' (Ch \<pi> xC)" and
+
+    static_fan_out_sound: "
+      static_fan_out V e xC \<Longrightarrow>
+      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+      ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+      fan_out \<E>' (Ch \<pi> xC)" and
+
+    static_fan_in_sound: "
+      static_fan_in V e xC \<Longrightarrow>
+      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+      ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+      fan_in \<E>' (Ch \<pi> xC)" and
+
+    static_one_to_one_sound: "
+      static_one_to_one V e xC \<Longrightarrow>
+      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+      ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+      one_to_one \<E>' (Ch \<pi> xC)"
+
+begin
+end
 
 datatype node_label = NLet var | NResult var
 

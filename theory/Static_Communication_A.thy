@@ -1,9 +1,9 @@
-theory Static_Communication_Analysis_A
+theory Static_Communication_A
   imports Main Syntax 
     Dynamic_Semantics 
     Static_Semantics
-    Dynamic_Communication_Analysis
-    Static_Communication_Analysis
+    Dynamic_Communication
+    Static_Communication
 begin
 
 datatype edge_label = ENext | ESpawn | ECall | EReturn
@@ -17,7 +17,7 @@ type_synonym step_label = "(node_label \<times> edge_label)"
 type_synonym abstract_path = "step_label list"
 
 
-inductive static_traversable :: "abstract_env \<Rightarrow> (node_label * edge_label * node_label) set \<Rightarrow> exp \<Rightarrow> bool"  where
+inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> exp \<Rightarrow> bool"  where
   Result: "
     static_traversable V F (RESULT x)
   " |
@@ -171,30 +171,6 @@ inductive static_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Right
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>2
   "
 
-lemma static_inclusive_commut: "
-  path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>2 \<asymp> path\<^sub>1
-"
- apply (erule static_inclusive.cases; auto)
-  apply (simp add: Prefix2)
-  apply (simp add: Prefix1)
-  apply (simp add: Spawn2)
-  apply (simp add: Spawn1)
-done
-
-
-lemma static_inclusive_preserved_under_unordered_extension: "
-  \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l] \<asymp> path\<^sub>2
-"
- apply (erule static_inclusive.cases; auto)
-  apply (simp add: Spawn1)
-  apply (simp add: Spawn2)
-done
-
-lemma static_inclusive_preserved_under_unordered_double_extension: "
-  path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 @ [l1] \<asymp> path\<^sub>2 @ [l2]
-"
-by (metis static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
-
 
 inductive singular :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   equal: "
@@ -244,6 +220,39 @@ inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<R
     static_traversable V F e \<Longrightarrow>
     static_fan_in V e xC 
   "
+
+locale communication_sound_A = 
+  Static_Communication.communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one
+begin 
+end
+
+
+
+
+
+lemma static_inclusive_commut: "
+  path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>2 \<asymp> path\<^sub>1
+"
+ apply (erule static_inclusive.cases; auto)
+  apply (simp add: Prefix2)
+  apply (simp add: Prefix1)
+  apply (simp add: Spawn2)
+  apply (simp add: Spawn1)
+done
+
+
+lemma static_inclusive_preserved_under_unordered_extension: "
+  \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l] \<asymp> path\<^sub>2
+"
+ apply (erule static_inclusive.cases; auto)
+  apply (simp add: Spawn1)
+  apply (simp add: Spawn2)
+done
+
+lemma static_inclusive_preserved_under_unordered_double_extension: "
+  path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 @ [l1] \<asymp> path\<^sub>2 @ [l2]
+"
+by (metis static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
 
 
 
@@ -788,7 +797,7 @@ where
   " 
 
 inductive static_traversable_stack :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> cont list \<Rightarrow> bool" where
-  Empty: "traversable_stack V F []" |
+  Empty: "static_traversable_stack V F []" |
   Nonempty: "
     \<lbrakk> 
       static_traversable V F e;
@@ -915,18 +924,6 @@ theorem static_one_shot_sound': "
  apply (metis not_static_inclusive equality_abstract_to_concrete is_send_path_implies_nonempty_pool)
 done
 
-theorem static_one_shot_sound: "
-  \<lbrakk>
-    static_one_shot V e xC;
-    (V, C) \<Turnstile>\<^sub>e e;
-    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')
-  \<rbrakk> \<Longrightarrow>
-  one_shot \<E>' (Ch \<pi> xC)
-"
- apply (erule static_one_shot.cases; auto)
- apply (unfold one_shot.simps)
- apply (simp add: static_one_shot_sound')
-done
 
 
 theorem noncompetitive_send_to_ordered_send: "
@@ -941,18 +938,6 @@ apply (simp add: every_two.simps noncompetitive.simps; auto?)
   apply (meson is_send_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
-theorem static_fan_out_sound: "
-  \<lbrakk>
-    static_fan_out V e xC;
-    (V, C) \<Turnstile>\<^sub>e e;
-    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')
-  \<rbrakk> \<Longrightarrow>
-  fan_out \<E>' (Ch \<pi> xC)
-"
- apply (erule static_fan_out.cases; auto)
- apply (unfold fan_out.simps)
- apply (metis noncompetitive_send_to_ordered_send)
-done
 
 lemma noncompetitive_recv_to_ordered_recv: "
    every_two (static_traceable V F (top_node_label e) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
@@ -967,31 +952,27 @@ apply (simp add: every_two.simps noncompetitive.simps; auto?)
 done
 
 
-theorem static_fan_in_sound: "
-  \<lbrakk>
-    static_fan_in V e xC;
-    (V, C) \<Turnstile>\<^sub>e e;
-    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')
-  \<rbrakk> \<Longrightarrow>
-  fan_in \<E>' (Ch \<pi> xC)
-"
- apply (erule static_fan_in.cases; auto)
- apply (unfold fan_in.simps)
- apply (metis noncompetitive_recv_to_ordered_recv)
-done
-
-
-theorem static_one_to_one_sound: "
-  \<lbrakk>
-    static_one_to_one V e xC;
-    (V, C) \<Turnstile>\<^sub>e e;
-    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')
-  \<rbrakk> \<Longrightarrow>
-  one_to_one \<E>' (Ch \<pi> xC)
-"
- apply (erule static_one_to_one.cases; auto)
- apply (unfold one_to_one.simps)
- apply (simp add: fan_in.simps fan_out.simps noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
-done
+interpretation communication_sound_A
+proof -
+ show "communication_sound_A" 
+   apply (unfold_locales)
+  
+   apply (erule static_one_shot.cases; auto)
+   apply (unfold one_shot.simps)
+   apply (simp add: static_one_shot_sound')
+  
+   apply (erule static_fan_out.cases; auto)
+   apply (unfold fan_out.simps)
+   apply (metis noncompetitive_send_to_ordered_send)
+  
+   apply (erule static_fan_in.cases; auto)
+   apply (unfold fan_in.simps)
+   apply (metis noncompetitive_recv_to_ordered_recv)
+  
+   apply (erule static_one_to_one.cases; auto)
+   apply (unfold one_to_one.simps)
+   apply (simp add: fan_in.simps fan_out.simps noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
+  done
+qed
 
 end

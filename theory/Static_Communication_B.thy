@@ -1,8 +1,8 @@
-theory Static_Communication_Analysis_B
+theory Static_Communication_B
   imports Main Syntax 
     Dynamic_Semantics Static_Semantics
-    Dynamic_Communication_Analysis 
-    Static_Communication_Analysis 
+    Dynamic_Communication
+    Static_Communication
 begin
 
 datatype edge_label = ENext | ESpawn | ESend var | ECall | EReturn var
@@ -464,34 +464,6 @@ inductive static_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Right
     \<pi> @ (NLet x, ENext) # \<pi>\<^sub>1 \<asymp> \<pi> @ (NLet x, ESend xE) # \<pi>\<^sub>2
   "
 
-lemma static_inclusive_commut: "
-  path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>2 \<asymp> path\<^sub>1
-"
- apply (erule static_inclusive.cases; auto)
-  apply (simp add: Prefix2)
-  apply (simp add: Prefix1)
-  apply (simp add: Spawn2)
-  apply (simp add: Spawn1)
-  apply (simp add: Send2)
-  apply (simp add: Send1)
-done
-
-
-lemma static_inclusive_preserved_under_unordered_extension: "
-  \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l] \<asymp> path\<^sub>2
-"
- apply (erule static_inclusive.cases; auto)
-  apply (simp add: Spawn1)
-  apply (simp add: Spawn2)
-  apply (simp add: Send1)
-  apply (simp add: Send2)
-done
-
-lemma static_inclusive_preserved_under_unordered_double_extension: "
-  path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 @ [l1] \<asymp> path\<^sub>2 @ [l2]
-"
-by (metis static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
-
 inductive singular :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   equal: "
     \<pi>\<^sub>1 = \<pi>\<^sub>2 \<Longrightarrow> 
@@ -545,6 +517,40 @@ inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<R
     static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
     static_fan_in V e xC 
   "
+locale communication_sound_B = 
+  Static_Communication.communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one
+begin 
+end
+
+
+lemma static_inclusive_commut: "
+  path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>2 \<asymp> path\<^sub>1
+"
+ apply (erule static_inclusive.cases; auto)
+  apply (simp add: Prefix2)
+  apply (simp add: Prefix1)
+  apply (simp add: Spawn2)
+  apply (simp add: Spawn1)
+  apply (simp add: Send2)
+  apply (simp add: Send1)
+done
+
+
+lemma static_inclusive_preserved_under_unordered_extension: "
+  \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> path\<^sub>1 @ [l] \<asymp> path\<^sub>2
+"
+ apply (erule static_inclusive.cases; auto)
+  apply (simp add: Spawn1)
+  apply (simp add: Spawn2)
+  apply (simp add: Send1)
+  apply (simp add: Send2)
+done
+
+lemma static_inclusive_preserved_under_unordered_double_extension: "
+  path\<^sub>1 \<asymp> path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> path\<^sub>1 @ [l1] \<asymp> path\<^sub>2 @ [l2]
+"
+by (metis static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
+
 
 inductive 
   dynamic_built_on_chan_var :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> var \<Rightarrow> bool" and
@@ -1136,6 +1142,10 @@ theorem one_to_one_sound: "
  apply (metis fan_in_sound fan_out.intros noncompetitive_send_to_ordered_send static_fan_in.intros)
 done
 
+interpretation communication_sound_B
+proof -
+ show "communication_sound_B" sorry
+qed
 
 (*
 
