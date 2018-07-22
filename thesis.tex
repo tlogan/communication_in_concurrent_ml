@@ -898,6 +898,31 @@ structure OneShotToOneChan : CHAN = struct
     static_eval_exp (V, C) (Let x (App f xa) e)
 
   \end{lstlisting}
+
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+  inductive static_reachable :: exp %$\Rightarrow$% exp %$\Rightarrow$% bool where
+    Refl :
+      static_reachable e e | 
+    let_Spawn_Child
+      static_reachable ec e %$\Longrightarrow$%
+      static_reachable (Let x (Spwn ec) en) e |
+    let_Case_Left :
+      static_reachable el e %$\Longrightarrow$%
+      static_reachable (Let x (case xs xl el xr er) en) e |
+    let_Case_Right :
+      static_reachable er e %$\Longrightarrow$%
+      static_reachable (Let x (case xs xl el xr er) en) e |
+    let_Abs_Body : "
+      static_reachable eb e %$\Longrightarrow$%
+      static_reachable (Let x (Abs f xp eb) en) e | 
+    Let :
+      static_reachable en e %$\Longrightarrow$%
+      static_reachable (Let x b en) e
+  \end{lstlisting}
+
+
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 
@@ -907,6 +932,24 @@ structure OneShotToOneChan : CHAN = struct
     abstract VClsr p env = APrim p
 
   \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+locale semantics_sound =
+  assumes
+    exp_always_not_static_bound_sound : "
+      ρ' x = Some ω ⟹
+      (𝒱, 𝒞) ⊨⇩e e ⟹
+      ([[] ↦ ⟨e; empty; []⟩], H) →* (ℰ', H') ⟹
+      ℰ' π = Some (⟨e'; ρ'; κ'⟩) ⟹
+      {|ω|} ⊆ 𝒱 x" and
+
+    exp_always_exp_not_static_reachable_sound: "
+      ([[] ↦ ⟨e⇩0;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹
+      ℰ' π' = Some (⟨e';ρ';κ'⟩) ⟹
+      static_reachable e⇩0 e'"
+  \end{lstlisting}
+
+
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
   inductive 
@@ -999,7 +1042,7 @@ structure OneShotToOneChan : CHAN = struct
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  theorem trace_pool_snapshot_value_not_bound_sound : "
+  theorem trace_pool_snapshot_not_static_bound_sound : "
     env x = Some v %$\Longrightarrow$%
     trpl pi = Some (Stt e env k) %$\Longrightarrow$%
     static_eval_pool (V, C) trpl %$\Longrightarrow$%
@@ -1010,7 +1053,7 @@ structure OneShotToOneChan : CHAN = struct
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  theorem trace_pool_always_value_not_bound_sound : "
+  theorem trace_pool_always_not_static_bound_sound : "
     env' x = Some v %$\Longrightarrow$%
     static_eval_pool (V, C) trpl %$\Longrightarrow$% 
     star concur_step (trpl, ys) (trpl', ys') %$\Longrightarrow$%
@@ -1019,131 +1062,102 @@ structure OneShotToOneChan : CHAN = struct
   proof sketch
   qed
 
-  theorem exp_always_value_not_bound_sound : "
-    env' x = Some v %$\Longrightarrow$%
-    static_eval_exp (V, C) e %$\Longrightarrow$%
-    star concur_step
-      ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], ys)
-      (trpl', ys') %$\Longrightarrow$%
-    trpl' pi = Some (Stt e' env' k') %$\Longrightarrow$%
-    {abstract v} %$\subseteq$% V x"
-  proof sketch
-  qed
-
   \end{lstlisting}
 
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive is_super_exp :: exp %$\Rightarrow$% exp %$\Rightarrow$% bool where
-    Refl :
-      is_super_exp e e | 
-    let_Spawn_Child
-      is_super_exp ec e %$\Longrightarrow$%
-      is_super_exp (Let x (Spwn ec) en) e |
-    let_Case_Left :
-      is_super_exp el e %$\Longrightarrow$%
-      is_super_exp (Let x (case xs xl el xr er) en) e |
-    let_Case_Right :
-      is_super_exp er e %$\Longrightarrow$%
-      is_super_exp (Let x (case xs xl el xr er) en) e |
-    let_Abs_Body : "
-      is_super_exp eb e %$\Longrightarrow$%
-      is_super_exp (Let x (Abs f xp eb) en) e | 
-    Let :
-      is_super_exp en e %$\Longrightarrow$%
-      is_super_exp (Let x b en) e
 
   inductive
-    is_super_exp_left :: exp %$\Rightarrow$% exp %$\Rightarrow$% bool where
+    static_reachable_left :: exp %$\Rightarrow$% exp %$\Rightarrow$% bool where
     Refl :
-      is_super_exp_left e0 e0 | 
+      static_reachable_left e0 e0 | 
     let_Spawn_Child :
-      is_super_exp_left e0 (Let x (Spwn ec) en)%$\Longrightarrow$%
-      is_super_exp_left e0 ec |
+      static_reachable_left e0 (Let x (Spwn ec) en)%$\Longrightarrow$%
+      static_reachable_left e0 ec |
     let_Case_Left :
-      is_super_exp_left e0 (Let x (case xs xl el xr er) en) %$\Longrightarrow$%
-      is_super_exp_left e0 el |
+      static_reachable_left e0 (Let x (case xs xl el xr er) en) %$\Longrightarrow$%
+      static_reachable_left e0 el |
     let_Case_Right :
-      is_super_exp_left e0 (Let x (case xs xl el xr er) en) %$\Longrightarrow$%
-      is_super_exp_left e0 er |
+      static_reachable_left e0 (Let x (case xs xl el xr er) en) %$\Longrightarrow$%
+      static_reachable_left e0 er |
     let_Abs_Body :
-      is_super_exp_left e0 (Let x (Abs f xp eb) en) %$\Longrightarrow$%
-      is_super_exp_left e0 eb | 
+      static_reachable_left e0 (Let x (Abs f xp eb) en) %$\Longrightarrow$%
+      static_reachable_left e0 eb | 
     Let :
-      is_super_exp_left e0 (Let x b en) %$\Longrightarrow$%
-      is_super_exp_left e0 en
+      static_reachable_left e0 (Let x b en) %$\Longrightarrow$%
+      static_reachable_left e0 en
 
   inductive
-    is_super_exp_over_prim :: exp %$\Rightarrow$% prim %$\Rightarrow$% bool where
+    static_reachable_over_prim :: exp %$\Rightarrow$% prim %$\Rightarrow$% bool where
     SendEvt :
-      is_super_exp_over_prim e0 (SendEvt xC xM) |
+      static_reachable_over_prim e0 (SendEvt xC xM) |
     RecvEvt :
-      is_super_exp_over_prim e0 (RecvEvt xC) |
+      static_reachable_over_prim e0 (RecvEvt xC) |
     Pair :
-      is_super_exp_over_prim e0 (Pair x1 x2) |
+      static_reachable_over_prim e0 (Pair x1 x2) |
     Left :
-      is_super_exp_over_prim e0 (Left x) |
+      static_reachable_over_prim e0 (Left x) |
     Right :
-      is_super_exp_over_prim e0 (Right x) |
+      static_reachable_over_prim e0 (Right x) |
     Abs :
-      is_super_exp_left e0 eb %$\Longrightarrow$%
-      is_super_exp_over_prim e0 (Abs fp xp eb) 
+      static_reachable_left e0 eb %$\Longrightarrow$%
+      static_reachable_over_prim e0 (Abs fp xp eb) 
 
   inductive 
-    is_super_exp_over_env :: exp %$\Rightarrow$% env %$\Rightarrow$% bool and
-    is_super_exp_over_val :: exp %$\Rightarrow$% val %$\Rightarrow$% bool where
+    static_reachable_over_env :: exp %$\Rightarrow$% env %$\Rightarrow$% bool and
+    static_reachable_over_val :: exp %$\Rightarrow$% val %$\Rightarrow$% bool where
     VUnt :
-      is_super_exp_over_val e0 VUnt |
+      static_reachable_over_val e0 VUnt |
     VChn :
-      is_super_exp_over_val e0 (VChn c) |
+      static_reachable_over_val e0 (VChn c) |
     VClsr : "
-      is_super_exp_over_prim e0 p %$\Longrightarrow$%
-      is_super_exp_over_env e0 env' %$\Longrightarrow$%
-      is_super_exp_over_val e0 (VClsr p env') |
+      static_reachable_over_prim e0 p %$\Longrightarrow$%
+      static_reachable_over_env e0 env' %$\Longrightarrow$%
+      static_reachable_over_val e0 (VClsr p env') |
     intro : "
       %$\forall$% x v .
         env x = Some v %$\longrightarrow$%
-        is_super_exp_over_val e0 v %$\Longrightarrow$%
-      is_super_exp_over_env e0 env
+        static_reachable_over_val e0 v %$\Longrightarrow$%
+      static_reachable_over_env e0 env
 
   inductive
-    is_super_exp_over_stack ::
+    static_reachable_over_stack ::
       exp %$\Rightarrow$% cont list %$\Rightarrow$% bool where
     Empty :
-      is_super_exp_over_stack e0 [] |
+      static_reachable_over_stack e0 [] |
     Nonempty :
-      is_super_exp_left e0 ek %$\Longrightarrow$%
-      is_super_exp_over_env e0 envk %$\Longrightarrow$%
-      is_super_exp_over_stack e0 k %$\Longrightarrow$%
-      is_super_exp_over_stack e0 ((Ctn xk ek envk) # k)
+      static_reachable_left e0 ek %$\Longrightarrow$%
+      static_reachable_over_env e0 envk %$\Longrightarrow$%
+      static_reachable_over_stack e0 k %$\Longrightarrow$%
+      static_reachable_over_stack e0 ((Ctn xk ek envk) # k)
 
   inductive
-    is_super_exp_over_state ::
+    static_reachable_over_state ::
       exp %$\Rightarrow$% state %$\Rightarrow$% bool where
     intro :
-      is_super_exp_left e0 e %$\Longrightarrow$%
-      is_super_exp_over_env e0 env %$\Longrightarrow$%
-      is_super_exp_over_stack e0 k %$\Longrightarrow$%
-      is_super_exp_over_state e0 (Ctn e env k)
+      static_reachable_left e0 e %$\Longrightarrow$%
+      static_reachable_over_env e0 env %$\Longrightarrow$%
+      static_reachable_over_stack e0 k %$\Longrightarrow$%
+      static_reachable_over_state e0 (Ctn e env k)
 
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-  lemma is_super_exp_trans : "
-    is_super_exp ez ey %$\Longrightarrow$%
-    is_super_exp ey ex %$\Longrightarrow$%
-    is_super_exp ez ex"
+  lemma static_reachable_trans : "
+    static_reachable ez ey %$\Longrightarrow$%
+    static_reachable ey ex %$\Longrightarrow$%
+    static_reachable ez ex"
   proof sketch 
   qed
 
 
-  lemma is_super_exp_over_state_preserved : "
+  lemma static_reachable_over_state_preserved : "
     concur_step (trpl, ys) (trpl', ys') %$\Longrightarrow$%
     %$\forall$% pi st.
       trpl pi = Some st %$\longrightarrow$%
-      is_super_exp_over_state e0 st %$\Longrightarrow$%
+      static_reachable_over_state e0 st %$\Longrightarrow$%
     trpl' pi' = Some st' %$\Longrightarrow$%
-    is_super_exp_over_state e0 st'"
+    static_reachable_over_state e0 st'"
   proof sketch 
   qed
   \end{lstlisting}
@@ -1151,26 +1165,61 @@ structure OneShotToOneChan : CHAN = struct
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  lemma state_always_exp_not_reachable_sound : "
+  lemma state_always_exp_not_static_reachable_sound : "
     star concur_step (trpl0, ys0) (trpl', ys') %$\Longrightarrow$%
     trpl0 = [[] %$\mapsto$% (Stt e0 (%$\lambda$% _ . None) [])] %$\Longrightarrow$%
     trpl' pi' = Some st' %$\Longrightarrow$%
-    is_super_exp_over_state e0 st' "
-  proof sketch
-  qed
-
-  lemma exp_always_exp_not_reachable_sound : "
-    star concur_step
-    ([[] %$\mapsto$% (Stt e0 (%$\lambda$% _ . None) [])], {})
-      (trpl', ys') %$\Longrightarrow$%
-    trpl' pi' = Some (Stt e' env' k')) %$\Longrightarrow$%
-    is_super_exp e0 e' " 
+    static_reachable_over_state e0 st' "
   proof sketch
   qed
 
   \end{lstlisting}
 
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+    interpretation semantics_sound
+    proof sketch
+    qed
+  \end{lstlisting}
+
 \section{Static Communication}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+locale communication_sound =
+  fixes 
+    static_one_shot :: "abstract_env ⇒ exp ⇒ var ⇒ bool" and
+    static_fan_out :: "abstract_env ⇒ exp ⇒ var ⇒ bool" and 
+    static_fan_in :: "abstract_env ⇒ exp ⇒ var ⇒ bool" and
+    static_one_to_one :: "abstract_env ⇒ exp ⇒ var ⇒ bool"
+
+  assumes 
+    static_one_shot_sound: "
+      static_one_shot V e xC ⟹
+      (V, C) ⊨⇩e e ⟹
+      ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹
+      one_shot ℰ' (Ch π xC)" and
+
+    static_fan_out_sound: "
+      static_fan_out V e xC ⟹
+      (V, C) ⊨⇩e e ⟹
+      ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹
+      fan_out ℰ' (Ch π xC)" and
+
+    static_fan_in_sound: "
+      static_fan_in V e xC ⟹
+      (V, C) ⊨⇩e e ⟹
+      ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹
+      fan_in ℰ' (Ch π xC)" and
+
+    static_one_to_one_sound: "
+      static_one_to_one V e xC ⟹
+      (V, C) ⊨⇩e e ⟹
+      ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹
+      one_to_one ℰ' (Ch π xC)"
+  \end{lstlisting}
+
+
+
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   datatype node_label = NLet var | NRslt var
 
@@ -1189,7 +1238,7 @@ structure OneShotToOneChan : CHAN = struct
     intro:
       {AChn xC} %$\subseteq$% V xSC %$\Longrightarrow$%
       {APrim (SendEvt xSC xM)} %$\subseteq$% V xE %$\Longrightarrow$%
-      is_super_exp e (Let x (Sync xE) e') %$\Longrightarrow$%
+      static_reachable e (Let x (Sync xE) e') %$\Longrightarrow$%
       static_static_send_node_label V e xC (NLet x)
 
   inductive
@@ -1199,7 +1248,7 @@ structure OneShotToOneChan : CHAN = struct
     intro:
       {AChn xC} %$\subseteq$% V xRC %$\Longrightarrow$%
       {APrim (RecvEvt xRC)} %$\subseteq$% V xE %$\Longrightarrow$%
-      is_super_exp e (Let x (Sync xE) e') %$\Longrightarrow$%
+      static_reachable e (Let x (Sync xE) e') %$\Longrightarrow$%
       static_static_recv_node_label V e xC (NLet x)
 
   \end{lstlisting}
@@ -1408,6 +1457,12 @@ structure OneShotToOneChan : CHAN = struct
       every_two (static_traceable V F (top_node_label e) (static_static_recv_node_label V e xC)) noncompetitive %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_fan_in V e xC
+
+    \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+locale communication_sound_A = 
+  Static_Communication.communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one
     \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
@@ -1555,47 +1610,9 @@ lemma static_traversable_pool_implies_static_traceable: "
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  theorem one_shot_sound: "
-    static_one_shot V e xC %$\Longrightarrow$%
-    static_eval (V, C) e %$\Longrightarrow$%
-    concur_step
-      ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
-      (trpl', ys') %$\Longrightarrow$%
-    one_shot trpl' (Ch pi xC) " 
-  proof sketch
-  qed
 
-
-  theorem fan_out_sound: "
-    static_fan_out V e xC %$\Longrightarrow$%
-    static_eval (V, C) e %$\Longrightarrow$%
-    star concur_step
-      ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
-      (trpl', ys') %$\Longrightarrow$%
-    fan_out trpl' (Ch pi xC) " 
-  proof sketch
-  qed
-
-  theorem fan_in_sound: "
-    static_fan_in V e xC %$\Longrightarrow$%
-    static_eval (V, C) e %$\Longrightarrow$%
-    star concur_step
-      ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
-      (trpl', ys') %$\Longrightarrow$%
-    fan_in trpl' (Ch pi xC) "
-  proof sketch
-  qed
-
-  theorem one_to_one_sound: "
-    static_one_to_one V e xC %$\Longrightarrow$%
-    static_eval (V, C) e %$\Longrightarrow$%
-    star concur_step
-      ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
-      (trpl', ys') %$\Longrightarrow$%
-    one_to_one trpl' (Ch pi xC) "
-  proof sketch
-  qed
-
+  interpretation communication_sound_A
+    proof -
 
   \end{lstlisting}
 
@@ -2115,6 +2132,10 @@ inductive static_fan_in :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
   "
 
     
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+locale communication_sound_B = 
+  Static_Communication.communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one
+    \end{lstlisting}
   \end{lstlisting}
 
 
@@ -2318,16 +2339,9 @@ lemma send_not_static_traceable_sound: "
 
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-
-theorem one_shot_sound: "
-  ⟦
-    static_one_shot V e xC;
-    (V, C) ⊨⇩e e;
-    ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H')
-  ⟧ ⟹
-  one_shot ℰ' (Ch π xC)
-
+interpretation communication_sound_B
+proof sketch
+qed
   \end{lstlisting}
 
 

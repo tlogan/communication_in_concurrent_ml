@@ -36,8 +36,6 @@ locale communication_sound =
       ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
       one_to_one \<E>' (Ch \<pi> xC)"
 
-begin
-end
 
 datatype node_label = NLet var | NResult var
 
@@ -53,7 +51,7 @@ inductive static_send_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow
   intro: "
     {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
     {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
-    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
+    static_reachable e (LET x = SYNC xE in e') \<Longrightarrow>
     static_send_node_label V e xC (NLet x)
   "
 
@@ -61,7 +59,7 @@ inductive static_recv_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow
   intro: "
     {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
     {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
-    is_super_exp e (LET x = SYNC xE in e') \<Longrightarrow>
+    static_reachable e (LET x = SYNC xE in e') \<Longrightarrow>
     static_recv_node_label V e xC (NLet x)
   "
 
@@ -110,7 +108,7 @@ lemma always_send_evt_not_bound_sound: "
   \<rbrakk> \<Longrightarrow>
   {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> V x\<^sub>e
 "
-  apply (drule exp_always_value_not_bound_sound; assumption?; auto)
+  apply (drule exp_always_not_static_bound_sound; assumption?; auto)
 done
 
 lemma always_recv_evt_not_bound_sound: "
@@ -122,7 +120,7 @@ lemma always_recv_evt_not_bound_sound: "
   \<rbrakk> \<Longrightarrow>
   {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> V x\<^sub>e
 "
-  apply (drule exp_always_value_not_bound_sound; assumption?; auto)
+  apply (drule exp_always_not_static_bound_sound; assumption?; auto)
 done
 
 lemma always_send_chan_not_bound_sound: "
@@ -186,7 +184,7 @@ lemma node_not_send_site_sound: "
  apply (rule exI[of _ x\<^sub>e]; auto?)
  apply (blast dest: always_send_evt_not_bound_sound)
  apply (rule exI; auto?)
- apply (erule exp_always_exp_not_reachable_sound; auto)
+ apply (erule exp_always_exp_not_static_reachable_sound; auto)
 done
 
 lemma node_not_recv_site_sound: "
@@ -203,7 +201,7 @@ lemma node_not_recv_site_sound: "
  apply (rule exI[of _ x\<^sub>e]; auto?)
  apply (blast dest: always_recv_evt_not_bound_sound)
  apply (rule exI; auto?)
- apply (erule exp_always_exp_not_reachable_sound; auto)
+ apply (erule exp_always_exp_not_static_reachable_sound; auto)
 done
 
 end
