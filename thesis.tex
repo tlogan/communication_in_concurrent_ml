@@ -1220,65 +1220,65 @@ structure OneShotToOneChan : CHAN = struct
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   inductive
-    static_connectable ::
+    static_traversable ::
       abstract_env %$\Rightarrow$%
       (node_label * edge_label * node_label) set %$\Rightarrow$%
       exp %$\Rightarrow$% bool  where
     Rslt:
-      static_connectable V F (Rslt x) |
+      static_traversable V F (Rslt x) |
     let_Unit:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F e  %$\Longrightarrow$%
-      static_connectable V F (Let x Unt e) |
+      static_traversable V F e  %$\Longrightarrow$%
+      static_traversable V F (Let x Unt e) |
     let_Chan:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x MkChn e) |
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x MkChn e) |
     let_Send_Evt:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x = (SendEvt xc xm) e) |
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x = (SendEvt xc xm) e) |
     let_Recv_Evt:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x = (RecvEvt xc) in e) |
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x = (RecvEvt xc) in e) |
     let_Pair:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x (Pair x1 x2) e) |
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x (Pair x1 x2) e) |
     let_Left:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x (Lft xp) e) |
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x (Lft xp) e) |
     let_Right:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x (Rht xp) e)" |
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x (Rht xp) e)" |
     let_Abs:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F eb %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x (Abs f xp eb) e) |
+      static_traversable V F eb %$\Longrightarrow$%
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x (Abs f xp eb) e) |
     let_Spawn:
       {
         (NLet x, ENext, top_node_label e),
         (NLet x, ESpawn, top_node_label ec)}
         %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F ec %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x (Spwn ec)  e) |
+      static_traversable V F ec %$\Longrightarrow$%
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x (Spwn ec)  e) |
     let_Sync:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x (Sync xSE) e) |
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x (Sync xSE) e) |
     let_Fst:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x (Fst xp) e) |
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x (Fst xp) e) |
     let_Snd:
       {(NLet x, ENext, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x (Snd xp) e) |
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x (Snd xp) e) |
     let_Case:
       {
         (NLet x, ECall, top_node_label el),
@@ -1286,10 +1286,10 @@ structure OneShotToOneChan : CHAN = struct
         (NRslt (rslt_var el), ERtn, top_node_label e),
         (NRslt (rslt_var er), ERtn, top_node_label e)}
         %$\subseteq$% F %$\Longrightarrow$%
-      static_connectable V F el %$\Longrightarrow$%
-      static_connectable V F er %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable V F (Let x (Case xs xl el xr er) e) |
+      static_traversable V F el %$\Longrightarrow$%
+      static_traversable V F er %$\Longrightarrow$%
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable V F (Let x (Case xs xl el xr er) e) |
     let_App:
       %$\forall$% fp xp eb .
         APrim (Abs fp xp eb) %$\in$% V f %$\longrightarrow$%
@@ -1297,8 +1297,8 @@ structure OneShotToOneChan : CHAN = struct
           (NLet x, ECall, top_node_label eb),
           (NRslt (rslt_var eb), ERtn, top_node_label e)}
           %$\subseteq$% F %$\Longrightarrow$%
-        static_connectable V F e %$\Longrightarrow$%
-        static_connectable V F (Let x (App f xa) e)
+        static_traversable V F e %$\Longrightarrow$%
+        static_traversable V F (Let x (App f xa) e)
 
   \end{lstlisting}
 
@@ -1369,7 +1369,7 @@ structure OneShotToOneChan : CHAN = struct
         (static_traceable V F (top_node_label e)
           (static_static_send_node_label V e xC))
         singular %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
+      static_traversable V F e %$\Longrightarrow$%
       static_one_shot V e xC 
 
     inductive
@@ -1385,7 +1385,7 @@ structure OneShotToOneChan : CHAN = struct
           (static_traceable V F
             (top_node_label e) (static_static_recv_node_label V e xC))
           noncompetitive %$\Longrightarrow$%
-        static_connectable V F e %$\Longrightarrow$%
+        static_traversable V F e %$\Longrightarrow$%
         static_one_to_one V e xC 
 
   inductive
@@ -1397,7 +1397,7 @@ structure OneShotToOneChan : CHAN = struct
         (static_traceable V F
           (top_node_label e) (static_static_send_node_label V e xC))
         noncompetitive %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
+      static_traversable V F e %$\Longrightarrow$%
       static_fan_out V e xC 
 
   inductive
@@ -1406,7 +1406,7 @@ structure OneShotToOneChan : CHAN = struct
       var %$\Rightarrow$% bool where
     Sync:
       every_two (static_traceable V F (top_node_label e) (static_static_recv_node_label V e xC)) noncompetitive %$\Longrightarrow$%
-      static_connectable V F e %$\Longrightarrow$%
+      static_traversable V F e %$\Longrightarrow$%
       static_fan_in V e xC
     \end{lstlisting}
 
@@ -1436,95 +1436,78 @@ structure OneShotToOneChan : CHAN = struct
       (trpl', ys') %$\Longrightarrow$% 
     trpl' pi1 %$\neq$% None %$\Longrightarrow$% 
     trpl' pi2 %$\neq$% None %$\Longrightarrow$% 
-    paths_congruent pi1 path1 %$\Longrightarrow$%
-    paths_congruent pi2 path2 %$\Longrightarrow$%
-    static_inclusive path1 path2"
-
-  lemma equality_abstract_to_concrete: "
-    path1 = path2 %$\Longrightarrow$%
     paths_correspond pi1 path1 %$\Longrightarrow$%
     paths_correspond pi2 path2 %$\Longrightarrow$%
-    pi1 = pi2"
-
-  lemma abstract_paths_equal_or_exclusive_implies_dynamic_paths_equal: "
-    pathSync = pathSynca %$\lor$% %$\not$% (static_inclusive pathSynca pathSync) %$\Longrightarrow$% 
-    paths_correspond pi1 pathSync %$\Longrightarrow$%
-    paths_correspond pi2 pathSynca %$\Longrightarrow$%
-
-    star concur_step ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {}) (trpl', ys') %$\Longrightarrow$%
-    trpl' pi1 %$\neq$% None %$\Longrightarrow$% 
-    trpl' pi2 %$\neq$% None %$\Longrightarrow$% 
-    pi1 = pi2"
-
+    static_inclusive path1 path2"
 
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   inductive 
-    static_connectable_env ::
+    static_traversable_env ::
       abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% env %$\Rightarrow$% bool and
-    static_connectable_val ::
+    static_traversable_val ::
       abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% val %$\Rightarrow$% bool where
     Intro:
       %$\forall$% x v .
         env x = Some v %$\longrightarrow$%
-        {rslt_var v} %$\subseteq$% V x %$\land$% static_connectable_val V F v %$\Longrightarrow$%
-      static_connectable_env V F env |
+        {rslt_var v} %$\subseteq$% V x %$\land$% static_traversable_val V F v %$\Longrightarrow$%
+      static_traversable_env V F env |
 
     Unit:
-      static_connectable_val V F VUnit |
+      static_traversable_val V F VUnit |
     Chan:
-      static_connectable_val V F (VChan c) |
+      static_traversable_val V F (VChan c) |
     Send_Evt:
-      static_connectable_env V F env %$\Longrightarrow$%
-      static_connectable_val V F (VClsr (Send_Evt _ _) env) |
+      static_traversable_env V F env %$\Longrightarrow$%
+      static_traversable_val V F (VClsr (Send_Evt _ _) env) |
     Recv_Evt:
-      static_connectable_env V F env %$\Longrightarrow$%
-      static_connectable_val V F (VClsr (Recv_Evt _) env) |
+      static_traversable_env V F env %$\Longrightarrow$%
+      static_traversable_val V F (VClsr (Recv_Evt _) env) |
     Left:
-      static_connectable_env V F env %$\Longrightarrow$%
-      static_connectable_val V F (VClsr (Left _) env) |
+      static_traversable_env V F env %$\Longrightarrow$%
+      static_traversable_val V F (VClsr (Left _) env) |
     Right:
-      static_connectable_env V F env %$\Longrightarrow$%
-      static_connectable_val V F (VClsr (Right _) env) |
+      static_traversable_env V F env %$\Longrightarrow$%
+      static_traversable_val V F (VClsr (Right _) env) |
     Abs:
-      static_connectable V F e %$\Longrightarrow$% 
-      static_connectable_env V F  env %$\Longrightarrow$%
-      static_connectable_val V F (VClsr (Abs f x e) env) |
+      static_traversable V F e %$\Longrightarrow$% 
+      static_traversable_env V F  env %$\Longrightarrow$%
+      static_traversable_val V F (VClsr (Abs f x e) env) |
   Pair:
-    static_connectable_env V F env %$\Longrightarrow$%
-    static_connectable_val V F (VClsr (Pair _ _) env) 
+    static_traversable_env V F env %$\Longrightarrow$%
+    static_traversable_val V F (VClsr (Pair _ _) env) 
 
 
 
-  inductive static_connectable_stack ::
+  inductive static_traversable_stack ::
     abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% cont list %$\Rightarrow$% bool where
     Empty:
-      static_connectable_stack V F [] |
+      static_traversable_stack V F [] |
     Nonempty:
-      static_connectable V F e %$\Longrightarrow$%
-      static_connectable_env V F env %$\Longrightarrow$%
-      static_connectable_stack V F k %$\Longrightarrow$% 
-      static_connectable_stack V F ((Ctn x e env) # k))
+      static_traversable V F e %$\Longrightarrow$%
+      static_traversable_env V F env %$\Longrightarrow$%
+      static_traversable_stack V F k %$\Longrightarrow$% 
+      static_traversable_stack V F ((Ctn x e env) # k))
 
   inductive
-    static_connectable_pool ::
+    static_traversable_pool ::
       abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$%
       trace_pool %$\Rightarrow$% bool  where
     Intro:
       %$\forall$% pi e env k .
         E pi = Some (Stt e env k) %$\longrightarrow$% 
-        static_connectable V F e %$\land$%
-        static_connectable_env V F env %$\land$%
-        static_connectable_stack V F k %$\Longrightarrow$% 
-      static_connectable_pool V F E
+        static_traversable V F e %$\land$%
+        static_traversable_env V F env %$\land$%
+        static_traversable_stack V F k %$\Longrightarrow$% 
+      static_traversable_pool V F E
 
   \end{lstlisting}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 
-  lemma static_connectable_pool_preserved_star: "
-    static_connectable_pool V F
+  lemma static_traversable_pool_preserved_star: "
+    static_traversable_pool V F
       ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])]) %$\Longrightarrow$%
     static_eval (V, C) e %$\Longrightarrow$%
     trpl' pi = Some (Stt (Let x b en) envk) %$\Longrightarrow$%
@@ -1532,17 +1515,17 @@ structure OneShotToOneChan : CHAN = struct
       ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
       (trpl', ys') %$\Longrightarrow$%
     isEnd (NLet x) %$\Longrightarrow$%
-    static_connectable_pool V F trpl' "
+    static_traversable_pool V F trpl' "
   proof sketch
   qed
 
-lemma static_connectable_pool_implies_static_traceable: "
+lemma static_traversable_pool_implies_static_traceable: "
   trpl' pi = Some (Stt (Let x b in en) env k) %$\Longrightarrow$%
   concur_step
     ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
     (trpl', ys') %$\Longrightarrow$% 
   static_eval (V, C) e %$\Longrightarrow$%
-  static_connectable_pool V F trpl' %$\Longrightarrow$%
+  static_traversable_pool V F trpl' %$\Longrightarrow$%
   isEnd (NLet x) %$\Longrightarrow$%
   %$\exists$% path . 
     paths_correspond pi path %$\land$%
@@ -1554,13 +1537,13 @@ lemma static_connectable_pool_implies_static_traceable: "
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  lemma path_not_traceable_sound: "
+  lemma not_static_traceable_sound: "
   trpl' pi = Some (Stt (Let x b en) env k) %$\Longrightarrow$%
   star concur_step
     ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
     (trpl', ys') %$\Longrightarrow$% 
   static_eval (V, C) e %$\Longrightarrow$%
-  static_connectable V F e %$\Longrightarrow$%
+  static_traversable V F e %$\Longrightarrow$%
   isEnd (NLet x) %$\Longrightarrow$%
   %$\exists$% path . 
     paths_correspond pi path %$\land$%
@@ -1615,14 +1598,907 @@ lemma static_connectable_pool_implies_static_traceable: "
 
 
   \end{lstlisting}
+
+
+
+\section{Static Communication part B}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+datatype edge_label = ENext | ESpawn | ESend var | ECall | EReturn var
+
+type_synonym flow_label = "(node_label × edge_label × node_label)"
+
+type_synonym flow_set = "flow_label set"
+
+type_synonym step_label = "(node_label × edge_label)"
+
+type_synonym abstract_path = "step_label list"
+  \end{lstlisting}
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+  inductive static_traversable :: "abstract_env ⇒ flow_set ⇒ (var ⇒ node_label ⇒ bool) ⇒ exp ⇒ bool"  where
+  Result: "
+    static_traversable V F static_recv_site (RESULT x)
+  " |
+  Let_Unit: "
+    ⟦
+      {(NLet x , ENext, nodeLabel e)} ⊆ F;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = ⦇⦈ in e)
+  " |
+  Let_Chan: "
+    ⟦
+      {(NLet x, ENext, nodeLabel e)} ⊆ F;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = CHAN ⦇⦈ in e)
+  " |
+  Let_Send_Evt: "
+    ⟦
+      {(NLet x, ENext, nodeLabel e)} ⊆ F;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = SEND EVT x⇩c x⇩m in e)
+  " |
+  Let_Recv_Evt: "
+    ⟦
+      {(NLet x, ENext, nodeLabel e)} ⊆ F;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = RECV EVT x⇩c in e)
+  " |
+  Let_Pair: "
+    ⟦
+      {(NLet x, ENext, nodeLabel e)} ⊆ F;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = ⦇x⇩1, x⇩2⦈ in e)
+  " |
+  Let_Left: "
+    ⟦
+      {(NLet x, ENext, nodeLabel e)} ⊆ F;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = LEFT x⇩p in e)
+  " |
+  Let_Right: "
+    ⟦
+      {(NLet x, ENext, nodeLabel e)} ⊆ F;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = RIGHT x⇩p in e)
+  " |
+  Let_Abs: "
+    ⟦
+      {(NLet x, ENext, nodeLabel e)} ⊆ F;
+      static_traversable V F static_recv_site e⇩b;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = FN f x⇩p . e⇩b  in e)
+  " |
+  Let_Spawn: "
+    ⟦
+      {
+        (NLet x, ENext, nodeLabel e),
+        (NLet x, ESpawn, nodeLabel e⇩c)
+      } ⊆ F;
+      static_traversable V F static_recv_site e⇩c;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = SPAWN e⇩c in e)
+  " |
+  Let_Sync: "
+    ⟦
+      {(NLet x, ENext, nodeLabel e)} ⊆ F;
+      (∀ xSC xM xC y.
+        {^Send_Evt xSC xM} ⊆ V xSE ⟶
+        {^Chan xC} ⊆ V xSC ⟶
+        static_recv_site xC (NLet y) ⟶
+        {(NLet x, ESend xSE, NLet y)} ⊆ F
+      );
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = SYNC xSE in e)
+  " |
+  Let_Fst: "
+    ⟦
+      {(NLet x, ENext, nodeLabel e)} ⊆ F;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = FST x⇩p in e)
+  " |
+  Let_Snd: "
+    ⟦
+      {(NLet x, ENext, nodeLabel e)} ⊆ F;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = SND x⇩p in e)
+  " |
+  Let_Case: "
+    ⟦
+      {
+        (NLet x, ECall, nodeLabel e⇩l),
+        (NLet x, ECall, nodeLabel e⇩r),
+        (NResult (⌊e⇩l⌋), EReturn x, nodeLabel e),
+        (NResult (⌊e⇩r⌋), EReturn x, nodeLabel e)
+      } ⊆ F;
+      static_traversable V F static_recv_site e⇩l;
+      static_traversable V F static_recv_site e⇩r;
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e)
+  " |
+  Let_App: "
+    ⟦
+      (∀ f' x⇩p e⇩b . ^Abs f' x⇩p e⇩b ∈ V f ⟶
+        {
+          (NLet x, ECall, nodeLabel e⇩b),
+          (NResult (⌊e⇩b⌋), EReturn x, nodeLabel e)
+        } ⊆ F);
+      static_traversable V F static_recv_site e
+    ⟧ ⟹
+    static_traversable V F static_recv_site (LET x = APP f x⇩a in e)
+  "
+  \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+inductive 
+  static_built_on_chan :: "abstract_env ⇒ node_map ⇒ var ⇒ var ⇒ bool"
+where
+  Chan: "
+    ⟦
+      ^Chan x⇩c ∈ V x 
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Send_Evt: "
+    ⟦
+      ^Send_Evt x⇩s⇩c x⇩m ∈ V x;
+      static_built_on_chan V Ln x⇩c x⇩s⇩c ∨ static_built_on_chan V Ln x⇩c x⇩m 
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Recv_Evt: "
+    ⟦
+      ^Recv_Evt x⇩r⇩c ∈ V x;
+      static_built_on_chan V Ln x⇩c x⇩r⇩c
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Pair: "
+    ⟦
+      ^(Pair x⇩1 x⇩2) ∈ V x;
+      static_built_on_chan V Ln x⇩c x⇩1 ∨ static_built_on_chan V Ln x⇩c x⇩2
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Left: "
+    ⟦
+      ^(Left x⇩a) ∈ V x;
+      static_built_on_chan V Ln x⇩c x⇩a
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Right: "
+    ⟦
+      ^(Right x⇩a) ∈ V x;
+      static_built_on_chan V Ln x⇩c x⇩a
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Abs: "
+    ^Abs f x⇩p e⇩b ∈ V x ⟹ 
+    ¬ Set.is_empty (Ln (nodeLabel e⇩b) - {x⇩p}) ⟹
+    static_built_on_chan V Ln x⇩c x
+  " 
+  \end{lstlisting}
+
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+  fun chan_set :: "abstract_env ⇒ node_map ⇒ var ⇒ var ⇒ var set" where
+  "chan_set V Ln x⇩c x = (if (static_built_on_chan V Ln x⇩c x) then {x} else {})"
+  \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+inductive static_live_chan :: "abstract_env ⇒ node_map ⇒ node_map ⇒ var ⇒ exp ⇒ bool" where
+  Result: "
+    ⟦
+      chan_set V Ln x⇩c y = Ln (NResult y)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (RESULT y)
+  " |
+  Let_Unit: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      Lx (NLet x) = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = ⦇⦈ in e)
+  " |
+  Let_Chan: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = CHAN ⦇⦈ in e)
+  " |
+  Let_Send_Evt: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) ∪ chan_set V Ln x⇩c x⇩s⇩c ∪ chan_set V Ln x⇩c x⇩m = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = SEND EVT x⇩s⇩c x⇩m in e)
+  " |
+  Let_Recv_Evt: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) ∪ chan_set V Ln x⇩c x⇩r⇩c = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = RECV EVT x⇩r⇩c in e)
+  " |
+  Let_Pair: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) ∪  chan_set V Ln x⇩c x⇩1 ∪ chan_set V Ln x⇩c x⇩2 = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = ⦇x⇩1, x⇩2⦈ in e)
+  " |
+  Let_Left: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) ∪ chan_set V Ln x⇩c x⇩a = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = LEFT x⇩a in e)
+  " |
+  Let_Right: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) ∪ chan_set V Ln x⇩c x⇩a = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = RIGHT x⇩a in e)
+  " |
+  Let_Abs: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      static_live_chan V Ln Lx x⇩c e⇩b;
+      (Lx (NLet x) - {x}) ∪ (Ln (nodeLabel e⇩b) - {x⇩p}) = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = FN f x⇩p . e⇩b  in e)
+  " |
+  Let_Spawn: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      static_live_chan V Ln Lx x⇩c e⇩c;
+      Ln (nodeLabel e) ∪ Ln (nodeLabel e⇩c) = Lx (NLet x);
+      (Lx (NLet x) - {x}) = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = SPAWN e⇩c in e)
+  " |
+  Let_Sync: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) ∪ chan_set V Ln x⇩c x⇩e = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = SYNC x⇩e in e)
+  " |
+  Let_Fst: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) ∪ chan_set V Ln x⇩c x⇩a = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = FST x⇩a in e)
+  " |
+  Let_Snd: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) ∪ chan_set V Ln x⇩c x⇩a = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = SND x⇩a in e)
+  " |
+  Let_Case: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      static_live_chan V Ln Lx x⇩c e⇩l;
+      static_live_chan V Ln Lx x⇩c e⇩r;
+      (Lx (NLet x) - {x}) ∪ chan_set V Ln x⇩c x⇩s ∪ 
+         (Ln (nodeLabel e⇩l) - {x⇩l}) ∪ (Ln (nodeLabel e⇩r) - {x⇩r}) = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = CASE x⇩s LEFT x⇩l |> e⇩l RIGHT x⇩r |> e⇩r in e)
+  " |
+  Let_App: "
+    ⟦
+      static_live_chan V Ln Lx x⇩c e;
+      Ln (nodeLabel e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) ∪ chan_set V Ln x⇩c f ∪ chan_set V Ln x⇩c x⇩a = Ln (NLet x)
+    ⟧ ⟹
+    static_live_chan V Ln Lx x⇩c (LET x = APP f x⇩a in e)
+  "
+
+  \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+inductive static_traceable :: "flow_set ⇒ node_label ⇒ abstract_path ⇒ bool" where
+  Empty: "
+    static_traceable F end []
+  " |
+  Edge: "
+    (start, edge, end) ∈ F ⟹
+    static_traceable F end [(start, edge)]
+  " |
+  Step: "
+    static_traceable F end ((middle, edge') # post) ⟹
+    (start, edge, middle) ∈ F ⟹
+    path = [(start, edge), (middle, edge')] @ post ⟹
+    static_traceable F end path
+  "
+
+  \end{lstlisting}
+
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+  inductive static_live_traversable :: "flow_set ⇒ node_map ⇒ node_map ⇒ flow_label ⇒ bool"  where
+  Next: "
+    (l, ENext, l') ∈ F ⟹
+    ¬ Set.is_empty (Lx l) ⟹
+    ¬ Set.is_empty (Ln l') ⟹
+    static_live_traversable F Ln Lx (l, ENext, l')
+  " |
+  Spawn: "
+    (l, ESpawn, l') ∈ F ⟹
+    ¬ Set.is_empty (Lx l) ⟹
+    ¬ Set.is_empty (Ln l') ⟹
+    static_live_traversable F Ln Lx (l, ESpawn, l')
+  " |
+  Call_Live_Outer: "
+    (l, ECall, l') ∈ F ⟹
+    ¬ Set.is_empty (Lx l) ⟹
+    static_live_traversable F Ln Lx (l, ECall, l')
+  " |
+  Call_Live_Inner: "
+    (l, ECall, l') ∈ F ⟹
+    ¬ Set.is_empty (Ln l') ⟹
+    static_live_traversable F Ln Lx (l, ECall, l')
+  " |
+  Return: "
+    (l, EReturn x, l') ∈ F ⟹
+    ¬ Set.is_empty (Ln l') ⟹
+    static_live_traversable F Ln Lx (l, EReturn x, l')
+  " |
+  Send: "
+    ((NLet xSend), ESend xE, (NLet xRecv)) ∈ F ⟹
+    {xE} ⊆ (Ln (NLet xSend)) ⟹
+    static_live_traversable F Ln Lx ((NLet xSend), ESend xE, (NLet xRecv))
+    "
+    
+  \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+  
+inductive static_live_traceable :: "abstract_env ⇒ flow_set ⇒ node_map ⇒ node_map ⇒ node_label ⇒ (node_label ⇒ bool) ⇒ abstract_path ⇒ bool" where
+  Empty: "
+    isEnd start ⟹
+    static_live_traceable V F Ln Lx start isEnd []
+  " |
+  Edge: "
+    isEnd end ⟹
+    static_live_traversable F Ln Lx (start, edge, end) ⟹
+    static_live_traceable V F Ln Lx start isEnd [(start, edge)]
+  " |
+  Step: "
+    static_live_traceable V F Ln Lx middle isEnd ((middle, edge') # path) ⟹
+    static_live_traversable F Ln Lx (start, edge, middle) ⟹
+    static_live_traceable V F Ln Lx start isEnd ((start, edge) # (middle, edge') # path)
+  " |
+
+  Pre_Return: "
+    static_live_traceable V F Ln Lx (NResult y) isEnd ((NResult y, EReturn x) # post) ⟹
+    static_traceable  F (NResult y) pre ⟹
+    ¬ static_balanced (pre @ [(NResult y, EReturn x)]) ⟹
+    ¬ Set.is_empty (Lx (NLet x)) ⟹
+    path = pre @ (NResult y, EReturn x) # post ⟹
+    static_live_traceable V F Ln Lx start isEnd path
+  "
+
+    
+  \end{lstlisting}
+
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+  
+inductive static_inclusive :: "abstract_path ⇒ abstract_path ⇒ bool" (infix "≍" 55) where
+  Prefix1: "
+    prefix π⇩1 π⇩2 ⟹
+    π⇩1 ≍ π⇩2
+  " |
+  Prefix2: "
+    prefix π⇩2 π⇩1 ⟹
+    π⇩1 ≍ π⇩2
+  " |
+  Spawn1: "
+    π @ (NLet x, ESpawn) # π⇩1 ≍ π @ (NLet x, ENext) # π⇩2
+  " |
+  Spawn2: "
+    π @ (NLet x, ENext) # π⇩1 ≍ π @ (NLet x, ESpawn) # π⇩2
+  " |
+  Send1: "
+    π @ (NLet x, ESend xE) # π⇩1 ≍ π @ (NLet x, ENext) # π⇩2
+  " |
+  Send2: "
+    π @ (NLet x, ENext) # π⇩1 ≍ π @ (NLet x, ESend xE) # π⇩2
+    "
+
+    
+  \end{lstlisting}
+
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+
+  
+inductive singular :: "abstract_path ⇒ abstract_path ⇒ bool" where
+  equal: "
+    π⇩1 = π⇩2 ⟹ 
+    singular π⇩1 π⇩2
+  " |
+  exclusive: "
+    ¬ (π⇩1 ≍ π⇩2) ⟹ 
+    singular π⇩1 π⇩2
+  "
+
+inductive noncompetitive :: "abstract_path ⇒ abstract_path ⇒ bool" where
+  ordered: "
+    ordered π⇩1 π⇩2 ⟹ 
+    noncompetitive π⇩1 π⇩2
+  " |
+  exclusive: "
+    ¬ (π⇩1 ≍ π⇩2) ⟹ 
+    noncompetitive π⇩1 π⇩2
+  "
+
+
+inductive static_one_shot :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) singular ⟹
+    static_live_chan V Ln Lx xC e ⟹
+    static_traversable V F (static_recv_node_label V e) e ⟹
+    static_one_shot V e xC 
+  "
+
+inductive static_one_to_one :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive ⟹
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive ⟹
+    static_live_chan V Ln Lx xC e ⟹
+    static_traversable V F (static_recv_node_label V e) e ⟹
+    static_one_to_one V e xC 
+  "
+
+inductive static_fan_out :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive ⟹
+    static_live_chan V Ln Lx xC e ⟹
+    static_traversable V F (static_recv_node_label V e) e ⟹
+    static_fan_out V e xC 
+  "
+
+inductive static_fan_in :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive ⟹
+    static_live_chan V Ln Lx xC e ⟹
+    static_traversable V F (static_recv_node_label V e) e ⟹
+    static_fan_in V e xC 
+  "
+
+    
+  \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+
+  inductive 
+  dynamic_built_on_chan_var :: "(var ⇀ val) ⇒ chan ⇒ var ⇒ bool" and
+  dynamic_built_on_chan_prim :: "(var ⇀ val) ⇒ chan ⇒ prim ⇒ bool" and
+  dynamic_built_on_chan_bindee :: "(var ⇀ val) ⇒ chan ⇒ bind ⇒ bool" and
+  dynamic_built_on_chan_exp :: "(var ⇀ val) ⇒ chan ⇒ exp ⇒ bool" 
+where
+  Chan: "
+    ρ x = Some (VChan c) ⟹
+    dynamic_built_on_chan_var ρ c x
+  " |
+  Closure: "
+    dynamic_built_on_chan_prim ρ' c p ⟹
+    ρ x = Some (VClosure p ρ') ⟹
+    dynamic_built_on_chan_var ρ c x
+  " |
+
+
+  Send_Evt: "
+    dynamic_built_on_chan_var ρ c xSC ∨ dynamic_built_on_chan_var ρ c xM ⟹
+    dynamic_built_on_chan_prim ρ c (Send_Evt xSC xM)
+  " |
+  Recv_Evt: "
+    dynamic_built_on_chan_var ρ c xRC ⟹
+    dynamic_built_on_chan_prim ρ c (Recv_Evt xRC)
+  " |
+  Pair: "
+    dynamic_built_on_chan_var ρ c x1 ∨ dynamic_built_on_chan ρ c x2 ⟹
+    dynamic_built_on_chan_prim ρ c (Pair x1 x2)
+  " |
+  Left: "
+    dynamic_built_on_chan_var ρ c xSum ⟹
+    dynamic_built_on_chan_prim ρ c (Left xSum)
+  " |
+  Right: "
+    dynamic_built_on_chan_var ρ c xSum ⟹
+    dynamic_built_on_chan_prim ρ c (Right xSum)
+  " |
+  Abs: "
+    dynamic_built_on_chan_exp ρ' c e ⟹
+    dynamic_built_on_chan_prim ρ c (Abs f x e)
+  " |
+
+  Prim: "
+    dynamic_built_on_chan_prim ρ c p ⟹
+    dynamic_built_on_chan_bindee ρ c (Prim p)
+  " |
+  Spawn: "
+    dynamic_built_on_chan_exp ρ c eCh ⟹
+    dynamic_built_on_chan_bindee ρ c (SPAWN eCh)
+  " |
+  Sync: "
+    dynamic_built_on_chan_var ρ c xY ⟹
+    dynamic_built_on_chan_bindee ρ c (SYNC xY)
+  " |
+  Fst: "
+    dynamic_built_on_chan_var ρ c xP ⟹
+    dynamic_built_on_chan_bindee ρ c (FST xP)
+  " |
+  Snd: "
+    dynamic_built_on_chan_var ρ c xP ⟹
+    dynamic_built_on_chan_bindee ρ c (SND xP)
+  " |
+  Case: "
+    dynamic_built_on_chan_var ρ c xS ∨ 
+    dynamic_built_on_chan_exp ρ c eL ∨ dynamic_built_on_chan_exp ρ c eR ⟹
+    dynamic_built_on_chan_bindee ρ c (CASE xS LEFT xL |> eL RIGHT xR |> eR)
+  " |
+  App: "
+    dynamic_built_on_chan_var ρ c f ∨
+    dynamic_built_on_chan_var ρ c xA ⟹
+    dynamic_built_on_chan_bindee ρ c (APP f xA)
+  " |
+
+  Result: "
+    dynamic_built_on_chan_var ρ c x ⟹
+    dynamic_built_on_chan_exp ρ c (RESULT x)
+  " |
+  Let: "
+    dynamic_built_on_chan_bindee ρ c b ∨ dynamic_built_on_chan_exp ρ c e ⟹
+    dynamic_built_on_chan_exp ρ c (LET x = b in e)
+    "
+    
+  \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+
+  inductive paths_correspond :: "control_path ⇒ abstract_path ⇒ bool" where
+  Empty: "
+    paths_correspond [] []
+  " |
+  Next: "
+    paths_correspond π path ⟹
+    paths_correspond (π @ [LNext x]) (path @ [(NLet x, ENext)])
+  " |
+  Spawn: "
+    paths_correspond π path ⟹
+    paths_correspond (π @ [LSpawn x]) (path @ [(NLet x, ESpawn)])
+  " |
+  Call: "
+    paths_correspond π path ⟹
+    paths_correspond (π @ [LCall x]) (path @ [(NLet x, ECall)])
+  "  |
+  Return: "
+    paths_correspond π (path @ (NLet x, ECall) # path') ⟹
+    static_balanced path' ⟹
+    paths_correspond (π @ [LReturn y]) (path @ (NLet x, ECall) # path' @ [(NResult y, EReturn x)])
+  " 
+
+inductive paths_correspond_mod_chan :: 
+  "trace_pool * cmmn_set ⇒ chan ⇒ control_path ⇒ abstract_path ⇒ bool" where
+  Unordered: "
+    paths_correspond π pathx ⟹
+    ¬ (prefix pathx path) ⟹
+    ¬ (prefix path pathx) ⟹
+    paths_correspond_mod_chan (ℰ, H) c π path
+  " |
+  Chan: "
+    paths_correspond ((LNext xC) # πSuff) path ⟹
+    ℰ (πC @ (LNext xC) # πSuff) ≠ None ⟹
+    paths_correspond_mod_chan (ℰ, H) (Ch πC xC) (πC @ (LNext xC) # πSuff) path
+  " |
+  Sync: "
+    paths_correspond πSuffix pathSuffix ⟹
+    ℰ (πR @ (LNext xR) # πSuffix) ≠ None ⟹
+    dynamic_built_on_chan_var ρRY c xR ⟹
+    ℰ πS = Some (⟨LET xS = SYNC xSE in eSY;ρSY;κSY⟩) ⟹
+    ℰ πR = Some (⟨LET xR = SYNC xRE in eRY;ρRY;κRY⟩) ⟹
+    {(πS, c, πR)} ⊆ H ⟹
+    paths_correspond_mod_chan (ℰ, H) c πS pathPre ⟹
+    paths_correspond_mod_chan (ℰ, H) c (πR @ (LNext xR) # πSuffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
+  " 
+
+  \end{lstlisting}
+
+
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+lemma not_static_inclusive_sound_base: "
+  E0 = [[] ↦ ⟨e;Map.empty;[]⟩] ⟹
+  E0 π1 ≠ None ⟹
+  E0 π2 ≠ None ⟹
+  paths_correspond_mod_chan (E0, {}) (Ch π xC) π1 path1 ⟹ 
+  paths_correspond_mod_chan (E0, {}) (Ch π xC) π2 path2 ⟹
+  path1 ≍ path2
+"
+proof -
+  \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+  lemma static_equality_sound: "
+  path1 = path2 ⟹
+  paths_correspond_mod_chan (ℰ', H') (Ch π xC) π1 path1 ⟹
+  paths_correspond_mod_chan (ℰ', H') (Ch π xC) π2 path2 ⟹
+  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹ 
+  ℰ' π1 ≠ None ⟹ 
+  ℰ' π2 ≠ None   ⟹ 
+  π1 = π2
+"
+sorry
+
+
+  lemma not_static_traceable_sound: "
+  ℰ' π = Some (⟨LET x = b in e⇩n;ρ;κ⟩) ⟹
+  ρ z ≠ None ⟹
+  dynamic_built_on_chan_var ρ (Ch πC xC) z ⟹
+  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹ 
+  (V, C) ⊨⇩e e ⟹
+  static_live_chan V Ln Lx xC e ⟹
+  static_traversable V F (static_recv_node_label V e) e ⟹
+  isEnd (NLet x) ⟹
+  ∃ path . 
+    paths_correspond_mod_chan (ℰ', H') (Ch πC xC) π path ∧
+    static_live_traceable V F Ln Lx (NLet xC) isEnd path
+"
+sorry
+
+
+lemma send_not_static_traceable_sound: "
+  is_send_path ℰ' (Ch πC xC) πSync ⟹
+  ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H') ⟹ 
+  (V, C) ⊨⇩e e ⟹
+  static_live_chan V Ln Lx xC e ⟹
+  static_traversable V F (static_recv_node_label V e) e ⟹
+  ∃ pathSync .
+    (paths_correspond_mod_chan (ℰ', H') (Ch πC xC) πSync pathSync) ∧ 
+    static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC) pathSync
+"
+  \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+
+theorem one_shot_sound: "
+  ⟦
+    static_one_shot V e xC;
+    (V, C) ⊨⇩e e;
+    ([[] ↦ ⟨e;Map.empty;[]⟩], {}) →* (ℰ', H')
+  ⟧ ⟹
+  one_shot ℰ' (Ch π xC)
+
+  \end{lstlisting}
+
+
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   \end{lstlisting}
+
+
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   \end{lstlisting}
+
+
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   \end{lstlisting}
+
+
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
+
   \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+
+  definition program where "program = (
+
+  $LET no_chan_loop = ($FN no_chan_loop x .
+    $CASE $x
+    LEFT y |> $APP $no_chan_loop $y
+    RIGHT z |> $⦇⦈
+  ) in
+
+  $LET make_server = ($FN make_server x .
+    $LET ch = $CHAN ⦇⦈ in
+    $LET z = $APP $no_chan_loop ($LEFT ($LEFT ($RIGHT $⦇⦈))) in
+    $LET loop = ($FN loop x .
+      $LET pair = $SYNC ($RECV EVT $ch) in
+      $LET w = $FST $pair in
+      $LET replCh = $SND $pair in 
+      $LET z = $SYNC ($SEND EVT $replCh $x) in
+      $APP $loop $w
+    ) in
+    $LET z  = $SPAWN ($APP $loop ($RIGHT $⦇⦈)) in
+    $ch
+  ) in
+
+  $LET call_server = ($FN call_server pair .
+    $LET ch = $FST $pair in
+    $LET w = $SND $pair in
+    $LET replCh = $CHAN ⦇⦈ in
+    $LET z = $SYNC ($SEND EVT $ch ($⦇$w, $replCh⦈)) in
+    $LET y = $SYNC ($RECV EVT $replCh) in
+    $y
+  ) in
+
+  $LET server = $APP $make_server $⦇⦈ in
+  $LET z = $SPAWN
+    $APP $call_server $⦇$server, $RIGHT $⦇⦈⦈
+  in
+  $LET z = $SPAWN
+    $LET z = $APP $call_server $⦇$server, $LEFT ($RIGHT $⦇⦈)⦈ in
+    $LET z = $APP $call_server $⦇$server, ($RIGHT $⦇⦈)⦈ in
+    $z
+  in
+  $LET z = $APP $call_server $⦇$server, $LEFT ($RIGHT $⦇⦈)⦈ in
+  $⦇⦈
+)"
+  \end{lstlisting}
+
+
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+  fun [[_]] ::
+  [[x]] = Var x | 
+  [[let x = b in e]] = (Let [[x] [[b]] [[e]]) |
+    [[send_evt xC cM]] = (SendEvt [[xC]] [[xM]]) |
+    ...
+    
+  \end{lstlisting}
+
+
+\begin{lstlisting}[style=codestyle1, escapechar=\%]
+
+definition anf_program where "anf_program = (
+LET g100 = FN g101 g102 . 
+
+  LET g103 = CASE g102 
+
+    LEFT g104 |> 
+      LET g105 = APP g101 g104 in 
+      RESULT g105 
+
+    RIGHT g106 |> 
+        LET g107 = ⦇⦈ in 
+      RESULT g107 
+
+  in 
+  RESULT g103 
+in 
+
+LET g108 = FN g109 g110 . 
+  LET g111 = CHAN ⦇⦈ in 
+  LET g112 = ⦇⦈ in 
+  LET g113 = RIGHT g112 in 
+  LET g114 = LEFT g113 in 
+  LET g115 = LEFT g114 in 
+  LET g116 = APP g100 g115 in 
+  LET g117 = FN g118 g119 . 
+    LET g120 = RECV EVT g111 in 
+    LET g121 = SYNC g120 in 
+    LET g122 = FST g121 in 
+    LET g123 = SND g121 in 
+    LET g124 = SEND EVT g123 g119 in 
+    LET g125 = SYNC g124 in 
+    LET g126 = APP g118 g122 in 
+    RESULT g126 
+  in 
+  LET g127 = SPAWN 
+    LET g128 = ⦇⦈ in 
+    LET g129 = RIGHT g128 in 
+    LET g130 = APP g117 g129 in 
+    RESULT g130 
+  in 
+  RESULT g111 
+in 
+LET g131 = FN g132 g133 . 
+  LET g134 = FST g133 in 
+  LET g135 = SND g133 in 
+  LET g136 = CHAN ⦇⦈ in 
+  LET g137 = ⦇g135, g136⦈ in 
+  LET g138 = SEND EVT g134 g137 in 
+  LET g139 = SYNC g138 in 
+  LET g140 = RECV EVT g136 in 
+  LET g141 = SYNC g140 in 
+  RESULT g141 
+in 
+LET g142 = ⦇⦈ in 
+LET g143 = APP g108 g142 in 
+LET g144 = SPAWN 
+  LET g145 = ⦇⦈ in 
+  LET g146 = RIGHT g145 in
+  LET g147 = ⦇g143, g146⦈ in
+  LET g148 = APP g131 g147 in
+  RESULT g148 
+in
+LET g149 = SPAWN 
+  LET g150 = ⦇⦈ in
+  LET g151 = RIGHT g150 in
+  LET g152 = LEFT g151 in
+  LET g153 = ⦇g143, g152⦈ in
+  LET g154 = APP g131 g153 in
+  LET g155 = ⦇⦈ in
+  LET g156 = RIGHT g155 in
+  LET g157 = ⦇g143, g156⦈ in
+  LET g158 = APP g131 g157 in
+  RESULT g158 
+in
+LET g159 = ⦇⦈ in
+LET g160 = RIGHT g159 in
+LET g161 = LEFT g160 in
+LET g162 = ⦇g143, g161⦈ in
+LET g163 = APP g131 g162 in
+LET g164 = ⦇⦈ in
+RESULT g164
+)"
+
+
+  \end{lstlisting}
+
+
 
 \end{document}
 \end{document}

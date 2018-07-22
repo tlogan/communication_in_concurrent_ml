@@ -16,66 +16,66 @@ type_synonym step_label = "(node_label \<times> edge_label)"
 type_synonym abstract_path = "step_label list"
 
 
-inductive static_flow_set :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> (var \<Rightarrow> node_label \<Rightarrow> bool) \<Rightarrow> exp \<Rightarrow> bool"  where
+inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> (var \<Rightarrow> node_label \<Rightarrow> bool) \<Rightarrow> exp \<Rightarrow> bool"  where
   Result: "
-    static_flow_set V F static_recv_site (RESULT x)
+    static_traversable V F static_recv_site (RESULT x)
   " |
   Let_Unit: "
     \<lbrakk>
       {(NLet x , ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = \<lparr>\<rparr> in e)
+    static_traversable V F static_recv_site (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Chan: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = CHAN \<lparr>\<rparr> in e)
+    static_traversable V F static_recv_site (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
+    static_traversable V F static_recv_site (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = RECV EVT x\<^sub>c in e)
+    static_traversable V F static_recv_site (LET x = RECV EVT x\<^sub>c in e)
   " |
   Let_Pair: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
+    static_traversable V F static_recv_site (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
   " |
   Let_Left: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = LEFT x\<^sub>p in e)
+    static_traversable V F static_recv_site (LET x = LEFT x\<^sub>p in e)
   " |
   Let_Right: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = RIGHT x\<^sub>p in e)
+    static_traversable V F static_recv_site (LET x = RIGHT x\<^sub>p in e)
   " |
   Let_Abs: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F static_recv_site e\<^sub>b;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e\<^sub>b;
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
+    static_traversable V F static_recv_site (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
   " |
   Let_Spawn: "
     \<lbrakk>
@@ -83,10 +83,10 @@ inductive static_flow_set :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> 
         (NLet x, ENext, nodeLabel e),
         (NLet x, ESpawn, nodeLabel e\<^sub>c)
       } \<subseteq> F;
-      static_flow_set V F static_recv_site e\<^sub>c;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e\<^sub>c;
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = SPAWN e\<^sub>c in e)
+    static_traversable V F static_recv_site (LET x = SPAWN e\<^sub>c in e)
   " |
   Let_Sync: "
     \<lbrakk>
@@ -97,23 +97,23 @@ inductive static_flow_set :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> 
         static_recv_site xC (NLet y) \<longrightarrow>
         {(NLet x, ESend xSE, NLet y)} \<subseteq> F
       );
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = SYNC xSE in e)
+    static_traversable V F static_recv_site (LET x = SYNC xSE in e)
   " |
   Let_Fst: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = FST x\<^sub>p in e)
+    static_traversable V F static_recv_site (LET x = FST x\<^sub>p in e)
   " |
   Let_Snd: "
     \<lbrakk>
       {(NLet x, ENext, nodeLabel e)} \<subseteq> F;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = SND x\<^sub>p in e)
+    static_traversable V F static_recv_site (LET x = SND x\<^sub>p in e)
   " |
   Let_Case: "
     \<lbrakk>
@@ -123,11 +123,11 @@ inductive static_flow_set :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> 
         (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn x, nodeLabel e),
         (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn x, nodeLabel e)
       } \<subseteq> F;
-      static_flow_set V F static_recv_site e\<^sub>l;
-      static_flow_set V F static_recv_site e\<^sub>r;
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e\<^sub>l;
+      static_traversable V F static_recv_site e\<^sub>r;
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
+    static_traversable V F static_recv_site (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
   " |
   Let_App: "
     \<lbrakk>
@@ -136,9 +136,9 @@ inductive static_flow_set :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> 
           (NLet x, ECall, nodeLabel e\<^sub>b),
           (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn x, nodeLabel e)
         } \<subseteq> F);
-      static_flow_set V F static_recv_site e
+      static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
-    static_flow_set V F static_recv_site (LET x = APP f x\<^sub>a in e)
+    static_traversable V F static_recv_site (LET x = APP f x\<^sub>a in e)
   "
 
 inductive 
@@ -208,129 +208,129 @@ fun chan_set :: "abstract_env \<Rightarrow> node_map \<Rightarrow> var \<Rightar
   "chan_set V Ln x\<^sub>c x = (if (static_built_on_chan V Ln x\<^sub>c x) then {x} else {})"
 
 
-inductive static_chan_liveness :: "abstract_env \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
+inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "
     \<lbrakk>
       chan_set V Ln x\<^sub>c y = Ln (NResult y)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (RESULT y)
+    static_live_chan V Ln Lx x\<^sub>c (RESULT y)
   " |
   Let_Unit: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       Lx (NLet x) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = \<lparr>\<rparr> in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = \<lparr>\<rparr> in e)
   " |
   Let_Chan: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       (Lx (NLet x) - {x}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = CHAN \<lparr>\<rparr> in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = CHAN \<lparr>\<rparr> in e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>s\<^sub>c \<union> chan_set V Ln x\<^sub>c x\<^sub>m = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = SEND EVT x\<^sub>s\<^sub>c x\<^sub>m in e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>r\<^sub>c = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = RECV EVT x\<^sub>r\<^sub>c in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = RECV EVT x\<^sub>r\<^sub>c in e)
   " |
   Let_Pair: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union>  chan_set V Ln x\<^sub>c x\<^sub>1 \<union> chan_set V Ln x\<^sub>c x\<^sub>2 = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
   " |
   Let_Left: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = LEFT x\<^sub>a in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = LEFT x\<^sub>a in e)
   " |
   Let_Right: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = RIGHT x\<^sub>a in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = RIGHT x\<^sub>a in e)
   " |
   Let_Abs: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>b;
+      static_live_chan V Ln Lx x\<^sub>c e\<^sub>b;
       (Lx (NLet x) - {x}) \<union> (Ln (nodeLabel e\<^sub>b) - {x\<^sub>p}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
   " |
   Let_Spawn: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
-      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>c;
+      static_live_chan V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e\<^sub>c;
       Ln (nodeLabel e) \<union> Ln (nodeLabel e\<^sub>c) = Lx (NLet x);
       (Lx (NLet x) - {x}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SPAWN e\<^sub>c in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = SPAWN e\<^sub>c in e)
   " |
   Let_Sync: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>e = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SYNC x\<^sub>e in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = SYNC x\<^sub>e in e)
   " |
   Let_Fst: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = FST x\<^sub>a in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = FST x\<^sub>a in e)
   " |
   Let_Snd: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = SND x\<^sub>a in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = SND x\<^sub>a in e)
   " |
   Let_Case: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
-      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>l;
-      static_chan_liveness V Ln Lx x\<^sub>c e\<^sub>r;
+      static_live_chan V Ln Lx x\<^sub>c e\<^sub>l;
+      static_live_chan V Ln Lx x\<^sub>c e\<^sub>r;
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>s \<union> 
          (Ln (nodeLabel e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (nodeLabel e\<^sub>r) - {x\<^sub>r}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
   " |
   Let_App: "
     \<lbrakk>
-      static_chan_liveness V Ln Lx x\<^sub>c e;
+      static_live_chan V Ln Lx x\<^sub>c e;
       Ln (nodeLabel e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c f \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
-    static_chan_liveness V Ln Lx x\<^sub>c (LET x = APP f x\<^sub>a in e)
+    static_live_chan V Ln Lx x\<^sub>c (LET x = APP f x\<^sub>a in e)
   "
 
 
@@ -351,25 +351,26 @@ inductive static_traceable :: "flow_set \<Rightarrow> node_label \<Rightarrow> a
     static_traceable F end path
   "
 
-inductive abstract_balanced :: "abstract_path \<Rightarrow> bool" where
+inductive static_balanced :: "abstract_path \<Rightarrow> bool" where
   Empty: "
-    abstract_balanced []
+    static_balanced []
   " |
   Next: "
-    abstract_balanced [(NLet x, ENext)]
+    static_balanced [(NLet x, ENext)]
   " |
   CallReturn: "
-    abstract_balanced path \<Longrightarrow>
-    abstract_balanced ((NLet x, ECall) # (path @ [(NResult y, EReturn x)]))
+    static_balanced path \<Longrightarrow>
+    static_balanced ((NLet x, ECall) # (path @ [(NResult y, EReturn x)]))
   " |
   Append: "
     path \<noteq> [] \<Longrightarrow>
-    abstract_balanced path \<Longrightarrow>
+    static_balanced path \<Longrightarrow>
     path' \<noteq> [] \<Longrightarrow>
-    abstract_balanced path' \<Longrightarrow>
-    abstract_balanced (path @ path')
+    static_balanced path' \<Longrightarrow>
+    static_balanced (path @ path')
   "
 
+(*
 inductive static_unbalanced :: "abstract_path \<Rightarrow> bool" where
   Result: "
     static_unbalanced ((NResult y, EReturn x) # post)
@@ -378,65 +379,65 @@ inductive static_unbalanced :: "abstract_path \<Rightarrow> bool" where
     static_unbalanced post \<Longrightarrow>
     static_unbalanced ((NLet x, ENext) # post)
   "
+*)
 
-
-inductive static_live_flow :: "flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> flow_label \<Rightarrow> bool"  where
+inductive static_live_traversable :: "flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> flow_label \<Rightarrow> bool"  where
   Next: "
     (l, ENext, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Lx l) \<Longrightarrow>
     \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    static_live_flow F Ln Lx (l, ENext, l')
+    static_live_traversable F Ln Lx (l, ENext, l')
   " |
   Spawn: "
     (l, ESpawn, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Lx l) \<Longrightarrow>
     \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    static_live_flow F Ln Lx (l, ESpawn, l')
+    static_live_traversable F Ln Lx (l, ESpawn, l')
   " |
   Call_Live_Outer: "
     (l, ECall, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Lx l) \<Longrightarrow>
-    static_live_flow F Ln Lx (l, ECall, l')
+    static_live_traversable F Ln Lx (l, ECall, l')
   " |
   Call_Live_Inner: "
     (l, ECall, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    static_live_flow F Ln Lx (l, ECall, l')
+    static_live_traversable F Ln Lx (l, ECall, l')
   " |
   Return: "
     (l, EReturn x, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    static_live_flow F Ln Lx (l, EReturn x, l')
+    static_live_traversable F Ln Lx (l, EReturn x, l')
   " |
   Send: "
     ((NLet xSend), ESend xE, (NLet xRecv)) \<in> F \<Longrightarrow>
     {xE} \<subseteq> (Ln (NLet xSend)) \<Longrightarrow>
-    static_live_flow F Ln Lx ((NLet xSend), ESend xE, (NLet xRecv))
+    static_live_traversable F Ln Lx ((NLet xSend), ESend xE, (NLet xRecv))
   "
 
-inductive static_live_path :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive static_live_traceable :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
-    static_live_path V F Ln Lx start isEnd []
+    static_live_traceable V F Ln Lx start isEnd []
   " |
   Edge: "
     isEnd end \<Longrightarrow>
-    static_live_flow F Ln Lx (start, edge, end) \<Longrightarrow>
-    static_live_path V F Ln Lx start isEnd [(start, edge)]
+    static_live_traversable F Ln Lx (start, edge, end) \<Longrightarrow>
+    static_live_traceable V F Ln Lx start isEnd [(start, edge)]
   " |
   Step: "
-    static_live_path V F Ln Lx middle isEnd ((middle, edge') # path) \<Longrightarrow>
-    static_live_flow F Ln Lx (start, edge, middle) \<Longrightarrow>
-    static_live_path V F Ln Lx start isEnd ((start, edge) # (middle, edge') # path)
+    static_live_traceable V F Ln Lx middle isEnd ((middle, edge') # path) \<Longrightarrow>
+    static_live_traversable F Ln Lx (start, edge, middle) \<Longrightarrow>
+    static_live_traceable V F Ln Lx start isEnd ((start, edge) # (middle, edge') # path)
   " |
 
   Pre_Return: "
-    static_live_path V F Ln Lx (NResult y) isEnd ((NResult y, EReturn x) # post) \<Longrightarrow>
+    static_live_traceable V F Ln Lx (NResult y) isEnd ((NResult y, EReturn x) # post) \<Longrightarrow>
     static_traceable  F (NResult y) pre \<Longrightarrow>
-    \<not> abstract_balanced (pre @ [(NResult y, EReturn x)]) \<Longrightarrow>
+    \<not> static_balanced (pre @ [(NResult y, EReturn x)]) \<Longrightarrow>
     \<not> Set.is_empty (Lx (NLet x)) \<Longrightarrow>
     path = pre @ (NResult y, EReturn x) # post \<Longrightarrow>
-    static_live_path V F Ln Lx start isEnd path
+    static_live_traceable V F Ln Lx start isEnd path
   "
 
 
@@ -514,41 +515,41 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
 
 inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC)) singular \<Longrightarrow>
-    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) singular \<Longrightarrow>
+    static_live_chan V Ln Lx xC e \<Longrightarrow>
+    static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
 inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two (static_live_path V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
-    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    static_live_chan V Ln Lx xC e \<Longrightarrow>
+    static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
 inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    static_live_chan V Ln Lx xC e \<Longrightarrow>
+    static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
 inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_path V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
-    static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-    static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    static_live_chan V Ln Lx xC e \<Longrightarrow>
+    static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
     static_fan_in V e xC 
   "
 
 inductive 
   dynamic_built_on_chan_var :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> var \<Rightarrow> bool" and
   dynamic_built_on_chan_prim :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> prim \<Rightarrow> bool" and
-  dynamic_built_on_chan_bindee :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> bind \<Rightarrow> bool" and
+  dynamic_built_on_chan_bound_exp :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> bind \<Rightarrow> bool" and
   dynamic_built_on_chan_exp :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> exp \<Rightarrow> bool" 
 where
   Chan: "
@@ -589,33 +590,33 @@ where
 
   Prim: "
     dynamic_built_on_chan_prim \<rho> c p \<Longrightarrow>
-    dynamic_built_on_chan_bindee \<rho> c (Prim p)
+    dynamic_built_on_chan_bound_exp \<rho> c (Prim p)
   " |
   Spawn: "
     dynamic_built_on_chan_exp \<rho> c eCh \<Longrightarrow>
-    dynamic_built_on_chan_bindee \<rho> c (SPAWN eCh)
+    dynamic_built_on_chan_bound_exp \<rho> c (SPAWN eCh)
   " |
   Sync: "
     dynamic_built_on_chan_var \<rho> c xY \<Longrightarrow>
-    dynamic_built_on_chan_bindee \<rho> c (SYNC xY)
+    dynamic_built_on_chan_bound_exp \<rho> c (SYNC xY)
   " |
   Fst: "
     dynamic_built_on_chan_var \<rho> c xP \<Longrightarrow>
-    dynamic_built_on_chan_bindee \<rho> c (FST xP)
+    dynamic_built_on_chan_bound_exp \<rho> c (FST xP)
   " |
   Snd: "
     dynamic_built_on_chan_var \<rho> c xP \<Longrightarrow>
-    dynamic_built_on_chan_bindee \<rho> c (SND xP)
+    dynamic_built_on_chan_bound_exp \<rho> c (SND xP)
   " |
   Case: "
     dynamic_built_on_chan_var \<rho> c xS \<or> 
     dynamic_built_on_chan_exp \<rho> c eL \<or> dynamic_built_on_chan_exp \<rho> c eR \<Longrightarrow>
-    dynamic_built_on_chan_bindee \<rho> c (CASE xS LEFT xL |> eL RIGHT xR |> eR)
+    dynamic_built_on_chan_bound_exp \<rho> c (CASE xS LEFT xL |> eL RIGHT xR |> eR)
   " |
   App: "
     dynamic_built_on_chan_var \<rho> c f \<or>
     dynamic_built_on_chan_var \<rho> c xA \<Longrightarrow>
-    dynamic_built_on_chan_bindee \<rho> c (APP f xA)
+    dynamic_built_on_chan_bound_exp \<rho> c (APP f xA)
   " |
 
   Result: "
@@ -623,7 +624,7 @@ where
     dynamic_built_on_chan_exp \<rho> c (RESULT x)
   " |
   Let: "
-    dynamic_built_on_chan_bindee \<rho> c b \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
+    dynamic_built_on_chan_bound_exp \<rho> c b \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
     dynamic_built_on_chan_exp \<rho> c (LET x = b in e)
   "
 
@@ -666,11 +667,12 @@ inductive paths_correspond :: "control_path \<Rightarrow> abstract_path \<Righta
   "  |
   Return: "
     paths_correspond \<pi> (path @ (NLet x, ECall) # path') \<Longrightarrow>
-    abstract_balanced path' \<Longrightarrow>
+    static_balanced path' \<Longrightarrow>
     paths_correspond (\<pi> @ [LReturn y]) (path @ (NLet x, ECall) # path' @ [(NResult y, EReturn x)])
   " 
 
-inductive paths_correspond_mod_chan :: "trace_pool * cmmn_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive paths_correspond_mod_chan :: 
+  "trace_pool * cmmn_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Unordered: "
     paths_correspond \<pi> pathx \<Longrightarrow>
     \<not> (prefix pathx path) \<Longrightarrow>
@@ -701,7 +703,7 @@ lemma no_empty_paths_correspond_mod_chan: "
 done
 
 
-lemma abstract_paths_of_same_run_inclusive_base: "
+lemma not_static_inclusive_sound_base: "
   E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
@@ -727,12 +729,14 @@ lemma paths_equal_implies_paths_inclusive: "
 by (simp add: Prefix2)
 
 
+(*
 lemma equal_concrete_paths_implies_unordered_or_equal_abstract_paths: "
 paths_correspond_mod_chan EH c \<pi> path1 \<Longrightarrow>
 paths_correspond_mod_chan EH c \<pi> path2 \<Longrightarrow>
 path1 = path2 \<or> (\<not> prefix path1 path2 \<and> \<not> prefix path2 path1)
 "
 sorry
+*)
 
 lemma paths_cong_mod_chan_preserved_under_reduction: "
 paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
@@ -740,6 +744,7 @@ paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> @ [l]) (path @ [n]) \<L
 paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path
 "
 sorry
+
 
 
 lemma leaf_prefix_exists: "
@@ -763,7 +768,7 @@ apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
 done
 
 
-lemma abstract_paths_of_same_run_inclusive_step: "
+lemma not_static_inclusive_sound_step: "
 \<forall>\<pi>1 \<pi>2 path1 path2.
   E \<pi>1 \<noteq> None \<longrightarrow>
   E \<pi>2 \<noteq> None \<longrightarrow>
@@ -888,7 +893,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 qed
 
 
-lemma abstract_paths_of_same_run_inclusive: "
+lemma not_static_inclusive_sound: "
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
@@ -925,7 +930,7 @@ proof -
   proof induction
     case (refl z)
     then show ?case
-      using abstract_paths_of_same_run_inclusive_base by blast
+      using not_static_inclusive_sound_base by blast
   next
     case (step x y z)
 
@@ -954,7 +959,7 @@ proof -
 
       have 
         "path1 \<asymp> path2"
-        using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 abstract_paths_of_same_run_inclusive_step step.hyps(1) step.hyps(2) by blast
+        using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 not_static_inclusive_sound_step step.hyps(1) step.hyps(2) by blast
     }
     then show ?case by blast
   qed
@@ -979,78 +984,53 @@ proof -
     "\<E> \<pi> \<noteq> None" by blast
 qed
 
-lemma send_abstract_paths_of_same_run_inclusive: "
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
-  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-  path1 \<asymp> path2
-"
-using is_send_path_implies_nonempty_pool abstract_paths_of_same_run_inclusive by fastforce
 
-
-
-lemma send_path_equality_sound: "
+lemma static_equality_sound: "
   path1 = path2 \<Longrightarrow>
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> xC) \<pi>1 \<Longrightarrow> 
-  is_send_path \<E>' (Ch \<pi> xC) \<pi>2 \<Longrightarrow> 
+  \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
+  \<E>' \<pi>2 \<noteq> None   \<Longrightarrow> 
   \<pi>1 = \<pi>2
 "
 sorry
 
 
-lemma send_abstract_paths_equal_exclusive_implies_dynamic_paths_equal: "
-pathSync = pathSynca \<or> \<not> pathSync \<asymp> pathSynca \<Longrightarrow> 
-
-([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
-is_send_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>1 \<Longrightarrow>
-is_send_path \<E>' (Ch \<pi> xC) \<pi>\<^sub>2 \<Longrightarrow>
-
-paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>1 pathSync \<Longrightarrow>
-paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>\<^sub>2 pathSynca \<Longrightarrow>
-
-\<pi>\<^sub>1 = \<pi>\<^sub>2
-"
-by (simp add: send_path_equality_sound send_abstract_paths_of_same_run_inclusive)
-
 (* PATH SOUND *)
 
-lemma isnt_path_sound: "
+lemma not_static_traceable_sound: "
   \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   \<rho> z \<noteq> None \<Longrightarrow>
   dynamic_built_on_chan_var \<rho> (Ch \<pi>C xC) z \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-  static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
+  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
-    static_live_path V F Ln Lx (NLet xC) isEnd path
+    static_live_traceable V F Ln Lx (NLet xC) isEnd path
 "
 sorry
 
 
-lemma node_not_send_path_sound: "
+lemma send_not_static_traceable_sound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-  static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
+  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
-    static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC) pathSync
+    static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in node_not_send_site_sound; auto?)
- apply (frule isnt_path_sound; auto?)
+ apply (frule not_static_traceable_sound; auto?)
   apply (auto simp: 
     dynamic_built_on_chan_var.simps 
-    dynamic_built_on_chan_var_dynamic_built_on_chan_prim_dynamic_built_on_chan_bindee_dynamic_built_on_chan_exp.Send_Evt 
+    dynamic_built_on_chan_var_dynamic_built_on_chan_prim_dynamic_built_on_chan_bound_exp_dynamic_built_on_chan_exp.Send_Evt 
   )
 done
 
@@ -1058,20 +1038,20 @@ done
 
 
 theorem one_shot_sound': "
-  every_two (static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC)) singular \<Longrightarrow>
-  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-  static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
+  every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) singular \<Longrightarrow>
+  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
   every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
  apply (simp add: every_two.simps singular.simps; auto)
- apply (frule_tac \<pi>Sync = \<pi>1 in node_not_send_path_sound; auto)
+ apply (frule_tac \<pi>Sync = \<pi>1 in send_not_static_traceable_sound; auto)
  apply (drule_tac x = pathSync in spec)
- apply (frule_tac \<pi>Sync = \<pi>2 in node_not_send_path_sound; auto?)
+ apply (frule_tac \<pi>Sync = \<pi>2 in send_not_static_traceable_sound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (simp add: send_abstract_paths_equal_exclusive_implies_dynamic_paths_equal)
+ apply (metis is_send_path_implies_nonempty_pool not_static_inclusive_sound static_equality_sound)
 done
 
 theorem one_shot_sound: "
@@ -1093,9 +1073,9 @@ TO DO LATER:
 *)
 
 theorem noncompetitive_send_to_ordered_send: "
-  every_two (static_live_path V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-  static_chan_liveness V Ln Lx xC e \<Longrightarrow>
-  static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
+  every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
   every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
@@ -1103,7 +1083,7 @@ theorem noncompetitive_send_to_ordered_send: "
 sorry
 (*
 apply (simp add: every_two.simps noncompetitive.simps; auto)
-using node_not_send_path_sound runtime_send_paths_are_inclusive by blast
+using send_not_static_traceable_sound runtime_send_paths_are_inclusive by blast
 *)
 
 theorem fan_out_sound: "
@@ -1120,8 +1100,8 @@ theorem fan_out_sound: "
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two (static_live_path V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
-   static_flow_set V F (static_recv_node_label V e) e \<Longrightarrow>
+   every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+   static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
    every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered

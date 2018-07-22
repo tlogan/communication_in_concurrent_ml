@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  18 JUL 2018 21:02
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  21 JUL 2018 20:46
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -512,10 +512,10 @@ Overfull \hbox (20.86896pt too wide) in paragraph at lines 1449--1450
 
 [28] [29] [30] [31] (./thesis.aux) ) 
 Here is how much of TeX's memory you used:
- 4351 strings out of 493014
- 53958 string characters out of 6133351
+ 4350 strings out of 493014
+ 53956 string characters out of 6133351
  354518 words of memory out of 5000000
- 7866 multiletter control sequences out of 15000+600000
+ 7865 multiletter control sequences out of 15000+600000
  11882 words of font info for 47 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  27i,6n,42p,222b,1681s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -530,7 +530,7 @@ ic/amsfonts/cm/cmr9.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/
 amsfonts/cm/cmsy9.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/am
 sfonts/cm/cmtt9.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsf
 onts/symbols/msbm10.pfb>
-Output written on thesis.pdf (32 pages, 150438 bytes).
+Output written on thesis.pdf (32 pages, 150648 bytes).
 PDF statistics:
  148 PDF objects out of 1000 (max. 8388607)
  102 compressed objects within 2 object streams
