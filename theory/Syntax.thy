@@ -4,115 +4,73 @@ begin
   
 datatype var = Var string
 
-(* ANF grammar *)
-datatype exp = 
-  ELet var bind exp ("LET _ = _ in _" [0,0, 61] 61) |
-  EResult var ("RESULT _" [61] 61)
+datatype 
+  exp = 
+    Let var bind exp |
+    Rslt var and 
 
-and bind = 
-  Unit ("\<lparr>\<rparr>") |
-  Chan ("CHAN \<lparr>\<rparr>") |
-  Prim prim |
-  Spawn exp ("SPAWN _" [61] 61) |
-  Sync var ("SYNC _" [61] 61)  |
-  Fst var ("FST _" [61] 61) |
-  Snd var ("SND _" [61] 61) |
-  Case var var exp var exp ("CASE _ LEFT _ |> _ RIGHT _ |> _" [0,0,0,0, 61] 61) |
-  App var var ("APP _ _" [61, 61] 61)
-  
-and prim = 
-  Send_Evt var var |
-  Recv_Evt var |
-  Pair var var |
-  Left var |
-  Right var |
-  Abs var var exp
+  bind = 
+    Unt | MkChn | Prim prim | Spwn exp |
+    Sync var | Fst var | Snd var |
+    Case var var exp var exp | App var var and 
 
+  prim = 
+    SendEvt var var | RecvEvt var | Pair var var |
+    Lft var | Rght var | Abs var var exp
 
-abbreviation bind_send_evt :: "var => var => bind" ("SEND EVT _ _" [0, 61] 61) where
-  "SEND EVT x y \<equiv> Prim (Send_Evt x y)"
-  
-abbreviation bind_recv_evt :: "var => bind" ("RECV EVT _" [61] 61) where
-  "RECV EVT x \<equiv> Prim (Recv_Evt x)"
-  
-abbreviation bind_abs :: "var => var => exp => bind" ("FN _ _ . _" [0, 0, 61] 61) where
-  "FN f x . e \<equiv> Prim (Abs f x e)"
-  
-abbreviation bind_pair :: "var => var => bind" ("\<lparr>_, _\<rparr>" [0, 0] 61) where
-  "\<lparr>x, y\<rparr> \<equiv> Prim (Pair x y)"
-  
-abbreviation bind_inl :: "var => bind" ("LEFT _" [61] 61) where
-  "LEFT x \<equiv> Prim (Left x)"
-  
-abbreviation bind_inr :: "var => bind" ("RIGHT _" [61] 61) where
-  "RIGHT x \<equiv> Prim (Right x)"
-  
 (* unrestricted grammar*)
 
-datatype u_exp =
-  U_Let var u_exp u_exp ("$LET _ = _ in _" [0,0, 61] 61) |
-  U_Var var ("$_" [61] 61) |
-  U_Unit ("$\<lparr>\<rparr>") |
-  U_Chan ("$CHAN \<lparr>\<rparr>") |
-  U_Send_Evt u_exp u_exp ("$SEND EVT _ _" [61] 61) |
-  U_Recv_Evt u_exp ("$RECV EVT _" [61] 61)|
-  U_Pair u_exp u_exp ("$\<lparr>_, _\<rparr>" [0, 0] 61) |
-  U_Left u_exp ("$LEFT _" [61] 61)|
-  U_Right u_exp ("$RIGHT _" [61] 61)|
-  U_Abs var var u_exp ("$FN _ _ .  _" [0, 0, 61] 61)|
-  U_Spawn u_exp ("$SPAWN _" [61] 61) |
-  U_Sync u_exp ("$SYNC _" [61] 61) |
-  U_Fst u_exp ("$FST _" [61] 61) |
-  U_Snd u_exp ("$SND _" [61] 61) |
-  U_Case u_exp var u_exp var u_exp ("$CASE _ LEFT _ |> _ RIGHT _ |> _" [0,0,0,0, 61] 61) |
-  U_App u_exp u_exp ("$APP _ _" [61, 61] 61)
+datatype 
+  qexp =
+    QLet var qexp qexp | QVar var | QUnt |
+    QMkChn | QSendEvt qexp qexp | QRecvEvt qexp |
+    QPair qexp qexp | QLft qexp | QRght qexp |
+    QAbs var var qexp | QSpwn qexp | QSync qexp |
+    QFst qexp | QSnd qexp |
+    QCase qexp var qexp var qexp | QApp qexp qexp
   
   
-fun program_size :: "u_exp \<Rightarrow> nat" where
-  "program_size ($y) = 1" |
-  "program_size ($LET x2 = eb in e) = 1 + (program_size eb) + (program_size e)" |
-  "program_size ($\<lparr>\<rparr>) = 1" |
-  "program_size ($CHAN \<lparr>\<rparr>) = 1" |
-  "program_size ($SEND EVT e1 e2) = 1 + (program_size e1) + (program_size e2)" |
-  "program_size ($RECV EVT e) =  1 + (program_size e)" |
-  "program_size ($\<lparr>e1, e2\<rparr>) = 1 + (program_size e1) + (program_size e2)" |
-  "program_size ($LEFT e) = 1 + (program_size e)" |
-  "program_size ($RIGHT e) = 1 + (program_size e)" |
-  "program_size ($FN f x2 . e) = 1 + (program_size e)" | 
-  "program_size ($SPAWN e) = 1 + (program_size e)" |
-  "program_size ($SYNC e) = 1 + (program_size e)" |
-  "program_size ($FST e) = 1 + (program_size e)" |
-  "program_size ($SND e) = 1 + (program_size e)" |
-  "program_size ($CASE e1 LEFT x2 |> e2 RIGHT x3 |> e3) = 1 + (program_size e1) + (program_size e2) + (program_size e3)" |
-  "program_size ($APP e1 e2) = 1 + (program_size e1) + (program_size e2)"
+fun program_size :: "qexp \<Rightarrow> nat" where
+  "program_size (QVar y) = 1" |
+  "program_size (QLet x2 eb e) = 1 + (program_size eb) + (program_size e)" |
+  "program_size (QUnt) = 1" |
+  "program_size (QMkChn) = 1" |
+  "program_size (QSendEvt e1 e2) = 1 + (program_size e1) + (program_size e2)" |
+  "program_size (QRecvEvt e) =  1 + (program_size e)" |
+  "program_size (QPair e1 e2) = 1 + (program_size e1) + (program_size e2)" |
+  "program_size (QLft e) = 1 + (program_size e)" |
+  "program_size (QRght e) = 1 + (program_size e)" |
+  "program_size (QAbs f x2 e) = 1 + (program_size e)" | 
+  "program_size (QSpwn e) = 1 + (program_size e)" |
+  "program_size (QSync e) = 1 + (program_size e)" |
+  "program_size (QFst e) = 1 + (program_size e)" |
+  "program_size (QSnd e) = 1 + (program_size e)" |
+  "program_size (QCase e1 x2 e2 x3 e3) = 1 + (program_size e1) + (program_size e2) + (program_size e3)" |
+  "program_size (QApp e1 e2) = 1 + (program_size e1) + (program_size e2)"
   
   
-fun rename :: "var \<Rightarrow> var \<Rightarrow> u_exp \<Rightarrow> u_exp" where
-  "rename x0 x1 ($y) = (if x0 = y then $x1 else $y)" |
-  "rename x0 x1 ($LET x2 = eb in e) = ($LET x2 = rename x0 x1 eb in
-    (if x0 = x2 then e else (rename x0 x1 e))
-  )" |
-  "rename x0 x1 ($\<lparr>\<rparr>) = $\<lparr>\<rparr>" |
-  "rename x0 x1 ($CHAN \<lparr>\<rparr>) = $CHAN \<lparr>\<rparr>" |
-  "rename x0 x1 ($SEND EVT e1 e2) = $SEND EVT (rename x0 x1 e1) (rename x0 x1 e2)" |
-  "rename x0 x1 ($RECV EVT e) = $RECV EVT (rename x0 x1 e)" |
-  "rename x0 x1 ($\<lparr>e1, e2\<rparr>) = $\<lparr>rename x0 x1 e1, rename x0 x1 e2\<rparr>" |
-  "rename x0 x1 ($LEFT e) = $LEFT (rename x0 x1 e)" |
-  "rename x0 x1 ($RIGHT e) = $RIGHT (rename x0 x1 e)" |
-  "rename x0 x1 ($FN f x2 . e) = ($FN f x2 .
-    (if x0 = f \<or> x0 = x2 then e else (rename x0 x1 e))
-  )" | 
-  "rename x0 x1 ($SPAWN e) = $SPAWN (rename x0 x1 e)" |
-  "rename x0 x1 ($SYNC e) = $SYNC (rename x0 x1 e)" |
-  "rename x0 x1 ($FST e) = $FST (rename x0 x1 e)" |
-  "rename x0 x1 ($SND e) = $SND (rename x0 x1 e)" |
-  "rename x0 x1 ($CASE e1 LEFT x2 |> e2 RIGHT x3 |> e3) = 
-    ($CASE rename x0 x1 e1 
-      LEFT x2 |> (if x0 = x2 then e2 else (rename x0 x1 e2)) 
-      RIGHT x3 |> (if x0 = x3 then e3 else (rename x0 x1 e3)) 
-    )
-  " |
-  "rename x0 x1 ($APP e1 e2) = $APP (rename x0 x1 e1) (rename x0 x1 e2)"
+fun rename :: "var \<Rightarrow> var \<Rightarrow> qexp \<Rightarrow> qexp" where
+  "rename x0 x1 (QVar y) = (if x0 = y then (QVar x1) else (QVar y))" |
+  "rename x0 x1 (QLet x2 eb e) = (QLet x2 (rename x0 x1 eb)
+    (if x0 = x2 then e else (rename x0 x1 e)))" |
+  "rename x0 x1 (QUnt) = QUnt" |
+  "rename x0 x1 (QMkChn) = QMkChn" |
+  "rename x0 x1 (QSendEvt e1 e2) = QSendEvt (rename x0 x1 e1) (rename x0 x1 e2)" |
+  "rename x0 x1 (QRecvEvt e) = QRecvEvt (rename x0 x1 e)" |
+  "rename x0 x1 (QPair e1 e2) = QPair (rename x0 x1 e1) (rename x0 x1 e2)" |
+  "rename x0 x1 (QLft e) = QLft (rename x0 x1 e)" |
+  "rename x0 x1 (QRght e) = QRght (rename x0 x1 e)" |
+  "rename x0 x1 (QAbs f x2 e) = QAbs f x2 
+    (if x0 = f \<or> x0 = x2 then e else (rename x0 x1 e))" | 
+  "rename x0 x1 (QSpwn e) = QSpwn (rename x0 x1 e)" |
+  "rename x0 x1 (QSync e) = QSync (rename x0 x1 e)" |
+  "rename x0 x1 (QFst e) = QFst (rename x0 x1 e)" |
+  "rename x0 x1 (QSnd e) = QSnd (rename x0 x1 e)" |
+  "rename x0 x1 (QCase e1 x2 e2 x3 e3) = 
+    (QCase (rename x0 x1 e1) 
+      x2 (if x0 = x2 then e2 else (rename x0 x1 e2)) 
+      x3 (if x0 = x3 then e3 else (rename x0 x1 e3)))" |
+  "rename x0 x1 (QApp e1 e2) = QApp (rename x0 x1 e1) (rename x0 x1 e2)"
 
   
 theorem program_size_rename_equal[simp]: "program_size (rename x0 x1 e) = program_size e"
@@ -132,139 +90,91 @@ definition sym :: "nat \<Rightarrow> var" where "sym i = Var (''g'' @ (string_of
   
 (*related normalize algorithm explained at http://matt.might.net/articles/a-normalization/ *) 
 (*termination proofs explained in http://isabelle.in.tum.de/doc/functions.pdf*)
-function (sequential) normalize_cont :: "nat \<Rightarrow> u_exp \<Rightarrow> (nat \<Rightarrow> var \<Rightarrow> (exp \<times> nat)) \<Rightarrow> (exp \<times> nat)" where
-  "normalize_cont i ($x) k = k i x" |
-  "normalize_cont i ($LET x = $xb in e) k = 
-    normalize_cont i (rename x xb e) k
-  " |
-  "normalize_cont i ($LET x = eb in e) k = 
-    normalize_cont i eb (\<lambda> i' xb . 
-      normalize_cont i' (rename x xb e) k
-    )
-  " |
-
-  "normalize_cont i ($\<lparr>\<rparr>) k =
+function (sequential) normalize_cont :: "nat \<Rightarrow> qexp \<Rightarrow> (nat \<Rightarrow> var \<Rightarrow> (exp \<times> nat)) \<Rightarrow> (exp \<times> nat)" where
+  "normalize_cont i (QVar x) k = k i x" |
+  "normalize_cont i (QLet x (QVar xb) e) k = 
+    normalize_cont i (rename x xb e) k" |
+  "normalize_cont i (QLet x eb e) k = 
+    normalize_cont i eb (\<lambda> i' xb . normalize_cont i' (rename x xb e) k)" |
+  "normalize_cont i (QUnt) k =
     (let (ek, i') = k (i+1) (sym i) in
-      (LET (sym i) = \<lparr>\<rparr> in ek, i')
-    )
-  "|
-  "normalize_cont i ($CHAN \<lparr>\<rparr>) k =
+      (Let (sym i) Unt ek, i'))"|
+  "normalize_cont i QMkChn k =
     (let (ek, i') = k (i+1) (sym i) in
-      (LET (sym i) = CHAN \<lparr>\<rparr> in ek, i')
-    )
-  "|
+      (Let (sym i) MkChn ek, i'))" |
 
-  "normalize_cont i ($SEND EVT e1 e2) k =
+  "normalize_cont i (QSendEvt e1 e2) k =
    normalize_cont i e1 (\<lambda> i' x1 .
       normalize_cont i' e2 (\<lambda> i'' x2 .
         (let (ek, i''') = (k (i''+1) (sym i'')) in
-          (LET (sym i'') = SEND EVT x1 x2 in ek, i''')
-        )
-      )
-    )
-  " |
-  "normalize_cont i ($RECV EVT e) k =
+          (Let (sym i'') (Prim (SendEvt x1 x2)) ek, i'''))))" |
+
+  "normalize_cont i (QRecvEvt e) k =
     normalize_cont i e (\<lambda> i' xb .
       (let (ek, i'') = (k (i'+1) (sym i')) in
-        (LET (sym i') = RECV EVT xb in ek, i'')
-      )
-    )
-  " |
+        (Let (sym i') (Prim (RecvEvt xb)) ek, i'')))" |
 
 
-  "normalize_cont i ($\<lparr>e1, e2\<rparr>) k =
+  "normalize_cont i (QPair e1 e2) k =
     normalize_cont i e1 (\<lambda> i' x1 .
       normalize_cont i' e2 (\<lambda> i'' x2 .
         (let (ek, i''') = (k (i''+1) (sym i'')) in
-          (LET (sym i'') = \<lparr>x1, x2\<rparr> in ek, i''')
-        )
-      )
-    )
-  " |
-  "normalize_cont i ($LEFT e) k =
-    normalize_cont i e (\<lambda> i' xb .
-      (let (ek, i'') = (k (i'+1) (sym i')) in
-        (LET (sym i') = LEFT xb in ek, i'')
-      )
-    )
-  " |
-  "normalize_cont i ($RIGHT e) k =
-    normalize_cont i e (\<lambda> i' xb .
-      (let (ek, i'') = (k (i'+1) (sym i')) in
-        (LET (sym i') = RIGHT xb in ek, i'')
-      )
-    )
-  " |
+          (Let (sym i'') (Prim (Pair x1 x2)) ek, i'''))))" |
 
-  "normalize_cont i ($FN f x . e) k =
+  "normalize_cont i (QLft e) k =
+    normalize_cont i e (\<lambda> i' xb .
+      (let (ek, i'') = (k (i'+1) (sym i')) in
+        (Let (sym i') (Prim (Lft xb)) ek, i'')))" |
+
+  "normalize_cont i (QRght e) k =
+    normalize_cont i e (\<lambda> i' xb .
+      (let (ek, i'') = (k (i'+1) (sym i')) in
+        (Let (sym i') (Prim (Rght xb)) ek, i'')))" |
+
+  "normalize_cont i (QAbs f x e) k =
     (let g = sym i in
     (let f' = sym (i+1) in
     (let x' = sym (i+2) in
-    (let (e', i') = normalize_cont (i+3) (rename f f' (rename x x' e)) (\<lambda> ik x . (RESULT x, ik)) in
+    (let (e', i') = normalize_cont (i+3) (rename f f' (rename x x' e)) (\<lambda> ik x . (Rslt x, ik)) in
     (let (ek, i'') = (k i' g) in
-      (LET g = (FN f' x' . e') in ek, i'')
-    )))))
-  " |
+      (Let g (Prim (Abs f' x' e')) ek, i''))))))" |
 
-  "normalize_cont i ($SPAWN e) k = 
-    (let (e', i') = normalize_cont (i+1) e (\<lambda> ik x . (RESULT x, ik)) in
+  "normalize_cont i (QSpwn e) k = 
+    (let (e', i') = normalize_cont (i+1) e (\<lambda> ik x . (Rslt x, ik)) in
     (let (ek, i'') = k i' (sym i) in
-      (LET (sym i) = SPAWN e' in ek, i'')
-    ))
-  " |
-  "normalize_cont i ($SYNC e) k =
+      (Let (sym i) (Spwn e') ek, i'')))" |
+
+  "normalize_cont i (QSync e) k =
     normalize_cont i e (\<lambda> i' xb .
       (let (ek, i'') = (k (i'+1) (sym i')) in
-        (LET (sym i') = SYNC xb in ek, i'')
-      )
-    )
-  " |
-  "normalize_cont i ($FST e) k =
+        (Let (sym i') (Sync xb) ek, i'')))" |
+  "normalize_cont i (QFst e) k =
     normalize_cont i e (\<lambda> i' xb .
       (let (ek, i'') = (k (i'+1) (sym i')) in
-        (LET (sym i') = FST xb in ek, i'')
-      )
-    )
-  " |
-  "normalize_cont i ($SND e) k =
+        (Let (sym i') (Fst xb) ek, i'')))" |
+  "normalize_cont i (QSnd e) k =
     normalize_cont i e (\<lambda> i' xb .
       (let (ek, i'') = (k (i'+1) (sym i')) in
-        (LET (sym i') = SND xb in ek, i'')
-      )
-    )
-  " |
-  "normalize_cont i ($CASE e LEFT xl |> el RIGHT xr |> er) k =
+        (Let (sym i') (Snd xb) ek, i'')))" |
+  "normalize_cont i (QCase e xl el xr er) k =
     normalize_cont i e (\<lambda> i' x .
       (let xl' = sym (i'+1) in
-      (let (el', i'') = normalize_cont (i'+2) (rename xl xl' el) (\<lambda> il x . (RESULT x, il)) in
+      (let (el', i'') = normalize_cont (i'+2) (rename xl xl' el) (\<lambda> il x . (Rslt x, il)) in
       (let xr' = sym i'' in  
-      (let (er', i''') = normalize_cont (i''+1) (rename xr xr' er) (\<lambda> ir x . (RESULT x, ir))  in
+      (let (er', i''') = normalize_cont (i''+1) (rename xr xr' er) (\<lambda> ir x . (Rslt x, ir))  in
       (let (ek, i'''') = k i''' (sym i') in
-        (  
-          LET (sym i') = 
-            CASE x 
-            LEFT xl' |> el'
-            RIGHT xr' |> er' 
-          in ek, 
-          i''''
-        )
-      )))))
-    )
-  " |
-  "normalize_cont i ($APP e1 e2) k =
+        (Let (sym i')
+          (Case x xl' el' xr' er') ek, i'''')))))))" |
+  "normalize_cont i (QApp e1 e2) k =
     normalize_cont i e1 (\<lambda> i' x1 .
       normalize_cont i' e2 (\<lambda> i'' x2 .
         (let (e''', i''') = (k (i''+1) (sym i'')) in
-          (LET (sym i'') = APP x1 x2 in e''', i''')
-        )
-      )
-    )
-  "
+          (Let (sym i'') (App x1 x2) e''', i'''))))"
 by pat_completeness auto
 termination by (relation "measure (\<lambda>(i, e, k). program_size e)") auto
 
     
-definition normalize :: "u_exp \<Rightarrow> exp" where
-  "normalize e = fst (normalize_cont 100 e (\<lambda> i x . (RESULT x, i)))"
+definition normalize :: "qexp \<Rightarrow> exp" where
+  "normalize e = fst (normalize_cont 100 e (\<lambda> i x . (Rslt x, i)))"
 
 end

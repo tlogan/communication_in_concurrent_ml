@@ -4,71 +4,66 @@ begin
 
 
 datatype control_label = 
-  LNext var | 
-  LSpawn var |
-  LCall var |
-  LReturn var
+  LNxt var | LSpwn var | LCall var | LRtn var
 
 type_synonym control_path = "control_label list"
 
 datatype chan = Ch control_path var
 
 datatype val = 
-  VUnit |
-  VChan chan |
-  VClosure prim "var \<rightharpoonup> val"
+  VUnt | VChn chan | VClsr prim "var \<rightharpoonup> val"
 
 type_synonym env = "var \<rightharpoonup> val"
   
-datatype cont = Cont var exp env ("\<langle>_,_,_\<rangle>" [0, 0, 0] 70) 
+datatype contin = Ctn var exp env ("\<langle>_,_,_\<rangle>" [0, 0, 0] 70) 
 
-datatype state = State exp env "cont list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
+datatype state = State exp env "contin list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
 
 
 inductive seq_step :: "(bind \<times> env) \<Rightarrow> val \<Rightarrow> bool" where
   Let_Unit: "
-    seq_step (\<lparr>\<rparr>, env) VUnit
+    seq_step (Unt, env) VUnt
   " |
   Let_Prim: "
-    seq_step (Prim p, env) (VClosure p env)
+    seq_step (Prim p, env) (VClsr p env)
   " |
   Let_Fst: "
     \<lbrakk> 
-      env xp = Some (VClosure (Pair x1 x2) envp); 
+      env xp = Some (VClsr (Pair x1 x2) envp); 
       envp x1 = Some v
     \<rbrakk> \<Longrightarrow>
-    seq_step (FST xp, env) v
+    seq_step (Fst xp, env) v
   " |
   Let_Snd: "
     \<lbrakk> 
-      env xp = Some (VClosure (Pair x1 x2) envp); 
+      env xp = Some (VClsr (Pair x1 x2) envp); 
       envp x2 = Some v
     \<rbrakk> \<Longrightarrow>
-    seq_step (SND xp, env) v
+    seq_step (Snd xp, env) v
   "
 
 
 inductive seq_step_up :: "bind * env \<Rightarrow> exp * env \<Rightarrow> bool" where 
-  Let_Case_Left: "
+  let_case_left: "
     \<lbrakk> 
-      env xs = Some (VClosure (Left xl') envl); 
+      env xs = Some (VClsr (Lft xl') envl); 
       envl xl' = Some vl
     \<rbrakk> \<Longrightarrow>
-    seq_step_up (CASE xs LEFT xl |> el RIGHT xr |> er, env) (el, env(xl \<mapsto> vl))
+    seq_step_up (Case xs xl el xr er, env) (el, env(xl \<mapsto> vl))
   " |
-  Let_Case_Right: "
+  let_case_right: "
     \<lbrakk>
-      env xs = Some (VClosure (Right xr') envr); 
+      env xs = Some (VClsr (Rght xr') envr); 
       envr xr' = Some vr
     \<rbrakk> \<Longrightarrow>
-    seq_step_up (CASE xs LEFT xl |> el RIGHT xr |> er, env) (er, env(xr \<mapsto> vr))
+    seq_step_up (Case xs xl el xr er, env) (er, env(xr \<mapsto> vr))
   " |
-  Let_App: "
+  let_app: "
     \<lbrakk>
-      env f = Some (VClosure (Abs fp xp el) envl); 
+      env f = Some (VClsr (Abs fp xp el) envl); 
       env xa = Some va 
     \<rbrakk> \<Longrightarrow>
-    seq_step_up (APP f xa, env) (el, envl(fp \<mapsto> (VClosure (Abs fp xp el) envl), xp \<mapsto> va))
+    seq_step_up (App f xa, env) (el, envl(fp \<mapsto> (VClsr (Abs fp xp el) envl), xp \<mapsto> va))
   "
 
 
@@ -86,23 +81,23 @@ inductive concur_step :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_
   Seq_Step_Down: "
     \<lbrakk> 
       leaf trpl pi;
-      trpl pi = Some (\<langle>RESULT x; env; \<langle>xk, ek, envk\<rangle> # k\<rangle>) ;
+      trpl pi = Some (\<langle>Rslt x; env; \<langle>xk, ek, envk\<rangle> # k\<rangle>) ;
       env x = Some v
     \<rbrakk> \<Longrightarrow>
-    (trpl, ys) \<rightarrow> (trpl(pi @ [LReturn xk] \<mapsto> \<langle>ek; envk(xk \<mapsto> v); k\<rangle>), ys)
+    (trpl, ys) \<rightarrow> (trpl(pi @ [LRtn xk] \<mapsto> \<langle>ek; envk(xk \<mapsto> v); k\<rangle>), ys)
   " |
   Seq_Step: "
     \<lbrakk> 
       leaf trpl pi ;
-      trpl pi = Some (\<langle>LET x = b in e; env; k\<rangle>) ;
+      trpl pi = Some (\<langle>Let x b e; env; k\<rangle>) ;
       seq_step (b, env) v
     \<rbrakk> \<Longrightarrow>
-    (trpl, ys) \<rightarrow> (trpl(pi @ [LNext x] \<mapsto> \<langle>e; env(x \<mapsto> v); k\<rangle>), ys)
+    (trpl, ys) \<rightarrow> (trpl(pi @ [LNxt x] \<mapsto> \<langle>e; env(x \<mapsto> v); k\<rangle>), ys)
   " |
   Seq_Step_Up: "
     \<lbrakk> 
       leaf trpl pi ;
-      trpl pi = Some (\<langle>LET x = b in e; env; k\<rangle>) ;
+      trpl pi = Some (\<langle>Let x b e; env; k\<rangle>) ;
       seq_step_up (b, env) (e', env')
     \<rbrakk> \<Longrightarrow>
     (trpl, ys) \<rightarrow> (trpl(pi @ [LCall x] \<mapsto> \<langle>e'; env'; \<langle>x, e, env\<rangle> # k\<rangle>), ys)
@@ -110,44 +105,41 @@ inductive concur_step :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_
   Let_Chan: "
     \<lbrakk> 
       leaf trpl pi ;
-      trpl pi = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; env; k\<rangle>)
+      trpl pi = Some (\<langle>Let x MkChn e; env; k\<rangle>)
     \<rbrakk> \<Longrightarrow>
     (trpl, ys) \<rightarrow> (trpl(
-      pi @ [LNext x] \<mapsto> (\<langle>e; env(x \<mapsto> (VChan (Ch pi x))); k\<rangle>)), ys)
+      pi @ [LNxt x] \<mapsto> (\<langle>e; env(x \<mapsto> (VChn (Ch pi x))); k\<rangle>)), ys)
   " |
   Let_Spawn: "
     \<lbrakk> 
       leaf trpl pi ;
-      trpl pi = Some (\<langle>LET x = SPAWN ec in e; env; k\<rangle>)
+      trpl pi = Some (\<langle>Let x (Spwn ec) e; env; k\<rangle>)
     \<rbrakk> \<Longrightarrow>
     (trpl, ys) \<rightarrow> (trpl(
-      pi @ [LNext x] \<mapsto> (\<langle>e; env(x \<mapsto> VUnit); k\<rangle>), 
-      pi @ [LSpawn x] \<mapsto> (\<langle>ec; env; []\<rangle>)), ys)
+      pi @ [LNxt x] \<mapsto> (\<langle>e; env(x \<mapsto> VUnt); k\<rangle>), 
+      pi @ [LSpwn x] \<mapsto> (\<langle>ec; env; []\<rangle>)), ys)
   " |
   Let_Sync: "
     \<lbrakk>
    
       leaf trpl pis ;
-      trpl pis = Some (\<langle>LET xs = SYNC xse in es; envs; ks\<rangle>);
-      envs xse = Some (VClosure (Send_Evt xsc xm) envse);
+      trpl pis = Some (\<langle>Let xs (Sync xse) es; envs; ks\<rangle>);
+      envs xse = Some (VClsr (SendEvt xsc xm) envse);
 
       leaf trpl pir ;
-      trpl pir = Some (\<langle>LET xr = SYNC xre in er; envr; kr\<rangle>);
-      envr xre = Some (VClosure (Recv_Evt xrc) envre);
+      trpl pir = Some (\<langle>Let xr (Sync xre) er; envr; kr\<rangle>);
+      envr xre = Some (VClsr (RecvEvt xrc) envre);
 
-      envse xsc = Some (VChan c); 
-      envre xrc = Some (VChan c);      
+      envse xsc = Some (VChn c); 
+      envre xrc = Some (VChn c);      
       envse xm = Some vm
 
     \<rbrakk> \<Longrightarrow>
     (trpl, ys) \<rightarrow> (
       trpl(
-        pis @ [LNext xs] \<mapsto> (\<langle>es; envs(xs \<mapsto> VUnit); ks\<rangle>), 
-        pir @ [LNext xr] \<mapsto> (\<langle>er; envr(xr \<mapsto> vm); kr\<rangle>)), 
+        pis @ [LNxt xs] \<mapsto> (\<langle>es; envs(xs \<mapsto> VUnt); ks\<rangle>), 
+        pir @ [LNxt xr] \<mapsto> (\<langle>er; envr(xr \<mapsto> vm); kr\<rangle>)), 
       ys \<union> {(pis, c, pir)})
   "
-
-abbreviation dynamic_eval :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_set \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
-  "X \<rightarrow>* X' \<equiv> star concur_step X X'"
 
 end
