@@ -250,7 +250,7 @@ inductive static_eval_stack :: "abstract_env \<times> abstract_env \<Rightarrow>
       (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>;
       (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<W> \<Rrightarrow> (\<langle>x, e, \<rho>\<rangle> # \<kappa>)
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<W> \<Rrightarrow> ((Ctn x e \<rho>) # \<kappa>)
   "
 
 
@@ -271,13 +271,13 @@ inductive static_eval_pool :: "abstract_env \<times> abstract_env \<Rightarrow> 
   "
 
 lemma static_eval_state_to_exp_result: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x;\<rho>;(Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>
 "
 proof -
   assume 
-    "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" 
+    "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x;\<rho>;(Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>" 
   then have 
-    "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" by (simp add: static_eval_state.simps) then
+    "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>" by (simp add: static_eval_state.simps) then
   show 
     "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>" by (rule static_eval_stack.cases; auto)
 qed
@@ -367,20 +367,20 @@ proof -
 qed
 
 lemma static_eval_state_to_env_result: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)
 "
 proof
  assume "\<rho> x = Some \<omega> "
 
- assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" then
- have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (rule static_eval_state.cases; auto)+
+ assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>" then
+ have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (rule static_eval_state.cases; auto)+
 
  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> x = Some \<omega>`
  have "{|\<omega>|} \<subseteq> \<V> x" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (simp add: static_eval_env.simps)+
 
- from `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>`
+ from `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>`
  show "\<forall>x \<omega>'. (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)) x = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'"
  proof cases
    case Nonempty
@@ -415,31 +415,31 @@ qed
 
 
 lemma static_eval_state_to_stack_result: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>
 "
 proof -
   assume "\<rho> x = Some \<omega>"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>" by (simp add: static_eval_state.simps) then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>" by (simp add: static_eval_state.simps) then
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>" by (rule static_eval_stack.cases; auto)
 qed
 
 
 lemma static_eval_state_to_state_result: "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle> \<Longrightarrow> 
   \<rho> x = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>); \<kappa>\<rangle>
 "
 proof
-  assume "\<rho> x = Some \<omega>" "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" then
+  assume "\<rho> x = Some \<omega>" "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>" then
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)" by (blast intro: static_eval_state_to_env_result)
 
-  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>`
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>" by (blast intro: static_eval_state_to_exp_result)
 
-  with `\<rho> x = Some \<omega>` `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; \<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>`
+  with `\<rho> x = Some \<omega>` `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: static_eval_state_to_stack_result)
 qed
 
@@ -606,7 +606,7 @@ qed
 lemma static_eval_state_to_stack_let_case_left: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l) \<Longrightarrow> \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> (Ctn x e \<rho>) # \<kappa>
 "
 proof
 
@@ -645,7 +645,7 @@ lemma static_eval_state_to_state_let_case_left: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l) \<Longrightarrow> 
   \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>l; \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l); \<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>l; \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l); (Ctn x e \<rho>) # \<kappa>\<rangle>
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>" and "\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)" then
@@ -658,7 +658,7 @@ proof
   from `\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l`  
   and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>`
   and `\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)` 
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>" by (simp add: static_eval_state_to_stack_let_case_left)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> (Ctn x e \<rho>) # \<kappa>" by (simp add: static_eval_state_to_stack_let_case_left)
 qed
 
 
@@ -711,7 +711,7 @@ qed
 lemma static_eval_state_to_stack_let_case_right: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<langle>Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClsr (Rght x\<^sub>r') \<rho>\<^sub>r) \<Longrightarrow> \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa>  \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa>  \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> (Ctn x e \<rho>) # \<kappa>
 "
 proof
 
@@ -748,7 +748,7 @@ qed
 lemma static_eval_state_to_state_let_case_right: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClsr (Rght x\<^sub>r') \<rho>\<^sub>r) \<Longrightarrow> 
-  \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>r; \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r); \<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>
+  \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>r; \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r); (Ctn x e \<rho>) # \<kappa>\<rangle>
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>" and "\<rho> x\<^sub>s = Some (VClsr (Rght x\<^sub>r') \<rho>\<^sub>r)" then
@@ -761,7 +761,7 @@ proof
   from `\<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r`  
   and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>`
   and `\<rho> x\<^sub>s = Some (VClsr (Rght x\<^sub>r') \<rho>\<^sub>r)` 
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>" by (simp add: static_eval_state_to_stack_let_case_right)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> (Ctn x e \<rho>) # \<kappa>" by (simp add: static_eval_state_to_stack_let_case_right)
 qed
 
 
@@ -947,7 +947,7 @@ qed
 lemma static_eval_state_to_stack_let_app: "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x (App f x\<^sub>a) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
   \<rho> f = Some (VClsr (Abs f' x\<^sub>p e\<^sub>b) \<rho>') \<Longrightarrow> \<rho> x\<^sub>a = Some \<omega>\<^sub>a \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>b\<rfloor>) \<Rrightarrow> \<langle>x,e,\<rho>\<rangle> # \<kappa>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>b\<rfloor>) \<Rrightarrow> (Ctn x e \<rho>) # \<kappa>
 "
 proof
   assume "\<rho> f = Some (VClsr (Abs f' x\<^sub>p e\<^sub>b) \<rho>')" and "\<rho> x\<^sub>a = Some \<omega>\<^sub>a"
@@ -1045,14 +1045,14 @@ theorem static_eval_state_preserved_under_step_up : "
     (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x b e; \<rho>; \<kappa>\<rangle>;
     seq_step_up (b, \<rho>) (e', \<rho>')
   \<rbrakk> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e'; \<rho>'; \<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e'; \<rho>'; (Ctn x e \<rho>) # \<kappa>\<rangle>
 "
 proof -
   assume 
     H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x b e; \<rho>; \<kappa>\<rangle>" and
     H2: "seq_step_up (b, \<rho>) (e', \<rho>')"
 
-  from H2 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e'; \<rho>'; \<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>" 
+  from H2 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e'; \<rho>'; (Ctn x e \<rho>) # \<kappa>\<rangle>" 
   proof cases
     case (let_case_left xs xl' envl vl xl xr er)
     then show ?thesis
@@ -1070,14 +1070,14 @@ qed
 
 theorem static_eval_state_preserved_under_step_down : "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>; 
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>; 
     \<rho> x = Some \<omega>
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>
 "
 proof -
   assume 
-    H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>" and
+    H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>" and
     H2: "\<rho> x = Some \<omega>"
 
   from H1 H2
@@ -1544,7 +1544,7 @@ proof -
       by (simp add: L1H9 local.Seq_Step(1))
   next
     case (Seq_Step_Up \<pi> x b e \<rho> \<kappa> e' \<rho>')
-    have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LCall x] \<mapsto> \<langle>e';\<rho>';\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>)"
+    have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LCall x] \<mapsto> \<langle>e';\<rho>';(Ctn x e \<rho>) # \<kappa>\<rangle>)"
       using H1 local.Seq_Step_Up(4) local.Seq_Step_Up(5) static_eval_pool.simps static_eval_state_preserved_under_step_up by fastforce
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
       by (simp add: L1H1 local.Seq_Step_Up(1))
@@ -1840,7 +1840,7 @@ inductive static_reachable_over_stack :: "exp \<Rightarrow> contin list \<Righta
     static_reachable_left e0 e\<^sub>\<kappa> \<Longrightarrow>
     static_reachable_over_env e0 \<rho>\<^sub>\<kappa> \<Longrightarrow>
     static_reachable_over_stack e0 \<kappa> \<Longrightarrow>
-    static_reachable_over_stack e0 (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)
+    static_reachable_over_stack e0 ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>)
   "
 
 inductive static_reachable_over_state :: "exp \<Rightarrow> state \<Rightarrow> bool" where
@@ -1868,11 +1868,11 @@ proof -
     case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<omega>)
 
     from H1 local.Seq_Step_Down(4)
-    have L1H1: "static_reachable_over_state e\<^sub>0 (\<langle>Rslt x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)" by blast
+    have L1H1: "static_reachable_over_state e\<^sub>0 (\<langle>Rslt x;\<rho>;(Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>)" by blast
 
     then have 
       L1H2: "static_reachable_over_env e\<^sub>0 \<rho>" and 
-      L1H3: "static_reachable_over_stack e\<^sub>0 (\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>)" by (blast dest: static_reachable_over_state.cases)+
+      L1H3: "static_reachable_over_stack e\<^sub>0 ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>)" by (blast dest: static_reachable_over_state.cases)+
 
     then have 
       L1H4: "static_reachable_left e\<^sub>0 e\<^sub>\<kappa>" and 
@@ -1968,7 +1968,7 @@ proof -
       L1H5: "static_reachable_left e\<^sub>0 el" by (blast dest: static_reachable_left.Let)
 
     from L1H3 L1H4 L1H5 have 
-      L1H6: "static_reachable_over_stack e\<^sub>0 (\<langle>x,el,\<rho>l\<rangle> # \<kappa>l)" 
+      L1H6: "static_reachable_over_stack e\<^sub>0 ((Ctn x el \<rho>l) # \<kappa>l)" 
         by (simp add: static_reachable_over_stack.Nonempty)
 
     from local.Seq_Step_Up(5)
@@ -2035,7 +2035,7 @@ proof -
        with L2H2 show "static_reachable_left e\<^sub>0 el' \<and> static_reachable_over_env e\<^sub>0 \<rho>l'" by simp
     qed
 
-    with L1H6 have "static_reachable_over_state e\<^sub>0 (\<langle>el';\<rho>l';\<langle>x,el,\<rho>l\<rangle> # \<kappa>l\<rangle>)" by (simp add: static_reachable_over_state.intros)
+    with L1H6 have "static_reachable_over_state e\<^sub>0 (\<langle>el';\<rho>l';(Ctn x el \<rho>l) # \<kappa>l\<rangle>)" by (simp add: static_reachable_over_state.intros)
 
     with H1 H2 local.Seq_Step_Up(1) show 
       "static_reachable_over_state e\<^sub>0 \<sigma>'"

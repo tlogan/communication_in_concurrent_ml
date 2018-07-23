@@ -802,7 +802,7 @@ inductive static_traversable_stack :: "abstract_env \<Rightarrow> flow_set \<Rig
       static_traversable_env V F \<rho>;
       static_traversable_stack V F \<kappa>
     \<rbrakk> \<Longrightarrow> 
-    static_traversable_stack V F (\<langle>x, e, \<rho>\<rangle> # \<kappa>)
+    static_traversable_stack V F ((Ctn x e \<rho>) # \<kappa>)
   "
 
 inductive static_traversable_pool :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where

@@ -18,8 +18,6 @@ datatype
     SendEvt var var | RecvEvt var | Pair var var |
     Lft var | Rght var | Abs var var exp
 
-(* unrestricted grammar*)
-
 datatype 
   qexp =
     QLet var qexp qexp | QVar var | QUnt |

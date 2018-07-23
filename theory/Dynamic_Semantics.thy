@@ -15,7 +15,7 @@ datatype val =
 
 type_synonym env = "var \<rightharpoonup> val"
   
-datatype contin = Ctn var exp env ("\<langle>_,_,_\<rangle>" [0, 0, 0] 70) 
+datatype contin = Ctn var exp env
 
 datatype state = State exp env "contin list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
 
@@ -81,7 +81,7 @@ inductive concur_step :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_
   Seq_Step_Down: "
     \<lbrakk> 
       leaf trpl pi;
-      trpl pi = Some (\<langle>Rslt x; env; \<langle>xk, ek, envk\<rangle> # k\<rangle>) ;
+      trpl pi = Some (\<langle>Rslt x; env; (Ctn xk ek envk) # k\<rangle>) ;
       env x = Some v
     \<rbrakk> \<Longrightarrow>
     (trpl, ys) \<rightarrow> (trpl(pi @ [LRtn xk] \<mapsto> \<langle>ek; envk(xk \<mapsto> v); k\<rangle>), ys)
@@ -89,7 +89,7 @@ inductive concur_step :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_
   Seq_Step: "
     \<lbrakk> 
       leaf trpl pi ;
-      trpl pi = Some (\<langle>Let x b e; env; k\<rangle>) ;
+      trpl pi = Some (\<langle>(Let x b e); env; k\<rangle>) ;
       seq_step (b, env) v
     \<rbrakk> \<Longrightarrow>
     (trpl, ys) \<rightarrow> (trpl(pi @ [LNxt x] \<mapsto> \<langle>e; env(x \<mapsto> v); k\<rangle>), ys)
@@ -97,15 +97,15 @@ inductive concur_step :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_
   Seq_Step_Up: "
     \<lbrakk> 
       leaf trpl pi ;
-      trpl pi = Some (\<langle>Let x b e; env; k\<rangle>) ;
+      trpl pi = Some (\<langle>(Let x b e); env; k\<rangle>) ;
       seq_step_up (b, env) (e', env')
     \<rbrakk> \<Longrightarrow>
-    (trpl, ys) \<rightarrow> (trpl(pi @ [LCall x] \<mapsto> \<langle>e'; env'; \<langle>x, e, env\<rangle> # k\<rangle>), ys)
+    (trpl, ys) \<rightarrow> (trpl(pi @ [LCall x] \<mapsto> \<langle>e'; env'; (Ctn x e env) # k\<rangle>), ys)
   " |
   Let_Chan: "
     \<lbrakk> 
       leaf trpl pi ;
-      trpl pi = Some (\<langle>Let x MkChn e; env; k\<rangle>)
+      trpl pi = Some (\<langle>(Let x MkChn e); env; k\<rangle>)
     \<rbrakk> \<Longrightarrow>
     (trpl, ys) \<rightarrow> (trpl(
       pi @ [LNxt x] \<mapsto> (\<langle>e; env(x \<mapsto> (VChn (Ch pi x))); k\<rangle>)), ys)
