@@ -19,56 +19,56 @@ type_synonym abstract_path = "step_label list"
 
 inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> exp \<Rightarrow> bool"  where
   Result: "
-    static_traversable V F (RESULT x)
+    static_traversable V F (Rslt x)
   " |
   Let_Unit: "
     \<lbrakk>
       {(NLet x , ENext, top_node_label e)} \<subseteq> F;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = \<lparr>\<rparr> in e)
+    static_traversable V F (Let x Unt e)
   " |
   Let_Chan: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = CHAN \<lparr>\<rparr> in e)
+    static_traversable V F (Let x MkChn e)
   " |
-  Let_Send_Evt: "
+  Let_SendEvt: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = SEND EVT x\<^sub>c x\<^sub>m in e)
+    static_traversable V F (Let x (Prim (SendEvt x\<^sub>c x\<^sub>m)) e)
   " |
-  Let_Recv_Evt: "
+  Let_RecvEvt: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = RECV EVT x\<^sub>c in e)
+    static_traversable V F (Let x (Prim (RecvEvt x\<^sub>c)) e)
   " |
   Let_Pair: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e)
+    static_traversable V F (Let x (Prim (Pair x\<^sub>1 x\<^sub>2)) e)
   " |
   Let_Left: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = LEFT x\<^sub>p in e)
+    static_traversable V F (Let x (Prim (Lft x\<^sub>p)) e)
   " |
   Let_Right: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = RIGHT x\<^sub>p in e)
+    static_traversable V F (Let x (Prim (Rght x\<^sub>p)) e)
   " |
   Let_Abs: "
     \<lbrakk>
@@ -76,7 +76,7 @@ inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarro
       static_traversable V F e\<^sub>b;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = FN f x\<^sub>p . e\<^sub>b  in e)
+    static_traversable V F (Let x (Prim (Abs f x\<^sub>p e\<^sub>b)) e)
   " |
   Let_Spawn: "
     \<lbrakk>
@@ -87,28 +87,28 @@ inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarro
       static_traversable V F e\<^sub>c;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = SPAWN e\<^sub>c in e)
+    static_traversable V F (Let x (Spwn e\<^sub>c) e)
   " |
   Let_Sync: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = SYNC xSE in e)
+    static_traversable V F (Let x (Sync xSE) e)
   " |
   Let_Fst: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = FST x\<^sub>p in e)
+    static_traversable V F (Let x (Fst x\<^sub>p) e)
   " |
   Let_Snd: "
     \<lbrakk>
       {(NLet x, ENext, top_node_label e)} \<subseteq> F;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = SND x\<^sub>p in e)
+    static_traversable V F (Let x (Snd x\<^sub>p) e)
   " |
   Let_Case: "
     \<lbrakk>
@@ -122,7 +122,7 @@ inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarro
       static_traversable V F e\<^sub>r;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e)
+    static_traversable V F (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
   " |
   Let_App: "
     \<lbrakk>
@@ -133,7 +133,7 @@ inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarro
         } \<subseteq> F);
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (LET x = APP f x\<^sub>a in e)
+    static_traversable V F (Let x (App f x\<^sub>a) e)
   "
 
 
@@ -260,11 +260,11 @@ inductive paths_correspond :: "control_path \<Rightarrow> abstract_path \<Righta
   " |
   Next: "
     paths_correspond \<pi> path \<Longrightarrow>
-    paths_correspond (\<pi> @ [LNext x]) (path @ [(NLet x, ENext)])
+    paths_correspond (\<pi> @ [LNxt x]) (path @ [(NLet x, ENext)])
   " |
   Spawn: "
     paths_correspond \<pi> path \<Longrightarrow>
-    paths_correspond (\<pi> @ [LSpawn x]) (path @ [(NLet x, ESpawn)])
+    paths_correspond (\<pi> @ [LSpwn x]) (path @ [(NLet x, ESpawn)])
   " |
   Call: "
     paths_correspond \<pi> path \<Longrightarrow>
@@ -272,7 +272,7 @@ inductive paths_correspond :: "control_path \<Rightarrow> abstract_path \<Righta
   "  |
   Return: "
     paths_correspond \<pi> path \<Longrightarrow>
-    paths_correspond (\<pi> @ [LReturn x]) (path @ [(NResult x, EReturn)])
+    paths_correspond (\<pi> @ [LRtn x]) (path @ [(NResult x, EReturn)])
   " 
 
 lemma not_static_inclusive_sound: "
@@ -466,7 +466,7 @@ by (simp add: equality_contcrete_to_abstract')
 
 
 lemma spawn_point_preserved_under_congruent_paths: " 
-l1 = (LNext x) \<Longrightarrow> l2 = (LSpawn x) \<Longrightarrow>
+l1 = (LNxt x) \<Longrightarrow> l2 = (LSpwn x) \<Longrightarrow>
 paths_correspond (\<pi> @ [l1]) (path @ [n1]) \<Longrightarrow>
 paths_correspond (\<pi> @ [l2]) (path @ [n2]) \<Longrightarrow>
 n1 = (NLet x, ENext) \<and> n2 = (NLet x, ESpawn)
@@ -568,8 +568,8 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 
         have L3H3: "
           l1 = l2 \<or> 
-          (\<exists> x . l1 = (LNext x) \<and> l2 = (LSpawn x)) \<or>
-          (\<exists> x . l1 = (LSpawn x) \<and> l2 = (LNext x))" 
+          (\<exists> x . l1 = (LNxt x) \<and> l2 = (LSpwn x)) \<or>
+          (\<exists> x . l1 = (LSpwn x) \<and> l2 = (LNxt x))" 
           by (smt H10 H11 H12 H14 H15 H16 H3 H7 L1H1 L2H4 L3H1 strict_prefix_abstract_to_concrete prefix_snoc spawn_point strict_prefixI' strict_prefix_def)
 
         have L3H4: "
@@ -633,7 +633,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 qed
 
 lemma not_static_inclusive: "
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
+  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
   paths_correspond \<pi>1 path1 \<Longrightarrow>
@@ -642,7 +642,7 @@ lemma not_static_inclusive: "
 "
 proof -
   assume
-    H1: "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H')" and
+    H1: "star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" and
     H2: "\<E>' \<pi>1 \<noteq> None" and
     H3: "\<E>' \<pi>2 \<noteq> None" and
     H4: "paths_correspond \<pi>1 path1" and
@@ -717,7 +717,7 @@ proof -
   
   then have
     H2: "
-      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) 
+      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) 
     " using is_send_path.simps by auto
 
   then show 
@@ -733,7 +733,7 @@ proof -
   
   then have
     H2: "
-      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) 
+      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) 
     " using is_recv_path.simps by auto
 
   then show 
@@ -756,45 +756,45 @@ where
   " |
 
   Unit: "
-    static_traversable_val V F VUnit
+    static_traversable_val V F VUnt
   " |
 
   Chan: "
-    static_traversable_val V F (VChan c)
+    static_traversable_val V F (VChn c)
   " |
 
-  Send_Evt: "
+  SendEvt: "
     static_traversable_env V F \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClosure (Send_Evt _ _) \<rho>)
+    static_traversable_val V F (VClsr (SendEvt _ _) \<rho>)
   " |
 
-  Recv_Evt: "
+  RecvEvt: "
     static_traversable_env V F \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClosure (Recv_Evt _) \<rho>)
+    static_traversable_val V F (VClsr (RecvEvt _) \<rho>)
   " |
 
   Left: "
     static_traversable_env V F \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClosure (Left _) \<rho>)
+    static_traversable_val V F (VClsr (Lft _) \<rho>)
   " |
 
   Right: "
     static_traversable_env V F \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClosure (Right _) \<rho>)
+    static_traversable_val V F (VClsr (Rght _) \<rho>)
   " |
 
   Abs: "
     static_traversable V F e \<Longrightarrow> 
     static_traversable_env V F  \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClosure (Abs f x e) \<rho>)
+    static_traversable_val V F (VClsr (Abs f x e) \<rho>)
   " |
 
   Pair: "
     static_traversable_env V F \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClosure (Pair _ _) \<rho>)
+    static_traversable_val V F (VClsr (Pair _ _) \<rho>)
   " 
 
-inductive static_traversable_stack :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> cont list \<Rightarrow> bool" where
+inductive static_traversable_stack :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> contin list \<Rightarrow> bool" where
   Empty: "static_traversable_stack V F []" |
   Nonempty: "
     \<lbrakk> 
@@ -818,16 +818,16 @@ inductive static_traversable_pool :: "abstract_env \<Rightarrow> flow_set \<Righ
 lemma static_traversable_pool_preserved_star: "
   static_traversable_pool V F ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]) \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   static_traversable_pool V F \<E>'
 "
 sorry
 
 lemma static_traversable_pool_implies_static_traceable: "
-  \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
+  \<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_traversable_pool V F \<E>' \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
@@ -846,8 +846,8 @@ apply (erule static_traversable.cases; auto)
   apply (simp add: static_traversable.Result static_traversable_env.simps static_traversable_pool.Intro static_traversable_stack.Empty)
   apply (simp add: static_traversable.Let_Unit static_traversable_env.simps static_traversable_pool.intros static_traversable_stack.Empty)
   apply (simp add: static_traversable.Let_Chan static_traversable_env.simps static_traversable_pool.intros static_traversable_stack.Empty)
-  apply (simp add: static_traversable.Let_Send_Evt static_traversable_env.simps static_traversable_pool.intros static_traversable_stack.Empty)
-  apply (simp add: static_traversable.Let_Recv_Evt static_traversable_env.simps static_traversable_pool.intros static_traversable_stack.Empty)
+  apply (simp add: static_traversable.Let_SendEvt static_traversable_env.simps static_traversable_pool.intros static_traversable_stack.Empty)
+  apply (simp add: static_traversable.Let_RecvEvt static_traversable_env.simps static_traversable_pool.intros static_traversable_stack.Empty)
   apply (simp add: static_traversable.Let_Pair static_traversable_env.simps static_traversable_pool.intros static_traversable_stack.Empty)
   apply (simp add: static_traversable.Let_Left static_traversable_env.simps static_traversable_pool.intros static_traversable_stack.Empty)
   apply (simp add: static_traversable.Let_Right static_traversable_env.simps static_traversable_pool.intros static_traversable_stack.Empty)
@@ -861,8 +861,8 @@ apply (erule static_traversable.cases; auto)
 done
 
 lemma path_not_traceable_sound: "
-  \<E>' \<pi> = Some (\<langle>LET x = b in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
+  \<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_traversable V F e \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
@@ -876,7 +876,7 @@ by (metis lift_traversable_to_pool static_traversable_pool_implies_static_tracea
 
 lemma send_path_not_traceable_sound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
+  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_traversable V F e \<Longrightarrow>
   \<exists> pathSync .
@@ -890,7 +890,7 @@ done
 
 lemma recv_path_not_traceable_sound: "
   is_recv_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
+  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_traversable V F e \<Longrightarrow>
   \<exists> pathSync .
@@ -910,7 +910,7 @@ theorem static_one_shot_sound': "
   every_two (static_traceable V F (top_node_label e) (static_send_node_label V e xC)) singular \<Longrightarrow>
   static_traversable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
   every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
  apply (simp add: every_two.simps singular.simps; auto)
@@ -928,7 +928,7 @@ theorem noncompetitive_send_to_ordered_send: "
   every_two (static_traceable V F (top_node_label e) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
   static_traversable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
   every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
@@ -941,7 +941,7 @@ lemma noncompetitive_recv_to_ordered_recv: "
    every_two (static_traceable V F (top_node_label e) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
    static_traversable V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-   ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
    every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)

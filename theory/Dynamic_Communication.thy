@@ -4,17 +4,17 @@ begin
 
 inductive is_send_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where
   intro: "
-    trpl \<pi>y = Some (\<langle>LET xy = SYNC xe in en; env; \<kappa>\<rangle>) \<Longrightarrow>
-    env xe = Some (VClosure (Send_Evt xsc xm) enve) \<Longrightarrow>
-    enve xsc = Some (VChan c) \<Longrightarrow>
+    trpl \<pi>y = Some (\<langle>Let xy (Sync xe) en; env; \<kappa>\<rangle>) \<Longrightarrow>
+    env xe = Some (VClsr (SendEvt xsc xm) enve) \<Longrightarrow>
+    enve xsc = Some (VChn c) \<Longrightarrow>
     is_send_path trpl c \<pi>y
   "
 
 inductive is_recv_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where
   intro: "
-    trpl \<pi>y = Some (\<langle>LET xy = SYNC xe in en; env; \<kappa>\<rangle>) \<Longrightarrow>
-    env xe = Some (VClosure (Recv_Evt xrc) enve) \<Longrightarrow>
-    enve xrc = Some (VChan c) \<Longrightarrow>
+    trpl \<pi>y = Some (\<langle>Let xy (Sync xe) en; env; \<kappa>\<rangle>) \<Longrightarrow>
+    env xe = Some (VClsr (RecvEvt xrc) enve) \<Longrightarrow>
+    enve xrc = Some (VChn c) \<Longrightarrow>
     is_recv_path trpl c \<pi>y
   "
 

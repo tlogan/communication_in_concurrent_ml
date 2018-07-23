@@ -15,33 +15,33 @@ locale communication_sound =
     static_one_shot_sound: "
       static_one_shot V e xC \<Longrightarrow>
       (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+      star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
       one_shot \<E>' (Ch \<pi> xC)" and
 
     static_fan_out_sound: "
       static_fan_out V e xC \<Longrightarrow>
       (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+      star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
       fan_out \<E>' (Ch \<pi> xC)" and
 
     static_fan_in_sound: "
       static_fan_in V e xC \<Longrightarrow>
       (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+      star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
       fan_in \<E>' (Ch \<pi> xC)" and
 
     static_one_to_one_sound: "
       static_one_to_one V e xC \<Longrightarrow>
       (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow>
+      star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
       one_to_one \<E>' (Ch \<pi> xC)"
 
 
 datatype node_label = NLet var | NResult var
 
 fun top_node_label :: "exp \<Rightarrow> node_label" where
-  "top_node_label (LET x = b in e) = NLet x" |
-  "top_node_label (RESULT y) = NResult y"
+  "top_node_label (Let x b e) = NLet x" |
+  "top_node_label (Rslt y) = NResult y"
 
 type_synonym node_set = "node_label set"
 
@@ -50,16 +50,16 @@ type_synonym node_map = "node_label \<Rightarrow> var set"
 inductive static_send_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
   intro: "
     {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
-    {^Send_Evt xSC xM} \<subseteq> V xE \<Longrightarrow>
-    static_reachable e (LET x = SYNC xE in e') \<Longrightarrow>
+    {^SendEvt xSC xM} \<subseteq> V xE \<Longrightarrow>
+    static_reachable e (Let x (Sync xE) e') \<Longrightarrow>
     static_send_node_label V e xC (NLet x)
   "
 
 inductive static_recv_node_label :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> node_label \<Rightarrow> bool" where
   intro: "
     {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
-    {^Recv_Evt xRC} \<subseteq> V xE \<Longrightarrow>
-    static_reachable e (LET x = SYNC xE in e') \<Longrightarrow>
+    {^RecvEvt xRC} \<subseteq> V xE \<Longrightarrow>
+    static_reachable e (Let x (Sync xE) e') \<Longrightarrow>
     static_recv_node_label V e xC (NLet x)
   "
 
@@ -84,8 +84,8 @@ lemma spawn_point: "
   E' (\<pi> @ [l1]) = Some \<sigma>1 \<Longrightarrow>
   E' (\<pi> @ [l2]) = Some \<sigma>2 \<Longrightarrow>
   l1 = l2 \<or> 
-  (\<exists> x . l1 = (LNext x) \<and> l2 = (LSpawn x)) \<or>
-  (\<exists> x . l1 = (LSpawn x) \<and> l2 = (LNext x))
+  (\<exists> x . l1 = (LNxt x) \<and> l2 = (LSpwn x)) \<or>
+  (\<exists> x . l1 = (LSpwn x) \<and> l2 = (LNxt x))
 "
 apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
   apply (metis leaf.cases option.distinct(1) strict_prefixI')
@@ -101,34 +101,34 @@ done
 
 lemma always_send_evt_not_bound_sound: "
   \<lbrakk>
-    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
-    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H');
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    \<rho>\<^sub>y x\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
+    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H');
+    \<E>' \<pi>\<^sub>y = Some (\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
-  {^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> V x\<^sub>e
+  {^SendEvt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> V x\<^sub>e
 "
   apply (drule exp_always_not_static_bound_sound; assumption?; auto)
 done
 
 lemma always_recv_evt_not_bound_sound: "
   \<lbrakk>
-    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
-    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H');
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    \<rho>\<^sub>y x\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
+    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H');
+    \<E>' \<pi>\<^sub>y = Some (\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
-  {^Recv_Evt x\<^sub>r\<^sub>c} \<subseteq> V x\<^sub>e
+  {^RecvEvt x\<^sub>r\<^sub>c} \<subseteq> V x\<^sub>e
 "
   apply (drule exp_always_not_static_bound_sound; assumption?; auto)
 done
 
 lemma always_send_chan_not_bound_sound: "
   \<lbrakk>
-    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi> xC));
-    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H');
+    \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChn (Ch \<pi> xC));
+    \<rho>\<^sub>y x\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
+    \<E>' \<pi>\<^sub>y = Some (\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H');
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   ^Chan xC \<in> V x\<^sub>s\<^sub>c
@@ -136,22 +136,22 @@ lemma always_send_chan_not_bound_sound: "
  apply (frule static_eval_to_pool)
  apply (drule static_eval_preserved_under_concur_step_star[of _ _ _ ]; assumption?)
  apply (erule static_eval_pool.cases; auto)
- apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
+ apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
  apply (erule static_eval_state.cases; auto)
  apply (erule static_eval_env.cases; auto)
- apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e)"]; simp)
+ apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e)"]; simp)
  apply (erule conjE)
  apply (erule static_eval_value.cases; auto)
  apply (erule static_eval_env.cases; auto)
- apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
+ apply (drule spec[of _ x\<^sub>s\<^sub>c], drule spec[of _ "(VChn (Ch \<pi> xC))"]; simp)
 done
 
 lemma always_recv_chan_not_bound_sound: "
   \<lbrakk>
-    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi> xC));
-    \<rho>\<^sub>y x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
-    \<E>' \<pi>\<^sub>y = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H');
+    \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChn (Ch \<pi> xC));
+    \<rho>\<^sub>y x\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
+    \<E>' \<pi>\<^sub>y = Some (\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H');
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   ^Chan xC \<in> V x\<^sub>r\<^sub>c
@@ -159,21 +159,21 @@ lemma always_recv_chan_not_bound_sound: "
  apply (frule static_eval_to_pool)
  apply (drule static_eval_preserved_under_concur_step_star[of _ _ _ ]; assumption?)
  apply (erule static_eval_pool.cases; auto)
- apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
+ apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
  apply (erule static_eval_state.cases; auto)
  apply (erule static_eval_env.cases; auto)
- apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e)"]; simp)
+ apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>e)"]; simp)
  apply (erule conjE)
  apply (erule static_eval_value.cases; auto)
  apply (erule static_eval_env.cases; auto)
- apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "(VChan (Ch \<pi> xC))"]; simp)
+ apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "(VChn (Ch \<pi> xC))"]; simp)
 done
 
 lemma node_not_send_site_sound: "
-  \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  \<rho> x\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
-  \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
+  \<E>' \<pi>Sync = Some (\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<rho> x\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
+  \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChn (Ch \<pi>C xC)) \<Longrightarrow>
+  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_send_node_label V e xC (NLet x\<^sub>y)
 "
@@ -188,10 +188,10 @@ lemma node_not_send_site_sound: "
 done
 
 lemma node_not_recv_site_sound: "
-  \<E>' \<pi>Sync = Some (\<langle>LET x\<^sub>y = SYNC x\<^sub>e in e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  \<rho> x\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>e) \<Longrightarrow>
-  \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChan (Ch \<pi>C xC)) \<Longrightarrow>
-  ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow>* (\<E>', H') \<Longrightarrow> 
+  \<E>' \<pi>Sync = Some (\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<rho> x\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>e) \<Longrightarrow>
+  \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChn (Ch \<pi>C xC)) \<Longrightarrow>
+  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_recv_node_label V e xC (NLet x\<^sub>y)
 "
