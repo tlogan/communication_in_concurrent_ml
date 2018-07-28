@@ -2365,49 +2365,42 @@ qed
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 
-  definition program where "program = (
+  let lp = fun lp x => 
+    let z1 = case x of 
+      L y => let z2 = lp y in z2 |
+      R () => let z3 = () in z3
+      in ()
+    in
 
-  $LET no_chan_loop = ($FN no_chan_loop x .
-    $CASE $x
-    LEFT y |> $APP $no_chan_loop $y
-    RIGHT z |> $⦇⦈
-  ) in
+  let mksr = fun _ x => 
+    let ch1 = mkChan ()  in
+    let z4 = (lp (L (L (R ()))) in
+    let srv = fun srv x  =>
+      let p = sync (recv_evt ch1) in
+      let v1 = fst p in
+      let ch2 = snd p in 
+      let z5 = sync (send_evt ch2 x) in
+      let z6 = srv v1 in ()
+      in
+    let z7 = spawn (
+      let z8 = srv (R ()) in ()) in
+    ch1 in
 
-  $LET make_server = ($FN make_server x .
-    $LET ch = $CHAN ⦇⦈ in
-    $LET z = $APP $no_chan_loop ($LEFT ($LEFT ($RIGHT $⦇⦈))) in
-    $LET loop = ($FN loop x .
-      $LET pair = $SYNC ($RECV EVT $ch) in
-      $LET w = $FST $pair in
-      $LET replCh = $SND $pair in 
-      $LET z = $SYNC ($SEND EVT $replCh $x) in
-      $APP $loop $w
-    ) in
-    $LET z  = $SPAWN ($APP $loop ($RIGHT $⦇⦈)) in
-    $ch
-  ) in
+  let rqst = fun _ pair =>
+    let ch3 = fst pair in
+    let v2 = snd pair in
+    let ch4 = chan () in
+    let z9 = sync (send_evt ch3 (v2, ch4)) in
+    let v3 = sync (recv_evt ch4) in
+    v3 in
 
-  $LET call_server = ($FN call_server pair .
-    $LET ch = $FST $pair in
-    $LET w = $SND $pair in
-    $LET replCh = $CHAN ⦇⦈ in
-    $LET z = $SYNC ($SEND EVT $ch ($⦇$w, $replCh⦈)) in
-    $LET y = $SYNC ($RECV EVT $replCh) in
-    $y
-  ) in
+  let srvr = mksr () in
+  let z10 = spawn ( 
+    let z11 = rqst (srvr, R ()) in ())
+    in
+  let z12 = rqst (srvr, L (R ())) in
+  () 
 
-  $LET server = $APP $make_server $⦇⦈ in
-  $LET z = $SPAWN
-    $APP $call_server $⦇$server, $RIGHT $⦇⦈⦈
-  in
-  $LET z = $SPAWN
-    $LET z = $APP $call_server $⦇$server, $LEFT ($RIGHT $⦇⦈)⦈ in
-    $LET z = $APP $call_server $⦇$server, ($RIGHT $⦇⦈)⦈ in
-    $z
-  in
-  $LET z = $APP $call_server $⦇$server, $LEFT ($RIGHT $⦇⦈)⦈ in
-  $⦇⦈
-)"
   \end{lstlisting}
 
 

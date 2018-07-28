@@ -2,8 +2,7 @@ theory Program1
  imports Main 
   Syntax
   Static_Semantics
-  Static_Framework
-  Static_Communication_Analysis
+  Static_Communication
 begin
 
 abbreviation no_chan_loop where "no_chan_loop \<equiv> Var ''no_chan_loop''"
