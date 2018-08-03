@@ -189,11 +189,14 @@ Spending your energy to determine the topologies for each unique
 program and then verifying them for each program would be exhausting. Instead, you would probably rather have a generic procedure
 that can compute communication topologies for any program in a language, along with a proof that the procedure is sound with
 respect to the programming language.
+
 In this work I demonstostrate formal proofs that the a relation between programs and topologies is sound with respect to the
-semantics of the programming language.  I do not formally prove that the specialized implementations are behaviorally equivalent to
-a generic implementation, but I suggest some plausible examples implementations.  Additionally, I do not prove the the relation
-between input programs and output topologies is a computable procedure, although the syntax directed structure of the definitions
-gives strong evidence of computability. 
+semantics of the programming language.  I refer to this as a static relation, because the intent is that the topologies are computable from the programs, although I do not formally prove computability in this work.  The static relation is defined with a syntax directed structure, which gives strong evidence of computability.  Additionally, I do not formally prove that the specialized implementations are behaviorally equivalent to a generic implementation, but I suggest some plausible example implementations.
+
+The relations are defined over a simple language featuring a small subset of Concurrent ML features.  The features include recursive function abstraction with application, left and right construction with pattern matching, pair construction with first and second projections, send and receive event construction with synchronization, channel creation, thread spawning, and unit literal.  The syntax and semantics are defined in a peculiar way to enable relations between static and dynamic properties of the language.
+
+The syntax is in a very restrictive administrative normal form (ANF), in which every value or evaluatable construct is bound to a name.  Furthermore, constructs only accept names for eagerly evaluted inputs, rather than expression.  A control path is basically defined as a list of bound names, where the names are in order of their respective constructs' evaluation.  The names are also annoted with information related to aspects of the control flow.  A dynamic channel value is uniquely identified by the full control path up to the creation point and also the name bound to the channel creation construct. 
+
 
 \section{Mathematical Artifacts}
 
