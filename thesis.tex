@@ -174,7 +174,7 @@ An even more restrictive version of a channel with at most one send could be use
 	Although there are proofs that the communication topologies are sound with respect to the semantics, it would additionally be important to have proofs that the above specialized implementations are equivalent to the many-to-many implementation under the assumption of particular communication topologies.
 
 
-\section{Informal Objectives}
+\section{Objectives}
 If an algorithm for synchronization is specific to a maxiumum number of threads, it may be more efficient than an algorithm that is generic for any number of threads.  For instance, if there is only ever one thread sending and one thread receiving on a channel, then no locks are needed, which saves time.  However, if there are multiple senders and multiple receivers, then some form of locks or trials and aborts would be needed, which is costly.
 
 The example implementations of generic synchronization and specialized syncrhonization suggest that cost savings of specialized
@@ -191,11 +191,46 @@ that can compute communication topologies for any program in a language, along w
 respect to the programming language.
 
 In this work I demonstostrate formal proofs that the a relation between programs and topologies is sound with respect to the
-semantics of the programming language.  I refer to this as a static relation, because the intent is that the topologies are computable from the programs, although I do not formally prove computability in this work.  The static relation is defined with a syntax directed structure, which gives strong evidence of computability.  Additionally, I do not formally prove that the specialized implementations are behaviorally equivalent to a generic implementation, but I suggest some plausible example implementations.
+semantics of the programming language.  I refer to this as a static relation, because the intent is that the topologies are
+computable from the programs, although I do not formally prove computability in this work.  The static relation is defined with a
+syntax directed structure, which gives strong evidence of computability.  Additionally, I do not formally prove that the specialized
+implementations are behaviorally equivalent to a generic implementation, but I suggest some plausible example implementations.
 
-The relations are defined over a simple language featuring a small subset of Concurrent ML features.  The features include recursive function abstraction with application, left and right construction with pattern matching, pair construction with first and second projections, send and receive event construction with synchronization, channel creation, thread spawning, and unit literal.  The syntax and semantics are defined in a peculiar way to enable relations between static and dynamic properties of the language.
+The relations are defined over a simple language featuring a small subset of Concurrent ML features.  The features include
+recursive function abstraction with application, left and right construction with pattern matching, pair construction with first
+and second projections, send and receive event construction with synchronization, channel creation, thread spawning, and unit
+literal.  The syntax and semantics are defined in a peculiar way to enable relations between static and dynamic properties of the
+language.  A primititive construct is one that contains references to names but cannot be evaulated any further. Send and receive events, left and right constructs, pairs, and function abstractions are primitive constructs.
 
-The syntax is in a very restrictive administrative normal form (ANF), in which every value or evaluatable construct is bound to a name.  Furthermore, constructs only accept names for eagerly evaluted inputs, rather than expression.  A control path is basically defined as a list of bound names, where the names are in order of their respective constructs' evaluation.  The names are also annoted with information related to aspects of the control flow.  A dynamic channel value is uniquely identified by the full control path up to the creation point and also the name bound to the channel creation construct. 
+The syntax is in a very restrictive administrative normal form (ANF), in which every value or evaluatable construct is bound to a
+name.  Furthermore, constructs only accept names for eagerly evaluted inputs, rather than expression.  A control path is basically
+defined as a list of bound names, where the names are in order of their respective constructs' evaluation. The names are also annoted with information related to aspects of the control flow.
+
+The unit literal corresponds to a unit value. A dynamic channel value is uniquely identified by the full control path up to the
+point of channel creation along with the name bound to the channel creation construct. The value of a primitive construct is a c
+losure over the construct with an environment that maps the names to further values.
+
+Bound expressions of the unit literal, primitive constructs, and first and second constructs can be evalued to values in one step.  The seq_step relation describes the evaluation of bound expressions with environments to values.  The unit construct simpl evalues
+to the unit value.  A prim constructs is simply wrapped up with the environment.  The first construct is evaluated by retrieving
+the pair associated with the construct's named argument and looking up the value of that pair's first named argument. The second
+construct is evaluated by retrieving the pair associated with the construct's named argument and looking up the value of that pair's
+second named argument.  Other constructs for spawn, application, and case matching cannot be described with the seq_step because
+they do not evaluate to values in one step and require updating additional information about control flow. 
+
+The seq_step_up relation handles the evaluation of function application and case pattern matching.  These bound expressions with
+associated environments are evalued to full expressions along with a new environment.  Pattern matching is evaluated looking up the
+value of first named argument.  If the pattern is a Left construct, then the it's evauluated to the left expression along with an
+environment updated with a name specified for use in that expression.  The value associated with the left case pattern, is bound to
+the specified name in the new environment. If the pattern is a Right construct, then the it's evauluated to the right expression
+along with an environment updated with a name specified for use in that expression.  The value associated with the right case
+pattern, is bound to the specified name in the new environment. Function application evaluates to the expression within the applied function abstraction, along with the abstraction's environment with a couple of modifications.  The environenment is updated with the recursion paramenter name bound to the abstraction, and the variable parameter bound to the argument specified in the application expression. 
+
+The concur_step ...
+
+
+
+
+
 
 
 \section{Mathematical Artifacts}
