@@ -14,10 +14,6 @@ datatype val =
   VUnt | VChn chan | VClsr prim "var \<rightharpoonup> val"
 
 type_synonym env = "var \<rightharpoonup> val"
-  
-datatype contin = Ctn var exp env
-
-datatype state = State exp env "contin list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
 
 
 inductive seq_step :: "(bind \<times> env) \<Rightarrow> val \<Rightarrow> bool" where
@@ -66,6 +62,12 @@ inductive seq_step_up :: "bind * env \<Rightarrow> exp * env \<Rightarrow> bool"
     seq_step_up (App f xa, env) (el, envl(fp \<mapsto> (VClsr (Abs fp xp el) envl), xp \<mapsto> va))
   "
 
+
+
+  
+datatype contin = Ctn var exp env
+
+datatype state = State exp env "contin list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
 
 type_synonym trace_pool = "control_path \<rightharpoonup> state"
 
