@@ -252,7 +252,13 @@ If two leaves in the trace pool correspond to synchronization constructs on the 
 and the other synchronizes on a receive event, then the trace pool is updated with two new paths extending the two synchronizing leaf paths.  The leaf path for the send event is extended by a label indicating sequential flow.  For its state, the next expression of the let expression is used, and the environment is updated with the unit value bound to the let expression name.  The leaf path for the receive event is also extended by a label indicatin sequential control flow.  For its state, the next expression of the let expression is used, and the environment is updated with the value associated with the send event's second argument.   Additionally, the communication set is updated with the send and receive paths, and the channel that is communicated on. 
 
 
-dynamic communication ...
+The one shot predicate states that in a trace pool, there is only one control path that synchronizes and sends on a given channel.
+
+Whether two attempts to synchronize on a channel are competitive or not can be determined by looking at the control paths of the trace pool.  If two paths are ordered, that is, one is the prefix of the other and vice versa, then the dynamic semantics states that they necessarily occur in sequence, so the shorter path must synchronize before the longer path.  Two paths may be competitive only if they are unordered. 
+The fan in predicate states that there is no competition on the receiving end of a channel, by stating that any two paths that synchonize to receive on a channel are ordered.
+The fan out predicate states that there is no competition on the sending end of a channel, by stating that any two paths that syncronize to send on a channel are ordered. 
+The one to one predicates states that there is no competition on either the receiving or the sending ends of a channel. 
+
 
 
 static semantics ...
