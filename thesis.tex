@@ -260,8 +260,24 @@ The fan out predicate states that there is no competition on the sending end of 
 The one to one predicates states that there is no competition on either the receiving or the sending ends of a channel. 
 
 
-
 static semantics ...
+
+In order to determine sound communication topologies with some decent amount of precision, it is necessary to determine values associated with expressions and names of a program.  In a language that allows inifinite recursion, it is not always possible to determine the exact values.  However, it's also not necessary.  Abstract values, which are imprecise approximations of the values at runtime, are good enough.
+
+abstract values consist of abstract unit, abstract channels, and abstract primitive values.  The abstract unit is actually no less precise than the actual unit value.  The abstract channel is identified only by the name at which it is created, rather than the full control path that leads up to it.  The abstract primitive value is simply a primitive construct without an environment for looking up its named arguments. 
+
+The static evaluation predicate is a relation from an input program to two outputs, each a map of names to sets of abstract values.  A set of abstract values can be thought as a further abstraction, allowing less precision.
+The first output represents a the values that might bind to names.  The second output represents values that might be passed over channels.
+
+The definition for static evaluation is nondeterministic, but its syntax-directed structure suggests a refinement to computable definition, thus proving soundness with this definition should be sufficient to prove soundness for the more practical computable definition.
+
+For a result expression, there may be any abstract value bindings or communication.
+For all let expressions, the bindings and communication are outputs for the next expression. 
+For unit binding, the binding name is bound to the abstract unit. 
+For channel creation, the binding name is bound to an abstract channel identified by the same binding name. 
+For all primtive contruct bindings, the binding name is bound to the abstract primtive value represented by the primitive construct.  Additionaly for the primitive construct of function abstraction, the the recursive parameter to the function abstraction is bound to the function abstraction, and the bindings and communication are also outputs for the function abstraction's internal expression.  
+For spawn, the bindings and communication are also outputs for the spawned expression, and the the binding name is bound to the abstract unit.
+
 
 
 static communication ...
