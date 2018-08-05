@@ -210,20 +210,18 @@ The unit literal corresponds to a unit value. A dynamic channel value is uniquel
 point of channel creation along with the name bound to the channel creation construct. The value of a primitive construct is a c
 losure over the construct with an environment that maps the names to further values.
 
-Bound expressions of the unit literal, primitive constructs, and first and second constructs can be evalued to values in one step.  The seq step relation describes the evaluation of bound expressions with environments to values.  The unit construct simpl evalues
-to the unit value.  A prim constructs is simply wrapped up with the environment.  The first construct is evaluated by retrieving
-the pair associated with the construct's named argument and looking up the value of that pair's first named argument. The second
-construct is evaluated by retrieving the pair associated with the construct's named argument and looking up the value of that pair's
-second named argument.  Other constructs for spawn, application, and case matching cannot be described with the seq step because
+Bound expressions of the unit literal, primitive constructs, and first and second constructs can be evalued to values in one step.  The seq step relation describes the evaluation of bound expressions with environments to values.  The unit construct simply evaluates
+to the unit value.  A prim construct is simply wrapped up with the environment.  The first projection is evaluated to the abstract value of the first argument of the associated pair. The second projection is evaluated to the abstract value of the second argument of the associated pair.
+
+Other constructs for spawn, application, and case matching cannot be described with the seq step because
 they do not evaluate to values in one step and require updating additional information about control flow. 
 
 The seq step up relation handles the evaluation of function application and case pattern matching.  These bound expressions with
-associated environments are evalued to full expressions along with a new environment.  Pattern matching is evaluated looking up the
-value of first named argument.  If the pattern is a Left construct, then the it's evauluated to the left expression along with an
-environment updated with a name specified for use in that expression.  The value associated with the left case pattern, is bound to
-the specified name in the new environment. If the pattern is a Right construct, then the it's evauluated to the right expression
+associated environments are evalued to full expressions along with a new environment.  Case matching is evaluated based on the case of the construct's first argument.  If the first argument is a left case, then the case matching is evauluated to the left expression along with an
+environment updated with a name specified for use in that expression.  The value associated with the left case pattern is bound to
+the specified name in the new environment. If the first argument is a right case, then then the case matching is evaluated to the right expression
 along with an environment updated with a name specified for use in that expression.  The value associated with the right case
-pattern, is bound to the specified name in the new environment. Function application evaluates to the expression within the applied function abstraction, along with the abstraction's environment with a couple of modifications.  The environenment is updated with the recursion paramenter name bound to the abstraction, and the variable parameter bound to the argument specified in the application expression. 
+ is bound to the specified name in the new environment. Function application evaluates to the expression within the applied function abstraction, along with the function abstraction's environment with a couple of modifications.  The environment is updated with the recursive function name bound to the function abstraction, and the parameter name is bound to the function argument specified in the application expression. 
 
 
 A continuation is composed of a name, an expression and an environment.  It represents an expression and environment that should be evaluated once the name can be resolved to a value.  A state is composed of an expression, an evnironment, and a stack of continuations.  It represents information that might be evaluted to another state in the present of control path information.  A trace pool associated control paths with states.  The associated control path represent the path taken to reach the associated state.
@@ -260,8 +258,6 @@ The fan out predicate states that there is no competition on the sending end of 
 The one to one predicates states that there is no competition on either the receiving or the sending ends of a channel. 
 
 
-static semantics ...
-
 In order to determine sound communication topologies with some decent amount of precision, it is necessary to determine values associated with expressions and names of a program.  In a language that allows inifinite recursion, it is not always possible to determine the exact values.  However, it's also not necessary.  Abstract values, which are imprecise approximations of the values at runtime, are good enough.
 
 abstract values consist of abstract unit, abstract channels, and abstract primitive values.  The abstract unit is actually no less precise than the actual unit value.  The abstract channel is identified only by the name at which it is created, rather than the full control path that leads up to it.  The abstract primitive value is simply a primitive construct without an environment for looking up its named arguments. 
@@ -278,6 +274,14 @@ For channel creation, the binding name is bound to an abstract channel identifie
 For all primtive contruct bindings, the binding name is bound to the abstract primtive value represented by the primitive construct.  Additionaly for the primitive construct of function abstraction, the the recursive parameter to the function abstraction is bound to the function abstraction, and the bindings and communication are also outputs for the function abstraction's internal expression.  
 For spawn, the bindings and communication are also outputs for the spawned expression, and the the binding name is bound to the abstract unit.
 
+For synchronization, if the send event is bound to the syncrhonization argument, then the binding name is bound to abstract unit, and the send event's channel communicates the argument associated with the send event's message argument.  If the receive event is bound to the synchronization argument, then the binding name is bound to the abstract value communicated by the receive event's channel.
+
+For the first projection, if its argument is a pair, then the binding name is bound to the abastract value associated with the pair's first argument.  For the second projection, if its argument is a pair, then the binding name is bound to the abstract value associated with the pair's second argument.  
+
+For the case matching, if its first argument is a left case, then the left name is bound to the abstract value of the left case, the let binding name is bound to the result value of the left expression, and the bindings and communication are outputs for the left expression.  If its first argument is a right case, then the right name is bound to the abstract value of the right case, the right binding name is ound to the result value of the right expression, and the bindings and communication are outputs for the right expression. 
+
+
+for function application, if a function abstraction is bound to the first argument of application, then the abstract value of the second argument of application (the function argument) is bound to the abstraction's parameter name, and the resulting abstract value of the abstraction is bound the the let binding name.
 
 
 static communication ...
