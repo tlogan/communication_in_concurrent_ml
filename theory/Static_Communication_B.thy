@@ -518,9 +518,6 @@ inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<R
     static_fan_in V e xC 
   "
 
-locale communication_sound_B = 
-  Static_Communication.communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one
-
 
 
 end

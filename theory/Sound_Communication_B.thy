@@ -5,6 +5,9 @@ theory Sound_Communication_B
     Static_Communication_B
 begin
 
+locale communication_sound_B = 
+  Sound_Communication.communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one
+
 lemma static_inclusive_commut: "
   static_inclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> static_inclusive path\<^sub>2 path\<^sub>1
 "

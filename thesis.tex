@@ -258,7 +258,7 @@ The fan out predicate states that there is no competition on the sending end of 
 The one to one predicates states that there is no competition on either the receiving or the sending ends of a channel. 
 
 
-In order to determine sound communication topologies with some decent amount of precision, it is necessary to determine values associated with expressions and names of a program.  In a language that allows inifinite recursion, it is not always possible to determine the exact values.  However, it's also not necessary.  Abstract values, which are imprecise approximations of the values at runtime, are good enough.
+In order to determine communication topologies with some decent amount of precision, it is necessary to determine values associated with expressions and names of a program.  In a language that allows inifinite recursion, it is not always possible to determine the exact values.  However, it's also not necessary.  Abstract values, which are imprecise approximations of the values at runtime, are good enough.
 
 abstract values consist of abstract unit, abstract channels, and abstract primitive values.  The abstract unit is actually no less precise than the actual unit value.  The abstract channel is identified only by the name at which it is created, rather than the full control path that leads up to it.  The abstract primitive value is simply a primitive construct without an environment for looking up its named arguments. 
 
@@ -280,11 +280,13 @@ For the first projection, if its argument is a pair, then the binding name is bo
 
 For the case matching, if its first argument is a left case, then the left name is bound to the abstract value of the left case, the let binding name is bound to the result value of the left expression, and the bindings and communication are outputs for the left expression.  If its first argument is a right case, then the right name is bound to the abstract value of the right case, the right binding name is ound to the result value of the right expression, and the bindings and communication are outputs for the right expression. 
 
+The static reachable predicate states that an expression can be reached from another expression, by simply stating that an expression is reachable from itself,  and an expression is reachable from an initial expression, if it is also reachable from the sub expressions of the initial expression.  
 
 for function application, if a function abstraction is bound to the first argument of application, then the abstract value of the second argument of application (the function argument) is bound to the abstraction's parameter name, and the resulting abstract value of the abstraction is bound the the let binding name.
 
+To describe communication statically, yet also somewhat precisely, it will be advantageous label describe every expression in a with a short description.  There are two forms of expressions, let binding expressions and result expressions.  A let binding expression is associated with a label indicating its form and contains the name used for its first binding. A result expression is associated with a label indicating its form and contains the name of the result's argument.  The dynamic description also contains labels for representing the control flow, which are slightly different due to the differences in how the static and dynamic relations can be defined.  Since a goal of the static relations is that they imply a computable refinement, there is an additional restriction to consider, resulting in the slightly different labeling of expressions.    
 
-static communication ...
+the static send node predicate states that a node might represent a sycnronization to send on a given abstract channel, in a given a program with given abstract value bindings.  The static receive node predicate state that a node might represent a synchronization to receive on a given abstract channel, in a given program with given abstract value bindings. 
 
 static communication A ...
 
