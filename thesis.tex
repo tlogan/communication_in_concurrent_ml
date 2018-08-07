@@ -288,7 +288,25 @@ To describe communication statically, yet also somewhat precisely, it will be ad
 
 the static send node predicate states that a node might represent a sycnronization to send on a given abstract channel, in a given a program with given abstract value bindings.  The static receive node predicate state that a node might represent a synchronization to receive on a given abstract channel, in a given program with given abstract value bindings. 
 
+
+I define the static communicatin predicates relating programs to communnication topologies in two different ways.  The first way is simpler but the second way may allows more precise communication topologies for many common programs.
+
+For the simpler version, there are four kinds of control edges, indicating how one point in a program transitions to another point in a program.  The edge transitions are sequencing, calling, spawning, and returning. 
+A flow is a triplet of a node, representing a point in the progra, a control edge, and another node.  A step is just a node and a control edge, without the destination node.  An abstract control path is a list of steps.  
+
+
+
 static communication A ...
+
+the static traversable predicate states that a set of flows describes all the flows that might be traversed for a program, given bindings of abstract values.  For a result expression, any flows might be traversed.  For all let expressions, except those binding to case matching and function application, the sequential flow from the top expression to the sequenced expression might be traversable, and the traversable flows are also the traversable flows for the sequenced expression.  For binding to function abstraction, the traversable flows are also traversable flows for the inner expression of the function abstraction.  For binding to spawning, the spawning flow from the top expression to the spawned expression might be traversed, and the traversable flows are also traversable flows for the spawned expression.
+For binding to case matching, the the calling flow from the top expression to the left case expression might be traversable, and the calling flow from the top expression to the right case expression might be traversable.  The returning flow from the result of the left case expression to the sequenced expression might be traversable, and the returning flow from the result of the right case expression to the sequenced expression might be traversable.  Additionally, the traversable flows are traversable flows the left case expression, right case expression, and the sequenced expression.   
+For binding to function application, if the applied name is acutally bound to a function abstraction, then a calling flow from the top expression to the inner expression of the abstraction might be traversable, and the returning flow from the result of the function abstracted expression to the sequenced expression.  Additionally, the traversable flows are traversable flows for the sequenced expression. 
+
+The static traceable predicate states that an abstract control path can be traced according to a set of flows from a starting node to a final node matching a given condition.  An empty path might be traceable if the start node is also the final node.  A path of one step might be traceable if its node is the required start node, and there is a flow containing the step and the flow's destination node meets the final node requirement.   
+For a path of two or more steps, the first node is the start node, there is a flow from the first step to the second step, and the path from the second step onward also might be traceable.
+
+
+
 
 
 static communication B ...
