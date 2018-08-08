@@ -214,7 +214,7 @@ Bound expressions of the unit literal, primitive constructs, and first and secon
 to the unit value.  A prim construct is simply wrapped up with the environment.  The first projection is evaluated to the abstract value of the first argument of the associated pair. The second projection is evaluated to the abstract value of the second argument of the associated pair.
 
 Other constructs for spawn, application, and case matching cannot be described with the seq step because
-they do not evaluate to values in one step and require updating additional information about control flow. 
+they do not evaluate to values in one step and require updating additional information about the mode of the transition. 
 
 The seq step up relation handles the evaluation of function application and case pattern matching.  These bound expressions with
 associated environments are evalued to full expressions along with a new environment.  Case matching is evaluated based on the case of the construct's first argument.  If the first argument is a left case, then the case matching is evauluated to the left expression along with an
@@ -230,24 +230,23 @@ The leaf predicate desribes that a path is has no descendants within a trace poo
 The concur step relation describes the evaluation of a trace pool to another tracel pool.  Trace pools grow montonicially with
 respect to evaluation, retaining a full history.  A trace pool is evaluated to a new trace pool based only on information
 associated with leaf paths and their associated states.  If a leaf path is associated with a bound expresion that can be evaluated
-to a value in one sequential step, then the trace pool is updated with the leaf path extended by a label indicating a sequential
-control flow, and the extended path is associated with the let binding's next expression and the leaf path's associated environment
+to a value in one sequential step, then the trace pool is updated with the leaf path extended by a label indicating a sequential transition, and the extended path is associated with the let binding's next expression and the leaf path's associated environment
 updated with the value bound to the let binding's name.  If the bound expression can be evaluated to an expression and a new 
-environment, then the leaf path is extended with a label indicating a calling control flow.  The extended path is associated with
+environment, then the leaf path is extended with a label indicating a calling transition.  The extended path is associated with
 the the new expression and new environment resulting from the evaluation of the bound expression, and the name and expression of the
 let binding are pushed onto the stack to be evaluated in later steps.  If a leaf path is associated with a result expression, then
-the trace pool is updated with the leaf path extended with a label indicating a return control flow.  The new path is associated
+the trace pool is updated with the leaf path extended with a label indicating a returning transition.  The new path is associated
 with a state containing the expression popped from the continuation stack and the environment popped from the stack and updated
 with continuation's name bound to the result's associated value.  If a leaf path is associated with a channel creation construct,
-then the trace pool is updated with the leaf path extended with a sequential control flow label, and its associated state contains
+then the trace pool is updated with the leaf path extended with a sequential transition, and its associated state contains
 the next expression, and an environment updated with a new channel value.  If a leaf path is associated with a let expression
 binding to a spawn contstruct, then the trace pool is updated with two new paths extending the leaf path.  For one, the leaf path
 is extended with a sequential label whose state has the next expression and the environment updated with the unit value bound to
 the let binding name, and the original continuation stack. For the other, the leaf path extended with a label indicating a spawning
-control flow.  Its state has the spawned expression, the original environment, and an empty continuation stack.  
+transition.  Its state has the spawned expression, the original environment, and an empty continuation stack.  
 
 If two leaves in the trace pool correspond to synchronization constructs on the same channel, where one synchronizes on a send event
-and the other synchronizes on a receive event, then the trace pool is updated with two new paths extending the two synchronizing leaf paths.  The leaf path for the send event is extended by a label indicating sequential flow.  For its state, the next expression of the let expression is used, and the environment is updated with the unit value bound to the let expression name.  The leaf path for the receive event is also extended by a label indicatin sequential control flow.  For its state, the next expression of the let expression is used, and the environment is updated with the value associated with the send event's second argument.   Additionally, the communication set is updated with the send and receive paths, and the channel that is communicated on. 
+and the other synchronizes on a receive event, then the trace pool is updated with two new paths extending the two synchronizing leaf paths.  The leaf path for the send event is extended by a label indicating sequential transition.  For its state, the next expression of the let expression is used, and the environment is updated with the unit value bound to the let expression name.  The leaf path for the receive event is also extended by a label indicating sequential transition.  For its state, the next expression of the let expression is used, and the environment is updated with the value associated with the send event's second argument.   Additionally, the communication set is updated with the send and receive paths, and the channel that is communicated on. 
 
 
 The one shot predicate states that in a trace pool, there is only one control path that synchronizes and sends on a given channel.
@@ -284,29 +283,26 @@ The static reachable predicate states that an expression can be reached from ano
 
 for function application, if a function abstraction is bound to the first argument of application, then the abstract value of the second argument of application (the function argument) is bound to the abstraction's parameter name, and the resulting abstract value of the abstraction is bound the the let binding name.
 
-To describe communication statically, yet also somewhat precisely, it will be advantageous label describe every expression in a with a short description.  There are two forms of expressions, let binding expressions and result expressions.  A let binding expression is associated with a label indicating its form and contains the name used for its first binding. A result expression is associated with a label indicating its form and contains the name of the result's argument.  The dynamic description also contains labels for representing the control flow, which are slightly different due to the differences in how the static and dynamic relations can be defined.  Since a goal of the static relations is that they imply a computable refinement, there is an additional restriction to consider, resulting in the slightly different labeling of expressions.    
+To describe communication statically, yet also somewhat precisely, it will be advantageous label describe every expression in a with a short description.  There are two forms of expressions, let binding expressions and result expressions.  A let binding expression is associated with a label indicating its form and contains the name used for its first binding. A result expression is associated with a label indicating its form and contains the name of the result's argument.  The dynamic description also contains labels for representing the mode of transition, which are slightly different due to the differences in how the static and dynamic relations can be defined.  Since a goal of the static relations is that they imply a computable refinement, there is an additional restriction to consider, resulting in the slightly different labeling of transitions between expressions.    
 
-the static send node predicate states that a node might represent a sycnronization to send on a given abstract channel, in a given a program with given abstract value bindings.  The static receive node predicate state that a node might represent a synchronization to receive on a given abstract channel, in a given program with given abstract value bindings. 
+the static send label predicate states that a label might represent a sycnronization to send on a given abstract channel, in a given a program with given abstract value bindings.  The static receive label predicate state that a label might represent a synchronization to receive on a given abstract channel, in a given program with given abstract value bindings. 
 
 
 I define the static communicatin predicates relating programs to communnication topologies in two different ways.  The first way is simpler but the second way may allows more precise communication topologies for many common programs.
 
 For the simpler version, there are four kinds of control edges, indicating how one point in a program transitions to another point in a program.  The edge transitions are sequencing, calling, spawning, and returning. 
-A flow is a triplet of a node, representing a point in the progra, a control edge, and another node.  A step is just a node and a control edge, without the destination node.  An abstract control path is a list of steps.  
+A transition is a triplet of a label, representing a point in the progra, a control edge, and another label.  A step is just a label and a control edge, without the destination label.  An abstract control path is a list of steps.  
 
 
 
 static communication A ...
 
-the static traversable predicate states that a set of flows describes all the flows that might be traversed for a program, given bindings of abstract values.  For a result expression, any flows might be traversed.  For all let expressions, except those binding to case matching and function application, the sequential flow from the top expression to the sequenced expression might be traversable, and the traversable flows are also the traversable flows for the sequenced expression.  For binding to function abstraction, the traversable flows are also traversable flows for the inner expression of the function abstraction.  For binding to spawning, the spawning flow from the top expression to the spawned expression might be traversed, and the traversable flows are also traversable flows for the spawned expression.
-For binding to case matching, the the calling flow from the top expression to the left case expression might be traversable, and the calling flow from the top expression to the right case expression might be traversable.  The returning flow from the result of the left case expression to the sequenced expression might be traversable, and the returning flow from the result of the right case expression to the sequenced expression might be traversable.  Additionally, the traversable flows are traversable flows the left case expression, right case expression, and the sequenced expression.   
-For binding to function application, if the applied name is acutally bound to a function abstraction, then a calling flow from the top expression to the inner expression of the abstraction might be traversable, and the returning flow from the result of the function abstracted expression to the sequenced expression.  Additionally, the traversable flows are traversable flows for the sequenced expression. 
+the static traversable predicate states that a set of transitions describes all the transitions that might be traversed for a program, given bindings of abstract values.  For a result expression, any transition might be traversed.  For all let expressions, except those binding to case matching and function application, the sequential transition from the top expression to the sequenced expression might be traversable, and the traversable transitions are also the traversable transitions for the sequenced expression.  For binding to function abstraction, the traversable transitions are also traversable transitions for the inner expression of the function abstraction.  For binding to spawning, the spawning transition from the top expression to the spawned expression might be traversed, and the traversable transitions are also traversable transitions for the spawned expression.
+For binding to case matching, the the calling transition from the top expression to the left case expression might be traversable, and the calling transition from the top expression to the right case expression might be traversable.  The returning transition from the result of the left case expression to the sequenced expression might be traversable, and the returning transition from the result of the right case expression to the sequenced expression might be traversable.  Additionally, the traversable transitions are traversable transitions the left case expression, right case expression, and the sequenced expression.   
+For binding to function application, if the applied name is acutally bound to a function abstraction, then a calling transition from the top expression to the inner expression of the abstraction might be traversable, and the returning transition from the result of the function abstracted expression to the sequenced expression.  Additionally, the traversable transitions are traversable transitions for the sequenced expression. 
 
-The static traceable predicate states that an abstract control path can be traced according to a set of flows from a starting node to a final node matching a given condition.  An empty path might be traceable if the start node is also the final node.  A path of one step might be traceable if its node is the required start node, and there is a flow containing the step and the flow's destination node meets the final node requirement.   
-For a path of two or more steps, the first node is the start node, there is a flow from the first step to the second step, and the path from the second step onward also might be traceable.
-
-
-
+The static traceable predicate states that an abstract control path can be traced according to a set of transitions from a starting label to a final label matching a given condition.  An empty path might be traceable if the start label is also the final label.  A path of one step might be traceable if its label is the required start label, and there is a transition containing the step and the transition's destination label meets the final label requirement.   
+For a path of two or more steps, the first label is the start label, there is a transition from the first step to the second step, and the path from the second step onward also might be traceable.
 
 
 static communication B ...
@@ -1486,119 +1482,119 @@ locale communication_sound =
 
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-  datatype node_label = NLet var | NRslt var
+  datatype label = NLet var | NRslt var
 
-  fun top_node_label :: exp %$\Rightarrow$% node_label where
-    top_node_label (Let x b e) = NLet x |
-    top_node_label (Rslt y) = NRslt y
+  fun top_label :: exp %$\Rightarrow$% label where
+    top_label (Let x b e) = NLet x |
+    top_label (Rslt y) = NRslt y
 
-  type_synonym node_set = node_label set
+  type_synonym label_set = label set
 
-  type_synonym node_map = node_label %$\Rightarrow$% var set
+  type_synonym label_map = label %$\Rightarrow$% var set
 
   inductive
-    static_static_send_node_label ::
+    static_static_send_label ::
       abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
-      var %$\Rightarrow$% node_label %$\Rightarrow$% bool where
+      var %$\Rightarrow$% label %$\Rightarrow$% bool where
     intro:
       {AChn xC} %$\subseteq$% V xSC %$\Longrightarrow$%
       {APrim (SendEvt xSC xM)} %$\subseteq$% V xE %$\Longrightarrow$%
       static_reachable e (Let x (Sync xE) e') %$\Longrightarrow$%
-      static_static_send_node_label V e xC (NLet x)
+      static_static_send_label V e xC (NLet x)
 
   inductive
-    static_static_recv_node_label ::
+    static_static_recv_label ::
       abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
-      var %$\Rightarrow$% node_label %$\Rightarrow$% bool where
+      var %$\Rightarrow$% label %$\Rightarrow$% bool where
     intro:
       {AChn xC} %$\subseteq$% V xRC %$\Longrightarrow$%
       {APrim (RecvEvt xRC)} %$\subseteq$% V xE %$\Longrightarrow$%
       static_reachable e (Let x (Sync xE) e') %$\Longrightarrow$%
-      static_static_recv_node_label V e xC (NLet x)
+      static_static_recv_label V e xC (NLet x)
 
   \end{lstlisting}
 
 \section{Static Communication part A}
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  datatype edge_label = ENxt | ESpwn | ECall | ERtn
+  datatype mode = ENxt | ESpwn | ECall | ERtn
 
-  type_synonym flow_label = node_label * edge_label * node_label
+  type_synonym transition = label * mode * label
 
-  type_synonym flow_set = flow_label set
+  type_synonym transition_set = transition set
 
-  type_synonym step_label = node_label * edge_label
+  type_synonym step = label * mode
 
-  type_synonym abstract_path = step_label list
+  type_synonym abstract_path = step list
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   inductive
     static_traversable ::
       abstract_env %$\Rightarrow$%
-      (node_label * edge_label * node_label) set %$\Rightarrow$%
+      (label * mode * label) set %$\Rightarrow$%
       exp %$\Rightarrow$% bool  where
     Rslt:
       static_traversable V F (Rslt x) |
     let_Unit:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F e  %$\Longrightarrow$%
       static_traversable V F (Let x Unt e) |
     let_Chan:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_traversable V F (Let x MkChn e) |
     let_SendEvt:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_traversable V F (Let x = (SendEvt xc xm) e) |
     let_RecvEvt:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_traversable V F (Let x = (RecvEvt xc) in e) |
     let_Pair:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_traversable V F (Let x (Pair x1 x2) e) |
     let_Left:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_traversable V F (Let x (Lft xp) e) |
     let_Right:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_traversable V F (Let x (Rht xp) e)" |
     let_Abs:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F eb %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_traversable V F (Let x (Abs f xp eb) e) |
     let_Spawn:
       {
-        (NLet x, ENxt, top_node_label e),
-        (NLet x, ESpwn, top_node_label ec)}
+        (NLet x, ENxt, top_label e),
+        (NLet x, ESpwn, top_label ec)}
         %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F ec %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_traversable V F (Let x (Spwn ec)  e) |
     let_Sync:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_traversable V F (Let x (Sync xSE) e) |
     let_Fst:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_traversable V F (Let x (Fst xp) e) |
     let_Snd:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_traversable V F (Let x (Snd xp) e) |
     let_Case:
       {
-        (NLet x, ECall, top_node_label el),
-        (NLet x, ECall, top_node_label er),
-        (NRslt (rslt_var el), ERtn, top_node_label e),
-        (NRslt (rslt_var er), ERtn, top_node_label e)}
+        (NLet x, ECall, top_label el),
+        (NLet x, ECall, top_label er),
+        (NRslt (rslt_var el), ERtn, top_label e),
+        (NRslt (rslt_var er), ERtn, top_label e)}
         %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F el %$\Longrightarrow$%
       static_traversable V F er %$\Longrightarrow$%
@@ -1608,8 +1604,8 @@ locale communication_sound =
       %$\forall$% fp xp eb .
         APrim (Abs fp xp eb) %$\in$% V f %$\longrightarrow$%
         {
-          (NLet x, ECall, top_node_label eb),
-          (NRslt (rslt_var eb), ERtn, top_node_label e)}
+          (NLet x, ECall, top_label eb),
+          (NRslt (rslt_var eb), ERtn, top_label e)}
           %$\subseteq$% F %$\Longrightarrow$%
         static_traversable V F e %$\Longrightarrow$%
         static_traversable V F (Let x (App f xa) e)
@@ -1619,8 +1615,8 @@ locale communication_sound =
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   inductive static_traceable ::
     abstract_env %$\Rightarrow$%
-      flow_set %$\Rightarrow$% node_label %$\Rightarrow$%
-      (node_label %$\Rightarrow$% bool) %$\Rightarrow$%
+      transition_set %$\Rightarrow$% label %$\Rightarrow$%
+      (label %$\Rightarrow$% bool) %$\Rightarrow$%
       abstract_path %$\Rightarrow$% bool where
   Empty:
     isEnd start %$\Longrightarrow$%
@@ -1680,8 +1676,8 @@ locale communication_sound =
       var %$\Rightarrow$% bool where
     Sync:
       every_two
-        (static_traceable V F (top_node_label e)
-          (static_static_send_node_label V e xC))
+        (static_traceable V F (top_label e)
+          (static_static_send_label V e xC))
         singular %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_one_shot V e xC 
@@ -1693,11 +1689,11 @@ locale communication_sound =
       Sync:
         every_two
           (static_traceable V F
-            (top_node_label e) (static_static_send_node_label V e xC))
+            (top_label e) (static_static_send_label V e xC))
           noncompetitive %$\Longrightarrow$%
         every_two
           (static_traceable V F
-            (top_node_label e) (static_static_recv_node_label V e xC))
+            (top_label e) (static_static_recv_label V e xC))
           noncompetitive %$\Longrightarrow$%
         static_traversable V F e %$\Longrightarrow$%
         static_one_to_one V e xC 
@@ -1709,7 +1705,7 @@ locale communication_sound =
     Sync:
       every_two
         (static_traceable V F
-          (top_node_label e) (static_static_send_node_label V e xC))
+          (top_label e) (static_static_send_label V e xC))
         noncompetitive %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_fan_out V e xC 
@@ -1719,7 +1715,7 @@ locale communication_sound =
       abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
       var %$\Rightarrow$% bool where
     Sync:
-      every_two (static_traceable V F (top_node_label e) (static_static_recv_node_label V e xC)) noncompetitive %$\Longrightarrow$%
+      every_two (static_traceable V F (top_label e) (static_static_recv_label V e xC)) noncompetitive %$\Longrightarrow$%
       static_traversable V F e %$\Longrightarrow$%
       static_fan_in V e xC
 
@@ -1765,9 +1761,9 @@ locale communication_sound_A =
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   inductive 
     static_traversable_env ::
-      abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% env %$\Rightarrow$% bool and
+      abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% env %$\Rightarrow$% bool and
     static_traversable_val ::
-      abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% val %$\Rightarrow$% bool where
+      abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% val %$\Rightarrow$% bool where
     Intro:
       %$\forall$% x v .
         env x = Some v %$\longrightarrow$%
@@ -1801,7 +1797,7 @@ locale communication_sound_A =
 
 
   inductive static_traversable_stack ::
-    abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% cont list %$\Rightarrow$% bool where
+    abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% cont list %$\Rightarrow$% bool where
     Empty:
       static_traversable_stack V F [] |
     Nonempty:
@@ -1812,7 +1808,7 @@ locale communication_sound_A =
 
   inductive
     static_traversable_pool ::
-      abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$%
+      abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$%
       trace_pool %$\Rightarrow$% bool  where
     Intro:
       %$\forall$% pi e env k .
@@ -1849,7 +1845,7 @@ lemma static_traversable_pool_implies_static_traceable: "
   isEnd (NLet x) %$\Longrightarrow$%
   %$\exists$% path . 
     paths_correspond pi path %$\land$%
-    static_traceable V F (top_node_label e) isEnd path "
+    static_traceable V F (top_label e) isEnd path "
   proof sketch
   qed
   \end{lstlisting}
@@ -1867,7 +1863,7 @@ lemma static_traversable_pool_implies_static_traceable: "
   isEnd (NLet x) %$\Longrightarrow$%
   %$\exists$% path . 
     paths_correspond pi path %$\land$%
-    static_traceable V F (top_node_label e) isEnd path
+    static_traceable V F (top_label e) isEnd path
   proof sketch
   qed
   \end{lstlisting}
@@ -1886,63 +1882,63 @@ lemma static_traversable_pool_implies_static_traceable: "
 \section{Static Communication part B}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-datatype edge_label = ENxt | ESpwn | ESend var | ECall | ERtn var
+datatype mode = ENxt | ESpwn | ESend var | ECall | ERtn var
 
-type_synonym flow_label = (node_label * edge_label * node_label)
+type_synonym transition = (label * mode * label)
 
-type_synonym flow_set = flow_label set
+type_synonym transition_set = transition set
 
-type_synonym step_label = (node_label * edge_label)
+type_synonym step = (label * mode)
 
-type_synonym abstract_path = step_label list
+type_synonym abstract_path = step list
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  inductive static_traversable :: abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% (var %$\Rightarrow$% node_label %$\Rightarrow$% bool) %$\Rightarrow$% exp %$\Rightarrow$% bool  where
+  inductive static_traversable :: abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% (var %$\Rightarrow$% label %$\Rightarrow$% bool) %$\Rightarrow$% exp %$\Rightarrow$% bool  where
     result:
         static_traversable V F static_recv_site (Rslt x) |
     let_Unit:
-        {(NLet x , ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+        {(NLet x , ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
         static_traversable V F static_recv_site e %$\Longrightarrow$%
         static_traversable V F static_recv_site (Let x Unt e) |
     let_Chan:
-        {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+        {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
         static_traversable V F static_recv_site e %$\Longrightarrow$%
         static_traversable V F static_recv_site (Let x MkChn e) |
   let_SendEvt:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F static_recv_site e %$\Longrightarrow$%
       static_traversable V F static_recv_site (Let x (Prim (SendEvt xc xm)) e)" |
   let_RecvEvt:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F static_recv_site e %$\Longrightarrow$%
       static_traversable V F static_recv_site (Let x (Prim (RecvEvt xc)) e) |
   let_Pair:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F static_recv_site e %$\Longrightarrow$%
       static_traversable V F static_recv_site (Let x (Prim (Pair x1 x2)) e) |
   let_Left:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F static_recv_site e %$\Longrightarrow$%
       static_traversable V F static_recv_site (Let x (Prim (Lft xp)) e) |
   let_Right:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F static_recv_site e %$\Longrightarrow$%
       static_traversable V F static_recv_site (Let x (Prim (Rght xp)) e) |
   let_Abs:
-    {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+    {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
     static_traversable V F static_recv_site eb %$\Longrightarrow$%
     static_traversable V F static_recv_site e %$\Longrightarrow$%
     static_traversable V F static_recv_site (Let x (Prim (Abs f xp eb)) e) |
   let_Spawn:
-    {(NLet x, ENxt, top_node_label e),
-      (NLet x, ESpawn, top_node_label ec)} %$\subseteq$% F %$\Longrightarrow$%
+    {(NLet x, ENxt, top_label e),
+      (NLet x, ESpawn, top_label ec)} %$\subseteq$% F %$\Longrightarrow$%
     static_traversable V F static_recv_site ec %$\Longrightarrow$%
     static_traversable V F static_recv_site e %$\Longrightarrow$%
     static_traversable V F static_recv_site (Let x (Spwn ec) e) |
   let_Sync:
-    {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+    {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
     (%$\forall$% xSC xM xC y .
       {^SendEvt xSC xM} %$\subseteq$% V xSE %$\longrightarrow$%
       {^Chan xC} %$\subseteq$% V xSC %$\longrightarrow$%
@@ -1951,27 +1947,27 @@ type_synonym abstract_path = step_label list
     static_traversable V F static_recv_site e %$\Longrightarrow$%
     static_traversable V F static_recv_site (Let x (Sync xSE) e) |
   let_Fst:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F static_recv_site e %$\Longrightarrow$%
       static_traversable V F static_recv_site (Let x (Fst xp) e) |
   let_Snd:
-      {(NLet x, ENxt, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F static_recv_site e %$\Longrightarrow$%
       static_traversable V F static_recv_site (Let x (Snd xp) e) |
   let_Case:
       {
-        (NLet x, ECall, top_node_label el),
-        (NLet x, ECall, top_node_label er),
-        (NRslt (rslt_var el), ERtn x, top_node_label e),
-        (NRslt (rslt_var er), ERtn x, top_node_label e)} %$\subseteq$% F %$\Longrightarrow$%
+        (NLet x, ECall, top_label el),
+        (NLet x, ECall, top_label er),
+        (NRslt (rslt_var el), ERtn x, top_label e),
+        (NRslt (rslt_var er), ERtn x, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
       static_traversable V F static_recv_site el %$\Longrightarrow$%
       static_traversable V F static_recv_site er %$\Longrightarrow$%
       static_traversable V F static_recv_site e %$\Longrightarrow$%
       static_traversable V F static_recv_site (Let x (Case xs xl el xr er) e) |
   let_App:
       (%$\forall$% f' xp eb . ^Abs f' xp eb %$\in$% V f %$\longrightarrow$%
-        {(NLet x, ECall, top_node_label eb),
-          (NRslt (rslt_var eb), ERtn x, top_node_label e)} %$\subseteq$% F) %$\Longrightarrow$%
+        {(NLet x, ECall, top_label eb),
+          (NRslt (rslt_var eb), ERtn x, top_label e)} %$\subseteq$% F) %$\Longrightarrow$%
       static_traversable V F static_recv_site e %$\Longrightarrow$%
     static_traversable V F static_recv_site (Let x (App f xa) e)
 
@@ -1980,7 +1976,7 @@ type_synonym abstract_path = step_label list
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 inductive 
-  static_built_on_chan :: "abstract_env %$\Rightarrow$% node_map %$\Rightarrow$% var %$\Rightarrow$% var %$\Rightarrow$% bool"
+  static_built_on_chan :: "abstract_env %$\Rightarrow$% label_map %$\Rightarrow$% var %$\Rightarrow$% var %$\Rightarrow$% bool"
 where
   Chan:
       AChn xc %$\in$% V x %$\Longrightarrow$% 
@@ -2007,7 +2003,7 @@ where
       static_built_on_chan V Ln xc x |
   Abs:
     APrim (Abs f xp eb) %$\in$% V x %$\Longrightarrow$% 
-    %$\not$% Set.is_empty (Ln (nodeLabel eb) - {xp}) %$\Longrightarrow$%
+    %$\not$% Set.is_empty (Ln (labelLabel eb) - {xp}) %$\Longrightarrow$%
     static_built_on_chan V Ln xc x 
   \end{lstlisting}
 
@@ -2015,94 +2011,94 @@ where
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   fun chan_set ::
-    abstract_env %$\Rightarrow$% node_map %$\Rightarrow$% var %$\Rightarrow$% var %$\Rightarrow$% var set" where
+    abstract_env %$\Rightarrow$% label_map %$\Rightarrow$% var %$\Rightarrow$% var %$\Rightarrow$% var set" where
     chan_set V Ln xc x = (if (static_built_on_chan V Ln xc x) then {x} else {})
   \end{lstlisting}
 
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
   inductive static_live_chan ::
-    abstract_env %$\Rightarrow$% node_map %$\Rightarrow$% node_map %$\Rightarrow$% var %$\Rightarrow$% exp %$\Rightarrow$% bool where
+    abstract_env %$\Rightarrow$% label_map %$\Rightarrow$% label_map %$\Rightarrow$% var %$\Rightarrow$% exp %$\Rightarrow$% bool where
     Result:
       chan_set V Ln xc y = Ln (NRslt y) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc (Rslt y) |
   Let_Unit:
       static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-      Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+      Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
       Lx (NLet x) = Ln (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc (Let x Unt e) |
   Let_Chan:
     static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-    Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+    Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
     (Lx (NLet x) - {x}) = Ln (NLet x) %$\Longrightarrow$%
     static_live_chan V Ln Lx xc (Let x MkChn e) |
   Let_SendEvt:
     static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-    Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+    Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
     (Lx (NLet x) - {x}) %$\cup$% chan_set V Ln xc xsc %$\cup$%
       chan_set V Ln xc xm = Ln (NLet x) %$\Longrightarrow$%
     static_live_chan V Ln Lx xc (Let x (Prim (SendEvt xsc xm)) e) |
   Let_RecvEvt:
     static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-    Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+    Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
     (Lx (NLet x) - {x}) %$\cup$% chan_set V Ln xc xrc = Ln (NLet x) %$\Longrightarrow$%
     static_live_chan V Ln Lx xc (Let x (Prim (RecvEvt xrc)) e) |
   Let_Pair:
       static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-      Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+      Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
       (Lx (NLet x) - {x}) %$\cup$%  chan_set V Ln xc x1 %$\cup$%
         chan_set V Ln xc x2 = Ln (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc (Let x (Prim (Pair x1 x2)) e) |
   Let_Left:
       static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-      Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+      Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
       (Lx (NLet x) - {x}) %$\cup$% chan_set V Ln xc xa = Ln (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc (Let x (Prim (Lft xa)) e) |
   Let_Right:
       static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-      Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+      Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
       (Lx (NLet x) - {x}) %$\cup$% chan_set V Ln xc xa = Ln (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc (Let x (Prim (Rght xa)) e) |
   Let_Abs:
       static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-      Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+      Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc eb %$\Longrightarrow$%
       (Lx (NLet x) - {x}) %$\cup$%
-        (Ln (top_node_label eb) - {xp}) = Ln (NLet x) %$\Longrightarrow$%
+        (Ln (top_label eb) - {xp}) = Ln (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc (Let x (Prim (Abs f xp eb)) e) |
   Let_Spawn:
       static_live_chan V Ln Lx xc e %$\Longrightarrow$%
       static_live_chan V Ln Lx xc ec %$\Longrightarrow$%
-      Ln (top_node_label e) %$\cup$% Ln (top_node_label ec) = Lx (NLet x) %$\Longrightarrow$%
+      Ln (top_label e) %$\cup$% Ln (top_label ec) = Lx (NLet x) %$\Longrightarrow$%
       (Lx (NLet x) - {x}) = Ln (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc (Let x (Spwn ec) e) |
   Let_Sync:
       static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-      Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+      Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
       (Lx (NLet x) - {x}) %$\cup$% chan_set V Ln xc xe = Ln (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc (Let x (Sync xe) e) |
   Let_Fst:
       static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-      Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+      Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
       (Lx (NLet x) - {x}) %$\cup$% chan_set V Ln xc xa = Ln (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc (Let x (Fst xa) e) |
   Let_Snd:
       static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-      Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+      Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
       (Lx (NLet x) - {x}) %$\cup$% chan_set V Ln xc xa = Ln (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc (Let x (Snd xa) e) |
   Let_Case:
       static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-      Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+      Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc el %$\Longrightarrow$%
       static_live_chan V Ln Lx xc er %$\Longrightarrow$%
       (Lx (NLet x) - {x}) %$\cup$% chan_set V Ln xc xs %$\cup$% 
-      (Ln (top_node_label el) - {xl}) %$\cup$%
-      (Ln (top_node_label er) - {xr}) = Ln (NLet x) %$\Longrightarrow$%
+      (Ln (top_label el) - {xl}) %$\cup$%
+      (Ln (top_label er) - {xr}) = Ln (NLet x) %$\Longrightarrow$%
       static_live_chan V Ln Lx xc (Let x (Case xs xl el xr er) e) |
   Let_App:
       static_live_chan V Ln Lx xc e %$\Longrightarrow$%
-      Ln (top_node_label e) = Lx (NLet x) %$\Longrightarrow$%
+      Ln (top_label e) = Lx (NLet x) %$\Longrightarrow$%
       (Lx (NLet x) - {x}) %$\cup$%
       chan_set V Ln xc f %$\cup$%
       chan_set V Ln xc xa = Ln (NLet x) %$\Longrightarrow$%
@@ -2115,7 +2111,7 @@ where
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
   inductive static_traceable ::
-    flow_set %$\Rightarrow$% node_label
+    transition_set %$\Rightarrow$% label
     %$\Rightarrow$% abstract_path %$\Rightarrow$% bool" where
     Empty:
       static_traceable F end [] |
@@ -2134,7 +2130,7 @@ where
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-  inductive static_live_traversable :: "flow_set %$\Rightarrow$% node_map %$\Rightarrow$% node_map %$\Rightarrow$% flow_label %$\Rightarrow$% bool"  where
+  inductive static_live_traversable :: "transition_set %$\Rightarrow$% label_map %$\Rightarrow$% label_map %$\Rightarrow$% transition %$\Rightarrow$% bool"  where
   Next: "
     (l, ENxt, l') %$\in$% F %$\Longrightarrow$%
     %$\not$% Set.is_empty (Lx l) %$\Longrightarrow$%
@@ -2174,7 +2170,7 @@ where
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
   
-inductive static_live_traceable :: "abstract_env %$\Rightarrow$% flow_set %$\Rightarrow$% node_map %$\Rightarrow$% node_map %$\Rightarrow$% node_label %$\Rightarrow$% (node_label %$\Rightarrow$% bool) %$\Rightarrow$% abstract_path %$\Rightarrow$% bool" where
+inductive static_live_traceable :: "abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% label_map %$\Rightarrow$% label_map %$\Rightarrow$% label %$\Rightarrow$% (label %$\Rightarrow$% bool) %$\Rightarrow$% abstract_path %$\Rightarrow$% bool" where
   Empty:
     isEnd start %$\Longrightarrow$%
     static_live_traceable V F Ln Lx start isEnd [] |
@@ -2246,31 +2242,31 @@ inductive static_live_traceable :: "abstract_env %$\Rightarrow$% flow_set %$\Rig
 
 inductive static_one_shot :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool where
   Sync:
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) singular %$\Longrightarrow$%
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) singular %$\Longrightarrow$%
     static_live_chan V Ln Lx xC e %$\Longrightarrow$%
-    static_traversable V F (static_recv_node_label V e) e %$\Longrightarrow$%
+    static_traversable V F (static_recv_label V e) e %$\Longrightarrow$%
     static_one_shot V e xC
 
 inductive static_one_to_one :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool where
   Sync:
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive %$\Longrightarrow$%
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive %$\Longrightarrow$%
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive %$\Longrightarrow$%
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive %$\Longrightarrow$%
     static_live_chan V Ln Lx xC e %$\Longrightarrow$%
-    static_traversable V F (static_recv_node_label V e) e %$\Longrightarrow$%
+    static_traversable V F (static_recv_label V e) e %$\Longrightarrow$%
     static_one_to_one V e xC
 
 inductive static_fan_out :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool where
   Sync:
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive %$\Longrightarrow$%
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive %$\Longrightarrow$%
     static_live_chan V Ln Lx xC e %$\Longrightarrow$%
-    static_traversable V F (static_recv_node_label V e) e %$\Longrightarrow$%
+    static_traversable V F (static_recv_label V e) e %$\Longrightarrow$%
     static_fan_out V e xC
 
 inductive static_fan_in :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool where
   Sync:
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive %$\Longrightarrow$%
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive %$\Longrightarrow$%
     static_live_chan V Ln Lx xC e %$\Longrightarrow$%
-    static_traversable V F (static_recv_node_label V e) e %$\Longrightarrow$%
+    static_traversable V F (static_recv_label V e) e %$\Longrightarrow$%
     static_fan_in V e xC
 
   \end{lstlisting}

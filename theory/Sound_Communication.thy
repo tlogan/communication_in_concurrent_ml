@@ -143,15 +143,15 @@ lemma always_recv_chan_not_bound_sound: "
  apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "(VChn (Ch \<pi> xC))"]; simp)
 done
 
-lemma node_not_send_site_sound: "
+lemma label_not_send_site_sound: "
   \<E>' \<pi>Sync = Some (\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   \<rho> x\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChn (Ch \<pi>C xC)) \<Longrightarrow>
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  static_send_node_label V e xC (NLet x\<^sub>y)
+  static_send_label V e xC (NLet x\<^sub>y)
 "
- apply (unfold static_send_node_label.simps; auto)
+ apply (unfold static_send_label.simps; auto)
  apply (rule exI[of _ x\<^sub>s\<^sub>c]; auto)
  apply (auto simp: always_send_chan_not_bound_sound)
  apply (rule exI[of _ x\<^sub>m]; auto?)
@@ -161,15 +161,15 @@ lemma node_not_send_site_sound: "
  apply (erule exp_always_exp_not_static_reachable_sound; auto)
 done
 
-lemma node_not_recv_site_sound: "
+lemma label_not_recv_site_sound: "
   \<E>' \<pi>Sync = Some (\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   \<rho> x\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChn (Ch \<pi>C xC)) \<Longrightarrow>
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  static_recv_node_label V e xC (NLet x\<^sub>y)
+  static_recv_label V e xC (NLet x\<^sub>y)
 "
- apply (unfold static_recv_node_label.simps; auto)
+ apply (unfold static_recv_label.simps; auto)
  apply (rule exI[of _ x\<^sub>r\<^sub>c]; auto)
  apply (auto simp: always_recv_chan_not_bound_sound)
  apply (rule exI[of _ x\<^sub>e]; auto?)

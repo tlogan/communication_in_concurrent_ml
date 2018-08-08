@@ -480,7 +480,7 @@ lemma not_static_traceable_sound: "
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
+  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
@@ -518,13 +518,13 @@ lemma send_not_static_traceable_sound: "
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
+  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
-    static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC) pathSync
+    static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
- apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in node_not_send_site_sound; auto?)
+ apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in label_not_send_site_sound; auto?)
  apply (frule not_static_traceable_sound; auto?)
   apply (auto simp: 
     dynamic_built_on_chan_var.simps 
@@ -536,9 +536,9 @@ done
 
 
 theorem one_shot_sound': "
-  every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) singular \<Longrightarrow>
+  every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) singular \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
+  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
@@ -571,9 +571,9 @@ TO DO LATER:
 *)
 
 theorem noncompetitive_send_to_ordered_send: "
-  every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+  every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
+  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
   every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
@@ -598,8 +598,8 @@ theorem fan_out_sound: "
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
-   static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
+   every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
+   static_traversable V F (static_recv_label V e) e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
    every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered

@@ -5,73 +5,73 @@ theory Static_Communication_B
     Static_Communication
 begin
 
-datatype edge_label = ENext | ESpawn | ESend var | ECall | EReturn var
+datatype mode = ENext | ESpawn | ESend var | ECall | EReturn var
 
-type_synonym flow_label = "(node_label \<times> edge_label \<times> node_label)"
+type_synonym transition = "(label \<times> mode \<times> label)"
 
-type_synonym flow_set = "flow_label set"
+type_synonym transition_set = "transition set"
 
-type_synonym step_label = "(node_label \<times> edge_label)"
+type_synonym step_label = "(label \<times> mode)"
 
 type_synonym abstract_path = "step_label list"
 
 
-inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> (var \<Rightarrow> node_label \<Rightarrow> bool) \<Rightarrow> exp \<Rightarrow> bool"  where
+inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> (var \<Rightarrow> label \<Rightarrow> bool) \<Rightarrow> exp \<Rightarrow> bool"  where
   Result: "
     static_traversable V F static_recv_site (Rslt x)
   " |
   Let_Unit: "
     \<lbrakk>
-      {(NLet x , ENext, top_node_label e)} \<subseteq> F;
+      {(NLet x , ENext, top_label e)} \<subseteq> F;
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
     static_traversable V F static_recv_site (Let x Unt e)
   " |
   Let_Chan: "
     \<lbrakk>
-      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
+      {(NLet x, ENext, top_label e)} \<subseteq> F;
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
     static_traversable V F static_recv_site (Let x MkChn e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
-      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
+      {(NLet x, ENext, top_label e)} \<subseteq> F;
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
     static_traversable V F static_recv_site (Let x (Prim (SendEvt x\<^sub>c x\<^sub>m)) e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
-      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
+      {(NLet x, ENext, top_label e)} \<subseteq> F;
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
     static_traversable V F static_recv_site (Let x (Prim (RecvEvt x\<^sub>c)) e)
   " |
   Let_Pair: "
     \<lbrakk>
-      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
+      {(NLet x, ENext, top_label e)} \<subseteq> F;
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
     static_traversable V F static_recv_site (Let x (Prim (Pair x\<^sub>1 x\<^sub>2)) e)
   " |
   Let_Left: "
     \<lbrakk>
-      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
+      {(NLet x, ENext, top_label e)} \<subseteq> F;
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
     static_traversable V F static_recv_site (Let x (Prim (Lft x\<^sub>p)) e)
   " |
   Let_Right: "
     \<lbrakk>
-      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
+      {(NLet x, ENext, top_label e)} \<subseteq> F;
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
     static_traversable V F static_recv_site (Let x (Prim (Rght x\<^sub>p)) e)
   " |
   Let_Abs: "
     \<lbrakk>
-      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
+      {(NLet x, ENext, top_label e)} \<subseteq> F;
       static_traversable V F static_recv_site e\<^sub>b;
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
@@ -80,8 +80,8 @@ inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarro
   Let_Spawn: "
     \<lbrakk>
       {
-        (NLet x, ENext, top_node_label e),
-        (NLet x, ESpawn, top_node_label e\<^sub>c)
+        (NLet x, ENext, top_label e),
+        (NLet x, ESpawn, top_label e\<^sub>c)
       } \<subseteq> F;
       static_traversable V F static_recv_site e\<^sub>c;
       static_traversable V F static_recv_site e
@@ -90,7 +90,7 @@ inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarro
   " |
   Let_Sync: "
     \<lbrakk>
-      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
+      {(NLet x, ENext, top_label e)} \<subseteq> F;
       (\<forall> xSC xM xC y.
         {^SendEvt xSC xM} \<subseteq> V xSE \<longrightarrow>
         {^Chan xC} \<subseteq> V xSC \<longrightarrow>
@@ -103,14 +103,14 @@ inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarro
   " |
   Let_Fst: "
     \<lbrakk>
-      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
+      {(NLet x, ENext, top_label e)} \<subseteq> F;
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
     static_traversable V F static_recv_site (Let x (Fst x\<^sub>p) e)
   " |
   Let_Snd: "
     \<lbrakk>
-      {(NLet x, ENext, top_node_label e)} \<subseteq> F;
+      {(NLet x, ENext, top_label e)} \<subseteq> F;
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
     static_traversable V F static_recv_site (Let x (Snd x\<^sub>p) e)
@@ -118,10 +118,10 @@ inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarro
   Let_Case: "
     \<lbrakk>
       {
-        (NLet x, ECall, top_node_label e\<^sub>l),
-        (NLet x, ECall, top_node_label e\<^sub>r),
-        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn x, top_node_label e),
-        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn x, top_node_label e)
+        (NLet x, ECall, top_label e\<^sub>l),
+        (NLet x, ECall, top_label e\<^sub>r),
+        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn x, top_label e),
+        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn x, top_label e)
       } \<subseteq> F;
       static_traversable V F static_recv_site e\<^sub>l;
       static_traversable V F static_recv_site e\<^sub>r;
@@ -133,8 +133,8 @@ inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarro
     \<lbrakk>
       (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow>
         {
-          (NLet x, ECall, top_node_label e\<^sub>b),
-          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn x, top_node_label e)
+          (NLet x, ECall, top_label e\<^sub>b),
+          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn x, top_label e)
         } \<subseteq> F);
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
@@ -142,7 +142,7 @@ inductive static_traversable :: "abstract_env \<Rightarrow> flow_set \<Rightarro
   "
 
 inductive 
-  static_built_on_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"
+  static_built_on_chan :: "abstract_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"
 where
   Chan: "
     \<lbrakk>
@@ -187,7 +187,7 @@ where
   " |
   Abs: "
     ^Abs f x\<^sub>p e\<^sub>b \<in> V x \<Longrightarrow> 
-    \<not> Set.is_empty (Ln (top_node_label e\<^sub>b) - {x\<^sub>p}) \<Longrightarrow>
+    \<not> Set.is_empty (Ln (top_label e\<^sub>b) - {x\<^sub>p}) \<Longrightarrow>
     static_built_on_chan V Ln x\<^sub>c x
   " 
 (*
@@ -204,11 +204,11 @@ where
   "
 *)
 
-fun chan_set :: "abstract_env \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> var set" where
+fun chan_set :: "abstract_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> var set" where
   "chan_set V Ln x\<^sub>c x = (if (static_built_on_chan V Ln x\<^sub>c x) then {x} else {})"
 
 
-inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
+inductive static_live_chan :: "abstract_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "
     \<lbrakk>
       chan_set V Ln x\<^sub>c y = Ln (NResult y)
@@ -218,7 +218,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Unit: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       Lx (NLet x) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x Unt e)
@@ -226,7 +226,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Chan: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       (Lx (NLet x) - {x}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x MkChn e)
@@ -234,7 +234,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Send_Evt: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>s\<^sub>c \<union> chan_set V Ln x\<^sub>c x\<^sub>m = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (SendEvt x\<^sub>s\<^sub>c x\<^sub>m)) e)
@@ -242,7 +242,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Recv_Evt: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>r\<^sub>c = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (RecvEvt x\<^sub>r\<^sub>c)) e)
@@ -250,7 +250,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Pair: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union>  chan_set V Ln x\<^sub>c x\<^sub>1 \<union> chan_set V Ln x\<^sub>c x\<^sub>2 = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (Pair x\<^sub>1 x\<^sub>2)) e)
@@ -258,7 +258,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Left: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (Lft x\<^sub>a)) e)
@@ -266,7 +266,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Right: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (Rght x\<^sub>a)) e)
@@ -274,9 +274,9 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Abs: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       static_live_chan V Ln Lx x\<^sub>c e\<^sub>b;
-      (Lx (NLet x) - {x}) \<union> (Ln (top_node_label e\<^sub>b) - {x\<^sub>p}) = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<union> (Ln (top_label e\<^sub>b) - {x\<^sub>p}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (Abs f x\<^sub>p e\<^sub>b)) e)
   " |
@@ -284,7 +284,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
       static_live_chan V Ln Lx x\<^sub>c e\<^sub>c;
-      Ln (top_node_label e) \<union> Ln (top_node_label e\<^sub>c) = Lx (NLet x);
+      Ln (top_label e) \<union> Ln (top_label e\<^sub>c) = Lx (NLet x);
       (Lx (NLet x) - {x}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Spwn e\<^sub>c) e)
@@ -292,7 +292,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Sync: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>e = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Sync x\<^sub>e) e)
@@ -300,7 +300,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Fst: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Fst x\<^sub>a) e)
@@ -308,7 +308,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Snd: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Snd x\<^sub>a) e)
@@ -316,18 +316,18 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
   Let_Case: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       static_live_chan V Ln Lx x\<^sub>c e\<^sub>l;
       static_live_chan V Ln Lx x\<^sub>c e\<^sub>r;
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>s \<union> 
-         (Ln (top_node_label e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (top_node_label e\<^sub>r) - {x\<^sub>r}) = Ln (NLet x)
+         (Ln (top_label e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (top_label e\<^sub>r) - {x\<^sub>r}) = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
   " |
   Let_App: "
     \<lbrakk>
       static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_node_label e) = Lx (NLet x);
+      Ln (top_label e) = Lx (NLet x);
       (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c f \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (App f x\<^sub>a) e)
@@ -336,7 +336,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> node_map \<Rightarrow>
 
 
 
-inductive static_traceable :: "flow_set \<Rightarrow> node_label \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive static_traceable :: "transition_set \<Rightarrow> label \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
     static_traceable F end []
   " |
@@ -381,7 +381,7 @@ inductive static_unbalanced :: "abstract_path \<Rightarrow> bool" where
   "
 *)
 
-inductive static_live_traversable :: "flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> flow_label \<Rightarrow> bool"  where
+inductive static_live_traversable :: "transition_set \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> transition \<Rightarrow> bool"  where
   Next: "
     (l, ENext, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Lx l) \<Longrightarrow>
@@ -415,7 +415,7 @@ inductive static_live_traversable :: "flow_set \<Rightarrow> node_map \<Rightarr
     static_live_traversable F Ln Lx ((NLet xSend), ESend xE, (NLet xRecv))
   "
 
-inductive static_live_traceable :: "abstract_env \<Rightarrow> flow_set \<Rightarrow> node_map \<Rightarrow> node_map \<Rightarrow> node_label \<Rightarrow> (node_label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive static_live_traceable :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> label \<Rightarrow> (label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
     static_live_traceable V F Ln Lx start isEnd []
@@ -487,34 +487,34 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
 
 inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) singular \<Longrightarrow>
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) singular \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
-    static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
+    static_traversable V F (static_recv_label V e) e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
 inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
-    static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
+    static_traversable V F (static_recv_label V e) e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
 inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
-    static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
+    static_traversable V F (static_recv_label V e) e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
 inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_node_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
-    static_traversable V F (static_recv_node_label V e) e \<Longrightarrow>
+    static_traversable V F (static_recv_label V e) e \<Longrightarrow>
     static_fan_in V e xC 
   "
 
