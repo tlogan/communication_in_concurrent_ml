@@ -283,19 +283,25 @@ The static reachable predicate states that an expression can be reached from ano
 
 for function application, if a function abstraction is bound to the first argument of application, then the abstract value of the second argument of application (the function argument) is bound to the abstraction's parameter name, and the resulting abstract value of the abstraction is bound the the let binding name.
 
-To describe communication statically, yet also somewhat precisely, it will be advantageous label describe every expression in a with a short description.  There are two forms of expressions, let binding expressions and result expressions.  A let binding expression is associated with a label indicating its form and contains the name used for its first binding. A result expression is associated with a label indicating its form and contains the name of the result's argument.  The dynamic description also contains labels for representing the mode of transition, which are slightly different due to the differences in how the static and dynamic relations can be defined.  Since a goal of the static relations is that they imply a computable refinement, there is an additional restriction to consider, resulting in the slightly different labeling of transitions between expressions.    
+To describe communication statically, yet also somewhat precisely, it will be advantageous to describe every expression in a with a short description.  There are two forms of expressions, let binding expressions and result expressions.  A let binding expression is associated with a label indicating its form and contains the name used for its first binding. A result expression is associated with a label indicating its form and contains the name of the result's argument.  The dynamic description also contains labels for representing the mode of transition, which are slightly different due to the differences in how the static and dynamic relations can be defined.  Since a goal of the static relations is that they imply a computable refinement, there is an additional restriction to consider, resulting in the slightly different labeling of transitions between expressions.    
 
 the static send label predicate states that a label might represent a sycnronization to send on a given abstract channel, in a given a program with given abstract value bindings.  The static receive label predicate state that a label might represent a synchronization to receive on a given abstract channel, in a given program with given abstract value bindings. 
 
 
-I define the static communicatin predicates relating programs to communnication topologies in two different ways.  The first way is simpler but the second way may allows more precise communication topologies for many common programs.
 
-For the simpler version, there are four kinds of control edges, indicating how one point in a program transitions to another point in a program.  The edge transitions are sequencing, calling, spawning, and returning. 
+
+
+
+I define the static communicatin predicates relating programs to communnication topologies in two different ways.  The first way is simpler but the second way allows more precise communication topologies for many common programs.
+
+
+static communication A ...
+
+For the simpler version, there are four kinds of control edges, indicating how one point in a program transitions to another point in a program.  The modes of transition are sequencing, calling, spawning, and returning. 
 A transition is a triplet of a label, representing a point in the progra, a control edge, and another label.  A step is just a label and a control edge, without the destination label.  An abstract control path is a list of steps.  
 
 
 
-static communication A ...
 
 the static traversable predicate states that a set of transitions describes all the transitions that might be traversed for a program, given bindings of abstract values.  For a result expression, any transition might be traversed.  For all let expressions, except those binding to case matching and function application, the sequential transition from the top expression to the sequenced expression might be traversable, and the traversable transitions are also the traversable transitions for the sequenced expression.  For binding to function abstraction, the traversable transitions are also traversable transitions for the inner expression of the function abstraction.  For binding to spawning, the spawning transition from the top expression to the spawned expression might be traversed, and the traversable transitions are also traversable transitions for the spawned expression.
 For binding to case matching, the the calling transition from the top expression to the left case expression might be traversable, and the calling transition from the top expression to the right case expression might be traversable.  The returning transition from the result of the left case expression to the sequenced expression might be traversable, and the returning transition from the result of the right case expression to the sequenced expression might be traversable.  Additionally, the traversable transitions are traversable transitions the left case expression, right case expression, and the sequenced expression.   
@@ -305,7 +311,37 @@ The static traceable predicate states that an abstract control path can be trace
 For a path of two or more steps, the first label is the start label, there is a transition from the first step to the second step, and the path from the second step onward also might be traceable.
 
 
+The static inclusive predicate states that two abstract paths represent might be traversed in the same run of a program.   Ordered paths might be inclusive, and also a path that diverges from another at a spawn transition might be inclusive.  This concept is useful for achieving greater precision, since if two paths cannot occur in the same run of a program, only one needs to be counted towards the communication topology. 
+
+The singular predicate states that two paths are the same or cannot occur in the same run of a program.    
+The noncompetitive predicates states that two paths are ordered or cannot occur in the same run of a program.
+
+The static one shot predicate states that there is at most one attempt to syncrhonize to send on an abstract channel in a run of a given program with given abstract value bindings.
+
+The static one to one predicate states that there is at most one thread attempting to send and one thread attempting to receive on a given channel at any time during a run of a given program.
+
+The static fan out predicate states that there is at most one thread attempting to send on a given channel at any time during a run of a given program.
+
+The static fan in predicate states that there is at most one thread attempting to receive on a given channel at any time during a run of a given program.
+
+
 static communication B ...
+
+The higher precision defintions for static communication topologies enables the discrimination between channels created by the same piece of code, but at different instances during a run of a program.  For example, a function abstraction may specify the creation of a channel with a binding to the name x.  This function may be called twice during a run of the program, resulting in two distinct channels.  However, the abstract channels would be indentified by the same name x.  To get around this issue, the static communications definitions are complicated to ignore expresions that apply the function abstraction containing the channel creation of interest.  Doing so requires describing a trimmed down sub program for each channel of interest.  To avoid disconnecting the channel creation portion of the program from communicating threads defined outside the channel's function abstraction, the trimmed program is expressed in terms of transitions, with sending transitions used to connect communication points.  
+Thus, the modes of transition are sequential, spawning, calling, returining, and sending. 
+
+
+The static traverable predicate differs from the simpler version in a few ways.  First, the predicate is dependent on the higher order predicate for stating tat a label might represent a receive site.  Second, in the case of a let binding to synchronization to send, a sending transition from let binding name to a receiving expression.    
+
+
+
+
+
+soundness communication ... 
+
+The static predicates for communication topologies should be a generalization of procedures that computate the topologies from programs.  To be certain that the soundness of the static predicates must be provable.
+The lemma for soundness of static one shot states that if an abstract channel is statically classified as one shot for a given program, and value bindings derived from the program, then any corresponding dynamic channel is classified as one shot over any trace pool that results from running the program.  The lemmas for soundness of fan out, fan in, and one to one follow similar patterns. 
+
 
 
 
