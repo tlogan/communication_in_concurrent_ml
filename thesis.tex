@@ -357,10 +357,15 @@ soundness semantics ...
 
   The lemma static eval preserved under concur step states that if some abstract binings hold for a trace pool, and the trace pool takes a concurrent step to new trace pool, then the bindings also hold for the new trace pool. The proof is by a straightforward case analysis based on the definitions of the predicates.
 
-  The predicate static eval preserved under concur step star generalizes the previous predicate over multiple concur steps.  The proof is by induction over the first parameter of the star of concur step predicate.  In the inductive case of star where at least one step is taken, the induction hypothesis provides the assumption that if the abstract value bindings hold for second trace pool stepped to from the first, then they hold for a third trace pool that the stepped to trace pool takes multiple steps to.  The induction hypothesis is strong enough to conclude that the abstract value bindings hold for the third trace pool if they hold for the first. 
+  The lemma static eval preserved under concur step star generalizes the previous predicate over multiple concur steps.  The proof is by induction over the first parameter of the star of concur step predicate.  In the inductive case of star where at least one step is taken, the induction hypothesis provides the assumption that if the abstract value bindings hold for second trace pool stepped to from the first, then they hold for a third trace pool that the stepped to trace pool takes multiple steps to.  The induction hypothesis is strong enough to conclude that the abstract value bindings hold for the third trace pool if they hold for the first. 
 
 
+The lemma trace pool snapshot not static bound sound states that an abstract value is statically bound to a name if the abstract value binding is a static evaluation of a trace pool, and there is an environment in that trace pool that contains the name bound to a corresponding concreate value.  In other words, if there is no statically evaluated abstract value binding from a trace pool then there is no corresponding dynamically evaluated concrete value binding.  The proof is a straightforward application of the predicate definitions. 
 
+The lemma trace pool always not static bound sound states that an abstract value binds to a name from static evaluation of a trace pool, if that trace pool dynamically evalutes to a new trace pool over multipe steps, and the name is bound to a corresponding concrete value in the new trace pool.  The proof is by applying the lemmas for static eval preserved under concur step star, and trace pool snapshot not static bound sound. 
+
+
+The lemma exp always not static bound sound states that an abstract value binds to a name from static evaluation of an exp, if that expression in an initial trace pool dynamically evalutes to a new trace pool over multipe steps, and the name is bound to a corresponding concrete value in the new trace pool.  The proof is by applying the lemma trace pool always not static bound, and the definitions of the static eval predicates. 
 
 
 soundness communication ... 
