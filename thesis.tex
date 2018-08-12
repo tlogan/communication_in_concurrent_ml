@@ -338,16 +338,27 @@ The static traversable predicate differs from the simpler version in a few ways.
 The static predicates for communication topologies should be a generalizations of procedures that compute the topologies from programs.  The soundness of the static predicates must be provable to be certain that statically described topologies are also observed when running the program.
 
 soundness semantics ... 
+
   To prove the soundness of communication topologies, it is useful to define predicates that relate the the static evaluation of programs to ther elements of the dynamic semantics, including values, environments, continuation stacks, and trace pools. 
+
+  The static eval value and static eval env predicates are mutually recursive predicates that describe the bindings to values that might be evaluated from values and environments of running programs. 
+
+  In the case of an function abstraction closure, the abstract function abstract value is bound to the function's recursive name, and the bindings also represent all possible bindings for the function abstraction's inner expression.
+  For an environment, every name and value in the environment correspond abstract value bindings, and the abstract value bindings also represent all possible bindings for each value within the environment.
+
+  For all closure values, the abstract value bindings of a value are also the abstract value bindings of the envirnment within the closure.
+
+  The static eval stack predicate states that some abstract value bindings represent all the bindings possibly evaluated in a continuation stack, given some abstract values.  For an empty stack, any abstract value bindings may be possible.  For a nonempty stack, The abstract value bindings hold for the constiuents of the first continuation, and the name of the first conintuation is bound to the given abstract values.  The abstract value bindings hold for remaining continuation stack with the abstract values from the result of the first continuation.  
+
+  The static eval state predicate simply states the the abstract value bindings hold for the state's constituents.
+
+  The static eval pool predicate states that the abstract value bindings hold for each state within the trace pool.
 
 
 soundness communication ... 
 
-
-
 soundness communication theorem ... 
 The lemma for soundness of static one shot states that if an abstract channel is statically classified as one shot for a given program, and value bindings derived from the program, then any corresponding dynamic channel is classified as one shot over any trace pool that results from running the program.  The lemmas for soundness of fan out, fan in, and one to one follow similar patterns. 
-
 
 
 
