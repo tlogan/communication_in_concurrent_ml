@@ -1485,6 +1485,25 @@ proof -
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: static_eval_pool.intros)
 qed
 
+theorem exp_always_not_static_bound_sound : "
+      \<rho>' x = Some \<omega> \<Longrightarrow>
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+      star concur_step ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) (\<E>', H') \<Longrightarrow>
+      \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
+      {|\<omega>|} \<subseteq> \<V> x"
+proof -
+  assume 
+    H1: "\<rho>' x = Some \<omega>" and
+    H2: "(\<V>, \<C>) \<Turnstile>\<^sub>e e" and 
+    H3: "star concur_step ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) (\<E>', H')" and 
+    H4: "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
+
+  from H2 have 
+    H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: static_eval_to_pool)
+
+  from H1 H3 H4 H5
+  show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_not_static_bound_sound by blast
+qed
 
 
 inductive static_reachable_left :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
@@ -2033,25 +2052,6 @@ proof -
     "static_reachable_over_state e\<^sub>0 \<sigma>'" by blast
 qed
 
-theorem exp_always_not_static_bound_sound : "
-      \<rho>' x = Some \<omega> \<Longrightarrow>
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      star concur_step ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) (\<E>', H') \<Longrightarrow>
-      \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
-      {|\<omega>|} \<subseteq> \<V> x"
-proof -
-  assume 
-    H1: "\<rho>' x = Some \<omega>" and
-    H2: "(\<V>, \<C>) \<Turnstile>\<^sub>e e" and 
-    H3: "star concur_step ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) (\<E>', H')" and 
-    H4: "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
-
-  from H2 have 
-    H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: static_eval_to_pool)
-
-  from H1 H3 H4 H5
-  show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_not_static_bound_sound by blast
-qed
 
 theorem exp_always_exp_not_static_reachable_sound: "
       star concur_step ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>

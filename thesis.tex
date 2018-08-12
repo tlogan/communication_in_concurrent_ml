@@ -355,6 +355,14 @@ soundness semantics ...
   The static eval pool predicate states that the abstract value bindings hold for each state within the trace pool.
 
 
+  The lemma static eval preserved under concur step states that if some abstract binings hold for a trace pool, and the trace pool takes a concurrent step to new trace pool, then the bindings also hold for the new trace pool. The proof is by a straightforward case analysis based on the definitions of the predicates.
+
+  The predicate static eval preserved under concur step star generalizes the previous predicate over multiple concur steps.  The proof is by induction over the first parameter of the star of concur step predicate.  In the inductive case of star where at least one step is taken, the induction hypothesis provides the assumption that if the abstract value bindings hold for second trace pool stepped to from the first, then they hold for a third trace pool that the stepped to trace pool takes multiple steps to.  The induction hypothesis is strong enough to conclude that the abstract value bindings hold for the third trace pool if they hold for the first. 
+
+
+
+
+
 soundness communication ... 
 
 soundness communication theorem ... 
