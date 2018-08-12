@@ -301,8 +301,6 @@ For the simpler version, there are four kinds of control edges, indicating how o
 A transition is a triplet of a label, representing a point in the progra, a control edge, and another label.  A step is just a label and a control edge, without the destination label.  An abstract control path is a list of steps.  
 
 
-
-
 the static traversable predicate states that a set of transitions describes all the transitions that might be traversed for a program, given bindings of abstract values.  For a result expression, any transition might be traversed.  For all let expressions, except those binding to case matching and function application, the sequential transition from the top expression to the sequenced expression might be traversable, and the traversable transitions are also the traversable transitions for the sequenced expression.  For binding to function abstraction, the traversable transitions are also traversable transitions for the inner expression of the function abstraction.  For binding to spawning, the spawning transition from the top expression to the spawned expression might be traversed, and the traversable transitions are also traversable transitions for the spawned expression.
 For binding to case matching, the the calling transition from the top expression to the left case expression might be traversable, and the calling transition from the top expression to the right case expression might be traversable.  The returning transition from the result of the left case expression to the sequenced expression might be traversable, and the returning transition from the result of the right case expression to the sequenced expression might be traversable.  Additionally, the traversable transitions are traversable transitions the left case expression, right case expression, and the sequenced expression.   
 For binding to function application, if the applied name is acutally bound to a function abstraction, then a calling transition from the top expression to the inner expression of the abstraction might be traversable, and the returning transition from the result of the function abstracted expression to the sequenced expression.  Additionally, the traversable transitions are traversable transitions for the sequenced expression. 
@@ -331,17 +329,24 @@ The higher precision defintions for static communication topologies enables the 
 Thus, the modes of transition are sequential, spawning, calling, returining, and sending. 
 
 
-The static traverable predicate differs from the simpler version in a few ways.  First, the predicate is dependent on the higher order predicate for stating tat a label might represent a receive site.  Second, in the case of a let binding to synchronization to send, a sending transition from let binding name to a receiving expression.    
+The static traversable predicate differs from the simpler version in a few ways.  First, the predicate is dependent on the higher order predicate for stating tat a label might represent a receive site.  Second, in the case of a let binding to synchronization to send, a sending transition from let binding name to a receiving expression.
 
 
+... TO DO after proofs of part B
 
+
+The static predicates for communication topologies should be a generalizations of procedures that compute the topologies from programs.  The soundness of the static predicates must be provable to be certain that statically described topologies are also observed when running the program.
+
+soundness semantics ... 
+  To prove the soundness of communication topologies, it is useful to define predicates that relate the the static evaluation of programs to ther elements of the dynamic semantics, including values, environments, continuation stacks, and trace pools. 
 
 
 soundness communication ... 
 
-The static predicates for communication topologies should be a generalization of procedures that computate the topologies from programs.  To be certain that the soundness of the static predicates must be provable.
-The lemma for soundness of static one shot states that if an abstract channel is statically classified as one shot for a given program, and value bindings derived from the program, then any corresponding dynamic channel is classified as one shot over any trace pool that results from running the program.  The lemmas for soundness of fan out, fan in, and one to one follow similar patterns. 
 
+
+soundness communication theorem ... 
+The lemma for soundness of static one shot states that if an abstract channel is statically classified as one shot for a given program, and value bindings derived from the program, then any corresponding dynamic channel is classified as one shot over any trace pool that results from running the program.  The lemmas for soundness of fan out, fan in, and one to one follow similar patterns. 
 
 
 

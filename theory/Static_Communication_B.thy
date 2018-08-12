@@ -347,8 +347,7 @@ inductive static_traceable :: "transition_set \<Rightarrow> label \<Rightarrow> 
   Step: "
     static_traceable F end ((middle, edge') # post) \<Longrightarrow>
     (start, edge, middle) \<in> F \<Longrightarrow>
-    path = [(start, edge), (middle, edge')] @ post \<Longrightarrow>
-    static_traceable F end path
+    static_traceable F end ([(start, edge), (middle, edge')] @ post)
   "
 
 inductive static_balanced :: "abstract_path \<Rightarrow> bool" where

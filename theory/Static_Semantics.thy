@@ -176,20 +176,4 @@ inductive static_reachable :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
   "
 
 
-locale semantics_sound =
-  assumes
-    exp_always_not_static_bound_sound : "
-      \<rho>' x = Some \<omega> \<Longrightarrow>
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      star concur_step ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) (\<E>', H') \<Longrightarrow>
-      \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
-      {|\<omega>|} \<subseteq> \<V> x" and
-
-    exp_always_exp_not_static_reachable_sound: "
-      star concur_step ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
-      \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
-      static_reachable e\<^sub>0 e'"
-
-
-
 end

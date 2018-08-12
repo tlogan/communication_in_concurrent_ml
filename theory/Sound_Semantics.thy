@@ -3,6 +3,8 @@ theory Sound_Semantics
     "~~/src/HOL/Library/List"
 begin
 
+
+
 inductive 
   static_eval_value :: "abstract_env \<times> abstract_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55) and  
   static_eval_env :: "abstract_env \<times> abstract_env \<Rightarrow> env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 
@@ -2031,9 +2033,13 @@ proof -
     "static_reachable_over_state e\<^sub>0 \<sigma>'" by blast
 qed
 
-interpretation semantics_sound
-proof 
-  fix \<rho>' x \<omega> \<V> \<C> e H \<E>' H' \<pi> e' \<kappa>'
+theorem exp_always_not_static_bound_sound : "
+      \<rho>' x = Some \<omega> \<Longrightarrow>
+      (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+      star concur_step ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) (\<E>', H') \<Longrightarrow>
+      \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
+      {|\<omega>|} \<subseteq> \<V> x"
+proof -
   assume 
     H1: "\<rho>' x = Some \<omega>" and
     H2: "(\<V>, \<C>) \<Turnstile>\<^sub>e e" and 
@@ -2045,8 +2051,13 @@ proof
 
   from H1 H3 H4 H5
   show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_not_static_bound_sound by blast
-next
-  fix e\<^sub>0 \<E>' H' \<pi>' e' \<rho>' \<kappa>'
+qed
+
+theorem exp_always_exp_not_static_reachable_sound: "
+      star concur_step ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+      \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+      static_reachable e\<^sub>0 e'"
+proof -
   assume 
     L1H1: "star concur_step ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) (\<E>', H')" and
     L1H2: "\<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
