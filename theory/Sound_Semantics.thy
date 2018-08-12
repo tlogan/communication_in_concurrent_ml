@@ -1506,6 +1506,35 @@ proof -
 qed
 
 
+
+(*
+
+inductive static_reachable :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
+  Refl : "
+    static_reachable e e
+  " | 
+  Let_Spawn_Child: "
+    static_reachable e\<^sub>c e \<Longrightarrow>
+    static_reachable (Let x (Spwn e\<^sub>c) e\<^sub>n) e
+  " |
+  let_case_left: "
+    static_reachable e\<^sub>l e \<Longrightarrow>
+    static_reachable (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e\<^sub>n) e
+  " |
+  let_case_right: "
+    static_reachable e\<^sub>r e \<Longrightarrow>
+    static_reachable (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e\<^sub>n) e
+  " |
+  Let_Abs_Body: "
+    static_reachable e\<^sub>b e \<Longrightarrow>
+    static_reachable (Let x (Prim (Abs f x\<^sub>p e\<^sub>b)) e\<^sub>n) e
+  " | 
+  Let: "
+    static_reachable e\<^sub>n e \<Longrightarrow>
+    static_reachable (Let x b e\<^sub>n) e
+  "
+
+
 inductive static_reachable_left :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
   Refl : "
     static_reachable_left e0 e0
@@ -2069,5 +2098,7 @@ proof -
       state_always_exp_not_static_reachable_sound
     by fastforce
 qed
+
+*)
 
 end
