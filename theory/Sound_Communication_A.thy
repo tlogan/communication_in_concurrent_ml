@@ -10,10 +10,6 @@ theory Sound_Communication_A
 
 begin
 
-locale communication_sound_A = 
-  Sound_Communication.communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one
-
-
 lemma static_inclusive_commut: "
   static_inclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> static_inclusive path\<^sub>2 path\<^sub>1
 "
@@ -202,7 +198,7 @@ strict_prefix path1 path2 \<longrightarrow>
 paths_correspond \<pi>1 path1 \<longrightarrow>
 strict_prefix \<pi>1 \<pi>2
 "
-apply (erule paths_correspond.induct; auto)
+apply (erule paths_correspond.cases; auto)
   apply (metis not_Cons_self2 prefix_abstract_to_concrete prefix_snoc same_prefix_nil strict_prefix_def)+
 done
 
@@ -249,8 +245,6 @@ lemma equality_contcrete_to_abstract: "
 
 "
 by (simp add: equality_contcrete_to_abstract')
-
-
 
 
 lemma spawn_point_preserved_under_congruent_paths: " 
@@ -539,7 +533,7 @@ inductive
   static_traversable_val :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> val \<Rightarrow> bool"
 where
   Intro: "
-    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> static_traversable_val V F \<omega> \<Longrightarrow>
+    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>  static_traversable_val V F \<omega> \<Longrightarrow>
     static_traversable_env V F \<rho>
   " |
 
@@ -694,7 +688,7 @@ done
 
 
 
-theorem static_one_shot_sound': "
+theorem singular_to_equal: "
   every_two (static_traceable V F (top_label e) (static_send_label V e xC)) singular \<Longrightarrow>
   static_traversable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -738,14 +732,15 @@ apply (simp add: every_two.simps noncompetitive.simps; auto?)
 done
 
 
-interpretation communication_sound_A
+
+lemma static_communication_classification_sound:
+  "Sound_Communication.communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one"
 proof -
- show "communication_sound_A" 
+ show "communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one" 
    apply (unfold_locales)
-  
    apply (erule static_one_shot.cases; auto)
    apply (unfold one_shot.simps)
-   apply (simp add: static_one_shot_sound')
+   apply (simp add: singular_to_equal)
   
    apply (erule static_fan_out.cases; auto)
    apply (unfold fan_out.simps)
