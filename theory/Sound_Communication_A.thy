@@ -597,11 +597,22 @@ inductive static_traversable_pool :: "abstract_env \<Rightarrow> transition_set 
   "
 
 
-lemma static_traversable_pool_preserved_star: "
-  static_traversable_pool V F ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]) \<Longrightarrow>
-  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+lemma static_traversable_pool_preserved: "
+  static_traversable_pool V F \<E>m \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> \<E>' \<Longrightarrow>
   \<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+  concur_step (\<E>m, Hm) (\<E>', H') \<Longrightarrow>
+  isEnd (NLet x) \<Longrightarrow>
+  static_traversable_pool V F \<E>'
+"
+sorry
+
+
+lemma static_traversable_pool_preserved_star: "
+  static_traversable_pool V F \<E> \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> \<E>' \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  star concur_step (\<E>, H) (\<E>', H') \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   static_traversable_pool V F \<E>'
 "
@@ -652,9 +663,7 @@ lemma path_not_traceable_sound: "
     paths_correspond \<pi> path \<and>
     static_traceable V F (top_label e) isEnd path
 "
-by (metis lift_traversable_to_pool static_traversable_pool_implies_static_traceable static_traversable_pool_preserved_star)
-
-
+by (metis lift_traversable_to_pool static_eval_preserved_under_concur_step_star static_eval_to_pool static_traversable_pool_implies_static_traceable static_traversable_pool_preserved_star)
 
 lemma send_path_not_traceable_sound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
