@@ -599,10 +599,8 @@ inductive static_traversable_pool :: "abstract_env \<Rightarrow> transition_set 
 
 lemma static_traversable_pool_preserved: "
   static_traversable_pool V F \<E>m \<Longrightarrow>
-  (V, C) \<Turnstile>\<^sub>\<E> \<E>' \<Longrightarrow>
-  \<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
   concur_step (\<E>m, Hm) (\<E>', H') \<Longrightarrow>
-  isEnd (NLet x) \<Longrightarrow>
   static_traversable_pool V F \<E>'
 "
 sorry
@@ -610,13 +608,66 @@ sorry
 
 lemma static_traversable_pool_preserved_star: "
   static_traversable_pool V F \<E> \<Longrightarrow>
-  (V, C) \<Turnstile>\<^sub>\<E> \<E>' \<Longrightarrow>
-  \<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   star concur_step (\<E>, H) (\<E>', H') \<Longrightarrow>
-  isEnd (NLet x) \<Longrightarrow>
   static_traversable_pool V F \<E>'
 "
-sorry
+proof -
+  assume 
+    H1: "static_traversable_pool V F \<E>" and
+    H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>" and
+    H4: "star concur_step (\<E>, H) (\<E>', H')"
+
+  obtain EH EH' where
+    H6: "EH = (\<E>, H)" and 
+    H7: "EH' = (\<E>', H')" and 
+    H8: "star concur_step EH EH'"
+    by (simp add: H4)
+
+  have H9: "star_left concur_step EH EH'"
+    by (simp add: H4 H6 H7 star_implies_star_left)
+
+  from H9
+  have 
+    H10: "
+    \<forall> \<E> H \<E>' H' .
+    (V, C) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow>
+    (\<E>, H) = EH \<longrightarrow> static_traversable_pool V F \<E> \<longrightarrow>
+    (\<E>', H') = EH' \<longrightarrow> static_traversable_pool V F \<E>'" 
+  proof induction
+    case (refl x)
+    then show ?case by blast
+  next
+    case (step x y z)
+    {
+      fix \<E> H \<E>' H'
+      assume 
+        L1H1: "(\<E>, H) = x" and
+        L1H2: "static_traversable_pool V F \<E>" and
+        L1H3: "(\<E>', H') = z" and 
+        L1H4: "(V, C) \<Turnstile>\<^sub>\<E> \<E>"
+
+
+      have 
+        L1H6: "\<forall> \<E>m Hm . (\<E>m, Hm) = y \<longrightarrow> (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<longrightarrow> static_traversable_pool V F \<E>m"
+        using L1H1 L1H2 L1H4 step.IH by blast
+
+      have L1H7: "\<exists> \<E>m Hm . (\<E>m, Hm) = y \<and> (V, C) \<Turnstile>\<^sub>\<E> \<E>m " 
+        by (metis L1H1 L1H4 eq_fst_iff star_left_implies_star static_eval_preserved_under_concur_step_star step.hyps(1))
+
+      have L1H8: "static_traversable_pool V F \<E>'"
+        using L1H3 L1H6 L1H7 static_traversable_pool_preserved step.hyps(2) by auto
+    }
+
+    then show ?case 
+      by blast
+  qed
+
+  show "static_traversable_pool V F \<E>'"
+    using H1 H10 H2 H6 H7 by blast
+
+qed
+
 
 lemma static_traversable_pool_implies_static_traceable: "
   \<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
@@ -629,6 +680,22 @@ lemma static_traversable_pool_implies_static_traceable: "
     static_traceable V F (top_label e) isEnd path
 "
 sorry
+(*
+proof -
+  assume 
+    H1: "\<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>)" and 
+    H2: "star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" and
+    H3: "(V, C) \<Turnstile>\<^sub>e e" and
+    H4: "static_traversable_pool V F \<E>'" and
+    H5: "isEnd (NLet x)"
+
+  have H6: "(V, C) \<Turnstile>\<^sub>\<E> \<E>'" 
+    using H2 H3 static_eval_preserved_under_concur_step_star static_eval_to_pool 
+    by blast
+
+  show "\<exists>path. paths_correspond \<pi> path \<and> static_traceable V F (top_label e) isEnd path" sorry
+qed
+*)
 
 
 lemma lift_traversable_to_pool: "
@@ -663,7 +730,7 @@ lemma path_not_traceable_sound: "
     paths_correspond \<pi> path \<and>
     static_traceable V F (top_label e) isEnd path
 "
-by (metis lift_traversable_to_pool static_eval_preserved_under_concur_step_star static_eval_to_pool static_traversable_pool_implies_static_traceable static_traversable_pool_preserved_star)
+by (metis lift_traversable_to_pool static_eval_to_pool static_traversable_pool_implies_static_traceable static_traversable_pool_preserved_star)
 
 lemma send_path_not_traceable_sound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
