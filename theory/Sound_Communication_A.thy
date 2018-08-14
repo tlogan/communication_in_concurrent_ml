@@ -596,6 +596,70 @@ inductive static_traversable_pool :: "abstract_env \<Rightarrow> transition_set 
     static_traversable_pool V F E
   "
 
+lemma static_traversable_pool_preserved_under_seq_step_down: "
+  static_traversable_pool V F \<E>m \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
+  leaf \<E>m pi \<Longrightarrow>
+  \<E>m pi = Some (\<langle>Rslt x;env;Ctn xk ek envk # k\<rangle>) \<Longrightarrow> 
+  env x = Some v \<Longrightarrow> 
+  static_traversable_pool V F (\<E>m(pi @ [LRtn xk] \<mapsto> \<langle>ek;envk(xk \<mapsto> v);k\<rangle>))
+"
+sorry
+
+lemma static_traversable_pool_preserved_under_seq_step: "
+  static_traversable_pool V F \<E>m \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
+  leaf \<E>m pi \<Longrightarrow>
+  \<E>m pi = Some (\<langle>exp.Let x b e;env;k\<rangle>) \<Longrightarrow> 
+  seq_step (b, env) v \<Longrightarrow> 
+  static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> v);k\<rangle>))
+"
+sorry
+
+lemma static_traversable_pool_preserved_under_seq_step_up: "
+  static_traversable_pool V F \<E>m \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
+  leaf \<E>m pi \<Longrightarrow>
+  \<E>m pi = Some (\<langle>exp.Let x b e;env;k\<rangle>) \<Longrightarrow>
+  seq_step_up (b, env) (e', env') \<Longrightarrow> 
+  static_traversable_pool V F (\<E>m(pi @ [LCall x] \<mapsto> \<langle>e';env';Ctn x e env # k\<rangle>))
+"
+sorry
+
+lemma static_traversable_pool_preserved_under_let_chan: "
+  static_traversable_pool V F \<E>m \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
+  leaf \<E>m pi \<Longrightarrow> 
+  \<E>m pi = Some (\<langle>exp.Let x MkChn e;env;k\<rangle>) \<Longrightarrow> 
+  static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> VChn (Ch pi x));k\<rangle>))
+"
+sorry
+
+lemma static_traversable_pool_preserved_under_let_spawn: "
+  static_traversable_pool V F \<E>m \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
+  leaf \<E>m pi \<Longrightarrow> \<E>m pi = Some (\<langle>exp.Let x (Spwn ec) e;env;k\<rangle>) \<Longrightarrow> 
+  static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> VUnt);k\<rangle>, pi @ [LSpwn x] \<mapsto> \<langle>ec;env;[]\<rangle>))
+"
+sorry
+
+
+lemma static_traversable_pool_preserved_under_let_sync: "
+  static_traversable_pool V F \<E>m \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
+  leaf \<E>m pis \<Longrightarrow>
+  \<E>m pis = Some (\<langle>exp.Let xs (Sync xse) es;envs;ks\<rangle>) \<Longrightarrow>
+  envs xse = Some (VClsr (SendEvt xsc xm) envse) \<Longrightarrow>
+  leaf \<E>m pir \<Longrightarrow>
+  \<E>m pir = Some (\<langle>exp.Let xr (Sync xre) er;envr;kr\<rangle>) \<Longrightarrow>
+  envr xre = Some (VClsr (RecvEvt xrc) envre) \<Longrightarrow>
+  envse xsc = Some (VChn c) \<Longrightarrow>
+  envre xrc = Some (VChn c) \<Longrightarrow> 
+  envse xm = Some vm \<Longrightarrow> 
+  static_traversable_pool V F 
+    (\<E>m(pis @ [LNxt xs] \<mapsto> \<langle>es;envs(xs \<mapsto> VUnt);ks\<rangle>, pir @ [LNxt xr] \<mapsto> \<langle>er;envr(xr \<mapsto> vm);kr\<rangle>))
+"
+sorry
 
 lemma static_traversable_pool_preserved: "
   static_traversable_pool V F \<E>m \<Longrightarrow>
@@ -603,7 +667,42 @@ lemma static_traversable_pool_preserved: "
   concur_step (\<E>m, Hm) (\<E>', H') \<Longrightarrow>
   static_traversable_pool V F \<E>'
 "
-sorry
+proof -
+  assume 
+    H1: "static_traversable_pool V F \<E>m" and
+    H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
+    H3: "concur_step (\<E>m, Hm) (\<E>', H')"
+
+  from H3
+  show "static_traversable_pool V F \<E>'"
+  proof cases
+    case (Seq_Step_Down pi x env xk ek envk k v)
+    then show ?thesis
+      using H1 H2 static_traversable_pool_preserved_under_seq_step_down by auto
+  next
+    case (Seq_Step pi x b e env k v)
+    then show ?thesis
+      using H1 H2 static_traversable_pool_preserved_under_seq_step by blast
+  next
+    case (Seq_Step_Up pi x b e env k e' env')
+    then show ?thesis
+      using H1 H2 static_traversable_pool_preserved_under_seq_step_up by blast
+  next
+    case (Let_Chan pi x e env k)
+    then show ?thesis
+      using H1 H2 static_traversable_pool_preserved_under_let_chan by auto
+  next
+    case (Let_Spawn pi x ec e env k)
+    then show ?thesis
+      using H1 H2 static_traversable_pool_preserved_under_let_spawn by blast
+  next
+    case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
+    then show ?thesis
+      using H1 H2 static_traversable_pool_preserved_under_let_sync by auto
+  qed
+
+
+qed
 
 
 lemma static_traversable_pool_preserved_star: "
