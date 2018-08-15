@@ -604,7 +604,42 @@ lemma static_traversable_pool_preserved_under_seq_step_down: "
   env x = Some v \<Longrightarrow> 
   static_traversable_pool V F (\<E>m(pi @ [LRtn xk] \<mapsto> \<langle>ek;envk(xk \<mapsto> v);k\<rangle>))
 "
-sorry
+proof -
+assume 
+ H1: "static_traversable_pool V F \<E>m" and
+ H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
+ H3: "leaf \<E>m pi" and
+ H4: "\<E>m pi = Some (\<langle>Rslt x;env;Ctn xk ek envk # k\<rangle>)" and
+ H5: "env x = Some v"
+
+
+ have 
+  H6: " 
+    \<forall>\<pi> e \<rho> \<kappa>.
+    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+  using H1 static_traversable_pool.cases by blast 
+
+  have 
+    H7: "static_traversable V F (Rslt x)"
+    by (simp add: static_traversable.Result)
+  have
+     H8: "static_traversable_env V F env"
+    using H4 H6 by blast
+  have
+     H9: "static_traversable_stack V F ((Ctn xk ek envk) # k)"
+    using H4 H6 by blast
+
+  have 
+    H10: "static_traversable V F ek" and
+    H11: "static_traversable_env V F envk" and
+    H12: "static_traversable_stack V F k"
+    using H9 static_traversable_stack.cases by auto
+
+ show "static_traversable_pool V F (\<E>m(pi @ [LRtn xk] \<mapsto> \<langle>ek;envk(xk \<mapsto> v);k\<rangle>))"
+   using H1 H10 H11 H12 H5 H8 static_traversable_env.simps static_traversable_pool.simps by auto
+qed
+
 
 lemma static_traversable_pool_preserved_under_seq_step: "
   static_traversable_pool V F \<E>m \<Longrightarrow>
@@ -614,7 +649,87 @@ lemma static_traversable_pool_preserved_under_seq_step: "
   seq_step (b, env) v \<Longrightarrow> 
   static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> v);k\<rangle>))
 "
-sorry
+proof -
+  assume 
+    H1: "static_traversable_pool V F \<E>m" and
+    H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
+    H3: "leaf \<E>m pi" and
+    H4: "\<E>m pi = Some (\<langle>exp.Let x b e;env;k\<rangle>)" and 
+    H5: "seq_step (b, env) v"
+
+  have H6: "
+    \<forall>\<pi> e \<rho> \<kappa>.
+    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+  using H1 static_traversable_pool.cases by blast 
+
+  have 
+    H7: "static_traversable V F (Let x b e)"
+    using H4 H6 by auto
+  have
+     H8: "static_traversable_env V F env"
+    using H4 H6 by blast
+  have
+     H9: "static_traversable_stack V F k"
+    using H4 H6 by blast
+
+  have H10: 
+    "static_traversable V F e" using H7 static_traversable.cases by blast
+
+
+
+  from H5
+  show "static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> v);k\<rangle>))"
+  proof cases
+    case Let_Unit
+    then show ?thesis
+    using H1 H10 H8 H9 static_traversable_env.simps 
+      static_traversable_env_static_traversable_val.Unit 
+      static_traversable_pool.simps by auto
+  next
+    case (Let_Prim p)
+    have L1H1: "static_traversable_val V F (VClsr p env)" 
+    proof (cases p)
+      case (SendEvt x11 x12)
+      then show ?thesis
+        by (simp add: H8 static_traversable_env_static_traversable_val.SendEvt)
+    next
+      case (RecvEvt x2)
+      then show ?thesis
+        by (simp add: H8 static_traversable_env_static_traversable_val.RecvEvt)
+    next
+      case (Pair x31 x32)
+      then show ?thesis
+        by (simp add: H8 static_traversable_env_static_traversable_val.Pair)
+    next
+      case (Lft x4)
+      then show ?thesis
+        by (simp add: H8 Left)
+    next
+      case (Rght x5)
+      then show ?thesis
+        by (simp add: H8 Right)
+    next
+      case (Abs f' x' e')
+
+      thm static_traversable_val.simps
+
+      have L2H1: "static_traversable V F e'" sorry
+
+      then show ?thesis
+        by (simp add: H8 local.Abs static_traversable_env_static_traversable_val.Abs)
+    qed
+    then show ?thesis
+      by (smt H10 H6 H8 H9 local.Let_Prim(2) map_upd_Some_unfold state.inject static_traversable_env.cases static_traversable_env_static_traversable_val.Intro static_traversable_pool.simps)
+  next
+    case (Let_Fst xp x1 x2 envp)
+    then show ?thesis sorry
+  next
+    case (Let_Snd xp x1 x2 envp)
+    then show ?thesis sorry
+  qed
+qed
+
 
 lemma static_traversable_pool_preserved_under_seq_step_up: "
   static_traversable_pool V F \<E>m \<Longrightarrow>
