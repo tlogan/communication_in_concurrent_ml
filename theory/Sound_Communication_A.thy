@@ -676,10 +676,8 @@ proof -
   have H10: 
     "static_traversable V F e" using H7 static_traversable.cases by blast
 
-
-
-  from H5
   show "static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> v);k\<rangle>))"
+  using H5
   proof cases
     case Let_Unit
     then show ?thesis
@@ -688,6 +686,7 @@ proof -
       static_traversable_pool.simps by auto
   next
     case (Let_Prim p)
+
     have L1H1: "static_traversable_val V F (VClsr p env)" 
     proof (cases p)
       case (SendEvt x11 x12)
@@ -711,22 +710,61 @@ proof -
         by (simp add: H8 Right)
     next
       case (Abs f' x' e')
-
-      thm static_traversable_val.simps
-
-      have L2H1: "static_traversable V F e'" sorry
-
-      then show ?thesis
+      have L2H1: "static_traversable V F (Let x (Prim (Abs f' x' e')) e)"
+        using H7 local.Abs local.Let_Prim(1) by auto
+      show ?thesis using L2H1
+      proof cases
+        case Let_Abs
+        then show ?thesis
         by (simp add: H8 local.Abs static_traversable_env_static_traversable_val.Abs)
+      qed
     qed
-    then show ?thesis
-      by (smt H10 H6 H8 H9 local.Let_Prim(2) map_upd_Some_unfold state.inject static_traversable_env.cases static_traversable_env_static_traversable_val.Intro static_traversable_pool.simps)
+
+    have L1H2: "static_traversable_env V F (env(x \<mapsto> v))"
+      using H8 L1H1 local.Let_Prim(2) static_traversable_env.simps by auto
+    show ?thesis
+      by (simp add: H10 H6 H9 L1H2 static_traversable_pool.simps)
   next
     case (Let_Fst xp x1 x2 envp)
-    then show ?thesis sorry
+
+    have L1H1: "static_traversable_val V F (VClsr (prim.Pair x1 x2) envp)" 
+    using H8 static_traversable_env.cases
+          using local.Let_Fst(2) by blast
+
+    have L1H2: "static_traversable_env V F envp" using L1H1 
+    proof cases
+      case Pair
+      then show ?thesis by auto
+    qed
+
+    have L1H3: "static_traversable_val V F v"
+      using L1H2 local.Let_Fst(3) static_traversable_env.cases by blast
+
+    have L1H4: "static_traversable_env V F (env(x \<mapsto> v))"
+      using H8 L1H3 static_traversable_env.simps by auto
+
+    show ?thesis 
+      by (simp add: L1H4 H10 H6 H9 static_traversable_pool.simps)
   next
     case (Let_Snd xp x1 x2 envp)
-    then show ?thesis sorry
+    have L1H1: "static_traversable_val V F (VClsr (prim.Pair x1 x2) envp)" 
+    using H8 static_traversable_env.cases
+          using local.Let_Snd(2) by blast
+
+    have L1H2: "static_traversable_env V F envp" using L1H1 
+    proof cases
+      case Pair
+      then show ?thesis by auto
+    qed
+
+    have L1H3: "static_traversable_val V F v"
+      using L1H2 local.Let_Snd(3) static_traversable_env.cases by blast
+
+    have L1H4: "static_traversable_env V F (env(x \<mapsto> v))"
+      using H8 L1H3 static_traversable_env.simps by auto
+
+    show ?thesis 
+      by (simp add: L1H4 H10 H6 H9 static_traversable_pool.simps)
   qed
 qed
 
