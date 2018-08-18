@@ -1019,7 +1019,92 @@ lemma static_traversable_pool_preserved_under_let_sync: "
   static_traversable_pool V F 
     (\<E>m(pis @ [LNxt xs] \<mapsto> \<langle>es;envs(xs \<mapsto> VUnt);ks\<rangle>, pir @ [LNxt xr] \<mapsto> \<langle>er;envr(xr \<mapsto> vm);kr\<rangle>))
 "
-sorry
+proof -
+  assume 
+    H1: "static_traversable_pool V F \<E>m" and
+    H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
+    H3: "leaf \<E>m pis" and
+    H4: "\<E>m pis = Some (\<langle>exp.Let xs (Sync xse) es;envs;ks\<rangle>)" and
+    H5: "envs xse = Some (VClsr (SendEvt xsc xm) envse)" and
+    H6: "leaf \<E>m pir" and
+    H7: "\<E>m pir = Some (\<langle>exp.Let xr (Sync xre) er;envr;kr\<rangle>)" and
+    H8: "envr xre = Some (VClsr (RecvEvt xrc) envre)" and
+    H9: "envse xsc = Some (VChn c)" and
+    H10: "envre xrc = Some (VChn c)" and 
+    H11: "envse xm = Some vm"
+
+  have H12: "
+    \<forall>\<pi> e \<rho> \<kappa>.
+    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+  using H1 static_traversable_pool.cases by blast 
+
+  have H13: "static_traversable V F (Let xs (Sync xse) es)"
+    using H12 H4 by blast
+
+  have H14: "static_traversable_env V F envs"
+    using H12 H4 by blast
+
+  have H15: "static_traversable_stack V F ks"
+    using H12 H4 by blast
+
+
+  have H16: "static_traversable V F (Let xr (Sync xre) er)"
+  using H12 H7 by blast
+
+  have H17: "static_traversable_env V F envr"
+    using H12 H7 by blast
+
+  have H18: "static_traversable_stack V F kr"
+  using H12 H7 by blast
+
+
+  have H19: "static_traversable_env V F (envs(xs \<mapsto> VUnt))"
+    using H14 static_traversable_env.simps static_traversable_env_static_traversable_val.Unit by auto
+
+
+  have H20: "static_traversable_val V F (VClsr (SendEvt xsc xm) envse)"
+    using H14 H5 static_traversable_env.cases by blast
+
+  have H21: "static_traversable_env V F envse"
+  using H20 proof cases
+    case SendEvt
+    then show ?thesis by simp
+  qed
+
+  have H22: "static_traversable_val V F vm"
+    using H11 H21 static_traversable_env.cases by blast
+
+  have H23: "static_traversable_env V F (envr(xr \<mapsto> vm))"
+    using H11 H17 H21 static_traversable_env.simps by auto
+
+
+  have H24: "static_traversable_env V F (envs(xs \<mapsto> VUnt))"
+    by (simp add: H19)
+
+  have H25: "static_traversable_stack V F ks"
+    by (simp add: H15)
+
+  have H26: "static_traversable_stack V F kr"
+    by (simp add: H18)
+
+  have H27: "static_traversable V F er"
+  using H16 proof cases
+    case Let_Sync
+    then show ?thesis by simp
+  qed
+
+  have H28: "static_traversable V F es"
+  using H13 proof cases
+    case Let_Sync
+    then show ?thesis by simp
+  qed
+
+
+show "static_traversable_pool V F 
+    (\<E>m(pis @ [LNxt xs] \<mapsto> \<langle>es;envs(xs \<mapsto> VUnt);ks\<rangle>, pir @ [LNxt xr] \<mapsto> \<langle>er;envr(xr \<mapsto> vm);kr\<rangle>))"
+  by (simp add: H12 H23 H24 H25 H26 H27 H28 static_traversable_pool.intros)
+qed
 
 lemma static_traversable_pool_preserved: "
   static_traversable_pool V F \<E>m \<Longrightarrow>
