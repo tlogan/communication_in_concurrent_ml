@@ -777,7 +777,135 @@ lemma static_traversable_pool_preserved_under_seq_step_up: "
   seq_step_up (b, env) (e', env') \<Longrightarrow> 
   static_traversable_pool V F (\<E>m(pi @ [LCall x] \<mapsto> \<langle>e';env';Ctn x e env # k\<rangle>))
 "
-sorry
+proof -
+  assume 
+    H1: "static_traversable_pool V F \<E>m" and
+    H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
+    H3: "leaf \<E>m pi" and
+    H4: "\<E>m pi = Some (\<langle>exp.Let x b e;env;k\<rangle>)" and
+    H5: "seq_step_up (b, env) (e', env')"
+
+  have H6: "
+    \<forall>\<pi> e \<rho> \<kappa>.
+    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+  using H1 static_traversable_pool.cases by blast 
+
+  have 
+    H7: "static_traversable V F (Let x b e)"
+  using H4 H6 by blast
+
+
+  have
+     H8: "static_traversable_env V F env"
+    using H4 H6 by blast
+  have
+     H9: "static_traversable_stack V F k"
+    using H4 H6 by blast
+
+  have H10: 
+    "static_traversable V F e" using H7 static_traversable.cases by blast
+
+  show "static_traversable_pool V F (\<E>m(pi @ [LCall x] \<mapsto> \<langle>e';env';Ctn x e env # k\<rangle>))"
+  using H5
+  proof cases
+    case (let_case_left xs xl' envl vl xl xr er)
+
+    have L1H1: "static_traversable_val V F (VClsr (Lft xl') envl)"
+      using H8 local.let_case_left(3) static_traversable_env.cases by blast
+
+    have L1H2: "static_traversable_env V F envl"
+    using L1H1 
+    proof cases
+      case Left
+      then show ?thesis by auto
+    qed
+
+    have L1H3: "static_traversable_val V F vl"
+    using L1H2  local.let_case_left(4) static_traversable_env.cases by blast
+
+    have L1H4: "static_traversable_env V F env'"
+    using H8 L1H2 local.let_case_left(2) local.let_case_left(4) static_traversable_env.simps by auto
+
+    have L1H5: "static_traversable V F (Let x (Case xs xl e' xr er) e)"
+      using H7 local.let_case_left(1) by blast
+
+    have L1H6: "static_traversable V F e'"
+    using L1H5 
+    proof cases
+      case Let_Case
+      then show ?thesis
+        by blast
+    qed
+
+    show ?thesis
+      by (simp add: H10 H6 H8 H9 L1H4 L1H6 static_traversable_pool.intros static_traversable_stack.Nonempty)
+
+
+  next
+    case (let_case_right xs xr' envr vr xl el xr)
+    have L1H1: "static_traversable_val V F (VClsr (Rght xr') envr)"
+      using H8 local.let_case_right(3) static_traversable_env.cases by blast
+
+    have L1H2: "static_traversable_env V F envr"
+    using L1H1 
+    proof cases
+      case Right
+      then show ?thesis by auto
+    qed
+
+    have L1H3: "static_traversable_val V F vr"
+    using L1H2  local.let_case_right(4) static_traversable_env.cases by blast
+
+    have L1H4: "static_traversable_env V F env'"
+    using H8 L1H2 local.let_case_right(2) local.let_case_right(4) static_traversable_env.simps by auto
+
+    have L1H5: "static_traversable V F (Let x (Case xs xl el xr e') e)"
+      using H7 local.let_case_right(1) by blast
+
+    have L1H6: "static_traversable V F e'"
+    using L1H5 
+    proof cases
+      case Let_Case
+      then show ?thesis
+        by blast
+    qed
+
+    show ?thesis
+      by (simp add: H10 H6 H8 H9 L1H4 L1H6 static_traversable_pool.intros static_traversable_stack.Nonempty)
+
+  next
+    case (let_app f fp xp envl xa va)
+
+    have L1H1: "static_traversable_val V F (VClsr (Abs fp xp e') envl)"
+      using H8 local.let_app(3) static_traversable_env.cases by blast
+
+
+    have L1H2: "static_traversable V F e'"
+    using L1H1 proof cases
+      case Abs
+      then show ?thesis
+        by simp
+    qed
+
+    have L1H3: "static_traversable_env V F envl"
+    using L1H1 proof cases
+      case Abs
+      then show ?thesis
+        by simp
+    qed
+
+
+    have L1H4: "static_traversable_val V F va"
+      using H8 local.let_app(4) static_traversable_env.cases by blast
+
+    have L1H5: "static_traversable_env V F env'"
+      using H8 L1H3 local.let_app(2) local.let_app(3) local.let_app(4) static_traversable_env.simps by auto
+
+    show ?thesis
+      using H10 H6 H8 H9 L1H2 L1H5 static_traversable_pool.intros static_traversable_stack.Nonempty by auto
+  qed
+qed
 
 lemma static_traversable_pool_preserved_under_let_chan: "
   static_traversable_pool V F \<E>m \<Longrightarrow>
@@ -786,15 +914,94 @@ lemma static_traversable_pool_preserved_under_let_chan: "
   \<E>m pi = Some (\<langle>exp.Let x MkChn e;env;k\<rangle>) \<Longrightarrow> 
   static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> VChn (Ch pi x));k\<rangle>))
 "
-sorry
+proof -
+  assume 
+    H1: "static_traversable_pool V F \<E>m" and
+    H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
+    H3: "leaf \<E>m pi" and
+    H4: "\<E>m pi = Some (\<langle>exp.Let x MkChn e;env;k\<rangle>)"
+
+  have H6: "
+    \<forall>\<pi> e \<rho> \<kappa>.
+    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+  using H1 static_traversable_pool.cases by blast 
+
+  have 
+    H7: "static_traversable V F (Let x MkChn e)"
+  using H4 H6 by blast
+
+
+  have
+     H8: "static_traversable_env V F env"
+    using H4 H6 by blast
+  have
+     H9: "static_traversable_stack V F k"
+    using H4 H6 by blast
+
+  have H10: 
+    "static_traversable V F e" using H7 static_traversable.cases by blast
+
+  show "static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> VChn (Ch pi x));k\<rangle>))"
+    using H10 H6 H8 H9 static_traversable_env.simps 
+    static_traversable_env_static_traversable_val.Chan 
+    static_traversable_pool.simps by auto
+
+qed
 
 lemma static_traversable_pool_preserved_under_let_spawn: "
   static_traversable_pool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
-  leaf \<E>m pi \<Longrightarrow> \<E>m pi = Some (\<langle>exp.Let x (Spwn ec) e;env;k\<rangle>) \<Longrightarrow> 
+  leaf \<E>m pi \<Longrightarrow> 
+  \<E>m pi = Some (\<langle>exp.Let x (Spwn ec) e;env;k\<rangle>) \<Longrightarrow> 
   static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> VUnt);k\<rangle>, pi @ [LSpwn x] \<mapsto> \<langle>ec;env;[]\<rangle>))
 "
-sorry
+proof -
+  assume 
+    H1: "static_traversable_pool V F \<E>m" and
+    H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
+    H3: "leaf \<E>m pi" and
+    H4: "\<E>m pi = Some (\<langle>exp.Let x (Spwn ec) e;env;k\<rangle>)"
+
+  have H6: "
+    \<forall>\<pi> e \<rho> \<kappa>.
+    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+  using H1 static_traversable_pool.cases by blast 
+
+  have 
+    H7: "static_traversable V F (Let x (Spwn ec) e)"
+  using H4 H6 by blast
+
+
+  have
+     H8: "static_traversable_env V F env"
+    using H4 H6 by blast
+  have
+     H9: "static_traversable_stack V F k"
+    using H4 H6 by blast
+
+  have H10: "static_traversable V F e" using H7 static_traversable.cases by blast
+
+
+  have 
+    H11: "static_traversable V F ec" using H7 static_traversable.cases by blast
+
+  have 
+    H12: "static_traversable_val V F VUnt"
+    by (simp add: static_traversable_env_static_traversable_val.Unit)
+
+  have 
+    H13: "static_traversable_stack V F []"
+    by (simp add: static_traversable_stack.Empty) 
+
+  have H14: "static_traversable_env V F (env(x \<mapsto> VUnt))"
+    using H12 H8 static_traversable_env.simps by auto
+
+  show "static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> VUnt);k\<rangle>, pi @ [LSpwn x] \<mapsto> \<langle>ec;env;[]\<rangle>))"
+    by (simp add: H10 H11 H13 H14 H6 H8 H9 static_traversable_pool.simps)
+
+qed
 
 
 lemma static_traversable_pool_preserved_under_let_sync: "

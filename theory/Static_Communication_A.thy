@@ -99,7 +99,6 @@ inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rig
   Let_Fst: "
     \<lbrakk>
       {(NLet x, ENext, top_label e)} \<subseteq> F;
-      APrim (Pair x1 x2) \<in> V x\<^sub>p;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
     static_traversable V F (Let x (Fst x\<^sub>p) e)
@@ -107,7 +106,6 @@ inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rig
   Let_Snd: "
     \<lbrakk>
       {(NLet x, ENext, top_label e)} \<subseteq> F;
-      APrim (Pair x1 x2) \<in> V x\<^sub>p;
       static_traversable V F e
     \<rbrakk> \<Longrightarrow>
     static_traversable V F (Let x (Snd x\<^sub>p) e)
