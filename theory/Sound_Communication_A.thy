@@ -1213,18 +1213,72 @@ qed
 
 
 lemma static_traversable_pool_implies_static_traceabl_generalized: "
-  \<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
-  star concur_step (\<E>, H) (\<E>', H') \<Longrightarrow> 
+  \<E>H = (\<E>, H) \<Longrightarrow> 
+
   \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   leaf \<E> \<pi> \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
+
+  \<E>H' = (\<E>', H') \<Longrightarrow> 
+  prefix \<pi> \<pi>' \<Longrightarrow>
+  \<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+
   static_traversable_pool V F \<E>' \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
+  \<pi> @ \<pi>Suff = \<pi>' \<Longrightarrow>
+  star concur_step \<E>H \<E>H' \<Longrightarrow> 
   \<exists> path . 
-    paths_correspond \<pi>' path \<and>
+    paths_correspond \<pi>Suff path \<and>
     static_traceable V F (top_label e) isEnd path
 "
-sorry
+proof -
+
+  assume
+    H1: "\<E>H = (\<E>, H)" and
+    H2: "\<E>H' = (\<E>', H')" and
+    H3: "\<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
+    H4: "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" and
+    H5: "leaf \<E> \<pi>" and
+    H6: "(V, C) \<Turnstile>\<^sub>\<E> \<E>" and
+    H7: "static_traversable_pool V F \<E>'" and
+    H8: "isEnd (NLet x)" and
+    H9: "\<pi> @ \<pi>Suff = \<pi>'" and
+    H10: "star concur_step \<E>H \<E>H'"
+
+
+  have H11: "
+    \<forall> \<E> H \<pi> e \<rho> \<kappa> \<E>' H' \<pi>' x b e\<^sub>n \<rho>' \<kappa>' \<pi>Suff.
+      \<E>H = (\<E>, H) \<longrightarrow>
+      \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+      leaf \<E> \<pi> \<longrightarrow>
+      (V, C) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow>
+    
+      \<E>H' = (\<E>', H') \<longrightarrow>
+      \<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+    
+      static_traversable_pool V F \<E>' \<longrightarrow>
+      isEnd (NLet x) \<longrightarrow>
+      \<pi> @ \<pi>Suff = \<pi>' \<longrightarrow>
+      (\<exists> path . 
+        paths_correspond \<pi>Suff path \<and>
+        static_traceable V F (top_label e) isEnd path)
+    "
+    using H10
+    proof induct
+      case (refl x)
+      then show ?case sorry
+    next
+      case (step x y z)
+      then show ?case sorry
+    qed
+
+
+
+  show "
+    \<exists> path . 
+        paths_correspond \<pi>Suff path \<and>
+        static_traceable V F (top_label e) isEnd path" sorry
+qed
 
 
 lemma static_traversable_pool_implies_static_traceable: "
@@ -1252,12 +1306,13 @@ proof -
 
   have H8: "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] [] = Some (\<langle>e;Map.empty;[]\<rangle>)" by simp
 
+  have H9: "[] @ \<pi>' = \<pi>'" by blast
   show "
     \<exists> path . 
       paths_correspond \<pi>' path \<and>
       static_traceable V F (top_label e) isEnd path"
     using static_traversable_pool_implies_static_traceabl_generalized
-    using H1 H2 H4 H5 H6 H7 H8 by blast
+    by (metis H1 H2 H4 H5 H6 H7 H8 H9 prefixI)
 
 qed
 
