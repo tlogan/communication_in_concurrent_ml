@@ -1146,7 +1146,6 @@ proof -
       using H1 H2 static_traversable_pool_preserved_under_let_sync by auto
   qed
 
-
 qed
 
 
@@ -1213,33 +1212,54 @@ proof -
 qed
 
 
+lemma static_traversable_pool_implies_static_traceabl_generalized: "
+  \<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+  star concur_step (\<E>, H) (\<E>', H') \<Longrightarrow> 
+  \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  leaf \<E> \<pi> \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
+  static_traversable_pool V F \<E>' \<Longrightarrow>
+  isEnd (NLet x) \<Longrightarrow>
+  \<exists> path . 
+    paths_correspond \<pi>' path \<and>
+    static_traceable V F (top_label e) isEnd path
+"
+sorry
+
+
 lemma static_traversable_pool_implies_static_traceable: "
-  \<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_traversable_pool V F \<E>' \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
-    paths_correspond \<pi> path \<and>
+    paths_correspond \<pi>' path \<and>
     static_traceable V F (top_label e) isEnd path
 "
-sorry
-(*
 proof -
   assume 
-    H1: "\<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>)" and 
+    H1: "\<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and 
     H2: "star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" and
     H3: "(V, C) \<Turnstile>\<^sub>e e" and
     H4: "static_traversable_pool V F \<E>'" and
     H5: "isEnd (NLet x)"
+  
+  have H6: "(V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]"
+    by (simp add: H3 static_eval_to_pool)
 
-  have H6: "(V, C) \<Turnstile>\<^sub>\<E> \<E>'" 
-    using H2 H3 static_eval_preserved_under_concur_step_star static_eval_to_pool 
-    by blast
+  have H7: "leaf [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] []" using leaf.simps by simp
 
-  show "\<exists>path. paths_correspond \<pi> path \<and> static_traceable V F (top_label e) isEnd path" sorry
+  have H8: "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] [] = Some (\<langle>e;Map.empty;[]\<rangle>)" by simp
+
+  show "
+    \<exists> path . 
+      paths_correspond \<pi>' path \<and>
+      static_traceable V F (top_label e) isEnd path"
+    using static_traversable_pool_implies_static_traceabl_generalized
+    using H1 H2 H4 H5 H6 H7 H8 by blast
+
 qed
-*)
 
 
 lemma lift_traversable_to_pool: "
