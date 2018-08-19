@@ -1211,32 +1211,6 @@ proof -
 
 qed
 
-(*
-lemma static_traversable_pool_implies_static_traceabl_refl: "
-\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-leaf \<E> \<pi> \<Longrightarrow>
-(V, C) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-\<E> \<pi> = Some (\<langle>exp.Let xa b e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
-static_traversable_pool V F \<E> \<Longrightarrow>
-isEnd (NLet xa) \<Longrightarrow>
-\<pi> @ \<pi>Suff = \<pi> \<Longrightarrow>
-(\<exists>path. paths_correspond \<pi>Suff path \<and> static_traceable V F (top_label e) isEnd path)
-"
-proof -
-  assume 
-    H1: "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" and
-    H2: "leaf \<E> \<pi>" and
-    H3: "(V, C) \<Turnstile>\<^sub>\<E> \<E>" and
-    H4: "\<E> \<pi> = Some (\<langle>exp.Let xa b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
-    H5: "static_traversable_pool V F \<E>" and
-    H6: "isEnd (NLet xa)" and
-    H7: "\<pi> @ \<pi>Suff = \<pi>"
-  
-  show "\<exists>path. paths_correspond \<pi>Suff path \<and> static_traceable V F (top_label e) isEnd path"
-    using H1 H4 H6 H7 paths_correspond.Empty static_traceable.Empty by auto
-qed
-*)
-
 
 lemma static_traversable_pool_implies_static_traceabl_generalized:
   assumes
@@ -1254,16 +1228,16 @@ lemma static_traversable_pool_implies_static_traceabl_generalized:
     H9A: "\<forall> \<E>m Hm . concur_step \<E>H (\<E>m, Hm) \<longrightarrow> (\<exists> l . \<E>m (\<pi> @ [l]) \<noteq> None)" and
     H10: "star concur_step \<E>H \<E>H'"
 
-  shows "(\<exists> path . 
+  shows 
+    "(\<exists> path . 
         paths_correspond \<pi>Suff path \<and>
         static_traceable V F (top_label e) isEnd path)"
-(*
 proof -
 
   have H11: "
     \<forall> \<E> H \<pi> e \<rho> \<kappa> \<pi>Suff .
       \<E>H = (\<E>, H) \<longrightarrow>
-      (\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<pi> @ \<pi>Suff = \<pi>') \<longrightarrow>
+      \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
       leaf \<E> \<pi> \<longrightarrow>
       (V, C) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow>
     
@@ -1271,6 +1245,9 @@ proof -
       \<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
       static_traversable_pool V F \<E>' \<longrightarrow>
       isEnd (NLet x) \<longrightarrow>
+      
+      \<pi> @ \<pi>Suff = \<pi>' \<longrightarrow>
+      (\<forall> \<E>m Hm . concur_step \<E>H (\<E>m, Hm) \<longrightarrow> (\<exists> l . \<E>m (\<pi> @ [l]) \<noteq> None)) \<longrightarrow>
 
       (\<exists> path . 
         paths_correspond \<pi>Suff path \<and>
@@ -1281,14 +1258,17 @@ proof -
       case (refl xa)
       {
 
-        fix \<E> H \<pi>Suff
+        fix \<E> H \<pi> e \<rho> \<kappa> \<pi>Suff
         assume 
           L2H0: "xa = (\<E>, H)" "xa = (\<E>', H')" and
-          L2H1: "\<forall> \<pi> \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<pi> @ \<pi>Suff = \<pi>'" and
+          L2H1: "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" and
+          L2H2: "leaf \<E> \<pi>" and
           L2H3: "(V, C) \<Turnstile>\<^sub>\<E> \<E>" and
           L2H4: "\<E>' \<pi>' = Some (\<langle>exp.Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
           L2H5: "static_traversable_pool V F \<E>'" and
-          L2H6: "isEnd (NLet x)"
+          L2H6: "isEnd (NLet x)" and
+          L2H7: "\<pi> @ \<pi>Suff = \<pi>'" and
+          L2H7A: "\<forall> \<E>m Hm . concur_step xa (\<E>m, Hm) \<longrightarrow> (\<exists> l . \<E>m (\<pi> @ [l]) \<noteq> None)"
 
         have L2H8: "\<E> = \<E>'"
           using L2H0(1) L2H0(2) by blast
@@ -1296,12 +1276,19 @@ proof -
         have L2H9: "\<E> \<pi>' = Some (\<langle>exp.Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)"
           by (simp add: L2H4 L2H8)
 
-        have L2H10: "\<pi>' @ \<pi>Suff = \<pi>'" sorry
+        have L2H9A: "\<not> strict_prefix \<pi> \<pi>'" using leaf.simps
+          using L2H2 L2H9 by blast
+
+        have L2H9B: "\<pi> = \<pi>'"
+          using L2H7 L2H9A prefixI strict_prefix_def by blast
+
+        have L2H10: "\<pi>' @ \<pi>Suff = \<pi>'"
+          using L2H7 L2H9B by auto
 
         have L2H11: "\<pi>Suff = []" using L2H10 by blast
 
         have "\<exists>path. paths_correspond \<pi>Suff path \<and> static_traceable V F (top_label e) isEnd path"
-sorry
+        using L2H1 L2H11 L2H4 L2H6 L2H7 L2H8 paths_correspond.Empty static_traceable.Empty by auto
 
       }
 
