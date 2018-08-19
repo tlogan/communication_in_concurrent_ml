@@ -1211,6 +1211,30 @@ proof -
 
 qed
 
+lemma static_traversable_pool_implies_static_traceabl_refl: "
+\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+leaf \<E> \<pi> \<Longrightarrow>
+(V, C) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
+\<E> \<pi> = Some (\<langle>exp.Let xa b e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+static_traversable_pool V F \<E> \<Longrightarrow>
+isEnd (NLet xa) \<Longrightarrow>
+\<pi> @ \<pi>Suff = \<pi> \<Longrightarrow>
+(\<exists>path. paths_correspond \<pi>Suff path \<and> static_traceable V F (top_label e) isEnd path)
+"
+proof -
+  assume 
+    H1: "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" and
+    H2: "leaf \<E> \<pi>" and
+    H3: "(V, C) \<Turnstile>\<^sub>\<E> \<E>" and
+    H4: "\<E> \<pi> = Some (\<langle>exp.Let xa b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
+    H5: "static_traversable_pool V F \<E>" and
+    H6: "isEnd (NLet xa)" and
+    H7: "\<pi> @ \<pi>Suff = \<pi>"
+  
+  show "\<exists>path. paths_correspond \<pi>Suff path \<and> static_traceable V F (top_label e) isEnd path"
+    using H1 H4 H6 H7 paths_correspond.Empty static_traceable.Empty by auto
+qed
+
 
 lemma static_traversable_pool_implies_static_traceabl_generalized: "
   \<E>H = (\<E>, H) \<Longrightarrow> 
@@ -1268,7 +1292,38 @@ proof -
     using H10
     proof induct
       case (refl x)
-      then show ?case sorry
+      {
+
+        fix \<E> H \<pi> e \<rho> \<kappa> \<E>' H' \<pi>' xa b e\<^sub>n \<rho>' \<kappa>' \<pi>Suff
+        assume 
+          H0: "x = (\<E>, H)" "x = (\<E>', H')" and
+          H1: "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" and
+          H2: "leaf \<E> \<pi>" and
+          H3: "(V, C) \<Turnstile>\<^sub>\<E> \<E>" and
+          H4: "\<E>' \<pi>' = Some (\<langle>exp.Let xa b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
+          H5: "static_traversable_pool V F \<E>'" and
+          H6: "isEnd (NLet xa)" and
+          H7: "\<pi> @ \<pi>Suff = \<pi>'"
+
+        have H8: "\<E> = \<E>'"
+          using H0(1) H0(2) by blast
+
+
+        have H9: "\<E> (\<pi> @ \<pi>Suff) = Some (\<langle>exp.Let xa b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)"
+          by (simp add: H4 H7 H8)
+
+        have H10: "\<not> strict_prefix \<pi> (\<pi> @ \<pi>Suff)"
+        using leaf.simps H2 H4 H7 H8 by force
+
+        have H11: "\<pi>Suff = []"
+          using H10 strict_prefix_def by fastforce
+  
+        have "\<exists>path. paths_correspond \<pi>Suff path \<and> static_traceable V F (top_label e) isEnd path"
+          using H1 H11 H4 H6 H7 H8 paths_correspond.Empty static_traceable.Empty by auto
+
+      }
+
+      then show ?case by blast
     next
       case (step x y z)
       then show ?case sorry
