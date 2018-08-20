@@ -7,7 +7,7 @@ theory Sound_Communication_A
     Static_Communication
     Sound_Communication
     Static_Communication_A
-
+    List
 begin
 
 lemma static_inclusive_commut: "
@@ -1211,169 +1211,23 @@ proof -
 
 qed
 
-
 lemma static_traversable_pool_implies_static_traceabl_generalized:
   assumes
-    H1: "\<E>H = (\<E>, H)" and
-    H2: "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" and
-    H3: "leaf \<E> \<pi>" and 
-    H4: "(V, C) \<Turnstile>\<^sub>\<E> \<E>" and
+    H1: "\<E>' \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" and
+    H2: "\<pi> @ \<pi>Suff = \<pi>'" and
+    H3: "\<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
+    H4: "(V, C) \<Turnstile>\<^sub>\<E> \<E>'" and
+    H5: "static_traversable_pool V F \<E>'" and
+    H6: "isEnd (NLet x)"
 
-    H5: "\<E>H' = (\<E>', H')" and
-    H6: "\<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
-    H7: "static_traversable_pool V F \<E>'" and
-    H8: "isEnd (NLet x)" and
-
-    H9: "\<pi> @ \<pi>Suff = \<pi>'" and 
-    H9A: "
-      \<forall> \<E>m Hm . 
-        concur_step \<E>H (\<E>m, Hm) \<longrightarrow> 
-        star concur_step (\<E>m, Hm) \<E>H' \<longrightarrow> 
-        \<E>m (\<pi> @ [hd \<pi>Suff]) \<noteq> None" and
-    H10: "star concur_step \<E>H \<E>H'"
-
-  shows 
-    "(\<exists> path . 
-        paths_correspond \<pi>Suff path \<and>
-        static_traceable V F (top_label e) isEnd path)"
-proof -
-
-  have H11: "
-    \<forall> \<E> H \<pi> e \<rho> \<kappa> \<pi>Suff .
-      \<E>H = (\<E>, H) \<longrightarrow>
-      \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-      leaf \<E> \<pi> \<longrightarrow>
-      (V, C) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow>
-    
-      \<E>H' = (\<E>', H') \<longrightarrow>
-      \<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
-      static_traversable_pool V F \<E>' \<longrightarrow>
-      isEnd (NLet x) \<longrightarrow>
-      
-      \<pi> @ \<pi>Suff = \<pi>' \<longrightarrow>
-      (\<forall> \<E>m Hm . concur_step \<E>H (\<E>m, Hm) \<longrightarrow> star concur_step (\<E>m, Hm) \<E>H' \<longrightarrow> \<E>m (\<pi> @ [hd \<pi>Suff]) \<noteq> None) \<longrightarrow>
-
-      (\<exists> path . 
-        paths_correspond \<pi>Suff path \<and>
-        static_traceable V F (top_label e) isEnd path)
-    "
-    using H10
-    proof induct
-      case (refl xa)
-      {
-
-        fix \<E> H \<pi> e \<rho> \<kappa> \<pi>Suff
-        assume 
-          L2H0: "xa = (\<E>, H)" "xa = (\<E>', H')" and
-          L2H1: "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" and
-          L2H2: "leaf \<E> \<pi>" and
-          L2H3: "(V, C) \<Turnstile>\<^sub>\<E> \<E>" and
-          L2H4: "\<E>' \<pi>' = Some (\<langle>exp.Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
-          L2H5: "static_traversable_pool V F \<E>'" and
-          L2H6: "isEnd (NLet x)" and
-          L2H7: "\<pi> @ \<pi>Suff = \<pi>'" and
-          L2H7A: "\<forall> \<E>m Hm . concur_step xa (\<E>m, Hm) \<longrightarrow> star concur_step (\<E>m, Hm) xa \<longrightarrow> \<E>m (\<pi> @ [hd \<pi>Suff]) \<noteq> None"
-
-        have L2H8: "\<E> = \<E>'"
-          using L2H0(1) L2H0(2) by blast
-
-        have L2H9: "\<E> \<pi>' = Some (\<langle>exp.Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)"
-          by (simp add: L2H4 L2H8)
-
-        have L2H9A: "\<not> strict_prefix \<pi> \<pi>'" using leaf.simps
-          using L2H2 L2H9 by blast
-
-        have L2H9B: "\<pi> = \<pi>'"
-          using L2H7 L2H9A prefixI strict_prefix_def by blast
-
-        have L2H10: "\<pi>' @ \<pi>Suff = \<pi>'"
-          using L2H7 L2H9B by auto
-
-        have L2H11: "\<pi>Suff = []" using L2H10 by blast
-
-        have "\<exists>path. paths_correspond \<pi>Suff path \<and> static_traceable V F (top_label e) isEnd path"
-        using L2H1 L2H11 L2H4 L2H6 L2H7 L2H8 paths_correspond.Empty static_traceable.Empty by auto
-
-      }
-
-      then show ?case by blast
-    next
-      case (step xa y z)
-
-      {
-        fix \<E> H \<pi> e \<rho> \<kappa> \<pi>Suff
-        assume 
-          L2H0: "xa = (\<E>, H)" "z = (\<E>', H')" and
-          L2H1: "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" and
-          L2H2: "leaf \<E> \<pi>" and
-          L2H3: "(V, C) \<Turnstile>\<^sub>\<E> \<E>" and
-          L2H4: "\<E>' \<pi>' = Some (\<langle>exp.Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
-          L2H5: "static_traversable_pool V F \<E>'" and
-          L2H6: "isEnd (NLet x)" and
-          L2H7: "\<pi> @ \<pi>Suff = \<pi>'" and
-          L2H8: "\<forall> \<E>m Hm . concur_step xa (\<E>m, Hm) \<longrightarrow> star concur_step (\<E>m, Hm) z \<longrightarrow> \<E>m (\<pi> @ [hd \<pi>Suff]) \<noteq> None"
-
-        obtain \<E>m Hm where L2H10: "y = (\<E>m, Hm)"
-          by fastforce
-
-        have L2H11: "concur_step (\<E>, H) (\<E>m, Hm)"
-          using L2H0(1) L2H10 step.hyps(1) by auto
-
-        have L2H12: "star concur_step (\<E>m, Hm) (\<E>', H')"
-          using L2H0(2) L2H10 step.hyps(2) by blast
-
-        have "\<exists>path. paths_correspond \<pi>Suff path \<and> static_traceable V F (top_label e) isEnd path"
-        using L2H11
-        proof cases
-          case (Seq_Step_Down pi x env xk ek envk k v)
-
-
-          have L3H0: "pi = \<pi>" using L2H8 L2H2 leaf.simps
-            by (metis (mono_tags, lifting) L2H10 butlast_snoc fun_upd_other local.Seq_Step_Down(1) step.hyps(1) step.hyps(2) strict_prefixI')
-
-          have L3H1: "\<E>m (\<pi> @ [LRtn xk]) = Some (\<langle>ek;envk(xk \<mapsto> v);k\<rangle>)"
-            by (simp add: L3H0 local.Seq_Step_Down(1))
-          have L3H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" using L2H11 L2H4 static_eval_preserved_under_concur_step
-            using L2H3 by blast
-
-          have L3H3: "leaf \<E>m (\<pi> @ [LRtn xk])" using Seq_Step_Down(1) Seq_Step_Down(3) leaf.simps
-            by (smt L3H0 L3H1 fun_upd_other option.distinct(1) prefix_order.dual_order.strict_trans strict_prefixI' strict_prefix_def)
-
-
-          have "(\<pi> @ [LRtn xk]) @ (tl \<pi>Suff) = \<pi>'" sorry
-
-          have "(\<exists>path. paths_correspond (tl \<pi>Suff) path \<and> static_traceable V F (top_label e) isEnd path)" sorry
-
-          show ?thesis sorry
-        next
-          case (Seq_Step pi x b e env k v)
-          then show ?thesis sorry
-        next
-          case (Seq_Step_Up pi x b e env k e' env')
-          then show ?thesis sorry
-        next
-          case (Let_Chan pi x e env k)
-          then show ?thesis sorry
-        next
-          case (Let_Spawn pi x ec e env k)
-          then show ?thesis sorry
-        next
-          case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
-          then show ?thesis sorry
-        qed
-
-      }
- 
-      then show ?case by blast
-    qed
-
-
-  show "
+  shows "
     \<exists> path . 
-        paths_correspond \<pi>Suff path \<and>
-        static_traceable V F (top_label e) isEnd path" sorry
-qed
+      paths_correspond \<pi>Suff path \<and>
+      static_traceable V F (top_label e) isEnd path"
 sorry
+
+
+
 
 lemma static_traversable_pool_implies_static_traceable:
   assumes
@@ -1388,42 +1242,22 @@ lemma static_traversable_pool_implies_static_traceable:
       paths_correspond \<pi>' path \<and>
       static_traceable V F (top_label e) isEnd path"
 proof -
-
   
-  have H6: "(V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]"
-    by (simp add: H3 static_eval_to_pool)
+  have H6: "(V, C) \<Turnstile>\<^sub>\<E> \<E>'" using H2 H3 static_eval_preserved_under_concur_step_star static_eval_to_pool by blast
 
   have H7: "leaf [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] []" using leaf.simps by simp
 
-  have H8: "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] [] = Some (\<langle>e;Map.empty;[]\<rangle>)" by simp
+  have H8: "\<E>' [] = Some (\<langle>e;Map.empty;[]\<rangle>)" using H2 mapping_preserved_star by auto
 
   have H9: "[] @ \<pi>' = \<pi>'" by blast
-
-
-  {
-    fix \<E>m Hm 
-    assume L2H1: "concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>m, Hm)"
-    assume L2H2: "star concur_step (\<E>m, Hm) (\<E>', H')" 
-
-    have "\<E>m [hd \<pi>'] \<noteq> None" sorry
-  }
-
-  then have H10: "
-    \<forall> \<E>m Hm . 
-      concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>m, Hm) \<longrightarrow> 
-      star concur_step (\<E>m, Hm) (\<E>', H') \<longrightarrow>
-      \<E>m [hd \<pi>'] \<noteq> None"
-  by simp
 
   show "
     \<exists> path . 
       paths_correspond \<pi>' path \<and>
       static_traceable V F (top_label e) isEnd path"
   using 
-    static_traversable_pool_implies_static_traceabl_generalized[of _ 
-      "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" _ "[]" _ _ _ _ _ _ _ _ "\<pi>'" _ _ _ _ _ _ _ "\<pi>'"]
-        H1 H2 H4 H5 H6 H7 H8 H9 H10 by auto
-
+    static_traversable_pool_implies_static_traceabl_generalized
+        H1 H2 H3 H4 H5 H6 H7 H8 H9 by blast
 qed
 
 

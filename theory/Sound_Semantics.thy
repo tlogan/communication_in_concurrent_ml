@@ -1505,6 +1505,7 @@ proof -
   show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_not_static_bound_sound by blast
 qed
 
+(*
 inductive static_reachable :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
   Refl : "
     static_reachable e e
@@ -2094,6 +2095,6 @@ proof -
       state_always_exp_not_static_reachable_sound
     by fastforce
 qed
-
+*)
 
 end

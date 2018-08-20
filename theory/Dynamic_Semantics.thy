@@ -144,4 +144,94 @@ inductive concur_step :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_
       ys \<union> {(pis, c, pir)})
   "
 
+
+lemma mapping_preserved: 
+  assumes 
+    H1: "concur_step (E, H) (E', H')" and
+    H2: "E \<pi> = Some \<sigma>"
+
+  shows "
+     E' \<pi> = Some \<sigma>
+  "
+proof -
+
+  show "E' \<pi> = Some \<sigma>"
+  using H1
+  proof cases
+    case (Seq_Step_Down pi x env xk ek envk k v)
+    have "pi @ [LRtn xk] \<noteq> \<pi>" using leaf.simps by (metis H2 local.Seq_Step_Down(3) option.simps(3) strict_prefixI')
+    then show ?thesis using H2 local.Seq_Step_Down(1) by auto
+  next
+    case (Seq_Step pi x b e env k v)
+    have "pi @ [LNxt x] \<noteq> \<pi>" using leaf.simps by (metis H2 local.Seq_Step(3) option.simps(3) strict_prefixI')
+    then show ?thesis using H2 local.Seq_Step(1) by auto
+  next
+    case (Seq_Step_Up pi x b e env k e' env')
+    have "pi @ [LCall x] \<noteq> \<pi>" using leaf.simps by (metis H2 local.Seq_Step_Up(3) option.simps(3) strict_prefixI')
+    then show ?thesis using H2 local.Seq_Step_Up(1) by auto
+  next
+    case (Let_Chan pi x e env k)
+    have "pi @ [LNxt x] \<noteq> \<pi>" using leaf.simps by (metis H2 local.Let_Chan(3) option.simps(3) strict_prefixI')
+    then show ?thesis  using H2 local.Let_Chan(1) by auto
+  next
+    case (Let_Spawn pi x ec e env k)
+
+      have "pi @ [LNxt x] \<noteq> \<pi> \<and> pi @ [LSpwn x] \<noteq> \<pi>" using leaf.simps by (metis H2 local.Let_Spawn(3) option.simps(3) strict_prefixI')
+      then show ?thesis  using H2 local.Let_Spawn(1) by auto
+  next
+    case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
+      have "pis @ [LNxt xs] \<noteq> \<pi> \<and> pir @ [LNxt xr] \<noteq> \<pi>" using leaf.simps
+      by (metis H2 local.Let_Sync(3) local.Let_Sync(6) option.simps(3) strict_prefixI')
+    then show ?thesis using H2 local.Let_Sync(1) by auto
+  qed
+qed
+
+lemma mapping_preserved_star: 
+  assumes 
+    H1: "star concur_step EH EH'" and
+    H2: "EH = (E, H)" and 
+    H3: "EH' = (E', H')" and
+    H4: "E \<pi> = Some \<sigma>"
+
+  shows "
+     E' \<pi> = Some \<sigma>
+  "
+proof -
+  
+  have H5: "
+    \<forall> E H.
+    EH = (E, H) \<longrightarrow> 
+    EH' = (E', H') \<longrightarrow>
+    E \<pi> = Some \<sigma> \<longrightarrow>
+    E' \<pi> = Some \<sigma>
+  "
+  using H1
+  proof induct
+    case (refl x)
+    then show ?case by simp
+  next
+    case (step x y z)
+
+    {
+      fix E H
+      assume 
+        L2H1: "x = (E, H)" and 
+        L2H2: "z = (E', H')" and 
+        L2H3: "E \<pi> = Some \<sigma>"
+
+      obtain Em Hm where L2H4: "y = (Em, Hm)" by (meson surj_pair)
+
+      have L2H5: "concur_step (E, H) (Em, Hm)"
+        using L2H1 L2H4 step.hyps(1) by auto
+
+      have "E' \<pi> = Some \<sigma>" using L2H2 L2H3 L2H4 L2H5 mapping_preserved step.hyps(3) by auto
+    }
+    then show ?case by simp
+  qed
+
+  show ?thesis by (simp add: H2 H3 H4 H5)
+    
+qed
+
+
 end
