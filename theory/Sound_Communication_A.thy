@@ -1291,8 +1291,8 @@ proof -
         L2H5: "prefix \<pi> \<pi>'"
 
 
-      obtain Em Hm where
-        L2H9: "\<exists> l . y = (Em, Hm) \<and> leaf Em (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'"
+      have
+        L2H9: "\<exists> l Em Hm . y = (Em, Hm) \<and> leaf Em (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'"
       using step.hyps(1)
       proof cases
         case (Seq_Step_Down pi x env xk ek envk k v)
@@ -1317,7 +1317,7 @@ proof -
 
 
     
-      obtain l where L2H10: "leaf Em (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'" using L2H9 by blast
+      obtain Em Hm l where L2H10: "y = (Em, Hm) \<and> leaf Em (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'" using L2H9 by blast
 
       have "L2H11": "narrow_step (Em, Hm) (\<pi> @ [l]) (E', H') \<pi>'"
         using L2H10 L2H2 L2H4 L2H9 step.hyps(3) by blast
@@ -1325,7 +1325,7 @@ proof -
       have L2H12: "Em (\<pi> @ [l]) \<noteq> None" using leaf.simps L2H10 by blast
 
       have L2H13: "narrow_step (E, H) \<pi> (E', H') \<pi>'"
-        using L2H1 L2H11 L2H12 L2H3 L2H9 narrow_step.step step.hyps(1) by blast
+        using L2H1 L2H11 L2H12 L2H3 L2H10 narrow_step.step step.hyps(1) by blast
 
       have "narrow_step x \<pi> z \<pi>'" by (simp add: L2H1 L2H13 L2H2)
     }
