@@ -1290,19 +1290,10 @@ proof -
         L2H4: "E' \<pi>' \<noteq> None" and 
         L2H5: "prefix \<pi> \<pi>'"
 
+
       obtain Em Hm where
-        L2H6: "y = (Em, Hm)"
-        by (meson surj_pair)
-
-      have L2H7: "concur_step (E, H) (Em, Hm)"
-        using L2H1 L2H6 step.hyps(1) by auto
-
-      have L2H8: "star concur_step (Em, Hm) (E', H')"
-        using L2H2 L2H6 step.hyps(2) by auto
-
-
-      have L2H9: "\<exists> l . leaf Em (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'"
-      using L2H7
+        L2H9: "\<exists> l . y = (Em, Hm) \<and> leaf Em (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'"
+      using step.hyps(1)
       proof cases
         case (Seq_Step_Down pi x env xk ek envk k v)
         then show ?thesis sorry
@@ -1322,15 +1313,19 @@ proof -
         case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
         then show ?thesis sorry
       qed
+
+
+
     
       obtain l where L2H10: "leaf Em (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'" using L2H9 by blast
 
       have "L2H11": "narrow_step (Em, Hm) (\<pi> @ [l]) (E', H') \<pi>'"
-        using L2H10 L2H2 L2H4 L2H6 L2H9 step.hyps(3) by blast
+        using L2H10 L2H2 L2H4 L2H9 step.hyps(3) by blast
 
       have L2H12: "Em (\<pi> @ [l]) \<noteq> None" using leaf.simps L2H10 by blast
 
-      have L2H13: "narrow_step (E, H) \<pi> (E', H') \<pi>'" using L2H11 L2H12 L2H3 L2H7 narrow_step.step by auto
+      have L2H13: "narrow_step (E, H) \<pi> (E', H') \<pi>'"
+        using L2H1 L2H11 L2H12 L2H3 L2H9 narrow_step.step step.hyps(1) by blast
 
       have "narrow_step x \<pi> z \<pi>'" by (simp add: L2H1 L2H13 L2H2)
     }
