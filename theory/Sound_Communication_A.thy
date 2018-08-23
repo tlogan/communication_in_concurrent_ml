@@ -1214,35 +1214,7 @@ qed
 
 
 
-inductive narrow_step :: "trace_pool * cmmn_set \<Rightarrow> control_path \<Rightarrow> trace_pool * cmmn_set \<Rightarrow> control_path \<Rightarrow> bool" where
-  refl: "
-    E \<pi> \<noteq> None \<Longrightarrow>
-    narrow_step (E, H) \<pi> (E, H) \<pi>" |
-  step: "
-    concur_step (E, H) (Em, Hm) \<Longrightarrow>
-    leaf E \<pi> \<Longrightarrow>
-    leaf Em (\<pi> @ [l]) \<Longrightarrow>
-    narrow_step (Em, Hm) (\<pi> @ [l]) (E', H') \<pi>' \<Longrightarrow>
-    narrow_step (E, H) \<pi> (E', H') \<pi>'
-  "
 
-lemma static_traversable_pool_implies_static_traceabl_generalized:
-  assumes
-    H1: "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" and
-    H2: "narrow_step (\<E>, H) \<pi> (\<E>', H') \<pi>'" and
-    H3: "\<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
-    H4: "(V, C) \<Turnstile>\<^sub>\<E> \<E>'" and
-    H5: "static_traversable_pool V F \<E>'" and
-    H6: "isEnd (NLet x)"
-
-
-  shows "
-    \<exists> \<pi>Suff path .
-      \<pi> @ \<pi>Suff = \<pi>' \<and> 
-      paths_correspond \<pi>Suff path \<and>
-      static_traceable V F (top_label e) isEnd path"
-
-sorry
 
 lemma step_in_line: 
   assumes 
@@ -1344,72 +1316,50 @@ proof -
 qed
 
 
-lemma star_concur_step_implies_narrow_step: 
-  assumes 
-    H1: "star concur_step EH EH'" and
-    H2: "EH = (E, H) \<and> EH' = (E', H')" and
-    H3: "leaf E \<pi>" and
-    H4: "E' \<pi>' \<noteq> None" and
-    H5: "prefix \<pi> \<pi>'"
+inductive narrow_step :: "trace_pool * cmmn_set \<Rightarrow> control_path \<Rightarrow> trace_pool * cmmn_set \<Rightarrow> control_path \<Rightarrow> bool" where
+  refl: "
+    E \<pi> \<noteq> None \<Longrightarrow>
+    star concur_step (E, H) (E', H') \<Longrightarrow>
+    narrow_step (E, H) \<pi> (E', H') \<pi>" |
+  step: "
+    concur_step (E, H) (Em, Hm) \<Longrightarrow>
+    leaf E \<pi> \<Longrightarrow>
+    leaf Em (\<pi> @ [l]) \<Longrightarrow>
+    narrow_step (Em, Hm) (\<pi> @ [l]) (E', H') \<pi>' \<Longrightarrow>
+    narrow_step (E, H) \<pi> (E', H') \<pi>'
+  "
 
-  shows "narrow_step EH \<pi> EH' \<pi>'"
 
-proof -
 
-  have H6: "
-      \<forall> E H \<pi> .
-      EH = (E, H) \<longrightarrow> EH' = (E', H') \<longrightarrow> 
-      leaf E \<pi> \<longrightarrow> E' \<pi>' \<noteq> None \<longrightarrow> prefix \<pi> \<pi>' \<longrightarrow>
-      narrow_step EH \<pi> EH' \<pi>'"
-  using H1
-  proof induct
-    case (refl x)
-    {
-      fix E H \<pi>
-      assume
-        L2H1: "x = (E, H)" and 
-        L2H2: "x = (E', H')" and 
-        L2H3: "leaf E \<pi>" and
-        L2H4: "E' \<pi>' \<noteq> None" and 
-        L2H5: "prefix \<pi> \<pi>'"
 
-      have L2H6: "\<pi> = \<pi>'" by (metis L2H1 L2H2 L2H3 L2H4 L2H5 leaf.simps Pair_inject prefix_order.dual_order.not_eq_order_implies_strict)
+lemma static_traversable_pool_implies_static_traceabl_generalized:
+  assumes
+    H1: "\<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>)" and
+    H2: "narrow_step (\<E>, H) \<pi> (\<E>', H') \<pi>'" and
+    H3: "\<E>' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
+    H4: "(V, C) \<Turnstile>\<^sub>\<E> \<E>'" and
+    H5: "static_traversable_pool V F \<E>'" and
+    H6: "isEnd (NLet x)"
 
-      have "narrow_step x \<pi> x \<pi>'"
-        by (simp add: L2H2 L2H4 L2H6 narrow_step.refl)
-    }
-    then show ?case by blast
-  next
-    case (step x y z)
-    {
-      fix E H \<pi>
-      assume
-        L2H1: "x = (E, H)" and 
-        L2H2: "z = (E', H')" and 
-        L2H3: "leaf E \<pi>" and
-        L2H4: "E' \<pi>' \<noteq> None" and 
-        L2H5: "prefix \<pi> \<pi>'"
+  shows "
+    \<exists> \<pi>Suff path .
+      \<pi> @ \<pi>Suff = \<pi>' \<and> 
+      paths_correspond \<pi>Suff path \<and>
+      static_traceable V F (top_label e) isEnd path"
 
-    
-      obtain Em Hm where 
-        L2H6: "y = (Em, Hm)" by fastforce
-    
-      obtain l where
-        L2H7: "leaf Em (\<pi> @ [l])" and
-        L2H8: "prefix (\<pi> @ [l]) \<pi>'"
-        using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 step.hyps(1) step.hyps(2) step_in_line by blast
-    
-      have L2H9: "narrow_step (Em, Hm) (\<pi> @ [l]) (E', H') \<pi>'"
-        using L2H2 L2H4 L2H6 L2H7 L2H8 step.hyps(3) by blast
+sorry
 
-      have "narrow_step x \<pi> z \<pi>'" using narrow_step.step
-        using L2H1 L2H2 L2H3 L2H6 L2H7 L2H8 L2H9 step.hyps(1) by blast
- 
-    }
-    then show ?case by blast
-  qed
-  show ?thesis using H2 H3 H4 H5 H6 by blast
-qed
+
+
+lemma star_concur_step_implies_narrow_step:
+  assumes
+    H1: "star concur_step (E, H) (E', H')" and
+    H2: "leaf E \<pi>" and
+    H3: "E' \<pi>' \<noteq> None" and
+    H2: "prefix \<pi> \<pi>'"
+
+  shows "narrow_step (E, H) \<pi> (E', H') \<pi>'"
+sorry
 
 lemma static_traversable_pool_implies_static_traceable:
   assumes
@@ -1432,7 +1382,9 @@ proof -
 
   have H8: "leaf [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] [] " using leaf.simps by simp
 
-  have H9: "narrow_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) [] (\<E>', H') \<pi>'" using star_concur_step_implies_narrow_step H1 H2 H8 by blast
+  have H9: "narrow_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) [] (\<E>', H') \<pi>'"
+    by (simp add: H1 H2 H8 star_concur_step_implies_narrow_step)
+
 
   show "
     \<exists> path . 
