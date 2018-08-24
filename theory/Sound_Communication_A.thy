@@ -1243,104 +1243,103 @@ lemma static_traversable_pool_implies_static_traceabl_generalized:
 
 sorry
 
-
+ 
 lemma step_in_line: 
   assumes 
-    H1: "concur_step (E, H) (Em, Hm)" and
-    H2: "star concur_step (Em, Hm) (E', H')" and
-    H3: "leaf E \<pi>" and
+    H1: "concur_step (E0, H0) (E, H)" and
+    H2: "star concur_step (E, H) (E', H')" and
+    H3: "leaf E0 \<pi>" and
     H4: "E' \<pi>' \<noteq> None" and
     H5: "strict_prefix \<pi> \<pi>'"
 
-  shows "\<exists> l . leaf Em (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'"
+  shows "\<exists> l . leaf E (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'"
 proof -
   
-  obtain EH EHm EH' where
-    H6: "EH = (E, H)" and H7: "EHm = (Em, Hm)" and H8: "EH' = (E', H')"
+  obtain EH0 EH EH' where
+    H6: "EH0 = (E0, H0)" and H7: "EH = (E, H)" and H8: "EH' = (E', H')"
     by simp
 
-  have H9: "star concur_step EHm EH'"
-    by (simp add: H2 H7 H8)
+  have H9: "star_left concur_step EH EH'"
+    by (simp add: H2 H7 H8 star_implies_star_left)
 
   have H10: "
-    \<forall> E H \<pi> Em Hm .
-    EH = (E, H) \<longrightarrow> EHm = (Em, Hm) \<longrightarrow> EH' = (E', H') \<longrightarrow>
-    concur_step (E, H) (Em, Hm) \<longrightarrow>
-    leaf E \<pi> \<longrightarrow> strict_prefix \<pi> \<pi>' \<longrightarrow>
-    (\<exists> l . leaf Em (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>')
+    \<forall> E' H' .
+    EH0 = (E0, H0) \<longrightarrow> EH = (E, H) \<longrightarrow> EH' = (E', H') \<longrightarrow>
+    E' \<pi>' \<noteq> None \<longrightarrow>
+    (\<exists> l . leaf E (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>')
   "
   using H9
   proof induction
-    case (refl x)
+    case (refl z)
     {
-      fix E H \<pi> Em Hm
+      fix E' H'
       assume
-        L2H1: "EH = (E, H)" and
-        L2H2: "x = (Em, Hm)" and
-        L2H3: "x = (E', H')" and 
-        L2H4: "(E, H) \<rightarrow> (Em, Hm)" and
-        L2H5: "leaf E \<pi>" and
-        L2H6: "strict_prefix \<pi> \<pi>'"
+        L2H1: "EH0 = (E0, H0)" and
+        L2H2: "z = (E, H)" and
+        L2H3: "z = (E', H')" and 
+        L2H4: "E' \<pi>' \<noteq> None"
 
-      have L2H7: "Em = E'" using L2H2 L2H3 by auto
+      have L2H7: "E = E'" using L2H2 L2H3 by auto
 
+      have L2H8: "E0 \<pi>' = None" using H5 leaf.cases H3 by blast
 
-      have L2H8: "E \<pi>' = None" using L2H5 L2H6 using leaf.cases by auto
-
-      have L2H9: "(E, H) \<rightarrow> (E', H')"  using L2H2 L2H3 L2H4 by blast
+      have L2H9: "(E0, H0) \<rightarrow> (E', H')"
+        using H1 L2H2 L2H3 by blast
 
       have L2H10: "\<exists>l. leaf E' (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'"
       using L2H9
       proof cases
         case (Seq_Step_Down pi x env xk ek envk k v)
         then show ?thesis
-          by (smt H4 L2H5 L2H6 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
+          by (smt H3 L2H4 H5 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
       next
         case (Seq_Step pi x b e env k v)
         then show ?thesis
-          by (smt H4 L2H5 L2H6 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
+          by (smt H3 L2H4 H5 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
       next
         case (Seq_Step_Up pi x b e env k e' env')
         then show ?thesis
-          by (smt H4 L2H5 L2H6 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
+          by (smt H3 L2H4 H5 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
       next
         case (Let_Chan pi x e env k)
         then show ?thesis 
-          by (smt H4 L2H5 L2H6 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
+          by (smt H3 L2H4 H5 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
       next
         case (Let_Spawn pi x ec e env k)
         then show ?thesis
-          by (smt H4 L2H5 L2H6 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
+          by (smt H3 L2H4 H5 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
       next
         case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
         then show ?thesis
-          by (smt H4 L2H5 L2H6 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
+          by (smt H3 L2H4 H5 fun_upd_other leaf.simps prefix_order.le_less_trans prefix_snoc strict_prefix_def)
       qed
 
-      have "\<exists>l. leaf Em (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'"
+      have "\<exists>l. leaf E (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'"
         by (simp add: L2H7 L2H10)
     }
-    then show ?case by blast
+    then show ?case
+      using H5 by blast
   next
-    case (step x y z)    
-    {
-      fix E H \<pi> Em Hm
-      assume
-        L2H1: "EH = (E, H)" and
-        L2H2: "x = (Em, Hm)" and
-        L2H3: "z = (E', H')" and 
-        L2H4: "(E, H) \<rightarrow> (Em, Hm)" and
-        L2H5: "leaf E \<pi>" and
-        L2H6: "strict_prefix \<pi> \<pi>'"
+    case (step x y z)  
 
-      have "\<exists>l. leaf Em (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'" sorry
+    obtain Em Hm where
+      L1H1: "y = (Em, Hm)" by fastforce  
+    {
+      fix E' H'
+      assume
+        L2H1: "EH0 = (E0, H0)" and
+        L2H2: "x = (E, H)" and
+        L2H3: "z = (E', H')" and 
+        L2H4: "E' \<pi>' \<noteq> None"
+
+      have "\<exists>l. leaf E (\<pi> @ [l]) \<and> prefix (\<pi> @ [l]) \<pi>'" sorry
     }
 
     then show ?case by blast
   qed
 
-  show ?thesis 
-    by (simp add: H1 H10 H3 H5 H6 H7 H8)
+  show ?thesis
+    by (simp add: H10 H4 H6 H7 H8)
 qed
 
 lemma star_concur_step_implies_narrow_step':
