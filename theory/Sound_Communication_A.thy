@@ -1514,16 +1514,19 @@ proof -
       have L2H9: "concur_step (E0, H0) (E', H')"
         using L2H0 L2H1 L2H2 by auto
 
-      thm narrow_step.step
       have L2H10: "narrow_step (E0, H0) \<pi>0 (E', H') \<pi>'"
       using L2H9
       proof cases
         case (Seq_Step_Down pi x env xk ek envk k v)
-        have "pi = \<pi>0"
+        have L3H1: "pi = \<pi>0"
           by (metis H3 L2H3 L2H5 fun_upd_other leaf.simps local.Seq_Step_Down(1) 
             local.Seq_Step_Down(3) prefix_order.dual_order.not_eq_order_implies_strict 
             prefix_snoc strict_prefixE)
-        then show ?thesis using narrow_step.step sorry
+        have L3H2: "narrow_step (E, H) (\<pi>0 @ [LRtn xk]) (E', H') \<pi>'"
+          by (metis L2H3 L2H6 L2H7 L2H8 L3H1 fun_upd_other local.Seq_Step_Down(1) narrow_step.refl star.refl)
+        show ?thesis using narrow_step.step
+          by (smt H3 H4 L2H3 L2H4 L2H6 L2H7 L2H9 L3H1 L3H2 fun_upd_other leaf.simps 
+              local.Seq_Step_Down(1) prefix_order.le_less_trans strict_prefix_def)
       next
         case (Seq_Step pi x b e env k v)
          have "pi = \<pi>0"
