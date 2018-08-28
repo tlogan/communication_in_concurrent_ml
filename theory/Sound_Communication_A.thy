@@ -351,7 +351,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
         have L3H3: "
           l1 = l2 \<or> 
           (\<exists> x . l1 = (LNxt x) \<and> l2 = (LSpwn x)) \<or>
-          (\<exists> x . l1 = (LSpwn x) \<and> l2 = (LNxt x))" 
+          (\<exists> x . l1 = (LSpwn x) \<and> l2 = (LNxt x))"
           by (smt H10 H11 H12 H14 H15 H16 H3 H7 L1H1 L2H4 L3H1 strict_prefix_abstract_to_concrete prefix_snoc spawn_point strict_prefixI' strict_prefix_def)
 
         have L3H4: "
@@ -1471,6 +1471,152 @@ proof -
   qed
 qed
 *)
+
+lemma step_in_line: 
+  assumes 
+    H2: "star concur_step EH EH'" and
+    H3: "leaf E0 \<pi>0" and
+    H4: "strict_prefix \<pi>0 \<pi>"
+
+  shows "
+    \<forall> E' H' \<pi>' .
+    concur_step (E0, H0) (E, H) \<longrightarrow>
+    EH = (E, H) \<longrightarrow> EH' = (E', H') \<longrightarrow>
+    E' \<pi>' \<noteq> None \<longrightarrow>
+    prefix \<pi> \<pi>' \<longrightarrow>
+    narrow_step (E0, H0) \<pi>0 (E', H') \<pi>'"
+proof -
+
+  have H5: "star_left concur_step EH EH'"
+    by (simp add: H2 star_implies_star_left)
+
+  show ?thesis
+  using H5
+  proof induction
+    case (refl z)
+    {
+      fix E' H' \<pi>'
+      assume
+        L2H0: "concur_step (E0, H0) (E, H)" and
+        L2H1: "z = (E, H)" and
+        L2H2: "z = (E', H')" and 
+        L2H3: "E' \<pi>' \<noteq> None" and
+        L2H4: "prefix \<pi> \<pi>'"
+
+
+      have L2H5: "strict_prefix \<pi>0 \<pi>'" using H4 L2H4 by auto
+
+      have L2H6: "E = E'" and L2H7: "H = H'" using L2H1 L2H2 by auto
+
+      have L2H8: "E0 \<pi>' = None" using L2H5 leaf.cases 
+        using H3 by blast
+
+      have L2H9: "concur_step (E0, H0) (E', H')"
+        using L2H0 L2H1 L2H2 by auto
+
+      thm narrow_step.step
+      have L2H10: "narrow_step (E0, H0) \<pi>0 (E', H') \<pi>'"
+      using L2H9
+      proof cases
+        case (Seq_Step_Down pi x env xk ek envk k v)
+        have "pi = \<pi>0"
+          by (metis H3 L2H3 L2H5 fun_upd_other leaf.simps local.Seq_Step_Down(1) 
+            local.Seq_Step_Down(3) prefix_order.dual_order.not_eq_order_implies_strict 
+            prefix_snoc strict_prefixE)
+        then show ?thesis using narrow_step.step sorry
+      next
+        case (Seq_Step pi x b e env k v)
+         have "pi = \<pi>0"
+           by (metis H3 L2H3 L2H5 fun_upd_other leaf.simps local.Seq_Step(1) 
+            local.Seq_Step(3) prefix_order.dual_order.not_eq_order_implies_strict prefix_order.order.strict_implies_order 
+            prefix_snoc)
+        then show ?thesis sorry
+      next
+        case (Seq_Step_Up pi x b e env k e' env')
+        have "pi = \<pi>0"
+          by (metis (full_types) H3 L2H3 L2H5 fun_upd_other leaf.simps local.Seq_Step_Up(1) local.Seq_Step_Up(3) prefix_order.dual_order.not_eq_order_implies_strict prefix_order.order.strict_implies_order prefix_snoc)
+        then show ?thesis sorry
+      next
+        case (Let_Chan pi x e env k)
+        have "pi = \<pi>0"
+          by (metis H3 L2H3 L2H5 fun_upd_other leaf.simps local.Let_Chan(1) local.Let_Chan(3) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc strict_prefixE)
+        then show ?thesis sorry
+          
+      next
+        case (Let_Spawn pi x ec e env k)
+        have "pi = \<pi>0"
+          by (smt H3 L2H3 L2H5 fun_upd_apply leaf.simps local.Let_Spawn(1) local.Let_Spawn(3) prefix_order.dual_order.not_eq_order_implies_strict prefix_order.order.strict_implies_order prefix_snoc)
+        then show ?thesis sorry
+      next
+        case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
+         have "pis = \<pi>0 \<or> pir = \<pi>0"
+           by (smt H3 L2H3 L2H5 fun_upd_other leaf.simps local.Let_Sync(1) local.Let_Sync(3) local.Let_Sync(6) prefix_order.dual_order.not_eq_order_implies_strict prefix_order.order.strict_implies_order prefix_snoc)
+        then show ?thesis sorry
+      qed
+    }
+    then show ?case by blast
+  next
+    case (step x y z)  
+
+    obtain Em Hm where
+      L1H1: "y = (Em, Hm)" by fastforce  
+    {
+      fix E' H' \<pi>'
+      assume
+        L2H1: "EH0 = (E0, H0)" and
+        L2H2: "x = (E, H)" and
+        L2H3: "z = (E', H')" and 
+        L2H4: "E' \<pi>' \<noteq> None" and
+        L2H5: "strict_prefix \<pi>0 \<pi>'"
+
+      have L2H6: "(Em, Hm) \<rightarrow> (E', H')"
+        using L1H1 L2H3 step.hyps(2) by blast
+
+      have "\<exists>l. leaf E (\<pi>0 @ [l]) \<and> prefix (\<pi>0 @ [l]) \<pi>'"
+      proof cases
+        assume L3H1: "Em \<pi>' = None"
+        show ?thesis
+        using L2H6
+        proof cases
+          case (Seq_Step_Down pi x env xk ek envk k v)
+          have L4H1: "\<pi>' = pi @ [LRtn xk]" using leaf.simps
+            using L2H4 L3H1 local.Seq_Step_Down(1) by fastforce
+          have L4H2: "prefix \<pi>0 pi" by (metis L2H5 L4H1 prefix_snoc strict_prefix_def)
+          have L4H3: "\<pi>0 \<noteq> pi" using leaf.simps sorry
+          have L4H4: "strict_prefix \<pi>0 pi" using leaf.simps Seq_Step_Down(3) L4H2 L4H3 by auto
+          have L4H5: "\<exists>l. leaf E (\<pi>0 @ [l]) \<and> prefix (\<pi>0 @ [l]) pi"
+            by (simp add: L1H1 L2H1 L2H2 L4H4 local.Seq_Step_Down(4) step.IH)
+          then show ?thesis using L4H1 by auto
+        next
+          case (Seq_Step pi x b e env k v)
+          then show ?thesis sorry
+        next
+          case (Seq_Step_Up pi x b e env k e' env')
+          then show ?thesis sorry
+        next
+          case (Let_Chan pi x e env k)
+          then show ?thesis sorry
+        next
+          case (Let_Spawn pi x ec e env k)
+          then show ?thesis sorry
+        next
+          case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
+          then show ?thesis sorry
+        qed
+      next
+        assume "Em \<pi>' \<noteq> None"
+        then show ?thesis
+          by (simp add: L1H1 L2H1 L2H2 L2H5 step.IH)
+      qed
+
+    }
+
+    then show ?case by blast
+  qed
+
+  show ?thesis
+    by (simp add: H10 H4 H5 H6 H7 H8)
+qed
 
 lemma star_concur_step_implies_narrow_step:
   assumes
