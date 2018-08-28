@@ -1529,32 +1529,76 @@ proof -
               local.Seq_Step_Down(1) prefix_order.le_less_trans strict_prefix_def)
       next
         case (Seq_Step pi x b e env k v)
-         have "pi = \<pi>0"
+         have L3H1: "pi = \<pi>0"
            by (metis H3 L2H3 L2H5 fun_upd_other leaf.simps local.Seq_Step(1) 
             local.Seq_Step(3) prefix_order.dual_order.not_eq_order_implies_strict prefix_order.order.strict_implies_order 
             prefix_snoc)
-        then show ?thesis sorry
+        have L3H2: "narrow_step (E, H) (\<pi>0 @ [LNxt x]) (E', H') \<pi>'"
+          by (metis L2H3 L2H6 L2H7 L2H8 L3H1 fun_upd_other local.Seq_Step(1) narrow_step.refl star.refl)
+        then show ?thesis
+          by (smt H3 H4 L2H3 L2H4 L2H6 L2H7 L2H8 L2H9 L3H1 fun_upd_other leaf.simps 
+            local.Seq_Step(1) narrow_step.step prefix_order.le_less_trans strict_prefixE)
       next
         case (Seq_Step_Up pi x b e env k e' env')
-        have "pi = \<pi>0"
+        have L3H1: "pi = \<pi>0"
           by (metis (full_types) H3 L2H3 L2H5 fun_upd_other leaf.simps local.Seq_Step_Up(1) local.Seq_Step_Up(3) prefix_order.dual_order.not_eq_order_implies_strict prefix_order.order.strict_implies_order prefix_snoc)
-        then show ?thesis sorry
+        then have "narrow_step (E, H) (\<pi>0 @ [LCall x]) (E', H') \<pi>'"
+          by (metis L2H1 L2H2 L2H3 L2H8 fun_upd_other local.Seq_Step_Up(1) narrow_step.refl star.refl)
+        then show ?thesis
+          by (smt H3 H4 L2H1 L2H2 L2H3 L2H4 L2H8 L2H9 L3H1 fun_upd_other leaf.simps local.Seq_Step_Up(1) narrow_step.step prefix_order.le_less_trans strict_prefixE)
       next
         case (Let_Chan pi x e env k)
-        have "pi = \<pi>0"
+        have L3H1: "pi = \<pi>0"
           by (metis H3 L2H3 L2H5 fun_upd_other leaf.simps local.Let_Chan(1) local.Let_Chan(3) prefix_order.dual_order.not_eq_order_implies_strict prefix_snoc strict_prefixE)
-        then show ?thesis sorry
+        then have "narrow_step (E, H) (\<pi>0 @ [LNxt x]) (E', H') \<pi>'"
+          by (metis L2H1 L2H2 L2H3 L2H8 fun_upd_other local.Let_Chan(1) narrow_step.refl star.refl)
+        then show ?thesis
+          by (smt H3 H4 L2H1 L2H2 L2H3 L2H4 L2H8 L2H9 L3H1 fun_upd_other 
+          leaf.simps local.Let_Chan(1) narrow_step.step prefix_order.le_less_trans strict_prefixE)
           
       next
         case (Let_Spawn pi x ec e env k)
-        have "pi = \<pi>0"
+        have L3H1: "pi = \<pi>0"
           by (smt H3 L2H3 L2H5 fun_upd_apply leaf.simps local.Let_Spawn(1) local.Let_Spawn(3) prefix_order.dual_order.not_eq_order_implies_strict prefix_order.order.strict_implies_order prefix_snoc)
-        then show ?thesis sorry
+        
+        show ?thesis
+        proof cases
+          assume L4H1: "\<pi>0 @ [LNxt x] = \<pi>'"
+          have "narrow_step (E, H) (\<pi>0 @ [LNxt x]) (E', H') \<pi>'"
+            using L2H1 L2H2 L2H3 L4H1 narrow_step.refl by auto
+          then show ?thesis
+            by (smt H3 H4 L2H1 L2H2 L2H3 L2H4 L2H9 L4H1 append1_eq_conv fun_upd_apply leaf.simps 
+              local.Let_Spawn(1) narrow_step.step prefix_order.le_less_trans 
+              prefix_order.less_le_not_le prefix_snoc)
+        next
+          assume L4H1: "\<pi>0 @ [LNxt x] \<noteq> \<pi>'"
+          have L4H2: "\<pi>0 @ [LSpwn x] = \<pi>'"
+            by (metis L2H3 L2H8 L3H1 L4H1 fun_upd_other local.Let_Spawn(1))
+          have L4H3: "narrow_step (E, H) (\<pi>0 @ [LSpwn x]) (E', H') \<pi>'"
+            using L2H1 L2H2 L2H3 L4H2 narrow_step.refl by blast
+          have L4H4: "leaf E (\<pi>0 @ [LSpwn x])" using L2H9 leaf.simps concur_step.cases 
+            by (smt H3 L2H3 L2H5 L2H6 L3H1 L4H2 fun_upd_apply local.Let_Spawn(1) 
+            prefix_order.le_less_trans prefix_order.less_le_not_le prefix_snoc)
+          then show ?thesis
+            using H3 L2H1 L2H2 L2H9 L4H3 narrow_step.step by blast
+        qed
       next
         case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
-         have "pis = \<pi>0 \<or> pir = \<pi>0"
+        have L3H1: "(pis = \<pi>0) \<or> (pir = \<pi>0)"
            by (smt H3 L2H3 L2H5 fun_upd_other leaf.simps local.Let_Sync(1) local.Let_Sync(3) local.Let_Sync(6) prefix_order.dual_order.not_eq_order_implies_strict prefix_order.order.strict_implies_order prefix_snoc)
-        then show ?thesis sorry
+        then show ?thesis
+        proof cases
+          assume L4H1: "pis = \<pi>0"
+          have L4H2: "\<pi>0 @ [LNxt xs] = \<pi>'"
+            by (smt H3 L2H3 L2H5 L2H9 L4H1 control_label.simps(6) fun_upd_other fun_upd_same leaf.simps local.Let_Sync(1) local.Let_Sync(6) prefix_snoc spawn_point strict_prefix_def)
+          have L4H3: "narrow_step (E, H) (\<pi>0 @ [LNxt xs]) (E', H') \<pi>'" sorry
+          then show ?thesis sorry
+        next
+          assume L4H1: "pis \<noteq> \<pi>0"
+          have "pir = \<pi>0"
+            using L3H1 L4H1 by auto
+          then show ?thesis sorry
+        qed
       qed
     }
     then show ?case by blast
