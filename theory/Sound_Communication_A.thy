@@ -1591,13 +1591,24 @@ proof -
           assume L4H1: "pis = \<pi>0"
           have L4H2: "\<pi>0 @ [LNxt xs] = \<pi>'"
             by (smt H3 L2H3 L2H5 L2H9 L4H1 control_label.simps(6) fun_upd_other fun_upd_same leaf.simps local.Let_Sync(1) local.Let_Sync(6) prefix_snoc spawn_point strict_prefix_def)
-          have L4H3: "narrow_step (E, H) (\<pi>0 @ [LNxt xs]) (E', H') \<pi>'" sorry
-          then show ?thesis sorry
+          have L4H3: "narrow_step (E, H) (\<pi>0 @ [LNxt xs]) (E', H') \<pi>'"
+            using L2H1 L2H2 L2H3 L4H2 narrow_step.refl by blast
+          have L4H4: "leaf E (\<pi>0 @ [LNxt xs])" sorry
+          then show ?thesis
+            using H3 L2H1 L2H2 L2H9 L4H3 narrow_step.step by blast
         next
           assume L4H1: "pis \<noteq> \<pi>0"
-          have "pir = \<pi>0"
+          have L4H2: "pir = \<pi>0"
             using L3H1 L4H1 by auto
-          then show ?thesis sorry
+          have L4H3: "\<pi>0 @ [LNxt xr] = \<pi>'"
+            by (smt H3 L2H3 L2H5 L4H1 L4H2 fun_upd_other leaf.simps 
+            local.Let_Sync(1) local.Let_Sync(3) prefix_snoc strict_prefix_def)
+
+          have L4H4: "narrow_step (E, H) (\<pi>0 @ [LNxt xr]) (E', H') \<pi>'"
+            using L2H1 L2H2 L2H3 L4H3 narrow_step.refl by blast
+          have L4H5: "leaf E (\<pi>0 @ [LNxt xr])" sorry
+          then show ?thesis
+            using H3 L2H1 L2H2 L2H9 L4H4 narrow_step.step by blast
         qed
       qed
     }
