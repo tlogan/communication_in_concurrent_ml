@@ -1593,7 +1593,11 @@ proof -
             by (smt H3 L2H3 L2H5 L2H9 L4H1 control_label.simps(6) fun_upd_other fun_upd_same leaf.simps local.Let_Sync(1) local.Let_Sync(6) prefix_snoc spawn_point strict_prefix_def)
           have L4H3: "narrow_step (E, H) (\<pi>0 @ [LNxt xs]) (E', H') \<pi>'"
             using L2H1 L2H2 L2H3 L4H2 narrow_step.refl by blast
-          have L4H4: "leaf E (\<pi>0 @ [LNxt xs])" sorry
+          have L4H4: "leaf E (\<pi>0 @ [LNxt xs])"
+            by (smt Let_Sync(6) H3 L2H3 L2H6 L4H1 L4H2 exp.simps(1) fun_upd_other leaf.simps 
+              local.Let_Sync(1) local.Let_Sync(4) local.Let_Sync(7) option.inject 
+              prefixI prefix_order.dual_order.not_eq_order_implies_strict prefix_order.le_less_trans 
+              prefix_snoc state.inject strict_prefixE)
           then show ?thesis
             using H3 L2H1 L2H2 L2H9 L4H3 narrow_step.step by blast
         next
@@ -1606,7 +1610,10 @@ proof -
 
           have L4H4: "narrow_step (E, H) (\<pi>0 @ [LNxt xr]) (E', H') \<pi>'"
             using L2H1 L2H2 L2H3 L4H3 narrow_step.refl by blast
-          have L4H5: "leaf E (\<pi>0 @ [LNxt xr])" sorry
+          have L4H5: "leaf E (\<pi>0 @ [LNxt xr])" using Let_Sync(9)
+            by (smt H3 L2H3 L2H6 L4H1 L4H2 L4H3 fun_upd_apply leaf.simps local.Let_Sync(1) 
+              local.Let_Sync(3) prefixI prefix_order.dual_order.not_eq_order_implies_strict 
+              prefix_order.le_less_trans prefix_snoc strict_prefixE)
           then show ?thesis
             using H3 L2H1 L2H2 L2H9 L4H4 narrow_step.step by blast
         qed
