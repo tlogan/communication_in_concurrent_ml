@@ -1214,22 +1214,22 @@ qed
 
 inductive narrow_step :: "trace_pool * cmmn_set \<Rightarrow> control_path \<Rightarrow> trace_pool * cmmn_set \<Rightarrow> control_path \<Rightarrow> bool" where
   refl: "
-    E0 \<pi>0 \<noteq> None \<Longrightarrow>
-    star_left concur_step (E0, H0) (E', H') \<Longrightarrow>
-    narrow_step (E0, H0) \<pi>0 (E', H') \<pi>0" |
+    E \<pi> \<noteq> None \<Longrightarrow>
+    star concur_step (E, H) (E', H') \<Longrightarrow>
+    narrow_step (E, H) \<pi> (E', H') \<pi>" |
   side_step: "
-    narrow_step (E0, H0) \<pi>0 (E, H) \<pi> \<Longrightarrow>
-    concur_step (E, H) (E', H') \<Longrightarrow>
+    concur_step (E, H) (Em, Hm) \<Longrightarrow>
     leaf E \<pi> \<Longrightarrow>
-    leaf E' \<pi> \<Longrightarrow>
-    narrow_step (E0, H0) \<pi>0 (E', H') \<pi>
+    leaf Em \<pi> \<Longrightarrow>
+    narrow_step (Em, Hm) \<pi> (E', H') \<pi>' \<Longrightarrow>
+    narrow_step (E, H) \<pi> (E', H') \<pi>'
   " |
   step: "
-    narrow_step (E0, H0) \<pi>0 (E, H) \<pi> \<Longrightarrow>
-    concur_step (E, H) (E', H') \<Longrightarrow>
+    concur_step (E, H) (Em, Hm) \<Longrightarrow>
     leaf E \<pi> \<Longrightarrow>
-    leaf E' (\<pi> @ [l]) \<Longrightarrow>
-    narrow_step (E0, H0) \<pi> (E', H') (\<pi> @ [l])
+    leaf Em (\<pi> @ [l]) \<Longrightarrow>
+    narrow_step (Em, Hm) (\<pi> @ [l]) (E', H') \<pi>' \<Longrightarrow>
+    narrow_step (E, H) \<pi> (E', H') \<pi>'
   "
 
 
@@ -1443,34 +1443,33 @@ proof -
 qed
 *)
 
-
 lemma star_concur_step_implies_narrow_step':
   assumes
-    H1: "star_left concur_step EH0 EH'"
+    H1: "star concur_step EH EH'"
 
   shows "
-    \<forall> E' H' \<pi>' .
-    EH0 = (E0, H0) \<longrightarrow> EH' = (E', H') \<longrightarrow>
-    leaf E0 \<pi>0 \<longrightarrow> E' \<pi>' \<noteq> None \<longrightarrow> prefix \<pi>0 \<pi>' \<longrightarrow>
-    narrow_step (E0, H0) \<pi>0 (E', H') \<pi>'"
+    \<forall> E H \<pi> .
+    EH = (E, H) \<longrightarrow> EH' = (E', H') \<longrightarrow>
+    leaf E \<pi> \<longrightarrow> E' \<pi>' \<noteq> None \<longrightarrow> prefix \<pi> \<pi>' \<longrightarrow>
+    narrow_step (E, H) \<pi> (E', H') \<pi>'"
 proof -
   show ?thesis
   using H1
   proof induction
     case (refl x)
     {
-      fix E' H' \<pi>'
+      fix E H \<pi>
       assume  
-        L2H1: "x = (E0, H0)" and
+        L2H1: "x = (E, H)" and
         L2H2: "x = (E', H')" and
-        L2H3: "leaf E0 \<pi>0" and 
+        L2H3: "leaf E \<pi>" and 
         L2H4: "E' \<pi>' \<noteq> None" and 
-        L2H5: "prefix \<pi>0 \<pi>'"
+        L2H5: "prefix \<pi> \<pi>'"
 
-      have L2H6: "E0 \<pi>0 \<noteq> None" using leaf.simps L2H3 by auto
-      have L2H7: "E0 \<pi>' \<noteq> None" using L2H1 L2H2 L2H4 by blast
-      have L2H8: "\<pi>0 = \<pi>'" using leaf.simps L2H5 L2H3 by (meson L2H7 prefix_order.le_imp_less_or_eq)
-      have "narrow_step (E0, H0) \<pi>0 (E', H') \<pi>'" by (metis L2H1 L2H2 L2H6 L2H8 narrow_step.refl star_left.refl)
+      have L2H6: "E \<pi> \<noteq> None" using leaf.simps L2H3 by auto
+      have L2H7: "E \<pi>' \<noteq> None" using L2H1 L2H2 L2H4 by blast
+      have L2H8: "\<pi> = \<pi>'" using leaf.simps L2H5 L2H3 by (meson L2H7 prefix_order.le_imp_less_or_eq)
+      have "narrow_step (E, H) \<pi> (E', H') \<pi>'" using L2H1 L2H2 L2H7 L2H8 narrow_step.refl by blast
 
     }
 
@@ -1478,26 +1477,36 @@ proof -
   next
     case (step x y z)
     {
-      fix E' H' \<pi>'
+      fix E H \<pi>
       assume  
-        L2H1: "x = (E0, H0)" and
+        L2H1: "x = (E, H)" and
         L2H2: "z = (E', H')" and
-        L2H3: "leaf E0 \<pi>0" and 
+        L2H3: "leaf E \<pi>" and 
         L2H4: "E' \<pi>' \<noteq> None" and 
-        L2H5: "prefix \<pi>0 \<pi>'"
+        L2H5: "prefix \<pi> \<pi>'"
 
       obtain Em Hm where L2H6: "y = (Em, Hm)" by fastforce
-      have L2H7: "star_left concur_step (E0, H0) (Em, Hm)"
+      have L2H7: "concur_step (E, H) (Em, Hm)"
         using L2H1 L2H6 step.hyps(1) by auto
-
-      have L2H8: "concur_step (Em, Hm) (E', H')"
-        using L2H2 L2H6 step.hyps(2) by blast
-
-      have "narrow_step (E0, H0) \<pi>0 (E', H') \<pi>'"
-      using L2H8
+      have "narrow_step (E, H) \<pi> (E', H') \<pi>'"
+      using L2H7
       proof cases
         case (Seq_Step_Down pi x env xk ek envk k v)
-        then show ?thesis sorry
+        show ?thesis
+        proof cases
+          assume L4H1: "\<pi> = pi"
+          thm narrow_step.step
+          have L4H2: "leaf Em (\<pi> @ [LRtn xk])" 
+            by (smt L2H3 L4H1 leaf.simps fun_upd_apply local.Seq_Step_Down(1) 
+                option.simps(3) prefix_order.dual_order.strict_trans 
+                strict_prefixE strict_prefixI')
+          have "narrow_step (Em, Hm) (\<pi> @ [LRtn xk]) (E', H') \<pi>'"  sorry
+          then show ?thesis using narrow_step.step
+            using L2H7 L4H1 L4H2 local.Seq_Step_Down(3) by blast
+        next
+          assume "\<pi> \<noteq> pi"
+          then show ?thesis sorry
+        qed
       next
         case (Seq_Step pi x b e env k v)
         then show ?thesis sorry
@@ -1520,7 +1529,6 @@ proof -
   qed
 qed
 
-
 lemma star_concur_step_implies_narrow_step:
   assumes
     H1: "star concur_step (E, H) (E', H')" and
@@ -1529,7 +1537,7 @@ lemma star_concur_step_implies_narrow_step:
     H4: "prefix \<pi> \<pi>'"
 
   shows "narrow_step (E, H) \<pi> (E', H') \<pi>'"
-  by (meson H1 H2 H3 H4 star_concur_step_implies_narrow_step' star_implies_star_left)
+by (meson H2 H3 H4 star.refl star_concur_step_implies_narrow_step')
 
 lemma static_traversable_pool_implies_static_traceable:
   assumes
