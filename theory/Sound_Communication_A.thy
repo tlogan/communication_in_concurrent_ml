@@ -1231,6 +1231,28 @@ inductive narrow_step :: "trace_pool * cmmn_set \<Rightarrow> control_path \<Rig
     narrow_step (E, H) \<pi> (E', H') \<pi>'
   "
 
+lemma static_traversable_pool_implies_static_traceable':
+  assumes
+    "star concur_step EH EH'"
+  shows "
+    EH = (E, H) \<longrightarrow> EH' = (E', H') \<longrightarrow>
+    concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<longrightarrow> 
+    E' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+    (V, C) \<Turnstile>\<^sub>e e \<longrightarrow>
+    static_traversable_pool V F E' \<longrightarrow>
+    isEnd (NLet x) \<longrightarrow>
+      (\<exists> path . 
+      paths_correspond \<pi>' path \<and>
+      static_traceable V F (top_label e) isEnd path)"
+sorry
+  thm static_traceable.intros
+(*
+  have H6: "(V, C) \<Turnstile>\<^sub>\<E> \<E>'" using H2 H3 static_eval_preserved_under_concur_step_star static_eval_to_pool by blast
+
+  have H7: "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] [] = Some (\<langle>e;Map.empty;[]\<rangle>)" using leaf.simps by simp
+
+  have H8: "leaf [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] [] " using leaf.simps by simp
+*)
 
 
 lemma static_traversable_pool_implies_static_traceable:
@@ -1245,20 +1267,18 @@ lemma static_traversable_pool_implies_static_traceable:
     \<exists> path . 
       paths_correspond \<pi>' path \<and>
       static_traceable V F (top_label e) isEnd path"
-proof -
-  
-  have H6: "(V, C) \<Turnstile>\<^sub>\<E> \<E>'" using H2 H3 static_eval_preserved_under_concur_step_star static_eval_to_pool by blast
-
-  have H7: "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] [] = Some (\<langle>e;Map.empty;[]\<rangle>)" using leaf.simps by simp
-
-  have H8: "leaf [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] [] " using leaf.simps by simp
-
-  show "
-    \<exists> path . 
-      paths_correspond \<pi>' path \<and>
-      static_traceable V F (top_label e) isEnd path"
-sorry
-
+using H2 
+proof cases
+  case refl
+  then show ?thesis
+  by (metis H1 H5 fun_upd_apply option.inject 
+  option.simps(3) paths_correspond.Empty state.inject 
+  static_traceable.Empty top_label.simps(1))
+next
+  case (step y)
+  then show ?thesis
+  by (metis (no_types, lifting) H1 H3 H4 H5 case_prodE 
+  case_prod_curry static_traversable_pool_implies_static_traceable')
 qed
 
 
