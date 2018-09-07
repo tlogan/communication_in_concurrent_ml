@@ -1233,18 +1233,75 @@ inductive narrow_step :: "trace_pool * cmmn_set \<Rightarrow> control_path \<Rig
 
 lemma static_traversable_pool_implies_static_traceable':
   assumes
-    "star concur_step EH EH'"
+    H1: "star concur_step EH EH'" and
+    H2: "(V, C) \<Turnstile>\<^sub>\<E> E'" and
+    H3: "E' \<pi>' = Some (\<langle>Let x' b' e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
+    H4: "static_traversable_pool V F E'" and
+    H5: "isEnd (NLet x')"
   shows "
+    \<forall> E H .
     EH = (E, H) \<longrightarrow> EH' = (E', H') \<longrightarrow>
-    concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<longrightarrow> 
-    E' \<pi>' = Some (\<langle>Let x b e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
-    (V, C) \<Turnstile>\<^sub>e e \<longrightarrow>
-    static_traversable_pool V F E' \<longrightarrow>
-    isEnd (NLet x) \<longrightarrow>
-      (\<exists> path . 
+    ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow> (E, H) \<longrightarrow>
+    (\<exists> path . 
       paths_correspond \<pi>' path \<and>
       static_traceable V F (top_label e) isEnd path)"
-sorry
+using H1
+proof induction
+  case (refl EH)
+  {
+    fix E H
+    assume
+      L1H1: "EH = (E, H)" and
+      L1H2: "EH = (E', H')" and
+      L1H3: "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow> (E, H)"
+
+    have L1H7: "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow> (E', H')" using L1H1 L1H2 L1H3 by blast
+    thm static_traceable.Edge
+
+    have "\<exists>path. paths_correspond \<pi>' path \<and> static_traceable V F (top_label e) isEnd path" 
+    using L1H7
+    proof cases
+      case (Seq_Step_Down pi x env xk ek envk k v)
+      then show ?thesis by (metis map_upd_Some_unfold option.distinct(1) state.inject)
+    next
+      case (Seq_Step pi x b e env k v)
+      have L2H1: "pi = []" by (metis fun_upd_apply local.Seq_Step(4) option.simps(3))
+      show ?thesis
+      proof (cases \<pi>')
+        case Nil
+        then show ?thesis using H3 H5 local.Seq_Step(1) paths_correspond.Empty static_traceable.Empty by auto
+      next
+        case (Cons a list)
+        have L2H2: "\<pi>' = [LNxt x]"
+          by (metis H3 append.left_neutral fun_upd_def list.distinct(1) 
+          local.Cons local.Seq_Step(1) local.Seq_Step(4) option.simps(3))
+        have L2H3: "paths_correspond \<pi>' [(NLet x, ENext)]"
+          using L2H2 Next paths_correspond.Empty by fastforce
+        (* have "{(NLet x, ENext, (NLet x'))} \<subseteq> F" sorry *)
+  
+        have "static_traceable V F (top_label e) isEnd [(NLet x, ENext)]" sorry
+        then show ?thesis sorry
+      qed
+
+    next
+      case (Seq_Step_Up pi x b e env k e' env')
+      then show ?thesis sorry
+    next
+      case (Let_Chan pi x e env k)
+      then show ?thesis sorry
+    next
+      case (Let_Spawn pi x ec e env k)
+      then show ?thesis sorry
+    next
+      case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
+      then show ?thesis sorry
+    qed
+  }
+  then show ?case sorry
+next
+  case (step EH EHm EH')
+  then show ?case sorry
+qed
   thm static_traceable.intros
 (*
   have H6: "(V, C) \<Turnstile>\<^sub>\<E> \<E>'" using H2 H3 static_eval_preserved_under_concur_step_star static_eval_to_pool by blast
