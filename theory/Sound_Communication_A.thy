@@ -1379,8 +1379,33 @@ proof induction
         then show ?thesis using L2H1 local.Seq_Step_Up(4) L3H2 by auto
       qed
     next
-      case (Let_Chan pi x e env k)
-      then show ?thesis sorry
+      case (Let_Chan pi x em env k)
+      have L2H1: "pi = []" by (metis fun_upd_apply local.Let_Chan(4) option.simps(3))
+      then show ?thesis
+      proof (cases \<pi>')
+        case Nil
+        then show ?thesis
+          by (metis (mono_tags, lifting) H3 H5 L1H7 map_upd_Some_unfold mapping_preserved 
+            paths_correspond.Empty state.inject static_traceable.Empty top_label.simps(1))
+      next
+        case (Cons a list)
+        have L3H1: "\<pi>' = [LNxt x]"
+          by (metis H3 append.left_neutral fun_upd_other list.simps(3) 
+          local.Cons local.Let_Chan(1) local.Let_Chan(4) option.simps(3))
+        have L3H2: "paths_correspond \<pi>' [(NLet x, ENext)]" using L3H1 Next paths_correspond.Empty by fastforce
+
+        have L3H3: "em = (Let x' b' e\<^sub>n)" using H3 L2H1 L3H1 local.Let_Chan(1) by auto
+        have L3H4: "static_traversable V F (Let x MkChn (Let x' b' e\<^sub>n))" 
+          by (metis H4 L1H7 L3H3 local.Let_Chan(4) mapping_preserved static_traversable_pool.cases)
+        have L3H5: "{(NLet x, ENext, NLet x')} \<subseteq> F"
+        using L3H4
+        proof cases
+          case Let_Chan
+          then show ?thesis by simp
+        qed
+        have "static_traceable V F (NLet x) isEnd [(NLet x, ECall)]" sorry
+        then show ?thesis using Edge H5 L2H1 L3H2 L3H5 local.Let_Chan(4) by auto
+      qed
     next
       case (Let_Spawn pi x ec e env k)
       then show ?thesis sorry
