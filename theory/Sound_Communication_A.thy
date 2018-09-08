@@ -1232,10 +1232,11 @@ inductive narrow_step :: "trace_pool * cmmn_set \<Rightarrow> control_path \<Rig
   "
 
 
-lemma static_trav_edge:
+lemma static_seq_step_trav_edge:
    assumes
      H1: "static_traversable V F (Let x b (Let x' b' en))" and
-     H2: "static_traversable V F (Let x' b' en')"
+     H2: "static_traversable V F (Let x' b' en')" and
+     H3: "seq_step (b, env) v"
 
    shows "{(NLet x, ENext, NLet x')} \<subseteq> F"
 using H1
@@ -1278,10 +1279,12 @@ next
   then show ?thesis by simp
 next
   case (Let_Case e\<^sub>l e\<^sub>r x\<^sub>s x\<^sub>l x\<^sub>r)
-  then show ?thesis sorry
+  have "b \<noteq> Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r" using seq_step.cases H3 by blast
+  then show ?thesis using local.Let_Case(1) by blast
 next
   case (Let_App f x\<^sub>a)
-  then show ?thesis sorry
+  have "b \<noteq> App f x\<^sub>a" using H3 seq_step.simps by auto
+  then show ?thesis by (simp add: local.Let_App(1))
 qed
 
 lemma static_traversable_pool_implies_static_traceable':
@@ -1340,7 +1343,7 @@ proof induction
 
         have L2H8: "static_traversable V F (Let x b (Let x' b' e\<^sub>n))" using L2H6 L2H7 by blast
 
-        have L2H9: "{(NLet x, ENext, NLet x')} \<subseteq> F" using L2H5 L2H8 static_trav_edge by auto
+        have L2H9: "{(NLet x, ENext, NLet x')} \<subseteq> F" using L2H5 L2H8 local.Seq_Step(5) static_seq_step_trav_edge by blast
   
         have "static_traceable V F (NLet x) isEnd [(NLet x, ENext)]" using Edge H5 L2H9 by auto
         then show ?thesis using L2H1 L2H3 local.Seq_Step(4) by auto
