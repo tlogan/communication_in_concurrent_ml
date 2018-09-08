@@ -1231,6 +1231,59 @@ inductive narrow_step :: "trace_pool * cmmn_set \<Rightarrow> control_path \<Rig
     narrow_step (E, H) \<pi> (E', H') \<pi>'
   "
 
+
+lemma static_trav_edge:
+   assumes
+     H1: "static_traversable V F (Let x b (Let x' b' en))" and
+     H2: "static_traversable V F (Let x' b' en')"
+
+   shows "{(NLet x, ENext, NLet x')} \<subseteq> F"
+using H1
+proof cases
+  case Let_Unit
+  then show ?thesis
+    by simp
+next
+  case Let_Chan
+  then show ?thesis by simp
+next
+  case (Let_SendEvt x\<^sub>c x\<^sub>m)
+  then show ?thesis by simp
+next
+  case (Let_RecvEvt x\<^sub>c)
+  then show ?thesis by simp
+next
+  case (Let_Pair x\<^sub>1 x\<^sub>2)
+  then show ?thesis by simp
+next
+  case (Let_Left x\<^sub>p)
+  then show ?thesis by simp
+next
+  case (Let_Right x\<^sub>p)
+  then show ?thesis by simp
+next
+  case (Let_Abs e\<^sub>b f x\<^sub>p)
+  then show ?thesis by simp
+next
+  case (Let_Spawn e\<^sub>c)
+  then show ?thesis by simp
+next
+  case (Let_Sync xSE)
+  then show ?thesis by simp
+next
+  case (Let_Fst x\<^sub>p)
+  then show ?thesis by simp
+next
+  case (Let_Snd x\<^sub>p)
+  then show ?thesis by simp
+next
+  case (Let_Case e\<^sub>l e\<^sub>r x\<^sub>s x\<^sub>l x\<^sub>r)
+  then show ?thesis sorry
+next
+  case (Let_App f x\<^sub>a)
+  then show ?thesis sorry
+qed
+
 lemma static_traversable_pool_implies_static_traceable':
   assumes
     H1: "star concur_step EH EH'" and
@@ -1264,7 +1317,7 @@ proof induction
       case (Seq_Step_Down pi x env xk ek envk k v)
       then show ?thesis by (metis map_upd_Some_unfold option.distinct(1) state.inject)
     next
-      case (Seq_Step pi x b e env k v)
+      case (Seq_Step pi x b em env k v)
       have L2H1: "pi = []" by (metis fun_upd_apply local.Seq_Step(4) option.simps(3))
       show ?thesis
       proof (cases \<pi>')
@@ -1277,10 +1330,20 @@ proof induction
           local.Cons local.Seq_Step(1) local.Seq_Step(4) option.simps(3))
         have L2H3: "paths_correspond \<pi>' [(NLet x, ENext)]"
           using L2H2 Next paths_correspond.Empty by fastforce
-        (* have "{(NLet x, ENext, (NLet x'))} \<subseteq> F" sorry *)
+        have L2H4: "e = (Let x b em)" using L2H1 local.Seq_Step(4) by auto
+        thm static_traversable.intros
+        have L2H5: "static_traversable V F (Let x' b' e\<^sub>n)"
+          using H3 H4 static_traversable_pool.cases by blast
+        have L2H6: "static_traversable V F (Let x b em)"
+          by (meson H4 L1H7 local.Seq_Step(4) mapping_preserved static_traversable_pool.cases)
+        have L2H7: "em = (Let x' b' e\<^sub>n)" using H3 L2H1 L2H2 local.Seq_Step(1) by auto
+
+        have L2H8: "static_traversable V F (Let x b (Let x' b' e\<^sub>n))" using L2H6 L2H7 by blast
+
+        have L2H9: "{(NLet x, ENext, NLet x')} \<subseteq> F" using L2H5 L2H8 static_trav_edge by auto
   
-        have "static_traceable V F (top_label e) isEnd [(NLet x, ENext)]" sorry
-        then show ?thesis sorry
+        have "static_traceable V F (NLet x) isEnd [(NLet x, ENext)]" using Edge H5 L2H9 by auto
+        then show ?thesis using L2H1 L2H3 local.Seq_Step(4) by auto
       qed
 
     next
