@@ -1408,14 +1408,59 @@ proof induction
         then show ?thesis using Edge H5 L2H1 L3H2 L3H5 local.Let_Chan(4) by auto
       qed
     next
-      case (Let_Spawn pi x ec e env k)
-      then show ?thesis sorry
+      case (Let_Spawn pi x ec em env k)
+      have L2H1: "pi = []" by (metis fun_upd_apply local.Let_Spawn(4) option.simps(3))
+      then show ?thesis
+      proof (cases \<pi>')
+        case Nil
+        then show ?thesis
+          by (metis (mono_tags, lifting) H3 H5 L1H7 map_upd_Some_unfold mapping_preserved 
+            paths_correspond.Empty state.inject static_traceable.Empty top_label.simps(1))
+      next
+        case (Cons a list)
+        show ?thesis
+        proof cases
+          assume L3H1: "\<pi>' = [LNxt x]"
+          have L3H2: "paths_correspond \<pi>' [(NLet x, ENext)]" using L3H1 Next paths_correspond.Empty by fastforce
+  
+          have L3H3: "em = (Let x' b' e\<^sub>n)" using H3 L2H1 L3H1 local.Let_Spawn(1) by auto
+          have L3H4: "static_traversable V F (Let x (Spwn ec) (Let x' b' e\<^sub>n))"
+            by (metis H4 L1H7 L3H3 local.Let_Spawn(4) mapping_preserved static_traversable_pool.cases)
+          have L3H5: "{(NLet x, ENext, NLet x')} \<subseteq> F"
+          using L3H4
+          proof cases
+            case Let_Spawn
+            then show ?thesis by simp
+          qed
+  
+          have "static_traceable V F (NLet x) isEnd [(NLet x, ENext)]" using Edge H5 L3H5 by blast
+          then show ?thesis  using L2H1 L3H2 local.Let_Spawn(4) by auto
+        next
+          assume L3H1: "\<pi>' \<noteq> [LNxt x]"
+          have L3H2: "\<pi>' = [LSpwn x]" using H3 L2H1 L3H1 append_eq_Cons_conv local.Cons local.Let_Spawn(1) by fastforce
+
+          have L3H3: "paths_correspond \<pi>' [(NLet x, ESpawn)]"  using L3H2 Spawn paths_correspond.Empty by fastforce
+  
+          have L3H4: "ec = (Let x' b' e\<^sub>n)" using H3 L2H1 L3H2 local.Let_Spawn(1) by auto
+          have L3H5: "static_traversable V F (Let x (Spwn (Let x' b' e\<^sub>n)) em)"
+            by (metis H4 L1H7 L3H4 local.Let_Spawn(4) mapping_preserved static_traversable_pool.cases)
+          have L3H6: "{(NLet x, ESpawn, NLet x')} \<subseteq> F"
+          using L3H5
+          proof cases
+            case Let_Spawn
+            then show ?thesis by simp
+          qed
+  
+          have "static_traceable V F (NLet x) isEnd [(NLet x, ESpawn)]" using Edge H5 L3H6 by auto
+          then show ?thesis using L2H1 L3H3 local.Let_Spawn(4) by auto
+        qed
+      qed
     next
       case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
       then show ?thesis sorry
     qed
   }
-  then show ?case sorry
+  then show ?case by blast
 next
   case (step EH EHm EH')
   then show ?case sorry
