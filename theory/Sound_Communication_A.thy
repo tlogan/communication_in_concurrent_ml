@@ -1292,7 +1292,7 @@ lemma static_traversable_pool_implies_static_traceable':
     H1: "star_left concur_step EH EH'" and
     H2: "(V, C) \<Turnstile>\<^sub>e e"
   shows "
-    \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' .
+    \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
     EH = (E, H) \<longrightarrow> EH' = (E', H') \<longrightarrow>
     E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
     static_traversable_pool V F E' \<longrightarrow>
@@ -1304,7 +1304,7 @@ using H1
 proof induction
   case (refl EH')
   {
-    fix E' H' \<pi>' e' \<rho>' \<kappa>' 
+    fix E' H' \<pi>' e' \<rho>' \<kappa>' isEnd
     assume
       L1H1: "EH' = (E, H)" and
       L1H2: "EH' = (E', H')" and
@@ -1467,7 +1467,7 @@ next
   case (step EH EHm EH')
 
   {
-    fix E' H' \<pi>' e' \<rho>' \<kappa>'
+    fix E' H' \<pi>' e' \<rho>' \<kappa>' isEnd
     assume 
       L1H1: "EH = (E, H)" and
       L1H2: "EH' = (E', H')" and
@@ -1479,15 +1479,14 @@ next
     using step(2)
     proof cases
       case (Seq_Step_Down Em pi x env xk ek envk k v ys)
-      thm step.IH
       have L2H1: "Em pi = Some (\<langle>Rslt x;env;Ctn xk ek envk # k\<rangle>)" by (simp add: local.Seq_Step_Down(4))
       have L2H2: "static_traversable_pool V F Em"
         by (smt L1H2 L1H4 local.Seq_Step_Down(1) mapping_preserved_star 
           star_step1 static_traversable_pool.simps step.hyps(2))
-      have L2H3: "isEnd (top_label (Rslt x))" sorry
+      have L2H3: "(\<lambda> l . True) (top_label (Rslt x))" by simp
 
-      have L2H5: "\<exists>path. paths_correspond pi path \<and> static_traceable V F (top_label e) isEnd path"
-        using L1H1 L2H1 L2H2 L2H3 local.Seq_Step_Down(1) step.IH by blast
+      have L2H5: "\<exists>path. paths_correspond pi path \<and> static_traceable V F (top_label e) (\<lambda> l . True) path"
+        using L1H1 L2H1 L2H2 L2H3 local.Seq_Step_Down(1) step.IH by simp
       then show ?thesis sorry
     next
       case (Seq_Step trpl pi x b e env k v ys)
