@@ -149,9 +149,9 @@ inductive static_traceable :: "abstract_env \<Rightarrow> transition_set \<Right
     static_traceable V F start isEnd [(start, edge)]
   " |
   Step: "
-    static_traceable V F middle isEnd ((middle, edge') # path) \<Longrightarrow>
+    static_traceable V F middle isEnd (path @ [(middle, edge')]) \<Longrightarrow>
     {(start, edge, middle)} \<subseteq> F \<Longrightarrow>
-    static_traceable V F start isEnd ((start, edge) # (middle, edge') # path)
+    static_traceable V F start isEnd (path @ [(start, edge), (middle, edge')])
   "
 
 

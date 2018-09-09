@@ -1234,16 +1234,15 @@ inductive narrow_step :: "trace_pool * cmmn_set \<Rightarrow> control_path \<Rig
 
 lemma static_seq_step_trav_edge:
    assumes
-     H1: "static_traversable V F (Let x b (Let x' b' en))" and
-     H2: "static_traversable V F (Let x' b' en')" and
+     H1: "static_traversable V F (Let x b e')" and
+     H2: "static_traversable V F e'" and
      H3: "seq_step (b, env) v"
 
-   shows "{(NLet x, ENext, NLet x')} \<subseteq> F"
+   shows "{(NLet x, ENext, top_label e')} \<subseteq> F"
 using H1
 proof cases
   case Let_Unit
-  then show ?thesis
-    by simp
+  then show ?thesis by blast
 next
   case Let_Chan
   then show ?thesis by simp
@@ -1293,11 +1292,11 @@ lemma static_traversable_pool_implies_static_traceable':
     H1: "star_left concur_step EH EH'" and
     H2: "(V, C) \<Turnstile>\<^sub>e e"
   shows "
-    \<forall> E' H' \<pi>' x' b' e\<^sub>n \<rho>' \<kappa>' .
+    \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' .
     EH = (E, H) \<longrightarrow> EH' = (E', H') \<longrightarrow>
-    E' \<pi>' = Some (\<langle>Let x' b' e\<^sub>n;\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+    E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
     static_traversable_pool V F E' \<longrightarrow>
-    isEnd (NLet x') \<longrightarrow>
+    isEnd (top_label e') \<longrightarrow>
     (\<exists> path . 
       paths_correspond \<pi>' path \<and>
       static_traceable V F (top_label e) isEnd path)"
@@ -1305,13 +1304,13 @@ using H1
 proof induction
   case (refl EH')
   {
-    fix E' H' \<pi>' x' b' e\<^sub>n \<rho>' \<kappa>' 
+    fix E' H' \<pi>' e' \<rho>' \<kappa>' 
     assume
       L1H1: "EH' = (E, H)" and
       L1H2: "EH' = (E', H')" and
-      L1H3: "E' \<pi>' = Some (\<langle>Let x' b' e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
+      L1H3: "E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" and
       L1H4: "static_traversable_pool V F E'" and
-      L1H5: "isEnd (NLet x')"
+      L1H5: "isEnd (top_label e')"
 
     have L1H7: "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow> (E', H')" using L1H1 L1H2 H0 by blast
 
@@ -1327,7 +1326,7 @@ proof induction
       proof (cases \<pi>')
         case Nil
         then show ?thesis by (metis (mono_tags, lifting) L1H3 L1H5 L1H7 map_upd_Some_unfold mapping_preserved 
-            paths_correspond.Empty state.inject static_traceable.Empty top_label.simps(1))
+            paths_correspond.Empty state.inject static_traceable.Empty)
       next
         case (Cons a list)
         have L2H2: "\<pi>' = [LNxt x]"
@@ -1336,36 +1335,36 @@ proof induction
         have L2H3: "paths_correspond \<pi>' [(NLet x, ENext)]"
           using L2H2 Next paths_correspond.Empty by fastforce
         have L2H4: "e = (Let x b em)" using L2H1 local.Seq_Step(4) by auto
-        have L2H5: "static_traversable V F (Let x' b' e\<^sub>n)"
+        have L2H5: "static_traversable V F e'"
           using L1H3 L1H4 static_traversable_pool.cases by blast
         have L2H6: "static_traversable V F (Let x b em)"
           by (meson L1H4 L1H7 local.Seq_Step(4) mapping_preserved static_traversable_pool.cases)
-        have L2H7: "em = (Let x' b' e\<^sub>n)" using L1H3 L2H1 L2H2 local.Seq_Step(1) by auto
+        have L2H7: "em = e'" using L1H3 L2H1 L2H2 local.Seq_Step(1) by auto
 
-        have L2H8: "static_traversable V F (Let x b (Let x' b' e\<^sub>n))" using L2H6 L2H7 by blast
+        have L2H8: "static_traversable V F (Let x b e')" using L2H6 L2H7 by blast
 
-        have L2H9: "{(NLet x, ENext, NLet x')} \<subseteq> F" using L2H5 L2H8 local.Seq_Step(5) static_seq_step_trav_edge by blast
-  
-        have "static_traceable V F (NLet x) isEnd [(NLet x, ENext)]" using Edge L1H5 L2H9 by auto
-        then show ?thesis using L2H1 L2H3 local.Seq_Step(4) by auto
+        have L2H9: "{(NLet x, ENext, (top_label e'))} \<subseteq> F" using L2H5 L2H8 local.Seq_Step(5) static_seq_step_trav_edge by blast
+
+        have "static_traceable V F (NLet x) isEnd [(NLet x, ENext)]" using Edge L1H5 L2H9 by blast
+        then show ?thesis using L2H1 L2H3 local.Seq_Step(4) using Edge L1H5 L2H9 by auto
       qed
 
     next
-      case (Seq_Step_Up pi x b em env k e' env')
+      case (Seq_Step_Up pi x b em env k eu envu)
       have L2H1: "pi = []" by (metis fun_upd_apply local.Seq_Step_Up(4) option.simps(3))
       then show ?thesis
       proof (cases \<pi>')
         case Nil
         then show ?thesis
           by (metis (mono_tags, lifting) L1H3 L1H5 L1H7 map_upd_Some_unfold mapping_preserved 
-            paths_correspond.Empty state.inject static_traceable.Empty top_label.simps(1))
+            paths_correspond.Empty state.inject static_traceable.Empty)
       next
         case (Cons a list)
         have L3H1: "\<pi>' = [LCall x]" by (metis L1H3 append.left_neutral fun_upd_other list.simps(3) 
            local.Cons local.Seq_Step_Up(1) local.Seq_Step_Up(4) option.simps(3))
         have L3H2: "paths_correspond \<pi>' [(NLet x, ECall)]" using Call L3H1 paths_correspond.Empty by fastforce
 
-        have L3H4: "{(NLet x, ECall, NLet x')} \<subseteq> F"
+        have L3H4: "{(NLet x, ECall, (top_label e'))} \<subseteq> F"
         using Seq_Step_Up(5)
         proof cases
           case (let_case_left xs xl' envl vl xl xr er)
@@ -1389,7 +1388,7 @@ proof induction
         case Nil
         then show ?thesis
           by (metis (mono_tags, lifting) L1H3 L1H5 L1H7 map_upd_Some_unfold mapping_preserved 
-            paths_correspond.Empty state.inject static_traceable.Empty top_label.simps(1))
+            paths_correspond.Empty state.inject static_traceable.Empty)
       next
         case (Cons a list)
         have L3H1: "\<pi>' = [LNxt x]"
@@ -1397,10 +1396,10 @@ proof induction
           local.Cons local.Let_Chan(1) local.Let_Chan(4) option.simps(3))
         have L3H2: "paths_correspond \<pi>' [(NLet x, ENext)]" using L3H1 Next paths_correspond.Empty by fastforce
 
-        have L3H3: "em = (Let x' b' e\<^sub>n)" using L1H3 L2H1 L3H1 local.Let_Chan(1) by auto
-        have L3H4: "static_traversable V F (Let x MkChn (Let x' b' e\<^sub>n))" 
+        have L3H3: "em = e'" using L1H3 L2H1 L3H1 local.Let_Chan(1) by auto
+        have L3H4: "static_traversable V F (Let x MkChn e')" 
           by (metis L1H4 L1H7 L3H3 local.Let_Chan(4) mapping_preserved static_traversable_pool.cases)
-        have L3H5: "{(NLet x, ENext, NLet x')} \<subseteq> F"
+        have L3H5: "{(NLet x, ENext, top_label e')} \<subseteq> F"
         using L3H4
         proof cases
           case Let_Chan
@@ -1418,7 +1417,7 @@ proof induction
         case Nil
         then show ?thesis
           by (metis (mono_tags, lifting) L1H3 L1H5 L1H7 map_upd_Some_unfold mapping_preserved 
-            paths_correspond.Empty state.inject static_traceable.Empty top_label.simps(1))
+            paths_correspond.Empty state.inject static_traceable.Empty)
       next
         case (Cons a list)
         show ?thesis
@@ -1426,10 +1425,10 @@ proof induction
           assume L3H1: "\<pi>' = [LNxt x]"
           have L3H2: "paths_correspond \<pi>' [(NLet x, ENext)]" using L3H1 Next paths_correspond.Empty by fastforce
   
-          have L3H3: "em = (Let x' b' e\<^sub>n)" using L1H3 L2H1 L3H1 local.Let_Spawn(1) by auto
-          have L3H4: "static_traversable V F (Let x (Spwn ec) (Let x' b' e\<^sub>n))"
+          have L3H3: "em = e'" using L1H3 L2H1 L3H1 local.Let_Spawn(1) by auto
+          have L3H4: "static_traversable V F (Let x (Spwn ec) e')"
             by (metis L1H4 L1H7 L3H3 local.Let_Spawn(4) mapping_preserved static_traversable_pool.cases)
-          have L3H5: "{(NLet x, ENext, NLet x')} \<subseteq> F"
+          have L3H5: "{(NLet x, ENext, top_label e')} \<subseteq> F"
           using L3H4
           proof cases
             case Let_Spawn
@@ -1444,10 +1443,10 @@ proof induction
 
           have L3H3: "paths_correspond \<pi>' [(NLet x, ESpawn)]"  using L3H2 Spawn paths_correspond.Empty by fastforce
   
-          have L3H4: "ec = (Let x' b' e\<^sub>n)" using L1H3 L2H1 L3H2 local.Let_Spawn(1) by auto
-          have L3H5: "static_traversable V F (Let x (Spwn (Let x' b' e\<^sub>n)) em)"
+          have L3H4: "ec = e'" using L1H3 L2H1 L3H2 local.Let_Spawn(1) by auto
+          have L3H5: "static_traversable V F (Let x (Spwn e') em)"
             by (metis L1H4 L1H7 L3H4 local.Let_Spawn(4) mapping_preserved static_traversable_pool.cases)
-          have L3H6: "{(NLet x, ESpawn, NLet x')} \<subseteq> F"
+          have L3H6: "{(NLet x, ESpawn, top_label e')} \<subseteq> F"
           using L3H5
           proof cases
             case Let_Spawn
@@ -1468,27 +1467,38 @@ next
   case (step EH EHm EH')
 
   {
-    fix E' H' \<pi>' x' b' e\<^sub>n \<rho>' \<kappa>'
+    fix E' H' \<pi>' e' \<rho>' \<kappa>'
     assume 
       L2H1: "EH = (E, H)" and
       L2H2: "EH' = (E', H')" and
-      L1H3: "E' \<pi>' = Some (\<langle>Let x' b' e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and
+      L1H3: "E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" and
       L1H4: "static_traversable_pool V F E'" and
-      L1H5: "isEnd (NLet x')"
+      L1H5: "isEnd (top_label e')"
 
-    have "\<exists>path. paths_correspond \<pi>' path \<and> static_traceable V F (top_label e) isEnd path" sorry
+    have "\<exists>path. paths_correspond \<pi>' path \<and> static_traceable V F (top_label e) isEnd path"
+    using step(2)
+    proof cases
+      case (Seq_Step_Down Em pi x env xk ek envk k v ys)
+      then show ?thesis sorry
+    next
+      case (Seq_Step trpl pi x b e env k v ys)
+      then show ?thesis sorry
+    next
+      case (Seq_Step_Up trpl pi x b e env k e' env' ys)
+      then show ?thesis sorry
+    next
+      case (Let_Chan trpl pi x e env k ys)
+      then show ?thesis sorry
+    next
+      case (Let_Spawn trpl pi x ec e env k ys)
+      then show ?thesis sorry
+    next
+      case (Let_Sync trpl pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm ys)
+      then show ?thesis sorry
+    qed
   }
   then show ?case by blast
 qed
-
-(*
-  have H6: "(V, C) \<Turnstile>\<^sub>\<E> \<E>'" using H2 H3 static_eval_preserved_under_concur_step_star static_eval_to_pool by blast
-
-  have H7: "[[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] [] = Some (\<langle>e;Map.empty;[]\<rangle>)" using leaf.simps by simp
-
-  have H8: "leaf [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] [] " using leaf.simps by simp
-*)
-
 
 lemma static_traversable_pool_implies_static_traceable:
   assumes
@@ -1514,7 +1524,7 @@ next
   have L2H1: "star_left concur_step y (\<E>', H')" by (simp add: local.step(2) star_implies_star_left)
   obtain E H where "y = (E, H)" by fastforce
   then show ?thesis using static_traversable_pool_implies_static_traceable'[of e E H]
-    using H1 H3 H4 H5 L2H1 local.step(1) by blast
+    using H1 H3 H4 H5 L2H1 local.step(1) by auto
 qed
 
 
