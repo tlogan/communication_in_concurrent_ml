@@ -1403,7 +1403,8 @@ proof induction
           case Let_Chan
           then show ?thesis by simp
         qed
-        have "static_traceable V F (NLet x) isEnd [(NLet x, ECall)]" sorry
+
+        have "static_traceable V F (NLet x) isEnd [(NLet x, ENext)]" using Edge H5 L3H5 by blast
         then show ?thesis using Edge H5 L2H1 L3H2 L3H5 local.Let_Chan(4) by auto
       qed
     next
