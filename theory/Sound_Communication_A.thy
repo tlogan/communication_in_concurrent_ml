@@ -1457,7 +1457,7 @@ proof induction
       qed
     next
       case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
-      then show ?thesis sorry
+      then show ?thesis by (metis map_upd_Some_unfold option.simps(3) state.inject)
     qed
   }
   then show ?case by blast
