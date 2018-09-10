@@ -1286,6 +1286,9 @@ next
   then show ?thesis by (simp add: local.Let_App(1))
 qed
 
+(*
+TODO: Redo below with using new definition of static_traceable.
+
 lemma static_traversable_pool_implies_static_traceable':
   assumes
     H0: "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow> (E, H)" and
@@ -1487,7 +1490,20 @@ next
 
       have L2H5: "\<exists>path. paths_correspond pi path \<and> static_traceable V F (top_label e) (\<lambda> l . True) path"
         using L1H1 L2H1 L2H2 L2H3 local.Seq_Step_Down(1) step.IH by simp
-      then show ?thesis sorry
+
+      obtain p where L2H6: "paths_correspond pi p \<and> static_traceable V F (top_label e) (\<lambda> l . True) p"
+        using L2H5 by auto
+
+      then show ?thesis
+      proof cases
+        assume "\<pi>' = pi @ [LRtn xk]"
+        have "paths_correspond (pi @ [LRtn xk]) (p @ [(NResult xk, EReturn)])" by (simp add: L2H6 Return)
+        thm static_traceable.intros
+        then show ?thesis sorry
+      next
+        assume "\<pi>' \<noteq> pi @ [LRtn xk]"
+        then show ?thesis using L1H1 L1H2 L1H3 L1H5 L2H2 local.Seq_Step_Down(1) local.Seq_Step_Down(2) step.IH by auto
+      qed
     next
       case (Seq_Step trpl pi x b e env k v ys)
       then show ?thesis sorry
@@ -1507,6 +1523,7 @@ next
   }
   then show ?case by blast
 qed
+*)
 
 lemma static_traversable_pool_implies_static_traceable:
   assumes
@@ -1520,21 +1537,7 @@ lemma static_traversable_pool_implies_static_traceable:
     \<exists> path . 
       paths_correspond \<pi>' path \<and>
       static_traceable V F (top_label e) isEnd path"
-using H2 
-proof cases
-  case refl
-  then show ?thesis
-  by (metis H1 H5 fun_upd_apply option.inject 
-  option.simps(3) paths_correspond.Empty state.inject 
-  static_traceable.Empty top_label.simps(1))
-next
-  case (step y)
-  have L2H1: "star_left concur_step y (\<E>', H')" by (simp add: local.step(2) star_implies_star_left)
-  obtain E H where "y = (E, H)" by fastforce
-  then show ?thesis using static_traversable_pool_implies_static_traceable'[of e E H]
-    using H1 H3 H4 H5 L2H1 local.step(1) by auto
-qed
-
+sorry
 
 lemma lift_traversable_to_pool: "
   static_traversable V F e \<Longrightarrow>
