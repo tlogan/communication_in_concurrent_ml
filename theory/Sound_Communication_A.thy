@@ -1525,6 +1525,91 @@ next
 qed
 *)
 
+lemma static_traversable_pool_implies_static_traceable_step:
+  assumes
+    H1: "star_left concur_step EH EHm" and
+    H2: "concur_step EHm EH'" and
+    H3: "EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" and
+    H4: "EH' = (E', H')" and
+    H5: "E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" and
+    H6: "static_traversable_pool V F E'" and
+    H7: "isEnd (top_label e')" and
+    IH: "
+    \<forall>E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
+       EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow>
+       EHm = (E', H') \<longrightarrow>
+       E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+       static_traversable_pool V F E' \<longrightarrow> isEnd (top_label e') \<longrightarrow> 
+      (\<exists>path. paths_correspond \<pi>' path \<and> static_traceable V F (top_label e) isEnd path)"
+  shows
+    "(\<exists>path. paths_correspond \<pi>' path \<and> static_traceable V F (top_label e) isEnd path)"
+proof -
+  show ?thesis
+  using H2
+  proof cases
+    case (Seq_Step_Down Em pi x env xk ek envk k v Hm)
+    have L1H1: "Em pi = Some (\<langle>Rslt x;env;Ctn xk ek envk # k\<rangle>)" by (simp add: local.Seq_Step_Down(4))
+    have L1H2: "static_traversable_pool V F Em" by (smt H2 H4 H6 local.Seq_Step_Down(1) mapping_preserved_star star_step1 static_traversable_pool.simps)
+
+    have L1H3: "\<exists>path. paths_correspond pi path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) path"
+    by (simp add: H3 IH L1H1 L1H2 local.Seq_Step_Down(1))
+
+    obtain p where L1H4: "paths_correspond pi p \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) p"
+    using L1H3 by blast
+
+    then show ?thesis
+    proof cases
+      assume L2H1: "\<pi>' = pi @ [LRtn xk]"
+      have L2H2: "paths_correspond (pi @ [LRtn xk]) (p @ [(NResult xk, EReturn)])"
+        by (simp add: L1H4 Return)
+      thm static_traceable.intros
+      have L2H3: "static_traceable V F (top_label e) isEnd (p @ [(NResult xk, EReturn)])" using static_traceable.Step sorry
+      then show ?thesis using L2H1 L2H2 by blast
+    next
+      assume "\<pi>' \<noteq> pi @ [LRtn xk]"
+      then show ?thesis
+        using H3 H4 H5 H7 IH L1H2 local.Seq_Step_Down(1) local.Seq_Step_Down(2) by auto
+    qed
+  next
+    case (Seq_Step trpl pi x b e env k v ys)
+    then show ?thesis sorry
+  next
+    case (Seq_Step_Up trpl pi x b e env k e' env' ys)
+    then show ?thesis sorry
+  next
+    case (Let_Chan trpl pi x e env k ys)
+    then show ?thesis sorry
+  next
+    case (Let_Spawn trpl pi x ec e env k ys)
+    then show ?thesis sorry
+  next
+    case (Let_Sync trpl pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm ys)
+    then show ?thesis sorry
+  qed
+qed
+
+lemma static_traversable_pool_implies_static_traceable':
+  assumes
+    H1: "star_left concur_step EH EH'" and
+    H2: "(V, C) \<Turnstile>\<^sub>e e"
+  shows "
+    \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
+    EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
+    E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+    static_traversable_pool V F E' \<longrightarrow>
+    isEnd (top_label e') \<longrightarrow>
+    (\<exists> path . 
+      paths_correspond \<pi>' path \<and>
+      static_traceable V F (top_label e) isEnd path)"
+using H1
+proof induction
+  case (refl z)
+  then show ?case using paths_correspond.Empty static_traceable.Empty by auto
+next
+  case (step EH EHm EH')
+  then show ?case using static_traversable_pool_implies_static_traceable_step[of EH EHm EH'] by blast
+qed
+
 lemma static_traversable_pool_implies_static_traceable:
   assumes
     H1: "\<E>' \<pi>' = Some (\<langle>Let x' b' e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and 
@@ -1537,7 +1622,8 @@ lemma static_traversable_pool_implies_static_traceable:
     \<exists> path . 
       paths_correspond \<pi>' path \<and>
       static_traceable V F (top_label e) isEnd path"
-sorry
+using static_traversable_pool_implies_static_traceable'[of "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" "(\<E>', H')"]
+H1 H2 H3 H4 H5 star_implies_star_left by fastforce
 
 lemma lift_traversable_to_pool: "
   static_traversable V F e \<Longrightarrow>
