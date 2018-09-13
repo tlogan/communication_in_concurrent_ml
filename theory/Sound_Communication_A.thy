@@ -576,15 +576,17 @@ where
     static_traversable_val V F (VClsr (Pair _ _) \<rho>)
   " 
 
-inductive static_traversable_stack :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> contin list \<Rightarrow> bool" where
-  Empty: "static_traversable_stack V F []" |
+
+inductive static_traversable_stack :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> var \<Rightarrow> contin list \<Rightarrow> bool" where
+  Empty: "static_traversable_stack V F y []" |
   Nonempty: "
     \<lbrakk> 
+      {(NResult y, EReturn, top_label e)} \<subseteq> F;
       static_traversable V F e;
       static_traversable_env V F \<rho>;
-      static_traversable_stack V F \<kappa>
+      static_traversable_stack V F (\<lfloor>e\<rfloor>) \<kappa>
     \<rbrakk> \<Longrightarrow> 
-    static_traversable_stack V F ((Ctn x e \<rho>) # \<kappa>)
+    static_traversable_stack V F y ((Ctn x e \<rho>) # \<kappa>)
   "
 
 inductive static_traversable_pool :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
@@ -592,7 +594,7 @@ inductive static_traversable_pool :: "abstract_env \<Rightarrow> transition_set 
     (\<forall> \<pi> e \<rho> \<kappa> . E \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
       static_traversable V F e \<and>
       static_traversable_env V F \<rho> \<and>
-      static_traversable_stack V F \<kappa>) \<Longrightarrow> 
+      static_traversable_stack V F (\<lfloor>e\<rfloor>) \<kappa>) \<Longrightarrow> 
     static_traversable_pool V F E
   "
 
@@ -617,27 +619,26 @@ assume
   H6: " 
     \<forall>\<pi> e \<rho> \<kappa>.
     \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 static_traversable_pool.cases by blast 
 
   have 
-    H7: "static_traversable V F (Rslt x)"
-    by (simp add: static_traversable.Result)
+    H7: "static_traversable V F (Rslt x)" by (simp add: static_traversable.Result)
   have
-     H8: "static_traversable_env V F env"
-    using H4 H6 by blast
+     H8: "static_traversable_env V F env" using H4 H6 by blast
   have
-     H9: "static_traversable_stack V F ((Ctn xk ek envk) # k)"
-    using H4 H6 by blast
+     H9: "static_traversable_stack V F x ((Ctn xk ek envk) # k)" using H4 H6 by fastforce
 
   have 
-    H10: "static_traversable V F ek" and
-    H11: "static_traversable_env V F envk" and
-    H12: "static_traversable_stack V F k"
-    using H9 static_traversable_stack.cases by auto
+    H10: "static_traversable V F ek \<and> static_traversable_env V F envk \<and> static_traversable_stack V F (\<lfloor>ek\<rfloor>) k" 
+    using H9 proof cases
+    case Nonempty
+    then show ?thesis by blast
+  qed
+
 
  show "static_traversable_pool V F (\<E>m(pi @ [LRtn x] \<mapsto> \<langle>ek;envk(xk \<mapsto> v);k\<rangle>))"
-   using H1 H10 H11 H12 H5 H8 static_traversable_env.simps static_traversable_pool.simps by auto
+   using H1 H10 H5 H8 static_traversable_env.simps static_traversable_pool.simps by auto
 qed
 
 
@@ -660,7 +661,7 @@ proof -
   have H6: "
     \<forall>\<pi> e \<rho> \<kappa>.
     \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 static_traversable_pool.cases by blast 
 
   have 
@@ -670,8 +671,8 @@ proof -
      H8: "static_traversable_env V F env"
     using H4 H6 by blast
   have
-     H9: "static_traversable_stack V F k"
-    using H4 H6 by blast
+     H9: "static_traversable_stack V F (\<lfloor>Let x b e\<rfloor>) k"
+    using H4 H6 by fastforce
 
   have H10: 
     "static_traversable V F e" using H7 static_traversable.cases by blast
@@ -723,7 +724,7 @@ proof -
     have L1H2: "static_traversable_env V F (env(x \<mapsto> v))"
       using H8 L1H1 local.Let_Prim(2) static_traversable_env.simps by auto
     show ?thesis
-      by (simp add: H10 H6 H9 L1H2 static_traversable_pool.simps)
+      using H10 H6 H9 L1H2 static_traversable_pool.simps by auto
   next
     case (Let_Fst xp x1 x2 envp)
 
@@ -743,8 +744,7 @@ proof -
     have L1H4: "static_traversable_env V F (env(x \<mapsto> v))"
       using H8 L1H3 static_traversable_env.simps by auto
 
-    show ?thesis 
-      by (simp add: L1H4 H10 H6 H9 static_traversable_pool.simps)
+    show ?thesis using H10 H6 H9 L1H4 static_traversable_pool.intros by auto
   next
     case (Let_Snd xp x1 x2 envp)
     have L1H1: "static_traversable_val V F (VClsr (prim.Pair x1 x2) envp)" 
@@ -763,8 +763,7 @@ proof -
     have L1H4: "static_traversable_env V F (env(x \<mapsto> v))"
       using H8 L1H3 static_traversable_env.simps by auto
 
-    show ?thesis 
-      by (simp add: L1H4 H10 H6 H9 static_traversable_pool.simps)
+    show ?thesis using H10 H6 H9 L1H4 static_traversable_pool.intros by auto
   qed
 qed
 
@@ -788,7 +787,7 @@ proof -
   have H6: "
     \<forall>\<pi> e \<rho> \<kappa>.
     \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 static_traversable_pool.cases by blast 
 
   have 
@@ -800,8 +799,8 @@ proof -
      H8: "static_traversable_env V F env"
     using H4 H6 by blast
   have
-     H9: "static_traversable_stack V F k"
-    using H4 H6 by blast
+     H9: "static_traversable_stack V F (\<lfloor>Let x b e\<rfloor>) k"
+    using H4 H6 by fastforce
 
   have H10: 
     "static_traversable V F e" using H7 static_traversable.cases by blast
@@ -838,8 +837,7 @@ proof -
         by blast
     qed
 
-    show ?thesis
-      by (simp add: H10 H6 H8 H9 L1H4 L1H6 static_traversable_pool.intros static_traversable_stack.Nonempty)
+    show ?thesis sorry
 
 
   next
@@ -871,8 +869,7 @@ proof -
         by blast
     qed
 
-    show ?thesis
-      by (simp add: H10 H6 H8 H9 L1H4 L1H6 static_traversable_pool.intros static_traversable_stack.Nonempty)
+    show ?thesis sorry
 
   next
     case (let_app f fp xp envl xa va)
@@ -903,7 +900,7 @@ proof -
       using H8 L1H3 local.let_app(2) local.let_app(3) local.let_app(4) static_traversable_env.simps by auto
 
     show ?thesis
-      using H10 H6 H8 H9 L1H2 L1H5 static_traversable_pool.intros static_traversable_stack.Nonempty by auto
+      using H10 H6 H8 H9 L1H2 L1H5 static_traversable_pool.intros static_traversable_stack.Nonempty sorry
   qed
 qed
 
@@ -924,7 +921,7 @@ proof -
   have H6: "
     \<forall>\<pi> e \<rho> \<kappa>.
     \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 static_traversable_pool.cases by blast 
 
   have 
@@ -936,7 +933,7 @@ proof -
      H8: "static_traversable_env V F env"
     using H4 H6 by blast
   have
-     H9: "static_traversable_stack V F k"
+     H9: "static_traversable_stack V F (\<lfloor>Let x MkChn e\<rfloor>) k"
     using H4 H6 by blast
 
   have H10: 
@@ -966,7 +963,7 @@ proof -
   have H6: "
     \<forall>\<pi> e \<rho> \<kappa>.
     \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 static_traversable_pool.cases by blast 
 
   have 
@@ -978,7 +975,7 @@ proof -
      H8: "static_traversable_env V F env"
     using H4 H6 by blast
   have
-     H9: "static_traversable_stack V F k"
+     H9: "static_traversable_stack V F (\<lfloor>Let x (Spwn ec) e\<rfloor>) k"
     using H4 H6 by blast
 
   have H10: "static_traversable V F e" using H7 static_traversable.cases by blast
@@ -992,14 +989,14 @@ proof -
     by (simp add: static_traversable_env_static_traversable_val.Unit)
 
   have 
-    H13: "static_traversable_stack V F []"
+    H13: "static_traversable_stack V F (\<lfloor>Let x (Spwn ec) e\<rfloor>) []"
     by (simp add: static_traversable_stack.Empty) 
 
   have H14: "static_traversable_env V F (env(x \<mapsto> VUnt))"
     using H12 H8 static_traversable_env.simps by auto
 
   show "static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> VUnt);k\<rangle>, pi @ [LSpwn x] \<mapsto> \<langle>ec;env;[]\<rangle>))"
-    by (simp add: H10 H11 H13 H14 H6 H8 H9 static_traversable_pool.simps)
+    using H10 H11 H13 H14 H6 H8 H9 static_traversable_pool.simps by (simp add: static_traversable_stack.Empty)
 
 qed
 
@@ -1036,7 +1033,7 @@ proof -
   have H12: "
     \<forall>\<pi> e \<rho> \<kappa>.
     \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
-    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F \<kappa>"
+    static_traversable V F e \<and> static_traversable_env V F \<rho> \<and> static_traversable_stack V F  (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 static_traversable_pool.cases by blast 
 
   have H13: "static_traversable V F (Let xs (Sync xse) es)"
@@ -1045,7 +1042,7 @@ proof -
   have H14: "static_traversable_env V F envs"
     using H12 H4 by blast
 
-  have H15: "static_traversable_stack V F ks"
+  have H15: "static_traversable_stack V F (\<lfloor>Let xs (Sync xse) es\<rfloor>) ks"
     using H12 H4 by blast
 
 
@@ -1055,7 +1052,7 @@ proof -
   have H17: "static_traversable_env V F envr"
     using H12 H7 by blast
 
-  have H18: "static_traversable_stack V F kr"
+  have H18: "static_traversable_stack V F (\<lfloor>Let xr (Sync xre) er\<rfloor>) kr"
   using H12 H7 by blast
 
 
@@ -1082,12 +1079,6 @@ proof -
   have H24: "static_traversable_env V F (envs(xs \<mapsto> VUnt))"
     by (simp add: H19)
 
-  have H25: "static_traversable_stack V F ks"
-    by (simp add: H15)
-
-  have H26: "static_traversable_stack V F kr"
-    by (simp add: H18)
-
   have H27: "static_traversable V F er"
   using H16 proof cases
     case Let_Sync
@@ -1103,7 +1094,7 @@ proof -
 
 show "static_traversable_pool V F 
     (\<E>m(pis @ [LNxt xs] \<mapsto> \<langle>es;envs(xs \<mapsto> VUnt);ks\<rangle>, pir @ [LNxt xr] \<mapsto> \<langle>er;envr(xr \<mapsto> vm);kr\<rangle>))"
-  by (simp add: H12 H23 H24 H25 H26 H27 H28 static_traversable_pool.intros)
+  using H12 H23 H24 H15 H16 H27 H28 static_traversable_pool.intros H18 by auto
 qed
 
 lemma static_traversable_pool_preserved: "
@@ -1282,7 +1273,7 @@ qed
 (*
 TODO: Redo below with using new definition of static_traceable.
 
-lemma static_traversable_pool_implies_static_traceable':
+lemma asdf:
   assumes
     H0: "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<rightarrow> (E, H)" and
     H1: "star_left concur_step EH EH'" and
@@ -1552,16 +1543,33 @@ proof -
       L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) p"
     using L1H3 by blast
 
-    have L1H6: "{(NResult x, EReturn, (top_label e'))} \<subseteq> F" using static_traceable.simps L1H2 sorry
-
-    have L1H7: "paths_correspond (pi @ [LRtn x]) (p @ [(NResult x, EReturn)])"
-      by (simp add: L1H4 Return)
-    have L1H8: "static_traceable V F (top_label e) isEnd (p @ [(NResult x, EReturn)])" using static_traceable.Step
-      using H7 L1H5 L1H6 by auto
-
     show ?thesis
-    by (smt H3 H4 H5 H7 IH L1H2 L1H7 L1H8 Pair_inject local.Seq_Step_Down(1) local.Seq_Step_Down(2) map_upd_Some_unfold)
- 
+    proof cases
+      assume L2H1: "\<pi>' = pi @ [LRtn x]"
+
+      have L2H2: "static_traversable_stack V F (\<lfloor>Rslt x\<rfloor>) ((Ctn xk ek envk) # k)" 
+      using L1H1 L1H2 static_traversable_pool.cases by blast
+   
+      have L2H4: "{(NResult x, EReturn, (top_label ek))} \<subseteq> F"
+      using L2H2 proof cases
+        case Nonempty
+        then show ?thesis by simp
+      qed
+
+      have L2H5: "ek = e'" using H4 H5 L2H1 local.Seq_Step_Down(2) by auto
+
+      have L2H5: "{(NResult x, EReturn, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by auto
+    
+      have L2H6: "paths_correspond (pi @ [LRtn x]) (p @ [(NResult x, EReturn)])" by (simp add: L1H4 Return)
+      have L2H7: "static_traceable V F (top_label e) isEnd (p @ [(NResult x, EReturn)])" using H7 L1H5 L2H5 Step by auto
+    
+      show ?thesis using L2H1 L2H6 L2H7 by blast
+    next
+      assume "\<pi>' \<noteq> pi @ [LRtn x]"
+      then show ?thesis
+      using H3 H4 H5 H7 IH L1H2 local.Seq_Step_Down(1) local.Seq_Step_Down(2) by auto
+    qed
+
   next
     case (Seq_Step trpl pi x b e env k v ys)
     then show ?thesis sorry
