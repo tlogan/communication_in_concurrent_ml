@@ -1554,15 +1554,22 @@ proof -
     have L1H3: "\<exists>path. paths_correspond pi path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) path"
     by (simp add: H3 IH L1H1 L1H2 local.Seq_Step_Down(1))
 
-    obtain p where L1H4: "paths_correspond pi p \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) p"
+    obtain p where 
+      L1H4: "paths_correspond pi p" and
+      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) p"
     using L1H3 by blast
 
+    have L1H6: "{(NResult xk, EReturn, (top_label e'))} \<subseteq> F" sorry
+
     then show ?thesis
+(* paths_correspond and top_label might be wrong.  figure out what to do in the Rtn case, maybe add Result variable to LRtn?*)
+thm paths_correspond.intros
+thm top_label.simps
     proof cases
       assume L2H1: "\<pi>' = pi @ [LRtn xk]"
       have L2H2: "paths_correspond (pi @ [LRtn xk]) (p @ [(NResult xk, EReturn)])"
         by (simp add: L1H4 Return)
-      thm static_traceable.intros
+      thm static_traceable.Step
       have L2H3: "static_traceable V F (top_label e) isEnd (p @ [(NResult xk, EReturn)])" using static_traceable.Step sorry
       then show ?thesis using L2H1 L2H2 by blast
     next
