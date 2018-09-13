@@ -602,7 +602,7 @@ lemma static_traversable_pool_preserved_under_seq_step_down: "
   leaf \<E>m pi \<Longrightarrow>
   \<E>m pi = Some (\<langle>Rslt x;env;Ctn xk ek envk # k\<rangle>) \<Longrightarrow> 
   env x = Some v \<Longrightarrow> 
-  static_traversable_pool V F (\<E>m(pi @ [LRtn xk] \<mapsto> \<langle>ek;envk(xk \<mapsto> v);k\<rangle>))
+  static_traversable_pool V F (\<E>m(pi @ [LRtn x] \<mapsto> \<langle>ek;envk(xk \<mapsto> v);k\<rangle>))
 "
 proof -
 assume 
@@ -636,7 +636,7 @@ assume
     H12: "static_traversable_stack V F k"
     using H9 static_traversable_stack.cases by auto
 
- show "static_traversable_pool V F (\<E>m(pi @ [LRtn xk] \<mapsto> \<langle>ek;envk(xk \<mapsto> v);k\<rangle>))"
+ show "static_traversable_pool V F (\<E>m(pi @ [LRtn x] \<mapsto> \<langle>ek;envk(xk \<mapsto> v);k\<rangle>))"
    using H1 H10 H11 H12 H5 H8 static_traversable_env.simps static_traversable_pool.simps by auto
 qed
 
@@ -1122,30 +1122,23 @@ proof -
   show "static_traversable_pool V F \<E>'"
   proof cases
     case (Seq_Step_Down pi x env xk ek envk k v)
-    then show ?thesis
-      using H1 H2 static_traversable_pool_preserved_under_seq_step_down by auto
+    then show ?thesis using H1 H2 static_traversable_pool_preserved_under_seq_step_down by blast
   next
     case (Seq_Step pi x b e env k v)
-    then show ?thesis
-      using H1 H2 static_traversable_pool_preserved_under_seq_step by blast
+    then show ?thesis using H1 H2 static_traversable_pool_preserved_under_seq_step by auto
   next
     case (Seq_Step_Up pi x b e env k e' env')
-    then show ?thesis
-      using H1 H2 static_traversable_pool_preserved_under_seq_step_up by blast
+    then show ?thesis using H1 H2 static_traversable_pool_preserved_under_seq_step_up by blast
   next
     case (Let_Chan pi x e env k)
-    then show ?thesis
-      using H1 H2 static_traversable_pool_preserved_under_let_chan by auto
+    then show ?thesis  using H1 H2 static_traversable_pool_preserved_under_let_chan by blast
   next
     case (Let_Spawn pi x ec e env k)
-    then show ?thesis
-      using H1 H2 static_traversable_pool_preserved_under_let_spawn by blast
+    then show ?thesis using H1 H2 static_traversable_pool_preserved_under_let_spawn by auto
   next
     case (Let_Sync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
-    then show ?thesis
-      using H1 H2 static_traversable_pool_preserved_under_let_sync by auto
+    then show ?thesis using H1 H2 static_traversable_pool_preserved_under_let_sync by auto
   qed
-
 qed
 
 
@@ -1559,24 +1552,16 @@ proof -
       L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) p"
     using L1H3 by blast
 
-    have L1H6: "{(NResult xk, EReturn, (top_label e'))} \<subseteq> F" sorry
+    have L1H6: "{(NResult x, EReturn, (top_label e'))} \<subseteq> F" using static_traceable.simps L1H2 sorry
 
-    then show ?thesis
-(* paths_correspond and top_label might be wrong.  figure out what to do in the Rtn case, maybe add Result variable to LRtn?*)
-thm paths_correspond.intros
-thm top_label.simps
-    proof cases
-      assume L2H1: "\<pi>' = pi @ [LRtn xk]"
-      have L2H2: "paths_correspond (pi @ [LRtn xk]) (p @ [(NResult xk, EReturn)])"
-        by (simp add: L1H4 Return)
-      thm static_traceable.Step
-      have L2H3: "static_traceable V F (top_label e) isEnd (p @ [(NResult xk, EReturn)])" using static_traceable.Step sorry
-      then show ?thesis using L2H1 L2H2 by blast
-    next
-      assume "\<pi>' \<noteq> pi @ [LRtn xk]"
-      then show ?thesis
-        using H3 H4 H5 H7 IH L1H2 local.Seq_Step_Down(1) local.Seq_Step_Down(2) by auto
-    qed
+    have L1H7: "paths_correspond (pi @ [LRtn x]) (p @ [(NResult x, EReturn)])"
+      by (simp add: L1H4 Return)
+    have L1H8: "static_traceable V F (top_label e) isEnd (p @ [(NResult x, EReturn)])" using static_traceable.Step
+      using H7 L1H5 L1H6 by auto
+
+    show ?thesis
+    by (smt H3 H4 H5 H7 IH L1H2 L1H7 L1H8 Pair_inject local.Seq_Step_Down(1) local.Seq_Step_Down(2) map_upd_Some_unfold)
+ 
   next
     case (Seq_Step trpl pi x b e env k v ys)
     then show ?thesis sorry

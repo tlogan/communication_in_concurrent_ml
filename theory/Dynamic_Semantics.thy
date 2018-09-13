@@ -86,7 +86,7 @@ inductive concur_step :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_
       trpl pi = Some (\<langle>Rslt x; env; (Ctn xk ek envk) # k\<rangle>) ;
       env x = Some v
     \<rbrakk> \<Longrightarrow>
-    (trpl, ys) \<rightarrow> (trpl(pi @ [LRtn xk] \<mapsto> \<langle>ek; envk(xk \<mapsto> v); k\<rangle>), ys)
+    (trpl, ys) \<rightarrow> (trpl(pi @ [LRtn x] \<mapsto> \<langle>ek; envk(xk \<mapsto> v); k\<rangle>), ys)
   " |
   Seq_Step: "
     \<lbrakk> 
@@ -159,7 +159,7 @@ proof -
   using H1
   proof cases
     case (Seq_Step_Down pi x env xk ek envk k v)
-    have "pi @ [LRtn xk] \<noteq> \<pi>" using leaf.simps by (metis H2 local.Seq_Step_Down(3) option.simps(3) strict_prefixI')
+    have "pi @ [LRtn x] \<noteq> \<pi>" using leaf.simps by (metis H2 local.Seq_Step_Down(3) option.simps(3) strict_prefixI')
     then show ?thesis using H2 local.Seq_Step_Down(1) by auto
   next
     case (Seq_Step pi x b e env k v)

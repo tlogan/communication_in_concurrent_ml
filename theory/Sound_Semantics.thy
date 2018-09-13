@@ -1337,7 +1337,7 @@ proof -
   proof cases
     case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<omega>)
 
-    have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LRtn x\<^sub>\<kappa>] \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>)"
+    have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LRtn x] \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>)"
       using H1 local.Seq_Step_Down(4) local.Seq_Step_Down(5) static_eval_pool.simps static_eval_state_to_state_result by fastforce
 
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
