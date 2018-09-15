@@ -794,7 +794,6 @@ proof -
     H7: "static_traversable V F (Let x b e)"
   using H4 H6 by blast
 
-
   have
      H8: "static_traversable_env V F env"
     using H4 H6 by blast
@@ -837,7 +836,17 @@ proof -
         by blast
     qed
 
-    show ?thesis sorry
+
+    have L1H7: "{(NResult (\<lfloor>e'\<rfloor>), EReturn, top_label e)} \<subseteq> F" 
+    using L1H5 proof cases
+      case Let_Case
+      then show ?thesis by blast
+    qed
+    have L1H8: "static_traversable_stack V F (\<lfloor>e'\<rfloor>) (Ctn x e env # k)"
+      using H10 H8 H9 L1H7 static_traversable_stack.Nonempty by auto
+
+    show ?thesis by (simp add: H6 L1H4 L1H6 L1H8 static_traversable_pool.intros)
+
 
 
   next
@@ -869,7 +878,15 @@ proof -
         by blast
     qed
 
-    show ?thesis sorry
+    have L1H7: "{(NResult (\<lfloor>e'\<rfloor>), EReturn, top_label e)} \<subseteq> F" 
+    using L1H5 proof cases
+      case Let_Case
+      then show ?thesis by blast
+    qed
+    have L1H8: "static_traversable_stack V F (\<lfloor>e'\<rfloor>) (Ctn x e env # k)"
+      using H10 H8 H9 L1H7 static_traversable_stack.Nonempty by auto
+
+    show ?thesis by (simp add: H6 L1H4 L1H6 L1H8 static_traversable_pool.intros)
 
   next
     case (let_app f fp xp envl xa va)
@@ -899,8 +916,28 @@ proof -
     have L1H5: "static_traversable_env V F env'"
       using H8 L1H3 local.let_app(2) local.let_app(3) local.let_app(4) static_traversable_env.simps by auto
 
+
+    have L1H6: "static_traversable V F (Let x (App f xa) e)" using H7 local.let_app(1) by auto
+
+    have L1H7: "static_traversable V F e'"
+    using L1H6
+    proof cases
+      case Let_App
+      then show ?thesis using L1H2 by blast
+    qed
+
+    have L1H7: "{(NResult (\<lfloor>e'\<rfloor>), EReturn, top_label e)} \<subseteq> F" 
+    using L1H6 proof cases
+      case Let_App
+      then show ?thesis
+        using H2 H4 local.let_app(3) trace_pool_snapshot_not_static_bound_sound by fastforce
+    qed
+
+    have L1H8: "static_traversable_stack V F (\<lfloor>e'\<rfloor>) (Ctn x e env # k)"
+      using H10 H8 H9 L1H7 static_traversable_stack.Nonempty by auto
+
     show ?thesis
-      using H10 H6 H8 H9 L1H2 L1H5 static_traversable_pool.intros static_traversable_stack.Nonempty sorry
+      by (simp add: H6 L1H2 L1H5 L1H8 static_traversable_pool.intros)
   qed
 qed
 
@@ -1676,8 +1713,45 @@ proof -
       then show ?thesis using H3 H4 H5 H7 IH L1H2 local.Seq_Step_Up(1) local.Seq_Step_Up(2) by auto
     qed
   next
-    case (Let_Chan trpl pi x e env k ys)
-    then show ?thesis sorry
+    case (Let_Chan Em pim xm em env k Hm)
+
+    have L1H2: "static_traversable_pool V F Em"
+     using H2 H4 H6 local.Let_Chan(1) mapping_preserved static_traversable_pool.simps by fastforce
+
+    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm MkChn em)) path"
+    by (simp add: H3 IH L1H2 local.Let_Chan(1) local.Let_Chan(4))
+
+    obtain p where 
+      L1H4: "paths_correspond pim p" and
+      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm MkChn em)) p"
+    using L1H3 by blast
+
+   show ?thesis
+    proof cases
+      assume L2H1: "\<pi>' = pim @ [LNxt xm]"
+
+      have L2H2: "static_traversable V F (Let xm MkChn em)"
+        using L1H2 local.Let_Chan(4) static_traversable_pool.simps by blast
+   
+      have L2H4: "{(NLet xm, ENext, (top_label em))} \<subseteq> F"
+      using L2H2 proof cases
+        case Let_Chan
+        then show ?thesis by blast
+      qed
+
+      have L2H5: "em = e'"
+        using H4 H5 L2H1 local.Let_Chan(2) by auto
+
+      have L2H5: "{(NLet xm, ENext, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by auto
+    
+      have L2H6: "paths_correspond (pim @ [LNxt xm]) (p @ [(NLet xm, ENext)])" by (simp add: L1H4 Next)
+      have L2H7: "static_traceable V F (top_label e) isEnd (p @ [(NLet xm, ENext)])" using H7 L1H5 L2H5 Step by auto
+    
+      show ?thesis using L2H1 L2H6 L2H7 by blast
+    next
+      assume "\<pi>' \<noteq> pim @ [LNxt xm]"
+      then show ?thesis using H3 H4 H5 H7 IH L1H2 local.Let_Chan(1) local.Let_Chan(2) by auto
+    qed
   next
     case (Let_Spawn trpl pi x ec e env k ys)
     then show ?thesis sorry
