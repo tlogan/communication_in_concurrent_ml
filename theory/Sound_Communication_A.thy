@@ -1662,7 +1662,7 @@ proof -
     proof cases
       assume L2H1: "\<pi>' = pim @ [LCall xm]"
 
-      thm static_traversable.intros
+
       have L2H2: "static_traversable V F (Let xm bm em)"
         using L1H2 local.Seq_Step_Up(4) static_traversable_pool.simps by blast
 
@@ -1753,8 +1753,72 @@ proof -
       then show ?thesis using H3 H4 H5 H7 IH L1H2 local.Let_Chan(1) local.Let_Chan(2) by auto
     qed
   next
-    case (Let_Spawn trpl pi x ec e env k ys)
-    then show ?thesis sorry
+    case (Let_Spawn Em pim xm ec em env k Hm)
+
+    have L1H2: "static_traversable_pool V F Em"
+     using H2 H4 H6 local.Let_Spawn(1) mapping_preserved static_traversable_pool.simps by fastforce
+
+    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm (Spwn ec) em)) path"
+    by (simp add: H3 IH L1H2 local.Let_Spawn(1) local.Let_Spawn(4))
+
+
+    obtain p where 
+      L1H4: "paths_correspond pim p" and
+      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm (Spwn ec) em)) p"
+    using L1H3 by blast
+
+    have L1H6: "E' = Em(pim @ [LNxt xm] \<mapsto> \<langle>em;env(xm \<mapsto> VUnt);k\<rangle>, pim @ [LSpwn xm] \<mapsto> \<langle>ec;env;[]\<rangle>)"
+      using H4 local.Let_Spawn(2) by blast
+    show ?thesis
+    proof cases
+      assume L2H0: "\<pi>' = pim @ [LSpwn xm]"
+
+      have L2H2: "static_traversable V F (Let xm (Spwn ec) em)"
+        using L1H2 local.Let_Spawn(4) static_traversable_pool.simps by blast
+   
+      have L2H4: "{(NLet xm, ESpawn, (top_label ec))} \<subseteq> F"
+      using L2H2 proof cases
+        case Let_Spawn
+        then show ?thesis by blast
+      qed
+
+      have L2H5: "ec = e'" using H5 L1H6 L2H0 by auto
+
+      have L2H6: "{(NLet xm, ESpawn, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by blast
+    
+      have L2H7: "paths_correspond (pim @ [LSpwn xm]) (p @ [(NLet xm, ESpawn)])" by (simp add: L1H4 Spawn)
+      have L2H8: "static_traceable V F (top_label e) isEnd (p @ [(NLet xm, ESpawn)])"
+        using H7 L1H5 L2H6 Step by auto
+    
+      show ?thesis using L2H0 L2H7 L2H8 by auto
+    next
+      assume L2H0: "\<pi>' \<noteq> pim @ [LSpwn xm]"
+      show ?thesis
+      proof cases
+        assume L2H1: "\<pi>' = pim @ [LNxt xm]"
+
+        have L2H2: "static_traversable V F (Let xm (Spwn ec) em)"
+          using L1H2 local.Let_Spawn(4) static_traversable_pool.simps by blast
+     
+        have L2H4: "{(NLet xm, ENext, (top_label em))} \<subseteq> F"
+        using L2H2 proof cases
+          case Let_Spawn
+          then show ?thesis by blast
+        qed
+  
+        have L2H5: "em = e'" using H5 L1H6 L2H1 by auto
+  
+        have L2H5: "{(NLet xm, ENext, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by auto
+      
+        have L2H6: "paths_correspond (pim @ [LNxt xm]) (p @ [(NLet xm, ENext)])" by (simp add: L1H4 Next)
+        have L2H7: "static_traceable V F (top_label e) isEnd (p @ [(NLet xm, ENext)])" using H7 L1H5 L2H5 Step by auto
+      
+        show ?thesis using L2H1 L2H6 L2H7 by blast
+      next
+        assume L2H1: "\<pi>' \<noteq> pim @ [LNxt xm]"
+        show ?thesis using H3 H5 H7 IH L1H2 L1H6 L2H0 L2H1 local.Let_Spawn(1) by auto
+      qed
+    qed
   next
     case (Let_Sync trpl pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm ys)
     then show ?thesis sorry
