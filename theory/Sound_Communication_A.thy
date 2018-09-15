@@ -1518,6 +1518,7 @@ lemma static_traversable_pool_implies_static_traceable_step:
     H5: "E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" and
     H6: "static_traversable_pool V F E'" and
     H7: "isEnd (top_label e')" and
+    H8: "(V, C) \<Turnstile>\<^sub>e e" and
     IH: "
     \<forall>E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
        EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow>
@@ -1606,24 +1607,74 @@ proof -
       assume "\<pi>' \<noteq> pim @ [LNxt xm]"
       then show ?thesis using H3 H4 H5 H7 IH L1H2 local.Seq_Step(1) local.Seq_Step(2) by auto
     qed
+  next
+    case (Seq_Step_Up Em pim xm bm em env k eu env' Hm)
 
-(*
-    have L1H1: "Em pi = Some (\<langle>Rslt x;env;Ctn xk ek envk # k\<rangle>)" by (simp add: local.Seq_Step_Down(4))
-    have L1H2: "static_traversable_pool V F Em" by (smt H2 H4 H6 local.Seq_Step_Down(1) mapping_preserved_star star_step1 static_traversable_pool.simps)
+    have L1H2: "static_traversable_pool V F Em"
+      by (smt H2 H4 H6 local.Seq_Step_Up(1) mapping_preserved_star star_step1 static_traversable_pool.simps)
 
-    have L1H3: "\<exists>path. paths_correspond pi path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) path"
-    by (simp add: H3 IH L1H1 L1H2 local.Seq_Step_Down(1))
+    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) path"
+    by (simp add: H3 IH L1H2 local.Seq_Step_Up(1) local.Seq_Step_Up(4))
 
     obtain p where 
-      L1H4: "paths_correspond pi p" and
-      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) p"
+      L1H4: "paths_correspond pim p" and
+      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) p"
     using L1H3 by blast
-*)
 
-    then show ?thesis sorry
-  next
-    case (Seq_Step_Up trpl pi x b e env k e' env' ys)
-    then show ?thesis sorry
+    show ?thesis
+    proof cases
+      assume L2H1: "\<pi>' = pim @ [LCall xm]"
+
+      thm static_traversable.intros
+      have L2H2: "static_traversable V F (Let xm bm em)"
+        using L1H2 local.Seq_Step_Up(4) static_traversable_pool.simps by blast
+
+      have L2H5: "{(NLet xm, ECall, (top_label e'))} \<subseteq> F"
+      using Seq_Step_Up(5)
+      proof cases
+        case (let_case_left xs xl' envl vl xl xr er)
+        have L3H1: "static_traversable V F (Let xm (Case xs xl eu xr er) em)" using L2H2 local.let_case_left(1) by auto
+        have L3H2: "{(NLet xm, ECall, (top_label eu))} \<subseteq> F"
+        using L3H1 proof cases
+          case Let_Case
+          then show ?thesis by blast
+        qed
+        then show ?thesis using H4 H5 L2H1 local.Seq_Step_Up(2) by auto
+      next
+        case (let_case_right xs xr' envr vr xl er el)
+        have L3H1: "static_traversable V F (Let xm (Case xs xl er el eu) em)" using L2H2 local.let_case_right(1) by auto
+        have L3H2: "{(NLet xm, ECall, (top_label eu))} \<subseteq> F"
+        using L3H1 proof cases
+          case Let_Case
+          then show ?thesis by blast
+        qed
+        then show ?thesis using H4 H5 L2H1 local.Seq_Step_Up(2) by auto
+      next
+        case (let_app f fp xp envl xa va)
+        have L3H1: "static_traversable V F (Let xm (App f xa) em)"
+          using L2H2 local.let_app(1) by auto
+        have L3H2: "(V, C) \<Turnstile>\<^sub>\<E> Em" using H1 H3 H8 local.Seq_Step_Up(1) star_left_implies_star 
+          static_eval_preserved_under_concur_step_star static_eval_to_pool by fastforce
+        have L3H3: "(APrim (Abs fp xp eu) \<in> V f)"
+          using L3H2 local.Seq_Step_Up(4) local.let_app(3) 
+          trace_pool_snapshot_not_static_bound_sound value_to_abstract_value.simps(3) by fastforce
+
+        have L3H2: "{(NLet xm, ECall, (top_label eu))} \<subseteq> F"
+        using L3H1 proof cases
+          case Let_App
+          then show ?thesis using L3H3 by blast
+        qed
+        then show ?thesis using H4 H5 L2H1 local.Seq_Step_Up(2) by auto
+      qed
+    
+      have L2H6: "paths_correspond (pim @ [LNxt xm]) (p @ [(NLet xm, ENext)])" by (simp add: L1H4 Next)
+      have L2H7: "static_traceable V F (top_label e) isEnd (p @ [(NLet xm, ECall)])" using H7 L1H5 L2H5 Step by auto
+    
+      show ?thesis using Call L1H4 L2H1 L2H7 by blast
+    next
+      assume "\<pi>' \<noteq> pim @ [LCall xm]"
+      then show ?thesis using H3 H4 H5 H7 IH L1H2 local.Seq_Step_Up(1) local.Seq_Step_Up(2) by auto
+    qed
   next
     case (Let_Chan trpl pi x e env k ys)
     then show ?thesis sorry
