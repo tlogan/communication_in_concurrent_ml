@@ -1532,11 +1532,10 @@ proof -
   using H2
   proof cases
     case (Seq_Step_Down Em pi x env xk ek envk k v Hm)
-    have L1H1: "Em pi = Some (\<langle>Rslt x;env;Ctn xk ek envk # k\<rangle>)" by (simp add: local.Seq_Step_Down(4))
     have L1H2: "static_traversable_pool V F Em" by (smt H2 H4 H6 local.Seq_Step_Down(1) mapping_preserved_star star_step1 static_traversable_pool.simps)
 
     have L1H3: "\<exists>path. paths_correspond pi path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) path"
-    by (simp add: H3 IH L1H1 L1H2 local.Seq_Step_Down(1))
+    by (simp add: H3 IH L1H2 local.Seq_Step_Down)
 
     obtain p where 
       L1H4: "paths_correspond pi p" and
@@ -1548,7 +1547,7 @@ proof -
       assume L2H1: "\<pi>' = pi @ [LRtn x]"
 
       have L2H2: "static_traversable_stack V F (\<lfloor>Rslt x\<rfloor>) ((Ctn xk ek envk) # k)" 
-      using L1H1 L1H2 static_traversable_pool.cases by blast
+      using local.Seq_Step_Down(4) L1H2 static_traversable_pool.cases by blast
    
       have L2H4: "{(NResult x, EReturn, (top_label ek))} \<subseteq> F"
       using L2H2 proof cases
@@ -1571,7 +1570,56 @@ proof -
     qed
 
   next
-    case (Seq_Step trpl pi x b e env k v ys)
+    case (Seq_Step Em pim xm bm em env k v Hm)
+
+    have L1H2: "static_traversable_pool V F Em"
+     using H2 H4 H6 local.Seq_Step(1) mapping_preserved static_traversable_pool.simps by fastforce
+
+    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) path"
+    by (simp add: H3 IH L1H2 local.Seq_Step(1) local.Seq_Step(4))
+
+    obtain p where 
+      L1H4: "paths_correspond pim p" and
+      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) p"
+    using L1H3 by blast
+
+   show ?thesis
+    proof cases
+      assume L2H1: "\<pi>' = pim @ [LNxt xm]"
+
+      have L2H2: "static_traversable V F (Let xm bm em)"
+        using L1H2 local.Seq_Step(4) static_traversable_pool.simps by blast 
+   
+      have L2H4: "{(NLet xm, ENext, (top_label em))} \<subseteq> F"
+        using H4 H6 L2H2 local.Seq_Step(2) local.Seq_Step(5) map_upd_Some_unfold 
+          static_seq_step_trav_edge static_traversable_pool.simps by fastforce
+
+      have L2H5: "em = e'" using H4 H5 L2H1 local.Seq_Step(2) by auto
+
+      have L2H5: "{(NLet xm, ENext, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by auto
+    
+      have L2H6: "paths_correspond (pim @ [LNxt xm]) (p @ [(NLet xm, ENext)])" by (simp add: L1H4 Next)
+      have L2H7: "static_traceable V F (top_label e) isEnd (p @ [(NLet xm, ENext)])" using H7 L1H5 L2H5 Step by auto
+    
+      show ?thesis using L2H1 L2H6 L2H7 by blast
+    next
+      assume "\<pi>' \<noteq> pim @ [LNxt xm]"
+      then show ?thesis using H3 H4 H5 H7 IH L1H2 local.Seq_Step(1) local.Seq_Step(2) by auto
+    qed
+
+(*
+    have L1H1: "Em pi = Some (\<langle>Rslt x;env;Ctn xk ek envk # k\<rangle>)" by (simp add: local.Seq_Step_Down(4))
+    have L1H2: "static_traversable_pool V F Em" by (smt H2 H4 H6 local.Seq_Step_Down(1) mapping_preserved_star star_step1 static_traversable_pool.simps)
+
+    have L1H3: "\<exists>path. paths_correspond pi path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) path"
+    by (simp add: H3 IH L1H1 L1H2 local.Seq_Step_Down(1))
+
+    obtain p where 
+      L1H4: "paths_correspond pi p" and
+      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) p"
+    using L1H3 by blast
+*)
+
     then show ?thesis sorry
   next
     case (Seq_Step_Up trpl pi x b e env k e' env' ys)
