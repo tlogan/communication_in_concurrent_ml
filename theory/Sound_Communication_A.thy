@@ -1807,27 +1807,45 @@ done
 
 
 
-lemma static_communication_classification_sound:
-  "Sound_Communication.communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one"
-proof -
- show "communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one" 
-   apply (unfold_locales)
-   apply (erule static_one_shot.cases; auto)
-   apply (unfold one_shot.simps)
-   apply (simp add: singular_to_equal)
-  
+theorem static_one_shot_sound: "
+      static_one_shot V e xC \<Longrightarrow>
+      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+      star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+      one_shot \<E>' (Ch \<pi> xC)"
+apply (erule static_one_shot.cases; auto)
+apply (unfold one_shot.simps)
+apply (simp add: singular_to_equal)
+done
+
+theorem static_fan_out_sound: "
+      static_fan_out V e xC \<Longrightarrow>
+      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+      star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+      fan_out \<E>' (Ch \<pi> xC)" 
    apply (erule static_fan_out.cases; auto)
    apply (unfold fan_out.simps)
    apply (metis noncompetitive_send_to_ordered_send)
-  
+done
+
+theorem static_fan_in_sound: "
+      static_fan_in V e xC \<Longrightarrow>
+      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+      star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+      fan_in \<E>' (Ch \<pi> xC)"
    apply (erule static_fan_in.cases; auto)
    apply (unfold fan_in.simps)
    apply (metis noncompetitive_recv_to_ordered_recv)
-  
-   apply (erule static_one_to_one.cases; auto)
-   apply (unfold one_to_one.simps)
-   apply (simp add: fan_in.simps fan_out.simps noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
-  done
-qed
+done
+
+theorem static_one_to_one_sound: "
+      static_one_to_one V e xC \<Longrightarrow>
+      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+      star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+      one_to_one \<E>' (Ch \<pi> xC)"
+ apply (erule static_one_to_one.cases; auto)
+ apply (unfold one_to_one.simps)
+ apply (simp add: fan_in.simps fan_out.simps noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
+done
+
 
 end

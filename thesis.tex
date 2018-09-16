@@ -323,21 +323,41 @@ The static fan out predicate states that there is at most one thread attempting 
 The static fan in predicate states that there is at most one thread attempting to receive on a given channel at any time during a run of a given program.
 
 
-static communication B ...
+soundness communication ... 
 
-The higher precision defintions for static communication topologies enables the discrimination between channels created by the same piece of code, but at different instances during a run of a program.  For example, a function abstraction may specify the creation of a channel with a binding to the name x.  This function may be called twice during a run of the program, resulting in two distinct channels.  However, the abstract channels would be indentified by the same name x.  To get around this issue, the static communications definitions are complicated to ignore expresions that apply the function abstraction containing the channel creation of interest.  Doing so requires describing a trimmed down sub program for each channel of interest.  To avoid disconnecting the channel creation portion of the program from communicating threads defined outside the channel's function abstraction, the trimmed program is expressed in terms of transitions, with sending transitions used to connect communication points.  
-Thus, the modes of transition are sequential, spawning, calling, returining, and sending. 
+It is useful to define how abstract and concrete dynamic paths correspond in order to prove the soundness theorems for communication classification.  Essentially, there is an isomorphism between each step of an abstract path and that of corresponding dynamic path.
+
+the lemma equality abstract to concrete states that if two concrete paths correspond to the same abstract path, then the two conrete paths are the same.  The proof is by induction of the paths of the paths correspond predicate.
+
+The lemma prefix abstract to concrete states that a concrete path is a prefix of a second concrete path if the corresponding abstract path of the former is the prefix of the corresponding abstract path of the latter.  The proof is by induction on the paths of the paths correspond predicate.
+
+The lemma strict prefix abstract to concrete states that a concrete path is a strict prefix of a sceond concrete path if the corresponding abstract path of the former is the strict prefix of the corresponding abstract path of the latter.  The proof is by induction on the paths of the paths correspond predicate.
 
 
-The static traversable predicate differs from the simpler version in a few ways.  First, the predicate is dependent on the higher order predicate for stating tat a label might represent a receive site.  Second, in the case of a let binding to synchronization to send, a sending transition from let binding name to a receiving expression.
+the lemma equality concrete to abstract states that if two abstract paths correspond to the same concrete path, then the two conrete paths are the same.  The proof is by induction of the paths of the paths correspond predicate.
+
+The lemma not static inclusive states that two abstract paths might be inclusive, if the correspond to dynamic paths that occur in the same run of a program.  The proof is by induction on the star of concur step predicate and relies on the lemmas and definitions related to the correponsance of paths.
 
 
-... TO DO after proofs of part B
+It is also useful to define how transitions relate to other parts of the dynamic semantics, including values, environments, continuations, states, and trace pools.
+
+The static traversable env predicate and static traversable val predicate are mutually inductive.
+For the environment, the predicate states that the given transitions hold for each value in the environment.  
+For the value, the predicate states that the givne transitions hold for the consituent parts of the value.
+
+The static traversable stack predicate states that the given transitions hold for the constinuent parts of the continuat stack.
+
+The static traversable pool states that the given transitions hold for the constiuent parts of every state in the trace pool.  
+
+
+soundness communication theorem ... 
+
+The lemma for soundness of static one shot states that if an abstract channel is statically classified as one shot for a given program, and value bindings derived from the program, then any corresponding dynamic channel is classified as one shot over any trace pool that results from running the program.  The lemmas for soundness of fan out, fan in, and one to one follow similar patterns. 
 
 
 The static predicates for communication topologies should be a generalizations of procedures that compute the topologies from programs.  The soundness of the static predicates must be provable to be certain that statically described topologies are also observed when running the program.
 
-soundness semantics ... 
+soundness semantics proofs ... 
 
   To prove the soundness of communication topologies, it is useful to define predicates that define how the abstract value bindings relate to various elements of the dynamic semantics, including values, environments, continuation stacks, states, and trace pools. 
 
@@ -368,37 +388,19 @@ The lemma trace pool always not static bound sound states that an abstract value
 The lemma exp always not static bound sound states that an abstract value binds to a name from static evaluation of an exp, if that expression in an initial trace pool dynamically evalutes to a new trace pool over multipe steps, and the name is bound to a corresponding concrete value in the new trace pool.  The proof is by applying the lemma trace pool always not static bound, and the definitions of the static eval predicates. 
 
 
-soundness communication ... 
 
-It is useful to define how abstract and concrete dynamic paths correspond in order to prove the soundness theorems for communication classification.  Essentially, there is an isomorphism between each step of an abstract path and that of corresponding dynamic path.
+-------------------------------------------------------------
+static communication B ...
 
-the lemma equality abstract to concrete states that if two concrete paths correspond to the same abstract path, then the two conrete paths are the same.  The proof is by induction of the paths of the paths correspond predicate.
-
-The lemma prefix abstract to concrete states that a concrete path is a prefix of a second concrete path if the corresponding abstract path of the former is the prefix of the corresponding abstract path of the latter.  The proof is by induction on the paths of the paths correspond predicate.
-
-The lemma strict prefix abstract to concrete states that a concrete path is a strict prefix of a sceond concrete path if the corresponding abstract path of the former is the strict prefix of the corresponding abstract path of the latter.  The proof is by induction on the paths of the paths correspond predicate.
+The higher precision defintions for static communication topologies enables the discrimination between channels created by the same piece of code, but at different instances during a run of a program.  For example, a function abstraction may specify the creation of a channel with a binding to the name x.  This function may be called twice during a run of the program, resulting in two distinct channels.  However, the abstract channels would be indentified by the same name x.  To get around this issue, the static communications definitions are complicated to ignore expresions that apply the function abstraction containing the channel creation of interest.  Doing so requires describing a trimmed down sub program for each channel of interest.  To avoid disconnecting the channel creation portion of the program from communicating threads defined outside the channel's function abstraction, the trimmed program is expressed in terms of transitions, with sending transitions used to connect communication points.  
+Thus, the modes of transition are sequential, spawning, calling, returining, and sending. 
 
 
-the lemma equality concrete to abstract states that if two abstract paths correspond to the same concrete path, then the two conrete paths are the same.  The proof is by induction of the paths of the paths correspond predicate.
-
-The lemma not static inclusive states that two abstract paths might be inclusive, if the correspond to dynamic paths that occur in the same run of a program.  The proof is by induction on the star of concur step predicate and relies on the lemmas and definitions related to the correponsance of paths.
+The static traversable predicate differs from the simpler version in a few ways.  First, the predicate is dependent on the higher order predicate for stating tat a label might represent a receive site.  Second, in the case of a let binding to synchronization to send, a sending transition from let binding name to a receiving expression.
 
 
-It is also useful to define how transitions relate to other parts of the dynamic semantics, including values, environments, continuations, states, and trace pools.
+... TO DO after proofs of part B
 
-The static traversable env predicate and static traversable val predicate are mutually inductive.
-For the environment, the predicate states that the given transitions hold for each value in the environment.  
-For the value, the predicate states that the givne transitions hold for the consituent parts of the value.
-
-The static traversable stack predicate states that the given transitions hold for the constinuent parts of the continuat stack.
-
-The static traversable pool states that the given transitions hold for the constiuent parts of every state in the trace pool.  
-
-
-
-soundness communication theorem ... 
-
-The lemma for soundness of static one shot states that if an abstract channel is statically classified as one shot for a given program, and value bindings derived from the program, then any corresponding dynamic channel is classified as one shot over any trace pool that results from running the program.  The lemmas for soundness of fan out, fan in, and one to one follow similar patterns. 
 
 
 

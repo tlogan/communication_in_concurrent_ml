@@ -66,7 +66,7 @@ inductive paths_correspond :: "control_path \<Rightarrow> abstract_path \<Righta
 inductive 
   dynamic_built_on_chan_var :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> var \<Rightarrow> bool" and
   dynamic_built_on_chan_prim :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> prim \<Rightarrow> bool" and
-  dynamic_built_on_chan_bound_exp :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> bind \<Rightarrow> bool" and
+  dynamic_built_on_chan_bound_exp :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> bound_exp \<Rightarrow> bool" and
   dynamic_built_on_chan_exp :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> exp \<Rightarrow> bool" 
 where
   Chan: "
@@ -324,7 +324,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       show "static_inclusive path1 path2"
       proof cases
         assume L3H1: "prefix path1x path2"
-       (* inclusive definition fails in case of non-unique variable bindings *)
+       (* inclusive definition fails in case of non-unique variable bound_expings *)
         show "static_inclusive path1 path2" sorry
       next
         assume L3H1: "\<not> prefix path1x path2"
@@ -535,7 +535,7 @@ done
 (* END PATH SOUND *)
 
 
-theorem one_shot_sound': "
+theorem static_one_shot_sound': "
   every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) singular \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   static_traversable V F (static_recv_label V e) e \<Longrightarrow>
@@ -552,7 +552,7 @@ theorem one_shot_sound': "
  apply (metis is_send_path_implies_nonempty_pool not_static_inclusive_sound static_equality_sound)
 done
 
-theorem one_shot_sound: "
+theorem static_one_shot_sound: "
   \<lbrakk>
     static_one_shot V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
@@ -562,7 +562,7 @@ theorem one_shot_sound: "
 "
  apply (erule static_one_shot.cases; auto)
  apply (unfold one_shot.simps)
- apply (simp add: one_shot_sound')
+ apply (simp add: static_one_shot_sound')
 done
 
 
@@ -584,7 +584,7 @@ apply (simp add: every_two.simps noncompetitive.simps; auto)
 using send_not_static_traceable_sound runtime_send_paths_are_inclusive by blast
 *)
 
-theorem fan_out_sound: "
+theorem static_fan_out_sound: "
   \<lbrakk>
     static_fan_out V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
@@ -607,7 +607,7 @@ lemma noncompetitive_recv_to_ordered_recv: "
 sorry
 
 
-theorem fan_in_sound: "
+theorem static_fan_in_sound: "
   \<lbrakk>
     static_fan_in V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
@@ -621,7 +621,7 @@ theorem fan_in_sound: "
 done
 
 
-theorem one_to_one_sound: "
+theorem static_one_to_one_sound: "
   \<lbrakk>
     static_one_to_one V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
@@ -633,11 +633,6 @@ theorem one_to_one_sound: "
  apply (unfold one_to_one.simps)
  apply (metis fan_in_sound fan_out.intros noncompetitive_send_to_ordered_send static_fan_in.intros)
 done
-
-interpretation communication_sound_B
-proof -
- show "communication_sound_B" sorry
-qed
 
 (*
 
