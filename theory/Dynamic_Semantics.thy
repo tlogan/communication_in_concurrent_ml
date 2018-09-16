@@ -11,35 +11,30 @@ type_synonym control_path = "control_label list"
 datatype chan = Ch control_path var
 
 datatype val = 
-  VUnt | VChn chan | VClsr prim "var \<rightharpoonup> val"
+  VUnt | VChn chan | VClsr prim "var \<Rightarrow> val option"
 
-type_synonym env = "var \<rightharpoonup> val"
+type_synonym env = "var \<Rightarrow> val option"
 
 
-inductive seq_step :: "(bind \<times> env) \<Rightarrow> val \<Rightarrow> bool" where
-  Let_Unit: "
-    seq_step (Unt, env) VUnt
+inductive seq_step :: "bound_exp \<Rightarrow> env \<Rightarrow> val \<Rightarrow> bool" where
+  UNIT: "
+    seq_step Unt env VUnt
   " |
-  Let_Prim: "
-    seq_step (Prim p, env) (VClsr p env)
+  PRIM: "
+    seq_step (Prim p) env (VClsr p env)
   " |
-  Let_Fst: "
-    \<lbrakk> 
-      env xp = Some (VClsr (Pair x1 x2) envp); 
-      envp x1 = Some v
-    \<rbrakk> \<Longrightarrow>
-    seq_step (Fst xp, env) v
+  FST: "
+    env xp = Some (VClsr (Pair x1 x2) envp) \<Longrightarrow>
+    envp x1 = Some v \<Longrightarrow>
+    seq_step (Fst xp) env v
   " |
-  Let_Snd: "
-    \<lbrakk> 
-      env xp = Some (VClsr (Pair x1 x2) envp); 
-      envp x2 = Some v
-    \<rbrakk> \<Longrightarrow>
-    seq_step (Snd xp, env) v
-  "
+  SND: " 
+    env xp = Some (VClsr (Pair x1 x2) envp) \<Longrightarrow>
+    envp x2 = Some v \<Longrightarrow>
+    seq_step (Snd xp) env v"
 
 
-inductive seq_step_up :: "bind * env \<Rightarrow> exp * env \<Rightarrow> bool" where 
+inductive seq_step_up :: "bound_exp * env \<Rightarrow> exp * env \<Rightarrow> bool" where 
   let_case_left: "
     \<lbrakk> 
       env xs = Some (VClsr (Lft xl') envl); 
@@ -92,7 +87,7 @@ inductive concur_step :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_
     \<lbrakk> 
       leaf trpl pi ;
       trpl pi = Some (\<langle>(Let x b e); env; k\<rangle>) ;
-      seq_step (b, env) v
+      seq_step b env v
     \<rbrakk> \<Longrightarrow>
     (trpl, ys) \<rightarrow> (trpl(pi @ [LNxt x] \<mapsto> \<langle>e; env(x \<mapsto> v); k\<rangle>), ys)
   " |

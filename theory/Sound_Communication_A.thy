@@ -647,7 +647,7 @@ lemma static_traversable_pool_preserved_under_seq_step: "
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
   leaf \<E>m pi \<Longrightarrow>
   \<E>m pi = Some (\<langle>exp.Let x b e;env;k\<rangle>) \<Longrightarrow> 
-  seq_step (b, env) v \<Longrightarrow> 
+  seq_step b env v \<Longrightarrow> 
   static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> v);k\<rangle>))
 "
 proof -
@@ -656,7 +656,7 @@ proof -
     H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
     H3: "leaf \<E>m pi" and
     H4: "\<E>m pi = Some (\<langle>exp.Let x b e;env;k\<rangle>)" and 
-    H5: "seq_step (b, env) v"
+    H5: "seq_step b env v"
 
   have H6: "
     \<forall>\<pi> e \<rho> \<kappa>.
@@ -680,13 +680,13 @@ proof -
   show "static_traversable_pool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> v);k\<rangle>))"
   using H5
   proof cases
-    case Let_Unit
+    case UNIT
     then show ?thesis
     using H1 H10 H8 H9 static_traversable_env.simps 
       static_traversable_env_static_traversable_val.Unit 
       static_traversable_pool.simps by auto
   next
-    case (Let_Prim p)
+    case (PRIM p)
 
     have L1H1: "static_traversable_val V F (VClsr p env)" 
     proof (cases p)
@@ -712,7 +712,7 @@ proof -
     next
       case (Abs f' x' e')
       have L2H1: "static_traversable V F (Let x (Prim (Abs f' x' e')) e)"
-        using H7 local.Abs local.Let_Prim(1) by auto
+        using H7 local.Abs local.PRIM(1) by auto
       show ?thesis using L2H1
       proof cases
         case Let_Abs
@@ -722,15 +722,15 @@ proof -
     qed
 
     have L1H2: "static_traversable_env V F (env(x \<mapsto> v))"
-      using H8 L1H1 local.Let_Prim(2) static_traversable_env.simps by auto
+      using H8 L1H1 local.PRIM(2) static_traversable_env.simps by auto
     show ?thesis
       using H10 H6 H9 L1H2 static_traversable_pool.simps by auto
   next
-    case (Let_Fst xp x1 x2 envp)
+    case (FST xp x1 x2 envp)
 
     have L1H1: "static_traversable_val V F (VClsr (prim.Pair x1 x2) envp)" 
     using H8 static_traversable_env.cases
-          using local.Let_Fst(2) by blast
+          using FST(2) by blast
 
     have L1H2: "static_traversable_env V F envp" using L1H1 
     proof cases
@@ -739,17 +739,17 @@ proof -
     qed
 
     have L1H3: "static_traversable_val V F v"
-      using L1H2 local.Let_Fst(3) static_traversable_env.cases by blast
+      using L1H2 local.FST(3) static_traversable_env.cases by blast
 
     have L1H4: "static_traversable_env V F (env(x \<mapsto> v))"
       using H8 L1H3 static_traversable_env.simps by auto
 
     show ?thesis using H10 H6 H9 L1H4 static_traversable_pool.intros by auto
   next
-    case (Let_Snd xp x1 x2 envp)
+    case (SND xp x1 x2 envp)
     have L1H1: "static_traversable_val V F (VClsr (prim.Pair x1 x2) envp)" 
     using H8 static_traversable_env.cases
-          using local.Let_Snd(2) by blast
+          using SND(2) by blast
 
     have L1H2: "static_traversable_env V F envp" using L1H1 
     proof cases
@@ -758,7 +758,7 @@ proof -
     qed
 
     have L1H3: "static_traversable_val V F v"
-      using L1H2 local.Let_Snd(3) static_traversable_env.cases by blast
+      using L1H2 SND(3) static_traversable_env.cases by blast
 
     have L1H4: "static_traversable_env V F (env(x \<mapsto> v))"
       using H8 L1H3 static_traversable_env.simps by auto
@@ -1257,7 +1257,7 @@ lemma static_seq_step_trav_edge:
    assumes
      H1: "static_traversable V F (Let x b e')" and
      H2: "static_traversable V F e'" and
-     H3: "seq_step (b, env) v"
+     H3: "seq_step b env v"
 
    shows "{(NLet x, ENext, top_label e')} \<subseteq> F"
 using H1
@@ -1677,7 +1677,8 @@ proof induction
   then show ?case using paths_correspond.Empty static_traceable.Empty by auto
 next
   case (step EH EHm EH')
-  then show ?case using static_traversable_pool_implies_static_traceable_step[of EH EHm EH'] by blast
+  then show ?case using static_traversable_pool_implies_static_traceable_step[of EH EHm EH']
+    using H2 by blast
 qed
 
 lemma static_traversable_pool_implies_static_traceable:

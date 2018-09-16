@@ -6,10 +6,10 @@ datatype var = Var string
 
 datatype 
   exp = 
-    Let var bind exp |
+    Let var bound_exp exp |
     Rslt var and 
 
-  bind = 
+  bound_exp = 
     Unt | MkChn | Prim prim | Spwn exp |
     Sync var | Fst var | Snd var |
     Case var var exp var exp | App var var and 

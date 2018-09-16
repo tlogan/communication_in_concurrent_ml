@@ -795,18 +795,18 @@ qed
 theorem static_eval_state_preserved_under_step : "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x b e; \<rho>; \<kappa>\<rangle>; 
-    seq_step (b, \<rho>) \<omega>
+    seq_step b \<rho> \<omega>
   \<rbrakk> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>
 "
 proof -
   assume 
     H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Let x b e; \<rho>; \<kappa>\<rangle>" and
-    H2: "seq_step (b, \<rho>) \<omega>"
+    H2: "seq_step b \<rho> \<omega>"
     
   from H2 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>"
   proof cases
-    case Let_Unit
+    case UNIT
     
     assume
       H3: "b = Unt" and
@@ -818,7 +818,7 @@ proof -
     
     with H4 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>" by simp
   next
-    case (Let_Prim p)
+    case (PRIM p)
 
     assume
       H3: "b = Prim p" and
@@ -830,7 +830,7 @@ proof -
     
     with H4 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>" by simp
   next
-    case (Let_Fst x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
+    case (FST x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
 
     assume 
       H3: "b = (Fst x\<^sub>p)" and
@@ -841,7 +841,7 @@ proof -
 
     with H4 H5 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>" by (simp add: static_eval_state_to_state_let_fst)
   next
-    case (Let_Snd x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
+    case (SND x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
 
     assume 
       H3: "b = (Snd x\<^sub>p)" and
