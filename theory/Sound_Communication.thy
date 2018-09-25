@@ -122,8 +122,9 @@ lemma label_not_send_site_sound: "
  apply (rule exI[of _ x\<^sub>s\<^sub>c]; auto)
  apply (auto simp: always_send_chan_not_bound_sound)
  apply (rule exI[of _ x\<^sub>m]; auto?)
- apply (rule exI[of _ x\<^sub>e]; auto?)
- apply (blast dest: always_send_evt_not_bound_sound)
+  apply (rule exI[of _ x\<^sub>e]; auto?)
+   apply (blast dest: always_send_evt_not_bound_sound)
+  using exp_always_exp_not_static_reachable_sound apply blast
 done
 
 lemma label_not_recv_site_sound: "
@@ -138,7 +139,8 @@ lemma label_not_recv_site_sound: "
  apply (rule exI[of _ x\<^sub>r\<^sub>c]; auto)
  apply (auto simp: always_recv_chan_not_bound_sound)
  apply (rule exI[of _ x\<^sub>e]; auto?)
- apply (blast dest: always_recv_evt_not_bound_sound)
+   apply (blast dest: always_recv_evt_not_bound_sound)
+  using exp_always_exp_not_static_reachable_sound apply blast
 done
 
 end

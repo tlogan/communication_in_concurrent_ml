@@ -1233,25 +1233,6 @@ proof -
 qed
 
 
-inductive narrow_step :: "trace_pool * cmmn_set \<Rightarrow> control_path \<Rightarrow> trace_pool * cmmn_set \<Rightarrow> control_path \<Rightarrow> bool" where
-  refl: "
-    E \<pi> \<noteq> None \<Longrightarrow>
-    star concur_step (E, H) (E', H') \<Longrightarrow>
-    narrow_step (E, H) \<pi> (E', H') \<pi>" |
-  side_step: "
-    concur_step (E, H) (Em, Hm) \<Longrightarrow>
-    leaf E \<pi> \<Longrightarrow>
-    narrow_step (Em, Hm) \<pi> (E', H') \<pi>' \<Longrightarrow>
-    narrow_step (E, H) \<pi> (E', H') \<pi>'
-  " |
-  step: "
-    concur_step (E, H) (Em, Hm) \<Longrightarrow>
-    leaf E \<pi> \<Longrightarrow>
-    leaf Em (\<pi> @ [l]) \<Longrightarrow>
-    narrow_step (Em, Hm) (\<pi> @ [l]) (E', H') \<pi>' \<Longrightarrow>
-    narrow_step (E, H) \<pi> (E', H') \<pi>'
-  "
-
 
 lemma static_seq_step_trav_edge:
    assumes
@@ -1323,9 +1304,9 @@ lemma static_traversable_pool_implies_static_traceable_step:
        EHm = (E', H') \<longrightarrow>
        E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
        static_traversable_pool V F E' \<longrightarrow> isEnd (top_label e') \<longrightarrow> 
-      (\<exists>path. paths_correspond \<pi>' path \<and> static_traceable V F (top_label e) isEnd path)"
+      (\<exists>path. paths_correspond \<pi>' path \<and> static_traceable F (top_label e) isEnd path)"
   shows
-    "(\<exists>path. paths_correspond \<pi>' path \<and> static_traceable V F (top_label e) isEnd path)"
+    "(\<exists>path. paths_correspond \<pi>' path \<and> static_traceable F (top_label e) isEnd path)"
 proof -
   show ?thesis
   using H2
@@ -1333,12 +1314,12 @@ proof -
     case (Seq_Step_Down Em pi x env xk ek envk k v Hm)
     have L1H2: "static_traversable_pool V F Em" by (smt H2 H4 H6 local.Seq_Step_Down(1) mapping_preserved_star star_step1 static_traversable_pool.simps)
 
-    have L1H3: "\<exists>path. paths_correspond pi path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) path"
+    have L1H3: "\<exists>path. paths_correspond pi path \<and> static_traceable F (top_label e) (\<lambda> l . l = top_label (Rslt x)) path"
     by (simp add: H3 IH L1H2 local.Seq_Step_Down)
 
     obtain p where 
       L1H4: "paths_correspond pi p" and
-      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Rslt x)) p"
+      L1H5: "static_traceable F (top_label e) (\<lambda> l . l = top_label (Rslt x)) p"
     using L1H3 by blast
 
     show ?thesis
@@ -1359,7 +1340,7 @@ proof -
       have L2H5: "{(NResult x, EReturn, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by auto
     
       have L2H6: "paths_correspond (pi @ [LRtn x]) (p @ [(NResult x, EReturn)])" by (simp add: L1H4 Return)
-      have L2H7: "static_traceable V F (top_label e) isEnd (p @ [(NResult x, EReturn)])" using H7 L1H5 L2H5 Step by auto
+      have L2H7: "static_traceable F (top_label e) isEnd (p @ [(NResult x, EReturn)])" using H7 L1H5 L2H5 Step by auto
     
       show ?thesis using L2H1 L2H6 L2H7 by blast
     next
@@ -1374,12 +1355,12 @@ proof -
     have L1H2: "static_traversable_pool V F Em"
      using H2 H4 H6 local.Seq_Step(1) mapping_preserved static_traversable_pool.simps by fastforce
 
-    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) path"
+    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) path"
     by (simp add: H3 IH L1H2 local.Seq_Step(1) local.Seq_Step(4))
 
     obtain p where 
       L1H4: "paths_correspond pim p" and
-      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) p"
+      L1H5: "static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) p"
     using L1H3 by blast
 
    show ?thesis
@@ -1398,7 +1379,7 @@ proof -
       have L2H5: "{(NLet xm, ENext, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by auto
     
       have L2H6: "paths_correspond (pim @ [LNxt xm]) (p @ [(NLet xm, ENext)])" by (simp add: L1H4 Next)
-      have L2H7: "static_traceable V F (top_label e) isEnd (p @ [(NLet xm, ENext)])" using H7 L1H5 L2H5 Step by auto
+      have L2H7: "static_traceable F (top_label e) isEnd (p @ [(NLet xm, ENext)])" using H7 L1H5 L2H5 Step by auto
     
       show ?thesis using L2H1 L2H6 L2H7 by blast
     next
@@ -1411,12 +1392,12 @@ proof -
     have L1H2: "static_traversable_pool V F Em"
       by (smt H2 H4 H6 local.Seq_Step_Up(1) mapping_preserved_star star_step1 static_traversable_pool.simps)
 
-    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) path"
+    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) path"
     by (simp add: H3 IH L1H2 local.Seq_Step_Up(1) local.Seq_Step_Up(4))
 
     obtain p where 
       L1H4: "paths_correspond pim p" and
-      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) p"
+      L1H5: "static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xm bm em)) p"
     using L1H3 by blast
 
     show ?thesis
@@ -1466,7 +1447,7 @@ proof -
       qed
     
       have L2H6: "paths_correspond (pim @ [LNxt xm]) (p @ [(NLet xm, ENext)])" by (simp add: L1H4 Next)
-      have L2H7: "static_traceable V F (top_label e) isEnd (p @ [(NLet xm, ECall)])" using H7 L1H5 L2H5 Step by auto
+      have L2H7: "static_traceable F (top_label e) isEnd (p @ [(NLet xm, ECall)])" using H7 L1H5 L2H5 Step by auto
     
       show ?thesis using Call L1H4 L2H1 L2H7 by blast
     next
@@ -1479,12 +1460,12 @@ proof -
     have L1H2: "static_traversable_pool V F Em"
      using H2 H4 H6 local.Let_Chan(1) mapping_preserved static_traversable_pool.simps by fastforce
 
-    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm MkChn em)) path"
+    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xm MkChn em)) path"
     by (simp add: H3 IH L1H2 local.Let_Chan(1) local.Let_Chan(4))
 
     obtain p where 
       L1H4: "paths_correspond pim p" and
-      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm MkChn em)) p"
+      L1H5: "static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xm MkChn em)) p"
     using L1H3 by blast
 
    show ?thesis
@@ -1506,7 +1487,7 @@ proof -
       have L2H5: "{(NLet xm, ENext, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by auto
     
       have L2H6: "paths_correspond (pim @ [LNxt xm]) (p @ [(NLet xm, ENext)])" by (simp add: L1H4 Next)
-      have L2H7: "static_traceable V F (top_label e) isEnd (p @ [(NLet xm, ENext)])" using H7 L1H5 L2H5 Step by auto
+      have L2H7: "static_traceable F (top_label e) isEnd (p @ [(NLet xm, ENext)])" using H7 L1H5 L2H5 Step by auto
     
       show ?thesis using L2H1 L2H6 L2H7 by blast
     next
@@ -1519,13 +1500,13 @@ proof -
     have L1H2: "static_traversable_pool V F Em"
      using H2 H4 H6 local.Let_Spawn(1) mapping_preserved static_traversable_pool.simps by fastforce
 
-    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm (Spwn ec) em)) path"
+    have L1H3: "\<exists>path. paths_correspond pim path \<and> static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xm (Spwn ec) em)) path"
     by (simp add: H3 IH L1H2 local.Let_Spawn(1) local.Let_Spawn(4))
 
 
     obtain p where 
       L1H4: "paths_correspond pim p" and
-      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xm (Spwn ec) em)) p"
+      L1H5: "static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xm (Spwn ec) em)) p"
     using L1H3 by blast
 
     have L1H6: "E' = Em(pim @ [LNxt xm] \<mapsto> \<langle>em;env(xm \<mapsto> VUnt);k\<rangle>, pim @ [LSpwn xm] \<mapsto> \<langle>ec;env;[]\<rangle>)"
@@ -1548,7 +1529,7 @@ proof -
       have L2H6: "{(NLet xm, ESpawn, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by blast
     
       have L2H7: "paths_correspond (pim @ [LSpwn xm]) (p @ [(NLet xm, ESpawn)])" by (simp add: L1H4 Spawn)
-      have L2H8: "static_traceable V F (top_label e) isEnd (p @ [(NLet xm, ESpawn)])"
+      have L2H8: "static_traceable F (top_label e) isEnd (p @ [(NLet xm, ESpawn)])"
         using H7 L1H5 L2H6 Step by auto
     
       show ?thesis using L2H0 L2H7 L2H8 by auto
@@ -1572,7 +1553,7 @@ proof -
         have L2H5: "{(NLet xm, ENext, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by auto
       
         have L2H6: "paths_correspond (pim @ [LNxt xm]) (p @ [(NLet xm, ENext)])" by (simp add: L1H4 Next)
-        have L2H7: "static_traceable V F (top_label e) isEnd (p @ [(NLet xm, ENext)])" using H7 L1H5 L2H5 Step by auto
+        have L2H7: "static_traceable F (top_label e) isEnd (p @ [(NLet xm, ENext)])" using H7 L1H5 L2H5 Step by auto
       
         show ?thesis using L2H1 L2H6 L2H7 by blast
       next
@@ -1586,20 +1567,20 @@ proof -
     have L1H2: "static_traversable_pool V F Em"
       by (smt H2 H4 H6 local.Let_Sync(1) mapping_preserved_star star_step1 static_traversable_pool.simps)
 
-    have L1H3: "\<exists>path. paths_correspond pir path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xr (Sync xre) er)) path"
+    have L1H3: "\<exists>path. paths_correspond pir path \<and> static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xr (Sync xre) er)) path"
     by (simp add: H3 IH L1H2 local.Let_Sync(1) local.Let_Sync(7))
 
     obtain pr where 
       L1H4: "paths_correspond pir pr" and
-      L1H5: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xr (Sync xre) er)) pr"
+      L1H5: "static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xr (Sync xre) er)) pr"
     using L1H3 by auto
 
-    have L1H6: "\<exists>path. paths_correspond pis path \<and> static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xs (Sync xse) es)) path"
+    have L1H6: "\<exists>path. paths_correspond pis path \<and> static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xs (Sync xse) es)) path"
     by (simp add: H3 IH L1H2 local.Let_Sync(1) local.Let_Sync(4))
 
     obtain ps where 
       L1H7: "paths_correspond pis ps" and
-      L1H8: "static_traceable V F (top_label e) (\<lambda> l . l = top_label (Let xs (Sync xse) es)) ps"
+      L1H8: "static_traceable F (top_label e) (\<lambda> l . l = top_label (Let xs (Sync xse) es)) ps"
     using L1H6 by blast
 
 
@@ -1622,7 +1603,7 @@ proof -
       have L2H6: "{(NLet xr, ENext, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by auto
     
       have L2H7: "paths_correspond (pir @ [LNxt xr]) (pr @ [(NLet xr, ENext)])" by (simp add: L1H4 Next)
-      have L2H8: "static_traceable V F (top_label e) isEnd (pr @ [(NLet xr, ENext)])" using H7 L1H5 L2H6 Step by auto
+      have L2H8: "static_traceable F (top_label e) isEnd (pr @ [(NLet xr, ENext)])" using H7 L1H5 L2H6 Step by auto
     
       show ?thesis using L2H0 L2H7 L2H8 by auto
     next
@@ -1647,7 +1628,7 @@ proof -
         have L2H6: "{(NLet xs, ENext, (top_label e'))} \<subseteq> F" using L2H4 L2H5 by auto
       
         have L2H7: "paths_correspond (pis @ [LNxt xs]) (ps @ [(NLet xs, ENext)])" by (simp add: L1H7 Next)
-        have L2H8: "static_traceable V F (top_label e) isEnd (ps @ [(NLet xs, ENext)])" using H7 L1H8 L2H6 Step by auto
+        have L2H8: "static_traceable F (top_label e) isEnd (ps @ [(NLet xs, ENext)])" using H7 L1H8 L2H6 Step by auto
       
         show ?thesis using L2H1 L2H7 L2H8 by blast
       next
@@ -1670,7 +1651,7 @@ lemma static_traversable_pool_implies_static_traceable':
     isEnd (top_label e') \<longrightarrow>
     (\<exists> path . 
       paths_correspond \<pi>' path \<and>
-      static_traceable V F (top_label e) isEnd path)"
+      static_traceable F (top_label e) isEnd path)"
 using H1
 proof induction
   case (refl z)
@@ -1692,7 +1673,7 @@ lemma static_traversable_pool_implies_static_traceable:
   shows "
     \<exists> path . 
       paths_correspond \<pi>' path \<and>
-      static_traceable V F (top_label e) isEnd path"
+      static_traceable F (top_label e) isEnd path"
 using static_traversable_pool_implies_static_traceable'[of "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" "(\<E>', H')"]
 H1 H2 H3 H4 H5 star_implies_star_left by fastforce
 
@@ -1726,7 +1707,7 @@ lemma path_not_traceable_sound: "
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond \<pi> path \<and>
-    static_traceable V F (top_label e) isEnd path
+    static_traceable F (top_label e) isEnd path
 "
 by (metis lift_traversable_to_pool static_eval_to_pool static_traversable_pool_implies_static_traceable static_traversable_pool_preserved_star)
 
@@ -1737,7 +1718,7 @@ lemma send_path_not_traceable_sound: "
   static_traversable V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond \<pi>Sync pathSync) \<and> 
-    static_traceable V F (top_label e) (static_send_label V e xC) pathSync
+    static_traceable F (top_label e) (static_send_label V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in label_not_send_site_sound; auto?)
@@ -1751,7 +1732,7 @@ lemma recv_path_not_traceable_sound: "
   static_traversable V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond \<pi>Sync pathSync) \<and> 
-    static_traceable V F (top_label e) (static_recv_label V e xC) pathSync
+    static_traceable F (top_label e) (static_recv_label V e xC) pathSync
 "
  apply (unfold is_recv_path.simps; auto)
  apply (frule_tac x\<^sub>r\<^sub>c = xrc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in label_not_recv_site_sound; auto?)
@@ -1763,7 +1744,7 @@ done
 
 
 theorem singular_to_equal: "
-  every_two (static_traceable V F (top_label e) (static_send_label V e xC)) singular \<Longrightarrow>
+  every_two (static_traceable F (top_label e) (static_send_label V e xC)) singular \<Longrightarrow>
   static_traversable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
@@ -1781,7 +1762,7 @@ done
 
 
 theorem noncompetitive_send_to_ordered_send: "
-  every_two (static_traceable V F (top_label e) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
+  every_two (static_traceable F (top_label e) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
   static_traversable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
@@ -1794,7 +1775,7 @@ done
 
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two (static_traceable V F (top_label e) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
+   every_two (static_traceable F (top_label e) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
    static_traversable V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>

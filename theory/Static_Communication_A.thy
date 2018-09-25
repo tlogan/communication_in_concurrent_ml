@@ -138,25 +138,6 @@ inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rig
 
 
 
-inductive static_traceable :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> label \<Rightarrow> (label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
-  Empty: "
-    isEnd start \<Longrightarrow>
-    static_traceable V F start isEnd []
-  " |
-(*
-  Edge: "
-    isEnd end \<Longrightarrow>
-    {(start, edge, end)} \<subseteq> F \<Longrightarrow>
-    static_traceable V F start isEnd [(start, edge)]
-  " |
-*)
-  Step: "
-    static_traceable V F start (\<lambda> l . l = middle) path \<Longrightarrow>
-    isEnd end \<Longrightarrow>
-    {(middle, edge, end)} \<subseteq> F \<Longrightarrow>
-    static_traceable V F start isEnd (path @ [(middle, edge)])
-  "
-
 
 inductive static_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Prefix1: "
@@ -197,29 +178,29 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
 
 inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_traceable V F (top_label e) (static_send_label V e xC)) singular \<Longrightarrow>
+    every_two (static_traceable F (top_label e) (static_send_label V e xC)) singular \<Longrightarrow>
     static_traversable V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
 inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_traceable V F (top_label e) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two (static_traceable V F (top_label e) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_traceable F (top_label e) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_traceable F (top_label e) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
     static_traversable V F e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
 inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_traceable V F (top_label e) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_traceable F (top_label e) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
     static_traversable V F e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
 inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_traceable V F (top_label e) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_traceable F (top_label e) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
     static_traversable V F e \<Longrightarrow>
     static_fan_in V e xC 
   "

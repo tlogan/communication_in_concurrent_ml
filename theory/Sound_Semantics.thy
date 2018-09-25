@@ -1504,31 +1504,6 @@ proof -
   show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_not_static_bound_sound by blast
 qed
 
-(*
-inductive static_reachable :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
-  Refl : "
-    static_reachable e e
-  " | 
-  Let_Spawn_Child: "
-    static_reachable e\<^sub>c e \<Longrightarrow>
-    static_reachable (Let x (Spwn e\<^sub>c) e\<^sub>n) e
-  " |
-  let_case_left: "
-    static_reachable e\<^sub>l e \<Longrightarrow>
-    static_reachable (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e\<^sub>n) e
-  " |
-  let_case_right: "
-    static_reachable e\<^sub>r e \<Longrightarrow>
-    static_reachable (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e\<^sub>n) e
-  " |
-  Let_Abs_Body: "
-    static_reachable e\<^sub>b e \<Longrightarrow>
-    static_reachable (Let x (Prim (Abs f x\<^sub>p e\<^sub>b)) e\<^sub>n) e
-  " | 
-  Let: "
-    static_reachable e\<^sub>n e \<Longrightarrow>
-    static_reachable (Let x b e\<^sub>n) e
-  "
 
 
 inductive static_reachable_left :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
@@ -1761,10 +1736,10 @@ proof -
     from local.Seq_Step(5) have 
       "static_reachable_over_val e\<^sub>0 \<omega>"
     proof cases
-      case Let_Unit
+      case UNIT
       then show "static_reachable_over_val e\<^sub>0 \<omega>" by (simp add: VUnt)
     next
-      case (Let_Prim p)
+      case (PRIM p)
 
       have L2H1: "static_reachable_over_prim e\<^sub>0 p"
       proof (cases p)
@@ -1785,7 +1760,7 @@ proof -
       next
         case (Abs x61 x62 x63)
 
-        with L1H2 local.Let_Prim(1) local.Abs
+        with L1H2 local.PRIM(1) local.Abs
         show "static_reachable_over_prim e\<^sub>0 p" by (smt static_reachable_left.Let_Abs_Body static_reachable_over_prim.Abs )
       qed
 
@@ -1793,13 +1768,13 @@ proof -
 
       with L2H1 have "static_reachable_over_val e\<^sub>0 (VClsr p \<rho>l)" by (simp add: VClsr)
 
-      with local.Let_Prim(2) show "static_reachable_over_val e\<^sub>0 \<omega>" by simp
+      with local.PRIM(2) show "static_reachable_over_val e\<^sub>0 \<omega>" by simp
     next
-      case (Let_Fst x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
+      case (FST x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
       then show "static_reachable_over_val e\<^sub>0 \<omega>"
         by (metis L1H3 static_reachable_over_env.cases static_reachable_over_val.cases val.distinct(3) val.distinct(5) val.inject(2))
     next
-      case (Let_Snd x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
+      case (SND x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
       then show "static_reachable_over_val e\<^sub>0 \<omega>"
         by (metis L1H3 static_reachable_over_env.cases static_reachable_over_val.cases val.distinct(3) val.distinct(5) val.inject(2))
     qed
@@ -2094,6 +2069,5 @@ proof -
       state_always_exp_not_static_reachable_sound
     by fastforce
 qed
-*)
 
 end
