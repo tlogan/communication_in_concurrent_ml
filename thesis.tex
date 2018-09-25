@@ -491,148 +491,292 @@ thread, and returns the states' associated message.
 
 The implementation of fan-in channels is very similar to that of fan-out channels.
 
-a one-to-one channel can also be in one of three possible states, but there is no associated lock. Additional, none of the states are associated with queues.  Instead, there is a possible state of a thread trying to send, with a condition and a message, or a possible state of a thread trying to receive with a condition and an empty cell, or a possible inactive state.
-	The send operation checks if the channel's state is inactive and tries to use the compareAndSwap operator to transactionally update the state of the channel to that of trying to send.  If successful, it simply waits on sendCond, the condition that a receiving thread will signal on, and then returns the unit value.  If the transactional update fails and the state is that of a thread trying to receive on the channel, then it deposits the message in the state's associated cell, updates the channel state to inactive, then signals on the state's associated condition and returns the unit value.  If the communication analysis for the channel is correctly one-to-one, then there should be no other thread trying update the state from the state of a thread trying to receive, and no thread modifies that particular state, so no locks are necessary.  Likewise, the send operation should never witness the state of another thread already trying to send, if it is truly one-to-one.
-	The recv operation checks if the channel's state is inactive and tries to use the compareAndSwap operator to transactionally update the state of the channel to that of trying to receive.  If successful, it simply waits on recvCond, the condition that a sending thread will signal on after it deposits a message, and then returns the deposited message.  If the transactional update fails and the state is that of a thread trying to send on the channel, then it updates the channel state to inactive, then signals on the state's associated condition and returns the message associated with the sending thread.  If the communication analysis for the channel is correctly one-to-one, then there should be no other thread trying update the state from the state of a thread trying to send, and no thread modifies that particular state, so no locks are necessary.  Likewise, the recv operation should never witness the state of another thread already trying to receive, if it is truly one-to-one.
+a one-to-one channel can also be in one of three possible states, but there is no associated
+lock. Additional, none of the states are associated with queues.  Instead, there is a possible
+state of a thread trying to send, with a condition and a message, or a possible state of a
+thread trying to receive with a condition and an empty cell, or a possible inactive state.
+The send operation checks if the channel's state is inactive and tries to use the
+compareAndSwap operator to transactionally update the state of the channel to that of trying to
+send.  If successful, it simply waits on sendCond, the condition that a receiving thread will
+signal on, and then returns the unit value.  If the transactional update fails and the state is
+that of a thread trying to receive on the channel, then it deposits the message in the state's
+associated cell, updates the channel state to inactive, then signals on the state's associated
+condition and returns the unit value.  If the communication analysis for the channel is
+correctly one-to-one, then there should be no other thread trying update the state from the
+state of a thread trying to receive, and no thread modifies that particular state, so no locks
+are necessary.  Likewise, the send operation should never witness the state of another thread
+already trying to send, if it is truly one-to-one.
+
+The recv operation checks if the channel's state is inactive and tries to use the
+compareAndSwap operator to transactionally update the state of the channel to that of trying
+to receive.  If successful, it simply waits on recvCond, the condition that a sending thread
+will signal on after it deposits a message, and then returns the deposited message.  If the
+transactional update fails and the state is that of a thread trying to send on the channel,
+then it updates the channel state to inactive, then signals on the state's associated
+condition and returns the message associated with the sending thread.  If the communication
+analysis for the channel is correctly one-to-one, then there should be no other thread trying
+update the state from the state of a thread trying to send, and no thread modifies that
+particular state, so no locks are necessary.  Likewise, the recv operation should never
+witness the state of another thread already trying to receive, if it is truly one-to-one.
 
 
-A one-shot channel consists of the same possible states as a one-to-one channel, but is additionally associated with a mutex lock, to account for the fact that multiple threads may try to receive on the channel, even though only at most one message is ever sent.
-	The send operation is like that of one-to-one channels, except that if the state is that of a thread trying to receive, it simply deposits the message and signals on the associated condition, without updating the channel's state to inactive, which would be unnecessary, since no further attempts to send are expected.
-	The recv operation checks if the channel's state is inactive and tries to use the compareAndSwap operator to transactionally update the state of the channel to that of trying to receive.  If successful, it simply waits on recvCond, the condition that a sending thread will signal on after it deposits a message, and then returns the deposited message.  If the transactional update fails and the state is that of a thread trying to send on the channel, then it acquires the lock, signals on the state's associated condition and returns the message associated with the sending thread, without ever releasing the lock, so that competing receiving threads will know to not progress.  If the state is that of a thread trying to receive on the channel, the it acquires the lock, which should block the current thread forever, if there truly is only one send ever.
+A one-shot channel consists of the same possible states as a one-to-one channel, but is
+additionally associated with a mutex lock, to account for the fact that multiple threads may
+try to receive on the channel, even though only at most one message is ever sent.
 
-An even more restrictive version of a channel with at most one send could be used if it's determined that the number of receiving threads is at most one.  The one-shot-to-one channel is composed of a possibly empty cell, a condition for a sending thread to wait on, and a condition for a receiving thread to wait on.
-	The send operation deposits the message in the cell, signals on the recvCond, waits on the sendCond, and then returns the unit value.  The recv operation waits on the recvCond, signals on the sendCond and then returns the deposited message.
+The send operation is like that of one-to-one channels, except that if the state is that of a
+thread trying to receive, it simply deposits the message and signals on the associated
+condition, without updating the channel's state to inactive, which would be unnecessary, since
+no further attempts to send are expected.
 
-	Although there are proofs that the communication topologies are sound with respect to the semantics, it would additionally be important to have proofs that the above specialized implementations are equivalent to the many-to-many implementation under the assumption of particular communication topologies.
+The recv operation checks if the channel's state is inactive and tries to use the
+compareAndSwap operator to transactionally update the state of the channel to that of trying
+to receive.  If successful, it simply waits on recvCond, the condition that a sending thread
+will signal on after it deposits a message, and then returns the deposited message.  If the
+transactional update fails and the state is that of a thread trying to send on the channel,
+then it acquires the lock, signals on the state's associated condition and returns the message
+associated with the sending thread, without ever releasing the lock, so that competing
+receiving threads will know to not progress.  If the state is that of a thread trying to
+receive on the channel, the it acquires the lock, which should block the current thread
+forever, if there truly is only one send ever.
+
+An even more restrictive version of a channel with at most one send could be used if it's
+determined that the number of receiving threads is at most one.  The one-shot-to-one channel is
+composed of a possibly empty cell, a condition for a sending thread to wait on, and a condition
+for a receiving thread to wait on.
+
+The send operation deposits the message in the cell, signals on the recvCond, waits on the
+sendCond, and then returns the unit value.  The recv operation waits on the recvCond, signals
+on the sendCond and then returns the deposited message.
+
+Although there are proofs that the communication topologies are sound with respect to the
+semantics, it would additionally be important to have proofs that the above specialized
+implementations are equivalent to the many-to-many implementation under the assumption of
+particular communication topologies.
 
 
 \section{Objectives}
-If an algorithm for synchronization is specific to a maxiumum number of threads, it may be more efficient than an algorithm that is generic for any number of threads.  For instance, if there is only ever one thread sending and one thread receiving on a channel, then no locks are needed, which saves time.  However, if there are multiple senders and multiple receivers, then some form of locks or trials and aborts would be needed, which is costly.
+If an algorithm for synchronization is specific to a maxiumum number of threads, it may be more
+efficient than an algorithm that is generic for any number of threads.  For instance, if there
+is only ever one thread sending and one thread receiving on a channel, then no locks are
+needed, which saves time.  However, if there are multiple senders and multiple receivers, then
+some form of locks or trials and aborts would be needed, which is costly.
 
-The example implementations of generic synchronization and specialized syncrhonization suggest that cost savings of specialized
-implementation are significant.  For example, if you know that a channel has at most one sender and one receiver, then you will
-lower synchronization costs by using an implemnetaiton that is specialized for one-to-one communication.  To be certain that the
-new program with the specialized implementation behaves the same as the original program with the generic implementaiton, you need
-to be certain of three basic properties: that the specialized program behaves the same given one-to-one communication; that you
-have a procedure to determine the oneo-to-one communication topology, and that the relation between the procedure's input program
-and output topology upperbound is sound with respect to the semantics of the program.  
+The example implementations of generic synchronization and specialized syncrhonization suggest
+that cost savings of specialized implementation are significant.  For example, if you know that
+a channel has at most one sender and one receiver, then you will lower synchronization costs by
+using an implemnetaiton that is specialized for one-to-one communication.  To be certain that
+the new program with the specialized implementation behaves the same as the original program
+with the generic implementaiton, you need to be certain of three basic properties: that the
+specialized program behaves the same given one-to-one communication; that you have a procedure
+to determine the oneo-to-one communication topology, and that the relation between the
+procedure's input program and output topology upperbound is sound with respect to the semantics
+of the program.  
 
-Spending your energy to determine the topologies for each unique
-program and then verifying them for each program would be exhausting. Instead, you would probably rather have a generic procedure
-that can compute communication topologies for any program in a language, along with a proof that the procedure is sound with
-respect to the programming language.
+Spending your energy to determine the topologies for each unique program and then verifying
+them for each program would be exhausting. Instead, you would probably rather have a generic
+procedure that can compute communication topologies for any program in a language, along with
+a proof that the procedure is sound with respect to the programming language.
 
-In this work I demonstostrate formal proofs that the a relation between programs and topologies is sound with respect to the
-semantics of the programming language.  I refer to this as a static relation, because the intent is that the topologies are
-computable from the programs, although I do not formally prove computability in this work.  The static relation is defined with a
-syntax directed structure, which gives strong evidence of computability.  Additionally, I do not formally prove that the specialized
-implementations are behaviorally equivalent to a generic implementation, but I suggest some plausible example implementations.
+In this work I demonstostrate formal proofs that the a relation between programs and topologies
+is sound with respect to the semantics of the programming language.  I refer to this as a
+static relation, because the intent is that the topologies are computable from the programs,
+although I do not formally prove computability in this work.  The static relation is defined
+with a syntax directed structure, which gives strong evidence of computability.  Additionally,
+I do not formally prove that the specialized implementations are behaviorally equivalent to a
+generic implementation, but I suggest some plausible example implementations.
 
 \section{Syntax Definitions}
-The relations are defined over a simple language featuring a small subset of Concurrent ML features.  The features include
-recursive function abstraction with application, left and right construction with pattern matching, pair construction with first
-and second projections, send and receive event construction with synchronization, channel creation, thread spawning, and unit
-literal.  The syntax and semantics are defined in a peculiar way to enable relations between static and dynamic properties of the
-language.  A primititive construct is one that contains references to names but cannot be evaulated any further. Send and receive events, left and right constructs, pairs, and function abstractions are primitive constructs.
+The relations are defined over a simple language featuring a small subset of Concurrent ML
+features. The features include recursive function abstraction with application, left and right
+construction with pattern matching, pair construction with first and second projections, send
+and receive event construction with synchronization, channel creation, thread spawning, and
+unit literal.  The syntax and semantics are defined in a peculiar way to enable relations
+between static and dynamic properties of the language.  A primititive construct is one that
+contains references to names but cannot be evaulated any further. Send and receive events,
+left and right constructs, pairs, and function abstractions are primitive constructs.
 
-The syntax is in a very restrictive administrative normal form (ANF), in which every value or evaluatable construct is bound to a
-name.  Furthermore, constructs only accept names for eagerly evaluted inputs, rather than expression.  A control path is basically
-defined as a list of bound names, where the names are in order of their respective constructs' evaluation. The names are also annoted with information related to aspects of the control flow.
+The syntax is in a very restrictive administrative normal form (ANF), in which every value or
+evaluatable construct is bound to a name.  Furthermore, constructs only accept names for
+eagerly evaluted inputs, rather than expression.  A control path is basically defined as a list
+of bound names, where the names are in order of their respective constructs' evaluation. The
+names are also annoted with information related to aspects of the control flow. 
 
-The unit literal corresponds to a unit value. A dynamic channel value is uniquely identified by the full control path up to the
-point of channel creation along with the name bound to the channel creation construct. The value of a primitive construct is a c
-losure over the construct with an environment that maps the names to further values.
 
-Bound expressions of the unit literal, primitive constructs, and first and second constructs can be evalued to values in one step.  The seq step relation describes the evaluation of bound expressions with environments to values.  The unit construct simply evaluates
-to the unit value.  A prim construct is simply wrapped up with the environment.  The first projection is evaluated to the abstract value of the first argument of the associated pair. The second projection is evaluated to the abstract value of the second argument of the associated pair.
+The unit literal corresponds to a unit value. A dynamic channel value is uniquely identified by
+the full control path up to the point of channel creation along with the name bound to the
+channel creation construct. The value of a primitive construct is a closure over the construct
+with an environment that maps the names to further values.
 
-Other constructs for spawn, application, and case matching cannot be described with the seq step because
-they do not evaluate to values in one step and require updating additional information about the mode of the transition. 
+Bound expressions of the unit literal, primitive constructs, and first and second constructs
+can be evalued to values in one step.  The seq step relation describes the evaluation of bound
+expressions with environments to values.  The unit construct simply evaluates to the unit
+value.  A prim construct is simply wrapped up with the environment.  The first projection is
+evaluated to the abstract value of the first argument of the associated pair. The second
+projection is evaluated to the abstract value of the second argument of the associated pair.
+
+Other constructs for spawn, application, and case matching cannot be described with the seq
+step because they do not evaluate to values in one step and require updating additional
+information about the mode of the transition. 
 
 \section{Dynamic Semantics Definitions}
 
-The seq step up relation handles the evaluation of function application and case pattern matching.  These bound expressions with
-associated environments are evalued to full expressions along with a new environment.  Case matching is evaluated based on the case of the construct's first argument.  If the first argument is a left case, then the case matching is evauluated to the left expression along with an
-environment updated with a name specified for use in that expression.  The value associated with the left case pattern is bound to
-the specified name in the new environment. If the first argument is a right case, then then the case matching is evaluated to the right expression
-along with an environment updated with a name specified for use in that expression.  The value associated with the right case
- is bound to the specified name in the new environment. Function application evaluates to the expression within the applied function abstraction, along with the function abstraction's environment with a couple of modifications.  The environment is updated with the recursive function name bound to the function abstraction, and the parameter name is bound to the function argument specified in the application expression. 
+The seq step up relation handles the evaluation of function application and case pattern
+matching.  These bound expressions with associated environments are evalued to full expressions
+along with a new environment.  Case matching is evaluated based on the case of the construct's
+first argument.  If the first argument is a left case, then the case matching is evauluated to
+the left expression along with an environment updated with a name specified for use in that
+expression.  The value associated with the left case pattern is bound to the specified name in
+the new environment. If the first argument is a right case, then then the case matching is
+evaluated to the right expression along with an environment updated with a name specified for
+use in that expression.  The value associated with the right case is bound to the specified
+name in the new environment. Function application evaluates to the expression within the
+applied function abstraction, along with the function abstraction's environment with a couple
+of modifications.  The environment is updated with the recursive function name bound to the
+function abstraction, and the parameter name is bound to the function argument specified in the
+application expression. 
 
 
-A continuation is composed of a name, an expression and an environment.  It represents an expression and environment that should be evaluated once the name can be resolved to a value.  A state is composed of an expression, an evnironment, and a stack of continuations.  It represents information that might be evaluted to another state in the present of control path information.  A trace pool associated control paths with states.  The associated control path represent the path taken to reach the associated state.
-The leaf predicate desribes that a path is has no descendants within a trace pool.  
+A continuation is composed of a name, an expression and an environment.  It represents an
+expression and environment that should be evaluated once the name can be resolved to a value.
+A state is composed of an expression, an evnironment, and a stack of continuations.
+It represents information that might be evaluted to another state in the present of control
+path information.  A trace pool associated control paths with states.  The associated control
+path represent the path taken to reach the associated state. The leaf predicate desribes that a
+path is has no descendants within a trace pool.  
 
-The concur step relation describes the evaluation of a trace pool to another tracel pool.  Trace pools grow montonicially with
-respect to evaluation, retaining a full history.  A trace pool is evaluated to a new trace pool based only on information
-associated with leaf paths and their associated states.  If a leaf path is associated with a bound expresion that can be evaluated
-to a value in one sequential step, then the trace pool is updated with the leaf path extended by a label indicating a sequential transition, and the extended path is associated with the let binding's next expression and the leaf path's associated environment
-updated with the value bound to the let binding's name.  If the bound expression can be evaluated to an expression and a new 
-environment, then the leaf path is extended with a label indicating a calling transition.  The extended path is associated with
-the the new expression and new environment resulting from the evaluation of the bound expression, and the name and expression of the
-let binding are pushed onto the stack to be evaluated in later steps.  If a leaf path is associated with a result expression, then
-the trace pool is updated with the leaf path extended with a label indicating a returning transition.  The new path is associated
-with a state containing the expression popped from the continuation stack and the environment popped from the stack and updated
-with continuation's name bound to the result's associated value.  If a leaf path is associated with a channel creation construct,
-then the trace pool is updated with the leaf path extended with a sequential transition, and its associated state contains
-the next expression, and an environment updated with a new channel value.  If a leaf path is associated with a let expression
-binding to a spawn contstruct, then the trace pool is updated with two new paths extending the leaf path.  For one, the leaf path
-is extended with a sequential label whose state has the next expression and the environment updated with the unit value bound to
-the let binding name, and the original continuation stack. For the other, the leaf path extended with a label indicating a spawning
-transition.  Its state has the spawned expression, the original environment, and an empty continuation stack.  
+The concur step relation describes the evaluation of a trace pool to another tracel pool.
+Trace pools grow montonicially with respect to evaluation, retaining a full history.  A trace
+pool is evaluated to a new trace pool based only on information associated with leaf paths and
+their associated states.  If a leaf path is associated with a bound expresion that can be
+evaluated to a value in one sequential step, then the trace pool is updated with the leaf path
+extended by a label indicating a sequential transition, and the extended path is associated
+with the let binding's next expression and the leaf path's associated environment updated with
+the value bound to the let binding's name.  If the bound expression can be evaluated to an
+expression and a new environment, then the leaf path is extended with a label indicating a
+calling transition.  The extended path is associated with the the new expression and new
+environment resulting from the evaluation of the bound expression, and the name and expression
+of the let binding are pushed onto the stack to be evaluated in later steps.  If a leaf path is
+associated with a result expression, then the trace pool is updated with the leaf path extended
+with a label indicating a returning transition.  The new path is associated with a state
+containing the expression popped from the continuation stack and the environment popped from
+the stack and updated with continuation's name bound to the result's associated value.  If a
+leaf path is associated with a channel creation construct, then the trace pool is updated with
+the leaf path extended with a sequential transition, and its associated state contains the next
+expression, and an environment updated with a new channel value.  If a leaf path is associated
+with a let expression binding to a spawn contstruct, then the trace pool is updated with two
+new paths extending the leaf path.  For one, the leaf path is extended with a sequential label
+whose state has the next expression and the environment updated with the unit value bound to
+the let binding name, and the original continuation stack. For the other, the leaf path
+extended with a label indicating a spawning transition.  Its state has the spawned expression,
+the original environment, and an empty continuation stack. 
 
-If two leaves in the trace pool correspond to synchronization constructs on the same channel, where one synchronizes on a send event
-and the other synchronizes on a receive event, then the trace pool is updated with two new paths extending the two synchronizing leaf paths.  The leaf path for the send event is extended by a label indicating sequential transition.  For its state, the next expression of the let expression is used, and the environment is updated with the unit value bound to the let expression name.  The leaf path for the receive event is also extended by a label indicating sequential transition.  For its state, the next expression of the let expression is used, and the environment is updated with the value associated with the send event's second argument.   Additionally, the communication set is updated with the send and receive paths, and the channel that is communicated on. 
+If two leaves in the trace pool correspond to synchronization constructs on the same channel,
+where one synchronizes on a send event and the other synchronizes on a receive event, then the
+trace pool is updated with two new paths extending the two synchronizing leaf paths.  The leaf
+path for the send event is extended by a label indicating sequential transition.  For its state
+, the next expression of the let expression is used, and the environment is updated with the
+unit value bound to the let expression name.  The leaf path for the receive event is also
+extended by a label indicating sequential transition.  For its state, the next expression of
+the let expression is used, and the environment is updated with the value associated with the
+send event's second argument.   Additionally, the communication set is updated with the send
+and receive paths, and the channel that is communicated on. 
 
 
 
 \section{Static Semantics Definitions}
 
-In order to determine communication topologies with some decent amount of precision, it is necessary to determine values associated with expressions and names of a program.  In a language that allows inifinite recursion, it is not always possible to determine the exact values.  However, it's also not necessary.  Abstract values, which are imprecise approximations of the values at runtime, are good enough.
+In order to determine communication topologies with some decent amount of precision, it is
+necessary to determine values associated with expressions and names of a program.  In a
+language that allows inifinite recursion, it is not always possible to determine the exact
+values.  However, it's also not necessary.  Abstract values, which are imprecise approximations
+of the values at runtime, are good enough.
 
-abstract values consist of abstract unit, abstract channels, and abstract primitive values.  The abstract unit is actually no less precise than the actual unit value.  The abstract channel is identified only by the name at which it is created, rather than the full control path that leads up to it.  The abstract primitive value is simply a primitive construct without an environment for looking up its named arguments. 
+abstract values consist of abstract unit, abstract channels, and abstract primitive values.
+The abstract unit is actually no less precise than the actual unit value.  The abstract channel
+is identified only by the name at which it is created, rather than the full control path that
+leads up to it.  The abstract primitive value is simply a primitive construct without an
+environment for looking up its named arguments. 
 
-The static evaluation predicate is a relation from an input program to two outputs, each a map of names to sets of abstract values.  A set of abstract values can be thought as a further abstraction, allowing less precision.
-The first output represents a the values that might bind to names.  The second output represents values that might be passed over channels.
+The static evaluation predicate is a relation from an input program to two outputs, each a map
+of names to sets of abstract values.  A set of abstract values can be thought as a further
+abstraction, allowing less precision. The first output represents a the values that might bind
+to names.  The second output represents values that might be passed over channels.
 
-The definition for static evaluation is nondeterministic, but its syntax-directed structure suggests a refinement to computable definition, thus proving soundness with this definition should be sufficient to prove soundness for the more practical computable definition.
+The definition for static evaluation is nondeterministic, but its syntax-directed structure
+suggests a refinement to computable definition, thus proving soundness with this definition
+should be sufficient to prove soundness for the more practical computable definition.
 
-For a result expression, there may be any abstract value bindings or communication.
-For all let expressions, the bindings and communication are outputs for the next expression. 
-For unit binding, the binding name is bound to the abstract unit. 
-For channel creation, the binding name is bound to an abstract channel identified by the same binding name. 
-For all primtive contruct bindings, the binding name is bound to the abstract primtive value represented by the primitive construct.  Additionaly for the primitive construct of function abstraction, the the recursive parameter to the function abstraction is bound to the function abstraction, and the bindings and communication are also outputs for the function abstraction's internal expression.  
-For spawn, the bindings and communication are also outputs for the spawned expression, and the the binding name is bound to the abstract unit.
+For a result expression, there may be any abstract value bindings or communication. For all let
+expressions, the bindings and communication are outputs for the next expression. For unit
+binding, the binding name is bound to the abstract unit. For channel creation, the binding name
+is bound to an abstract channel identified by the same binding name. For all primtive contruct
+bindings, the binding name is bound to the abstract primtive value represented by the primitive
+construct.  Additionaly for the primitive construct of function abstraction, the the recursive
+parameter to the function abstraction is bound to the function abstraction, and the bindings
+and communication are also outputs for the function abstraction's internal expression. For
+spawn, the bindings and communication are also outputs for the spawned expression, and the the
+binding name is bound to the abstract unit.
 
-For synchronization, if the send event is bound to the syncrhonization argument, then the binding name is bound to abstract unit, and the send event's channel communicates the argument associated with the send event's message argument.  If the receive event is bound to the synchronization argument, then the binding name is bound to the abstract value communicated by the receive event's channel.
+For synchronization, if the send event is bound to the syncrhonization argument, then the
+binding name is bound to abstract unit, and the send event's channel communicates the argument
+associated with the send event's message argument.  If the receive event is bound to the
+synchronization argument, then the binding name is bound to the abstract value communicated by
+the receive event's channel.
 
-For the first projection, if its argument is a pair, then the binding name is bound to the abastract value associated with the pair's first argument.  For the second projection, if its argument is a pair, then the binding name is bound to the abstract value associated with the pair's second argument.  
+For the first projection, if its argument is a pair, then the binding name is bound to the
+abastract value associated with the pair's first argument.  For the second projection, if its
+argument is a pair, then the binding name is bound to the abstract value associated with the
+pair's second argument.  
 
-For the case matching, if its first argument is a left case, then the left name is bound to the abstract value of the left case, the let binding name is bound to the result value of the left expression, and the bindings and communication are outputs for the left expression.  If its first argument is a right case, then the right name is bound to the abstract value of the right case, the right binding name is ound to the result value of the right expression, and the bindings and communication are outputs for the right expression. 
+For the case matching, if its first argument is a left case, then the left name is bound to the
+abstract value of the left case, the let binding name is bound to the result value of the left
+expression, and the bindings and communication are outputs for the left expression.  If its
+first argument is a right case, then the right name is bound to the abstract value of the right
+case, the right binding name is ound to the result value of the right expression, and the
+bindings and communication are outputs for the right expression. 
 
-The static reachable predicate states that an expression can be reached from another expression, by simply stating that an expression is reachable from itself,  and an expression is reachable from an initial expression, if it is also reachable from the sub expressions of the initial expression.  
+The static reachable predicate states that an expression can be reached from another
+expression, by simply stating that an expression is reachable from itself,  and an expression
+is reachable from an initial expression, if it is also reachable from the sub expressions of
+the initial expression.  
 
-for function application, if a function abstraction is bound to the first argument of application, then the abstract value of the second argument of application (the function argument) is bound to the abstraction's parameter name, and the resulting abstract value of the abstraction is bound the the let binding name.
+for function application, if a function abstraction is bound to the first argument of
+application, then the abstract value of the second argument of application (the function
+argument) is bound to the abstraction's parameter name, and the resulting abstract value of the
+abstraction is bound the the let binding name.
 
-To describe communication statically, yet also somewhat precisely, it will be advantageous to describe every expression in a with a short description.  There are two forms of expressions, let binding expressions and result expressions.  A let binding expression is associated with a label indicating its form and contains the name used for its first binding. A result expression is associated with a label indicating its form and contains the name of the result's argument.  The dynamic description also contains labels for representing the mode of transition, which are slightly different due to the differences in how the static and dynamic relations can be defined.  Since a goal of the static relations is that they imply a computable refinement, there is an additional restriction to consider, resulting in the slightly different labeling of transitions between expressions.    
+To describe communication statically, yet also somewhat precisely, it will be advantageous to
+describe every expression in a with a short description.  There are two forms of expressions,
+let binding expressions and result expressions.  A let binding expression is associated with a
+label indicating its form and contains the name used for its first binding. A result
+expression is associated with a label indicating its form and contains the name of the result's
+argument.  The dynamic description also contains labels for representing the mode of
+transition, which are slightly different due to the differences in how the static and dynamic
+relations can be defined.  Since a goal of the static relations is that they imply a computable
+refinement, there is an additional restriction to consider, resulting in the slightly different
+labeling of transitions between expressions.    
 
-the static send label predicate states that a label might represent a sycnronization to send on a given abstract channel, in a given a program with given abstract value bindings.  The static receive label predicate state that a label might represent a synchronization to receive on a given abstract channel, in a given program with given abstract value bindings. 
+the static send label predicate states that a label might represent a sycnronization to send on
+a given abstract channel, in a given a program with given abstract value bindings.  The static
+receive label predicate state that a label might represent a synchronization to receive on a
+given abstract channel, in a given program with given abstract value bindings. 
 
 \section{Static Communication Definitions}
 
-The one shot predicate states that in a trace pool, there is only one control path
-that synchronizes and sends on a given channel.
+The one shot predicate states that in a trace pool, there is only one control path that
+synchronizes and sends on a given channel.
 
-Whether two attempts to synchronize on a channel are competitive or not can be determined
-by looking at the control paths of the trace pool.  If two paths are ordered, that is,
-one is the prefix of the other and vice versa, then the dynamic semantics states that
-they necessarily occur in sequence, so the shorter path must synchronize before the longer
-path.  Two paths may be competitive only if they are unordered. 
-The fan in predicate states that there is no competition on the receiving end of a channel,
-by stating that any two paths that synchonize to receive on a channel are ordered.
-The fan out predicate states that there is no competition on the sending end of a channel,
-by stating that any two paths that syncronize to send on a channel are ordered. 
-The one to one predicates states that there is no competition on either the receiving or the
-sending ends of a channel. 
+Whether two attempts to synchronize on a channel are competitive or not can be determined by
+looking at the control paths of the trace pool. If two paths are ordered, that is, one is the
+prefix of the other and vice versa, then the dynamic semantics states that they necessarily
+occur in sequence, so the shorter path must synchronize before the longer path. Two paths may
+be competitive only if they are unordered. The fan in predicate states that there is no
+competition on the receiving end of a channel, by stating that any two paths that synchonize to
+receive on a channel are ordered. The fan out predicate states that there is no competition on
+the sending end of a channel, by stating that any two paths that syncronize to send on a
+channel are ordered. The one to one predicates states that there is no competition on either
+the receiving or the sending ends of a channel. 
 
 I define the static communicatin predicates relating programs to communnication topologies in
 two different ways.  The first way is simpler but the second way allows more precise
@@ -641,110 +785,222 @@ communication topologies for many common programs.
 
 static communication A ...
 
-For the simpler version, there are four kinds of control edges, indicating how one point in a program transitions to another point in a program.  The modes of transition are sequencing, calling, spawning, and returning. 
-A transition is a triplet of a label, representing a point in the progra, a control edge, and another label.  A step is just a label and a control edge, without the destination label.  An abstract control path is a list of steps.  
+For the simpler version, there are four kinds of control edges, indicating how one point in a
+program transitions to another point in a program.  The modes of transition are sequencing,
+calling, spawning, and returning. A transition is a triplet of a label, representing a point in
+the progra, a control edge, and another label.  A step is just a label and a control edge,
+without the destination label.  An abstract control path is a list of steps.  
 
 
-the static traversable predicate states that a set of transitions describes all the transitions that might be traversed for a program, given bindings of abstract values.  For a result expression, any transition might be traversed.  For all let expressions, except those binding to case matching and function application, the sequential transition from the top expression to the sequenced expression might be traversable, and the traversable transitions are also the traversable transitions for the sequenced expression.  For binding to function abstraction, the traversable transitions are also traversable transitions for the inner expression of the function abstraction.  For binding to spawning, the spawning transition from the top expression to the spawned expression might be traversed, and the traversable transitions are also traversable transitions for the spawned expression.
-For binding to case matching, the the calling transition from the top expression to the left case expression might be traversable, and the calling transition from the top expression to the right case expression might be traversable.  The returning transition from the result of the left case expression to the sequenced expression might be traversable, and the returning transition from the result of the right case expression to the sequenced expression might be traversable.  Additionally, the traversable transitions are traversable transitions the left case expression, right case expression, and the sequenced expression.   
-For binding to function application, if the applied name is acutally bound to a function abstraction, then a calling transition from the top expression to the inner expression of the abstraction might be traversable, and the returning transition from the result of the function abstracted expression to the sequenced expression.  Additionally, the traversable transitions are traversable transitions for the sequenced expression. 
+the static traversable predicate states that a set of transitions describes all the transitions
+that might be traversed for a program, given bindings of abstract values.  For a result
+expression, any transition might be traversed.  For all let expressions, except those binding
+to case matching and function application, the sequential transition from the top expression to
+the sequenced expression might be traversable, and the traversable transitions are also the
+traversable transitions for the sequenced expression.  For binding to function abstraction, the
+traversable transitions are also traversable transitions for the inner expression of the
+function abstraction.  For binding to spawning, the spawning transition from the top expression
+to the spawned expression might be traversed, and the traversable transitions are also
+traversable transitions for the spawned expression.
+
+For binding to case matching, the the calling transition from the top expression to the left
+case expression might be traversable, and the calling transition from the top expression to the
+right case expression might be traversable.  The returning transition from the result of the
+left case expression to the sequenced expression might be traversable, and the returning
+transition from the result of the right case expression to the sequenced expression might be
+traversable.  Additionally, the traversable transitions are traversable transitions the left
+case expression, right case expression, and the sequenced expression.   
+
+For binding to function application, if the applied name is acutally bound to a function
+abstraction, then a calling transition from the top expression to the inner expression of the
+abstraction might be traversable, and the returning transition from the result of the function
+abstracted expression to the sequenced expression.  Additionally, the traversable transitions
+are traversable transitions for the sequenced expression. 
 
 
 
-The static traceable predicate states that an abstract control path can be traced according to a set of transitions from a starting label to a final label matching a given condition.  An empty path might be traceable if the start label is also the final label.  A path of one step might be traceable if its label is the required start label, and there is a transition containing the step and the transition's destination label meets the final label requirement.   
-For a path of two or more steps, the first label is the start label, there is a transition from the first step to the second step, and the path from the second step onward also might be traceable.
+The static traceable predicate states that an abstract control path can be traced according to
+a set of transitions from a starting label to a final label matching a given condition.  An
+empty path might be traceable if the start label is also the final label.  A path of one step
+might be traceable if its label is the required start label, and there is a transition
+containing the step and the transition's destination label meets the final label requirement.
+For a path of two or more steps, the first label is the start label, there is a transition from
+the first step to the second step, and the path from the second step onward also might be
+traceable.
 
 
-The static inclusive predicate states that two abstract paths represent might be traversed in the same run of a program.   Ordered paths might be inclusive, and also a path that diverges from another at a spawn transition might be inclusive.  This concept is useful for achieving greater precision, since if two paths cannot occur in the same run of a program, only one needs to be counted towards the communication topology. 
+The static inclusive predicate states that two abstract paths represent might be traversed in
+the same run of a program.   Ordered paths might be inclusive, and also a path that diverges
+from another at a spawn transition might be inclusive.  This concept is useful for achieving
+greater precision, since if two paths cannot occur in the same run of a program, only one needs
+to be counted towards the communication topology. 
 
-The singular predicate states that two paths are the same or cannot occur in the same run of a program.    
-The noncompetitive predicates states that two paths are ordered or cannot occur in the same run of a program.
+The singular predicate states that two paths are the same or cannot occur in the same run of a
+program. The noncompetitive predicates states that two paths are ordered or cannot occur in the
+same run of a program. The static one shot predicate states that there is at most one attempt
+to syncrhonize to send on an abstract channel in a run of a given program with given abstract
+value bindings.
 
-The static one shot predicate states that there is at most one attempt to syncrhonize to send on an abstract channel in a run of a given program with given abstract value bindings.
+The static one to one predicate states that there is at most one thread attempting to send and
+one thread attempting to receive on a given channel at any time during a run of a given
+program.
 
-The static one to one predicate states that there is at most one thread attempting to send and one thread attempting to receive on a given channel at any time during a run of a given program.
-
-The static fan out predicate states that there is at most one thread attempting to send on a given channel at any time during a run of a given program.
-
-The static fan in predicate states that there is at most one thread attempting to receive on a given channel at any time during a run of a given program.
-
+The static fan out predicate states that there is at most one thread attempting to send on a
+given channel at any time during a run of a given program. The static fan in predicate states
+that there is at most one thread attempting to receive on a given channel at any time during a
+run of a given program.
 
 
 
 \section{Soundness of Communication Theorems}
 
-The lemma for soundness of static one shot states that if an abstract channel is statically classified as one shot for a given program, and value bindings derived from the program, then any corresponding dynamic channel is classified as one shot over any trace pool that results from running the program.  The lemmas for soundness of fan out, fan in, and one to one follow similar patterns. 
+The lemma for soundness of static one shot states that if an abstract channel is statically
+classified as one shot for a given program, and value bindings derived from the program, then
+any corresponding dynamic channel is classified as one shot over any trace pool that results
+from running the program.  The lemmas for soundness of fan out, fan in, and one to one follow
+similar patterns. 
 
 
-The static predicates for communication topologies should be generalizations of procedures that compute the topologies from programs.  The soundness of the static predicates must be provable to be certain that statically described topologies are also observed when running the program.
+The static predicates for communication topologies should be generalizations of procedures that
+compute the topologies from programs.  The soundness of the static predicates must be provable
+to be certain that statically described topologies are also observed when running the program.
 
 
 \section{Soundness of Semantics Proofs}
 soundness semantics proofs ... 
-  To prove the soundness of communication topologies, it is useful to define predicates that define how the abstract value bindings relate to various elements of the dynamic semantics, including values, environments, continuation stacks, states, and trace pools. 
 
-  The static eval value and static eval env predicates are mutually recursive predicates that describe the bindings to values that might be evaluated from values and environments of running programs. 
+To prove the soundness of communication topologies, it is useful to define predicates that
+define how the abstract value bindings relate to various elements of the dynamic semantics,
+including values, environments, continuation stacks, states, and trace pools. 
 
-  In the case of an function abstraction closure, the abstract function abstract value is bound to the function's recursive name, and the bindings also represent all possible bindings for the function abstraction's inner expression.
-  For an environment, every name and value in the environment correspond abstract value bindings, and the abstract value bindings also represent all possible bindings for each value within the environment.
+The static eval value and static eval env predicates are mutually recursive predicates that
+describe the bindings to values that might be evaluated from values and environments of running
+programs. 
 
-  For all closure values, the abstract value bindings of a value are also the abstract value bindings of the envirnment within the closure.
+In the case of an function abstraction closure, the abstract function abstract value is bound
+to the function's recursive name, and the bindings also represent all possible bindings for the
+function abstraction's inner expression. For an environment, every name and value in the
+environment correspond abstract value bindings, and the abstract value bindings also represent
+all possible bindings for each value within the environment.
 
-  The static eval stack predicate states that some abstract value bindings represent all the bindings possibly evaluated in a continuation stack, given some abstract values.  For an empty stack, any abstract value bindings may be possible.  For a nonempty stack, The abstract value bindings hold for the constiuents of the first continuation, and the name of the first conintuation is bound to the given abstract values.  The abstract value bindings hold for remaining continuation stack with the abstract values from the result of the first continuation.  
+For all closure values, the abstract value bindings of a value are also the abstract value
+bindings of the envirnment within the closure.
 
-  The static eval state predicate simply states the the abstract value bindings hold for the state's constituents.
+The static eval stack predicate states that some abstract value bindings represent all the
+bindings possibly evaluated in a continuation stack, given some abstract values.  For an empty
+stack, any abstract value bindings may be possible.  For a nonempty stack, The abstract value
+bindings hold for the constiuents of the first continuation, and the name of the first
+conintuation is bound to the given abstract values.  The abstract value bindings hold for
+remaining continuation stack with the abstract values from the result of the first
+continuation.  
 
-  The static eval pool predicate states that the abstract value bindings hold for each state within the trace pool.
+The static eval state predicate simply states the the abstract value bindings hold for the
+state's constituents.
+
+The static eval pool predicate states that the abstract value bindings hold for each state
+within the trace pool.
+
+The lemma static eval preserved under concur step states that if some abstract binings hold
+for a trace pool, and the trace pool takes a concurrent step to new trace pool, then the
+bindings also hold for the new trace pool. The proof is by a straightforward case analysis
+based on the definitions of the predicates.
+
+The lemma static eval preserved under concur step star generalizes the previous predicate over
+multiple concur steps.  The proof is by induction over the first parameter of the star of
+concur step predicate.  In the inductive case of star where at least one step is taken, the
+induction hypothesis provides the assumption that if the abstract value bindings hold for
+second trace pool stepped to from the first, then they hold for a third trace pool that the
+stepped to trace pool takes multiple steps to.  The induction hypothesis is strong enough to
+conclude that the abstract value bindings hold for the third trace pool if they hold for the
+first. 
+
+The lemma trace pool snapshot not static bound sound states that an abstract value is
+statically bound to a name if the abstract value binding is a static evaluation of a trace
+pool, and there is an environment in that trace pool that contains the name bound to a
+corresponding concreate value.  In other words, if there is no statically evaluated abstract
+value binding from a trace pool then there is no corresponding dynamically evaluated concrete
+value binding.  The proof is a straightforward application of the predicate definitions. 
+
+The lemma trace pool always not static bound sound states that an abstract value binds to a
+name from static evaluation of a trace pool, if that trace pool dynamically evalutes to a new
+trace pool over multipe steps, and the name is bound to a corresponding concrete value in the
+new trace pool.  The proof is by applying the lemmas for static eval preserved under concur
+step star, and trace pool snapshot not static bound sound. 
 
 
-  The lemma static eval preserved under concur step states that if some abstract binings hold for a trace pool, and the trace pool takes a concurrent step to new trace pool, then the bindings also hold for the new trace pool. The proof is by a straightforward case analysis based on the definitions of the predicates.
-
-  The lemma static eval preserved under concur step star generalizes the previous predicate over multiple concur steps.  The proof is by induction over the first parameter of the star of concur step predicate.  In the inductive case of star where at least one step is taken, the induction hypothesis provides the assumption that if the abstract value bindings hold for second trace pool stepped to from the first, then they hold for a third trace pool that the stepped to trace pool takes multiple steps to.  The induction hypothesis is strong enough to conclude that the abstract value bindings hold for the third trace pool if they hold for the first. 
-
-
-The lemma trace pool snapshot not static bound sound states that an abstract value is statically bound to a name if the abstract value binding is a static evaluation of a trace pool, and there is an environment in that trace pool that contains the name bound to a corresponding concreate value.  In other words, if there is no statically evaluated abstract value binding from a trace pool then there is no corresponding dynamically evaluated concrete value binding.  The proof is a straightforward application of the predicate definitions. 
-
-The lemma trace pool always not static bound sound states that an abstract value binds to a name from static evaluation of a trace pool, if that trace pool dynamically evalutes to a new trace pool over multipe steps, and the name is bound to a corresponding concrete value in the new trace pool.  The proof is by applying the lemmas for static eval preserved under concur step star, and trace pool snapshot not static bound sound. 
-
-
-The lemma exp always not static bound sound states that an abstract value binds to a name from static evaluation of an exp, if that expression in an initial trace pool dynamically evalutes to a new trace pool over multipe steps, and the name is bound to a corresponding concrete value in the new trace pool.  The proof is by applying the lemma trace pool always not static bound, and the definitions of the static eval predicates. 
+The lemma exp always not static bound sound states that an abstract value binds to a name from
+static evaluation of an exp, if that expression in an initial trace pool dynamically evalutes
+to a new trace pool over multipe steps, and the name is bound to a corresponding concrete value
+in the new trace pool.  The proof is by applying the lemma trace pool always not static bound,
+and the definitions of the static eval predicates. 
 
 soundness communication ... 
 
-It is useful to define how abstract and concrete dynamic paths correspond in order to prove the soundness theorems for communication classification.  Essentially, there is an isomorphism between each step of an abstract path and that of corresponding dynamic path.
+It is useful to define how abstract and concrete dynamic paths correspond in order to prove the
+soundness theorems for communication classification.  Essentially, there is an isomorphism
+between each step of an abstract path and that of corresponding dynamic path.
 
-the lemma equality abstract to concrete states that if two concrete paths correspond to the same abstract path, then the two conrete paths are the same.  The proof is by induction of the paths of the paths correspond predicate.
+the lemma equality abstract to concrete states that if two concrete paths correspond to the
+same abstract path, then the two conrete paths are the same.  The proof is by induction of the
+paths of the paths correspond predicate.
 
-The lemma prefix abstract to concrete states that a concrete path is a prefix of a second concrete path if the corresponding abstract path of the former is the prefix of the corresponding abstract path of the latter.  The proof is by induction on the paths of the paths correspond predicate.
+The lemma prefix abstract to concrete states that a concrete path is a prefix of a second
+concrete path if the corresponding abstract path of the former is the prefix of the
+corresponding abstract path of the latter.  The proof is by induction on the paths of the paths
+correspond predicate.
 
-The lemma strict prefix abstract to concrete states that a concrete path is a strict prefix of a sceond concrete path if the corresponding abstract path of the former is the strict prefix of the corresponding abstract path of the latter.  The proof is by induction on the paths of the paths correspond predicate.
+The lemma strict prefix abstract to concrete states that a concrete path is a strict prefix of
+a sceond concrete path if the corresponding abstract path of the former is the strict prefix of
+the corresponding abstract path of the latter.  The proof is by induction on the paths of the
+paths correspond predicate.
+
+the lemma equality concrete to abstract states that if two abstract paths correspond to the
+same concrete path, then the two conrete paths are the same. The proof is by induction of the
+paths of the paths correspond predicate.
+
+The lemma not static inclusive states that two abstract paths might be inclusive, if the
+correspond to dynamic paths that occur in the same run of a program.  The proof is by induction
+on the star of concur step predicate and relies on the lemmas and definitions related to the
+correponsance of paths.
 
 
-the lemma equality concrete to abstract states that if two abstract paths correspond to the same concrete path, then the two conrete paths are the same.  The proof is by induction of the paths of the paths correspond predicate.
+It is also useful to define how transitions relate to other parts of the dynamic semantics,
+including values, environments, continuations, states, and trace pools.
 
-The lemma not static inclusive states that two abstract paths might be inclusive, if the correspond to dynamic paths that occur in the same run of a program.  The proof is by induction on the star of concur step predicate and relies on the lemmas and definitions related to the correponsance of paths.
+The static traversable env predicate and static traversable val predicate are mutually
+inductive. For the environment, the predicate states that the given transitions hold for each
+value in the environment. For the value, the predicate states that the givne transitions hold
+for the consituent parts of the value.
 
+The static traversable stack predicate states that the given transitions hold for the
+constinuent parts of the continuat stack.
 
-It is also useful to define how transitions relate to other parts of the dynamic semantics, including values, environments, continuations, states, and trace pools.
-
-The static traversable env predicate and static traversable val predicate are mutually inductive.
-For the environment, the predicate states that the given transitions hold for each value in the environment.  
-For the value, the predicate states that the givne transitions hold for the consituent parts of the value.
-
-The static traversable stack predicate states that the given transitions hold for the constinuent parts of the continuat stack.
-
-The static traversable pool states that the given transitions hold for the constiuent parts of every state in the trace pool.  
-
+The static traversable pool states that the given transitions hold for the constiuent parts of
+every state in the trace pool.  
 
 
 -------------------------------------------------------------
 static communication B ...
 
-The higher precision defintions for static communication topologies enables the discrimination between channels created by the same piece of code, but at different instances during a run of a program.  For example, a function abstraction may specify the creation of a channel with a binding to the name x.  This function may be called twice during a run of the program, resulting in two distinct channels.  However, the abstract channels would be indentified by the same name x.  To get around this issue, the static communications definitions are complicated to ignore expresions that apply the function abstraction containing the channel creation of interest.  Doing so requires describing a trimmed down sub program for each channel of interest.  To avoid disconnecting the channel creation portion of the program from communicating threads defined outside the channel's function abstraction, the trimmed program is expressed in terms of transitions, with sending transitions used to connect communication points.  
-Thus, the modes of transition are sequential, spawning, calling, returining, and sending. 
+The higher precision defintions for static communication topologies enables the discrimination
+between channels created by the same piece of code, but at different instances during a run of
+a program.  For example, a function abstraction may specify the creation of a channel with a
+binding to the name x.  This function may be called twice during a run of the program,
+resulting in two distinct channels.  However, the abstract channels would be indentified by the
+same name x.  To get around this issue, the static communications definitions are complicated
+to ignore expresions that apply the function abstraction containing the channel creation of
+interest.  Doing so requires describing a trimmed down sub program for each channel of
+interest.  To avoid disconnecting the channel creation portion of the program from
+communicating threads defined outside the channel's function abstraction, the trimmed program
+is expressed in terms of transitions, with sending transitions used to connect communication
+points. Thus, the modes of transition are sequential, spawning, calling, returining, and
+sending. 
 
 
-The static traversable predicate differs from the simpler version in a few ways.  First, the predicate is dependent on the higher order predicate for stating tat a label might represent a receive site.  Second, in the case of a let binding to synchronization to send, a sending transition from let binding name to a receiving expression.
+The static traversable predicate differs from the simpler version in a few ways.  First, the
+predicate is dependent on the higher order predicate for stating tat a label might represent a
+receive site.  Second, in the case of a let binding to synchronization to send, a sending
+transition from let binding name to a receiving expression.
 
 
 ... TO DO after proofs of part B
