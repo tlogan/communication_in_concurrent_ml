@@ -414,34 +414,34 @@ inductive static_live_traversable :: "transition_set \<Rightarrow> label_map \<R
 
 
 
-(* TO DO: convert to snoc instead of cons definition *) 
 inductive static_live_traceable :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> label \<Rightarrow> (label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
     static_live_traceable V F Ln Lx start isEnd []
   " |
   Edge: "
+    static_live_traceable V F Ln Lx start (\<lambda> l . l = middle) path \<Longrightarrow>
     isEnd end \<Longrightarrow>
-    static_live_traversable F Ln Lx (start, edge, end) \<Longrightarrow>
-    static_live_traceable V F Ln Lx start isEnd [(start, edge)]
-  " |
-  Step: "
-    static_live_traceable V F Ln Lx middle isEnd ((middle, edge') # path) \<Longrightarrow>
-    static_live_traversable F Ln Lx (start, edge, middle) \<Longrightarrow>
-    static_live_traceable V F Ln Lx start isEnd ((start, edge) # (middle, edge') # path)
-  " |
+
+    static_live_traversable F Ln Lx (middle, edge, end) \<Longrightarrow>
+
+    static_live_traceable V F Ln Lx start isEnd (path @ [(middle, edge)])
+  " 
+
+
+(*|
 
   Pre_Return: "
     static_live_traceable V F Ln Lx (NResult y) isEnd ((NResult y, EReturn) # post) \<Longrightarrow>
 
 (* static_traceable F (NResult y) (\<lambda> l . l = top_label (Rslt x)) pre *)
-    static_traceable F (NResult y) pre \<Longrightarrow>
+ (*   static_traceable F (NResult y) pre \<Longrightarrow> *)
     \<not> static_balanced (pre @ [(NResult y, EReturn)]) \<Longrightarrow>
     \<not> Set.is_empty (Lx (NLet x)) \<Longrightarrow>
     path = pre @ (NResult y, EReturn) # post \<Longrightarrow>
-    static_live_traceable V F Ln Lx start isEnd path
-  "
-
+    static_live_traceable V F Ln Lx start isEnd (path @ [(NResult y, EReturn)])
+  " 
+*)
 
 
 inductive static_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
