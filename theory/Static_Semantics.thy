@@ -14,78 +14,78 @@ fun rslt_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
 
 inductive static_eval :: "abstract_env \<times> abstract_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>e" 55) where
   Result: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>e (Rslt x)
+    static_eval (\<V>, \<C>) (Rslt x)
   " |
   Let_Unit: "
     \<lbrakk>
       {^Unt} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      static_eval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x Unt e
+    static_eval (\<V>, \<C>) (Let x Unt e)
   " |
 
   Let_Chan: "
     \<lbrakk>
       {^Chan x} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      static_eval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x MkChn e
+    static_eval (\<V>, \<C>) (Let x MkChn e)
   " |
 
   Let_SendEvt : "
     \<lbrakk>
       {^(SendEvt x\<^sub>c x\<^sub>m)} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      static_eval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (Prim (SendEvt x\<^sub>c x\<^sub>m)) e
+    static_eval (\<V>, \<C>) (Let x (Prim (SendEvt x\<^sub>c x\<^sub>m)) e)
   " |
   Let_RecvEvt : "
     \<lbrakk>
       {^(RecvEvt x\<^sub>c)} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      static_eval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (Prim (RecvEvt x\<^sub>c)) e
+    static_eval (\<V>, \<C>) (Let x (Prim (RecvEvt x\<^sub>c)) e)
   " |
 
   Let_Pair : "
     \<lbrakk>
       {^Pair x\<^sub>1 x\<^sub>2} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      static_eval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (Prim (Pair x\<^sub>1 x\<^sub>2)) e
+    static_eval (\<V>, \<C>) (Let x (Prim (Pair x\<^sub>1 x\<^sub>2)) e)
   " |
   Let_Lft : "
     \<lbrakk>
       {^(Lft x\<^sub>p)} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      static_eval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (Prim (Lft x\<^sub>p)) e
+    static_eval (\<V>, \<C>) (Let x (Prim (Lft x\<^sub>p)) e)
   " |
   Let_Rght : "
     \<lbrakk>
       {^(Rght x\<^sub>p)} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      static_eval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (Prim (Rght x\<^sub>p)) e
+    static_eval (\<V>, \<C>) (Let x (Prim (Rght x\<^sub>p)) e)
   " |
 
   Let_Abs : "
     \<lbrakk>
       {^Abs f' x' e'} \<subseteq> \<V> f';
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e';
+      static_eval (\<V>, \<C>) e';
       {^Abs f' x' e'} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      static_eval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (Prim (Abs f' x' e')) e
+    static_eval (\<V>, \<C>) (Let x (Prim (Abs f' x' e')) e)
   " |
 
   Let_Spawn: "
     \<lbrakk>
       {^Unt} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>c;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      static_eval (\<V>, \<C>) e\<^sub>c;
+      static_eval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (Spwn e\<^sub>c) e
+    static_eval (\<V>, \<C>) (Let x (Spwn e\<^sub>c) e)
   " |
 
   Let_Sync  : "
@@ -100,36 +100,36 @@ inductive static_eval :: "abstract_env \<times> abstract_env \<Rightarrow> exp \
         ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow>
         \<C> x\<^sub>c \<subseteq> \<V> x
       ;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      static_eval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (Sync x\<^sub>e) e
+    static_eval (\<V>, \<C>) (Let x (Sync x\<^sub>e) e)
   " |
 
   Let_Fst: "
     \<lbrakk>
       \<forall> x\<^sub>1 x\<^sub>2. ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>1 \<subseteq> \<V> x; 
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      static_eval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (Fst x\<^sub>p) e
+    static_eval (\<V>, \<C>) (Let x (Fst x\<^sub>p) e)
   " |
   Let_Snd: "
     \<lbrakk>
       \<forall> x\<^sub>1 x\<^sub>2 . ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>2 \<subseteq> \<V> x; 
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      static_eval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (Snd x\<^sub>p) e
+    static_eval (\<V>, \<C>) (Let x (Snd x\<^sub>p) e)
   " |
   Let_Case: "
     \<lbrakk>
       \<forall> x\<^sub>l' . ^(Lft x\<^sub>l') \<in> \<V> x\<^sub>s \<longrightarrow>
-        \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l
+        \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> static_eval (\<V>, \<C>) e\<^sub>l
       ;
       \<forall> x\<^sub>r' . ^(Rght x\<^sub>r') \<in> \<V> x\<^sub>s \<longrightarrow>
-        \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r
+        \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x \<and> static_eval (\<V>, \<C>) e\<^sub>r
       ;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      static_eval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e
+    static_eval (\<V>, \<C>) (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
   " |
   let_app: "
     \<lbrakk>
@@ -137,9 +137,9 @@ inductive static_eval :: "abstract_env \<times> abstract_env \<Rightarrow> exp \
         \<V> x\<^sub>a \<subseteq> \<V> x' \<and>
         \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x
       ;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      static_eval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e Let x (App f x\<^sub>a) e
+    static_eval (\<V>, \<C>) (Let x (App f x\<^sub>a) e)
   "
 
 fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) where

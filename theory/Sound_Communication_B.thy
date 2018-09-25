@@ -55,7 +55,7 @@ inductive paths_correspond :: "control_path \<Rightarrow> abstract_path \<Righta
   Return: "
     paths_correspond \<pi> (path @ (NLet x, ECall) # path') \<Longrightarrow>
     static_balanced path' \<Longrightarrow>
-    paths_correspond (\<pi> @ [LRtn y]) (path @ (NLet x, ECall) # path' @ [(NResult y, EReturn x)])
+    paths_correspond (\<pi> @ [LRtn y]) (path @ (NLet x, ECall) # path' @ [(NResult y, EReturn)])
   " 
 
 
@@ -627,8 +627,8 @@ theorem static_one_to_one_sound: "
   one_to_one \<E>' (Ch \<pi> xC)
 "
  apply (erule static_one_to_one.cases; auto)
- apply (unfold one_to_one.simps)
- apply (metis fan_in_sound fan_out.intros noncompetitive_send_to_ordered_send static_fan_in.intros)
+  apply (unfold one_to_one.simps)
+  apply (metis static_fan_in.intros static_fan_in_sound static_fan_out.intros static_fan_out_sound)
 done
 
 (*

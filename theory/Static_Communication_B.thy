@@ -5,7 +5,7 @@ theory Static_Communication_B
     Static_Communication
 begin
 
-datatype mode = ENext | ESpawn | ESend var | ECall | EReturn var
+datatype mode = ENext | ESpawn | ESend var | ECall | EReturn
 
 type_synonym transition = "(label \<times> mode \<times> label)"
 
@@ -120,8 +120,8 @@ inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rig
       {
         (NLet x, ECall, top_label e\<^sub>l),
         (NLet x, ECall, top_label e\<^sub>r),
-        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn x, top_label e),
-        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn x, top_label e)
+        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn, top_label e),
+        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn, top_label e)
       } \<subseteq> F;
       static_traversable V F static_recv_site e\<^sub>l;
       static_traversable V F static_recv_site e\<^sub>r;
@@ -134,7 +134,7 @@ inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rig
       (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow>
         {
           (NLet x, ECall, top_label e\<^sub>b),
-          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn x, top_label e)
+          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn, top_label e)
         } \<subseteq> F);
       static_traversable V F static_recv_site e
     \<rbrakk> \<Longrightarrow>
@@ -359,7 +359,7 @@ inductive static_balanced :: "abstract_path \<Rightarrow> bool" where
   " |
   CallReturn: "
     static_balanced path \<Longrightarrow>
-    static_balanced ((NLet x, ECall) # (path @ [(NResult y, EReturn x)]))
+    static_balanced ((NLet x, ECall) # (path @ [(NResult y, EReturn)]))
   " |
   Append: "
     path \<noteq> [] \<Longrightarrow>
@@ -372,7 +372,7 @@ inductive static_balanced :: "abstract_path \<Rightarrow> bool" where
 (*
 inductive static_unbalanced :: "abstract_path \<Rightarrow> bool" where
   Result: "
-    static_unbalanced ((NResult y, EReturn x) # post)
+    static_unbalanced ((NResult y, EReturn) # post)
   " |
   Next: "
     static_unbalanced post \<Longrightarrow>
@@ -404,9 +404,9 @@ inductive static_live_traversable :: "transition_set \<Rightarrow> label_map \<R
     static_live_traversable F Ln Lx (l, ECall, l')
   " |
   Return: "
-    (l, EReturn x, l') \<in> F \<Longrightarrow>
+    (l, EReturn, l') \<in> F \<Longrightarrow>
     \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    static_live_traversable F Ln Lx (l, EReturn x, l')
+    static_live_traversable F Ln Lx (l, EReturn, l')
   " |
   Send: "
     ((NLet xSend), ESend xE, (NLet xRecv)) \<in> F \<Longrightarrow>
@@ -431,11 +431,11 @@ inductive static_live_traceable :: "abstract_env \<Rightarrow> transition_set \<
   " |
 
   Pre_Return: "
-    static_live_traceable V F Ln Lx (NResult y) isEnd ((NResult y, EReturn x) # post) \<Longrightarrow>
+    static_live_traceable V F Ln Lx (NResult y) isEnd ((NResult y, EReturn) # post) \<Longrightarrow>
     static_traceable  F (NResult y) pre \<Longrightarrow>
-    \<not> static_balanced (pre @ [(NResult y, EReturn x)]) \<Longrightarrow>
+    \<not> static_balanced (pre @ [(NResult y, EReturn)]) \<Longrightarrow>
     \<not> Set.is_empty (Lx (NLet x)) \<Longrightarrow>
-    path = pre @ (NResult y, EReturn x) # post \<Longrightarrow>
+    path = pre @ (NResult y, EReturn) # post \<Longrightarrow>
     static_live_traceable V F Ln Lx start isEnd path
   "
 
