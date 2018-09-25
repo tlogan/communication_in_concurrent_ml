@@ -204,131 +204,145 @@ where
   "
 *)
 
+(*
 fun chan_set :: "abstract_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> var set" where
   "chan_set V Ln x\<^sub>c x = (if (static_built_on_chan V Ln x\<^sub>c x) then {x} else {})"
+*)
 
 
 inductive static_live_chan :: "abstract_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> exp \<Rightarrow> bool" where
   Result: "
     \<lbrakk>
-      chan_set V Ln x\<^sub>c y = Ln (NResult y)
+      (static_built_on_chan V Ln x\<^sub>c y) \<longrightarrow> {y} \<subseteq> Ln (NResult y)
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Rslt y)
   " |
   Let_Unit: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
-      Lx (NLet x) = Ln (NLet x)
+      (Lx (NLet x) - {x}) = Ln (NLet x);
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x Unt e)
   " |
   Let_Chan: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) = Ln (NLet x)
+      (Lx (NLet x) - {x}) = Ln (NLet x);
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x MkChn e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>s\<^sub>c \<union> chan_set V Ln x\<^sub>c x\<^sub>m = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>s\<^sub>c \<longrightarrow> {x\<^sub>s\<^sub>c} \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>m \<longrightarrow> {x\<^sub>m} \<subseteq> Ln (NLet x);
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (SendEvt x\<^sub>s\<^sub>c x\<^sub>m)) e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>r\<^sub>c = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>r \<longrightarrow> {x\<^sub>r} \<subseteq> Ln (NLet x);
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (RecvEvt x\<^sub>r\<^sub>c)) e)
   " |
   Let_Pair: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union>  chan_set V Ln x\<^sub>c x\<^sub>1 \<union> chan_set V Ln x\<^sub>c x\<^sub>2 = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>1 \<longrightarrow> {x\<^sub>1} \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>2 \<longrightarrow> {x\<^sub>2} \<subseteq> Ln (NLet x);
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (Pair x\<^sub>1 x\<^sub>2)) e)
   " |
   Let_Left: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> Ln (NLet x);
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (Lft x\<^sub>a)) e)
   " |
   Let_Right: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> Ln (NLet x);
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (Rght x\<^sub>a)) e)
   " |
   Let_Abs: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
+      (Lx (NLet x) - {x}) \<union> (Ln (top_label e\<^sub>b) - {x\<^sub>p}) \<subseteq> Ln (NLet x);
       static_live_chan V Ln Lx x\<^sub>c e\<^sub>b;
-      (Lx (NLet x) - {x}) \<union> (Ln (top_label e\<^sub>b) - {x\<^sub>p}) = Ln (NLet x)
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Prim (Abs f x\<^sub>p e\<^sub>b)) e)
   " |
   Let_Spawn: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
+      Ln (top_label e) \<union> Ln (top_label e\<^sub>c) \<subseteq> Lx (NLet x);
       static_live_chan V Ln Lx x\<^sub>c e\<^sub>c;
-      Ln (top_label e) \<union> Ln (top_label e\<^sub>c) = Lx (NLet x);
-      (Lx (NLet x) - {x}) = Ln (NLet x)
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Spwn e\<^sub>c) e)
   " |
   Let_Sync: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>e = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>e \<longrightarrow> {x\<^sub>e} \<subseteq> Ln (NLet x);
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Sync x\<^sub>e) e)
   " |
   Let_Fst: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> Ln (NLet x);
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Fst x\<^sub>a) e)
   " |
   Let_Snd: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> Ln (NLet x);
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Snd x\<^sub>a) e)
   " |
   Let_Case: "
-    \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
+    \<lbrakk>_
+      (Lx (NLet x) - {x}) \<union> (Ln (top_label e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (top_label e\<^sub>r) - {x\<^sub>r}) \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>s \<longrightarrow> {x\<^sub>s} \<subseteq> Ln (NLet x);
       static_live_chan V Ln Lx x\<^sub>c e\<^sub>l;
       static_live_chan V Ln Lx x\<^sub>c e\<^sub>r;
-      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c x\<^sub>s \<union> 
-         (Ln (top_label e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (top_label e\<^sub>r) - {x\<^sub>r}) = Ln (NLet x)
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
   " |
   Let_App: "
     \<lbrakk>
-      static_live_chan V Ln Lx x\<^sub>c e;
-      Ln (top_label e) = Lx (NLet x);
-      (Lx (NLet x) - {x}) \<union> chan_set V Ln x\<^sub>c f \<union> chan_set V Ln x\<^sub>c x\<^sub>a = Ln (NLet x)
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> Ln (NLet x);
+      static_built_on_chan V Ln x\<^sub>c f \<longrightarrow> {f} \<subseteq> Ln (NLet x);
+      Ln (top_label e) \<subseteq> Lx (NLet x);
+      static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     static_live_chan V Ln Lx x\<^sub>c (Let x (App f x\<^sub>a) e)
   "
