@@ -143,10 +143,27 @@ lemma static_equality_sound: "
 
 (* PATH SOUND *)
 
+lemma not_static_traceable_sound': 
+
+assumes
+  H1: "star_left concur_step EH EH'" and
+  H2: "(V, C) \<Turnstile>\<^sub>e e"
+shows "
+  \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
+  EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
+  E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+(**Need to generalize over pool**)
+  static_live_chan V Ln Lx xC e \<longrightarrow>
+  static_traversable V F (static_recv_label V e) e \<longrightarrow>
+(****)
+  isEnd (top_label e') \<longrightarrow>
+  (\<exists> path . 
+    paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
+    static_live_traceable V F Ln Lx (NLet xC) isEnd path)"
+  sorry
+
 lemma not_static_traceable_sound: "
   \<E>' \<pi> = Some (\<langle>(Let x b e\<^sub>n);\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  \<rho> z \<noteq> None \<Longrightarrow>
-  dynamic_built_on_chan_var \<rho> (Ch \<pi>C xC) z \<Longrightarrow>
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
@@ -169,15 +186,10 @@ lemma send_not_static_traceable_sound: "
   static_traversable V F (static_recv_label V e) e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
-    static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC) pathSync
-"
+    static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC) pathSync"
  apply (unfold is_send_path.simps; auto)
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in label_not_send_site_sound; auto?)
- apply (frule not_static_traceable_sound; auto?)
-  apply (auto simp: 
-    dynamic_built_on_chan_var.simps 
-    dynamic_built_on_chan_var_dynamic_built_on_chan_prim_dynamic_built_on_chan_bound_exp_dynamic_built_on_chan_exp.Send_Evt 
-  )
+  apply (frule not_static_traceable_sound; auto?)
 done
 
 (* END PATH SOUND *)
@@ -283,8 +295,6 @@ theorem static_one_to_one_sound: "
 done
 
 (*
-
-
 
 lemma paths_cong_preserved_under_reduction: "
   paths_correspond (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
