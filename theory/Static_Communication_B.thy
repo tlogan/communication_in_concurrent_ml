@@ -16,66 +16,66 @@ type_synonym step_label = "(label \<times> mode)"
 type_synonym abstract_path = "step_label list"
 
 
-inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> (var \<Rightarrow> label \<Rightarrow> bool) \<Rightarrow> exp \<Rightarrow> bool"  where
+inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> exp \<Rightarrow> bool"  where
   Result: "
-    static_traversable V F static_recv_site (Rslt x)
+    static_traversable V F (Rslt x)
   " |
   Let_Unit: "
     \<lbrakk>
       {(NLet x , ENext, top_label e)} \<subseteq> F;
-      static_traversable V F static_recv_site e
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x Unt e)
+    static_traversable V F (Let x Unt e)
   " |
   Let_Chan: "
     \<lbrakk>
       {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F static_recv_site e
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x MkChn e)
+    static_traversable V F (Let x MkChn e)
   " |
   Let_Send_Evt: "
     \<lbrakk>
       {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F static_recv_site e
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (Prim (SendEvt x\<^sub>c x\<^sub>m)) e)
+    static_traversable V F (Let x (Prim (SendEvt x\<^sub>c x\<^sub>m)) e)
   " |
   Let_Recv_Evt: "
     \<lbrakk>
       {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F static_recv_site e
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (Prim (RecvEvt x\<^sub>c)) e)
+    static_traversable V F (Let x (Prim (RecvEvt x\<^sub>c)) e)
   " |
   Let_Pair: "
     \<lbrakk>
       {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F static_recv_site e
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (Prim (Pair x\<^sub>1 x\<^sub>2)) e)
+    static_traversable V F (Let x (Prim (Pair x\<^sub>1 x\<^sub>2)) e)
   " |
   Let_Left: "
     \<lbrakk>
       {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F static_recv_site e
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (Prim (Lft x\<^sub>p)) e)
+    static_traversable V F (Let x (Prim (Lft x\<^sub>p)) e)
   " |
   Let_Right: "
     \<lbrakk>
       {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F static_recv_site e
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (Prim (Rght x\<^sub>p)) e)
+    static_traversable V F (Let x (Prim (Rght x\<^sub>p)) e)
   " |
   Let_Abs: "
     \<lbrakk>
       {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F static_recv_site e\<^sub>b;
-      static_traversable V F static_recv_site e
+      static_traversable V F e\<^sub>b;
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (Prim (Abs f x\<^sub>p e\<^sub>b)) e)
+    static_traversable V F (Let x (Prim (Abs f x\<^sub>p e\<^sub>b)) e)
   " |
   Let_Spawn: "
     \<lbrakk>
@@ -83,10 +83,10 @@ inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rig
         (NLet x, ENext, top_label e),
         (NLet x, ESpawn, top_label e\<^sub>c)
       } \<subseteq> F;
-      static_traversable V F static_recv_site e\<^sub>c;
-      static_traversable V F static_recv_site e
+      static_traversable V F e\<^sub>c;
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (Spwn e\<^sub>c) e)
+    static_traversable V F (Let x (Spwn e\<^sub>c) e)
   " |
   Let_Sync: "
     \<lbrakk>
@@ -94,26 +94,26 @@ inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rig
       (\<forall> xSC xM xC y.
         {^SendEvt xSC xM} \<subseteq> V xSE \<longrightarrow>
         {^Chan xC} \<subseteq> V xSC \<longrightarrow>
-        static_recv_site xC (NLet y) \<longrightarrow>
+        static_recv_label V e xC (NLet y) \<longrightarrow>
         {(NLet x, ESend xSE, NLet y)} \<subseteq> F
       );
-      static_traversable V F static_recv_site e
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (Sync xSE) e)
+    static_traversable V F (Let x (Sync xSE) e)
   " |
   Let_Fst: "
     \<lbrakk>
       {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F static_recv_site e
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (Fst x\<^sub>p) e)
+    static_traversable V F (Let x (Fst x\<^sub>p) e)
   " |
   Let_Snd: "
     \<lbrakk>
       {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F static_recv_site e
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (Snd x\<^sub>p) e)
+    static_traversable V F (Let x (Snd x\<^sub>p) e)
   " |
   Let_Case: "
     \<lbrakk>
@@ -123,11 +123,11 @@ inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rig
         (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn, top_label e),
         (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn, top_label e)
       } \<subseteq> F;
-      static_traversable V F static_recv_site e\<^sub>l;
-      static_traversable V F static_recv_site e\<^sub>r;
-      static_traversable V F static_recv_site e
+      static_traversable V F e\<^sub>l;
+      static_traversable V F e\<^sub>r;
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
+    static_traversable V F (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
   " |
   Let_App: "
     \<lbrakk>
@@ -136,9 +136,9 @@ inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rig
           (NLet x, ECall, top_label e\<^sub>b),
           (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn, top_label e)
         } \<subseteq> F);
-      static_traversable V F static_recv_site e
+      static_traversable V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F static_recv_site (Let x (App f x\<^sub>a) e)
+    static_traversable V F (Let x (App f x\<^sub>a) e)
   "
 
 inductive 
@@ -491,7 +491,7 @@ inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \
   Sync: "
     every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) singular \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
-    static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+    static_traversable V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
@@ -500,7 +500,7 @@ inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var
     every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
     every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
-    static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+    static_traversable V F e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
@@ -508,7 +508,7 @@ inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<
   Sync: "
     every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
-    static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+    static_traversable V F e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
@@ -516,7 +516,7 @@ inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<R
   Sync: "
     every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
-    static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+    static_traversable V F e \<Longrightarrow>
     static_fan_in V e xC 
   "
 

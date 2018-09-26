@@ -89,7 +89,7 @@ is unordered necessary?
 lemma not_static_inclusive_sound: "
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+  static_traversable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
@@ -126,7 +126,7 @@ lemma static_equality_sound: "
 
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+  static_traversable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
@@ -154,7 +154,7 @@ shows "
   E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
 (**Need to generalize over pool**)
   static_live_chan V Ln Lx xC e \<longrightarrow>
-  static_traversable V F (static_recv_label V e) e \<longrightarrow>
+  static_traversable V F e \<longrightarrow>
 (****)
   isEnd (top_label e') \<longrightarrow>
   (\<exists> path . 
@@ -167,7 +167,7 @@ lemma not_static_traceable_sound: "
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+  static_traversable V F e \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
@@ -183,7 +183,7 @@ lemma send_not_static_traceable_sound: "
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+  static_traversable V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
     static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC) pathSync"
@@ -198,7 +198,7 @@ done
 theorem static_one_shot_sound': "
   every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) singular \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+  static_traversable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
@@ -233,7 +233,7 @@ TO DO LATER:
 theorem noncompetitive_send_to_ordered_send: "
   every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+  static_traversable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
   every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
@@ -259,7 +259,7 @@ done
 
 lemma noncompetitive_recv_to_ordered_recv: "
    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
-   static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+   static_traversable V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
    every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
