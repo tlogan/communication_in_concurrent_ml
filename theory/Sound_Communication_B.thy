@@ -53,108 +53,27 @@ inductive paths_correspond :: "control_path \<Rightarrow> abstract_path \<Righta
     paths_correspond (\<pi> @ [LCall x]) (path @ [(NLet x, ECall)])
   "  |
   Return: "
-    paths_correspond \<pi> (path @ (NLet x, ECall) # path') \<Longrightarrow>
-    static_balanced path' \<Longrightarrow>
-    paths_correspond (\<pi> @ [LRtn y]) (path @ (NLet x, ECall) # path' @ [(NResult y, EReturn)])
+    paths_correspond \<pi> path \<Longrightarrow>
+    paths_correspond (\<pi> @ [LRtn y]) (path @ [(NResult y, EReturn)])
   " 
 
 
-
-inductive 
-  dynamic_built_on_chan_var :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> var \<Rightarrow> bool" and
-  dynamic_built_on_chan_prim :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> prim \<Rightarrow> bool" and
-  dynamic_built_on_chan_bound_exp :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> bound_exp \<Rightarrow> bool" and
-  dynamic_built_on_chan_exp :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> exp \<Rightarrow> bool" 
-where
-  Chan: "
-    \<rho> x = Some (VChn c) \<Longrightarrow>
-    dynamic_built_on_chan_var \<rho> c x
-  " |
-  Closure: "
-    dynamic_built_on_chan_prim \<rho>' c p \<Longrightarrow>
-    \<rho> x = Some (VClsr p \<rho>') \<Longrightarrow>
-    dynamic_built_on_chan_var \<rho> c x
-  " |
-
-
-  Send_Evt: "
-    dynamic_built_on_chan_var \<rho> c xSC \<or> dynamic_built_on_chan_var \<rho> c xM \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (SendEvt xSC xM)
-  " |
-  Recv_Evt: "
-    dynamic_built_on_chan_var \<rho> c xRC \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (RecvEvt xRC)
-  " |
-  Pair: "
-    dynamic_built_on_chan_var \<rho> c x1 \<or> dynamic_built_on_chan \<rho> c x2 \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (Pair x1 x2)
-  " |
-  Left: "
-    dynamic_built_on_chan_var \<rho> c xSum \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (Lft xSum)
-  " |
-  Right: "
-    dynamic_built_on_chan_var \<rho> c xSum \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (Rght xSum)
-  " |
-  Abs: "
-    dynamic_built_on_chan_exp \<rho>' c e \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (Abs f x e)
-  " |
-
-  Prim: "
-    dynamic_built_on_chan_prim \<rho> c p \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Prim p)
-  " |
-  Spawn: "
-    dynamic_built_on_chan_exp \<rho> c eCh \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Spwn eCh)
-  " |
-  Sync: "
-    dynamic_built_on_chan_var \<rho> c xY \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Sync xY)
-  " |
-  Fst: "
-    dynamic_built_on_chan_var \<rho> c xP \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Fst xP)
-  " |
-  Snd: "
-    dynamic_built_on_chan_var \<rho> c xP \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Snd xP)
-  " |
-  Case: "
-    dynamic_built_on_chan_var \<rho> c xS \<or> 
-    dynamic_built_on_chan_exp \<rho> c eL \<or> dynamic_built_on_chan_exp \<rho> c eR \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Case xS xL eL xR eR)
-  " |
-  App: "
-    dynamic_built_on_chan_var \<rho> c f \<or>
-    dynamic_built_on_chan_var \<rho> c xA \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (App f xA)
-  " |
-
-  Result: "
-    dynamic_built_on_chan_var \<rho> c x \<Longrightarrow>
-    dynamic_built_on_chan_exp \<rho> c (Rslt x)
-  " |
-  Let: "
-    dynamic_built_on_chan_bound_exp \<rho> c b \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
-    dynamic_built_on_chan_exp \<rho> c (Let x b e)
-  "
-
 inductive paths_correspond_mod_chan :: 
   "trace_pool * cmmn_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+(*
+is unordered necessary?
   Unordered: "
     paths_correspond \<pi> pathx \<Longrightarrow>
     \<not> (prefix pathx path) \<Longrightarrow>
     \<not> (prefix path pathx) \<Longrightarrow>
     paths_correspond_mod_chan (\<E>, H) c \<pi> path
-  " |
+  " | *)
   Chan: "
     paths_correspond ((LNxt xC) # \<pi>Suff) path \<Longrightarrow>
     \<E> (\<pi>C @ (LNxt xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
     paths_correspond_mod_chan (\<E>, H) (Ch \<pi>C xC) (\<pi>C @ (LNxt xC) # \<pi>Suff) path
   " |
+(*  inducts on the strict prefix up to channel passing point*)
   Sync: "
     paths_correspond \<pi>Suffix pathSuffix \<Longrightarrow>
     \<E> (\<pi>R @ (LNxt xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
@@ -166,203 +85,6 @@ inductive paths_correspond_mod_chan ::
     paths_correspond_mod_chan (\<E>, H) c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
   " 
 
-lemma no_empty_paths_correspond_mod_chan: "
-  \<not> (paths_correspond_mod_chan EH c [] path)"
-  apply (rule notI)
-  apply (erule paths_correspond_mod_chan.cases; auto)
-  apply (erule paths_correspond.cases; auto)
-done
-
-
-lemma not_static_inclusive_sound_base: "
-  E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
-  E0 \<pi>1 \<noteq> None \<Longrightarrow>
-  E0 \<pi>2 \<noteq> None \<Longrightarrow>
-  paths_correspond_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow> 
-  paths_correspond_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-  static_inclusive path1 path2
-"
-proof -
-  assume 
-    H1: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
-    H2: "E0 \<pi>1 \<noteq> None" and
-    H3: "E0 \<pi>2 \<noteq> None" and
-    H4: "paths_correspond_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>1 path1" and
-    H5: "paths_correspond_mod_chan (E0, {}) (Ch \<pi> xC) \<pi>2 path2"
-  from H1 H2 H4 show 
-    "static_inclusive path1 path2" 
-    by (metis fun_upd_apply no_empty_paths_correspond_mod_chan)
-qed
-
-lemma paths_equal_implies_paths_inclusive: "
-  path1 = path2 \<Longrightarrow> static_inclusive path1 path2 
-"
-by (simp add: Prefix2)
-
-
-(*
-lemma equal_concrete_paths_implies_unordered_or_equal_abstract_paths: "
-paths_correspond_mod_chan EH c \<pi> path1 \<Longrightarrow>
-paths_correspond_mod_chan EH c \<pi> path2 \<Longrightarrow>
-path1 = path2 \<or> (\<not> prefix path1 path2 \<and> \<not> prefix path2 path1)
-"
-sorry
-*)
-
-lemma paths_cong_mod_chan_preserved_under_reduction: "
-paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
-(E, H) \<rightarrow> (E', H') \<Longrightarrow>
-paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path
-"
-sorry
-
-
-
-lemma leaf_prefix_exists: "
-  leaf E' (\<pi> @ [l]) \<Longrightarrow>
-  (E, H) \<rightarrow> (E', H') \<Longrightarrow>
-  E \<pi> \<noteq> None
-"
-sorry
-
-
-lemma path_state_preserved_for_non_leaf: "
-(E, H) \<rightarrow> (E', H') \<Longrightarrow>
-E' (\<pi> @ [l]) = Some \<sigma> \<Longrightarrow>
-\<not> leaf E \<pi> \<Longrightarrow>
-E (\<pi> @ [l]) = Some \<sigma>
-"
-apply (erule concur_step.cases; auto; (erule seq_step.cases; auto)?)
-  apply presburger+
-  apply (metis append1_eq_conv fun_upd_other)
-  apply (metis butlast_snoc fun_upd_apply)
-done
-
-
-lemma not_static_inclusive_sound_step: "
-\<forall>\<pi>1 \<pi>2 path1 path2.
-  E \<pi>1 \<noteq> None \<longrightarrow>
-  E \<pi>2 \<noteq> None \<longrightarrow>
-  paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1 \<longrightarrow> 
-  paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2 \<longrightarrow> 
-  static_inclusive path1 path2 \<Longrightarrow>
-star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H) \<Longrightarrow>
-(E, H) \<rightarrow> (E', H') \<Longrightarrow>
-E' \<pi>1 \<noteq> None \<Longrightarrow>
-E' \<pi>2 \<noteq> None \<Longrightarrow>
-paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>1 path1 \<Longrightarrow> 
-paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>2 path2 \<Longrightarrow>
-static_inclusive path1 path2 
-"
-proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (simp add: Prefix2)))
-  assume 
-    H1: "
-      \<forall>\<pi>1. (\<exists>y. E \<pi>1 = Some y) \<longrightarrow>
-      (\<forall>\<pi>2. (\<exists>y. E \<pi>2 = Some y) \<longrightarrow>
-      (\<forall>path1. paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1 \<longrightarrow>
-      (\<forall>path2. paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2 \<longrightarrow> 
-        static_inclusive path1 path2)))" and
-    H2: "star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (E, H)" and
-    H3: "(E, H) \<rightarrow> (E', H')" and
-    H4: "\<exists>y. E' \<pi>1 = Some y" and
-    H5: "\<exists>y. E' \<pi>2 = Some y " and
-    H6: "paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>1 path1" and
-    H7: "paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>2 path2" and
-    H8: "path1 \<noteq> []" and 
-    H9: "path2 \<noteq> []"
-
-  obtain \<sigma>1 where 
-    H10: "E' \<pi>1 = Some \<sigma>1"
-    using H4 by blast
-
-  obtain \<sigma>2 where 
-    H11: "E' \<pi>2 = Some \<sigma>2"
-    using H5 by blast
-
-  obtain \<pi>1x l1 path1x n1 where
-    H12: "\<pi>1x @ [l1] = \<pi>1" and
-    H13: "path1x @ [n1] = path1" and
-    H14: "paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1x path1x" 
-  by (metis H3 H6 H8 append_butlast_last_id paths_cong_mod_chan_preserved_under_reduction no_empty_paths_correspond_mod_chan)
-
-  obtain \<pi>2x l2 path2x n2 where
-    H15: "\<pi>2x @ [l2] = \<pi>2" and
-    H16: "path2x @ [n2] = path2" and
-    H17: "paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2x path2x"
-  by (metis H3 H7 H9 append_butlast_last_id paths_cong_mod_chan_preserved_under_reduction no_empty_paths_correspond_mod_chan)
-
-
-  have H18: "paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>1 path1" sorry
-
-  have H19: "paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi>2 path2" sorry
-
-  show "static_inclusive path1 path2"
-  proof cases
-    assume L1H1: "leaf E \<pi>1x"
-    obtain \<sigma>1x where
-      L1H2: "E \<pi>1x = Some \<sigma>1x" using L1H1 leaf.simps by auto
-    show "static_inclusive path1 path2"
-    proof cases
-      assume L2H1: "leaf E \<pi>2x"
-      obtain \<sigma>2x where
-        L2H2: "E \<pi>2x = Some \<sigma>2x" using L2H1 leaf.simps by auto
-      have "static_inclusive path1x path2x"
-        using H1 H14 H17 L1H2 L2H2 by blast
-      show "static_inclusive path1 path2" sorry
-    next
-      assume L2H1: "\<not> leaf E \<pi>2x"
-      have L2H2: "E \<pi>2 = Some \<sigma>2"
-        using H11 H15 H3 L2H1 path_state_preserved_for_non_leaf by blast
-      have L2H3: "static_inclusive path1x path2"
-        using H1 H14 H19 L1H2 L2H2 by auto
-
-      have L2H4: "\<not> strict_prefix \<pi>1x \<pi>2"
-        by (metis L1H1 L2H2 leaf.cases option.distinct(1))
-      show "static_inclusive path1 path2"
-      proof cases
-        assume L3H1: "prefix path1x path2"
-       (* inclusive definition fails in case of non-unique variable bound_expings *)
-        show "static_inclusive path1 path2" sorry
-      next
-        assume L3H1: "\<not> prefix path1x path2"
-        show "static_inclusive path1 path2"
-          by (metis H13 L2H3 L3H1 Prefix2 static_inclusive_preserved_under_unordered_extension prefix_prefix)
-      qed
-    qed
-
-  next
-    assume L1H1: "\<not> leaf E \<pi>1x"
-      have L1H2: "E \<pi>1 = Some \<sigma>1"
-        using H10 H12 H3 L1H1 path_state_preserved_for_non_leaf by blast
-    show "static_inclusive path1 path2"
-
-    proof cases
-      assume L2H1: "leaf E \<pi>2x"
-      obtain \<sigma>2x where
-        L2H2: "E \<pi>2x = Some \<sigma>2x" using L2H1 leaf.simps by auto
-      have L2H3: "static_inclusive path1 path2x"
-        using H1 H17 H18 L1H2 L2H2 by auto
-      show "static_inclusive path1 path2"
-      proof cases
-        assume L3H1: "prefix path2x path1"
-        show "static_inclusive path1 path2" sorry
-      next
-        assume L3H1: "\<not> prefix path2x path1"
-        show "static_inclusive path1 path2"
-          by (metis H16 L2H3 L3H1 Prefix1 static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_prefix)
-      qed
-    next
-      assume L2H1: "\<not> leaf E \<pi>2x"
-      have L2H2: "E \<pi>2 = Some \<sigma>2"
-        using H11 H15 H3 L2H1 path_state_preserved_for_non_leaf by blast
-      show "static_inclusive path1 path2"
-        using H1 H18 H19 L1H2 L2H2 by blast
-    qed
-
-  qed
-
-qed
-
 
 lemma not_static_inclusive_sound: "
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
@@ -372,72 +94,7 @@ lemma not_static_inclusive_sound: "
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
   static_inclusive path1 path2
 "
-proof -
-  assume
-    H1: "star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" and
-    H2: "\<E>' \<pi>1 \<noteq> None" and
-    H3: "\<E>' \<pi>2 \<noteq> None" and
-    H4: "paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1" and
-    H5: "paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2"
-
-  from H1 have
-    "star_left (op \<rightarrow>) ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" by (simp add: star_implies_star_left)
-  
-  then obtain X0 X' where 
-    H6: "X0 = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" 
-        "X' = (\<E>', H')" and
-    H7: "star_left (op \<rightarrow>) X0 X'" by auto
-
-  from H7 have 
-    H8: "
-      \<forall> \<E>' H' \<pi>1 \<pi>2 path1 path2.
-      X0 = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> X' = (\<E>', H') \<longrightarrow>
-      \<E>' \<pi>1 \<noteq> None \<longrightarrow>
-      \<E>' \<pi>2 \<noteq> None \<longrightarrow>
-      paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow>
-      paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow>
-      static_inclusive path1 path2
-    "
-  proof induction
-    case (refl z)
-    then show ?case
-      using not_static_inclusive_sound_base by blast
-  next
-    case (step x y z)
-
-    {
-      fix \<E>' H' \<pi>1 \<pi>2 path1 path2
-      assume 
-        L2H1: "x = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" and
-        L2H2: "z = (\<E>', H')" and
-        L2H3: "\<E>' \<pi>1 \<noteq> None" and
-        L2H4: "\<E>' \<pi>2 \<noteq> None" and
-        L2H5: "paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1" and
-        L2H6: "paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2"
-
-      obtain \<E> H where 
-        L2H7: "y = (\<E>, H)" by (meson surj_pair)
-
-      from L2H1 L2H7 step.IH have 
-        L2H8: "
-          \<forall> \<pi>1 \<pi>2 path1 path2 . 
-          \<E> \<pi>1 \<noteq> None \<longrightarrow>
-          \<E> \<pi>2 \<noteq> None \<longrightarrow>
-          paths_correspond_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>1 path1 \<longrightarrow> 
-          paths_correspond_mod_chan (\<E>, H) (Ch \<pi> xC) \<pi>2 path2 \<longrightarrow> 
-          static_inclusive path1 path2 "
-        by blast
-
-      have 
-        "static_inclusive path1 path2"
-        using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 not_static_inclusive_sound_step step.hyps(1) step.hyps(2) by blast
-    }
-    then show ?case by blast
-  qed
-
-  from H2 H3 H4 H5 H6(1) H6(2) H8 show 
-    "static_inclusive path1 path2" by blast
-qed
+sorry
 
 lemma is_send_path_implies_nonempty_pool: "
   is_send_path \<E> (Ch \<pi>C xC) \<pi> \<Longrightarrow> 
@@ -456,17 +113,17 @@ proof -
 qed
 
 
+
 lemma static_equality_sound: "
   path1 = path2 \<Longrightarrow>
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
-  \<E>' \<pi>2 \<noteq> None   \<Longrightarrow> 
+  \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
   \<pi>1 = \<pi>2
 "
-sorry
-
+  sorry
 
 (* PATH SOUND *)
 
@@ -483,30 +140,8 @@ lemma not_static_traceable_sound: "
     paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
     static_live_traceable V F Ln Lx (NLet xC) isEnd path
 "
-sorry
-
-
-
-inductive balanced :: "control_path \<Rightarrow> bool" where
-  Empty: "
-    balanced []
-  " |
-  Next: "
-    balanced [LNxt x]
-  " |
-  CallReturn: "
-    balanced \<pi> \<Longrightarrow>
-    balanced ((LCall x) # (\<pi> @ [LRtn x]))
-  " |
-  Append: "
-    balanced \<pi> \<Longrightarrow> balanced \<pi>' \<Longrightarrow>
-    balanced (\<pi> @ \<pi>')
-  "
-
-lemma call_return_balanced: "
-   balanced [LCall x, LRtn x]
-"
-using balanced.CallReturn balanced.Empty by fastforce
+  sorry
+(*  use induction on star_left concur_step along with deep definition of static_traversable *)
 
 
 

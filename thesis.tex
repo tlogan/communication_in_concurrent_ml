@@ -982,6 +982,24 @@ every state in the trace pool.
 -------------------------------------------------------------
 static communication B ...
 
+
+The most difficult aspect of formalizing a theory is in developing adequate definitions that
+enable formal reasoning.  It is often possible to define a single semantics in multiple ways.
+For instance, the sortedness of a list could be defined in terms of the sortedness of its tail
+or in terms of the sortedness of its longest strict prefix.  To prove theorems relating
+sortedness to other relations, it may be important that the other relations are inductively
+defined on the same subpart of the list.  Some relations may only be definable on the tail,
+while others are defineable on only the strict prefix.  In such cases, it would be necessary to
+define sortedness in two ways, and prove their equivalence, in order to prove theorems relating
+to less flexible relations.
+
+
+I have developed a number of definitions that will most likely be crucial to proving soundness
+of a higher precision static analysis.  The proofs are not yet complete, however it may be
+instructive to outline the conjectures that rely on these definition and the strategy of
+breaking the proof into subgoals that rely on these definitions.
+
+
 The higher precision defintions for static communication topologies enables the discrimination
 between channels created by the same piece of code, but at different instances during a run of
 a program.  For example, a function abstraction may specify the creation of a channel with a
@@ -1003,7 +1021,8 @@ receive site.  Second, in the case of a let binding to synchronization to send, 
 transition from let binding name to a receiving expression.
 
 
-... TO DO after proofs of part B
+
+
 
 
 
