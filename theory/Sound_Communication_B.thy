@@ -88,10 +88,18 @@ is unordered necessary?
 
 lemma not_static_inclusive_sound: "
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
-  \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
+  static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC) path1 \<Longrightarrow>
+  
+  \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC) path2 \<Longrightarrow>
+
   static_inclusive path1 path2
 "
 sorry
@@ -113,14 +121,22 @@ proof -
 qed
 
 
-
 lemma static_equality_sound: "
   path1 = path2 \<Longrightarrow>
-  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  static_traversable V F (static_recv_label V e) e \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
+  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
+  static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC) path1 \<Longrightarrow>
+  
+  paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
+  static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC) path2 \<Longrightarrow>
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
+
   \<pi>1 = \<pi>2
 "
   sorry
