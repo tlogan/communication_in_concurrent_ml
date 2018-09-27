@@ -76,10 +76,73 @@ inductive static_traversable_pool :: "abstract_env \<Rightarrow> transition_set 
     static_traversable_pool V F E
   "
 
+inductive 
+  static_live_chan_env :: "abstract_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> env \<Rightarrow> bool"  and
+  static_live_chan_val :: "abstract_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> val \<Rightarrow> bool"
+where
+  Intro: "
+    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>  static_live_chan_val V Ln Lx x\<^sub>c \<omega> \<Longrightarrow>
+    static_live_chan_env V Ln Lx x\<^sub>c \<rho>
+  " |
+
+  Unit: "
+    static_live_chan_val V Ln Lx x\<^sub>c VUnt
+  " |
+
+  Chan: "
+    static_live_chan_val V Ln Lx x\<^sub>c (VChn c)
+  " |
+
+  SendEvt: "
+    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (SendEvt _ _) \<rho>)
+  " |
+
+  RecvEvt: "
+    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (RecvEvt _) \<rho>)
+  " |
+
+  Left: "
+    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Lft _) \<rho>)
+  " |
+
+  Right: "
+    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Rght _) \<rho>)
+  " |
+
+  Abs: "
+    static_live_chan V Ln Lx x\<^sub>c e \<Longrightarrow> 
+    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Abs f x e) \<rho>)
+  " |
+
+  Pair: "
+    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Pair _ _) \<rho>)
+  " 
+
+
+inductive static_live_chan_stack :: "abstract_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> contin list \<Rightarrow> bool" where
+  Empty: "static_live_chan_stack V Ln Lx x\<^sub>c []" |
+  Nonempty: "
+    \<lbrakk> 
+      static_live_chan V Ln Lx x\<^sub>c e;
+      static_live_chan_env V Ln Lx x\<^sub>c \<rho>; 
+      static_live_chan_stack V Ln Lx x\<^sub>c \<kappa>
+    \<rbrakk> \<Longrightarrow> 
+    static_live_chan_stack V Ln Lx x\<^sub>c ((Ctn x e \<rho>) # \<kappa>)
+  "
+
+
 inductive static_live_chan_pool ::  "abstract_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> trace_pool \<Rightarrow> bool"  where
   Intro: "
-    (\<forall> \<pi> e \<rho> \<kappa> . pool \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
-      static_live_chan V Ln Lx x\<^sub>c e) \<Longrightarrow>
+    (\<forall> \<pi> e \<rho> \<kappa> . pool \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+      static_live_chan V Ln Lx x\<^sub>c e \<and>
+      static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<and>
+      static_live_chan_stack V Ln Lx x\<^sub>c \<kappa>) \<Longrightarrow>
     static_live_chan_pool V Ln Lx x\<^sub>c pool
   "
 

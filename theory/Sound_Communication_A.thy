@@ -1310,7 +1310,7 @@ proof -
   using H2
   proof cases
     case (Seq_Step_Down Em pi x env xk ek envk k v Hm)
-    thm static_traversable_pool.intros
+
     have L1H2: "static_traversable_pool V F Em" by (smt H2 H4 H6 local.Seq_Step_Down(1) mapping_preserved_star star_step1 static_traversable_pool.simps)
 
     have L1H3: "\<exists>path. paths_correspond pi path \<and> static_traceable F (top_label e) (\<lambda> l . l = top_label (Rslt x)) path"

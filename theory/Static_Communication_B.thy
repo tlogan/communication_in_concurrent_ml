@@ -326,7 +326,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> label_map \<Rightarrow
     static_live_chan V Ln Lx x\<^sub>c (Let x (Snd x\<^sub>a) e)
   " |
   Let_Case: "
-    \<lbrakk>_
+    \<lbrakk>
       (Lx (NLet x) - {x}) \<union> (Ln (top_label e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (top_label e\<^sub>r) - {x\<^sub>r}) \<subseteq> Ln (NLet x);
       static_built_on_chan V Ln x\<^sub>c x\<^sub>s \<longrightarrow> {x\<^sub>s} \<subseteq> Ln (NLet x);
       static_live_chan V Ln Lx x\<^sub>c e\<^sub>l;
