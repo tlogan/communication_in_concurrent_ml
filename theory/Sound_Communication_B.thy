@@ -147,16 +147,13 @@ lemma not_static_traceable_sound':
 
 assumes
   H1: "star_left concur_step EH EH'" and
-  H2: "(V, C) \<Turnstile>\<^sub>e e"
+  H2: "(V, C) \<Turnstile>\<^sub>e e" and
+  H3: "static_live_chan V Ln Lx xC e" and
+  H4: "static_traversable V F e"
 shows "
   \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
   EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
-  E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
-(**Need to generalize over pool**)
-  static_live_chan V Ln Lx xC e \<longrightarrow>
-  static_traversable V F e \<longrightarrow>
-(****)
-  isEnd (top_label e') \<longrightarrow>
+  E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow> isEnd (top_label e') \<longrightarrow>
   (\<exists> path . 
     paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
     static_live_traceable V F Ln Lx (NLet xC) isEnd path)"
