@@ -129,6 +129,7 @@ inductive static_live_chan_stack :: "abstract_env \<Rightarrow> label_map \<Righ
   Empty: "static_live_chan_stack V Ln Lx x\<^sub>c []" |
   Nonempty: "
     \<lbrakk> 
+      \<not> Set.is_empty (Ln (top_label e));
       static_live_chan V Ln Lx x\<^sub>c e;
       static_live_chan_env V Ln Lx x\<^sub>c \<rho>; 
       static_live_chan_stack V Ln Lx x\<^sub>c \<kappa>
