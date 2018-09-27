@@ -5,6 +5,84 @@ theory Sound_Communication_B
     Static_Communication_B
 begin
 
+
+inductive 
+  static_traversable_env :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> env \<Rightarrow> bool"  and
+  static_traversable_val :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> val \<Rightarrow> bool"
+where
+  Intro: "
+    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>  static_traversable_val V F \<omega> \<Longrightarrow>
+    static_traversable_env V F \<rho>
+  " |
+
+  Unit: "
+    static_traversable_val V F VUnt
+  " |
+
+  Chan: "
+    static_traversable_val V F (VChn c)
+  " |
+
+  SendEvt: "
+    static_traversable_env V F \<rho> \<Longrightarrow>
+    static_traversable_val V F (VClsr (SendEvt _ _) \<rho>)
+  " |
+
+  RecvEvt: "
+    static_traversable_env V F \<rho> \<Longrightarrow>
+    static_traversable_val V F (VClsr (RecvEvt _) \<rho>)
+  " |
+
+  Left: "
+    static_traversable_env V F \<rho> \<Longrightarrow>
+    static_traversable_val V F (VClsr (Lft _) \<rho>)
+  " |
+
+  Right: "
+    static_traversable_env V F \<rho> \<Longrightarrow>
+    static_traversable_val V F (VClsr (Rght _) \<rho>)
+  " |
+
+  Abs: "
+    static_traversable V F e \<Longrightarrow> 
+    static_traversable_env V F  \<rho> \<Longrightarrow>
+    static_traversable_val V F (VClsr (Abs f x e) \<rho>)
+  " |
+
+  Pair: "
+    static_traversable_env V F \<rho> \<Longrightarrow>
+    static_traversable_val V F (VClsr (Pair _ _) \<rho>)
+  " 
+
+
+inductive static_traversable_stack :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> var \<Rightarrow> contin list \<Rightarrow> bool" where
+  Empty: "static_traversable_stack V F y []" |
+  Nonempty: "
+    \<lbrakk> 
+      {(NResult y, EReturn, top_label e)} \<subseteq> F;
+      static_traversable V F e;
+      static_traversable_env V F \<rho>;
+      static_traversable_stack V F (\<lfloor>e\<rfloor>) \<kappa>
+    \<rbrakk> \<Longrightarrow> 
+    static_traversable_stack V F y ((Ctn x e \<rho>) # \<kappa>)
+  "
+
+inductive static_traversable_pool :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
+  Intro: "
+    (\<forall> \<pi> e \<rho> \<kappa> . E \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
+      static_traversable V F e \<and>
+      static_traversable_env V F \<rho> \<and>
+      static_traversable_stack V F (\<lfloor>e\<rfloor>) \<kappa>) \<Longrightarrow> 
+    static_traversable_pool V F E
+  "
+
+inductive static_live_chan_pool ::  "abstract_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> trace_pool \<Rightarrow> bool"  where
+  Intro: "
+    (\<forall> \<pi> e \<rho> \<kappa> . pool \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
+      static_live_chan V Ln Lx x\<^sub>c e) \<Longrightarrow>
+    static_live_chan_pool V Ln Lx x\<^sub>c pool
+  "
+
 lemma static_inclusive_commut: "
   static_inclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> static_inclusive path\<^sub>2 path\<^sub>1
 "
@@ -147,12 +225,12 @@ lemma not_static_traceable_sound':
 
 assumes
   H1: "star_left concur_step EH EH'" and
-  H2: "(V, C) \<Turnstile>\<^sub>e e" and
-  H3: "static_live_chan V Ln Lx xC e" and
-  H4: "static_traversable V F e"
+  H2: "(V, C) \<Turnstile>\<^sub>e e"
 shows "
   \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
   EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
+  static_live_chan_pool V Ln Lx xC E' \<longrightarrow>
+  static_traversable_pool V F E' \<longrightarrow>
   E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow> isEnd (top_label e') \<longrightarrow>
   (\<exists> path . 
     paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>

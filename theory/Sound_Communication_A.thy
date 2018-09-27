@@ -1232,8 +1232,6 @@ proof -
 
 qed
 
-
-
 lemma static_seq_step_trav_edge:
    assumes
      H1: "static_traversable V F (Let x b e')" and
