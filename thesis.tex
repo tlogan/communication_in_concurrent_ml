@@ -874,8 +874,41 @@ compute the topologies from programs.  The soundness of the static predicates mu
 to be certain that statically described topologies are also observed when running the program.
 
 
-\section{Soundness of Semantics Proofs}
+\section{Formal Reasoning}
+
+
+------------------------
+generalization technique
+------------------------
+
+We need a stronger induction hypothesis that enables direct access to properties necessary to
+prove the theorem.  In addition to the original predicate defined in terms of the expression,
+I define predicates in terms of the pool, environment and stack.  I prove that a particular use
+of these predicates imply the original use of the the expression predicate.  Some parts of the 
+predicate definitions allow direct access to properties that would otherwise be deeply nested
+in an inductive structure and difficult to access.  The other aspects of these predicate
+definitions are simply to prove that the definition is a generalization of that expression
+predicate.    
+-------
+
+
+---------------------------
+definition technique
+---------------------------
+One of the most difficult aspect of formalizing a theory is in developing adequate definitions
+that enable formal reasoning.  It is often possible to define a single semantics in multiple
+ways.
+For instance, the sortedness of a list could be defined in terms of the sortedness of its tail
+or in terms of the sortedness of its longest strict prefix.  To prove theorems relating
+sortedness to other relations, it may be important that the other relations are inductively
+defined on the same subpart of the list.  Some relations may only be definable on the tail,
+while others are defineable on only the strict prefix.  In such cases, it would be necessary to
+define sortedness in two ways, and prove their equivalence, in order to prove theorems relating
+to less flexible relations.
+
+------------------------------
 soundness semantics proofs ... 
+------------------------------
 
 To prove the soundness of communication topologies, it is useful to define predicates that
 define how the abstract value bindings relate to various elements of the dynamic semantics,
@@ -942,7 +975,10 @@ to a new trace pool over multipe steps, and the name is bound to a corresponding
 in the new trace pool.  The proof is by applying the lemma trace pool always not static bound,
 and the definitions of the static eval predicates. 
 
+
+---------------------------
 soundness communication ... 
+---------------------------
 
 It is useful to define how abstract and concrete dynamic paths correspond in order to prove the
 soundness theorems for communication classification.  Essentially, there is an isomorphism
@@ -987,22 +1023,13 @@ The static traversable pool states that the given transitions hold for the const
 every state in the trace pool.  
 
 
+
+
+
+
 -------------------------------------------------------------
 static communication B ...
-
-
-One of the most difficult aspect of formalizing a theory is in developing adequate definitions
-that enable formal reasoning.  It is often possible to define a single semantics in multiple
-ways.
-For instance, the sortedness of a list could be defined in terms of the sortedness of its tail
-or in terms of the sortedness of its longest strict prefix.  To prove theorems relating
-sortedness to other relations, it may be important that the other relations are inductively
-defined on the same subpart of the list.  Some relations may only be definable on the tail,
-while others are defineable on only the strict prefix.  In such cases, it would be necessary to
-define sortedness in two ways, and prove their equivalence, in order to prove theorems relating
-to less flexible relations.
-
-
+-------------------------------------------------------------
 I have developed a number of definitions that will most likely be crucial to proving soundness
 of a higher precision static analysis.  The proofs are not yet complete, however it may be
 instructive to outline the conjectures that rely on these definition and the strategy of
@@ -1030,18 +1057,6 @@ receive site.  Second, in the case of a let binding to synchronization to send, 
 transition from let binding name to a receiving expression.
 
 
-
------generalized definitions----
-
-We need a stronger induction hypothesis that enables direct access to properties necessary to
-prove the theorem.  In addition to the original predicate defined in terms of the expression,
-I define predicates in terms of the pool, environment and stack.  I prove that a particular use
-of these predicates imply the original use of the the expression predicate.  Some parts of the 
-predicate definitions allow direct access to properties that would otherwise be deeply nested
-in an inductive structure and difficult to access.  The other aspects of these predicate
-definitions are simply to prove that the definition is a generalization of that expression
-predicate.    
--------
 
 
 
