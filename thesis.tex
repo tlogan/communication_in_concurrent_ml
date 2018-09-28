@@ -765,9 +765,8 @@ given abstract channel, in a given program with given abstract value bindings.
 \section{Static Communication Definitions}
 
 The one shot predicate states that in a trace pool, there is only one control path that
-synchronizes and sends on a given channel.
-
-Whether two attempts to synchronize on a channel are competitive or not can be determined by
+synchronizes and sends on a given channel. Whether or not two attempts to synchronize on a
+channel are competitive can be determined by
 looking at the control paths of the trace pool. If two paths are ordered, that is, one is the
 prefix of the other and vice versa, then the dynamic semantics states that they necessarily
 occur in sequence, so the shorter path must synchronize before the longer path. Two paths may
@@ -778,19 +777,29 @@ the sending end of a channel, by stating that any two paths that syncronize to s
 channel are ordered. The one to one predicates states that there is no competition on either
 the receiving or the sending ends of a channel. 
 
+
+-----low precision // no live channel analysis ----
+Reppy and Xiao's work relies on detecting the liveness of channels in order to gain higher
+precision in the communication analysis.  Since formal proofs are inherently complicated and
+packed with details, I decided to simplify the problem, by developing formal proofs for
+definitions without the extra complication of live analysis. However, I have purposely
+structured the definitions to make adding live channel analysis to the definition and proofs
+straight forward with just a few alterations to the definitions.  I will expand on these
+alterations and outline a strategy that I belive will result formal proofs of soundness.  
+
+Having formal proofs for the requirement that each reasoning step be clearly documented.
 I define the static communicatin predicates relating programs to communnication topologies in
 two different ways.  The first way is simpler but the second way allows more precise
 communication topologies for many common programs.
 
 
-static communication A ...
+-------------
 
 For the simpler version, there are four kinds of control edges, indicating how one point in a
 program transitions to another point in a program.  The modes of transition are sequencing,
 calling, spawning, and returning. A transition is a triplet of a label, representing a point in
 the progra, a control edge, and another label.  A step is just a label and a control edge,
 without the destination label.  An abstract control path is a list of steps.  
-
 
 the static traversable predicate states that a set of transitions describes all the transitions
 that might be traversed for a program, given bindings of abstract values.  For a result
@@ -818,7 +827,6 @@ abstracted expression to the sequenced expression.  Additionally, the traversabl
 are traversable transitions for the sequenced expression. 
 
 
-
 The static traceable predicate states that an abstract control path can be traced according to
 a set of transitions from a starting label to a final label matching a given condition.  An
 empty path might be traceable if the start label is also the final label.  A path of one step
@@ -830,7 +838,7 @@ traceable.
 
 
 The static inclusive predicate states that two abstract paths represent might be traversed in
-the same run of a program.   Ordered paths might be inclusive, and also a path that diverges
+the same run of a program. Ordered paths might be inclusive, and also a path that diverges
 from another at a spawn transition might be inclusive.  This concept is useful for achieving
 greater precision, since if two paths cannot occur in the same run of a program, only one needs
 to be counted towards the communication topology. 
@@ -983,8 +991,9 @@ every state in the trace pool.
 static communication B ...
 
 
-The most difficult aspect of formalizing a theory is in developing adequate definitions that
-enable formal reasoning.  It is often possible to define a single semantics in multiple ways.
+One of the most difficult aspect of formalizing a theory is in developing adequate definitions
+that enable formal reasoning.  It is often possible to define a single semantics in multiple
+ways.
 For instance, the sortedness of a list could be defined in terms of the sortedness of its tail
 or in terms of the sortedness of its longest strict prefix.  To prove theorems relating
 sortedness to other relations, it may be important that the other relations are inductively
