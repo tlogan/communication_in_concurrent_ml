@@ -945,6 +945,17 @@ Theorem static_fan_out_sound is proved by a few simpler lemmas and the definitio
 of static_fan_out and fan_out.  The three main lemmas are label_not_send_site_sound,
 not_static_inclusive_sound, and not_static_traceable_sound.
 
+Lemma not_static_traceable_sound states that if a running a programming traces a concrete
+path, and a graph contains the statically traversable steps of the program, then there is an
+abstract path corresponding to the traced concrete path is statically traceable.   
+
+Lemma not_static_inclusive_sound states that if any two paths traced by running a programm
+correspond two abstract paths that are statically inclusive.    
+
+Lemma label_not_send_site_sound states that if a program is run to reach a synchronization on
+a send event, then the label corresponding to the syncrhonization expression is statically
+identified as a send site.
+
 
 -----
 lemma not_static_traceable_sound:
@@ -987,7 +998,7 @@ lemma label_not_send_site_sound:
     env' x_sc = Some (VChn (Ch path_c x_c)) and 
     static_eval env_a convo_a e0
   then 
-    static_send_label V e0 x_c (NLet x)
+    static_send_label env_a e0 x_c (NLet x)
 
 -----
 
