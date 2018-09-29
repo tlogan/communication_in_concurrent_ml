@@ -896,7 +896,50 @@ while others are defineable on only the strict prefix.  In such cases, it would 
 define sortedness in two ways, and prove their equivalence, in order to prove theorems relating
 to less flexible relations.
 
-The theorem static_fan_out_sound can be divided into a few broad subgoals.
+The theorem static_fan_out_sound is proved by a few simpler lemmas and the definitions
+of static_fan_out and fan_out.
+
+The three main lemmas are label_not_send_site_sound, not_static_inclusive_sound, and
+path_not_traceable_sound.
+
+-----
+lemma path_not_traceable_sound: "
+if
+  ℰ' π = Some (⟨Let x b e⇩n;ρ;κ⟩) and 
+  star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H') and 
+  (V, C) ⊨⇩e e and 
+  static_traversable V F e and 
+  isEnd (NLet x)
+
+then
+  ∃ path . 
+    paths_correspond π path and 
+    static_traceable F (top_label e) isEnd path
+"
+-----
+lemma not_static_inclusive_sound: "
+if
+  E0 = [[] ↦ ⟨e;Map.empty;[]⟩] and 
+  E0 π1 ≠ None and 
+  E0 π2 ≠ None and 
+  paths_correspond π1 path1 and 
+  paths_correspond π2 path2 and 
+then
+  static_inclusive path1 path2
+"
+-----
+lemma label_not_send_site_sound: "
+if
+  ℰ' πSync = Some (⟨Let x⇩y (Sync x⇩e) e⇩n;ρ;κ⟩) and 
+  ρ x⇩e = Some (VClsr (SendEvt x⇩s⇩c x⇩m) ρ⇩e) and 
+  ρ⇩e x⇩s⇩c = Some (VChn (Ch πC xC)) and 
+  star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H') and 
+  (V, C) ⊨⇩e e 
+
+then 
+  static_send_label V e xC (NLet x⇩y)
+"
+-----
 
 ------------------------------
 soundness semantics proofs ... 
