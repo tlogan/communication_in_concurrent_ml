@@ -111,15 +111,15 @@ lemma always_recv_chan_not_bound_sound: "
 done
 
 lemma label_not_send_site_sound: "
-  \<E>' \<pi>Sync = Some (\<langle>Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<E> \<pi>Sync = Some (\<langle>Let x (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   \<rho> x\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChn (Ch \<pi>C xC)) \<Longrightarrow>
-  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
-  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  static_send_label V e xC (NLet x\<^sub>y)
+  star concur_step ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) (\<E>, H) \<Longrightarrow> 
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  static_send_label V e0 xC (NLet x)
 "
  apply (unfold static_send_label.simps; auto)
- apply (rule exI[of _ x\<^sub>s\<^sub>c]; auto)
+ apply (rule exI[of _ x\<^sub>s\<^sub>c]; auto) 
  apply (auto simp: always_send_chan_not_bound_sound)
  apply (rule exI[of _ x\<^sub>m]; auto?)
   apply (rule exI[of _ x\<^sub>e]; auto?)

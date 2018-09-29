@@ -836,7 +836,6 @@ For a path of two or more steps, the first label is the start label, there is a 
 the first step to the second step, and the path from the second step onward also might be
 traceable.
 
-
 The static inclusive predicate states that two abstract paths represent might be traversed in
 the same run of a program. Ordered paths might be inclusive, and also a path that diverges
 from another at a spawn transition might be inclusive.  This concept is useful for achieving
@@ -903,42 +902,48 @@ The three main lemmas are label_not_send_site_sound, not_static_inclusive_sound,
 path_not_traceable_sound.
 
 -----
-lemma path_not_traceable_sound: "
-if
-  ℰ' π = Some (⟨Let x b e⇩n;ρ;κ⟩) and 
-  star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H') and 
-  (V, C) ⊨⇩e e and 
-  static_traversable V F e and 
-  isEnd (NLet x)
+lemma path_not_traceable_sound:
 
-then
-  ∃ path . 
-    paths_correspond π path and 
-    static_traceable F (top_label e) isEnd path
-"
------
-lemma not_static_inclusive_sound: "
-if
-  E0 = [[] ↦ ⟨e;Map.empty;[]⟩] and 
-  E0 π1 ≠ None and 
-  E0 π2 ≠ None and 
-  paths_correspond π1 path1 and 
-  paths_correspond π2 path2 and 
-then
-  static_inclusive path1 path2
-"
------
-lemma label_not_send_site_sound: "
-if
-  ℰ' πSync = Some (⟨Let x⇩y (Sync x⇩e) e⇩n;ρ;κ⟩) and 
-  ρ x⇩e = Some (VClsr (SendEvt x⇩s⇩c x⇩m) ρ⇩e) and 
-  ρ⇩e x⇩s⇩c = Some (VChn (Ch πC xC)) and 
-  star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H') and 
-  (V, C) ⊨⇩e e 
+∀ e0 pool convo path x b e' env stack evn_a convo_a graph isEnd .
+  if
+    star concur_step ([[] -> (Stt e0 [->] [])], {}) (pool, convo) and 
+    pool path = Some (Stt (Let x b e') env stack) and 
+    static_eval env_a convo_a e0 and 
+    static_traversable env_a graph e0 and 
+    isEnd (NLet x)
+  then
+    ∃ path_a . 
+      paths_correspond path path_a and 
+      static_traceable graph (top_label e0) isEnd path_a
 
+-----
+
+lemma not_static_inclusive_sound:
+
+∀ e0 pool convo path1 stt1 path2 stt2 path_a1 path_a2 . 
+if
+  star concur_step [[] -> (Stt e0 [->] [])] {} pool convo
+  pool path1 = Some stt1 and 
+  pool path2 = Some stt2 and 
+  paths_correspond path1 path_a1 and 
+  paths_correspond path2 path_a2
+then
+  static_inclusive path_a1 path_a2
+
+-----
+
+lemma label_not_send_site_sound:
+
+∀ e0 pool convo path x x_e e' env stack x_sc x_m env' path_c x_c .
+if
+  star concur_step [[] -> (Stt e0 [->] [])] {} pool convo and 
+  pool path = Some (Stt (Let x (Sync x_e) e') env stack) and 
+  env x_e = Some (VClsr (SendEvt x_sc x_m) env') and 
+  env' x_sc = Some (VChn (Ch path_c x_c)) and 
+  static_eval env_a convo_a e0
 then 
-  static_send_label V e xC (NLet x⇩y)
-"
+   static_send_label V e0 x_c (NLet x)
+
 -----
 
 ------------------------------

@@ -59,7 +59,7 @@ inductive paths_correspond :: "control_path \<Rightarrow> abstract_path \<Righta
     paths_correspond (\<pi> @ [LRtn x]) (path @ [(NResult x, EReturn)])
   " 
 
-lemma not_static_inclusive_sound: "
+lemma not_static_inclusive_sound_base: "
   E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
@@ -414,7 +414,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
 
 qed
 
-lemma not_static_inclusive: "
+lemma not_static_inclusive_sound: "
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
@@ -451,7 +451,7 @@ proof -
   proof induction
     case (refl z)
     then show ?case
-      using not_static_inclusive_sound by blast
+      using not_static_inclusive_sound_base by blast
   next
     case (step x y z)
 
@@ -1699,14 +1699,14 @@ apply (erule static_traversable.cases; auto)
 done
 
 lemma path_not_traceable_sound: "
-  \<E>' \<pi> = Some (\<langle>Let x b e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
-  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  static_traversable V F e \<Longrightarrow>
+  \<E> \<pi> = Some (\<langle>Let x b e';\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  star concur_step ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) (\<E>, H) \<Longrightarrow> 
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  static_traversable V F e0 \<Longrightarrow>
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond \<pi> path \<and>
-    static_traceable F (top_label e) isEnd path
+    static_traceable F (top_label e0) isEnd path
 "
 by (metis lift_traversable_to_pool static_eval_to_pool static_traversable_pool_implies_static_traceable static_traversable_pool_preserved_star)
 
@@ -1755,7 +1755,7 @@ theorem singular_to_equal: "
  apply (frule_tac \<pi>Sync = \<pi>2 in send_path_not_traceable_sound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (metis not_static_inclusive equality_abstract_to_concrete is_send_path_implies_nonempty_pool)
+ apply (metis not_static_inclusive_sound equality_abstract_to_concrete is_send_path_implies_nonempty_pool)
 done
 
 
@@ -1768,7 +1768,7 @@ theorem noncompetitive_send_to_ordered_send: "
   every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
-  using send_path_not_traceable_sound not_static_inclusive 
+  using send_path_not_traceable_sound not_static_inclusive_sound
   apply (meson is_send_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
@@ -1781,7 +1781,7 @@ lemma noncompetitive_recv_to_ordered_recv: "
    every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: every_two.simps noncompetitive.simps; auto?)
-  using recv_path_not_traceable_sound not_static_inclusive 
+  using recv_path_not_traceable_sound not_static_inclusive_sound
  apply (meson is_recv_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
