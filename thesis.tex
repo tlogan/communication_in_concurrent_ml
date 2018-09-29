@@ -859,19 +859,6 @@ run of a given program.
 
 
 
-\section{Soundness of Communication Theorems}
-
-The lemma for soundness of static one shot states that if an abstract channel is statically
-classified as one shot for a given program, and value bindings derived from the program, then
-any corresponding dynamic channel is classified as one shot over any trace pool that results
-from running the program.  The lemmas for soundness of fan out, fan in, and one to one follow
-similar patterns. 
-
-
-The static predicates for communication topologies should be generalizations of procedures that
-compute the topologies from programs.  The soundness of the static predicates must be provable
-to be certain that statically described topologies are also observed when running the program.
-
 \section{Formal Reasoning}
 The reasoning involved in proving each soundness theorem is based around breaking the
 goal into simpler subgoals, and generalizing assumptions to create useful induction
@@ -895,11 +882,69 @@ while others are defineable on only the strict prefix.  In such cases, it would 
 define sortedness in two ways, and prove their equivalence, in order to prove theorems relating
 to less flexible relations.
 
-The theorem static_fan_out_sound is proved by a few simpler lemmas and the definitions
-of static_fan_out and fan_out.
 
-The three main lemmas are label_not_send_site_sound, not_static_inclusive_sound, and
-path_not_traceable_sound.
+The lemma for soundness of static one shot states that if an abstract channel is statically
+classified as one shot for a given program, and value bindings derived from the program, then
+any corresponding dynamic channel is classified as one shot over any trace pool that results
+from running the program.  The lemma for static_fan_out_sound states that if an abstract
+channel is statically classified as fan_out for a given program and an abstract environment
+derived from that program, then any corresponding concrete channel is classified as fan_out
+over any pool that results from running the program.  The lemmas for soundness of fan in, and
+one to one follow similar patterns. 
+
+The static predicates for communication topologies should be generalizations of procedures that
+compute the topologies from programs.  The soundness of the static predicates must be provable
+to be certain that statically described topologies are also observed when running the program.
+
+-----
+theorem static_one_shot_sound: 
+
+∀ env_a convo_a e0 x_c pool convo path_c .
+if
+  static_eval env_a convo_a e0 and 
+  static_one_shot env_a e0 x_c and 
+  star concur_step [[] -> (Stt e0 [->] [])] {} pool convo
+then
+  one_shot pool (Ch path_c x_c)
+
+-----
+theorem static_fan_out_sound:
+∀ env_a convo_a e0 x_c pool convo path_c. 
+  if 
+    static_eval env_a convo_a e0 and 
+    static_fan_out env_a e0 x_c and 
+    star concur_step [[] -> (Stt e0 [->] [])] {} pool convo
+  then
+    fan_out pool (Ch path_c x_c)" 
+
+-----
+theorem static_fan_in_sound:
+
+∀ env_a convo_a e0 x_c pool convo path_c. 
+  if
+    static_eval env_a convo_a e0 and 
+    static_fan_in env_a e0 x_c and 
+    star concur_step [[] -> (Stt e [->] [])] {} pool convo
+  then
+    fan_in pool (Ch path_c x_c)
+
+-----
+theorem static_one_to_one_sound:
+
+∀ env_a convo_a e0 x_c pool convo path_c. 
+  if
+    static_eval env_a, convo_a e0 and 
+    static_one_to_one env_a e0 x_c and
+    star concur_step [[] -> (Stt e0 [->] [])] {} pool convo
+  then
+    one_to_one pool (Ch path_c x_c)
+
+-----
+
+Theorem static_fan_out_sound is proved by a few simpler lemmas and the definitions
+of static_fan_out and fan_out.  The three main lemmas are label_not_send_site_sound,
+not_static_inclusive_sound, and not_static_traceable_sound.
+
 
 -----
 lemma not_static_traceable_sound:
@@ -921,28 +966,28 @@ lemma not_static_traceable_sound:
 lemma not_static_inclusive_sound:
 
 ∀ e0 pool convo path1 stt1 path2 stt2 path_a1 path_a2 . 
-if
-  star concur_step [[] -> (Stt e0 [->] [])] {} pool convo
-  pool path1 = Some stt1 and 
-  pool path2 = Some stt2 and 
-  paths_correspond path1 path_a1 and 
-  paths_correspond path2 path_a2
-then
-  static_inclusive path_a1 path_a2
+  if
+    star concur_step [[] -> (Stt e0 [->] [])] {} pool convo
+    pool path1 = Some stt1 and 
+    pool path2 = Some stt2 and 
+    paths_correspond path1 path_a1 and 
+    paths_correspond path2 path_a2
+  then
+    static_inclusive path_a1 path_a2
 
 -----
 
 lemma label_not_send_site_sound:
 
 ∀ e0 pool convo path x x_e e' env stack x_sc x_m env' path_c x_c .
-if
-  star concur_step [[] -> (Stt e0 [->] [])] {} pool convo and 
-  pool path = Some (Stt (Let x (Sync x_e) e') env stack) and 
-  env x_e = Some (VClsr (SendEvt x_sc x_m) env') and 
-  env' x_sc = Some (VChn (Ch path_c x_c)) and 
-  static_eval env_a convo_a e0
-then 
-   static_send_label V e0 x_c (NLet x)
+  if
+    star concur_step [[] -> (Stt e0 [->] [])] {} pool convo and 
+    pool path = Some (Stt (Let x (Sync x_e) e') env stack) and 
+    env x_e = Some (VClsr (SendEvt x_sc x_m) env') and 
+    env' x_sc = Some (VChn (Ch path_c x_c)) and 
+    static_eval env_a convo_a e0
+  then 
+    static_send_label V e0 x_c (NLet x)
 
 -----
 
