@@ -1426,7 +1426,7 @@ qed
 theorem trace_pool_snapshot_not_static_bound_sound : "
   \<rho> x = Some \<omega> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>  
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   {|\<omega>|} \<subseteq> \<V> x
 "
 proof -
