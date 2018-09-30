@@ -862,10 +862,10 @@ run of a given program.
 \section{Formal Reasoning}
 The reasoning involved in proving each soundness theorem is based around breaking the
 goal into simpler subgoals, and generalizing assumptions to create useful induction
-hypotheses.  It is often useful to create helper definitions to be used as generalized
-assumptions in the proofs. A frequent pattern is to define predicates in terms of semantic
-structures, like the environment, stack, and pool, and prove that these definitions are
-gerenalizations of a predicate in terms of the program expression. 
+hypotheses.  It is often useful to create helper definitions that can be deduced from premises
+and enable general reasoning across arbitrary programs. A frequent pattern is to define
+predicates in terms of semantic structures, like the environment, stack, and pool, and deduce 
+the use of these predicates on the initial program state. 
 
 Some parts of the generalized predicate definitions exist simply to prove that they imply uses
 of the original expression predicate. However, the reason for the existence of the generalized
@@ -1009,13 +1009,20 @@ program.  Without such generalization, it would be possibe to prove soundness fo
 program, but not an arbitrary programs.
 
 The generalization of static_traversable is captured in the predicates static_traversable_val,
-static_traversable_env, static_traversable_stack, and static_traversable_pool. Most of the
-rules simply state that the nearest semantic substructure is
-statically traversable.  In the definition of static_traversable_stack, in the rule for a
-nonempty stack, there is the additional premise that the edge from a return point to the label
-of the continuation expression exists in the graph.  This information is consistent with the
-definition of static_traversable for expressions, but provided information about an edge in the
-graph with a fixed number of logical steps.
+static_traversable_env, static_traversable_stack, and static_traversable_pool.  The
+generalization is designed to have two main features.  First, the static information that
+describes one pool should also describe subsequent pools from running the program, as
+information shifts from the expression to the environment, and stack.  Second, certain should
+be described directly by a fixed number of logical steps, in constract to its representation in
+the original predicate, which requires knowledge of features particular context in a program.
+Most of the rules simply state that the nearest subexpression is statically traversable, and
+static_traversable offers direct information about statically described steps in a program.
+The exception is in the definition of static_traversable_stack, in the rule for a nonempty
+stack, where there is the additional clause that the edge from a return point to the label of
+the continuation expression exists in the graph.  This information is consistent with the
+definition of static_traversable for expressions, but provides information about an edge in the
+graph with a fixed number of logical steps, which would otherwise only be decucible by a
+varying number of logical steps dependent on location of an expression in a program.
 
 
 definition static_traversable_env of abstract_env -> transition_set -> env -> bool: 

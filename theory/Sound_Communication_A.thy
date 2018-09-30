@@ -522,7 +522,6 @@ proof -
     "\<E> \<pi> \<noteq> None" by blast
 qed
 
-
 inductive 
   static_traversable_env :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> env \<Rightarrow> bool"  and
   static_traversable_val :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> val \<Rightarrow> bool"
