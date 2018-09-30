@@ -1009,7 +1009,13 @@ program.  Without such generalization, it would be possibe to prove soundness fo
 program, but not an arbitrary programs.
 
 The generalization of static_traversable is captured in the predicates static_traversable_val,
-static_traversable_env, static_traversable_stack, and static_traversable_pool. 
+static_traversable_env, static_traversable_stack, and static_traversable_pool. Most of the
+rules simply state that the nearest semantic substructure is
+statically traversable.  In the definition of static_traversable_stack, in the rule for a
+nonempty stack, there is the additional premise that the edge from a return point to the label
+of the continuation expression exists in the graph.  This information is consistent with the
+definition of static_traversable for expressions, but provided information about an edge in the
+graph with a fixed number of logical steps.
 
 
 definition static_traversable_env of abstract_env -> transition_set -> env -> bool: 
