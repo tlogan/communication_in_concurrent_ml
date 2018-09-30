@@ -1002,6 +1002,106 @@ lemma label_not_send_site_sound:
 
 -----
 
+Lemma not_static_traceable_sound is proved by generalizing static_traversable and static_eval
+over pools, such that information about the a point in the program can be deduced by a fixed
+number of steps regardless of where the location of the program point or the size of the
+program.  Without such generalization, it would be possibe to prove soundness for a fixed
+program, but not an arbitrary programs.
+
+The generalization of static_traversable is captured in the predicates static_traversable_val,
+static_traversable_env, static_traversable_stack, and static_traversable_pool. 
+
+
+definition static_traversable_env of abstract_env -> transition_set -> env -> bool: 
+
+only 
+
+(∀ env_a graph env .
+  if
+    (∀ x v . if env x = Some v then static_traversable_val env_a graph v)
+  then
+    static_traversable_env env_a graph env) 
+
+
+definition static_traversable_val of abstract_env -> transition_set -> val -> bool:
+
+only
+
+(∀ env_a graph . static_traversable_val env_a graph VUnt) and 
+
+(∀ env_a graph c . static_traversable_val env_a graph (VChn c)) and
+
+(∀ env_a graph env x_e x_m.
+  if
+    static_traversable_env env_a graph env 
+  then 
+    static_traversable_val env_a graph (VClsr (SendEvt x_e x_m) env)) and
+
+(∀ env_a graph env x_e.
+  if
+    static_traversable_env env_a graph env 
+  then
+    static_traversable_val env_a graph (VClsr (RecvEvt x_e) env)) and
+
+(∀ env_a graph env x_c .
+  if
+    static_traversable_env env_a graph env 
+  then
+    static_traversable_val env_a graph (VClsr (Lft x_c) env)) and
+
+(∀ env_a graph env x_c .
+  if
+    static_traversable_env env_a graph env
+  then
+    static_traversable_val env_a graph (VClsr (Rght x_c) env)) and
+
+(∀ env_a graph e_b env f x_p .
+  if
+    static_traversable env_a graph e_b and 
+    static_traversable_env env_a graph env
+  then
+    static_traversable_val V F (VClsr (Abs f x_p e_b) env)) and
+
+(∀ env_a graph env . 
+  if
+    static_traversable_env env_a graph env
+  then
+    static_traversable_val env_a graph (VClsr (Pair x1 x2) env))
+
+
+definition static_traversable_stack of
+  abstract_env -> transition_set -> var -> contin list -> bool:
+
+only
+
+(∀ env_a graph y . static_traversable_stack env_a graph y []) and
+
+(∀ y e graph env_a graph env stack x env .
+  if 
+    {(NResult y, EReturn, top_label e)} ⊆ graph and
+    static_traversable env_a graph e and
+    static_traversable_env env_a graph env and
+    static_traversable_stack env_a graph (rslt_var e) stack 
+  then 
+    static_traversable_stack env_a graph y ((Ctn x e env) # stack))
+
+
+
+definition static_traversable_pool of
+  abstract_env -> transition_set -> trace_pool -> bool:
+
+only
+
+(∀ env_a graph pool .
+  if
+    (∀ path e env stack . if env path = Some (Stt e env stack) then 
+      static_traversable env_a graph e and 
+      static_traversable_env env_a graph env and 
+      static_traversable_stack env_a graph (rslt_var e) stack) 
+  then
+      static_traversable_pool env_a graph pool)
+
+
 ------------------------------
 soundness semantics proofs ... 
 ------------------------------
