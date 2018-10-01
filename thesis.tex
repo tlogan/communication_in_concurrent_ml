@@ -1025,6 +1025,15 @@ graph with a fixed number of logical steps, which would otherwise only be decuci
 varying number of logical steps dependent on location of an expression in a program.
 
 
+The abstract program transitions described by the various versions of static_traversable are
+dependent on abstract value bindings (in the application case), which are described by the
+static_eval predicate.  Thus generalized versions of static evaluation enables further
+deduction of abstract program transitions.  As with the generalized version of
+static_traversable, the generalized versions of static_eval are designed to preserve abstract
+value bindings across program execution steps, and also provide direct access to abstract
+binding information in a fixed number of logical steps. 
+
+
 definition static_traversable_env of abstract_env -> transition_set -> env -> bool: 
 
 only 
