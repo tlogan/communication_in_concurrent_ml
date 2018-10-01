@@ -1025,25 +1025,6 @@ graph with a fixed number of logical steps, which would otherwise only be decuci
 varying number of logical steps dependent on location of an expression in a program.
 
 
-The abstract program transitions described by the various versions of static_traversable are
-dependent on abstract value bindings (in the application case), which are described by the
-static_eval predicate.  Thus generalized versions of static evaluation enables further
-deduction of abstract program transitions.  As with the generalized version of
-static_traversable, the generalized versions of static_eval are designed to preserve abstract
-value bindings across program execution steps, and also provide direct access to abstract
-binding information in a fixed number of logical steps. 
-
-
-definition static_traversable_env of abstract_env -> transition_set -> env -> bool: 
-
-only 
-
-(∀ env_a graph env .
-  if
-    (∀ x v . if env x = Some v then static_traversable_val env_a graph v)
-  then
-    static_traversable_env env_a graph env) 
-
 
 definition static_traversable_val of abstract_env -> transition_set -> val -> bool:
 
@@ -1053,29 +1034,29 @@ only
 
 (∀ env_a graph c . static_traversable_val env_a graph (VChn c)) and
 
-(∀ env_a graph env x_e x_m.
+(∀ env_a graph env x_c x_m.
   if
     static_traversable_env env_a graph env 
   then 
-    static_traversable_val env_a graph (VClsr (SendEvt x_e x_m) env)) and
+    static_traversable_val env_a graph (VClsr (SendEvt x_c x_m) env)) and
 
-(∀ env_a graph env x_e.
+(∀ env_a graph env x_c.
   if
     static_traversable_env env_a graph env 
   then
-    static_traversable_val env_a graph (VClsr (RecvEvt x_e) env)) and
+    static_traversable_val env_a graph (VClsr (RecvEvt x_c) env)) and
 
-(∀ env_a graph env x_c .
+(∀ env_a graph env x_p .
   if
     static_traversable_env env_a graph env 
   then
-    static_traversable_val env_a graph (VClsr (Lft x_c) env)) and
+    static_traversable_val env_a graph (VClsr (Lft x_p) env)) and
 
-(∀ env_a graph env x_c .
+(∀ env_a graph env x_p .
   if
     static_traversable_env env_a graph env
   then
-    static_traversable_val env_a graph (VClsr (Rght x_c) env)) and
+    static_traversable_val env_a graph (VClsr (Rght x_p) env)) and
 
 (∀ env_a graph e_b env f x_p .
   if
@@ -1089,6 +1070,21 @@ only
     static_traversable_env env_a graph env
   then
     static_traversable_val env_a graph (VClsr (Pair x1 x2) env))
+
+-----
+
+definition static_traversable_env of abstract_env -> transition_set -> env -> bool: 
+
+only 
+
+(∀ env_a graph env .
+  if
+    (∀ x v . if env x = Some v then static_traversable_val env_a graph v)
+  then
+    static_traversable_env env_a graph env) 
+
+
+-----
 
 
 definition static_traversable_stack of
@@ -1108,6 +1104,7 @@ only
     static_traversable_stack env_a graph y ((Ctn x e env) # stack))
 
 
+-----
 
 definition static_traversable_pool of
   abstract_env -> transition_set -> trace_pool -> bool:
@@ -1122,6 +1119,102 @@ only
       static_traversable_stack env_a graph (rslt_var e) stack) 
   then
       static_traversable_pool env_a graph pool)
+
+-----
+
+The abstract program transitions described by the various versions of static_traversable are
+dependent on abstract value bindings (in the application case), which are described by the
+static_eval predicate.  Thus generalized versions of static evaluation enables further
+deduction of abstract program transitions.  As with the generalized version of
+static_traversable, the generalized versions of static_eval are designed to preserve abstract
+value bindings across program execution steps, and also provide direct access to abstract
+binding information in a fixed number of logical steps. 
+
+definition static_eval_value of
+  abstract_env -> abstract_convo -> val -> bool: 
+
+only
+
+(∀ env_a convo_a . static_eval_val env_a convo_a VUnit) and
+
+(∀ env_a convo_a c . static_eval_val env_a convo_a (VChn c)) and
+
+(∀ env_a convo_a env x_c x_m .
+  if
+    static_eval_env env_a convo_a env
+  then
+    static_eval_val env_a convo_a (VClsr (SendEvt x_c x_m) env)) and
+
+(∀ env_a convo_a env x_c  .
+  if
+    static_eval_env env_a convo_a env
+  then
+    static_eval_val env_a convo_a (VClsr (RecvEvt x_c) env)) and
+
+(∀ env_a convo_a env x_p  .
+  if
+    static_eval_env env_a convo_a env
+  then
+    static_eval_val env_a convo_a (VClsr (Lft x_p) env)) and
+
+(∀ env_a convo_a env x_p  .
+  if
+    static_eval_env env_a convo_a env
+  then
+    static_eval_val env_a convo_a (VClsr (Rght x_p) env)) and
+
+
+(∀ f x_p e_b env_a convo_a env .
+  if
+    {APrim (Abs f x_p e_b)} ⊆ env_a f and 
+    static_eval env_a convo_a e_b and 
+    static_eval_env env_a convo_a env
+  then
+    static_eval_val env_a convo_a (VClsr (Abs f x_p e_b) env)) and
+
+(∀ env_a convo_a env x1 x2 .
+  if
+    static_eval_env env_a convo_a env
+  then
+    static_eval_val env_a convo_a (VClsr (Pair x1 x2) env))
+
+----
+
+static_eval_env :: "abstract_env × abstract_env ⇒ env ⇒ bool" (infix "⊨⇩ρ" 55) 
+  Intro: " 
+    ∀ x ω . ρ x = Some ω ⟶ {|ω|} ⊆ 𝒱 x ∧ (𝒱, 𝒞) ⊨⇩ω ω ⟹
+    (𝒱, 𝒞) ⊨⇩ρ ρ
+  "
+
+
+inductive static_eval_stack :: "abstract_env × abstract_env ⇒ abstract_value set ⇒ contin list ⇒ bool" ("_ ⊨⇩κ _ ⇛ _" [56,0,56]55) where
+  Empty: "(𝒱, 𝒞) ⊨⇩κ 𝒲 ⇛ []" |
+  Nonempty: "
+    ⟦ 
+      𝒲 ⊆ 𝒱 x;
+      (𝒱, 𝒞) ⊨⇩e e;
+      (𝒱, 𝒞) ⊨⇩ρ ρ;
+      (𝒱, 𝒞) ⊨⇩κ 𝒱 (⌊e⌋) ⇛ κ
+    ⟧ ⟹ 
+    (𝒱, 𝒞) ⊨⇩κ 𝒲 ⇛ ((Ctn x e ρ) # κ)
+  "
+
+
+inductive static_eval_state :: "abstract_env × abstract_env ⇒ state ⇒ bool" (infix "⊨⇩σ" 55)  where
+  Intro: "
+    ⟦
+      (𝒱, 𝒞) ⊨⇩e e;
+      (𝒱, 𝒞) ⊨⇩ρ ρ;
+      (𝒱, 𝒞) ⊨⇩κ 𝒱 (⌊e⌋) ⇛ κ
+    ⟧ ⟹
+    (𝒱, 𝒞) ⊨⇩σ ⟨e; ρ; κ⟩
+  "
+
+inductive static_eval_pool :: "abstract_env × abstract_env ⇒ trace_pool ⇒ bool" (infix "⊨⇩ℰ" 55) where
+  Intro: "
+    (∀ π σ . ℰ π = Some σ ⟶ (𝒱, 𝒞) ⊨⇩σ σ) ⟹ 
+    (𝒱, 𝒞) ⊨⇩ℰ ℰ
+  "
 
 
 ------------------------------
