@@ -1180,41 +1180,47 @@ only
 
 ----
 
-static_eval_env :: "abstract_env × abstract_env ⇒ env ⇒ bool" (infix "⊨⇩ρ" 55) 
-  Intro: " 
-    ∀ x ω . ρ x = Some ω ⟶ {|ω|} ⊆ 𝒱 x ∧ (𝒱, 𝒞) ⊨⇩ω ω ⟹
-    (𝒱, 𝒞) ⊨⇩ρ ρ
-  "
+definition static_eval_env of abstract_env -> abstract_env -> env -> bool:
+
+only 
+
+(∀ env_a convo_a env .
+  if
+    (∀ x v . if env x = Some v then
+      {abstract v} ⊆ env_a x and
+      static_eval_val env_a convo_a v)
+  then 
+    static_eval_env env_a convo_a env)
 
 
-inductive static_eval_stack :: "abstract_env × abstract_env ⇒ abstract_value set ⇒ contin list ⇒ bool" ("_ ⊨⇩κ _ ⇛ _" [56,0,56]55) where
-  Empty: "(𝒱, 𝒞) ⊨⇩κ 𝒲 ⇛ []" |
-  Nonempty: "
-    ⟦ 
-      𝒲 ⊆ 𝒱 x;
-      (𝒱, 𝒞) ⊨⇩e e;
-      (𝒱, 𝒞) ⊨⇩ρ ρ;
-      (𝒱, 𝒞) ⊨⇩κ 𝒱 (⌊e⌋) ⇛ κ
-    ⟧ ⟹ 
-    (𝒱, 𝒞) ⊨⇩κ 𝒲 ⇛ ((Ctn x e ρ) # κ)
-  "
+definition static_eval_stack of
+  abstract_env -> abstract_env -> abstract_value set -> contin list -> bool:
+
+only 
+
+(∀ env_a convo_a res_a . static_eval_stack env_a convo_a res_a []) and
+
+(∀ res_a env_a convo_a . 
+  if 
+    res_a ⊆ env_a x and
+    static_eval env_a convo_a e and
+    static_eval_env env_a convo_a env and
+    static_eval_stack env_a convo_a env_a (rslt_var e) stack 
+  then
+    static_eval_stack env_a convo_a res_a ⇛ ((Ctn x e ρ) # stack))
 
 
-inductive static_eval_state :: "abstract_env × abstract_env ⇒ state ⇒ bool" (infix "⊨⇩σ" 55)  where
-  Intro: "
-    ⟦
-      (𝒱, 𝒞) ⊨⇩e e;
-      (𝒱, 𝒞) ⊨⇩ρ ρ;
-      (𝒱, 𝒞) ⊨⇩κ 𝒱 (⌊e⌋) ⇛ κ
-    ⟧ ⟹
-    (𝒱, 𝒞) ⊨⇩σ ⟨e; ρ; κ⟩
-  "
+definition static_eval_pool of abstract_env -> abstract_env -> trace_pool -> bool:
 
-inductive static_eval_pool :: "abstract_env × abstract_env ⇒ trace_pool ⇒ bool" (infix "⊨⇩ℰ" 55) where
-  Intro: "
-    (∀ π σ . ℰ π = Some σ ⟶ (𝒱, 𝒞) ⊨⇩σ σ) ⟹ 
-    (𝒱, 𝒞) ⊨⇩ℰ ℰ
-  "
+only
+(∀ env_a convo_a pool .
+  if
+    (∀ path e env stack . if pool path = Some (Stt e env stack) then 
+      static_eval env_a convo_a e and
+      static_eval_env env_a convo_a env and
+      static_eval_stack env_a convo_a env_a (rslt_var e) stack)
+  then 
+    static_eval_pool env_a convo_a pool)
 
 
 ------------------------------
