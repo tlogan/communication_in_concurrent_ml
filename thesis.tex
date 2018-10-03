@@ -1125,7 +1125,7 @@ only
 The abstract program transitions described by the various versions of static_traversable are
 dependent on abstract value bindings (in the application case), which are described by the
 static_eval predicate.  Thus generalized versions of static evaluation enables further
-deduction of abstract program transitions.  As with the generalized version of
+deduction of abstract program transitions.  As with the generalized versions of
 static_traversable, the generalized versions of static_eval are designed to preserve abstract
 value bindings across program execution steps, and also provide direct access to abstract
 binding information in a fixed number of logical steps. 
@@ -1221,6 +1221,20 @@ only
       static_eval_stack env_a convo_a env_a (rslt_var e) stack)
   then 
     static_eval_pool env_a convo_a pool)
+
+Lemma not_static_traceable_sound follows from the lemma 
+static_traversable_pool_preserved_star, the predicate star_left and its equivalence to star,
+and induction on star_left concur_step's latter argument.  Induction with star_left provides
+the premise that static_traversability holds for a path in a pool just once step earlier. The
+lemma also relies on the definition of static_traversable_pool and lemma
+static_traversable_pool_preserved to deduce abstraction transition information about the pool
+containing with the traced path.  
+
+Lemma static_traversable_pool_preserved relies on not_static_bound_sound_pool,
+to obtain information about abstract bindings.  That lemma, in turn, relies on static_eval_pool
+preserved, which follows from induction on star concur_step's former argument.
+
+
 
 
 ------------------------------
