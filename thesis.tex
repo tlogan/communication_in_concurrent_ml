@@ -1230,131 +1230,39 @@ lemma also relies on the definition of static_traversable_pool and lemma
 static_traversable_pool_preserved to deduce abstraction transition information about the pool
 containing with the traced path.  
 
+
+inductive star_left :: "('a ⇒ 'a ⇒ bool) ⇒ 'a ⇒ 'a ⇒ bool" for R where
+ refl: "star_left R z z" |
+ step: "star_left R x y ⟹ R y z ⟹ star_left R x z"
+
+lemma static_traversable_pool_preserved_star: "
+  static_traversable_pool V F ℰ ⟹
+  (V, C) ⊨⇩ℰ ℰ ⟹
+  star concur_step (ℰ, H) (ℰ', H') ⟹
+  static_traversable_pool V F ℰ'
+
+
 Lemma static_traversable_pool_preserved relies on not_static_bound_sound_pool,
 to obtain information about abstract bindings.  That lemma, in turn, relies on static_eval_pool
 preserved, which follows from induction on star concur_step's former argument.
 
 
+theorem trace_pool_always_not_static_bound_sound : "
+  ρ' x = Some ω ⟹
+  (𝒱, 𝒞) ⊨⇩ℰ ℰ ⟹ 
+  star concur_step (ℰ, H) (ℰ', H') ⟹
+  ℰ' π = Some (⟨e'; ρ'; κ'⟩) ⟹
+  {|ω|} ⊆ 𝒱 x
+"
 
 
-------------------------------
-soundness semantics proofs ... 
-------------------------------
-
-To prove the soundness of communication topologies, it is useful to define predicates that
-define how the abstract value bindings relate to various elements of the dynamic semantics,
-including values, environments, continuation stacks, states, and trace pools. 
-
-The static eval value and static eval env predicates are mutually recursive predicates that
-describe the bindings to values that might be evaluated from values and environments of running
-programs. 
-
-In the case of an function abstraction closure, the abstract function abstract value is bound
-to the function's recursive name, and the bindings also represent all possible bindings for the
-function abstraction's inner expression. For an environment, every name and value in the
-environment correspond abstract value bindings, and the abstract value bindings also represent
-all possible bindings for each value within the environment.
-
-For all closure values, the abstract value bindings of a value are also the abstract value
-bindings of the envirnment within the closure.
-
-The static eval stack predicate states that some abstract value bindings represent all the
-bindings possibly evaluated in a continuation stack, given some abstract values.  For an empty
-stack, any abstract value bindings may be possible.  For a nonempty stack, The abstract value
-bindings hold for the constiuents of the first continuation, and the name of the first
-conintuation is bound to the given abstract values.  The abstract value bindings hold for
-remaining continuation stack with the abstract values from the result of the first
-continuation.  
-
-The static eval state predicate simply states the the abstract value bindings hold for the
-state's constituents.
-
-The static eval pool predicate states that the abstract value bindings hold for each state
-within the trace pool.
-
-The lemma static eval preserved under concur step states that if some abstract binings hold
-for a trace pool, and the trace pool takes a concurrent step to new trace pool, then the
-bindings also hold for the new trace pool. The proof is by a straightforward case analysis
-based on the definitions of the predicates.
-
-The lemma static eval preserved under concur step star generalizes the previous predicate over
-multiple concur steps.  The proof is by induction over the first parameter of the star of
-concur step predicate.  In the inductive case of star where at least one step is taken, the
-induction hypothesis provides the assumption that if the abstract value bindings hold for
-second trace pool stepped to from the first, then they hold for a third trace pool that the
-stepped to trace pool takes multiple steps to.  The induction hypothesis is strong enough to
-conclude that the abstract value bindings hold for the third trace pool if they hold for the
-first. 
-
-The lemma trace pool snapshot not static bound sound states that an abstract value is
-statically bound to a name if the abstract value binding is a static evaluation of a trace
-pool, and there is an environment in that trace pool that contains the name bound to a
-corresponding concreate value.  In other words, if there is no statically evaluated abstract
-value binding from a trace pool then there is no corresponding dynamically evaluated concrete
-value binding.  The proof is a straightforward application of the predicate definitions. 
-
-The lemma trace pool always not static bound sound states that an abstract value binds to a
-name from static evaluation of a trace pool, if that trace pool dynamically evalutes to a new
-trace pool over multipe steps, and the name is bound to a corresponding concrete value in the
-new trace pool.  The proof is by applying the lemmas for static eval preserved under concur
-step star, and trace pool snapshot not static bound sound. 
-
-
-The lemma exp always not static bound sound states that an abstract value binds to a name from
-static evaluation of an exp, if that expression in an initial trace pool dynamically evalutes
-to a new trace pool over multipe steps, and the name is bound to a corresponding concrete value
-in the new trace pool.  The proof is by applying the lemma trace pool always not static bound,
-and the definitions of the static eval predicates. 
-
-
----------------------------
-soundness communication ... 
----------------------------
-
-It is useful to define how abstract and concrete dynamic paths correspond in order to prove the
-soundness theorems for communication classification.  Essentially, there is an isomorphism
-between each step of an abstract path and that of corresponding dynamic path.
-
-the lemma equality abstract to concrete states that if two concrete paths correspond to the
-same abstract path, then the two conrete paths are the same.  The proof is by induction of the
-paths of the paths correspond predicate.
-
-The lemma prefix abstract to concrete states that a concrete path is a prefix of a second
-concrete path if the corresponding abstract path of the former is the prefix of the
-corresponding abstract path of the latter.  The proof is by induction on the paths of the paths
-correspond predicate.
-
-The lemma strict prefix abstract to concrete states that a concrete path is a strict prefix of
-a sceond concrete path if the corresponding abstract path of the former is the strict prefix of
-the corresponding abstract path of the latter.  The proof is by induction on the paths of the
-paths correspond predicate.
-
-the lemma equality concrete to abstract states that if two abstract paths correspond to the
-same concrete path, then the two conrete paths are the same. The proof is by induction of the
-paths of the paths correspond predicate.
-
-The lemma not static inclusive states that two abstract paths might be inclusive, if the
-correspond to dynamic paths that occur in the same run of a program.  The proof is by induction
-on the star of concur step predicate and relies on the lemmas and definitions related to the
-correponsance of paths.
-
-
-It is also useful to define how transitions relate to other parts of the dynamic semantics,
-including values, environments, continuations, states, and trace pools.
-
-The static traversable env predicate and static traversable val predicate are mutually
-inductive. For the environment, the predicate states that the given transitions hold for each
-value in the environment. For the value, the predicate states that the givne transitions hold
-for the consituent parts of the value.
-
-The static traversable stack predicate states that the given transitions hold for the
-constinuent parts of the continuat stack.
-
-The static traversable pool states that the given transitions hold for the constiuent parts of
-every state in the trace pool.  
-
-
-
+theorem static_eval_preserved_under_concur_step_star : "
+  ⟦
+    star concur_step (ℰ, H) (ℰ', H')
+    (𝒱, 𝒞) ⊨⇩ℰ ℰ;  
+  ⟧ ⟹
+  (𝒱, 𝒞) ⊨⇩ℰ ℰ'
+"
 
 
 
