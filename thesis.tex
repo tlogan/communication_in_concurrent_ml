@@ -942,20 +942,36 @@ theorem static_one_to_one_sound:
 -----
 
 Theorem static_fan_out_sound is proved by a few simpler lemmas and the definitions
-of static_fan_out and fan_out.  The three main lemmas are label_not_send_site_sound,
-not_static_inclusive_sound, and not_static_traceable_sound.
+of static_fan_out and fan_out.  The three main lemmas are not_static_send_site_sound,
+not_static_inclusive_sound, and not_static_traceable_sound.  Additionally, the inductive
+definition paths_corresponds, which simply relates abstract paths to concrete paths,
+is helpful. 
+
+Lemma not_static_inclusive_sound states that if any two paths traced by running a programm
+correspond two abstract paths that are statically inclusive.  It follows from a straight
+forward case analysis of static_inclusive.
 
 Lemma not_static_traceable_sound states that if a running a programming traces a concrete
 path, and a graph contains the statically traversable steps of the program, then there is an
 abstract path corresponding to the traced concrete path is statically traceable.   
 
-Lemma not_static_inclusive_sound states that if any two paths traced by running a programm
-correspond two abstract paths that are statically inclusive.    
-
-Lemma label_not_send_site_sound states that if a program is run to reach a synchronization on
+Lemma not_static_send_site_sound states that if a program is run to reach a synchronization on
 a send event, then the label corresponding to the syncrhonization expression is statically
 identified as a send site.
 
+------
+
+lemma not_static_inclusive_sound:
+
+∀ e0 pool convo path1 stt1 path2 stt2 path_a1 path_a2 . 
+  if
+    star concur_step [[] -> (Stt e0 [->] [])] {} pool convo
+    pool path1 = Some stt1 and 
+    pool path2 = Some stt2 and 
+    paths_correspond path1 path_a1 and 
+    paths_correspond path2 path_a2
+  then
+    static_inclusive path_a1 path_a2
 
 -----
 lemma not_static_traceable_sound:
@@ -974,21 +990,7 @@ lemma not_static_traceable_sound:
 
 -----
 
-lemma not_static_inclusive_sound:
-
-∀ e0 pool convo path1 stt1 path2 stt2 path_a1 path_a2 . 
-  if
-    star concur_step [[] -> (Stt e0 [->] [])] {} pool convo
-    pool path1 = Some stt1 and 
-    pool path2 = Some stt2 and 
-    paths_correspond path1 path_a1 and 
-    paths_correspond path2 path_a2
-  then
-    static_inclusive path_a1 path_a2
-
------
-
-lemma label_not_send_site_sound:
+lemma not_static_send_site_sound:
 
 ∀ e0 pool convo path x x_e e' env stack x_sc x_m env' path_c x_c .
   if
@@ -1286,6 +1288,9 @@ lemma static_eval_pool_preserved:
   then
     static_eval_pool env_a convo_a pool'
 
+
+
+lemma not_static_send_site_sound is proved by ...
 
 -------------------------------------------------------------
 static communication B ...
