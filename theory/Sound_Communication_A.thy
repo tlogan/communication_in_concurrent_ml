@@ -1165,19 +1165,19 @@ qed
 
 
 lemma static_traversable_pool_preserved_star: "
-  static_traversable_pool V F \<E> \<Longrightarrow>
-  (V, C) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  star concur_step (\<E>, H) (\<E>', H') \<Longrightarrow>
+  static_traversable_pool V F [[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>] \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  star concur_step ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
   static_traversable_pool V F \<E>'
 "
 proof -
   assume 
-    H1: "static_traversable_pool V F \<E>" and
-    H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>" and
-    H4: "star concur_step (\<E>, H) (\<E>', H')"
+    H1: "static_traversable_pool V F [[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>]" and
+    H2: "(V, C) \<Turnstile>\<^sub>e e0" and
+    H4: "star concur_step ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) (\<E>', H')"
 
   obtain EH EH' where
-    H6: "EH = (\<E>, H)" and 
+    H6: "EH = ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {})" and 
     H7: "EH' = (\<E>', H')" and 
     H8: "star concur_step EH EH'"
     by (simp add: H4)
@@ -1188,9 +1188,8 @@ proof -
   from H9
   have 
     H10: "
-    \<forall> \<E> H \<E>' H' .
-    (V, C) \<Turnstile>\<^sub>\<E> \<E> \<longrightarrow>
-    (\<E>, H) = EH \<longrightarrow> static_traversable_pool V F \<E> \<longrightarrow>
+    \<forall> \<E>' H' .
+    ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) = EH \<longrightarrow> static_traversable_pool V F [[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>] \<longrightarrow>
     (\<E>', H') = EH' \<longrightarrow> static_traversable_pool V F \<E>'" 
   proof induction
     case (refl x)
@@ -1198,13 +1197,13 @@ proof -
   next
     case (step x y z)
     {
-      fix \<E> H \<E>' H'
+      fix \<E>' H'
       assume 
-        L1H1: "(\<E>, H) = x" and
-        L1H2: "static_traversable_pool V F \<E>" and
-        L1H3: "(\<E>', H') = z" and 
-        L1H4: "(V, C) \<Turnstile>\<^sub>\<E> \<E>"
+        L1H1: "([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) = x" and
+        L1H2: "static_traversable_pool V F [[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>]" and
+        L1H3: "(\<E>', H') = z"
 
+      have L1H4 : "(V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>]" by (simp add: H2 static_eval_to_pool)
 
       have 
         L1H6: "\<forall> \<E>m Hm . (\<E>m, Hm) = y \<longrightarrow> (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<longrightarrow> static_traversable_pool V F \<E>m"
@@ -1702,7 +1701,7 @@ lemma not_static_traceable_sound: "
     paths_correspond \<pi> path \<and>
     static_traceable F (top_label e0) isEnd path
 "
-by (metis lift_traversable_to_pool static_eval_to_pool not_static_traceable_pool_sound static_traversable_pool_preserved_star)
+by (metis lift_traversable_to_pool not_static_traceable_pool_sound static_traversable_pool_preserved_star)
 
 lemma send_not_static_traceable_sound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>

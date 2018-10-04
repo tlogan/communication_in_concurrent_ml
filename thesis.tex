@@ -1256,29 +1256,22 @@ lemma not_static_traceable_pool_sound:
       static_traceable graph (top_label e0) isEnd path_a
 
 lemma static_traversable_pool_preserved_star:
-∀  pool convo pool' convo' env_a convo_a graph .
+∀ e0 pool convo env_a convo_a graph .
   if
-    star concur_step pool convo pool' convo' and 
-    static_eval_pool env_a convo_a pool and
-    static_traversable_pool env_a graph pool
+    star concur_step [[] -> (Stt e0 [->] [])] {} pool convo and 
+    static_eval env_a convo_a e0 and
+    static_traversable_pool env_a graph [[] -> (Stt e0 [->] [])]
   then
-    static_traversable_pool env_a graph pool' 
+    static_traversable_pool env_a graph pool 
 
 
-Lemma static_traversable_pool_preserved follows from lemma not_static_bound_sound_pool, due to
-its information about abstract bindings.  That lemma, in turn, relies on static_eval_pool
-preserved, which follows from induction on star concur_step.
+Lemma static_traversable_pool_preserved_star follows from induction on star's equivalent
+star_left and lemma static_eval_pool_preserved_star, and the information about abstract
+bindings from static_eval_pool.
 
-lemma not_static_bound_sound_pool:
-∀ pool convo pool' convo' env_a convo_a path' e' env' stack' x v .
-  if
-    star concur_step pool convo pool' convo' and 
-    static_eval_pool env_a convo_a pool and 
-    pool' path' = Some (Stt e' env' stack') and 
-    env' x = Some v 
-  then
-    {abstract v} ⊆ env_a x
 
+Lemma not_static_bound_sound follows from static_eval_pool_preserved, which results from
+induction on star_concur_step.
 
 lemma static_eval_pool_preserved:
 ∀ pool convo pool' convo' env_a convo_a .
@@ -1289,8 +1282,8 @@ lemma static_eval_pool_preserved:
     static_eval_pool env_a convo_a pool'
 
 
-
-lemma not_static_send_site_sound is proved by ...
+lemma not_static_send_site_sound is proved using the lemmas   
+send_chan_not_static_bound_sound, not_static_bound_sound, and not_static_reachable_sound.
 
 -------------------------------------------------------------
 static communication B ...
