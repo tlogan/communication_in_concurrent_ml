@@ -1222,9 +1222,10 @@ only
   then 
     static_eval_pool env_a convo_a pool)
 
-Lemma not_static_traceable_sound follows from the lemma 
-static_traversable_pool_preserved_star, the predicate star_left and its equivalence to star,
-and induction on star_left concur_step's latter argument.  Induction with star_left provides
+Lemma not_static_traceable_sound follows from the generalized lemma
+not_static_traceable_pool_sound, lemma static_traversable_pool_preserved_star, the predicate
+star_left and its equivalence to star, and induction on star_left concur_step's latter
+argument.  Induction with star_left provides
 the premise that static_traversability holds for a path in a pool just once step earlier. The
 lemma also relies on the definition of static_traversable_pool and lemma
 static_traversable_pool_preserved to deduce abstraction transition information about the pool
@@ -1239,6 +1240,22 @@ only
     star_left R x y and R y z
   then
     star_left R x z)
+
+
+lemma not_static_traceable_pool_sound:
+∀ e0 pool convo path x b e' env stack evn_a convo_a graph isEnd .
+  if
+    star concur_step ([[] -> (Stt e0 [->] [])], {}) (pool, convo) and 
+    pool path = Some (Stt (Let x b e') env stack) and 
+    static_eval env_a convo_a e0 and 
+    static_traversable env_a graph pool and 
+    isEnd (NLet x)
+  then
+    ∃ path_a . 
+      paths_correspond path path_a and 
+      static_traceable graph (top_label e0) isEnd path_a
+
+
 
 lemma static_traversable_pool_preserved_star:
 ∀  pool convo pool' convo' env_a convo_a graph .
