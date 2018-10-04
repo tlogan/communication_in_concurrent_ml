@@ -1223,14 +1223,12 @@ only
     static_eval_pool env_a convo_a pool)
 
 Lemma not_static_traceable_sound follows from the generalized lemma
-not_static_traceable_pool_sound, lemma static_traversable_pool_preserved_star, the predicate
-star_left and its equivalence to star, and induction on star_left concur_step's latter
-argument.  Induction with star_left provides
-the premise that static_traversability holds for a path in a pool just once step earlier. The
-lemma also relies on the definition of static_traversable_pool and lemma
-static_traversable_pool_preserved to deduce abstraction transition information about the pool
-containing with the traced path.  
-
+not_static_traceable_pool_sound, which contains the generalized premise of
+static_traversable_pool. The generalized lemma follows from lemma
+static_traversable_pool_preserved_star, the predicate star_left and its equivalence to star,
+and induction on star_left. The lemma also relies on the definition of static_traversable_pool
+and lemma static_traversable_pool_preserved to deduce abstract transition information about the
+pool containing the traced path.
 
 definition star_left of ('a -> 'a -> bool) -> 'a -> 'a -> bool:
 only
@@ -1255,8 +1253,6 @@ lemma not_static_traceable_pool_sound:
       paths_correspond path path_a and 
       static_traceable graph (top_label e0) isEnd path_a
 
-
-
 lemma static_traversable_pool_preserved_star:
 ∀  pool convo pool' convo' env_a convo_a graph .
   if
@@ -1267,10 +1263,9 @@ lemma static_traversable_pool_preserved_star:
     static_traversable_pool env_a graph pool' 
 
 
-Lemma static_traversable_pool_preserved relies on not_static_bound_sound_pool,
-to obtain information about abstract bindings.  That lemma, in turn, relies on static_eval_pool
-preserved, which follows from induction on star concur_step's former argument.
-
+Lemma static_traversable_pool_preserved follows from lemma not_static_bound_sound_pool, due to
+its information about abstract bindings.  That lemma, in turn, relies on static_eval_pool
+preserved, which follows from induction on star concur_step.
 
 lemma not_static_bound_sound_pool:
 ∀ pool convo pool' convo' env_a convo_a path' e' env' stack' x v .
