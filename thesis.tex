@@ -1231,15 +1231,23 @@ static_traversable_pool_preserved to deduce abstraction transition information a
 containing with the traced path.  
 
 
-inductive star_left :: "('a ⇒ 'a ⇒ bool) ⇒ 'a ⇒ 'a ⇒ bool" for R where
- refl: "star_left R z z" |
- step: "star_left R x y ⟹ R y z ⟹ star_left R x z"
+definition star_left of ('a -> 'a -> bool) -> 'a -> 'a -> bool:
+only
+(∀ r z z . star_left r z z) and
+(∀ r x y z .
+  if
+    star_left R x y and R y z
+  then
+    star_left R x z)
 
-lemma static_traversable_pool_preserved_star: "
-  static_traversable_pool V F ℰ ⟹
-  (V, C) ⊨⇩ℰ ℰ ⟹
-  star concur_step (ℰ, H) (ℰ', H') ⟹
-  static_traversable_pool V F ℰ'
+lemma static_traversable_pool_preserved_star:
+∀  pool convo pool' convo' env_a convo_a graph .
+  if
+    star concur_step pool convo pool' convo' and 
+    static_eval_pool env_a convo_a pool and
+    static_traversable_pool env_a graph pool
+  then
+    static_traversable_pool env_a graph pool' 
 
 
 Lemma static_traversable_pool_preserved relies on not_static_bound_sound_pool,
@@ -1247,23 +1255,24 @@ to obtain information about abstract bindings.  That lemma, in turn, relies on s
 preserved, which follows from induction on star concur_step's former argument.
 
 
-theorem trace_pool_always_not_static_bound_sound : "
-  ρ' x = Some ω ⟹
-  (𝒱, 𝒞) ⊨⇩ℰ ℰ ⟹ 
-  star concur_step (ℰ, H) (ℰ', H') ⟹
-  ℰ' π = Some (⟨e'; ρ'; κ'⟩) ⟹
-  {|ω|} ⊆ 𝒱 x
-"
+lemma not_static_bound_sound_pool:
+∀ pool convo pool' convo' env_a convo_a path' e' env' stack' x v .
+  if
+    star concur_step pool convo pool' convo' and 
+    static_eval_pool env_a convo_a pool and 
+    pool' path' = Some (Stt e' env' stack') and 
+    env' x = Some v 
+  then
+    {abstract v} ⊆ env_a x
 
 
-theorem static_eval_preserved_under_concur_step_star : "
-  ⟦
-    star concur_step (ℰ, H) (ℰ', H')
-    (𝒱, 𝒞) ⊨⇩ℰ ℰ;  
-  ⟧ ⟹
-  (𝒱, 𝒞) ⊨⇩ℰ ℰ'
-"
-
+lemma static_eval_pool_preserved:
+∀ pool convo pool' convo' env_a convo_a .
+  if
+    star concur_step pool convo pool' convo' 
+    static_eval_pool env_a convo_a pool
+  then
+    static_eval_pool env_a convo_a pool'
 
 
 -------------------------------------------------------------
