@@ -1228,7 +1228,12 @@ Lemma not_static_traceable_sound follows from the generalized lemma
 not_static_traceable_pool_sound, which contains the generalized premise of
 static_traversable_pool. The generalized lemma follows from lemma
 static_traversable_pool_preserved_star, the predicate star_left and its equivalence to star,
-and induction on star_left. The lemma also relies on the definition of static_traversable_pool
+and induction on star_left.  star_left inductively defines a a binary relation as unraveling
+from right to left, rather than left to right.  In the case of steps through a program, it
+unravels the execution from the end to the beginning, which enables deducing traceablity of a
+path from its slightly shorter predecessor.  
+
+The lemma also relies on the definition of static_traversable_pool
 and lemma static_traversable_pool_preserved to deduce abstract transition information about the
 pool containing the traced path.
 
