@@ -1285,6 +1285,51 @@ lemma static_eval_pool_preserved:
 lemma not_static_send_site_sound is proved using the lemmas   
 send_chan_not_static_bound_sound, not_static_bound_sound, and not_static_reachable_sound.
 
+lemma send_chan_not_static_bound_sound:
+∀ e0 pool convo env_a convo_a path x x_e e' env stack x_sc x_m env_e path_c x_c .
+  if
+    star concur_step [[] -> (Stt e0 [->] [])], {} pool convo and
+    static_eval env_a convo_a e0 and
+    pool path = Some (Stt (Let x (Sync x_e) e') env stack) and
+    env_y x_e = Some (VClsr (SendEvt x_sc x_m) env_e) and
+    env_e x_sc = Some (VChn (Ch path_c x_c))
+  then
+    AChan x_c ∈ env_a x_sc
+
+
+lemma not_static_bound_sound:
+∀ e0 pool convo env_a convo_a path e env stack x v .
+  if
+    star concur_step [[] -> (Stt e0 [->] [])] {} pool convo and
+    static_eval env_a convo_a e0 and 
+    pool path = Some (Stt e env stack) and 
+    env x = Some v
+  then
+    abstract v ∈ env_a x
+
+Both send_chan_not_static_bound_sound, and not_static_bound_sound follow from
+static_eval_pool_preserved_star descrbied previously.
+
+lemma not_static_reachable_sound:
+∀ e0 pool convo env_a convo_a path e env stack .
+  if
+    star concur_step [[] -> (Stt e0 [->] [])] {} pool convo and
+    pool path = Some (Stt e env stack)
+  then
+    static_reachable e0 e
+
+
+The definition of static_reachable is syntax-directed in order to potray a clear connection to
+a computable algorithm that can determine the reachable expression from an initial program.
+However, to show that an expression is reachable from the initial program, it is necessary
+show that each intermediate expression is reachable from the initial expression.  Thus, the
+induction should be from the end to the begininng of the program.  The definition
+static_reachable_left is equivalent to static_reachable, but enables unraveling the reachable
+information from the end to the beggining.  Likewise induction on star_left is used, instead of
+star, to unravel the semantics from the end to the beginning, keeping the inital program in
+context foreach step. 
+
+
 -------------------------------------------------------------
 static communication B ...
 -------------------------------------------------------------
