@@ -352,7 +352,11 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
           l1 = l2 \<or> 
           (\<exists> x . l1 = (LNxt x) \<and> l2 = (LSpwn x)) \<or>
           (\<exists> x . l1 = (LSpwn x) \<and> l2 = (LNxt x))"
-          by (smt H10 H11 H12 H14 H15 H16 H3 H7 L1H1 L2H4 L3H1 strict_prefix_abstract_to_concrete prefix_snoc spawn_point strict_prefixI' strict_prefix_def)
+          using 
+            H10 H11 H12 H14 H15 H16 H3 H7 L1H1 L2H4 L3H1
+            strict_prefix_abstract_to_concrete 
+            prefix_snoc spawn_point strict_prefixI' strict_prefix_def
+          by smt
 
         have L3H4: "
           n1 = n2 \<or> 
@@ -409,15 +413,13 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       show "static_inclusive path1 path2"
         using H1 H6 H7 L1H2 L2H2 by blast
     qed
-
   qed
-
 qed
 
 lemma not_static_inclusive_sound: "
   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
-  \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
-  \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
+  \<E>' \<pi>1 \<noteq> None \<Longrightarrow>
+  \<E>' \<pi>2 \<noteq> None \<Longrightarrow>
   paths_correspond \<pi>1 path1 \<Longrightarrow>
   paths_correspond \<pi>2 path2 \<Longrightarrow>
   static_inclusive path1 path2

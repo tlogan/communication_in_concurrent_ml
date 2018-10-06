@@ -1228,7 +1228,7 @@ Lemma not_static_traceable_sound follows from the generalized lemma
 not_static_traceable_pool_sound, which contains the generalized premise of
 static_traversable_pool. The generalized lemma follows from lemma
 static_traversable_pool_preserved_star, the predicate star_left and its equivalence to star,
-and induction on star_left.  star_left inductively defines a a binary relation as unraveling
+and induction on star_left. star_left inductively defines a a binary relation as unraveling
 from right to left, rather than left to right.  In the case of steps through a program, it
 unravels the execution from the end to the beginning, which enables deducing traceablity of a
 path from its slightly shorter predecessor.  
@@ -1239,12 +1239,35 @@ pool containing the traced path.
 
 definition star_left of ('a -> 'a -> bool) -> 'a -> 'a -> bool:
 only
-(∀ r z z . star_left r z z) and
+(∀ r z z .
+  star_left r z z) and
 (∀ r x y z .
   if
     star_left R x y and R y z
   then
     star_left R x z)
+
+lemma star_implies_star_left:
+(∀ r x y .
+  if
+    star R x z
+  then
+    star_left R x z)
+
+
+lemma star_left_trans:
+(∀ r x y z .
+  if 
+    star_left r x y and
+    star_left r y z 
+  then
+    star_left r x z)
+
+lemma star_implies_star_left 
+
+lemma star_implies_star_left follows from induction on star and star_left_trans,
+which follows from induction on the latter star_left.  A similar approach deduces the
+fact that star_left implies star.
 
 
 lemma not_static_traceable_pool_sound:
@@ -1328,11 +1351,70 @@ The definition of static_reachable is syntax-directed in order to potray a clear
 a computable algorithm that can determine the reachable expression from an initial program.
 However, to show that an expression is reachable from the initial program, it is necessary
 show that each intermediate expression is reachable from the initial expression.  Thus, the
-induction should be from the end to the begininng of the program.  The definition
-static_reachable_left is equivalent to static_reachable, but enables unraveling the reachable
-information from the end to the beggining.  Likewise induction on star_left is used, instead of
+induction should be from the end to the begininng of the program.  the predicate static_reachable follows
+from static_reachable_left, but it enables unraveling the reachable
+information from the end to the beggining.  Likewise, induction on star_left is used, instead of
 star, to unravel the semantics from the end to the beginning, keeping the inital program in
 context foreach step. 
+
+
+definition static_reachable_left of exp -> exp -> bool:
+
+only
+
+(∀ e0 e .
+  static_reachable_left e0 e0) and
+
+(∀ e0 x e_c e' .
+  if 
+    static_reachable_left e0 (Let x (Spwn e_c) e')
+  then
+    static_reachable_left e0 e_c) and
+
+(∀ e0 x x_s x_l e_l x_r e_r e' .
+  if
+    static_reachable_left e0 (Let x (Case x_s x_l e_l x_r e_r) e')
+  then
+    static_reachable_left e0 e_l) and
+
+(∀ e0 x x_s x_l e_l x_r e_r e' .
+  if
+    static_reachable_left e0 (Let x (Case x_s x_l e_l x_r e_r) e')
+  then
+    static_reachable_left e0 e_r) and
+
+(∀ e0 x f x_p e_b e' .
+  if
+    static_reachable_left e0 (Let x (Prim (Abs f x_p e_b)) e')
+  then
+    static_reachable_left e0 e_b) and
+
+(∀ e0 x f x_p e_b e' .
+  if
+    static_reachable_left e0 (Let x b e')
+  then
+    static_reachable_left e0 e')
+
+
+lemma static_reachable_left_implies_static_reachable:
+(∀ e0 e. 
+  if
+    static_reachable_left e0 e
+  then
+    static_reachable e0 e)
+
+lemma static_reachable_trans:
+(∀ e1 e2 e3 .
+  if 
+    static_reachable e1 e2 and
+    static_reachable e2 e3
+  then
+    static_reachable e1 e3)
+
+
+lemma static_reachable_left_implies_static_reachable follows from induction on statc_reachable_left and
+static_reachable_trans, which follows from induction on static_reachable.
+
 
 
 -------------------------------------------------------------
