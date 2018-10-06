@@ -1361,8 +1361,8 @@ information from the end to the beggining.  Likewise, induction on star_left is 
 of star, to unravel the semantics from the end to the beginning, keeping the inital program in
 context foreach step. 
 
-With the the definitions of star_left, static_reachable_left and its generations,
-lemma not_static_reachable_sound follows via induction on star_left.
+The lemma not_static_reachable_sound follows the the definitions of star_left,
+static_reachable_left, its generalizations and the the lemma not_static_reachable_pool_sound.
 
 
 definition static_reachable_left of exp -> exp -> bool:
@@ -1402,6 +1402,62 @@ only
   then
     static_reachable_left e0 e')
 
+definition static_reachable_val of exp -> val -> bool:
+only
+(∀ e0 .
+    static_reachable_over_val e0 VUnt) and
+(∀ e0 c .
+    static_reachable_over_val e0 (VChn c)) and
+(∀ e0 p env .
+  if
+    static_reachable_over_prim e0 p and 
+    static_reachable_over_env e0 env
+  then
+    static_reachable_over_val e0 (VClsr p env))
+
+definition static_reachable_env of exp -> env -> bool:
+only
+(∀ e0 env
+  if
+    (∀ x v . if env x = Some v  then static_reachable_over_val e0 v)
+  then
+    static_reachable_over_env e0 env)
+
+definition static_reachable_over_stack of exp -> contin list -> bool:
+only
+(∀ e0 .
+  static_reachable_over_stack e0 []) and
+(∀ e0 e_k env_k stack' .
+  if
+    static_reachable_left e0 e_k and 
+    static_reachable_over_env e0 env_κ and
+    static_reachable_over_stack e0 stack' 
+  then
+    static_reachable_over_stack e0 ((Ctn x_k e_k env_k # stack')))
+
+definition static_reachable_pool of exp -> trace_pool -> bool:
+only
+(∀ e0 pool .
+  then
+    (∀ path e env stack . if pool path = Some (Stt e env stack) then 
+      static_reachable_left e0 e and 
+      static_reachable_over_env e0 env and 
+      static_reachable_over_stack e0 stack)
+   then
+    static_reachable_over_pool e0 pool)
+
+
+lemma not_static_reachable_pool_sound:
+(∀ e0 pool .
+  if
+    star concur_step [[] -> (Stt e0 [->] [])], {} pool convo 
+  then
+    static_reachable_over_pool e0 pool)
+
+
+lemma not_static_reachable_pool_sound follows via induction on star_left and the lemmas
+relating static_reachable to static_reachable left and star to star_left.
+
 
 lemma static_reachable_left_implies_static_reachable:
 (∀ e0 e. 
@@ -1419,8 +1475,9 @@ lemma static_reachable_trans:
     static_reachable e1 e3)
 
 
-lemma static_reachable_left_implies_static_reachable follows from induction on statc_reachable_left and
-static_reachable_trans, which follows from induction on static_reachable.
+lemma static_reachable_left_implies_static_reachable follows from induction on
+statc_reachable_left and static_reachable_trans, which follows from induction on
+static_reachable.
 
 
 
