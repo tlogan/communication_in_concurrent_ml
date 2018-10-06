@@ -1335,8 +1335,6 @@ lemma not_static_bound_sound:
   then
     abstract v ∈ env_a x
 
-Both send_chan_not_static_bound_sound, and not_static_bound_sound follow from
-static_eval_pool_preserved_star descrbied previously.
 
 lemma not_static_reachable_sound:
 ∀ e0 pool convo env_a convo_a path e env stack .
@@ -1347,15 +1345,24 @@ lemma not_static_reachable_sound:
     static_reachable e0 e
 
 
+Both send_chan_not_static_bound_sound, and not_static_bound_sound follow from
+static_eval_pool_preserved_star descrbied previously.
+The lemma not_static_reachable_sound relies on the helper definition static_reachable_left
+and generalizations based on that.
 The definition of static_reachable is syntax-directed in order to potray a clear connection to
 a computable algorithm that can determine the reachable expression from an initial program.
 However, to show that an expression is reachable from the initial program, it is necessary
 show that each intermediate expression is reachable from the initial expression.  Thus, the
-induction should be from the end to the begininng of the program.  the predicate static_reachable follows
-from static_reachable_left, but it enables unraveling the reachable
-information from the end to the beggining.  Likewise, induction on star_left is used, instead of
-star, to unravel the semantics from the end to the beginning, keeping the inital program in
+induction should be from the end to the begininng of the program.
+
+The predicate static_reachable follows
+from static_reachable_left, and it enables unraveling the reachable
+information from the end to the beggining.  Likewise, induction on star_left is used, instead
+of star, to unravel the semantics from the end to the beginning, keeping the inital program in
 context foreach step. 
+
+With the the definitions of star_left, static_reachable_left and its generations,
+lemma not_static_reachable_sound follows via induction on star_left.
 
 
 definition static_reachable_left of exp -> exp -> bool:

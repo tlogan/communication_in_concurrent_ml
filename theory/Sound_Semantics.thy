@@ -1676,314 +1676,286 @@ inductive static_reachable_over_stack :: "exp \<Rightarrow> contin list \<Righta
     static_reachable_over_stack e0 ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>)
   "
 
-inductive static_reachable_over_state :: "exp \<Rightarrow> state \<Rightarrow> bool" where
+inductive static_reachable_over_pool :: "exp \<Rightarrow> trace_pool \<Rightarrow> bool" where
   Intro: "
-    static_reachable_left e0 e \<Longrightarrow>
-    static_reachable_over_env e0 \<rho> \<Longrightarrow>
-    static_reachable_over_stack e0 \<kappa> \<Longrightarrow>
-    static_reachable_over_state e0 (\<langle>e;\<rho>;\<kappa>\<rangle>)
+    (\<forall>\<pi> e \<rho> \<kappa> . E \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
+      static_reachable_left e0 e \<and>
+      static_reachable_over_env e0 \<rho> \<and>
+      static_reachable_over_stack e0 \<kappa>) \<Longrightarrow>
+    static_reachable_over_pool e0 E
   "
 
-lemma static_reachable_over_state_preserved: "
+lemma static_reachable_over_pool_preserved: "
   concur_step (E, H) (E', H') \<Longrightarrow>
-  \<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> static_reachable_over_state e\<^sub>0 \<sigma> \<Longrightarrow>
-  E' \<pi>' = Some \<sigma>' \<Longrightarrow>
-  static_reachable_over_state e\<^sub>0 \<sigma>'
+  static_reachable_over_pool e0 E \<Longrightarrow>
+  static_reachable_over_pool e0 E'
 "
 proof -
   assume
-    H1: "\<forall>\<pi> \<sigma>. E \<pi> = Some \<sigma> \<longrightarrow> static_reachable_over_state e\<^sub>0 \<sigma>" and
-    H2: "E' \<pi>' = Some \<sigma>'" and
+    H1: "static_reachable_over_pool e0 E" and
     H3: "concur_step (E, H) (E', H')"
 
-  from H3 show "static_reachable_over_state e\<^sub>0 \<sigma>'"
+  from H3 show "static_reachable_over_pool e0 E'"
   proof cases
     case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<omega>)
 
-    from H1 local.Seq_Step_Down(4)
-    have L1H1: "static_reachable_over_state e\<^sub>0 (\<langle>Rslt x;\<rho>;(Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>)" by blast
-
     then have 
-      L1H2: "static_reachable_over_env e\<^sub>0 \<rho>" and 
-      L1H3: "static_reachable_over_stack e\<^sub>0 ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>)" by (blast dest: static_reachable_over_state.cases)+
+      L1H2: "static_reachable_over_env e0 \<rho>" and 
+      L1H3: "static_reachable_over_stack e0 ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>)"
+      using H1 local.Seq_Step_Down(4) static_reachable_over_pool.cases by blast+
 
-    then have 
-      L1H4: "static_reachable_left e\<^sub>0 e\<^sub>\<kappa>" and 
-      L1H5: "static_reachable_over_env e\<^sub>0 \<rho>\<^sub>\<kappa>" and 
-      L1H6: "static_reachable_over_stack e\<^sub>0 \<kappa>" by (blast dest: static_reachable_over_stack.cases)+
+   have 
+      L1H4: "static_reachable_left e0 e\<^sub>\<kappa>" and 
+      L1H5: "static_reachable_over_env e0 \<rho>\<^sub>\<kappa>" and 
+      L1H6: "static_reachable_over_stack e0 \<kappa>"
+     by (metis L1H3 contin.inject list.inject list.simps(3) static_reachable_over_stack.simps)+
 
-    from L1H2 L1H5 local.Seq_Step_Down(5) have L1H7: "static_reachable_over_env e\<^sub>0 (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>))"
-      by (smt static_reachable_over_env.cases static_reachable_over_env_static_reachable_over_val.Intro map_upd_Some_unfold)
+    from L1H2 L1H5 local.Seq_Step_Down(5) have L1H7: "static_reachable_over_env e0 (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>))"
+    using static_reachable_over_env.simps by auto
 
-    with L1H4 L1H6 L1H7 have L1H8: "static_reachable_over_state e\<^sub>0 (\<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>)"
-      by (simp add: static_reachable_over_state.intros)
-
-    with H1 H2 local.Seq_Step_Down(1) show "static_reachable_over_state e\<^sub>0 \<sigma>'"
-      by (metis map_upd_Some_unfold)
+    show ?thesis
+      using H1 L1H4 L1H6 L1H7 local.Seq_Step_Down(1) static_reachable_over_pool.simps by auto
   next
     case (Seq_Step \<pi> x b el \<rho>l \<kappa>l \<omega>)
 
-    from H1 local.Seq_Step(4) 
-    have L1H1: "static_reachable_over_state e\<^sub>0 (\<langle>Let x b el;\<rho>l;\<kappa>l\<rangle>)" by blast
+    have 
+      L1H2: "static_reachable_left e0 (Let x b el)" and
+      L1H3: "static_reachable_over_env e0 \<rho>l" and
+      L1H4: "static_reachable_over_stack e0 \<kappa>l"
+      using H1 local.Seq_Step(4) static_reachable_over_pool.cases by blast+
 
-    then have 
-      L1H2: "static_reachable_left e\<^sub>0 (Let x b el)" and
-      L1H3: "static_reachable_over_env e\<^sub>0 \<rho>l" and
-      L1H4: "static_reachable_over_stack e\<^sub>0 \<kappa>l" by (blast dest: static_reachable_over_state.cases)+
-
-    from L1H2 have L1H5: "static_reachable_left e\<^sub>0 el" by (blast dest: static_reachable_left.Let)
+    from L1H2 have L1H5: "static_reachable_left e0 el" by (blast dest: static_reachable_left.Let)
 
     from local.Seq_Step(5) have 
-      "static_reachable_over_val e\<^sub>0 \<omega>"
+      "static_reachable_over_val e0 \<omega>"
     proof cases
       case UNIT
-      then show "static_reachable_over_val e\<^sub>0 \<omega>" by (simp add: VUnt)
+      then show "static_reachable_over_val e0 \<omega>" by (simp add: VUnt)
     next
       case (PRIM p)
 
-      have L2H1: "static_reachable_over_prim e\<^sub>0 p"
+      have L2H1: "static_reachable_over_prim e0 p"
       proof (cases p)
         case (SendEvt x11 x12)
-        then show "static_reachable_over_prim e\<^sub>0 p" by (simp add: static_reachable_over_prim.SendEvt)
+        then show "static_reachable_over_prim e0 p" by (simp add: static_reachable_over_prim.SendEvt)
       next
         case (RecvEvt x2)
-        then show "static_reachable_over_prim e\<^sub>0 p" by (simp add: static_reachable_over_prim.RecvEvt)
+        then show "static_reachable_over_prim e0 p" by (simp add: static_reachable_over_prim.RecvEvt)
       next
         case (Pair x31 x32)
-        then show "static_reachable_over_prim e\<^sub>0 p" by (simp add: static_reachable_over_prim.Pair)
+        then show "static_reachable_over_prim e0 p" by (simp add: static_reachable_over_prim.Pair)
       next
         case (Lft x4)
-        then show "static_reachable_over_prim e\<^sub>0 p" by (simp add: static_reachable_over_prim.Lft)
+        then show "static_reachable_over_prim e0 p" by (simp add: static_reachable_over_prim.Lft)
       next
         case (Rght x5)
-        then show "static_reachable_over_prim e\<^sub>0 p" by (simp add: static_reachable_over_prim.Rght)
+        then show "static_reachable_over_prim e0 p" by (simp add: static_reachable_over_prim.Rght)
       next
         case (Abs x61 x62 x63)
 
         with L1H2 local.PRIM(1) local.Abs
-        show "static_reachable_over_prim e\<^sub>0 p" by (smt static_reachable_left.Let_Abs_Body static_reachable_over_prim.Abs )
+        show "static_reachable_over_prim e0 p" by (smt static_reachable_left.Let_Abs_Body static_reachable_over_prim.Abs )
       qed
 
-      have L2H3: "static_reachable_over_env e\<^sub>0 \<rho>l" by (simp add: L1H3)
+      have L2H3: "static_reachable_over_env e0 \<rho>l" by (simp add: L1H3)
 
-      with L2H1 have "static_reachable_over_val e\<^sub>0 (VClsr p \<rho>l)" by (simp add: VClsr)
+      with L2H1 have "static_reachable_over_val e0 (VClsr p \<rho>l)" by (simp add: VClsr)
 
-      with local.PRIM(2) show "static_reachable_over_val e\<^sub>0 \<omega>" by simp
+      with local.PRIM(2) show "static_reachable_over_val e0 \<omega>" by simp
     next
       case (FST x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
-      then show "static_reachable_over_val e\<^sub>0 \<omega>"
+      then show "static_reachable_over_val e0 \<omega>"
         by (metis L1H3 static_reachable_over_env.cases static_reachable_over_val.cases val.distinct(3) val.distinct(5) val.inject(2))
     next
       case (SND x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
-      then show "static_reachable_over_val e\<^sub>0 \<omega>"
+      then show "static_reachable_over_val e0 \<omega>"
         by (metis L1H3 static_reachable_over_env.cases static_reachable_over_val.cases val.distinct(3) val.distinct(5) val.inject(2))
     qed
     
-    with L1H3 have L1H6: "static_reachable_over_env e\<^sub>0 (\<rho>l(x \<mapsto> \<omega>))"
+    with L1H3 have L1H6: "static_reachable_over_env e0 (\<rho>l(x \<mapsto> \<omega>))"
       by (smt static_reachable_over_env.cases static_reachable_over_env_static_reachable_over_val.Intro map_upd_Some_unfold)
 
-    with L1H4 L1H5 have L1H7: "static_reachable_over_state e\<^sub>0 (\<langle>el;\<rho>l(x \<mapsto> \<omega>);\<kappa>l\<rangle>)" by (simp add: static_reachable_over_state.intros)
-   
-    with H1 H2 local.Seq_Step(1) show "static_reachable_over_state e\<^sub>0 \<sigma>'"
-      by (metis map_upd_Some_unfold)
+    show ?thesis
+      using H1 L1H4 L1H5 L1H6 local.Seq_Step(1) static_reachable_over_pool.simps by auto
   next
     case (Seq_Step_Up \<pi> x b el \<rho>l \<kappa>l el' \<rho>l')
-
-    from H1 local.Seq_Step_Up(4) have 
-      L1H1: "static_reachable_over_state e\<^sub>0 (\<langle>Let x b el;\<rho>l;\<kappa>l\<rangle>)" by blast
-
-    then have 
-      L1H2: "static_reachable_left e\<^sub>0 (Let x b el)" and
-      L1H3: "static_reachable_over_env e\<^sub>0 \<rho>l" and
-      L1H4: "static_reachable_over_stack e\<^sub>0 \<kappa>l" by (blast dest: static_reachable_over_state.cases)+
+    
+    have 
+      L1H2: "static_reachable_left e0 (Let x b el)" and
+      L1H3: "static_reachable_over_env e0 \<rho>l" and
+      L1H4: "static_reachable_over_stack e0 \<kappa>l"
+      using H1 local.Seq_Step_Up(4) static_reachable_over_pool.cases by blast+
 
     from L1H2 have 
-      L1H5: "static_reachable_left e\<^sub>0 el" by (blast dest: static_reachable_left.Let)
+      L1H5: "static_reachable_left e0 el" by (blast dest: static_reachable_left.Let)
 
     from L1H3 L1H4 L1H5 have 
-      L1H6: "static_reachable_over_stack e\<^sub>0 ((Ctn x el \<rho>l) # \<kappa>l)" 
+      L1H6: "static_reachable_over_stack e0 ((Ctn x el \<rho>l) # \<kappa>l)" 
         by (simp add: static_reachable_over_stack.Nonempty)
 
     from local.Seq_Step_Up(5)
     have 
-      L1H7: "static_reachable_left e\<^sub>0 el' \<and> static_reachable_over_env e\<^sub>0 \<rho>l'"
+      L1H7: "static_reachable_left e0 el' \<and> static_reachable_over_env e0 \<rho>l'"
     proof cases
       case (let_case_left x\<^sub>s x\<^sub>l' \<rho>\<^sub>l \<omega>\<^sub>l x\<^sub>l x\<^sub>r e\<^sub>r)
 
       from L1H2 local.let_case_left(1) have 
-        L2H1: "static_reachable_left e\<^sub>0 el'" by (blast dest: static_reachable_left.let_case_left)
+        L2H1: "static_reachable_left e0 el'" by (blast dest: static_reachable_left.let_case_left)
 
       from L1H3 local.let_case_left(3) have 
-        "static_reachable_over_val e\<^sub>0 (VClsr (prim.Lft x\<^sub>l') \<rho>\<^sub>l)"
+        "static_reachable_over_val e0 (VClsr (prim.Lft x\<^sub>l') \<rho>\<^sub>l)"
         by (blast dest: static_reachable_over_env.cases)
 
-      then have "static_reachable_over_env e\<^sub>0 \<rho>\<^sub>l" by (blast dest: static_reachable_over_val.cases)
+      then have "static_reachable_over_env e0 \<rho>\<^sub>l" by (blast dest: static_reachable_over_val.cases)
 
-      with local.let_case_left(4) have "static_reachable_over_val e\<^sub>0 \<omega>\<^sub>l" by (blast dest: static_reachable_over_env.cases)
+      with local.let_case_left(4) have "static_reachable_over_val e0 \<omega>\<^sub>l" by (blast dest: static_reachable_over_env.cases)
 
-      with L1H3 have "static_reachable_over_env e\<^sub>0 (\<rho>l(x\<^sub>l \<mapsto> \<omega>\<^sub>l))"
+      with L1H3 have "static_reachable_over_env e0 (\<rho>l(x\<^sub>l \<mapsto> \<omega>\<^sub>l))"
         by (smt static_reachable_over_env.cases static_reachable_over_env_static_reachable_over_val.Intro map_upd_Some_unfold)
 
       with local.let_case_left(2) have 
-        L2H2: "static_reachable_over_env e\<^sub>0 \<rho>l'" by simp
+        L2H2: "static_reachable_over_env e0 \<rho>l'" by simp
 
-      with L2H1 show "static_reachable_left e\<^sub>0 el' \<and> static_reachable_over_env e\<^sub>0 \<rho>l'" by simp
+      show ?thesis by (simp add: L2H1 L2H2)
     next
       case (let_case_right x\<^sub>s x\<^sub>r' \<rho>\<^sub>r \<omega>\<^sub>r x\<^sub>l e\<^sub>l x\<^sub>r)
 
       from L1H2 local.let_case_right(1) have 
-        L2H1: "static_reachable_left e\<^sub>0 el'"
+        L2H1: "static_reachable_left e0 el'"
           by (blast dest: static_reachable_left.let_case_right)
 
       from L1H3 local.let_case_right(3)
-      have "static_reachable_over_val e\<^sub>0 (VClsr (prim.Rght x\<^sub>r') \<rho>\<^sub>r)"
+      have "static_reachable_over_val e0 (VClsr (prim.Rght x\<^sub>r') \<rho>\<^sub>r)"
         by (blast dest: static_reachable_over_env.cases)
 
-      then have "static_reachable_over_env e\<^sub>0 \<rho>\<^sub>r" by (blast dest: static_reachable_over_val.cases)
+      then have "static_reachable_over_env e0 \<rho>\<^sub>r" by (blast dest: static_reachable_over_val.cases)
 
       with L1H3 local.let_case_right(2) local.let_case_right(4) have 
-        L2H2: "static_reachable_over_env e\<^sub>0 \<rho>l'"
+        L2H2: "static_reachable_over_env e0 \<rho>l'"
           by (auto simp: static_reachable_over_env.simps)
 
-      with L2H1 show "static_reachable_left e\<^sub>0 el' \<and> static_reachable_over_env e\<^sub>0 \<rho>l'" by simp
+      with L2H1 show "static_reachable_left e0 el' \<and> static_reachable_over_env e0 \<rho>l'" by simp
     next
       case (let_app f f\<^sub>l x\<^sub>l \<rho>\<^sub>l x\<^sub>a \<omega>\<^sub>a)
 
       from L1H3 local.let_app(3) have
-        L2H1: "static_reachable_over_val e\<^sub>0 (VClsr (Abs f\<^sub>l x\<^sub>l el') \<rho>\<^sub>l)" by (blast dest: static_reachable_over_env.cases)
+        L2H1: "static_reachable_over_val e0 (VClsr (Abs f\<^sub>l x\<^sub>l el') \<rho>\<^sub>l)" by (blast dest: static_reachable_over_env.cases)
 
       then have 
-        "static_reachable_over_prim e\<^sub>0 (Abs f\<^sub>l x\<^sub>l el')" by (blast dest: static_reachable_over_val.cases)
+        "static_reachable_over_prim e0 (Abs f\<^sub>l x\<^sub>l el')" by (blast dest: static_reachable_over_val.cases)
 
-      then have L2H2: "static_reachable_left e\<^sub>0 el'" by (blast dest: static_reachable_over_prim.cases)
+      then have L2H2: "static_reachable_left e0 el'" by (blast dest: static_reachable_over_prim.cases)
 
-      from L2H1 have L2H3: "static_reachable_over_env e\<^sub>0 \<rho>\<^sub>l" by (blast dest: static_reachable_over_val.cases)
+      from L2H1 have L2H3: "static_reachable_over_env e0 \<rho>\<^sub>l" by (blast dest: static_reachable_over_val.cases)
 
       with L1H3 local.let_app(4) have
-        L2H1: "static_reachable_over_val e\<^sub>0 \<omega>\<^sub>a" by (blast dest: static_reachable_over_env.cases)
+        L2H1: "static_reachable_over_val e0 \<omega>\<^sub>a" by (blast dest: static_reachable_over_env.cases)
 
       with L1H3 L2H3 local.let_app(2) local.let_app(3) have 
-        L2H4: "static_reachable_over_env e\<^sub>0 \<rho>l'" by (auto simp: static_reachable_over_env.simps)
+        L2H4: "static_reachable_over_env e0 \<rho>l'" by (auto simp: static_reachable_over_env.simps)
 
-       with L2H2 show "static_reachable_left e\<^sub>0 el' \<and> static_reachable_over_env e\<^sub>0 \<rho>l'" by simp
+       with L2H2 show "static_reachable_left e0 el' \<and> static_reachable_over_env e0 \<rho>l'" by simp
     qed
 
-    with L1H6 have "static_reachable_over_state e\<^sub>0 (\<langle>el';\<rho>l';(Ctn x el \<rho>l) # \<kappa>l\<rangle>)" by (simp add: static_reachable_over_state.intros)
-
-    with H1 H2 local.Seq_Step_Up(1) show 
-      "static_reachable_over_state e\<^sub>0 \<sigma>'"
-      by (metis fun_upd_apply option.sel)
+    show ?thesis using H1 L1H6 L1H7 local.Seq_Step_Up(1) static_reachable_over_pool.simps by auto
   next
     case (Let_Chan \<pi> x e \<rho> \<kappa>)
 
-    from H1 local.Let_Chan(4) have 
-      "static_reachable_over_state e\<^sub>0 (\<langle>Let x MkChn e;\<rho>;\<kappa>\<rangle>)" by simp
-
-    then have
-      L1H1: "static_reachable_left e\<^sub>0 (Let x MkChn e)" and
-      L1H2: "static_reachable_over_env e\<^sub>0 \<rho>" and
-      L1H3: "static_reachable_over_stack e\<^sub>0 \<kappa>" using static_reachable_over_state.cases by blast+
+    have
+      L1H1: "static_reachable_left e0 (Let x MkChn e)" and
+      L1H2: "static_reachable_over_env e0 \<rho>" and
+      L1H3: "static_reachable_over_stack e0 \<kappa>"
+      using H1 local.Let_Chan(4) static_reachable_over_pool.cases by blast+
 
     from L1H1 have
-      L1H4: "static_reachable_left e\<^sub>0 e" using static_reachable_left.Let by blast
+      L1H4: "static_reachable_left e0 e" using static_reachable_left.Let by blast
 
     from L1H2 have
-      L1H5: "static_reachable_over_env e\<^sub>0 (\<rho>(x \<mapsto> VChn (Ch \<pi> x)))" using VChn static_reachable_over_env.simps by auto
+      L1H5: "static_reachable_over_env e0 (\<rho>(x \<mapsto> VChn (Ch \<pi> x)))" using VChn static_reachable_over_env.simps by auto
 
-    from L1H4 L1H5 L1H3 have
-      "static_reachable_over_state e\<^sub>0 (\<langle>e;\<rho> ++ [x \<mapsto> VChn (Ch \<pi> x)];\<kappa>\<rangle>)" using static_reachable_over_state.intros by simp
-
-    with H1 H2 local.Let_Chan(1) show
-      "static_reachable_over_state e\<^sub>0 \<sigma>'" by (metis fun_upd_other fun_upd_same map_add_empty map_add_upd option.sel)
+    show ?thesis using H1 L1H3 L1H4 L1H5 local.Let_Chan(1) static_reachable_over_pool.simps by auto
   next
     case (Let_Spawn \<pi> x e\<^sub>c e \<rho> \<kappa>)
 
-    from H1 local.Let_Spawn(4) have
-      "static_reachable_over_state e\<^sub>0 (\<langle>Let x (Spwn e\<^sub>c) e;\<rho>;\<kappa>\<rangle>)" by blast
-
-    then have
-      L1H1: "static_reachable_left e\<^sub>0 (Let x (Spwn e\<^sub>c) e)" and
-      L1H2: "static_reachable_over_env e\<^sub>0 \<rho>" and
-      L1H3: "static_reachable_over_stack e\<^sub>0 \<kappa>" using static_reachable_over_state.cases by blast+
-
-    from L1H1 have
-      L1H4: "static_reachable_left e\<^sub>0 e\<^sub>c" using static_reachable_left.Let_Spawn_Child by blast
-
-    from L1H1 have
-      L1H5: "static_reachable_left e\<^sub>0 e" using static_reachable_left.Let by blast
-
-    from L1H2 L1H4 have
-      L1H6: "static_reachable_over_state e\<^sub>0 (\<langle>e\<^sub>c;\<rho>;[]\<rangle>)" by (simp add: static_reachable_over_stack.Empty static_reachable_over_state.intros)
+    have
+      L1H1: "static_reachable_left e0 (Let x (Spwn e\<^sub>c) e)" and
+      L1H2: "static_reachable_over_env e0 \<rho>" and
+      L1H3: "static_reachable_over_stack e0 \<kappa>"
+      using H1 local.Let_Spawn(4) static_reachable_over_pool.cases by blast+
 
     have
-      L1H7: "static_reachable_over_val e\<^sub>0 VUnt" by (simp add: VUnt)
+      L1H4: "static_reachable_left e0 e\<^sub>c" using H1 local.Let_Spawn(4)
+      using L1H1 static_reachable_left.Let_Spawn_Child by blast
 
-    from L1H2 L1H3 L1H5 L1H7 have
-      L1H8: "static_reachable_over_state e\<^sub>0 (\<langle>e;\<rho>(x \<mapsto> VUnt);\<kappa>\<rangle>)" by (simp add:static_reachable_over_env.simps static_reachable_over_state.intros)
-   
-    from H1 H2 L1H6 L1H8 local.Let_Spawn(1) show
-      "static_reachable_over_state e\<^sub>0 \<sigma>'" by (smt fun_upd_apply map_add_empty map_add_upd option.sel)
+    have
+      L1H5: "static_reachable_left e0 e"
+      using L1H1 static_reachable_left.Let by blast
+
+    have
+      L1H7: "static_reachable_over_val e0 VUnt" by (simp add: VUnt)
+
+    have
+      L1H9: "static_reachable_over_env e0 (\<rho>(x \<mapsto> VUnt))" using L1H2 L1H7
+      by (simp add: static_reachable_over_env.simps)
+
+    show ?thesis
+      using H1 L1H2 L1H3 L1H4 L1H5 L1H9 local.Let_Spawn(1) static_reachable_over_pool.simps static_reachable_over_stack.Empty by auto
 
   next
     case (Let_Sync \<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e c \<omega>\<^sub>m)
 
-    from H1 local.Let_Sync(7) have 
-      "static_reachable_over_state e\<^sub>0 (\<langle>Let x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)" by blast
-
-    then have 
-      L1H1: "static_reachable_left e\<^sub>0 (Let x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r)" and
-      L1H2: "static_reachable_over_env e\<^sub>0 \<rho>\<^sub>r" and
-      L1H3: "static_reachable_over_stack e\<^sub>0 \<kappa>\<^sub>r" using static_reachable_over_state.cases by blast+
+    have 
+      L1H1: "static_reachable_left e0 (Let x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r)" and
+      L1H2: "static_reachable_over_env e0 \<rho>\<^sub>r" and
+      L1H3: "static_reachable_over_stack e0 \<kappa>\<^sub>r"
+      using H1 local.Let_Sync(7) static_reachable_over_pool.cases by blast+
 
     have 
-      L1H4: "static_reachable_left e\<^sub>0 e\<^sub>r"
+      L1H4: "static_reachable_left e0 e\<^sub>r"
       using L1H1 static_reachable_left.Let by blast
 
-    from H1 local.Let_Sync(4) have 
-      "static_reachable_over_state e\<^sub>0 (\<langle>Let x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)" by blast
-
-    then have 
-      L1H5: "static_reachable_left e\<^sub>0 (Let x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s)" and
-      L1H6: "static_reachable_over_env e\<^sub>0 \<rho>\<^sub>s" and
-      L1H7: "static_reachable_over_stack e\<^sub>0 \<kappa>\<^sub>s" using static_reachable_over_state.cases by blast+
+    have 
+      L1H5: "static_reachable_left e0 (Let x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s)" and
+      L1H6: "static_reachable_over_env e0 \<rho>\<^sub>s" and
+      L1H7: "static_reachable_over_stack e0 \<kappa>\<^sub>s" 
+      using H1 local.Let_Sync(4) static_reachable_over_pool.cases by blast+
 
     from L1H6 local.Let_Sync(5) have 
-      L1H8: "static_reachable_over_val e\<^sub>0 (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)" using static_reachable_over_env.cases by auto
+      L1H8: "static_reachable_over_val e0 (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)" using static_reachable_over_env.cases by auto
 
     then have 
-      L1H9: "static_reachable_over_env e\<^sub>0 \<rho>\<^sub>s\<^sub>e"  using static_reachable_over_val.cases by blast
+      L1H9: "static_reachable_over_env e0 \<rho>\<^sub>s\<^sub>e"  using static_reachable_over_val.cases by blast
 
     from L1H9 local.Let_Sync(11) have 
-      L1H10: "static_reachable_over_val e\<^sub>0 \<omega>\<^sub>m" using static_reachable_over_env.cases by auto
+      L1H10: "static_reachable_over_val e0 \<omega>\<^sub>m" using static_reachable_over_env.cases by auto
 
     from L1H5 have 
-      L1H11: "static_reachable_left e\<^sub>0 e\<^sub>s" using static_reachable_left.Let by blast
+      L1H11: "static_reachable_left e0 e\<^sub>s" using static_reachable_left.Let by blast
 
     have 
-      L1H12: "static_reachable_over_val e\<^sub>0 VUnt" by (simp add: VUnt)
+      L1H12: "static_reachable_over_val e0 VUnt" by (simp add: VUnt)
 
-    from L1H2 L1H3 L1H4 L1H10 L1H12 have 
-      L1H13: "static_reachable_over_state e\<^sub>0 (\<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)" by (simp add: static_reachable_over_env.simps static_reachable_over_state.intros)
+    have 
+      L1H13: "static_reachable_over_env e0 (\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m))"
+      using L1H2 L1H9 local.Let_Sync(11) static_reachable_over_env.simps by auto
 
-    from L1H6 L1H7 L1H11 L1H12 have 
-      L1H14: "static_reachable_over_state e\<^sub>0 (\<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt);\<kappa>\<^sub>s\<rangle>)" by (simp add: static_reachable_over_env.simps static_reachable_over_state.intros)
+    have
+      L1H14: "static_reachable_over_env e0 (\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt))" using L1H6 L1H12
+      by (simp add: static_reachable_over_env.simps)
 
-    from H1 H2 L1H13 L1H14 local.Let_Sync(1) show 
-      "static_reachable_over_state e\<^sub>0 \<sigma>'" by (smt fun_upd_apply map_add_empty map_add_upd option.sel)
-
+    show ?thesis
+      using H1 L1H11 L1H13 L1H14 L1H4 local.Let_Sync(1) local.Let_Sync(4) local.Let_Sync(7) static_reachable_over_pool.simps by auto
   qed
 qed
 
-lemma state_always_exp_not_static_reachable_sound: "
+lemma always_exp_not_static_reachable_sound_pool: "
   star concur_step (\<E>0, H0) (\<E>', H') \<Longrightarrow>
   \<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<Longrightarrow>
-  \<E>' \<pi>' = Some \<sigma>' \<Longrightarrow>
-  static_reachable_over_state e\<^sub>0 \<sigma>'
+  static_reachable_over_pool e\<^sub>0 \<E>'
 "
 proof -
   assume 
-    H1: "\<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and 
-    H2: "\<E>' \<pi>' = Some \<sigma>'" and
+    H1: "\<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and
     H3: "star concur_step (\<E>0, H0) (\<E>', H')"
 
   obtain X0 X' where
@@ -1998,8 +1970,7 @@ proof -
       \<forall> \<E>0 H0 \<E>' H' \<pi>' \<sigma>' .
       X0 = (\<E>0, H0) \<longrightarrow> X' = (\<E>', H') \<longrightarrow>
       \<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
-      \<E>' \<pi>' = Some \<sigma>' \<longrightarrow>
-      static_reachable_over_state e\<^sub>0 \<sigma>'
+      static_reachable_over_pool e\<^sub>0 \<E>'
     " 
   proof (induction)
     case (refl z)
@@ -2008,8 +1979,7 @@ proof -
       fix \<E>0 H0 \<E>' H' \<pi>' \<sigma>'
       assume 
         L1H0: "z = (\<E>0, H0)" "z = (\<E>', H')" and
-        L1H1: "\<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and
-        L1H2:  "\<E>0 \<pi>' = Some \<sigma>'"
+        L1H1: "\<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]"
   
       have 
         L1H3: "static_reachable_left e\<^sub>0 e\<^sub>0" by (simp add: static_reachable_left.Refl)
@@ -2018,38 +1988,35 @@ proof -
       have 
         L1H5: "static_reachable_over_stack e\<^sub>0 []" by (simp add: static_reachable_over_stack.Empty)
 
-      from L1H3 L1H4 L1H5 have 
-        L1H6: "static_reachable_over_state e\<^sub>0 (\<langle>e\<^sub>0;Map.empty;[]\<rangle>)" by (simp add: static_reachable_over_state.intros)
-
-     from L1H1 L1H2 L1H6 have
-        "static_reachable_over_state e\<^sub>0 \<sigma>'" by (metis fun_upd_apply option.distinct(1) option.sel)
+      have
+        "static_reachable_over_pool e\<^sub>0 \<E>0"
+       by (simp add: L1H1 L1H3 L1H4 L1H5 static_reachable_over_pool.intros)
     }
 
     then show ?case by blast
   next
     case (step x y z)
     {
-      fix \<E>0 H0 \<E>' H' \<pi>' \<sigma>'
+      fix \<E>0 H0 \<E>' H' \<pi>'
       assume 
         L1H0: "x = (\<E>0, H0)" "z = (\<E>', H')" and 
-        L2H1: "\<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and
-        L2H2: "\<E>' \<pi>' = Some \<sigma>'"
+        L2H1: "\<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]"
 
 
       obtain \<E> H where L2H3: "y = (\<E>, H)" by (meson surj_pair)
       from L1H0(1) L2H1 L2H3 step.IH have 
-        L2H4: "\<forall>\<pi> \<sigma>. \<E> \<pi> = Some \<sigma> \<longrightarrow> static_reachable_over_state e\<^sub>0 \<sigma>" by blast
+        L2H4: "static_reachable_over_pool e\<^sub>0 \<E>" by blast
 
-      from L1H0(2) L2H2 L2H3 L2H4 step.hyps(2) have 
-        "static_reachable_over_state e\<^sub>0 \<sigma>'" using static_reachable_over_state_preserved by blast
+      have 
+        "static_reachable_over_pool e\<^sub>0 \<E>'"
+        using L1H0(2) L2H3 L2H4 static_reachable_over_pool_preserved step.hyps(2) by blast
 
     } 
 
     then show ?case by blast
   qed
 
-  from H1 H2 H4 H5 H7 show 
-    "static_reachable_over_state e\<^sub>0 \<sigma>'" by blast
+  show ?thesis by (simp add: H1 H4 H5 H7)
 qed
 
 
@@ -2063,11 +2030,8 @@ proof -
     L1H2: "\<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
 
    show "static_reachable e\<^sub>0 e'" 
-    using L1H1 L1H2 
-      static_reachable_left_implies_static_reachable 
-      static_reachable_over_state.simps 
-      state_always_exp_not_static_reachable_sound
-    by fastforce
+    using L1H1 L1H2
+    using always_exp_not_static_reachable_sound_pool static_reachable_left_implies_static_reachable static_reachable_over_pool.simps by auto
 qed
 
 end
