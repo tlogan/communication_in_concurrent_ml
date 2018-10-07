@@ -867,6 +867,74 @@ the sending end of a channel, by stating that any two paths that syncronize to s
 channel are ordered. The one to one predicates states that there is no competition on either
 the receiving or the sending ends of a channel. 
 
+
+
+definition is_send_path of trace_pool -> chan -> control_path -> bool:
+only
+(∀ pool path x x_e e' env stack x_sc x_m env_e c.
+  if
+    pool path = Some (Stt (Let x (Sync x_e) e') env stack) and
+    env x_e = Some (VClsr (SendEvt x_sc x_m) env_e) and 
+    env_e x_sc = Some (VChn c)
+  then
+    is_send_path pool c path)
+
+definition is_recv_path of trace_pool -> chan -> control_path -> bool:
+only
+(∀ poo path x x_e e' env stack x_rc env_e c .
+  then
+    pool path = Some (Stt (Let x (Sync x_e) e') env stack) and
+    env x_e = Some (VClsr (RecvEvt x_rc) env_e) and
+    env_e x_rc = Some (VChn c)
+  then
+    is_recv_path pool c path)
+
+definition every_two of ('a -> bool) -> ('a -> 'a -> bool) -> bool:
+only
+(∀ p r .
+  if
+    (∀ path1 path2 . if p path1 and p path2 then r path1 path2)
+  then
+    every_two p r)
+
+definition ordered of 'a list -> 'a list -> bool:
+only
+(∀ path1 path2 . if prefix path1 path2 then
+  ordered path1 path2) and
+(∀ path2 path1 . if prefix path2 path1 then
+  ordered path1 path2)
+
+definition one_shot of trace_pool -> chan -> bool:
+(∀ pool c .
+  if
+    every_two (is_send_path pool c) (op =)
+  then
+    one_shot pool c)
+
+definition fan_out of trace_pool -> chan -> bool:
+(∀ pool c .
+  if
+    every_two (is_send_path pool c) ordered
+  then
+    fan_out pool c)
+  
+definition fan_in of trace_pool -> chan -> bool:
+only
+(∀ pool c .
+  if
+    every_two (is_recv_path pool c) ordered
+  then
+    fan_in pool c)
+
+definition one_to_one of trace_pool -> chan -> bool:
+only
+(∀ pool c.
+  if
+    fan_out pool c and 
+    fan_in pool c
+  then
+    one_to_one pool c)
+
 \section{Static Semantics Definitions}
 
 In order to determine communication topologies with some decent amount of precision, it is
