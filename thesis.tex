@@ -1232,19 +1232,15 @@ only
 -----low precision // no live channel analysis ----
 Reppy and Xiao's work relies on detecting the liveness of channels in order to gain higher
 precision in the communication analysis.  Since formal proofs are inherently complicated and
-packed with details, I decided to simplify the problem, by developing formal proofs for
-definitions without the extra complication of live analysis. However, I have purposely
-structured the definitions to make adding live channel analysis to the definition and proofs
-straight forward with just a few alterations to the definitions.  I will expand on these
-alterations and outline a strategy that I belive will result formal proofs of soundness.  
+packed with details, I decided to leave out the static analysis initially in order to simplify the
+problem and remove certain complications in formally proving soundness.
 
-Having formal proofs for the requirement that each reasoning step be clearly documented.
-I define the static communicatin predicates relating programs to communnication topologies in
-two different ways.  The first way is simpler but the second way allows more precise
-communication topologies for many common programs.
-
-
--------------
+However, I have purposely
+structured the definitions to make adding live channel analysis to the definition fairly  
+straight forward with just a few alterations to the definitions.  In section ? I expand on
+these alterations and outline a strategy that I belive will result in formal proofs of soundness,
+although the actual formal proof of the version with live channel analysis has not yet been
+completed.  
 
 For the simpler version, there are four kinds of control edges, indicating how one point in a
 program transitions to another point in a program.  The modes of transition are sequencing,
@@ -1277,6 +1273,134 @@ abstraction might be traversable, and the returning transition from the result o
 abstracted expression to the sequenced expression.  Additionally, the traversable transitions
 are traversable transitions for the sequenced expression. 
 
+datatype mode = ENext | ESpawn | ECall | EReturn
+
+type_synonym transition = label * mode * label
+
+type_synonym step = label * mode
+
+type_synonym abstract_path = step list
+
+
+definition static_traversable of abstract_env -> transition_set -> exp -> bool:
+only
+(∀ env_a graph x .
+    static_traversable env_a graph (Rslt x)) and
+
+(∀ x e' graph env_a  .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x Unt e')) and
+
+(∀ x e' graph env_a  .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x MkChn e')) and
+
+
+(∀ x e' graph env_a  x_c x_m .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Prim (SendEvt x_c x_m)) e')) and
+
+(∀ x e' graph env_a x_c .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Prim (RecvEvt x_c)) e')) and
+
+
+(∀ x e' graph env_a x1 x2 .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Prim (Pair x1 x2)) e')) and
+
+
+(∀ x e' graph env_a x_s .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Prim (Lft x_s)) e'))
+
+
+(∀ x e' graph env_a x_s .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Prim (Rght x_s)) e')) and
+
+
+(∀ x e' graph env_a e_b f x_p .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e' and
+    static_traversable env_a graph e_b
+  then
+    static_traversable env_a graph (Let x (Prim (Abs f x_p e_b)) e')) and
+
+(∀ x e' e_c graph env_a.
+  if
+    {(NLet x, ENext, top_label e'),
+      (NLet x, ESpawn, top_label e_c)} ⊆ graph and
+    static_traversable env_a graph e_c and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Spwn e_c) e')) and
+
+(∀ x e' graph env_a x_se .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e' and
+  then
+    static_traversable env_a graph (Let x (Sync x_se) e')) and
+
+(∀ x e' graph env_a x_p .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e' and
+  then
+    static_traversable env_a graph (Let x (Fst x_p) e')) and
+
+(∀ x e' graph env_a x_p .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e' and
+  then
+    static_traversable env_a graph (Let x (Snd x_p) e')) and
+
+(∀ x e_l e_r e' graph env_a x_s .
+  if
+    {(NLet x, ECall, top_label e_l),
+      (NLet x, ECall, top_label e_r),
+      (NResult (rslt_var e_l), EReturn, top_label e'),
+      (NResult (rslt_var e_r), EReturn, top_label e')} ⊆ graph and
+    static_traversable env_a graph e_l and
+    static_traversable env_a graph e_r and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Case x_s x_l e_l x_r e_r) e')) and
+  
+(∀  env_a f x e' x x_a .
+  if
+    (∀ f_p x_p e_b . if (AClsr (Abs f_p x_p e_b)) ∈ env_a f then 
+      {(NLet x, ECall, top_label e_b),
+        (NResult (rslt_var e_b), EReturn, top_label e')} ⊆ graph) and
+
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (App f x_a) e'))
+
 
 The static traceable predicate states that an abstract control path can be traced according to
 a set of transitions from a starting label to a final label matching a given condition.  An
@@ -1287,17 +1411,69 @@ For a path of two or more steps, the first label is the start label, there is a 
 the first step to the second step, and the path from the second step onward also might be
 traceable.
 
+
+inductive static_traceable :: "(label * 'a * label) set ⇒ label ⇒ (label ⇒ bool) ⇒ (label * 'a) list ⇒ bool" where
+  Empty: "
+    isEnd start ⟹
+    static_traceable F start isEnd []
+  " |
+  Step: "
+    static_traceable F start (λ l . l = middle) path ⟹
+    isEnd end ⟹
+    {(middle, edge, end)} ⊆ F ⟹
+    static_traceable F start isEnd (path @ [(middle, edge)])
+  "
+
+
 The static inclusive predicate states that two abstract paths represent might be traversed in
 the same run of a program. Ordered paths might be inclusive, and also a path that diverges
 from another at a spawn transition might be inclusive.  This concept is useful for achieving
 greater precision, since if two paths cannot occur in the same run of a program, only one needs
 to be counted towards the communication topology. 
 
+inductive static_inclusive :: "abstract_path ⇒ abstract_path ⇒ bool" where
+  Prefix1: "
+    prefix π⇩1 π⇩2 ⟹
+    static_inclusive π⇩1 π⇩2
+  " |
+  Prefix2: "
+    prefix π⇩2 π⇩1 ⟹
+    static_inclusive π⇩1 π⇩2
+  " |
+  Spawn1: "
+    static_inclusive (π @ (NLet x, ESpawn) # π⇩1) (π @ (NLet x, ENext) # π⇩2)
+  " |
+  Spawn2: "
+    static_inclusive (π @ (NLet x, ENext) # π⇩1) (π @ (NLet x, ESpawn) # π⇩2)
+  "
+
+
 The singular predicate states that two paths are the same or cannot occur in the same run of a
 program. The noncompetitive predicates states that two paths are ordered or cannot occur in the
 same run of a program. The static one shot predicate states that there is at most one attempt
 to syncrhonize to send on an abstract channel in a run of a given program with given abstract
 value bindings.
+
+inductive singular :: "abstract_path ⇒ abstract_path ⇒ bool" where
+  equal: "
+    π⇩1 = π⇩2 ⟹ 
+    singular π⇩1 π⇩2
+  " |
+  exclusive: "
+    ¬ (static_inclusive π⇩1 π⇩2) ⟹ 
+    singular π⇩1 π⇩2
+  "
+
+inductive noncompetitive :: "abstract_path ⇒ abstract_path ⇒ bool" where
+  ordered: "
+    ordered π⇩1 π⇩2 ⟹ 
+    noncompetitive π⇩1 π⇩2
+  " |
+  exclusive: "
+    ¬ (static_inclusive π⇩1 π⇩2) ⟹
+    noncompetitive π⇩1 π⇩2
+  "
+
 
 The static one to one predicate states that there is at most one thread attempting to send and
 one thread attempting to receive on a given channel at any time during a run of a given
@@ -1306,7 +1482,39 @@ program.
 The static fan out predicate states that there is at most one thread attempting to send on a
 given channel at any time during a run of a given program. The static fan in predicate states
 that there is at most one thread attempting to receive on a given channel at any time during a
-run of a given program.
+run of a given program. 
+
+
+inductive static_one_shot :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (static_traceable F (top_label e) (static_send_label V e xC)) singular ⟹
+    static_traversable env_a graph e ⟹
+    static_one_shot V e xC 
+  "
+
+inductive static_one_to_one :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (static_traceable F (top_label e) (static_send_label V e xC)) noncompetitive ⟹
+    every_two (static_traceable F (top_label e) (static_recv_label V e xC)) noncompetitive ⟹
+    static_traversable env_a graph e ⟹
+    static_one_to_one V e xC 
+  "
+
+inductive static_fan_out :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (static_traceable F (top_label e) (static_send_label V e xC)) noncompetitive ⟹
+    static_traversable env_a graph e ⟹
+    static_fan_out V e xC 
+  "
+
+inductive static_fan_in :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
+  Sync: "
+    every_two (static_traceable F (top_label e) (static_recv_label V e xC)) noncompetitive ⟹
+    static_traversable env_a graph e ⟹
+    static_fan_in V e xC 
+  "
+
+
 
 
 
@@ -3215,60 +3423,60 @@ locale communication_sound =
       (label * mode * label) set %$\Rightarrow$%
       exp %$\Rightarrow$% bool  where
     Rslt:
-      static_traversable V F (Rslt x) |
+      static_traversable env_a graph (Rslt x) |
     let_Unit:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F e  %$\Longrightarrow$%
-      static_traversable V F (Let x Unt e) |
+      static_traversable env_a graph e  %$\Longrightarrow$%
+      static_traversable env_a graph (Let x Unt e) |
     let_Chan:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x MkChn e) |
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x MkChn e) |
     let_SendEvt:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x = (SendEvt xc xm) e) |
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x = (SendEvt xc xm) e) |
     let_RecvEvt:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x = (RecvEvt xc) in e) |
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x = (RecvEvt xc) in e) |
     let_Pair:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x (Pair x1 x2) e) |
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x (Pair x1 x2) e) |
     let_Left:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x (Lft xp) e) |
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x (Lft xp) e) |
     let_Right:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x (Rht xp) e)" |
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x (Rht xp) e)" |
     let_Abs:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F eb %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x (Abs f xp eb) e) |
+      static_traversable env_a graph eb %$\Longrightarrow$%
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x (Abs f xp eb) e) |
     let_Spawn:
       {
         (NLet x, ENxt, top_label e),
         (NLet x, ESpwn, top_label ec)}
         %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F ec %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x (Spwn ec)  e) |
+      static_traversable env_a graph ec %$\Longrightarrow$%
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x (Spwn ec)  e) |
     let_Sync:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x (Sync xSE) e) |
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x (Sync xSE) e) |
     let_Fst:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x (Fst xp) e) |
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x (Fst xp) e) |
     let_Snd:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x (Snd xp) e) |
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x (Snd xp) e) |
     let_Case:
       {
         (NLet x, ECall, top_label el),
@@ -3276,10 +3484,10 @@ locale communication_sound =
         (NRslt (rslt_var el), ERtn, top_label e),
         (NRslt (rslt_var er), ERtn, top_label e)}
         %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F el %$\Longrightarrow$%
-      static_traversable V F er %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
-      static_traversable V F (Let x (Case xs xl el xr er) e) |
+      static_traversable env_a graph el %$\Longrightarrow$%
+      static_traversable env_a graph er %$\Longrightarrow$%
+      static_traversable env_a graph e %$\Longrightarrow$%
+      static_traversable env_a graph (Let x (Case xs xl el xr er) e) |
     let_App:
       %$\forall$% fp xp eb .
         APrim (Abs fp xp eb) %$\in$% V f %$\longrightarrow$%
@@ -3287,8 +3495,8 @@ locale communication_sound =
           (NLet x, ECall, top_label eb),
           (NRslt (rslt_var eb), ERtn, top_label e)}
           %$\subseteq$% F %$\Longrightarrow$%
-        static_traversable V F e %$\Longrightarrow$%
-        static_traversable V F (Let x (App f xa) e)
+        static_traversable env_a graph e %$\Longrightarrow$%
+        static_traversable env_a graph (Let x (App f xa) e)
 
   \end{lstlisting}
 
@@ -3359,7 +3567,7 @@ locale communication_sound =
         (static_traceable V F (top_label e)
           (static_static_send_label V e xC))
         singular %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
+      static_traversable env_a graph e %$\Longrightarrow$%
       static_one_shot V e xC 
 
     inductive
@@ -3375,7 +3583,7 @@ locale communication_sound =
           (static_traceable V F
             (top_label e) (static_static_recv_label V e xC))
           noncompetitive %$\Longrightarrow$%
-        static_traversable V F e %$\Longrightarrow$%
+        static_traversable env_a graph e %$\Longrightarrow$%
         static_one_to_one V e xC 
 
   inductive
@@ -3387,7 +3595,7 @@ locale communication_sound =
         (static_traceable V F
           (top_label e) (static_static_send_label V e xC))
         noncompetitive %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
+      static_traversable env_a graph e %$\Longrightarrow$%
       static_fan_out V e xC 
 
   inductive
@@ -3396,7 +3604,7 @@ locale communication_sound =
       var %$\Rightarrow$% bool where
     Sync:
       every_two (static_traceable V F (top_label e) (static_static_recv_label V e xC)) noncompetitive %$\Longrightarrow$%
-      static_traversable V F e %$\Longrightarrow$%
+      static_traversable env_a graph e %$\Longrightarrow$%
       static_fan_in V e xC
 
     \end{lstlisting}
@@ -3467,7 +3675,7 @@ locale communication_sound_A =
       static_traversable_env V F env %$\Longrightarrow$%
       static_traversable_val V F (VClsr (Right _) env) |
     Abs:
-      static_traversable V F e %$\Longrightarrow$% 
+      static_traversable env_a graph e %$\Longrightarrow$% 
       static_traversable_env V F  env %$\Longrightarrow$%
       static_traversable_val V F (VClsr (Abs f x e) env) |
   Pair:
@@ -3481,7 +3689,7 @@ locale communication_sound_A =
     Empty:
       static_traversable_stack V F [] |
     Nonempty:
-      static_traversable V F e %$\Longrightarrow$%
+      static_traversable env_a graph e %$\Longrightarrow$%
       static_traversable_env V F env %$\Longrightarrow$%
       static_traversable_stack V F k %$\Longrightarrow$% 
       static_traversable_stack V F ((Ctn x e env) # k))
@@ -3493,7 +3701,7 @@ locale communication_sound_A =
     Intro:
       %$\forall$% pi e env k .
         E pi = Some (Stt e env k) %$\longrightarrow$% 
-        static_traversable V F e %$\land$%
+        static_traversable env_a graph e %$\land$%
         static_traversable_env V F env %$\land$%
         static_traversable_stack V F k %$\Longrightarrow$% 
       static_traversable_pool V F E
@@ -3539,7 +3747,7 @@ lemma static_traversable_pool_implies_static_traceable: "
     ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
     (trpl', ys') %$\Longrightarrow$% 
   static_eval (V, C) e %$\Longrightarrow$%
-  static_traversable V F e %$\Longrightarrow$%
+  static_traversable env_a graph e %$\Longrightarrow$%
   isEnd (NLet x) %$\Longrightarrow$%
   %$\exists$% path . 
     paths_correspond pi path %$\land$%
@@ -3577,46 +3785,46 @@ type_synonym abstract_path = step list
 
   inductive static_traversable :: abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% (var %$\Rightarrow$% label %$\Rightarrow$% bool) %$\Rightarrow$% exp %$\Rightarrow$% bool  where
     result:
-        static_traversable V F static_recv_site (Rslt x) |
+        static_traversable env_a graph static_recv_site (Rslt x) |
     let_Unit:
         {(NLet x , ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-        static_traversable V F static_recv_site e %$\Longrightarrow$%
-        static_traversable V F static_recv_site (Let x Unt e) |
+        static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+        static_traversable env_a graph static_recv_site (Let x Unt e) |
     let_Chan:
         {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-        static_traversable V F static_recv_site e %$\Longrightarrow$%
-        static_traversable V F static_recv_site (Let x MkChn e) |
+        static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+        static_traversable env_a graph static_recv_site (Let x MkChn e) |
   let_SendEvt:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F static_recv_site e %$\Longrightarrow$%
-      static_traversable V F static_recv_site (Let x (Prim (SendEvt xc xm)) e)" |
+      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+      static_traversable env_a graph static_recv_site (Let x (Prim (SendEvt xc xm)) e)" |
   let_RecvEvt:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F static_recv_site e %$\Longrightarrow$%
-      static_traversable V F static_recv_site (Let x (Prim (RecvEvt xc)) e) |
+      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+      static_traversable env_a graph static_recv_site (Let x (Prim (RecvEvt xc)) e) |
   let_Pair:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F static_recv_site e %$\Longrightarrow$%
-      static_traversable V F static_recv_site (Let x (Prim (Pair x1 x2)) e) |
+      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+      static_traversable env_a graph static_recv_site (Let x (Prim (Pair x1 x2)) e) |
   let_Left:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F static_recv_site e %$\Longrightarrow$%
-      static_traversable V F static_recv_site (Let x (Prim (Lft xp)) e) |
+      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+      static_traversable env_a graph static_recv_site (Let x (Prim (Lft xp)) e) |
   let_Right:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F static_recv_site e %$\Longrightarrow$%
-      static_traversable V F static_recv_site (Let x (Prim (Rght xp)) e) |
+      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+      static_traversable env_a graph static_recv_site (Let x (Prim (Rght xp)) e) |
   let_Abs:
     {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-    static_traversable V F static_recv_site eb %$\Longrightarrow$%
-    static_traversable V F static_recv_site e %$\Longrightarrow$%
-    static_traversable V F static_recv_site (Let x (Prim (Abs f xp eb)) e) |
+    static_traversable env_a graph static_recv_site eb %$\Longrightarrow$%
+    static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+    static_traversable env_a graph static_recv_site (Let x (Prim (Abs f xp eb)) e) |
   let_Spawn:
     {(NLet x, ENxt, top_label e),
       (NLet x, ESpawn, top_label ec)} %$\subseteq$% F %$\Longrightarrow$%
-    static_traversable V F static_recv_site ec %$\Longrightarrow$%
-    static_traversable V F static_recv_site e %$\Longrightarrow$%
-    static_traversable V F static_recv_site (Let x (Spwn ec) e) |
+    static_traversable env_a graph static_recv_site ec %$\Longrightarrow$%
+    static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+    static_traversable env_a graph static_recv_site (Let x (Spwn ec) e) |
   let_Sync:
     {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
     (%$\forall$% xSC xM xC y .
@@ -3624,32 +3832,32 @@ type_synonym abstract_path = step list
       {AChan xC} %$\subseteq$% V xSC %$\longrightarrow$%
       static_recv_site xC (NLet y) %$\longrightarrow$%
       {(NLet x, ESend xSE, NLet y)} %$\subseteq$% F) %$\Longrightarrow$%
-    static_traversable V F static_recv_site e %$\Longrightarrow$%
-    static_traversable V F static_recv_site (Let x (Sync xSE) e) |
+    static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+    static_traversable env_a graph static_recv_site (Let x (Sync xSE) e) |
   let_Fst:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F static_recv_site e %$\Longrightarrow$%
-      static_traversable V F static_recv_site (Let x (Fst xp) e) |
+      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+      static_traversable env_a graph static_recv_site (Let x (Fst xp) e) |
   let_Snd:
       {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F static_recv_site e %$\Longrightarrow$%
-      static_traversable V F static_recv_site (Let x (Snd xp) e) |
+      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+      static_traversable env_a graph static_recv_site (Let x (Snd xp) e) |
   let_Case:
       {
         (NLet x, ECall, top_label el),
         (NLet x, ECall, top_label er),
         (NRslt (rslt_var el), ERtn x, top_label e),
         (NRslt (rslt_var er), ERtn x, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable V F static_recv_site el %$\Longrightarrow$%
-      static_traversable V F static_recv_site er %$\Longrightarrow$%
-      static_traversable V F static_recv_site e %$\Longrightarrow$%
-      static_traversable V F static_recv_site (Let x (Case xs xl el xr er) e) |
+      static_traversable env_a graph static_recv_site el %$\Longrightarrow$%
+      static_traversable env_a graph static_recv_site er %$\Longrightarrow$%
+      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+      static_traversable env_a graph static_recv_site (Let x (Case xs xl el xr er) e) |
   let_App:
       (%$\forall$% f' xp eb . ^Abs f' xp eb %$\in$% V f %$\longrightarrow$%
         {(NLet x, ECall, top_label eb),
           (NRslt (rslt_var eb), ERtn x, top_label e)} %$\subseteq$% F) %$\Longrightarrow$%
-      static_traversable V F static_recv_site e %$\Longrightarrow$%
-    static_traversable V F static_recv_site (Let x (App f xa) e)
+      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
+    static_traversable env_a graph static_recv_site (Let x (App f xa) e)
 
   \end{lstlisting}
 
@@ -3924,7 +4132,7 @@ inductive static_one_shot :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% va
   Sync:
     every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) singular %$\Longrightarrow$%
     static_live_chan V Ln Lx xC e %$\Longrightarrow$%
-    static_traversable V F (static_recv_label V e) e %$\Longrightarrow$%
+    static_traversable env_a graph (static_recv_label V e) e %$\Longrightarrow$%
     static_one_shot V e xC
 
 inductive static_one_to_one :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool where
@@ -3932,21 +4140,21 @@ inductive static_one_to_one :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% 
     every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive %$\Longrightarrow$%
     every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive %$\Longrightarrow$%
     static_live_chan V Ln Lx xC e %$\Longrightarrow$%
-    static_traversable V F (static_recv_label V e) e %$\Longrightarrow$%
+    static_traversable env_a graph (static_recv_label V e) e %$\Longrightarrow$%
     static_one_to_one V e xC
 
 inductive static_fan_out :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool where
   Sync:
     every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive %$\Longrightarrow$%
     static_live_chan V Ln Lx xC e %$\Longrightarrow$%
-    static_traversable V F (static_recv_label V e) e %$\Longrightarrow$%
+    static_traversable env_a graph (static_recv_label V e) e %$\Longrightarrow$%
     static_fan_out V e xC
 
 inductive static_fan_in :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool where
   Sync:
     every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive %$\Longrightarrow$%
     static_live_chan V Ln Lx xC e %$\Longrightarrow$%
-    static_traversable V F (static_recv_label V e) e %$\Longrightarrow$%
+    static_traversable env_a graph (static_recv_label V e) e %$\Longrightarrow$%
     static_fan_in V e xC
 
   \end{lstlisting}
