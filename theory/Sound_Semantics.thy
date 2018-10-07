@@ -4,6 +4,11 @@ theory Sound_Semantics
 begin
 
 
+fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) where
+  "|VUnt| = ^Unt" |
+  "|VChn (Ch \<pi> x)| = ^Chan x" |
+  "|VClsr p \<rho>| = ^p"
+
 inductive 
   static_eval_value :: "abstract_env \<times> abstract_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55) and  
   static_eval_env :: "abstract_env \<times> abstract_env \<Rightarrow> env \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<rho>" 55) 

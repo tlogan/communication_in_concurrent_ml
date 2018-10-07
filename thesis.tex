@@ -997,6 +997,181 @@ application, then the abstract value of the second argument of application (the 
 argument) is bound to the abstraction's parameter name, and the resulting abstract value of the
 abstraction is bound the the let binding name.
 
+
+datatype abstract_value =
+  AChn var | AUnit | AClsr prim 
+
+fun rslt_var of exp -> var:
+(∀ x .
+  rslt_var (Rslt x) = x) and
+(∀ x b e' . 
+  rslt_var (Let x b e') = (rslt_var e))
+
+
+  
+definition static_eval of abstract_env -> abstract_env -> exp -> bool:
+only
+
+(∀ env_a convo_a x.
+    static_eval env_a convo_a (Rslt x)) and
+
+(∀ env_a x convo_a e' .
+  if 
+    AUnt ∈ env_a x and
+    static_eval env_a convo_a e
+  then
+    static_eval env_a convo_a (Let x Unt e')) and
+
+(∀ x env_a convo_a e' .
+  if 
+    (AChan x) ∈ env_a x and
+    static_eval env_a convo_a e'
+  then  
+    static_eval env_a convo_a (Let x MkChn e')) and
+
+(∀ x_c x_m env_a x convo_a e' .
+  if
+    (AClsr (SendEvt x_c x_m)) ∈ env_a x and
+    static_eval env_a convo_a e' 
+  then
+    static_eval env_a convo_a (Let x (Prim (SendEvt x_c x_m)) e')) and
+
+(∀ x_c env_a x convo_a e' . 
+  if 
+    (AClsr(RecvEvt x_c)) ∈ env_a x and
+    static_eval env_a convo_a e'
+  then
+    static_eval env_a convo_a (Let x (Prim (RecvEvt x_c)) e')) and
+
+(∀ x1 x2 env_a x convo_a e' .
+  if
+    (AClsr (Pair x1 x2)) ∈ env_a x and
+    static_eval env_a convo_a e'
+  then
+    static_eval env_a convo_a (Let x (Prim (Pair x⇩1 x⇩2)) e)) and
+
+(∀ x_s env_a x convo_a e' .
+  if
+    (AClsr(Lft x_s)) ∈ env_a x and
+    static_eval env_a convo_a e' 
+  then
+    static_eval env_a convo_a (Let x (Prim (Lft x_s)) e')) and
+
+(∀ x_s env_a x convo_a e' .
+  if
+    (AClsr(Rght x_s)) ∈ env_a x and
+    static_eval env_a convo_a e
+  then
+    static_eval env_a convo_a (Let x (Prim (Rght x_s)) e')) and
+
+(∀ f x_p e_b env_a convo_a x e' .
+  if
+    (AClsr (Abs f x_p e_b)) ∈ env_a f and
+    static_eval env_a convo_a e_b and
+    (AClsr (Abs f x_p e_b)) ∈ env_a x and
+    static_eval env_a convo_a e'
+  then
+    static_eval env_a convo_a (Let x (Prim (Abs f x_p e_b)) e')) and
+
+(∀ f x_p e_b env_a convo_a x e' .
+  if
+    AUnt ∈ env_a f and
+    static_eval env_a convo_a e_c;
+    static_eval env_a convo_a e'
+  then
+    static_eval env_a convo_a (Let x (Spwn e_c) e'))
+
+(∀ env_a x_e x convo_a  e'.
+  if
+    (∀ x_sc x_m x_c . 
+      if
+        (AClsr (SendEvt x_sc x_m)) ∈ env_a x_e and 
+        AChan x_c ∈ env_a x_sc 
+      then
+        AUnt ∈ env_a x and env_a x_m ⊆ convo_a x_c) and
+
+    (∀ x_rc x_c . 
+      if
+        (AClsr (RecvEvt x_rc)) ∈ env_a x_e and 
+        AChan x_c ∈ env_a x_rc and 
+      then
+        convo_a x_c ⊆ env_a x) and
+
+    static_eval env_a convo_a e'
+  then
+    static_eval env_a convo_a (Let x (Sync x_e) e')) and
+
+(∀ env_a x_p x convo_a e' . 
+  if
+    (∀ x1 x2 . if (AClsr (Pair x1 x2)) ∈ env_a x_p then
+      env_a x1 ⊆ env_a x) and
+    static_eval env_a convo_a e'
+  then
+    static_eval env_a convo_a (Let x (Fst x_p) e')) and
+
+(∀ env_a x_p x convo_a e' . 
+  if
+    (∀ x1 x2 . if (AClsr (Pair x1 x2)) ∈ env_a x_p then
+      env_a x2 ⊆ env_a x) and
+    static_eval env_a convo_a e'
+  then
+    static_eval env_a convo_a (Let x (Snd x_p) e')) and
+
+(∀ env_a x_s x_l e_l x convo_a x_r e_r e' . 
+  if
+    (∀ x_c . if (AClsr (Lft x_c)) ∈ env_a x_s then 
+      env_a x_c ⊆ env_a x_l and
+      env_a (rslt_var e_l) ⊆ env_a x and
+      static_eval env_a convo_a e_l) and
+
+    (∀ x_c . if (AClsr (Rght x_c)) ∈ env_a x_s then 
+      env_a x_c ⊆ env_a x_r and
+      env_a (rslt_var e_r) ⊆ env_a x and
+      static_eval env_a convo_a e_r) and
+
+    static_eval env_a convo_a e'
+  then
+    static_eval env_a convo_a (Let x (Case x_s x_l e_l x_r e_r) e')) and
+
+(∀ env_a f x_a x convo_a e' . 
+  if
+    (∀ f_p x_p e_b . if (AClsr (Abs f_p x_p e_b)) ∈ env_a f then 
+      env_a x_a ⊆ env_a x_p and 
+      env_a (rslt_var e_b) ⊆ env_a x) and
+
+    static_eval env_a convo_a e'
+  then
+    static_eval env_a convo_a (Let x (App f x_a) e'))
+
+
+
+
+inductive static_reachable :: "exp ⇒ exp ⇒ bool"  where
+  Refl : "
+    static_reachable e e
+  " | 
+  Let_Spawn_Child: "
+    static_reachable e⇩c e ⟹
+    static_reachable (Let x (Spwn e⇩c) e⇩n) e
+  " |
+  let_case_left: "
+    static_reachable e⇩l e ⟹
+    static_reachable (Let x (Case x⇩s x⇩l e⇩l x⇩r e⇩r) e⇩n) e
+  " |
+  let_case_right: "
+    static_reachable e⇩r e ⟹
+    static_reachable (Let x (Case x⇩s x⇩l e⇩l x⇩r e⇩r) e⇩n) e
+  " |
+  Let_Abs_Body: "
+    static_reachable e⇩b e ⟹
+    static_reachable (Let x (Prim (Abs f x⇩p e⇩b)) e⇩n) e
+  " | 
+  Let: "
+    static_reachable e⇩n e ⟹
+    static_reachable (Let x b e⇩n) e
+  "
+
+
 \section{Static Communication Definitions}
 
 To describe communication statically, yet also somewhat precisely, it will be advantageous to
@@ -1369,6 +1544,14 @@ deduction of abstract program transitions.  As with the generalized versions of
 static_traversable, the generalized versions of static_eval are designed to preserve abstract
 value bindings across program execution steps, and also provide direct access to abstract
 binding information in a fixed number of logical steps. 
+
+
+fun abstract of val -> abstract_value:
+  abstract VUnt = AUnt and 
+  (∀ path x . 
+    abstract (VChn (Ch path x)) = AChan x) and
+  (∀ prim env .
+    abstract (VClsr prim env) = AClsr prim)
 
 definition static_eval_value of
   abstract_env -> abstract_convo -> val -> bool: 
@@ -3400,7 +3583,7 @@ type_synonym abstract_path = step list
     {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
     (%$\forall$% xSC xM xC y .
       {^SendEvt xSC xM} %$\subseteq$% V xSE %$\longrightarrow$%
-      {^Chan xC} %$\subseteq$% V xSC %$\longrightarrow$%
+      {AChan xC} %$\subseteq$% V xSC %$\longrightarrow$%
       static_recv_site xC (NLet y) %$\longrightarrow$%
       {(NLet x, ESend xSE, NLet y)} %$\subseteq$% F) %$\Longrightarrow$%
     static_traversable V F static_recv_site e %$\Longrightarrow$%

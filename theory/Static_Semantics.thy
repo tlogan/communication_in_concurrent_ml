@@ -142,12 +142,6 @@ inductive static_eval :: "abstract_env \<times> abstract_env \<Rightarrow> exp \
     static_eval (\<V>, \<C>) (Let x (App f x\<^sub>a) e)
   "
 
-fun value_to_abstract_value :: "val \<Rightarrow> abstract_value" ("|_|" [0]61) where
-  "|VUnt| = ^Unt" |
-  "|VChn (Ch \<pi> x)| = ^Chan x" |
-  "|VClsr p \<rho>| = ^p"
-
-
 inductive static_reachable :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
   Refl : "
     static_reachable e e
@@ -172,6 +166,5 @@ inductive static_reachable :: "exp \<Rightarrow> exp \<Rightarrow> bool"  where
     static_reachable e\<^sub>n e \<Longrightarrow>
     static_reachable (Let x b e\<^sub>n) e
   "
-
 
 end
