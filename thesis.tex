@@ -603,14 +603,33 @@ of bound names, where the names are in order of their respective constructs' eva
 names are also annoted with information related to aspects of the control flow. 
 
 
+datatype var = Var string
+
+datatype 
+  exp = 
+    Let var bound_exp exp |
+    Rslt var and 
+
+  bound_exp = 
+    Unt | MkChn | Prim prim | Spwn exp |
+    Sync var | Fst var | Snd var |
+    Case var var exp var exp | App var var and 
+
+  prim = 
+    SendEvt var var | RecvEvt var | Pair var var |
+    Lft var | Rght var | Abs var var exp
+
+
 The unit literal corresponds to a unit value. A dynamic channel value is uniquely identified by
 the full control path up to the point of channel creation along with the name bound to the
 channel creation construct. The value of a primitive construct is a closure over the construct
 with an environment that maps the names to further values.
 
+\section{Dynamic Semantics Definitions}
+
 Bound expressions of the unit literal, primitive constructs, and first and second constructs
-can be evalued to values in one step.  The seq step relation describes the evaluation of bound
-expressions with environments to values.  The unit construct simply evaluates to the unit
+can be evalued to values in one step. The seq step relation describes the evaluation of bound
+expressions with environments to values. The unit construct simply evaluates to the unit
 value.  A prim construct is simply wrapped up with the environment.  The first projection is
 evaluated to the abstract value of the first argument of the associated pair. The second
 projection is evaluated to the abstract value of the second argument of the associated pair.
@@ -619,23 +638,82 @@ Other constructs for spawn, application, and case matching cannot be described w
 step because they do not evaluate to values in one step and require updating additional
 information about the mode of the transition. 
 
-\section{Dynamic Semantics Definitions}
+datatype control_label = 
+  LNxt var | LSpwn var | LCall var | LRtn var
+
+type_synonym control_path =
+  control_label list
+
+datatype chan =
+  Ch control_path var
+
+datatype val = 
+  VUnt | VChn chan | VClsr prim (var -> val option)
+
+type_synonym env =
+  var -> val option
+
+
+definition seq_step of bound_exp -> env -> val -> bool:
+only
+(∀ env . 
+    seq_step Unt env VUnt) and
+(∀ p env .
+    seq_step (Prim p) env (VClsr p env)) and
+(∀ env x_p x1 x2 env_p v. 
+  if
+    env x_p = Some (VClsr (Pair x1 x2) env_p) and
+    env_p x1 = Some v
+  then
+    seq_step (Fst x_p) env v) and
+(∀ env x_p x1 x2 env_p v . 
+  if
+    env x_p = Some (VClsr (Pair x1 x2) env_p) and 
+    env_p x2 = Some v 
+  then
+    seq_step (Snd x_p) env v)
+
 
 The seq step up relation handles the evaluation of function application and case pattern
-matching.  These bound expressions with associated environments are evalued to full expressions
+matching. These bound expressions with associated environments are evalued to full expressions
 along with a new environment.  Case matching is evaluated based on the case of the construct's
-first argument.  If the first argument is a left case, then the case matching is evauluated to
+first argument. If the first argument is a left case, then the case matching is evauluated to
 the left expression along with an environment updated with a name specified for use in that
-expression.  The value associated with the left case pattern is bound to the specified name in
+expression. The value associated with the left case pattern is bound to the specified name in
 the new environment. If the first argument is a right case, then then the case matching is
 evaluated to the right expression along with an environment updated with a name specified for
-use in that expression.  The value associated with the right case is bound to the specified
+use in that expression. The value associated with the right case is bound to the specified
 name in the new environment. Function application evaluates to the expression within the
 applied function abstraction, along with the function abstraction's environment with a couple
-of modifications.  The environment is updated with the recursive function name bound to the
+of modifications. The environment is updated with the recursive function name bound to the
 function abstraction, and the parameter name is bound to the function argument specified in the
 application expression. 
 
+definition seq_step_up of bound_exp -> env -> exp -> env -> bool:
+only
+(∀ env x_s x_c env_s v x_l e_l x_r e_r .
+  if
+    env x_s = Some (VClsr (Lft x_c) env_s) and
+    env_s x_c = Some v
+  then
+    seq_step_up (Case x_s x_l e_l x_r e_r) env e_l (env(x_l -> v))) and
+
+(∀ env x_s x_c env_s v x_l e_l x_r e_r .
+  if 
+    env x_s = Some (VClsr (Rght x_c) env_s); 
+    env_s x_c = Some v
+  then
+    seq_step_up (Case x_s x_l e_l x_r e_r) env e_r (env(x_r -> v))) and
+
+(∀ env f f_p x_p e_b env_l x_a v .
+  if 
+    env f = Some (VClsr (Abs f_p x_p e_b) env_l); 
+    env_l x_a = Some v
+  then
+    seq_step_up (App f x_a) env e_b (
+      env_l(f_p -> (VClsr (Abs f_p x_p e_b) env_l), x_p -> v)))
+  
+  
 
 A continuation is composed of a name, an expression and an environment.  It represents an
 expression and environment that should be evaluated once the name can be resolved to a value.
@@ -681,6 +759,98 @@ extended by a label indicating sequential transition.  For its state, the next e
 the let expression is used, and the environment is updated with the value associated with the
 send event's second argument.   Additionally, the communication set is updated with the send
 and receive paths, and the channel that is communicated on. 
+
+datatype contin =
+  Ctn var exp env
+
+datatype state =
+  Stt exp env (contin list)
+
+type_synonym trace_pool =
+  control_path -> state option
+
+definition leaf of trace_pool -> control_path -> bool
+(∀ pool path stt .
+  if
+    pool path = Some stt and 
+    (∄ path' stt' . (pool path' = Some stt') and (strict_prefix path path'))
+  then
+    leaf pool path)
+
+type_synonym cmmn_set =
+  (control_path * chan * control_path) set
+
+
+definition concur_step of trace_pool -> cmmn_set -> trace_pool -> cmmn_set -> bool: 
+only
+(∀ pool path x env x_k e_k env_k stack' v convo .
+  if
+    leaf pool path and
+    pool path = Some (Stt (Rslt x) env ((Ctn x_k e_k env_k) # stack')) and
+    env x = Some v
+  then
+    concur_step
+      pool convo
+      (pool(path @ [LRtn x] -> (Stt e_k env_k(x_k -> v) stack'))) convo) and
+(∀ .
+    ⟦ 
+      leaf trpl pi ;
+      trpl pi = Some (⟨(Let x b e); env; k⟩) ;
+      seq_step b env v
+    ⟧ ⟹
+    (trpl, ys) → (trpl(pi @ [LNxt x] ↦ ⟨e; env(x ↦ v); k⟩), ys)
+(∀ .
+    ⟦ 
+      leaf trpl pi ;
+      trpl pi = Some (⟨(Let x b e); env; k⟩) ;
+      seq_step_up (b, env) (e', env')
+    ⟧ ⟹
+    (trpl, ys) → (trpl(pi @ [LCall x] ↦ ⟨e'; env'; (Ctn x e env) # k⟩), ys)
+  " |
+  Let_Chan: "
+(∀ .
+    ⟦ 
+      leaf trpl pi ;
+      trpl pi = Some (⟨(Let x MkChn e); env; k⟩)
+    ⟧ ⟹
+    (trpl, ys) → (trpl(
+      pi @ [LNxt x] ↦ (⟨e; env(x ↦ (VChn (Ch pi x))); k⟩)), ys)
+  " |
+  Let_Spawn: "
+(∀ .
+    ⟦ 
+      leaf trpl pi ;
+      trpl pi = Some (⟨Let x (Spwn ec) e; env; k⟩)
+    ⟧ ⟹
+    (trpl, ys) → (trpl(
+      pi @ [LNxt x] ↦ (⟨e; env(x ↦ VUnt); k⟩), 
+      pi @ [LSpwn x] ↦ (⟨ec; env; []⟩)), ys)
+  " |
+  Let_Sync: "
+(∀ .
+    ⟦
+   
+      leaf trpl pis ;
+      trpl pis = Some (⟨Let xs (Sync xse) es; envs; ks⟩);
+      envs xse = Some (VClsr (SendEvt xsc xm) envse);
+
+      leaf trpl pir ;
+      trpl pir = Some (⟨Let xr (Sync xre) er; envr; kr⟩);
+      envr xre = Some (VClsr (RecvEvt xrc) envre);
+
+      envse xsc = Some (VChn c); 
+      envre xrc = Some (VChn c);      
+      envse xm = Some vm
+
+    ⟧ ⟹
+    (trpl, ys) → (
+      trpl(
+        pis @ [LNxt xs] ↦ (⟨es; envs(xs ↦ VUnt); ks⟩), 
+        pir @ [LNxt xr] ↦ (⟨er; envr(xr ↦ vm); kr⟩)), 
+      ys ∪ {(pis, c, pir)})
+  "
+
+
 
 
 
@@ -1401,6 +1571,24 @@ only
     static_reachable_left e0 (Let x b e')
   then
     static_reachable_left e0 e')
+
+definition static_reachable_over_prim of exp -> prim -> bool:
+only
+(∀ e0 x_c x_m .
+  static_reachable_over_prim e0 (SendEvt x_c x_m)) and
+(∀ e0 x_c .
+    static_reachable_over_prim e0 (RecvEvt x_c)) and
+(∀ e0 x1 x2 .
+    static_reachable_over_prim e0 (Pair x1 x2)) and
+(∀ e0 x_l .
+    static_reachable_over_prim e0 (Lft x_l)) and
+(∀ e0 x_r
+    static_reachable_over_prim e0 (Rght x_r)) and
+(∀ e0 e_b f x_p e_b . 
+  if
+    static_reachable_left e0 e_b 
+  then
+    static_reachable_over_prim e0 (Abs f x_p e_b))
 
 definition static_reachable_val of exp -> val -> bool:
 only
