@@ -1145,31 +1145,39 @@ only
 
 
 
+definition static_reachable of exp -> exp -> bool:
+only
+(∀ e .
+    static_reachable e e) and
+(∀ e_c e_z x e' . 
+  if
+    static_reachable e_c e_z
+  then
+    static_reachable (Let x (Spwn e_c) e') e_z) and
 
-inductive static_reachable :: "exp ⇒ exp ⇒ bool"  where
-  Refl : "
-    static_reachable e e
-  " | 
-  Let_Spawn_Child: "
-    static_reachable e⇩c e ⟹
-    static_reachable (Let x (Spwn e⇩c) e⇩n) e
-  " |
-  let_case_left: "
-    static_reachable e⇩l e ⟹
-    static_reachable (Let x (Case x⇩s x⇩l e⇩l x⇩r e⇩r) e⇩n) e
-  " |
-  let_case_right: "
-    static_reachable e⇩r e ⟹
-    static_reachable (Let x (Case x⇩s x⇩l e⇩l x⇩r e⇩r) e⇩n) e
-  " |
-  Let_Abs_Body: "
-    static_reachable e⇩b e ⟹
-    static_reachable (Let x (Prim (Abs f x⇩p e⇩b)) e⇩n) e
-  " | 
-  Let: "
-    static_reachable e⇩n e ⟹
-    static_reachable (Let x b e⇩n) e
-  "
+(∀ e_l e_z x x_s x_l x_r e_r e' . 
+  if
+    static_reachable e_l e_z
+  then
+    static_reachable (Let x (Case x_s x_l e_l x_r e_r) e') e_z) and
+
+(∀ e_r e_z x x_s x_l e_l x_r e' . 
+  if
+    static_reachable e_r e_z
+  then
+    static_reachable (Let x (Case x_s x_l e_l x_r e_r) e') e_z) and
+
+(∀ e_b e_z x f x_p e_b e' . 
+  if
+    static_reachable e_b e_z
+  then
+    static_reachable (Let x (Prim (Abs f x_p e_b)) e') e_z) and
+
+(∀ e' e_z x b . 
+  if
+    static_reachable e' e_z
+  then
+    static_reachable (Let x b e') e_z)
 
 
 \section{Static Communication Definitions}
