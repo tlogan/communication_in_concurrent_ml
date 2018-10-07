@@ -1412,17 +1412,21 @@ the first step to the second step, and the path from the second step onward also
 traceable.
 
 
-inductive static_traceable :: "(label * 'a * label) set ⇒ label ⇒ (label ⇒ bool) ⇒ (label * 'a) list ⇒ bool" where
-  Empty: "
-    isEnd start ⟹
-    static_traceable F start isEnd []
-  " |
-  Step: "
-    static_traceable F start (λ l . l = middle) path ⟹
-    isEnd end ⟹
-    {(middle, edge, end)} ⊆ F ⟹
-    static_traceable F start isEnd (path @ [(middle, edge)])
-  "
+definition static_traceable of transition set -> label -> (label -> bool) -> abstract_path -> bool:
+only
+(∀ start graph is_end .
+  if
+    is_end start
+  then
+    static_traceable graph start is_end []) and
+
+(∀  graph star middle path is_end end mode .
+  if 
+    static_traceable graph start (λ l . l = middle) path and
+    is_end end and
+    (middle, mode, end) ∈ graph 
+  then
+    static_traceable graph start is_end (path @ [(middle, mode)]))
 
 
 The static inclusive predicate states that two abstract paths represent might be traversed in
@@ -1454,25 +1458,30 @@ same run of a program. The static one shot predicate states that there is at mos
 to syncrhonize to send on an abstract channel in a run of a given program with given abstract
 value bindings.
 
-inductive singular :: "abstract_path ⇒ abstract_path ⇒ bool" where
-  equal: "
-    π⇩1 = π⇩2 ⟹ 
-    singular π⇩1 π⇩2
-  " |
-  exclusive: "
-    ¬ (static_inclusive π⇩1 π⇩2) ⟹ 
-    singular π⇩1 π⇩2
-  "
+definition singular of abstract_path -> abstract_path -> bool:
+only
+(∀ path .
+  singular path path) and
 
-inductive noncompetitive :: "abstract_path ⇒ abstract_path ⇒ bool" where
-  ordered: "
-    ordered π⇩1 π⇩2 ⟹ 
-    noncompetitive π⇩1 π⇩2
-  " |
-  exclusive: "
-    ¬ (static_inclusive π⇩1 π⇩2) ⟹
-    noncompetitive π⇩1 π⇩2
-  "
+(∀ path1 path2 .
+  if
+    not (static_inclusive path1 path2)
+  then
+    singular path1 path2)
+
+definition noncompetitive of abstract_path -> abstract_path -> bool:
+only
+(∀ path1 path2 .
+  if
+    ordered path1 path2
+  then
+    noncompetitive path1 path2) and
+
+(∀ path1 path2 .
+  if
+    not (static_inclusive path1 path2)
+  then
+    noncompetitive path1 path2)
 
 
 The static one to one predicate states that there is at most one thread attempting to send and
@@ -1485,34 +1494,50 @@ that there is at most one thread attempting to receive on a given channel at any
 run of a given program. 
 
 
-inductive static_one_shot :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
-  Sync: "
-    every_two (static_traceable F (top_label e) (static_send_label V e xC)) singular ⟹
-    static_traversable env_a graph e ⟹
-    static_one_shot V e xC 
-  "
+defnition static_one_shot of abstract_env -> exp -> var -> bool:
+only
+(∀ graph e env_a x_c .
+  if
+    every_two (static_traceable graph (top_label e) (static_send_label env_a e x_c)) singular and
+    static_traversable env_a graph e
+  then
+    static_one_shot graph e x_c)
 
-inductive static_one_to_one :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
-  Sync: "
-    every_two (static_traceable F (top_label e) (static_send_label V e xC)) noncompetitive ⟹
-    every_two (static_traceable F (top_label e) (static_recv_label V e xC)) noncompetitive ⟹
-    static_traversable env_a graph e ⟹
-    static_one_to_one V e xC 
-  "
+definition static_one_to_one of abstract_env -> exp -> var -> bool:
+only
+(∀ graph e env_a x_c .
+  if
+    (every_two
+      (static_traceable graph (top_label e) (static_send_label env_a e x_c))
+      noncompetitive) and 
+    (every_two
+      (static_traceable graph (top_label e) (static_recv_label env_a e x_c))
+      noncompetitive) and 
+    static_traversable env_a graph e
+  then
+    static_one_to_one V e xC)
 
-inductive static_fan_out :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
-  Sync: "
-    every_two (static_traceable F (top_label e) (static_send_label V e xC)) noncompetitive ⟹
-    static_traversable env_a graph e ⟹
-    static_fan_out V e xC 
-  "
+definition static_fan_out of abstract_env -> exp -> var -> bool:
+only
+(∀ graph e env_a x_c .
+  if
+    (every_two
+      (static_traceable graph (top_label e) (static_send_label env_a e x_c))
+      noncompetitive) and
+    static_traversable env_a graph e
+  then
+    static_fan_out env_a e x_c) 
 
 inductive static_fan_in :: "abstract_env ⇒ exp ⇒ var ⇒ bool" where
-  Sync: "
-    every_two (static_traceable F (top_label e) (static_recv_label V e xC)) noncompetitive ⟹
-    static_traversable env_a graph e ⟹
-    static_fan_in V e xC 
-  "
+only
+(∀ graph e env_a x_c .
+  if
+    (every_two
+      (static_traceable graph (top_label e) (static_recv_label env_a e x_c))
+      noncompetitive) and
+    static_traversable env_a graph e
+  then
+    static_fan_in env_a e x_c) 
 
 
 
@@ -1635,17 +1660,17 @@ lemma not_static_inclusive_sound:
 -----
 lemma not_static_traceable_sound:
 
-∀ e0 pool convo path x b e' env stack evn_a convo_a graph isEnd .
+∀ e0 pool convo path x b e' env stack evn_a convo_a graph is_end .
   if
     star concur_step ([[] -> (Stt e0 [->] [])], {}) (pool, convo) and 
     pool path = Some (Stt (Let x b e') env stack) and 
     static_eval env_a convo_a e0 and 
     static_traversable env_a graph e0 and 
-    isEnd (NLet x)
+    is_end (NLet x)
   then
     ∃ path_a . 
       paths_correspond path path_a and 
-      static_traceable graph (top_label e0) isEnd path_a
+      static_traceable graph (top_label e0) is_end path_a
 
 -----
 
@@ -1938,17 +1963,17 @@ fact that star_left implies star.
 
 
 lemma not_static_traceable_pool_sound:
-∀ e0 pool convo path x b e' env stack evn_a convo_a graph isEnd .
+∀ e0 pool convo path x b e' env stack evn_a convo_a graph is_end .
   if
     star concur_step ([[] -> (Stt e0 [->] [])], {}) (pool, convo) and 
     pool path = Some (Stt (Let x b e') env stack) and 
     static_eval env_a convo_a e0 and 
     static_traversable env_a graph pool and 
-    isEnd (NLet x)
+    is_end (NLet x)
   then
     ∃ path_a . 
       paths_correspond path path_a and 
-      static_traceable graph (top_label e0) isEnd path_a
+      static_traceable graph (top_label e0) is_end path_a
 
 lemma static_traversable_pool_preserved_star:
 ∀ e0 pool convo env_a convo_a graph .
@@ -3507,16 +3532,16 @@ locale communication_sound =
       (label %$\Rightarrow$% bool) %$\Rightarrow$%
       abstract_path %$\Rightarrow$% bool where
   Empty:
-    isEnd start %$\Longrightarrow$%
-    static_traceable V F start isEnd [] |
+    is_end start %$\Longrightarrow$%
+    static_traceable V F start is_end [] |
   Edge:
-    isEnd end %$\Longrightarrow$%
+    is_end end %$\Longrightarrow$%
     {(start, edge, end)} %$\subseteq$% F %$\Longrightarrow$%
-    static_traceable V F start isEnd [(start, edge)] |
+    static_traceable V F start is_end [(start, edge)] |
   Step:
-    static_traceable V F middle isEnd ((middle, edge') # path) %$\Longrightarrow$%
+    static_traceable V F middle is_end ((middle, edge') # path) %$\Longrightarrow$%
     {(start, edge, middle)} %$\subseteq$% F %$\Longrightarrow$%
-    static_traceable V F start isEnd ((start, edge) # (middle, edge') # path)
+    static_traceable V F start is_end ((start, edge) # (middle, edge') # path)
   \end{lstlisting}
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
@@ -3718,7 +3743,7 @@ locale communication_sound_A =
     star concur_step
       ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
       (trpl', ys') %$\Longrightarrow$%
-    isEnd (NLet x) %$\Longrightarrow$%
+    is_end (NLet x) %$\Longrightarrow$%
     static_traversable_pool V F trpl' "
   proof sketch
   qed
@@ -3730,10 +3755,10 @@ lemma static_traversable_pool_implies_static_traceable: "
     (trpl', ys') %$\Longrightarrow$% 
   static_eval (V, C) e %$\Longrightarrow$%
   static_traversable_pool V F trpl' %$\Longrightarrow$%
-  isEnd (NLet x) %$\Longrightarrow$%
+  is_end (NLet x) %$\Longrightarrow$%
   %$\exists$% path . 
     paths_correspond pi path %$\land$%
-    static_traceable V F (top_label e) isEnd path "
+    static_traceable V F (top_label e) is_end path "
   proof sketch
   qed
   \end{lstlisting}
@@ -3748,10 +3773,10 @@ lemma static_traversable_pool_implies_static_traceable: "
     (trpl', ys') %$\Longrightarrow$% 
   static_eval (V, C) e %$\Longrightarrow$%
   static_traversable env_a graph e %$\Longrightarrow$%
-  isEnd (NLet x) %$\Longrightarrow$%
+  is_end (NLet x) %$\Longrightarrow$%
   %$\exists$% path . 
     paths_correspond pi path %$\land$%
-    static_traceable V F (top_label e) isEnd path
+    static_traceable V F (top_label e) is_end path
   proof sketch
   qed
   \end{lstlisting}
@@ -4060,23 +4085,23 @@ where
   
 inductive static_live_traceable :: "abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% label_map %$\Rightarrow$% label_map %$\Rightarrow$% label %$\Rightarrow$% (label %$\Rightarrow$% bool) %$\Rightarrow$% abstract_path %$\Rightarrow$% bool" where
   Empty:
-    isEnd start %$\Longrightarrow$%
-    static_live_traceable V F Ln Lx start isEnd [] |
+    is_end start %$\Longrightarrow$%
+    static_live_traceable V F Ln Lx start is_end [] |
   Edge:
-    isEnd end %$\Longrightarrow$%
+    is_end end %$\Longrightarrow$%
     static_live_traversable F Ln Lx (start, edge, end) %$\Longrightarrow$%
-    static_live_traceable V F Ln Lx start isEnd [(start, edge)] |
+    static_live_traceable V F Ln Lx start is_end [(start, edge)] |
   Step:
-    static_live_traceable V F Ln Lx middle isEnd ((middle, edge') # path) %$\Longrightarrow$%
+    static_live_traceable V F Ln Lx middle is_end ((middle, edge') # path) %$\Longrightarrow$%
     static_live_traversable F Ln Lx (start, edge, middle) %$\Longrightarrow$%
-    static_live_traceable V F Ln Lx start isEnd ((start, edge) # (middle, edge') # path) |
+    static_live_traceable V F Ln Lx start is_end ((start, edge) # (middle, edge') # path) |
   Pre_Return:
-    static_live_traceable V F Ln Lx (NRslt y) isEnd ((NRslt y, ERtn x) # post) %$\Longrightarrow$%
+    static_live_traceable V F Ln Lx (NRslt y) is_end ((NRslt y, ERtn x) # post) %$\Longrightarrow$%
     static_traceable  F (NRslt y) pre %$\Longrightarrow$%
     %$\not$% static_balanced (pre @ [(NRslt y, ERtn x)]) %$\Longrightarrow$%
     %$\not$% Set.is_empty (Lx (NLet x)) %$\Longrightarrow$%
     path = pre @ (NRslt y, ERtn x) # post %$\Longrightarrow$%
-    static_live_traceable V F Ln Lx start isEnd path
+    static_live_traceable V F Ln Lx start is_end path
     
   \end{lstlisting}
 
