@@ -792,67 +792,80 @@ only
     concur_step
       pool convo
       (pool(path @ [LRtn x] -> (Stt e_k env_k(x_k -> v) stack'))) convo) and
-(∀ .
-    ⟦ 
-      leaf trpl pi ;
-      trpl pi = Some (⟨(Let x b e); env; k⟩) ;
-      seq_step b env v
-    ⟧ ⟹
-    (trpl, ys) → (trpl(pi @ [LNxt x] ↦ ⟨e; env(x ↦ v); k⟩), ys)
-(∀ .
-    ⟦ 
-      leaf trpl pi ;
-      trpl pi = Some (⟨(Let x b e); env; k⟩) ;
-      seq_step_up (b, env) (e', env')
-    ⟧ ⟹
-    (trpl, ys) → (trpl(pi @ [LCall x] ↦ ⟨e'; env'; (Ctn x e env) # k⟩), ys)
-  " |
-  Let_Chan: "
-(∀ .
-    ⟦ 
-      leaf trpl pi ;
-      trpl pi = Some (⟨(Let x MkChn e); env; k⟩)
-    ⟧ ⟹
-    (trpl, ys) → (trpl(
-      pi @ [LNxt x] ↦ (⟨e; env(x ↦ (VChn (Ch pi x))); k⟩)), ys)
-  " |
-  Let_Spawn: "
-(∀ .
-    ⟦ 
-      leaf trpl pi ;
-      trpl pi = Some (⟨Let x (Spwn ec) e; env; k⟩)
-    ⟧ ⟹
-    (trpl, ys) → (trpl(
-      pi @ [LNxt x] ↦ (⟨e; env(x ↦ VUnt); k⟩), 
-      pi @ [LSpwn x] ↦ (⟨ec; env; []⟩)), ys)
-  " |
-  Let_Sync: "
-(∀ .
-    ⟦
-   
-      leaf trpl pis ;
-      trpl pis = Some (⟨Let xs (Sync xse) es; envs; ks⟩);
-      envs xse = Some (VClsr (SendEvt xsc xm) envse);
 
-      leaf trpl pir ;
-      trpl pir = Some (⟨Let xr (Sync xre) er; envr; kr⟩);
-      envr xre = Some (VClsr (RecvEvt xrc) envre);
+(∀ pool path x b e' env stack v .
+  if 
+    leaf pool path and
+    pool path = Some (Stt (Let x b e') env stack) and
+    seq_step b env v
+  then
+    concur_step pool convo (pool(path @ [LNxt x] -> (Stt e (env(x -> v)) stack))) convo)
 
-      envse xsc = Some (VChn c); 
-      envre xrc = Some (VChn c);      
-      envse xm = Some vm
+(∀ pool path x b e' env stack e_u env_u convo .
+  if 
+    leaf pool path and 
+    pool path = Some (Stt (Let x b e') env stack) and
+    seq_step_up b env e_u env_u
+  then
+    concur_step
+      pool convo
+      (pool(path @ [LCall x] -> (Stt e_u env_u ((Ctn x e' env) # stack)) convo)
 
-    ⟧ ⟹
-    (trpl, ys) → (
-      trpl(
-        pis @ [LNxt xs] ↦ (⟨es; envs(xs ↦ VUnt); ks⟩), 
-        pir @ [LNxt xr] ↦ (⟨er; envr(xr ↦ vm); kr⟩)), 
-      ys ∪ {(pis, c, pir)})
-  "
+(∀ pool path x e' env stack .
+  if 
+    leaf pool path and
+    pool path = Some (Stt (Let x MkChn e') env stack)
+  then
+    concur_step
+      pool convo 
+      (pool(path @ [LNxt x] -> (Stt e' (env(x -> (VChn (Ch path x)))) stack))) convo) and
 
+(∀ pool path x e_c e' env stack convo .
+  if 
+    leaf pool path and 
+    pool path = Some (Stt (Let x (Spwn e_c) e') env stack)
+  then
+    concur_step
+    pool convo 
+    (pool(
+        path @ [LNxt x] -> (Stt e' (env(x -> VUnt)) stack),
+        path @ [LSpwn x] -> (Stt e_c env []))) convo) and
 
+(∀ pool path_s path x_s x_se e_s env_s stack_s x_sc x_m env_se
+  path_r x_r x_re e_r env_r stack_r x_rc env_re c convo .
+  if 
+    leaf pool path_s and
+    pool path_s = Some (Stt (Let x_s (Sync x_se) e_s) env_s stack_s) and
+    env_s x_se = Some (VClsr (SendEvt x_sc x_m) env_se) and
+    leaf pool path_r and
+    pool path_r = Some (Stt (Let x_r (Sync x_re) e_r) env_r stack_r) and
+    env_r x_re = Some (VClsr (RecvEvt x_rc) env_re) and
+    env_se x_sc = Some (VChn c) and
+    env_re x_rc = Some (VChn c) and 
+    env_se x_m = Some v_m
+  then
+  concur_step
+    pool
+    convo
+    (pool(
+        path_s @ [LNxt x_s] -> (Stt e_s (env_s(xs -> VUnt)) stack_s), 
+        path_r @ [LNxt x_r] -> (Stt e_r (env_r(x_r -> v_m))stack_r))) 
+     (convo ∪ {(path_s, c, path_r)}))
 
+\section{Dynamic Communication Definitions}
 
+The one shot predicate states that in a trace pool, there is only one control path that
+synchronizes and sends on a given channel. Whether or not two attempts to synchronize on a
+channel are competitive can be determined by
+looking at the control paths of the trace pool. If two paths are ordered, that is, one is the
+prefix of the other and vice versa, then the dynamic semantics states that they necessarily
+occur in sequence, so the shorter path must synchronize before the longer path. Two paths may
+be competitive only if they are unordered. The fan in predicate states that there is no
+competition on the receiving end of a channel, by stating that any two paths that synchonize to
+receive on a channel are ordered. The fan out predicate states that there is no competition on
+the sending end of a channel, by stating that any two paths that syncronize to send on a
+channel are ordered. The one to one predicates states that there is no competition on either
+the receiving or the sending ends of a channel. 
 
 \section{Static Semantics Definitions}
 
@@ -916,6 +929,8 @@ application, then the abstract value of the second argument of application (the 
 argument) is bound to the abstraction's parameter name, and the resulting abstract value of the
 abstraction is bound the the let binding name.
 
+\section{Static Communication Definitions}
+
 To describe communication statically, yet also somewhat precisely, it will be advantageous to
 describe every expression in a with a short description.  There are two forms of expressions,
 let binding expressions and result expressions.  A let binding expression is associated with a
@@ -931,21 +946,6 @@ the static send label predicate states that a label might represent a sycnroniza
 a given abstract channel, in a given a program with given abstract value bindings.  The static
 receive label predicate state that a label might represent a synchronization to receive on a
 given abstract channel, in a given program with given abstract value bindings. 
-
-\section{Static Communication Definitions}
-
-The one shot predicate states that in a trace pool, there is only one control path that
-synchronizes and sends on a given channel. Whether or not two attempts to synchronize on a
-channel are competitive can be determined by
-looking at the control paths of the trace pool. If two paths are ordered, that is, one is the
-prefix of the other and vice versa, then the dynamic semantics states that they necessarily
-occur in sequence, so the shorter path must synchronize before the longer path. Two paths may
-be competitive only if they are unordered. The fan in predicate states that there is no
-competition on the receiving end of a channel, by stating that any two paths that synchonize to
-receive on a channel are ordered. The fan out predicate states that there is no competition on
-the sending end of a channel, by stating that any two paths that syncronize to send on a
-channel are ordered. The one to one predicates states that there is no competition on either
-the receiving or the sending ends of a channel. 
 
 
 -----low precision // no live channel analysis ----
