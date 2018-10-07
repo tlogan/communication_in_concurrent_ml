@@ -987,17 +987,6 @@ first argument is a right case, then the right name is bound to the abstract val
 case, the right binding name is ound to the result value of the right expression, and the
 bindings and communication are outputs for the right expression. 
 
-The static reachable predicate states that an expression can be reached from another
-expression, by simply stating that an expression is reachable from itself,  and an expression
-is reachable from an initial expression, if it is also reachable from the sub expressions of
-the initial expression.  
-
-for function application, if a function abstraction is bound to the first argument of
-application, then the abstract value of the second argument of application (the function
-argument) is bound to the abstraction's parameter name, and the resulting abstract value of the
-abstraction is bound the the let binding name.
-
-
 datatype abstract_value =
   AChn var | AUnit | AClsr prim 
 
@@ -1143,6 +1132,16 @@ only
   then
     static_eval env_a convo_a (Let x (App f x_a) e'))
 
+
+The static reachable predicate states that an expression can be reached from another
+expression, by simply stating that an expression is reachable from itself,  and an expression
+is reachable from an initial expression, if it is also reachable from the sub expressions of
+the initial expression.  
+
+for function application, if a function abstraction is bound to the first argument of
+application, then the abstract value of the second argument of application (the function
+argument) is bound to the abstraction's parameter name, and the resulting abstract value of the
+abstraction is bound the the let binding name.
 
 
 definition static_reachable of exp -> exp -> bool:
