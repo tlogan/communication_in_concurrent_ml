@@ -1198,6 +1198,37 @@ receive label predicate state that a label might represent a synchronization to 
 given abstract channel, in a given program with given abstract value bindings. 
 
 
+datatype label = NLet var | NResult var
+
+fun top_label of exp -> label:
+(∀ x b e' . 
+  top_label (Let x b e') = NLet x) and
+(∀ x . 
+  top_label (Rslt x) = NResult x)
+
+type_synonym label_map = label -> var set
+
+definition static_send_label of abstract_env -> exp -> var -> label -> bool:
+only
+(∀ e0 x x_e e' x_sc x_m env_a x_c .
+  if
+    static_reachable e0 (Let x (Sync x_e) e') and
+    (AClsr (SendEvt x_sc x_m)) ⊆ env_a x_e and 
+    (AChan x_c) ∈ env_a x_sc
+  then
+    static_send_label env_a e0 x_c (NLet x))
+
+definition static_recv_label of abstract_env -> exp -> var -> label -> bool:
+only
+(∀ e0 x x_e e' x_rc env_a x_c .
+  if
+    static_reachable e0 (Let x (Sync x_e) e') and
+    (AClsr (RecvEvt x_rc)) ∈ env_a x_e and 
+    (AChan x_c) ∈ env_a x_rc 
+  then
+    static_recv_label env_a e0 x_c (NLet x))
+
+
 -----low precision // no live channel analysis ----
 Reppy and Xiao's work relies on detecting the liveness of channels in order to gain higher
 precision in the communication analysis.  Since formal proofs are inherently complicated and

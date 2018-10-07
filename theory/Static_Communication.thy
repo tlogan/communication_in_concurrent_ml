@@ -14,21 +14,6 @@ type_synonym label_set = "label set"
 
 type_synonym label_map = "label \<Rightarrow> var set"
 
-
-inductive static_traceable :: "(label * 'a * label) set \<Rightarrow> label \<Rightarrow> (label \<Rightarrow> bool) \<Rightarrow> (label * 'a) list \<Rightarrow> bool" where
-  Empty: "
-    isEnd start \<Longrightarrow>
-    static_traceable F start isEnd []
-  " |
-  Step: "
-    static_traceable F start (\<lambda> l . l = middle) path \<Longrightarrow>
-    isEnd end \<Longrightarrow>
-    {(middle, edge, end)} \<subseteq> F \<Longrightarrow>
-    static_traceable F start isEnd (path @ [(middle, edge)])
-  "
-
-
-
 inductive static_send_label :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> label \<Rightarrow> bool" where
   intro: "
     {^Chan xC} \<subseteq> V xSC \<Longrightarrow>

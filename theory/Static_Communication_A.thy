@@ -176,6 +176,20 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
+
+inductive static_traceable :: "(label * 'a * label) set \<Rightarrow> label \<Rightarrow> (label \<Rightarrow> bool) \<Rightarrow> (label * 'a) list \<Rightarrow> bool" where
+  Empty: "
+    isEnd start \<Longrightarrow>
+    static_traceable F start isEnd []
+  " |
+  Step: "
+    static_traceable F start (\<lambda> l . l = middle) path \<Longrightarrow>
+    isEnd end \<Longrightarrow>
+    {(middle, edge, end)} \<subseteq> F \<Longrightarrow>
+    static_traceable F start isEnd (path @ [(middle, edge)])
+  "
+
+
 inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
     every_two (static_traceable F (top_label e) (static_send_label V e xC)) singular \<Longrightarrow>
