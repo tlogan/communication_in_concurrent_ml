@@ -1,4 +1,4 @@
-\documentclass{article}
+documentclass{article}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -1361,7 +1361,7 @@ only
 (∀ x e' graph env_a x_se .
   if
     (NLet x , ENext, top_label e') ∈ graph and
-    static_traversable env_a graph e' and
+    static_traversable env_a graph e'
   then
     static_traversable env_a graph (Let x (Sync x_se) e')) and
 
@@ -2210,14 +2210,144 @@ duplicate instances of channels, thus gain higher precision.
 The sub portion of the program is represented by a graph containing all reachable nodes in the
 part of a program where a given channel is live, and transitive transitions to any of those nodes
 from the channel creation point.  To maintain connetions between a channel creation portion of the
-program and a thread that received the channel as a message, a transitions from the send site to
-the receive site of a syncrhonization is included in the graph, annoted with the Send mode.
-Additionally, transitions contain the modes Seq, Spwn, Call, Return to indicate basic control flow.
+program and a thread that received the channel as a message, transitions from the send site to
+the receive site of a syncrhonization is included in the graph, annoted with the sending mode, as
+indicated by the new definition of static_traversable.  Modes for typical control flow of
+sequencing, calling, returning, and spawning are also included transitions.
 
-The static traversable predicate differs from the simpler version in a few ways.  First, the
-predicate is dependent on the higher order predicate for stating that a label might represent a
-receive site.  Second, in the case of a let binding to synchronization to send, a sending
-transition from let binding name to a receiving expression.
+datatype mode = ENext | ESpawn | ESend var | ECall | EReturn
+
+type_synonym transition = label * mode * label
+
+type_synonym step_label = label * mode
+
+type_synonym abstract_path = step_label list
+
+definition static_traversable of abstract_env -> transition_set -> exp -> bool:
+only
+(∀ env_a graph x .
+    static_traversable env_a graph (Rslt x)) and
+
+(∀ x e' graph env_a  .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x Unt e')) and
+
+(∀ x e' graph env_a  .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x MkChn e')) and
+
+
+(∀ x e' graph env_a  x_c x_m .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Prim (SendEvt x_c x_m)) e')) and
+
+(∀ x e' graph env_a x_c .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Prim (RecvEvt x_c)) e')) and
+
+
+(∀ x e' graph env_a x1 x2 .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Prim (Pair x1 x2)) e')) and
+
+
+(∀ x e' graph env_a x_s .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Prim (Lft x_s)) e'))
+
+
+(∀ x e' graph env_a x_s .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Prim (Rght x_s)) e')) and
+
+
+(∀ x e' graph env_a e_b f x_p .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e' and
+    static_traversable env_a graph e_b
+  then
+    static_traversable env_a graph (Let x (Prim (Abs f x_p e_b)) e')) and
+
+(∀ x e' e_c graph env_a.
+  if
+    {(NLet x, ENext, top_label e'),
+      (NLet x, ESpawn, top_label e_c)} ⊆ graph and
+    static_traversable env_a graph e_c and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Spwn e_c) e')) and
+
+(∀ x e' graph env_a x_se .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    (∀ x_sc x_m x_c y.
+      if
+        (AClsr (SendEvt x_sc x_m)) ∈ env_a xSE and 
+        (AChan x_c) ∈ env_a x_sc and
+        static_recv_label env_a e' x_c (NLet y)
+      then
+        (NLet x, ESend x_se, NLet y) ∈ F) and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Sync x_se) e')) and
+
+(∀ x e' graph env_a x_p .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e' and
+  then
+    static_traversable env_a graph (Let x (Fst x_p) e')) and
+
+(∀ x e' graph env_a x_p .
+  if
+    (NLet x , ENext, top_label e') ∈ graph and
+    static_traversable env_a graph e' and
+  then
+    static_traversable env_a graph (Let x (Snd x_p) e')) and
+
+(∀ x e_l e_r e' graph env_a x_s .
+  if
+    {(NLet x, ECall, top_label e_l),
+      (NLet x, ECall, top_label e_r),
+      (NResult (rslt_var e_l), EReturn, top_label e'),
+      (NResult (rslt_var e_r), EReturn, top_label e')} ⊆ graph and
+    static_traversable env_a graph e_l and
+    static_traversable env_a graph e_r and
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (Case x_s x_l e_l x_r e_r) e')) and
+  
+(∀  env_a f x e' x x_a .
+  if
+    (∀ f_p x_p e_b . if (AClsr (Abs f_p x_p e_b)) ∈ env_a f then 
+      {(NLet x, ECall, top_label e_b),
+        (NResult (rslt_var e_b), EReturn, top_label e')} ⊆ graph) and
+
+    static_traversable env_a graph e'
+  then
+    static_traversable env_a graph (Let x (App f x_a) e'))
 
 
 \section{Reasoning Stategy for Static Communication with Channel Liveness}
