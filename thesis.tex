@@ -2350,6 +2350,62 @@ only
     static_traversable env_a graph (Let x (App f x_a) e'))
 
 
+For the live analysis it is necessary to track any variable that is bound to a channel of interest,
+since any use of that variable would indicate a use of the channel. The predicate
+static_built_on_chan states that a variable is bound to some structure containing a channel. 
+
+inductive 
+  static_built_on_chan :: "abstract_env ⇒ label_map ⇒ var ⇒ var ⇒ bool"
+where
+  Chan: "
+    ⟦
+      ^Chan x⇩c ∈ V x 
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Send_Evt: "
+    ⟦
+      ^SendEvt x⇩s⇩c x⇩m ∈ V x;
+      static_built_on_chan V Ln x⇩c x⇩s⇩c ∨ static_built_on_chan V Ln x⇩c x⇩m 
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Recv_Evt: "
+    ⟦
+      ^RecvEvt x⇩r⇩c ∈ V x;
+      static_built_on_chan V Ln x⇩c x⇩r⇩c
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Pair: "
+    ⟦
+      ^(Pair x⇩1 x⇩2) ∈ V x;
+      static_built_on_chan V Ln x⇩c x⇩1 ∨ static_built_on_chan V Ln x⇩c x⇩2
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Left: "
+    ⟦
+      ^(Lft x⇩a) ∈ V x;
+      static_built_on_chan V Ln x⇩c x⇩a
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Right: "
+    ⟦
+      ^(Rght x⇩a) ∈ V x;
+      static_built_on_chan V Ln x⇩c x⇩a
+    ⟧ ⟹ 
+    static_built_on_chan V Ln x⇩c x
+  " |
+  Abs: "
+    ^Abs f x⇩p e⇩b ∈ V x ⟹ 
+    ¬ Set.is_empty (Ln (top_label e⇩b) - {x⇩p}) ⟹
+    static_built_on_chan V Ln x⇩c x
+  " 
+
+
+
 \section{Reasoning Stategy for Static Communication with Channel Liveness}
 I have developed a number of definitions that will most likely be crucial to proving soundness
 of a higher precision static analysis.  The proofs are not yet complete, however it may be
