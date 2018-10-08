@@ -1179,7 +1179,7 @@ only
     static_reachable (Let x b e') e_z)
 
 
-\section{Static Communication Definitions}
+\section{Static Communication}
 
 To describe communication statically, yet also somewhat precisely, it will be advantageous to
 describe every expression in a with a short description.  There are two forms of expressions,
@@ -1435,21 +1435,27 @@ from another at a spawn transition might be inclusive.  This concept is useful f
 greater precision, since if two paths cannot occur in the same run of a program, only one needs
 to be counted towards the communication topology. 
 
-inductive static_inclusive :: "abstract_path ⇒ abstract_path ⇒ bool" where
-  Prefix1: "
-    prefix π⇩1 π⇩2 ⟹
-    static_inclusive π⇩1 π⇩2
-  " |
-  Prefix2: "
-    prefix π⇩2 π⇩1 ⟹
-    static_inclusive π⇩1 π⇩2
-  " |
-  Spawn1: "
-    static_inclusive (π @ (NLet x, ESpawn) # π⇩1) (π @ (NLet x, ENext) # π⇩2)
-  " |
-  Spawn2: "
-    static_inclusive (π @ (NLet x, ENext) # π⇩1) (π @ (NLet x, ESpawn) # π⇩2)
-  "
+definition static_inclusive of abstract_path -> abstract_path -> bool:
+
+only
+
+(∀ path1 path2 .
+  if
+    prefix path1 path2
+  then
+    static_inclusive path1 path2) and
+
+(∀ path2 path1 .
+  if
+    prefix path2 path1
+  then
+    static_inclusive path1 path2) and
+
+(∀ path x path1 path2 .
+    static_inclusive (path @ (NLet x, ESpawn) # path1) (path @ (NLet x, ENext) # path2)) and
+
+(∀ path x path1 path2 .
+    static_inclusive (path @ (NLet x, ENext) # path1) (path @ (NLet x, ESpawn) # path2))
 
 
 The singular predicate states that two paths are the same or cannot occur in the same run of a
@@ -1538,10 +1544,6 @@ only
     static_traversable env_a graph e
   then
     static_fan_in env_a e x_c) 
-
-
-
-
 
 \section{Formal Reasoning}
 The reasoning involved in proving each soundness theorem is based around breaking the
@@ -2191,34 +2193,38 @@ static_reachable.
 
 
 
--------------------------------------------------------------
-static communication B ...
--------------------------------------------------------------
-I have developed a number of definitions that will most likely be crucial to proving soundness
-of a higher precision static analysis.  The proofs are not yet complete, however it may be
-instructive to outline the conjectures that rely on these definition and the strategy of
-breaking the proof into subgoals that rely on these definitions.
-
+\section{Static Communication with Channel Liveness }
 
 The higher precision defintions for static communication topologies enables the discrimination
 between channels created by the same piece of code, but at different instances during a run of
 a program.  For example, a function abstraction may specify the creation of a channel with a
 binding to the name x.  This function may be called twice during a run of the program,
 resulting in two distinct channels.  However, the abstract channels would be indentified by the
-same name x.  To get around this issue, the static communications definitions are complicated
-to ignore expresions that apply the function abstraction containing the channel creation of
-interest.  Doing so requires describing a trimmed down sub program for each channel of
-interest.  To avoid disconnecting the channel creation portion of the program from
-communicating threads defined outside the channel's function abstraction, the trimmed program
-is expressed in terms of transitions, with sending transitions used to connect communication
-points. Thus, the modes of transition are sequential, spawning, calling, returining, and
-sending. 
+same name x.  Even if each instance of channel x only has one process sending on it, the static
+analysis discussed so far is only able to classiy a channel identified with x as having multiple
+threads sending on it. To get around this issue, the static communication definitions can be
+enhanced with additional information about the liveness of channels.  By limiting analysis to only
+the sub portion of the program wher a particular channel is live, the analysis is able to ignore
+duplicate instances of channels, thus gain higher precision. 
 
+The sub portion of the program is represented by a graph containing all reachable nodes in the
+part of a program where a given channel is live, and transitive transitions to any of those nodes
+from the channel creation point.  To maintain connetions between a channel creation portion of the
+program and a thread that received the channel as a message, a transitions from the send site to
+the receive site of a syncrhonization is included in the graph, annoted with the Send mode.
+Additionally, transitions contain the modes Seq, Spwn, Call, Return to indicate basic control flow.
 
 The static traversable predicate differs from the simpler version in a few ways.  First, the
-predicate is dependent on the higher order predicate for stating tat a label might represent a
+predicate is dependent on the higher order predicate for stating that a label might represent a
 receive site.  Second, in the case of a let binding to synchronization to send, a sending
 transition from let binding name to a receiving expression.
+
+
+\section{Reasoning Stategy for Static Communication with Channel Liveness}
+I have developed a number of definitions that will most likely be crucial to proving soundness
+of a higher precision static analysis.  The proofs are not yet complete, however it may be
+instructive to outline the conjectures that rely on these definition and the strategy of
+breaking the proof into subgoals that rely on these definitions.
 
 
 
