@@ -654,7 +654,7 @@ type_synonym env =
   var -> val option
 
 
-definition seq_step of bound_exp -> env -> val -> bool:
+predicate seq_step of bound_exp -> env -> val -> bool:
 only
 (∀ env . 
     seq_step Unt env VUnt) and
@@ -689,7 +689,7 @@ of modifications. The environment is updated with the recursive function name bo
 function abstraction, and the parameter name is bound to the function argument specified in the
 application expression. 
 
-definition seq_step_up of bound_exp -> env -> exp -> env -> bool:
+predicate seq_step_up of bound_exp -> env -> exp -> env -> bool:
 only
 (∀ env x_s x_c env_s v x_l e_l x_r e_r .
   if
@@ -769,7 +769,7 @@ datatype state =
 type_synonym trace_pool =
   control_path -> state option
 
-definition leaf of trace_pool -> control_path -> bool
+predicate leaf of trace_pool -> control_path -> bool
 (∀ pool path stt .
   if
     pool path = Some stt and 
@@ -781,7 +781,7 @@ type_synonym cmmn_set =
   (control_path * chan * control_path) set
 
 
-definition concur_step of trace_pool -> cmmn_set -> trace_pool -> cmmn_set -> bool: 
+predicate concur_step of trace_pool -> cmmn_set -> trace_pool -> cmmn_set -> bool: 
 only
 (∀ pool path x env x_k e_k env_k stack' v convo .
   if
@@ -869,7 +869,7 @@ the receiving or the sending ends of a channel.
 
 
 
-definition is_send_path of trace_pool -> chan -> control_path -> bool:
+predicate is_send_path of trace_pool -> chan -> control_path -> bool:
 only
 (∀ pool path x x_e e' env stack x_sc x_m env_e c.
   if
@@ -879,7 +879,7 @@ only
   then
     is_send_path pool c path)
 
-definition is_recv_path of trace_pool -> chan -> control_path -> bool:
+predicate is_recv_path of trace_pool -> chan -> control_path -> bool:
 only
 (∀ poo path x x_e e' env stack x_rc env_e c .
   then
@@ -889,7 +889,7 @@ only
   then
     is_recv_path pool c path)
 
-definition every_two of ('a -> bool) -> ('a -> 'a -> bool) -> bool:
+predicate every_two of ('a -> bool) -> ('a -> 'a -> bool) -> bool:
 only
 (∀ p r .
   if
@@ -897,28 +897,28 @@ only
   then
     every_two p r)
 
-definition ordered of 'a list -> 'a list -> bool:
+predicate ordered of 'a list -> 'a list -> bool:
 only
 (∀ path1 path2 . if prefix path1 path2 then
   ordered path1 path2) and
 (∀ path2 path1 . if prefix path2 path1 then
   ordered path1 path2)
 
-definition one_shot of trace_pool -> chan -> bool:
+predicate one_shot of trace_pool -> chan -> bool:
 (∀ pool c .
   if
     every_two (is_send_path pool c) (op =)
   then
     one_shot pool c)
 
-definition fan_out of trace_pool -> chan -> bool:
+predicate fan_out of trace_pool -> chan -> bool:
 (∀ pool c .
   if
     every_two (is_send_path pool c) ordered
   then
     fan_out pool c)
   
-definition fan_in of trace_pool -> chan -> bool:
+predicate fan_in of trace_pool -> chan -> bool:
 only
 (∀ pool c .
   if
@@ -926,7 +926,7 @@ only
   then
     fan_in pool c)
 
-definition one_to_one of trace_pool -> chan -> bool:
+predicate one_to_one of trace_pool -> chan -> bool:
 only
 (∀ pool c.
   if
@@ -998,7 +998,7 @@ fun rslt_var of exp -> var:
 
 
   
-definition static_eval of abstract_env -> abstract_env -> exp -> bool:
+predicate static_eval of abstract_env -> abstract_env -> exp -> bool:
 only
 
 (∀ env_a convo_a x.
@@ -1144,7 +1144,7 @@ argument) is bound to the abstraction's parameter name, and the resulting abstra
 abstraction is bound the the let binding name.
 
 
-definition static_reachable of exp -> exp -> bool:
+predicate static_reachable of exp -> exp -> bool:
 only
 (∀ e .
     static_reachable e e) and
@@ -1208,7 +1208,7 @@ fun top_label of exp -> label:
 
 type_synonym label_map = label -> var set
 
-definition static_send_label of abstract_env -> exp -> var -> label -> bool:
+predicate static_send_label of abstract_env -> exp -> var -> label -> bool:
 only
 (∀ e0 x x_e e' x_sc x_m env_a x_c .
   if
@@ -1218,7 +1218,7 @@ only
   then
     static_send_label env_a e0 x_c (NLet x))
 
-definition static_recv_label of abstract_env -> exp -> var -> label -> bool:
+predicate static_recv_label of abstract_env -> exp -> var -> label -> bool:
 only
 (∀ e0 x x_e e' x_rc env_a x_c .
   if
@@ -1232,13 +1232,14 @@ only
 -----low precision // no live channel analysis ----
 Reppy and Xiao's work relies on detecting the liveness of channels in order to gain higher
 precision in the communication analysis.  Since formal proofs are inherently complicated and
-packed with details, I decided to leave out the static analysis initially in order to simplify the
-problem and remove certain complications in formally proving soundness.
+packed with details, I decided to leave out the static analysis initially in order to simplify
+the problem and remove certain complications in formally proving soundness.
 
 However, I have purposely
 structured the definitions to make adding live channel analysis to the definition fairly  
 straight forward with just a few alterations to the definitions.  In section ? I expand on
-these alterations and outline a strategy that I belive will result in formal proofs of soundness,
+these alterations and outline a strategy that I belive will result in formal proofs of
+soundness,
 although the actual formal proof of the version with live channel analysis has not yet been
 completed.  
 
@@ -1282,7 +1283,7 @@ type_synonym step = label * mode
 type_synonym abstract_path = step list
 
 
-definition static_traversable of abstract_env -> transition_set -> exp -> bool:
+predicate static_traversable of abstract_env -> transition_set -> exp -> bool:
 only
 (∀ env_a graph x .
     static_traversable env_a graph (Rslt x)) and
@@ -1412,7 +1413,8 @@ the first step to the second step, and the path from the second step onward also
 traceable.
 
 
-definition static_traceable of transition set -> label -> (label -> bool) -> abstract_path -> bool:
+predicate static_traceable of
+  transition set -> label -> (label -> bool) -> abstract_path -> bool:
 only
 (∀ start graph is_end .
   if
@@ -1435,7 +1437,7 @@ from another at a spawn transition might be inclusive.  This concept is useful f
 greater precision, since if two paths cannot occur in the same run of a program, only one needs
 to be counted towards the communication topology. 
 
-definition static_inclusive of abstract_path -> abstract_path -> bool:
+predicate static_inclusive of abstract_path -> abstract_path -> bool:
 
 only
 
@@ -1464,7 +1466,7 @@ same run of a program. The static one shot predicate states that there is at mos
 to syncrhonize to send on an abstract channel in a run of a given program with given abstract
 value bindings.
 
-definition singular of abstract_path -> abstract_path -> bool:
+predicate singular of abstract_path -> abstract_path -> bool:
 only
 (∀ path .
   singular path path) and
@@ -1475,7 +1477,7 @@ only
   then
     singular path1 path2)
 
-definition noncompetitive of abstract_path -> abstract_path -> bool:
+predicate noncompetitive of abstract_path -> abstract_path -> bool:
 only
 (∀ path1 path2 .
   if
@@ -1509,7 +1511,7 @@ only
   then
     static_one_shot graph e x_c)
 
-definition static_one_to_one of abstract_env -> exp -> var -> bool:
+predicate static_one_to_one of abstract_env -> exp -> var -> bool:
 only
 (∀ graph e env_a x_c .
   if
@@ -1521,9 +1523,9 @@ only
       noncompetitive) and 
     static_traversable env_a graph e
   then
-    static_one_to_one V e xC)
+    static_one_to_one V e x_c)
 
-definition static_fan_out of abstract_env -> exp -> var -> bool:
+predicate static_fan_out of abstract_env -> exp -> var -> bool:
 only
 (∀ graph e env_a x_c .
   if
@@ -1714,7 +1716,7 @@ varying number of logical steps dependent on location of an expression in a prog
 
 
 
-definition static_traversable_val of abstract_env -> transition_set -> val -> bool:
+predicate static_traversable_val of abstract_env -> transition_set -> val -> bool:
 
 only
 
@@ -1761,7 +1763,7 @@ only
 
 -----
 
-definition static_traversable_env of abstract_env -> transition_set -> env -> bool: 
+predicate static_traversable_env of abstract_env -> transition_set -> env -> bool: 
 
 only 
 
@@ -1775,7 +1777,7 @@ only
 -----
 
 
-definition static_traversable_stack of
+predicate static_traversable_stack of
   abstract_env -> transition_set -> var -> contin list -> bool:
 
 only
@@ -1794,7 +1796,7 @@ only
 
 -----
 
-definition static_traversable_pool of
+predicate static_traversable_pool of
   abstract_env -> transition_set -> trace_pool -> bool:
 
 only
@@ -1826,7 +1828,7 @@ fun abstract of val -> abstract_value:
   (∀ prim env .
     abstract (VClsr prim env) = AClsr prim)
 
-definition static_eval_value of
+predicate static_eval_value of
   abstract_env -> abstract_convo -> val -> bool: 
 
 only
@@ -1876,7 +1878,7 @@ only
 
 ----
 
-definition static_eval_env of abstract_env -> abstract_env -> env -> bool:
+predicate static_eval_env of abstract_env -> abstract_env -> env -> bool:
 
 only 
 
@@ -1889,7 +1891,7 @@ only
     static_eval_env env_a convo_a env)
 
 
-definition static_eval_stack of
+predicate static_eval_stack of
   abstract_env -> abstract_env -> abstract_value set -> contin list -> bool:
 
 only 
@@ -1906,7 +1908,7 @@ only
     static_eval_stack env_a convo_a res_a ⇛ ((Ctn x e ρ) # stack))
 
 
-definition static_eval_pool of abstract_env -> abstract_env -> trace_pool -> bool:
+predicate static_eval_pool of abstract_env -> abstract_env -> trace_pool -> bool:
 
 only
 (∀ env_a convo_a pool .
@@ -1931,7 +1933,7 @@ The lemma also relies on the definition of static_traversable_pool
 and lemma static_traversable_pool_preserved to deduce abstract transition information about the
 pool containing the traced path.
 
-definition star_left of ('a -> 'a -> bool) -> 'a -> 'a -> bool:
+predicate star_left of ('a -> 'a -> bool) -> 'a -> 'a -> bool:
 only
 (∀ r z z .
   star_left r z z) and
@@ -2096,7 +2098,7 @@ only
   then
     static_reachable_left e0 e')
 
-definition static_reachable_over_prim of exp -> prim -> bool:
+predicate static_reachable_over_prim of exp -> prim -> bool:
 only
 (∀ e0 x_c x_m .
   static_reachable_over_prim e0 (SendEvt x_c x_m)) and
@@ -2114,7 +2116,7 @@ only
   then
     static_reachable_over_prim e0 (Abs f x_p e_b))
 
-definition static_reachable_val of exp -> val -> bool:
+predicate static_reachable_val of exp -> val -> bool:
 only
 (∀ e0 .
     static_reachable_over_val e0 VUnt) and
@@ -2127,7 +2129,7 @@ only
   then
     static_reachable_over_val e0 (VClsr p env))
 
-definition static_reachable_env of exp -> env -> bool:
+predicate static_reachable_env of exp -> env -> bool:
 only
 (∀ e0 env
   if
@@ -2135,7 +2137,7 @@ only
   then
     static_reachable_over_env e0 env)
 
-definition static_reachable_over_stack of exp -> contin list -> bool:
+predicate static_reachable_over_stack of exp -> contin list -> bool:
 only
 (∀ e0 .
   static_reachable_over_stack e0 []) and
@@ -2147,7 +2149,7 @@ only
   then
     static_reachable_over_stack e0 ((Ctn x_k e_k env_k # stack')))
 
-definition static_reachable_pool of exp -> trace_pool -> bool:
+predicate static_reachable_pool of exp -> trace_pool -> bool:
 only
 (∀ e0 pool .
   then
@@ -2201,19 +2203,19 @@ a program.  For example, a function abstraction may specify the creation of a ch
 binding to the name x.  This function may be called twice during a run of the program,
 resulting in two distinct channels.  However, the abstract channels would be indentified by the
 same name x.  Even if each instance of channel x only has one process sending on it, the static
-analysis discussed so far is only able to classiy a channel identified with x as having multiple
-threads sending on it. To get around this issue, the static communication definitions can be
-enhanced with additional information about the liveness of channels.  By limiting analysis to only
-the sub portion of the program wher a particular channel is live, the analysis is able to ignore
-duplicate instances of channels, thus gain higher precision. 
+analysis discussed so far is only able to classiy a channel identified with x as having
+multiple threads sending on it. To get around this issue, the static communication definitions
+can be enhanced with additional information about the liveness of channels.  By limiting
+analysis to only the sub portion of the program wher a particular channel is live, the analysis
+is able to ignore duplicate instances of channels, thus gain higher precision. 
 
 The sub portion of the program is represented by a graph containing all reachable nodes in the
-part of a program where a given channel is live, and transitive transitions to any of those nodes
-from the channel creation point.  To maintain connetions between a channel creation portion of the
-program and a thread that received the channel as a message, transitions from the send site to
-the receive site of a syncrhonization is included in the graph, annoted with the sending mode, as
-indicated by the new definition of static_traversable.  Modes for typical control flow of
-sequencing, calling, returning, and spawning are also included transitions.
+part of a program where a given channel is live, and transitive transitions to any of those
+nodes from the channel creation point.  To maintain connetions between a channel creation
+portion of the program and a thread that received the channel as a message, transitions from
+the send site to the receive site of a syncrhonization is included in the graph, annoted with
+the sending mode, as indicated by the new definition of static_traversable.  Modes for typical
+control flow of sequencing, calling, returning, and spawning are also included transitions.
 
 datatype mode = ENext | ESpawn | ESend var | ECall | EReturn
 
@@ -2223,7 +2225,7 @@ type_synonym step_label = label * mode
 
 type_synonym abstract_path = step_label list
 
-definition static_traversable of abstract_env -> transition_set -> exp -> bool:
+predicate static_traversable of abstract_env -> transition_set -> exp -> bool:
 only
 (∀ env_a graph x .
     static_traversable env_a graph (Rslt x)) and
@@ -2350,59 +2352,63 @@ only
     static_traversable env_a graph (Let x (App f x_a) e'))
 
 
-For the live analysis it is necessary to track any variable that is bound to a channel of interest,
-since any use of that variable would indicate a use of the channel. The predicate
+For the live analysis it is necessary to track any variable that is bound to a channel of
+interest, since any use of that variable would indicate a use of the channel. The predicate
 static_built_on_chan states that a variable is bound to some structure containing a channel. 
 
-inductive 
-  static_built_on_chan :: "abstract_env ⇒ label_map ⇒ var ⇒ var ⇒ bool"
-where
-  Chan: "
-    ⟦
-      ^Chan x⇩c ∈ V x 
-    ⟧ ⟹ 
-    static_built_on_chan V Ln x⇩c x
-  " |
-  Send_Evt: "
-    ⟦
-      ^SendEvt x⇩s⇩c x⇩m ∈ V x;
-      static_built_on_chan V Ln x⇩c x⇩s⇩c ∨ static_built_on_chan V Ln x⇩c x⇩m 
-    ⟧ ⟹ 
-    static_built_on_chan V Ln x⇩c x
-  " |
-  Recv_Evt: "
-    ⟦
-      ^RecvEvt x⇩r⇩c ∈ V x;
-      static_built_on_chan V Ln x⇩c x⇩r⇩c
-    ⟧ ⟹ 
-    static_built_on_chan V Ln x⇩c x
-  " |
-  Pair: "
-    ⟦
-      ^(Pair x⇩1 x⇩2) ∈ V x;
-      static_built_on_chan V Ln x⇩c x⇩1 ∨ static_built_on_chan V Ln x⇩c x⇩2
-    ⟧ ⟹ 
-    static_built_on_chan V Ln x⇩c x
-  " |
-  Left: "
-    ⟦
-      ^(Lft x⇩a) ∈ V x;
-      static_built_on_chan V Ln x⇩c x⇩a
-    ⟧ ⟹ 
-    static_built_on_chan V Ln x⇩c x
-  " |
-  Right: "
-    ⟦
-      ^(Rght x⇩a) ∈ V x;
-      static_built_on_chan V Ln x⇩c x⇩a
-    ⟧ ⟹ 
-    static_built_on_chan V Ln x⇩c x
-  " |
-  Abs: "
-    ^Abs f x⇩p e⇩b ∈ V x ⟹ 
-    ¬ Set.is_empty (Ln (top_label e⇩b) - {x⇩p}) ⟹
-    static_built_on_chan V Ln x⇩c x
-  " 
+predicate static_built_on_chan of
+  abstract_env -> label_map -> var -> var -> bool:
+
+only
+
+(∀ x_c env_a x entr .
+  if 
+    AChan x_c ∈ env_a x 
+  then 
+    static_built_on_chan env_a entr x_c x) and
+
+(∀ x_sc x_m env_a x entr x_c . 
+    (AClsr (SendEvt x_sc x_m)) ∈ env_a x and
+    (static_built_on_chan env_a entr x_c x_sc or
+      static_built_on_chan env_a entr x_c x_m)
+  then 
+    static_built_on_chan env_a entr x_c x)
+
+(∀ x_rc env_a x entr x_c . 
+  if  
+    (AClsr (RecvEvt x_rc)) ∈ env_a x and
+    static_built_on_chan env_a entr x_c x_rc
+  then 
+    static_built_on_chan env_a entr x_c x) and
+  
+(∀ x1 x2 env_a x entr x_c . 
+  if  
+    (AClsr (Pair x1 x2)) ∈ env_a x and
+    (static_built_on_chan env_a entr x_c x1 or
+      static_built_on_chan env_a entr x_c x2)
+  then 
+    static_built_on_chan env_a entr x_c x) and
+
+(∀ x_a env_a x entr x_c .
+  if
+    (AClsr (Lft x_a)) ∈ env_a x and
+    static_built_on_chan env_a entr x_c x_a
+  then 
+    static_built_on_chan env_a entr x_c x) and
+
+(∀ x_a env_a x entr x_c .
+  if
+    (AClsr (Rght x_a)) ∈ env_a x and
+    static_built_on_chan env_a entr x_c x_a
+  then 
+    static_built_on_chan env_a entr x_c x) and
+
+(∀ f x_p e_b .
+  if
+    (AClsr (Abs f x_p e_b)) ∈ env_a x and
+    not ((entr (top_label e_b) - {x_p}) = {})
+  then
+    static_built_on_chan env_a entr x_c x)
 
 
 
