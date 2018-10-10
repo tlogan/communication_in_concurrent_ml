@@ -2355,6 +2355,9 @@ only
 For the live analysis it is necessary to track any variable that is bound to a channel of
 interest, since any use of that variable would indicate a use of the channel. The predicate
 static_built_on_chan states that a variable is bound to some structure containing a channel. 
+In the case where the tracked variable might be a function abstraction, the channel simply
+needs to be live in the body of the abstraction, for the variable to be considered built on it.
+
 
 predicate static_built_on_chan of
   abstract_env -> label_map -> var -> var -> bool:
@@ -2368,6 +2371,7 @@ only
     static_built_on_chan env_a entr x_c x) and
 
 (∀ x_sc x_m env_a x entr x_c . 
+  if
     (AClsr (SendEvt x_sc x_m)) ∈ env_a x and
     (static_built_on_chan env_a entr x_c x_sc or
       static_built_on_chan env_a entr x_c x_m)
@@ -2409,6 +2413,15 @@ only
     not ((entr (top_label e_b) - {x_p}) = {})
   then
     static_built_on_chan env_a entr x_c x)
+
+
+Using the predicate static_built_on_chan, the predicate static_live_chan completes the
+description of channel liveness in terms of entry maps and exit maps.  The entry map maps a
+program point to a set of variables built on the given channel, if those variables are live at
+the entry of that program point.  The exit map maps a program point to a set of variables built
+on the given channel, if those variabes are live at the exit of that program point.
+
+
 
 
 

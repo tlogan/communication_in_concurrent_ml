@@ -347,7 +347,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> label_map \<Rightarrow
     static_live_chan V Ln Lx x\<^sub>c (Let x (App f x\<^sub>a) e)
   "
 
-
+(*
 inductive static_balanced :: "abstract_path \<Rightarrow> bool" where
   Empty: "
     static_balanced []
@@ -366,7 +366,7 @@ inductive static_balanced :: "abstract_path \<Rightarrow> bool" where
     static_balanced path' \<Longrightarrow>
     static_balanced (path @ path')
   "
-
+*)
 (*
 inductive static_unbalanced :: "abstract_path \<Rightarrow> bool" where
   Result: "
