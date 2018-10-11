@@ -219,7 +219,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> label_map \<Rightarrow
   " |
   Let_Unit: "
     \<lbrakk>
-      (Lx (NLet x) - {x}) = Ln (NLet x);
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
       Ln (top_label e) \<subseteq> Lx (NLet x);
       static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
@@ -227,7 +227,7 @@ inductive static_live_chan :: "abstract_env \<Rightarrow> label_map \<Rightarrow
   " |
   Let_Chan: "
     \<lbrakk>
-      (Lx (NLet x) - {x}) = Ln (NLet x);
+      (Lx (NLet x) - {x}) \<subseteq> Ln (NLet x);
       Ln (top_label e) \<subseteq> Lx (NLet x);
       static_live_chan V Ln Lx x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
