@@ -2784,10 +2784,116 @@ only
 
 
 \section{Reasoning Stategy for Static Communication with Channel Liveness}
-I have developed a number of definitions that will most likely be crucial to proving soundness
-of a higher precision static analysis.  The proofs are not yet complete, however it may be
-instructive to outline the conjectures that rely on these definition and the strategy of
-breaking the proof into subgoals that rely on these definitions.
+To prove soundess of the commounication topology classification, it should be possible to use
+previous techniques of generalizing propositions over pools and other semantic components,
+along with finding equivalent representaitons of propositions that vary in the inductive
+subcomponent. One thing that will make carrying out the formal proof particulary tricky is
+that paths in the dynamic semantics do not correspond one to one with abstract paths in the
+graph used for static analysis.  Essentially, it will be necessary to show that static
+properties that hold for some abstract path are related in some fashion to dyamic properties
+that hold for a dynamic path which corresponds to the abstract path module the channel under
+analysis.  These reasoning strategies are demonstrated by the theorem static_one_shot_sound. 
+
+
+
+theorem static_one_shot_sound: "
+  ⟦
+    static_one_shot V e xC;
+    (V, C) ⊨⇩e e;
+    star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H')
+  ⟧ ⟹
+  one_shot ℰ' (Ch π xC)
+"
+
+
+The theorem static_one_shot_sound depends on correlating dynamic paths with abstract paths,
+which is described by the predicates paths_correspond and paths_correspond_mod_chan.
+Additionally the theorem follows from not_static_traceable_sound,
+not_static_inclusive_sound and not_send_site_sound.  The reasoning for the latter one, is
+identical to that of the lower precision analysis, but the the reasoning for the former two is
+significantly more complicated and not yet completed.
+
+
+
+inductive paths_correspond :: "control_path ⇒ abstract_path ⇒ bool" where
+  Empty: "
+    paths_correspond [] []
+  " |
+  Next: "
+    paths_correspond π path ⟹
+    paths_correspond (π @ [LNxt x]) (path @ [(NLet x, ENext)])
+  " |
+  Spawn: "
+    paths_correspond π path ⟹
+    paths_correspond (π @ [LSpwn x]) (path @ [(NLet x, ESpawn)])
+  " |
+  Call: "
+    paths_correspond π path ⟹
+    paths_correspond (π @ [LCall x]) (path @ [(NLet x, ECall)])
+  "  |
+  Return: "
+    paths_correspond π path ⟹
+    paths_correspond (π @ [LRtn y]) (path @ [(NResult y, EReturn)])
+  " 
+
+
+inductive paths_correspond_mod_chan :: 
+  "trace_pool * cmmn_set ⇒ chan ⇒ control_path ⇒ abstract_path ⇒ bool" where
+  Chan: "
+    paths_correspond ((LNxt xC) # πSuff) path ⟹
+    ℰ (πC @ (LNxt xC) # πSuff) ≠ None ⟹
+    paths_correspond_mod_chan (ℰ, H) (Ch πC xC) (πC @ (LNxt xC) # πSuff) path
+  " |
+  Sync: "
+    paths_correspond πSuffix pathSuffix ⟹
+    ℰ (πR @ (LNxt xR) # πSuffix) ≠ None ⟹
+    dynamic_built_on_chan_var ρRY c xR ⟹
+    ℰ πS = Some (⟨(Let xS (Sync xSE) eSY);ρSY;κSY⟩) ⟹
+    ℰ πR = Some (⟨(Let xR (Sync xRE) eRY);ρRY;κRY⟩) ⟹
+    {(πS, c, πR)} ⊆ H ⟹
+    paths_correspond_mod_chan (ℰ, H) c πS pathPre ⟹
+    paths_correspond_mod_chan (ℰ, H) c (πR @ (LNxt xR) # πSuffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
+  " 
+
+
+
+--------------------
+lemma not_static_traceable_sound: "
+  ℰ' π = Some (⟨(Let x b e⇩n);ρ;κ⟩) ⟹
+  star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H') ⟹ 
+  (V, C) ⊨⇩e e ⟹
+  static_live_chan V Ln Lx xC e ⟹
+  static_traversable V F e ⟹
+  isEnd (NLet x) ⟹
+  ∃ path . 
+    paths_correspond_mod_chan (ℰ', H') (Ch πC xC) π path ∧
+    static_live_traceable F Ln Lx (NLet xC) isEnd path
+"
+
+lemma not_static_inclusive_sound: "
+  star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H') ⟹ 
+  static_live_chan V Ln Lx xC e ⟹
+  static_traversable V F e ⟹
+  (V, C) ⊨⇩e e ⟹
+
+  ℰ' π1 ≠ None ⟹ 
+  paths_correspond_mod_chan (ℰ', H') (Ch π xC) π1 path1 ⟹
+  static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path1 ⟹
+  
+  ℰ' π2 ≠ None ⟹ 
+  paths_correspond_mod_chan (ℰ', H') (Ch π xC) π2 path2 ⟹
+  static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path2 ⟹
+
+  static_inclusive path1 path2
+"
+sorry
+
+
+
+
+
+
+
 
 
 
