@@ -414,18 +414,18 @@ inductive static_live_traversable :: "transition_set \<Rightarrow> label_map \<R
 
 
 
-inductive static_live_traceable :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> label \<Rightarrow> (label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive static_live_traceable :: "transition_set \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> label \<Rightarrow> (label \<Rightarrow> bool) \<Rightarrow> abstract_path \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
-    static_live_traceable V F Ln Lx start isEnd []
+    static_live_traceable F Ln Lx start isEnd []
   " |
   Edge: "
-    static_live_traceable V F Ln Lx start (\<lambda> l . l = middle) path \<Longrightarrow>
+    static_live_traceable F Ln Lx start (\<lambda> l . l = middle) path \<Longrightarrow>
     isEnd end \<Longrightarrow>
 
     static_live_traversable F Ln Lx (middle, edge, end) \<Longrightarrow>
 
-    static_live_traceable V F Ln Lx start isEnd (path @ [(middle, edge)])
+    static_live_traceable F Ln Lx start isEnd (path @ [(middle, edge)])
   " 
 
 
@@ -489,7 +489,7 @@ inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightar
 
 inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) singular \<Longrightarrow>
+    every_two (static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC)) singular \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
     static_traversable V F e \<Longrightarrow>
     static_one_shot V e xC 
@@ -497,8 +497,8 @@ inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \
 
 inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_traceable F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
     static_traversable V F e \<Longrightarrow>
     static_one_to_one V e xC 
@@ -506,7 +506,7 @@ inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var
 
 inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
     static_traversable V F e \<Longrightarrow>
     static_fan_out V e xC 
@@ -514,7 +514,7 @@ inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<
 
 inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
   Sync: "
-    every_two (static_live_traceable V F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
+    every_two (static_live_traceable F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
     static_traversable V F e \<Longrightarrow>
     static_fan_in V e xC 

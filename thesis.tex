@@ -2416,10 +2416,11 @@ only
 
 
 Using the predicate static_built_on_chan, the predicate static_live_chan completes the
-description of channel liveness in terms of entry maps and exit maps.  The entry map maps a
-program point to a set of variables built on the given channel, if those variables are live at
-the entry of that program point.  The exit map maps a program point to a set of variables built
-on the given channel, if those variabes are live at the exit of that program point.
+description of channel liveness in terms of entry functions and exit functions. The entry
+function maps a program point to a set of variables built on the given channel, if those
+variables are live at the entry of that program point.  The exit map maps a program point to a
+set of variables built on the given channel, if those variabes are live at the exit of that
+program point.
 
 
 predicate static_live_chan of abstract_env -> label_map -> label_map -> var -> exp -> bool:
@@ -2555,8 +2556,8 @@ only
 (∀ exit x entr e_l x_l e_r x_r env_a x_c x_s e' .
   if 
     (exit (NLet x) - {x}) ⊆ entr (NLet x) and
-    (Ln (top_label e_l) - {x_l}) ⊆ entr (NLet x) and
-    (Ln (top_label e_r) - {x_r}) ⊆ entr (NLet x) and
+    (entr (top_label e_l) - {x_l}) ⊆ entr (NLet x) and
+    (entr (top_label e_r) - {x_r}) ⊆ entr (NLet x) and
     (if static_built_on_chan env_a entr x_c x_s then
       {x_s} ⊆ entr (NLet x)) and
     static_live_chan env_a entr exit x_c e_l and
@@ -2578,6 +2579,75 @@ only
   then
     static_live_chan env_a entr exit x_c (Let x (App f x_a) e'))
 
+The predicate static_live_traversable states that an abstraction transition exists in some
+graph, and is considered live with respect to given entry and exit functions.  The predicate
+static_live_traceable states that an entire abstract path exists in some graph and is live with
+respect to some entry and and exit functions.   
+
+
+predicate static_live_traversable of
+  transition_set -> label_map -> label_map -> transition -> bool:
+
+only
+
+(∀ l l' graph exit entr . 
+  if
+    (l, ENext, l') ∈ graph and
+    not (exit l = {}) and
+    not (entr l' = {})
+  then
+    static_live_traversable graph entr exit (l, ENext, l')) and
+
+(∀ l l' graph exit entr .
+  if
+    (l, ESpawn, l') ∈ graph and 
+    not (exit l = {}) and
+    not (entr l' = {})
+  then
+    static_live_traversable graph entr exit (l, ESpawn, l')) and
+
+(∀ l l' graph exit entr .
+  if
+    (l, ECall, l') ∈ graph and
+    (not (exit l = {})) or (not (entr l' = {}))
+  then
+    static_live_traversable graph entr exit (l, ECall, l')) and
+
+(∀ l l' graph entr exit .
+  if
+    (l, EReturn, l') ∈ graph and
+    not (entr l' = {})
+  then
+    static_live_traversable graph entr exit (l, EReturn, l'))
+
+(∀ x_send x_evt x_recv graph entr exit .
+  if
+    ((NLet x_send), ESend x_evt, (NLet x_recv)) ∈ graph and 
+    {x_evt} ⊆ (entr (NLet x_send))
+  then
+    static_live_traversable graph entr exit ((NLet x_send), ESend x_evt, (NLet x_recv)))
+
+
+
+predicate static_live_traceable of
+  abstract_env -> transition_set -> label_map -> label_map ->
+  label -> (label -> bool) -> abstract_path -> bool:
+
+only
+
+(∀ is_end start env_a graph entr exit .
+  if
+    is_end start
+  then
+    static_live_traceable graph entr exit start is_end []) and
+
+(∀ graph entr exit start middle path is_end mode. 
+  if
+    static_live_traceable graph entr exit start (λ l . l = middle) path and 
+    (is_end end) and
+    static_live_traversable graph entr exit (middle, mode, end) 
+  then
+    static_live_traceable graph entr exit start is_end (path @ [(middle, mode)])
 
 
 
@@ -4283,7 +4353,7 @@ where
       static_built_on_chan env_a entr xc x |
   Abs:
     APrim (Abs f xp eb) %$\in$% env_a x %$\Longrightarrow$% 
-    %$\not$% Set.is_empty (Ln (labelLabel eb) - {xp}) %$\Longrightarrow$%
+    %$\not$% Set.is_empty (entr (labelLabel eb) - {xp}) %$\Longrightarrow$%
     static_built_on_chan env_a entr xc x 
   \end{lstlisting}
 
@@ -4344,7 +4414,7 @@ where
       entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
       static_live_chan env_a entr exit xc eb %$\Longrightarrow$%
       (exit (NLet x) - {x}) %$\cup$%
-        (Ln (top_label eb) - {xp}) = entr (NLet x) %$\Longrightarrow$%
+        (entr (top_label eb) - {xp}) = entr (NLet x) %$\Longrightarrow$%
       static_live_chan env_a entr exit xc (Let x (Prim (Abs f xp eb)) e) |
   Let_Spawn:
       static_live_chan env_a entr exit xc e %$\Longrightarrow$%
@@ -4373,8 +4443,8 @@ where
       static_live_chan env_a entr exit xc el %$\Longrightarrow$%
       static_live_chan env_a entr exit xc er %$\Longrightarrow$%
       (exit (NLet x) - {x}) %$\cup$% chan_set env_a entr xc xs %$\cup$% 
-      (Ln (top_label el) - {xl}) %$\cup$%
-      (Ln (top_label er) - {xr}) = entr (NLet x) %$\Longrightarrow$%
+      (entr (top_label el) - {xl}) %$\cup$%
+      (entr (top_label er) - {xr}) = entr (NLet x) %$\Longrightarrow$%
       static_live_chan env_a entr exit xc (Let x (Case xs xl el xr er) e) |
   Let_App:
       static_live_chan env_a entr exit xc e %$\Longrightarrow$%
@@ -4414,13 +4484,13 @@ where
   Next: "
     (l, ENxt, l') %$\in$% F %$\Longrightarrow$%
     %$\not$% Set.is_empty (exit l) %$\Longrightarrow$%
-    %$\not$% Set.is_empty (Ln l') %$\Longrightarrow$%
+    %$\not$% Set.is_empty (entr l') %$\Longrightarrow$%
     static_live_traversable F entr exit (l, ENxt, l')
   " |
   Spawn: "
     (l, ESpwn, l') %$\in$% F %$\Longrightarrow$%
     %$\not$% Set.is_empty (exit l) %$\Longrightarrow$%
-    %$\not$% Set.is_empty (Ln l') %$\Longrightarrow$%
+    %$\not$% Set.is_empty (entr l') %$\Longrightarrow$%
     static_live_traversable F entr exit (l, ESpwn, l')
   " |
   Call_Live_Outer: "
@@ -4430,17 +4500,17 @@ where
   " |
   Call_Live_Inner: "
     (l, ECall, l') %$\in$% F %$\Longrightarrow$%
-    %$\not$% Set.is_empty (Ln l') %$\Longrightarrow$%
+    %$\not$% Set.is_empty (entr l') %$\Longrightarrow$%
     static_live_traversable F entr exit (l, ECall, l')
   " |
   Return: "
     (l, ERtn x, l') %$\in$% F %$\Longrightarrow$%
-    %$\not$% Set.is_empty (Ln l') %$\Longrightarrow$%
+    %$\not$% Set.is_empty (entr l') %$\Longrightarrow$%
     static_live_traversable F entr exit (l, ERtn x, l')
   " |
   Send: "
     ((NLet xSend), ESend xE, (NLet xRecv)) %$\in$% F %$\Longrightarrow$%
-    {xE} %$\subseteq$% (Ln (NLet xSend)) %$\Longrightarrow$%
+    {xE} %$\subseteq$% (entr (NLet xSend)) %$\Longrightarrow$%
     static_live_traversable F entr exit ((NLet xSend), ESend xE, (NLet xRecv))
     "
     
