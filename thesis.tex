@@ -2649,6 +2649,138 @@ only
   then
     static_live_traceable graph entr exit start is_end (path @ [(middle, mode)])
 
+As with the lower precision analysis, the higher precision analysis relies on recognizing
+whether or not two paths can actually occur within in a single run of a program.  The predicate
+static_inclusive describes relationship between paths for those paths to possible occur within
+the same run of the program.  In contrast to the analogous definition for the lower precision
+alysis, the higher precision definition needs to consider paths with the containing the
+sending mode.  As mentioned earlier, the path from the synchronization on sending to the
+syncrhonization on receiving is necessary to ensure that all uses of a channel are reachable
+from the channel's creation point.  The singular predicate states that only one of the two
+given paths can occur in a run of program.  The noncompetitve predicate states that the two
+given paths do not compete in any run of a program. 
+
+
+
+predicate static_inclusive of
+  abstract_path -> abstract_path -> bool:
+
+only
+
+(∀ path1 path2 .
+  if
+    prefix path1 path2 or path2 path1
+  then
+    static_inclusive path1 path2) and
+
+(∀ path x path1 path2 .
+  static_inclusive (path @ (NLet x, ESpawn) # path1) (path @ (NLet x, ENext) # path2)) and
+
+(∀ path x path1 path2 .
+    static_inclusive (path @ (NLet x, ENext) # path1) (path @ (NLet x, ESpawn) # path2)) and
+
+(∀ path x path1 path2 .
+    static_inclusive (path @ (NLet x, ESend xE) # path1) (path @ (NLet x, ENext) # path2)) and
+
+(∀ path x path1 path2 .
+    static_inclusive (path @ (NLet x, ENext) # path1) (path @ (NLet x, ESend xE) # path2))
+
+predicate singular of abstract_path -> abstract_path -> bool:
+
+only 
+
+(∀ path .
+    singular path path) and
+
+(∀ path1 path2 .
+  if
+    not (static_inclusive path1 path2)
+  then
+    singular path1 path2)
+
+
+predicate noncompetitive of abstract_path -> abstract_path -> bool:
+
+(∀ path1 path2 . 
+  if
+    ordered path1 path2
+  then
+    noncompetitive path1 path2) and
+
+(∀ path1 path2 .
+  if
+    not (static_inclusive path1 path2)
+  then
+    noncompetitive path1 path2)
+
+
+The predicates static_one_shot, static_one_to_one, static_fan_out, and static_fan_in describe
+the communication topologies with higher precision that the original definitions by using the
+predicates based on graphs trimmed down to contain only the parts where a given channel is
+live. The general structure of the predicate definitions is overall similar to that of the
+analgous lower precision definitions. 
+
+
+predicate static_one_shot of abstract_env -> exp -> var -> bool:
+
+only
+
+(∀ graph entr exit x_c env_a e . 
+  if
+    every_two
+      (static_live_traceable graph entr exit (NLet x_c) (static_send_label env_a e x_c))
+      singular and 
+    static_live_chan env_a entr exit x_c e and 
+    static_traversable env_a graph e
+  then
+    static_one_shot V e x_c)
+
+predicate static_one_to_one of abstract_env -> exp -> var -> bool:
+
+only
+
+(∀ graph entr exit x_c env_a e .
+    every_two
+      (static_live_traceable graph entr exit (NLet x_c) (static_send_label env_a e x_c))
+      noncompetitive and 
+    every_two
+      (static_live_traceable graph entr exit (NLet x_c) (static_recv_label env_a e x_c))
+      noncompetitive and
+    static_live_chan env_a entr exit x_c e and
+    static_traversable env_a graph e
+  then
+    static_one_to_one env_a e x_c)
+
+predicate static_fan_out of abstract_env -> exp -> var -> bool:
+
+only
+
+(∀ graph entr exit x_c env_a e .
+  if
+    every_two
+      (static_live_traceable graph entr exit (NLet x_c) (static_send_label env_a e x_c))
+      noncompetitive and
+    static_live_chan env_a entr exit x_c e and
+    static_traversable env_a graph e
+  then
+    static_fan_out env_a e x_c)
+
+predicate static_fan_in of abstract_env -> exp -> var -> bool:
+
+only
+
+(∀ graph entr exit x_c env_a e .
+  if
+    every_two
+      (static_live_traceable graph entr exit (NLet x_c) (static_recv_label env_a e x_c))
+      noncompetitive and 
+    static_live_chan env_a entr exit x_c e and
+    static_traversable env_a graph e
+  then
+    static_fan_in env_a e x_c)
+
+
+
 
 
 \section{Reasoning Stategy for Static Communication with Channel Liveness}
