@@ -184,37 +184,37 @@ one-shot.
 
 \begin{lstlisting}[language=ML, style=codestyle1]
   type thread_id
-  val spawn : (unit -> unit) -> thread_id
+  program_value spawn : (unit -> unit) -> thread_id
 
   type 'a chan
-  val channel : unit -> 'a chan
-  val recv : 'a chan -> 'a
-  val send : ('a chan * 'a) -> unit
+  program_value channel : unit -> 'a chan
+  program_value recv : 'a channel -> 'a
+  program_value send : ('a channel * 'a) -> unit
   \end{lstlisting}
 
 \begin{lstlisting}[language=ML, style=codestyle1]
 
   signature SERV = sig 
     type serv
-    val make : unit -> serv
-    val call : serv * int -> int
+    program_value make : unit -> serv
+    program_value call : serv * int -> int
   end
 
   structure Serv : SERV = struct 
-    datatype serv = S of (int * int chan) chan 
+    datatype serv = S of (int * int chan) channel 
 
     fun make () = let 
-      val reqChn = channel ()
+      program_value reqChn = channel ()
       fun loop state = let
-        val (v, replCh) = recv reqChn in 
+        program_value (v, replCh) = recv reqChn in 
         send (replCh, state);
         loop v end in
       spawn (fn () => loop 0);
       S reqChn end 
 
     fun call (server, v) = let 
-      val S reqChn = server
-      val replChn = channel () in 
+      program_value S reqChn = server
+      program_value replChn = channel () in 
       send (reqCh, (v, replCh));
       recv replChn end end
 
@@ -223,38 +223,38 @@ one-shot.
 \begin{lstlisting}[language=ML, style=codestyle1]
 
   type 'a event
-  val sync : 'a event -> 'a
-  val recvEvt : 'a chan -> 'a event
-  val sendEvt : 'a chan * 'a -> unit event
-  val choose : 'a event * 'a event -> 'a event
+  program_value sync : 'a event -> 'a
+  program_value recvEvt : 'a channel -> 'a event
+  program_value sendEvt : 'a channel * 'a -> unit event
+  program_value choose : 'a event * 'a event -> 'a event
 
   fun send (ch, v) = sync (sendEvt (ch, v))
   fun recv v = sync (recvEvt v)
 
-  val thenEvt : 'a event * ('a -> 'b event) -> 'b event
+  program_value thenEvt : 'a event * ('a -> 'b event) -> 'b event
 
   \end{lstlisting}
 
 \begin{lstlisting}[language=ML, style=codestyle1]
-  val server = Serv.make ()
-  val _ = spawn (fn () => Serv.call (server, 35))
-  val _ = spawn (fn () => 
+  program_value server = Serv.make ()
+  program_value _ = spawn (fn () => Serv.call (server, 35))
+  program_value _ = spawn (fn () => 
     Serv.call (server, 12); 
     Serv.call (server, 13))
-  val _ = spawn (fn () => Serv.call (server, 81))
-  val _ = spawn (fn () => Serv.call (server, 44))
+  program_value _ = spawn (fn () => Serv.call (server, 81))
+  program_value _ = spawn (fn () => Serv.call (server, 44))
   \end{lstlisting}
 
 \begin{lstlisting}[language=ML, style=codestyle1]
   structure Serv : SERV = struct 
-    datatype serv = S of (int * int chan) chan 
+    datatype serv = S of (int * int chan) channel 
 
     fun make () = let 
 
-      val reqChn = FanIn.channel()
+      program_value reqChn = FanIn.channel()
 
       fun loop state = let
-        val (v, replCh) = FanIn.recv reqChn in 
+        program_value (v, replCh) = FanIn.recv reqChn in 
         OneShot.send (replCh, state);
         loop v end in
 
@@ -262,8 +262,8 @@ one-shot.
       S reqChn end 
 
     fun call (server, v) = let 
-      val S reqChn = server
-      val replChn = OneShot.channel () in 
+      program_value S reqChn = server
+      program_value replChn = OneShot.channel () in 
       FanIn.send (reqCh, (v, replCh));
       OneShot.recv replChn end
 
@@ -349,21 +349,21 @@ expression analysis and liveness analysis can provide greater coverage.
 
 \begin{lstlisting}[language=ML, style=codestyle1]
   let
-    val w = 4
-    val x = ref 1
-    val y = ref 2
-    val z = (!x + 1) + (!y + 2) + (w - 3)
-    val w = 1 in
+    program_value w = 4
+    program_value x = ref 1
+    program_value y = ref 2
+    program_value z = (!x + 1) + (!y + 2) + (w - 3)
+    program_value w = 1 in
     y := 0;
     (!y + 2) - (!x + 1) * (w - 3) end
   \end{lstlisting}
 
 \begin{lstlisting}[language=ML, style=codestyle1]
   let 
-    val x = 1  
-    val y = 2
-    val z = ref (4 * 73)
-    val x = 4 in 
+    program_value x = 1  
+    program_value y = 2
+    program_value z = ref (4 * 73)
+    program_value x = 4 in 
     z := 1; 
     x * !z end
   \end{lstlisting}
@@ -371,9 +371,9 @@ expression analysis and liveness analysis can provide greater coverage.
 \begin{lstlisting}[language=ML, style=codestyle1]
 
   let 
-    val f = fn x => x 1
-    val g = fn y => y + 2
-    val h = fn z => z + 3 in 
+    program_value f = fn x => x 1
+    program_value g = fn y => y + 2
+    program_value h = fn z => z + 3 in 
     (f g) + (f h) end
 
 \end{lstlisting}
@@ -513,11 +513,11 @@ implementing its features as primitives would make the most sense.  Thus, one ca
 implementation shown here as an intermediate representation presented with concrete syntax.
 
 \begin{lstlisting}[language=ML, style=codestyle1]
-  signature CHAN = sig
-    type 'a chan 
-    val channel : unit -> 'a chan
-    val send : 'a chan * 'a -> unit
-    val recv : 'a chan -> 'a
+  signature CHANNEL = sig
+    type 'a channel 
+    program_value channel : unit -> 'a chan
+    program_value send : 'a channel * 'a -> unit
+    program_value recv : 'a channel -> 'a
     end     
 \end{lstlisting}
 
@@ -541,7 +541,7 @@ channel, the channel is associated with a queue consisting of messages to be sen
 conditions waited on by sending threads. When multiple threads are trying to receive on a
 channel, the channel is associated with a queue consisting of initially empty cells accessible
 by receiving threads and conditions waited on by the receiving threads. The three states are
-represented by the datatype chan\_content.  The channel is represented by the chan datatype,
+represented by the datatype chan\_content.  The channel is represented by the channel datatype,
 which is composed of a reference to chan\_content and a mutex lock.  
 
 The send operation acquires the channel's lock to ensure that it updates the channel based on
@@ -569,7 +569,7 @@ operation returns with the value deposited in the cell by a sending thread.
 
 \begin{lstlisting}[language=ML, style=codestyle1]
 
-  structure ManyToManyChan : CHAN = struct
+  structure ManyToManyChan : CHANNEL = struct
     type message_queue = 'a option ref queue
 
     datatype 'a chan_content = 
@@ -577,7 +577,7 @@ operation returns with the value deposited in the cell by a sending thread.
       Recv of (condition * 'a option ref) queue | 
       Inac
 
-    datatype 'a chan =
+    datatype 'a channel =
       Chn of 'a chan_content ref * mutex_lock 
 
     fun channel () = Chn (ref Inac, mutexLock ())
@@ -586,16 +586,16 @@ operation returns with the value deposited in the cell by a sending thread.
       acquire lock;
       (case !conRef of
         Recv q => let
-          val (recvCond, mopRef) = dequeue q in
+          program_value (recvCond, mopRef) = dequeue q in
           mopRef := Some m;
           if (isEmpty q) then conRef := Inac else (); 
           release lock; signal recvCond; () end |
         Send q => let
-          val sendCond = condition () in
+          program_value sendCond = condition () in
           enqueue (q, (sendCond, m));
           release lock; wait sendCond; () end |
         Inac => let
-          val sendCond = condition () in
+          program_value sendCond = condition () in
           conRef := Send (queue [(sendCond, m)]);
           release lock; wait sendCond; () end)
 
@@ -603,21 +603,21 @@ operation returns with the value deposited in the cell by a sending thread.
       acquire lock;
       (case !conRef of 
         Send q => let
-          val (sendCond, m) = dequeue q in
+          program_value (sendCond, m) = dequeue q in
           if (isEmpty q) then
             conRef := Inac
           else
             (); 
           release lock; signal sendCond; m end |
         Recv q => let
-          val recvCond = condition ()
-          val mopRef = ref None in
+          program_value recvCond = condition ()
+          program_value mopRef = ref None in
           enqueue (q, (recvCond, mopRef));
           release lock; wait recvCond;
           valOf (!mopRef) end |
         Inac => let
-          val recvCond = condition ()
-          val mopRef = ref None in
+          program_value recvCond = condition ()
+          program_value mopRef = ref None in
           conRef := Recv (queue [(recvCond, mopRef)]);
           release lock; wait recvCond;
           valOf (!mopRef) end)
@@ -658,20 +658,20 @@ thread, and returns the states' associated message.
 
   \begin{lstlisting}[language=ML, style=codestyle1]
 
-    structure FanOutChan : CHAN = struct
+    structure FanOutChan : CHANNEL = struct
 
     datatype 'a chan_content =
       Send of condition * 'a |
       Recv of (condition * 'a option ref) queue  |
       Inac
 
-    datatype 'a chan =
+    datatype 'a channel =
       Chn of 'a chan_content ref * mutex_lock
 
     fun channel () = Chn (ref Inac, mutexLock ())
 
     fun send (Chn (conRef, lock)) m = let
-      val sendCond = condition () in
+      program_value sendCond = condition () in
       case cas (conRef, Inac, Send (sendCond, m)) of
         Inac => (* conRef already set *)
           wait sendCond; () |
@@ -680,7 +680,7 @@ thread, and returns the states' associated message.
           * the only one that updates from this state *)
           acquire lock;
           (let
-            val (recvCond, mopRef) = dequeue q in
+            program_value (recvCond, mopRef) = dequeue q in
             mopRef := Some m; 
             if (isEmpty q) then conRef := Inac else (); 
             release lock; signal (recvCond);
@@ -691,14 +691,14 @@ thread, and returns the states' associated message.
       acquire lock;
       (case !conRef of
         Inac => let
-          val recvCond = condition ()
-          val mopRef = ref None in
+          program_value recvCond = condition ()
+          program_value mopRef = ref None in
           conRef := Recv (queue [(recvCond, mopRef)]);
           release lock; wait recvCond;
           valOf (!mopRef) end |
         Recv q => let
-          val recvCond = condition () 
-          val mopRef = ref None in
+          program_value recvCond = condition () 
+          program_value mopRef = ref None in
           enqueue (q, (recvCond, mopRef));
           release lock; wait recvCond;
           valOf (!mopRef) end |
@@ -714,14 +714,14 @@ thread, and returns the states' associated message.
 The implementation of fan-in channels is very similar to that of fan-out channels.
 
 \begin{lstlisting}[language=ML, style=codestyle1]
-  structure FanInChan : CHAN = struct
+  structure FanInChan : CHANNEL = struct
 
   datatype 'a chan_content =
     Send of (condition * 'a) queue |
     Recv of condition * 'a option ref |
     Inac
 
-  datatype 'a chan =
+  datatype 'a channel =
     Chn of 'a chan_content ref * mutex_lock
 
   fun channel () = Chn (ref Inac, mutexLock ())
@@ -734,18 +734,18 @@ The implementation of fan-in channels is very similar to that of fan-out channel
       release lock; signal recvCond;
       () |
     Send q => let
-      val sendCond = condition () in
+      program_value sendCond = condition () in
       enqueue (q, (sendCond, m));
       release lock; wait sendCond;
       () end |
     Inac => let
-      val sendCond = condition () in
+      program_value sendCond = condition () in
       conRef := Send (queue [(sendCond, m)])
       release lock; wait sendCond; () end 
 
   fun recv (Chn (conRef, lock)) = let
-    val recvCond = condition () 
-    val mopRef = ref None in
+    program_value recvCond = condition () 
+    program_value mopRef = ref None in
     case cas (conRef, Inac, Recv (recvCond, mopRef)) of
       Inac => (* conRef already set *)
         wait recvCond; valOf (!mopRef) |
@@ -754,7 +754,7 @@ The implementation of fan-in channels is very similar to that of fan-out channel
         -* that updates the state from this state *)
         acquire lock;
         (let
-          val (sendCond, m) = dequeue q in
+          program_value (sendCond, m) = dequeue q in
           if (isEmpty q) then conRef := Inac else (); 
           release lock; signal sendCond; m end) |
       Recv _ => raise NeverHappens end end
@@ -791,19 +791,19 @@ witness the state of another thread already trying to receive, if it is truly on
 
 \begin{lstlisting}[language=ML, style=codestyle1]
 
-structure OneToOneChan : CHAN = struct
+structure OneToOneChan : CHANNEL = struct
 
   datatype 'a chan_content =
     Send of condition * 'a |
     Recv of condition * 'a option ref |
     Inac  
 
-  datatype 'a chan = Chn of 'a chan_content ref
+  datatype 'a channel = Chn of 'a chan_content ref
 
   fun channel () = Chn (ref Inac)
 
   fun send (Chn conRef) m = let
-    val sendCond = condition () in
+    program_value sendCond = condition () in
     case cas (conRef, Inac, Send (sendCond, m)) of
       Inac => 
         (* conRef already set to Send *)
@@ -817,8 +817,8 @@ structure OneToOneChan : CHAN = struct
 
 
   fun recv (Chn conRef) = let
-    val recvCond = condition ();
-    val mopRef = ref None in
+    program_value recvCond = condition ();
+    program_value mopRef = ref None in
     case cas (conRef, Inac, Recv (recvCond, mopRef)) of
       Inac => (* conRef already set to Recv*)
         wait recvCond; valOf (!mopRef) |
@@ -855,19 +855,19 @@ forever, if there truly is only one send ever.
 
 
 \begin{lstlisting}[language=ML, style=codestyle1]
-  structure OneShotChan : CHAN = struct
+  structure OneShotChan : CHANNEL = struct
 
   datatype 'a chan_content =
     Send of condition * 'a |
     Recv of condition * 'a option ref |
     Inac  
 
-  datatype 'a chan = Chn of 'a chan_content ref * mutex_lock
+  datatype 'a channel = Chn of 'a chan_content ref * mutex_lock
 
   fun channel () = Chn (ref Inac, lock ())
 
   fun send (Chn (conRef, lock)) m = let
-    val sendCond = condition () in
+    program_value sendCond = condition () in
     case (conRef, Inac, Send (sendCond, m)) of
       Inac =>
         (* conRef already set to Send*)
@@ -879,8 +879,8 @@ forever, if there truly is only one send ever.
 
 
   fun recv (Chn (conRef, lock)) = let
-    val recvCond = condition ()
-    val mopRef = ref None in
+    program_value recvCond = condition ()
+    program_value mopRef = ref None in
     case (conRef, Inac, Recv (recvCond, mopRef)) of
       Inac =>
         (* conRef already set to Recv*)
@@ -911,9 +911,9 @@ on the sendCond and then returns the deposited message.
 
 
 \begin{lstlisting}[language=ML, style=codestyle1]
-structure OneShotToOneChan : CHAN = struct
+structure OneShotToOneChan : CHANNEL = struct
 
-  datatype 'a chan =
+  datatype 'a channel =
     Chn of condition * condition * 'a option ref
 
   fun channel () =
@@ -987,21 +987,27 @@ names are also annoted with information related to aspects of the control flow.
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-datatype var = Var string
+datatype name = Name string
 
 datatype 
-  exp = 
-    Let var bound_exp exp |
-    Rslt var and 
+  program = 
+    Let name expression program |
+    Rslt name and 
 
-  bound_exp = 
-    Unt | MkChn | Prim prim | Spwn exp |
-    Sync var | Fst var | Snd var |
-    Case var var exp var exp | App var var and 
+  expression = 
+    Unt | MkChn |
+    Prim primitive |
+    Spwn program |
+    Sync name |
+    Fst name | Snd name |
+    Case name name program name program |
+    App name name and 
 
-  prim = 
-    SendEvt var var | RecvEvt var | Pair var var |
-    Lft var | Rght var | Abs var var exp
+  primitive = 
+    SendEvt name name | RecvEvt name |
+    Pair name var |
+    Lft name | Rght name |
+    Abs name var exp
 
   \end{lstlisting}
 
@@ -1016,7 +1022,7 @@ with an environment that maps the names to further values.
 Bound expressions of the unit literal, primitive constructs, and first and second constructs
 can be evalued to values in one step. The seq step relation describes the evaluation of bound
 expressions with environments to values. The unit construct simply evaluates to the unit
-value.  A prim construct is simply wrapped up with the environment.  The first projection is
+value.  A primitive construct is simply wrapped up with the environment.  The first projection is
 evaluated to the abstract value of the first argument of the associated pair. The second
 projection is evaluated to the abstract value of the second argument of the associated pair.
 
@@ -1026,40 +1032,39 @@ information about the mode of the transition.
 
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-datatype control_label = 
-  LNxt var | LSpwn var | LCall var | LRtn var
+datatype program_point =
+  LNxt name | LSpwn name | LCll name | LRtn name 
 
-type_synonym control_path =
-  control_label list
+type program_path = program_point list
 
-datatype chan =
-  Ch control_path var
+datatype channel =
+  Chan program_path name 
 
-datatype val = 
-  VUnt | VChn chan | VClsr prim (var -> val option)
+datatype program_value = 
+  VUnt | VChn channel | VPrm primitive (var -> program_value option)
 
-type_synonym env =
-  var -> val option
+type environment =
+  name -> program_value option
 
 \end{lstlisting}
 
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-predicate seq_step of bound_exp -> env -> val -> bool:
+predicate seq_step of expression -> environment -> program_value -> bool:
 only
 (%$\forall$% env . 
     seq_step Unt env VUnt) and
 (%$\forall$% p env .
-    seq_step (Prim p) env (VClsr p env)) and
+    seq_step (Prim p) env (VPrm p env)) and
 (%$\forall$% env x_p x1 x2 env_p v. 
   if
-    env x_p = Some (VClsr (Pair x1 x2) env_p) and
+    env x_p = Some (VPrm (Pair x1 x2) env_p) and
     env_p x1 = Some v
   then
     seq_step (Fst x_p) env v) and
 (%$\forall$% env x_p x1 x2 env_p v . 
   if
-    env x_p = Some (VClsr (Pair x1 x2) env_p) and 
+    env x_p = Some (VPrm (Pair x1 x2) env_p) and 
     env_p x2 = Some v 
   then
     seq_step (Snd x_p) env v)
@@ -1086,29 +1091,29 @@ application expression.
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-predicate seq_step_up of bound_exp -> env -> exp -> env -> bool:
+predicate seq_step_up of expression -> env -> program -> env -> bool:
 only
 (%$\forall$% env x_s x_c env_s v x_l e_l x_r e_r .
   if
-    env x_s = Some (VClsr (Lft x_c) env_s) and
+    env x_s = Some (VPrm (Lft x_c) env_s) and
     env_s x_c = Some v
   then
     seq_step_up (Case x_s x_l e_l x_r e_r) env e_l (env(x_l -> v))) and
 
 (%$\forall$% env x_s x_c env_s v x_l e_l x_r e_r .
   if 
-    env x_s = Some (VClsr (Rght x_c) env_s); 
+    env x_s = Some (VPrm (Rght x_c) env_s); 
     env_s x_c = Some v
   then
     seq_step_up (Case x_s x_l e_l x_r e_r) env e_r (env(x_r -> v))) and
 
 (%$\forall$% env f f_p x_p e_b env_l x_a v .
   if 
-    env f = Some (VClsr (Abs f_p x_p e_b) env_l); 
+    env f = Some (VPrm (Abs f_p x_p e_b) env_l); 
     env_l x_a = Some v
   then
     seq_step_up (App f x_a) env e_b (
-      env_l(f_p -> (VClsr (Abs f_p x_p e_b) env_l), x_p -> v)))
+      env_l(f_p -> (VPrm (Abs f_p x_p e_b) env_l), x_p -> v)))
   
 
 \end{lstlisting}
@@ -1162,15 +1167,15 @@ and receive paths, and the channel that is communicated on.
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 datatype contin =
-  Ctn var exp env
+  Ctn name program env
 
 datatype state =
-  Stt exp env (contin list)
+  Stt program env (contin list)
 
 type_synonym trace_pool =
-  control_path -> state option
+  program_path -> state option
 
-predicate leaf of trace_pool -> control_path -> bool
+predicate leaf of trace_pool -> program_path -> bool
 (%$\forall$% pool path stt .
   if
     pool path = Some stt and 
@@ -1179,7 +1184,7 @@ predicate leaf of trace_pool -> control_path -> bool
     leaf pool path)
 
 type_synonym cmmn_set =
-  (control_path * chan * control_path) set
+  (program_path * channel * program_path) set
 
 
 predicate concur_step of trace_pool -> cmmn_set -> trace_pool -> cmmn_set -> bool: 
@@ -1237,10 +1242,10 @@ only
   if 
     leaf pool path_s and
     pool path_s = Some (Stt (Let x_s (Sync x_se) e_s) env_s stack_s) and
-    env_s x_se = Some (VClsr (SendEvt x_sc x_m) env_se) and
+    env_s x_se = Some (VPrm (SendEvt x_sc x_m) env_se) and
     leaf pool path_r and
     pool path_r = Some (Stt (Let x_r (Sync x_re) e_r) env_r stack_r) and
-    env_r x_re = Some (VClsr (RecvEvt x_rc) env_re) and
+    env_r x_re = Some (VPrm (RecvEvt x_rc) env_re) and
     env_se x_sc = Some (VChn c) and
     env_re x_rc = Some (VChn c) and 
     env_se x_m = Some v_m
@@ -1273,22 +1278,22 @@ the receiving or the sending ends of a channel.
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-predicate is_send_path of trace_pool -> chan -> control_path -> bool:
+predicate is_send_path of trace_pool -> channel -> program_path -> bool:
 only
 (%$\forall$% pool path x x_e e' env stack x_sc x_m env_e c.
   if
     pool path = Some (Stt (Let x (Sync x_e) e') env stack) and
-    env x_e = Some (VClsr (SendEvt x_sc x_m) env_e) and 
+    env x_e = Some (VPrm (SendEvt x_sc x_m) env_e) and 
     env_e x_sc = Some (VChn c)
   then
     is_send_path pool c path)
 
-predicate is_recv_path of trace_pool -> chan -> control_path -> bool:
+predicate is_recv_path of trace_pool -> channel -> program_path -> bool:
 only
 (%$\forall$% poo path x x_e e' env stack x_rc env_e c .
   then
     pool path = Some (Stt (Let x (Sync x_e) e') env stack) and
-    env x_e = Some (VClsr (RecvEvt x_rc) env_e) and
+    env x_e = Some (VPrm (RecvEvt x_rc) env_e) and
     env_e x_rc = Some (VChn c)
   then
     is_recv_path pool c path)
@@ -1308,21 +1313,21 @@ only
 (%$\forall$% path2 path1 . if prefix path2 path1 then
   ordered path1 path2)
 
-predicate one_shot of trace_pool -> chan -> bool:
+predicate one_shot of trace_pool -> channel -> bool:
 (%$\forall$% pool c .
   if
     every_two (is_send_path pool c) (op =)
   then
     one_shot pool c)
 
-predicate fan_out of trace_pool -> chan -> bool:
+predicate fan_out of trace_pool -> channel -> bool:
 (%$\forall$% pool c .
   if
     every_two (is_send_path pool c) ordered
   then
     fan_out pool c)
   
-predicate fan_in of trace_pool -> chan -> bool:
+predicate fan_in of trace_pool -> channel -> bool:
 only
 (%$\forall$% pool c .
   if
@@ -1330,7 +1335,7 @@ only
   then
     fan_in pool c)
 
-predicate one_to_one of trace_pool -> chan -> bool:
+predicate one_to_one of trace_pool -> channel -> bool:
 only
 (%$\forall$% pool c.
   if
@@ -1396,9 +1401,9 @@ bindings and communication are outputs for the right expression.
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 datatype abstract_value =
-  AChn var | AUnit | AClsr prim 
+  AChn name | AUnit | AClsr primitive 
 
-fun rslt_var of exp -> var:
+fun rslt_var of program -> var:
 (%$\forall$% x .
   rslt_var (Rslt x) = x) and
 (%$\forall$% x b e' . 
@@ -1406,7 +1411,7 @@ fun rslt_var of exp -> var:
 
 
   
-predicate static_eval of abstract_env -> abstract_env -> exp -> bool:
+predicate static_eval of abstract_env -> abstract_env -> program -> bool:
 only
 
 (%$\forall$% env_a convo_a x.
@@ -1556,7 +1561,7 @@ abstraction is bound the the let binding name.
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 
-predicate static_reachable of exp -> exp -> bool:
+predicate static_reachable of program -> program -> bool:
 only
 (%$\forall$% e .
     static_reachable e e) and
@@ -1613,17 +1618,17 @@ given abstract channel, in a given program with given abstract value bindings.
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-datatype label = NLet var | NResult var
+datatype label = NLet name | NResult var
 
-fun top_label of exp -> label:
+fun top_label of program -> label:
 (%$\forall$% x b e' . 
   top_label (Let x b e') = NLet x) and
 (%$\forall$% x . 
   top_label (Rslt x) = NResult x)
 
-type_synonym label_map = label -> var set
+type_synonym label_map = label -> name set
 
-predicate static_send_label of abstract_env -> exp -> var -> label -> bool:
+predicate static_send_label of abstract_env -> program -> name -> label -> bool:
 only
 (%$\forall$% e0 x x_e e' x_sc x_m env_a x_c .
   if
@@ -1633,7 +1638,7 @@ only
   then
     static_send_label env_a e0 x_c (NLet x))
 
-predicate static_recv_label of abstract_env -> exp -> var -> label -> bool:
+predicate static_recv_label of abstract_env -> program -> name -> label -> bool:
 only
 (%$\forall$% e0 x x_e e' x_rc env_a x_c .
   if
@@ -1702,7 +1707,7 @@ type_synonym step = label * mode
 type_synonym abstract_path = step list
 
 
-predicate static_traversable of abstract_env -> transition_set -> exp -> bool:
+predicate static_traversable of abstract_env -> transition_set -> program -> bool:
 only
 (%$\forall$% env_a graph x .
     static_traversable env_a graph (Rslt x)) and
@@ -1939,7 +1944,7 @@ run of a given program.
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-predicate static_one_shot of abstract_env -> exp -> var -> bool:
+predicate static_one_shot of abstract_env -> program -> name -> bool:
 only
 (%$\forall$% graph e env_a x_c .
   if
@@ -1950,7 +1955,7 @@ only
   then
     static_one_shot graph e x_c)
 
-predicate static_one_to_one of abstract_env -> exp -> var -> bool:
+predicate static_one_to_one of abstract_env -> program -> name -> bool:
 only
 (%$\forall$% graph e env_a x_c .
   if
@@ -1964,7 +1969,7 @@ only
   then
     static_one_to_one env_a e x_c)
 
-predicate static_fan_out of abstract_env -> exp -> var -> bool:
+predicate static_fan_out of abstract_env -> program -> name -> bool:
 only
 (%$\forall$% graph e env_a x_c .
   if
@@ -1975,7 +1980,7 @@ only
   then
     static_fan_out env_a e x_c) 
 
-predicate static_fan_in of abstract_env -> exp -> var -> bool:
+predicate static_fan_in of abstract_env -> program -> name -> bool:
 only
 (%$\forall$% graph e env_a x_c .
   if
@@ -2129,7 +2134,7 @@ lemma not_static_send_site_sound:
   if
     star concur_step [[] -> (Stt e0 [->] [])] {} pool convo and 
     pool path = Some (Stt (Let x (Sync x_e) e') env stack) and 
-    env x_e = Some (VClsr (SendEvt x_sc x_m) env') and 
+    env x_e = Some (VPrm (SendEvt x_sc x_m) env') and 
     env' x_sc = Some (VChn (Ch path_c x_c)) and 
     static_eval env_a convo_a e0
   then 
@@ -2164,7 +2169,7 @@ varying number of logical steps dependent on location of an expression in a prog
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 
-predicate static_traversable_val of abstract_env -> transition_set -> val -> bool:
+predicate static_traversable_val of abstract_env -> transition_set -> program_value -> bool:
 
 only
 
@@ -2176,38 +2181,38 @@ only
   if
     static_traversable_env env_a graph env 
   then 
-    static_traversable_val env_a graph (VClsr (SendEvt x_c x_m) env)) and
+    static_traversable_val env_a graph (VPrm (SendEvt x_c x_m) env)) and
 
 (%$\forall$% env_a graph env x_c.
   if
     static_traversable_env env_a graph env 
   then
-    static_traversable_val env_a graph (VClsr (RecvEvt x_c) env)) and
+    static_traversable_val env_a graph (VPrm (RecvEvt x_c) env)) and
 
 (%$\forall$% env_a graph env x_p .
   if
     static_traversable_env env_a graph env 
   then
-    static_traversable_val env_a graph (VClsr (Lft x_p) env)) and
+    static_traversable_val env_a graph (VPrm (Lft x_p) env)) and
 
 (%$\forall$% env_a graph env x_p .
   if
     static_traversable_env env_a graph env
   then
-    static_traversable_val env_a graph (VClsr (Rght x_p) env)) and
+    static_traversable_val env_a graph (VPrm (Rght x_p) env)) and
 
 (%$\forall$% env_a graph e_b env f x_p .
   if
     static_traversable env_a graph e_b and 
     static_traversable_env env_a graph env
   then
-    static_traversable_val env_a F (VClsr (Abs f x_p e_b) env)) and
+    static_traversable_val env_a F (VPrm (Abs f x_p e_b) env)) and
 
 (%$\forall$% env_a graph env . 
   if
     static_traversable_env env_a graph env
   then
-    static_traversable_val env_a graph (VClsr (Pair x1 x2) env))
+    static_traversable_val env_a graph (VPrm (Pair x1 x2) env))
 
 -----
 
@@ -2226,7 +2231,7 @@ only
 
 
 predicate static_traversable_stack of
-  abstract_env -> transition_set -> var -> contin list -> bool:
+  abstract_env -> transition_set -> name -> contin list -> bool:
 
 only
 
@@ -2272,15 +2277,15 @@ binding information in a fixed number of logical steps.
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-fun abstract of val -> abstract_value:
+fun abstract of program_value -> abstract_value:
   abstract VUnt = AUnt and 
   (%$\forall$% path x . 
     abstract (VChn (Ch path x)) = AChan x) and
-  (%$\forall$% prim env .
-    abstract (VClsr prim env) = AClsr prim)
+  (%$\forall$% primitive env .
+    abstract (VPrm primitive env) = AClsr prim)
 
 predicate static_eval_value of
-  abstract_env -> abstract_convo -> val -> bool: 
+  abstract_env -> abstract_convo -> program_value -> bool: 
 
 only
 
@@ -2292,25 +2297,25 @@ only
   if
     static_eval_env env_a convo_a env
   then
-    static_eval_val env_a convo_a (VClsr (SendEvt x_c x_m) env)) and
+    static_eval_val env_a convo_a (VPrm (SendEvt x_c x_m) env)) and
 
 (%$\forall$% env_a convo_a env x_c  .
   if
     static_eval_env env_a convo_a env
   then
-    static_eval_val env_a convo_a (VClsr (RecvEvt x_c) env)) and
+    static_eval_val env_a convo_a (VPrm (RecvEvt x_c) env)) and
 
 (%$\forall$% env_a convo_a env x_p  .
   if
     static_eval_env env_a convo_a env
   then
-    static_eval_val env_a convo_a (VClsr (Lft x_p) env)) and
+    static_eval_val env_a convo_a (VPrm (Lft x_p) env)) and
 
 (%$\forall$% env_a convo_a env x_p  .
   if
     static_eval_env env_a convo_a env
   then
-    static_eval_val env_a convo_a (VClsr (Rght x_p) env)) and
+    static_eval_val env_a convo_a (VPrm (Rght x_p) env)) and
 
 
 (%$\forall$% f x_p e_b env_a convo_a env .
@@ -2319,13 +2324,13 @@ only
     static_eval env_a convo_a e_b and 
     static_eval_env env_a convo_a env
   then
-    static_eval_val env_a convo_a (VClsr (Abs f x_p e_b) env)) and
+    static_eval_val env_a convo_a (VPrm (Abs f x_p e_b) env)) and
 
 (%$\forall$% env_a convo_a env x1 x2 .
   if
     static_eval_env env_a convo_a env
   then
-    static_eval_val env_a convo_a (VClsr (Pair x1 x2) env))
+    static_eval_val env_a convo_a (VPrm (Pair x1 x2) env))
 
 ----
 
@@ -2484,7 +2489,7 @@ lemma send_chan_not_static_bound_sound:
     star concur_step [[] -> (Stt e0 [->] [])], {} pool convo and
     static_eval env_a convo_a e0 and
     pool path = Some (Stt (Let x (Sync x_e) e') env stack) and
-    env_y x_e = Some (VClsr (SendEvt x_sc x_m) env_e) and
+    env_y x_e = Some (VPrm (SendEvt x_sc x_m) env_e) and
     env_e x_sc = Some (VChn (Ch path_c x_c))
   then
     AChan x_c %$\in$% env_a x_sc
@@ -2534,7 +2539,7 @@ static\_reachable\_left, its generalizations and the the lemma not\_static\_reac
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-predicate static_reachable_left of exp -> exp -> bool:
+predicate static_reachable_left of program -> program -> bool:
 
 only
 
@@ -2571,7 +2576,7 @@ only
   then
     static_reachable_left e0 e')
 
-predicate static_reachable_over_prim of exp -> prim -> bool:
+predicate static_reachable_over_prim of program -> primitive -> bool:
 only
 (%$\forall$% e0 x_c x_m .
   static_reachable_over_prim e0 (SendEvt x_c x_m)) and
@@ -2589,7 +2594,7 @@ only
   then
     static_reachable_over_prim e0 (Abs f x_p e_b))
 
-predicate static_reachable_val of exp -> val -> bool:
+predicate static_reachable_val of program -> program_value -> bool:
 only
 (%$\forall$% e0 .
     static_reachable_over_val e0 VUnt) and
@@ -2600,9 +2605,9 @@ only
     static_reachable_over_prim e0 p and 
     static_reachable_over_env e0 env
   then
-    static_reachable_over_val e0 (VClsr p env))
+    static_reachable_over_val e0 (VPrm p env))
 
-predicate static_reachable_env of exp -> env -> bool:
+predicate static_reachable_env of program -> env -> bool:
 only
 (%$\forall$% e0 env
   if
@@ -2610,7 +2615,7 @@ only
   then
     static_reachable_over_env e0 env)
 
-predicate static_reachable_over_stack of exp -> contin list -> bool:
+predicate static_reachable_over_stack of program -> contin list -> bool:
 only
 (%$\forall$% e0 .
   static_reachable_over_stack e0 []) and
@@ -2622,7 +2627,7 @@ only
   then
     static_reachable_over_stack e0 ((Ctn x_k e_k env_k # stack')))
 
-predicate static_reachable_pool of exp -> trace_pool -> bool:
+predicate static_reachable_pool of program -> trace_pool -> bool:
 only
 (%$\forall$% e0 pool .
   then
@@ -2693,7 +2698,7 @@ the sending mode, as indicated by the new definition of static\_traversable.  Mo
 control flow of sequencing, calling, returning, and spawning are also included transitions.
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-datatype mode = ENext | ESpawn | ESend var | ECall | EReturn
+datatype mode = ENext | ESpawn | ESend name | ECall | EReturn
 
 type_synonym transition = label * mode * label
 
@@ -2701,7 +2706,7 @@ type_synonym step_label = label * mode
 
 type_synonym abstract_path = step_label list
 
-predicate static_traversable of abstract_env -> transition_set -> exp -> bool:
+predicate static_traversable of abstract_env -> transition_set -> program -> bool:
 only
 (%$\forall$% env_a graph x .
     static_traversable env_a graph (Rslt x)) and
@@ -2839,7 +2844,7 @@ needs to be live in the body of the abstraction, for the variable to be consider
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
 predicate static_built_on_chan of
-  abstract_env -> label_map -> var -> var -> bool:
+  abstract_env -> label_map -> name -> name -> bool:
 
 only
 
@@ -2905,7 +2910,7 @@ program point.
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-predicate static_live_chan of abstract_env -> label_map -> label_map -> var -> exp -> bool:
+predicate static_live_chan of abstract_env -> label_map -> label_map -> name -> program -> bool:
     
 only
 
@@ -3211,7 +3216,7 @@ analgous lower precision definitions.
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
-predicate static_one_shot of abstract_env -> exp -> var -> bool:
+predicate static_one_shot of abstract_env -> program -> name -> bool:
 
 only
 
@@ -3225,7 +3230,7 @@ only
   then
     static_one_shot V e x_c)
 
-predicate static_one_to_one of abstract_env -> exp -> var -> bool:
+predicate static_one_to_one of abstract_env -> program -> name -> bool:
 
 only
 
@@ -3241,7 +3246,7 @@ only
   then
     static_one_to_one env_a e x_c)
 
-predicate static_fan_out of abstract_env -> exp -> var -> bool:
+predicate static_fan_out of abstract_env -> program -> name -> bool:
 
 only
 
@@ -3255,7 +3260,7 @@ only
   then
     static_fan_out env_a e x_c)
 
-predicate static_fan_in of abstract_env -> exp -> var -> bool:
+predicate static_fan_in of abstract_env -> program -> name -> bool:
 
 only
 
@@ -3314,7 +3319,7 @@ between the two kinds of paths is not so simple, and finding a description of th
 that correlates with the dynamic path is much more challenging.  
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
-predicate paths_correspond of control_path -> abstract_path -> bool:
+predicate paths_correspond of program_path -> abstract_path -> bool:
 only
 
 paths_correspond [] [] and
@@ -3345,7 +3350,7 @@ paths_correspond [] [] and
 
 
 predicate paths_correspond_mod_chan of 
-  trace_pool -> cmmn_set -> chan -> control_path -> abstract_path -> bool:
+  trace_pool -> cmmn_set -> channel -> program_path -> abstract_path -> bool:
 
 only
 
@@ -3456,7 +3461,7 @@ lemma not_static_inclusive_sound:
   let rqst = fun _ pair =>
     let ch3 = fst pair in
     let v2 = snd pair in
-    let ch4 = chan () in
+    let ch4 = channel () in
     let z9 = sync (send_evt ch3 (v2, ch4)) in
     let v3 = sync (recv_evt ch4) in
     v3 in
