@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  4 AUG 2018 12:49
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  14 OCT 2018 15:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -456,18 +456,18 @@ Package: ltxcmds 2016/05/16 v1.23 LaTeX kernel commands for general use (HO)
 (./thesis.aux)
 \openout1 = `thesis.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 62.
+LaTeX Font Info:    ... okay on input line 62.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 62.
+LaTeX Font Info:    ... okay on input line 62.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 62.
+LaTeX Font Info:    ... okay on input line 62.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 62.
+LaTeX Font Info:    ... okay on input line 62.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 62.
+LaTeX Font Info:    ... okay on input line 62.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 62.
+LaTeX Font Info:    ... okay on input line 62.
 \c@lstlisting=\count108
 
 (/usr/local/texlive/2016/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
@@ -484,19 +484,18 @@ LaTeX Font Info:    ... okay on input line 46.
 \makeMPintoPDFobject=\count114
 \everyMPtoPDFconversion=\toks24
 )
-LaTeX Font Info:    Try loading font information for U+msa on input line 48.
+LaTeX Font Info:    Try loading font information for U+msa on input line 64.
  (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 48.
+LaTeX Font Info:    Try loading font information for U+msb on input line 64.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) [1
 
 {/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [1] [2]
- [3] [4]
-[5] [6] [7] [8] [9] [10] [11] [12] [13]
+
 (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2015/06/04 1.6 listings language file
 )
@@ -504,34 +503,133 @@ File: lstlang1.sty 2015/06/04 1.6 listings language file
 File: lstlang2.sty 2015/06/04 1.6 listings language file
 )
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <9> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 242.
- [14]
-[15] [16] [17] [18] [19] [20] [21] [22] [23] [24] [25] [26] [27] [28] [29]
-[30] [31] [32] [33] [34] [35] [36] [37] [38] [39] [40] [41] [42] [43] [44]
-[45] [46] [47] [48] [49] [50] [51] [52] [53] [54] [55] (./thesis.aux) ) 
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 186.
+ [3]
+[4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17] [18] [19]
+[20] [21] [22] [23] [24] [25] [26] [27]
+Overfull \hbox (4.19508pt too wide) in paragraph at lines 1363--1366
+[]\OT1/cmr/m/n/10 The def-i-ni-tion for static eval-u-a-tion is non-de-ter-min-
+is-tic, but its syntax-directed
+ []
+
+[28] [29] [30] [31] [32] [33] [34] [35] [36] [37] [38] [39] [40] [41]
+Overfull \hbox (52.21931pt too wide) in paragraph at lines 2076--2081
+\OT1/cmr/m/n/10 i-ni-tions of static[]fan[]out and fan[]out. The three main lem
+-mas are not[]static[]send[]site[]sound,
+ []
+
+[42] [43]
+Overfull \hbox (3.28949pt too wide) in paragraph at lines 2142--2147
+[]\OT1/cmr/m/n/10 Lemma not[]static[]traceable[]sound is proved by gen-er-al-iz
+-ing static[]traversable
+ []
+
+
+Overfull \hbox (56.32841pt too wide) in paragraph at lines 2148--2163
+[]\OT1/cmr/m/n/10 The gen-er-al-iza-tion of static[]traversable is cap-tured in
+ the pred-i-cates static[]traversable[]val,
+ []
+
+
+Overfull \hbox (0.28583pt too wide) in paragraph at lines 2148--2163
+\OT1/cmr/m/n/10 static[]traversable[]env, static[]traversable[]stack, and stati
+c[]traversable[]pool. The
+ []
+
+[44] [45]
+Overfull \hbox (42.12842pt too wide) in paragraph at lines 2265--2272
+[]\OT1/cmr/m/n/10 The ab-stract pro-gram tran-si-tions de-scribed by the var-i-
+ous ver-sions of static[]traversable
+ []
+
+[46] [47] [48]
+Overfull \hbox (97.67311pt too wide) in paragraph at lines 2380--2388
+\OT1/cmr/m/n/10 Lemma not[]static[]traceable[]sound fol-lows from the gen-er-al
+-ized lemma not[]static[]traceable[]pool[]sound,
+ []
+
+
+Overfull \hbox (3.77293pt too wide) in paragraph at lines 2389--2392
+\OT1/cmr/m/n/10 static[]traversable[]pool[]preserved to de-duce ab-stract tran-
+si-tion in-for-ma-tion about
+ []
+
+[49]
+Overfull \hbox (3.27844pt too wide) in paragraph at lines 2423--2426
+[]\OT1/cmr/m/n/10 lemma star[]implies[]star[]left fol-lows from in-duc-tion on 
+star and star[]left[]trans,
+ []
+
+
+Overfull \hbox (3.45619pt too wide) in paragraph at lines 2454--2457
+[]\OT1/cmr/m/n/10 Lemma static[]traversable[]pool[]preserved[]star fol-lows fro
+m in-duc-tion on star's
+ []
+
+
+Overfull \hbox (5.65627pt too wide) in paragraph at lines 2459--2461
+[]\OT1/cmr/m/n/10 Lemma not[]static[]bound[]sound fol-lows from static[]eval[]p
+ool[]preserved, which
+ []
+
+[50]
+Overfull \hbox (84.92859pt too wide) in paragraph at lines 2475--2478
+[]\OT1/cmr/m/n/10 lemma not[]static[]send[]site[]sound is proved us-ing the lem
+-mas send[]chan[]not[]static[]bound[]sound,
+ []
+
+
+Overfull \hbox (71.52487pt too wide) in paragraph at lines 2515--2524
+\OT1/cmr/m/n/10 from static[]eval[]pool[]preserved[]star de-scr-bied pre-vi-ous
+ly. The lemma not[]static[]reachable[]sound
+ []
+
+[51]
+Overfull \hbox (48.57298pt too wide) in paragraph at lines 2531--2533
+\OT1/cmr/m/n/10 static[]reachable[]left, its gen-er-al-iza-tions and the the le
+mma not[]static[]reachable[]pool[]sound. 
+ []
+
+[52] [53] [54] [55] [56] [57] [58] [59] [60] [61] [62] [63] [64] [65]
+Overfull \hbox (20.09514pt too wide) in paragraph at lines 3206--3211
+[]\OT1/cmr/m/n/10 The pred-i-cates static[]one[]shot, static[]one[]to[]one, sta
+tic[]fan[]out, and static[]fan[]in
+ []
+
+[66] [67]
+Overfull \hbox (0.42291pt too wide) in paragraph at lines 3277--3277
+[]\OT1/cmr/bx/n/14.4 Reasoning Stat-egy for Static Com-mu-ni-ca-tion
+ []
+
+
+Overfull \hbox (65.53607pt too wide) in paragraph at lines 3303--3315
+\OT1/cmr/m/n/10 paths[]correspond[]mod[]chan. Ad-di-tion-ally the the-o-rem fol
+-lows from not[]static[]traceable[]sound,
+ []
+
+[68] [69] [70] [71] [72] (./thesis.aux) ) 
 Here is how much of TeX's memory you used:
- 4431 strings out of 493014
- 54971 string characters out of 6133351
- 360540 words of memory out of 5000000
- 7946 multiletter control sequences out of 15000+600000
+ 4316 strings out of 493014
+ 53498 string characters out of 6133351
+ 314879 words of memory out of 5000000
+ 7831 multiletter control sequences out of 15000+600000
  11882 words of font info for 47 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 27i,6n,42p,2254b,1705s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/lo
-cal/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/loc
-al/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmitt10.pfb></usr/loc
-al/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></usr/local
-/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/t
-exlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/tex
-live/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/texli
-ve/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive/
-2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/20
-16/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt9.pfb></usr/local/texlive/2016
-/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (56 pages, 225747 bytes).
+ 27i,6n,42p,222b,1649s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2016/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2016/texmf-dist/fon
+ts/type1/public/amsfonts/cm/cmitt10.pfb></usr/local/texlive/2016/texmf-dist/fon
+ts/type1/public/amsfonts/cm/cmmi9.pfb></usr/local/texlive/2016/texmf-dist/fonts
+/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2016/texmf-dist/fonts/t
+ype1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2016/texmf-dist/fonts/typ
+e1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1
+/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/p
+ublic/amsfonts/cm/cmtt9.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/pub
+lic/amsfonts/symbols/msbm10.pfb>
+Output written on thesis.pdf (73 pages, 242549 bytes).
 PDF statistics:
- 226 PDF objects out of 1000 (max. 8388607)
- 156 compressed objects within 2 object streams
+ 277 PDF objects out of 1000 (max. 8388607)
+ 191 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

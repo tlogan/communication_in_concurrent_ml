@@ -222,7 +222,7 @@ is unordered necessary?
     dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
     \<E> \<pi>S = Some (\<langle>(Let xS (Sync xSE) eSY);\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
     \<E> \<pi>R = Some (\<langle>(Let xR (Sync xRE) eRY);\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
-    {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
+    {(\<pi>S, c_c, \<pi>R)} \<subseteq> H \<Longrightarrow>
     paths_correspond_mod_chan (\<E>, H) c \<pi>S pathPre \<Longrightarrow>
     paths_correspond_mod_chan (\<E>, H) c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
   " 
