@@ -2796,14 +2796,15 @@ analysis.  These reasoning strategies are demonstrated by the theorem static_one
 
 
 
-theorem static_one_shot_sound: "
-  ⟦
-    static_one_shot V e xC;
-    (V, C) ⊨⇩e e;
-    star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H')
-  ⟧ ⟹
-  one_shot ℰ' (Ch π xC)
-"
+theorem static_one_shot_sound:
+
+∀ e0 pool convo env_a convo_a x_c path_x . 
+  if
+    star concur_step [[] -> (Stt e0 [->] []] {} pool convo and
+    static_eval env_a convo_a e0 and
+    static_one_shot env_a e0 x_c
+  then 
+    one_shot pool (Ch path_c x_c)
 
 
 The theorem static_one_shot_sound depends on correlating dynamic paths with abstract paths,
@@ -2813,36 +2814,34 @@ not_static_inclusive_sound and not_send_site_sound.  The reasoning for the latte
 identical to that of the lower precision analysis, but the the reasoning for the former two is
 significantly more complicated and not yet completed.
 
-
-
 predicate paths_correspond of control_path -> abstract_path -> bool:
 only
 
 paths_correspond [] [] and
 
-(∀ .
+(∀ path path_a x .
   if
-    paths_correspond π path
+    paths_correspond path path_a
   then
-    paths_correspond (π @ [LNxt x]) (path @ [(NLet x, ENext)])) and
+    paths_correspond (path @ [LNxt x]) (path_a @ [(NLet x, ENext)])) and
 
-(∀ .
+(∀ path path_a x .
   if
-    paths_correspond π path
+    paths_correspond path path_a
   then
-    paths_correspond (π @ [LSpwn x]) (path @ [(NLet x, ESpawn)])) and
+    paths_correspond (path @ [LSpwn x]) (path_a @ [(NLet x, ESpawn)])) and
 
-(∀ .
+(∀ path path_a x .
   if
-    paths_correspond π path
+    paths_correspond path path_a
   then
-    paths_correspond (π @ [LCall x]) (path @ [(NLet x, ECall)])) and
+    paths_correspond (path @ [LCall x]) (path_a @ [(NLet x, ECall)])) and
 
-(∀ .
+(∀ path path_a x .
   if
-    paths_correspond π path
+    paths_correspond path path_a
   then
-    paths_correspond (π @ [LRtn y]) (path @ [(NResult y, EReturn)]))
+    paths_correspond (path @ [LRtn x]) (path_a @ [(NResult x, EReturn)]))
 
 
 predicate paths_correspond_mod_chan of 
@@ -2850,26 +2849,30 @@ predicate paths_correspond_mod_chan of
 
 only
 
-(∀ .
+(∀ pool path_c x_c path_sfx stt path_a convo .
   if
-    paths_correspond ((LNxt xC) # πSuff) path ⟹
-    ℰ (πC @ (LNxt xC) # πSuff) ≠ None
+    pool (path_c @ (LNxt x_c) # path_sfx) = Some stt and
+    paths_correspond ((LNxt x_c) # path_sfx) path_a
   then
-    paths_correspond_mod_chan (ℰ, H) (Ch πC xC) (πC @ (LNxt xC) # πSuff) path) and
+    paths_correspond_mod_chan
+      (pool, convo) (Ch path_c x_c)
+      (path_c @ (LNxt x_c) # path_sfx) path_a
+   ) and
 
-(∀ . 
+(∀ pool path_r x_r path_sfx stt  path_s x_s x_se e_sy env_sy stack_sy
+  x_re e_ry env_ry stack_ry c_c convo c path_a_re path_a_sfx . 
   if
-    paths_correspond πSuffix pathSuffix and 
-    ℰ (πR @ (LNxt xR) # πSuffix) ≠ None and 
-    dynamic_built_on_chan_var ρRY c xR and 
-    ℰ πS = Some (⟨(Let xS (Sync xSE) eSY);ρSY;κSY⟩) and
-    ℰ πR = Some (⟨(Let xR (Sync xRE) eRY);ρRY;κRY⟩) and
-    {(πS, c, πR)} ⊆ H and 
-    paths_correspond_mod_chan (ℰ, H) c πS pathPre
+    pool (path_r @ (LNxt x_r) # path_sfx) = Some stt and 
+    pool path_s = Some (Stt (Let x_s (Sync x_se) e_sy) env_sy stack_sy) and
+    pool path_r = Some (Stt (Let x_r (Sync x_re) e_ry) env_ry stack_ry) and
+    {(path_s, c_c, path_r)} ⊆ convo and 
+    dynamic_built_on_chan_var env_ry c x_r and 
+    paths_correspond_mod_chan pool convo c path_s path_a_pre and
+    paths_correspond path_sfx path_a_sfx
   then
-    paths_correspond_mod_chan ℰ H c
-      (πR @ (LNxt xR) # πSuffix)
-      (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix))
+    paths_correspond_mod_chan pool convo c
+      (path_r @ (LNxt x_r) # path_sfx)
+      (path_a_pre @ (NLet x_s, ESend x_se) # (NLet x_r, ENext) # path_a_sfx))
 
 
 
@@ -2891,15 +2894,15 @@ lemma not_static_traceable_sound:
 lemma not_static_inclusive_sound:
 ∀ .
   if
-    star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H') and 
+    star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (pool', H') and 
     static_live_chan V Ln Lx xC e and 
     static_traversable V F e and 
     (V, C) ⊨⇩e e and 
-    ℰ' π1 ≠ None and 
-    paths_correspond_mod_chan (ℰ', H') (Ch π xC) π1 path1 and 
+    pool' π1 ≠ None and 
+    paths_correspond_mod_chan (pool', H') (Ch π xC) π1 path1 and 
     static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path1 and 
-    ℰ' π2 ≠ None and 
-    paths_correspond_mod_chan (ℰ', H') (Ch π xC) π2 path2 and 
+    pool' π2 ≠ None and 
+    paths_correspond_mod_chan (pool', H') (Ch π xC) π2 path2 and 
     static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path2
   then
     static_inclusive path1 path2
