@@ -2815,78 +2815,94 @@ significantly more complicated and not yet completed.
 
 
 
-inductive paths_correspond :: "control_path ⇒ abstract_path ⇒ bool" where
-  Empty: "
-    paths_correspond [] []
-  " |
-  Next: "
-    paths_correspond π path ⟹
-    paths_correspond (π @ [LNxt x]) (path @ [(NLet x, ENext)])
-  " |
-  Spawn: "
-    paths_correspond π path ⟹
-    paths_correspond (π @ [LSpwn x]) (path @ [(NLet x, ESpawn)])
-  " |
-  Call: "
-    paths_correspond π path ⟹
-    paths_correspond (π @ [LCall x]) (path @ [(NLet x, ECall)])
-  "  |
-  Return: "
-    paths_correspond π path ⟹
-    paths_correspond (π @ [LRtn y]) (path @ [(NResult y, EReturn)])
-  " 
+predicate paths_correspond of control_path -> abstract_path -> bool:
+only
+
+paths_correspond [] [] and
+
+(∀ .
+  if
+    paths_correspond π path
+  then
+    paths_correspond (π @ [LNxt x]) (path @ [(NLet x, ENext)])) and
+
+(∀ .
+  if
+    paths_correspond π path
+  then
+    paths_correspond (π @ [LSpwn x]) (path @ [(NLet x, ESpawn)])) and
+
+(∀ .
+  if
+    paths_correspond π path
+  then
+    paths_correspond (π @ [LCall x]) (path @ [(NLet x, ECall)])) and
+
+(∀ .
+  if
+    paths_correspond π path
+  then
+    paths_correspond (π @ [LRtn y]) (path @ [(NResult y, EReturn)]))
 
 
-inductive paths_correspond_mod_chan :: 
-  "trace_pool * cmmn_set ⇒ chan ⇒ control_path ⇒ abstract_path ⇒ bool" where
-  Chan: "
+predicate paths_correspond_mod_chan of 
+  trace_pool -> cmmn_set -> chan -> control_path -> abstract_path -> bool:
+
+only
+
+(∀ .
+  if
     paths_correspond ((LNxt xC) # πSuff) path ⟹
-    ℰ (πC @ (LNxt xC) # πSuff) ≠ None ⟹
-    paths_correspond_mod_chan (ℰ, H) (Ch πC xC) (πC @ (LNxt xC) # πSuff) path
-  " |
-  Sync: "
-    paths_correspond πSuffix pathSuffix ⟹
-    ℰ (πR @ (LNxt xR) # πSuffix) ≠ None ⟹
-    dynamic_built_on_chan_var ρRY c xR ⟹
-    ℰ πS = Some (⟨(Let xS (Sync xSE) eSY);ρSY;κSY⟩) ⟹
-    ℰ πR = Some (⟨(Let xR (Sync xRE) eRY);ρRY;κRY⟩) ⟹
-    {(πS, c, πR)} ⊆ H ⟹
-    paths_correspond_mod_chan (ℰ, H) c πS pathPre ⟹
-    paths_correspond_mod_chan (ℰ, H) c (πR @ (LNxt xR) # πSuffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
-  " 
+    ℰ (πC @ (LNxt xC) # πSuff) ≠ None
+  then
+    paths_correspond_mod_chan (ℰ, H) (Ch πC xC) (πC @ (LNxt xC) # πSuff) path) and
+
+(∀ . 
+  if
+    paths_correspond πSuffix pathSuffix and 
+    ℰ (πR @ (LNxt xR) # πSuffix) ≠ None and 
+    dynamic_built_on_chan_var ρRY c xR and 
+    ℰ πS = Some (⟨(Let xS (Sync xSE) eSY);ρSY;κSY⟩) and
+    ℰ πR = Some (⟨(Let xR (Sync xRE) eRY);ρRY;κRY⟩) and
+    {(πS, c, πR)} ⊆ H and 
+    paths_correspond_mod_chan (ℰ, H) c πS pathPre
+  then
+    paths_correspond_mod_chan ℰ H c
+      (πR @ (LNxt xR) # πSuffix)
+      (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix))
 
 
 
---------------------
-lemma not_static_traceable_sound: "
-  ℰ' π = Some (⟨(Let x b e⇩n);ρ;κ⟩) ⟹
-  star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H') ⟹ 
-  (V, C) ⊨⇩e e ⟹
-  static_live_chan V Ln Lx xC e ⟹
-  static_traversable V F e ⟹
-  isEnd (NLet x) ⟹
-  ∃ path . 
-    paths_correspond_mod_chan (ℰ', H') (Ch πC xC) π path ∧
-    static_live_traceable F Ln Lx (NLet xC) isEnd path
-"
+lemma not_static_traceable_sound: 
+∀ e0 pool convo path x b e' env stack env_a convo_a entr exit x_c graph is_end path_c  . 
+  if
+    star concur_step [[] -> (Stt e0 [->] []] {} pool convo and
+    pool path = Some (Stt (Let x b e') env stack) and
+    static_eval env_a convo_a e0 and
+    static_live_chan env_a entr exit x_c e0 and
+    static_traversable env_a graph e0 and 
+    is_end (NLet x)
+  then
+    (∃ path_a . 
+      paths_correspond_mod_chan pool convo (Ch path_c x_c) path path_a and 
+      static_live_traceable graph entr exit (NLet x_c) is_end path_a)
 
-lemma not_static_inclusive_sound: "
-  star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H') ⟹ 
-  static_live_chan V Ln Lx xC e ⟹
-  static_traversable V F e ⟹
-  (V, C) ⊨⇩e e ⟹
 
-  ℰ' π1 ≠ None ⟹ 
-  paths_correspond_mod_chan (ℰ', H') (Ch π xC) π1 path1 ⟹
-  static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path1 ⟹
-  
-  ℰ' π2 ≠ None ⟹ 
-  paths_correspond_mod_chan (ℰ', H') (Ch π xC) π2 path2 ⟹
-  static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path2 ⟹
-
-  static_inclusive path1 path2
-"
-sorry
+lemma not_static_inclusive_sound:
+∀ .
+  if
+    star concur_step ([[] ↦ ⟨e;Map.empty;[]⟩], {}) (ℰ', H') and 
+    static_live_chan V Ln Lx xC e and 
+    static_traversable V F e and 
+    (V, C) ⊨⇩e e and 
+    ℰ' π1 ≠ None and 
+    paths_correspond_mod_chan (ℰ', H') (Ch π xC) π1 path1 and 
+    static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path1 and 
+    ℰ' π2 ≠ None and 
+    paths_correspond_mod_chan (ℰ', H') (Ch π xC) π2 path2 and 
+    static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path2
+  then
+    static_inclusive path1 path2
 
 
 
