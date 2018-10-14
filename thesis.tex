@@ -2812,7 +2812,13 @@ which is described by the predicates paths_correspond and paths_correspond_mod_c
 Additionally the theorem follows from not_static_traceable_sound,
 not_static_inclusive_sound and not_send_site_sound.  The reasoning for the latter one, is
 identical to that of the lower precision analysis, but the the reasoning for the former two is
-significantly more complicated and not yet completed.
+significantly more complicated and not yet completed.  The complication arises from the
+correlation between dynamic paths and abstract paths.  The proofs depend on finding an abstract
+path that depends on a given dynamic path.  In the lower precision analysi the
+correlation was straight forward.  There was only one possible abstract path to choose for it
+to correlate with the given dynamic path.  In the higher precision analysis, the relationship
+between the two kinds of paths is not so simple, and finding a description of the abstract
+that correlates with the dynamic path is much more challenging.  
 
 predicate paths_correspond of control_path -> abstract_path -> bool:
 only
