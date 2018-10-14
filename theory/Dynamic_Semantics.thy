@@ -2,7 +2,6 @@ theory Dynamic_Semantics
   imports Main Syntax "~~/src/HOL/Library/Sublist" Stars
 begin
 
-
 datatype control_label = 
   LNxt var | LSpwn var | LCall var | LRtn var
 
