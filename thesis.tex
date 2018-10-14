@@ -165,6 +165,96 @@ call creates a distinct new channel replCh for receiving data.  The function cal
 the channel once and the server sends on the channel once, so each instance of replCh is
 one-shot.
 
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+  type thread_id
+  val spawn : (unit -> unit) -> thread_id
+
+  type 'a chan
+  val channel : unit -> 'a chan
+  val recv : 'a chan -> 'a
+  val send : ('a chan * 'a) -> unit
+  \end{lstlisting}
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+
+  signature SERV = sig 
+    type serv
+    val make : unit -> serv
+    val call : serv * int -> int
+  end
+
+  structure Serv : SERV = struct 
+    datatype serv = S of (int * int chan) chan 
+
+    fun make () = let 
+      val reqChn = channel ()
+      fun loop state = let
+        val (v, replCh) = recv reqChn in 
+        send (replCh, state);
+        loop v end in
+      spawn (fn () => loop 0);
+      S reqChn end 
+
+    fun call (server, v) = let 
+      val S reqChn = server
+      val replChn = channel () in 
+      send (reqCh, (v, replCh));
+      recv replChn end end
+
+  \end{lstlisting}
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+
+  type 'a event
+  val sync : 'a event -> 'a
+  val recvEvt : 'a chan -> 'a event
+  val sendEvt : 'a chan * 'a -> unit event
+  val choose : 'a event * 'a event -> 'a event
+
+  fun send (ch, v) = sync (sendEvt (ch, v))
+  fun recv v = sync (recvEvt v)
+
+  val thenEvt : 'a event * ('a -> 'b event) -> 'b event
+
+  \end{lstlisting}
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+  val server = Serv.make ()
+  val _ = spawn (fn () => Serv.call (server, 35))
+  val _ = spawn (fn () => 
+    Serv.call (server, 12); 
+    Serv.call (server, 13))
+  val _ = spawn (fn () => Serv.call (server, 81))
+  val _ = spawn (fn () => Serv.call (server, 44))
+  \end{lstlisting}
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+  structure Serv : SERV = struct 
+    datatype serv = S of (int * int chan) chan 
+
+    fun make () = let 
+
+      val reqChn = FanIn.channel()
+
+      fun loop state = let
+        val (v, replCh) = FanIn.recv reqChn in 
+        OneShot.send (replCh, state);
+        loop v end in
+
+      spawn (fn () => loop 0);
+      S reqChn end 
+
+    fun call (server, v) = let 
+      val S reqChn = server
+      val replChn = OneShot.channel () in 
+      FanIn.send (reqCh, (v, replCh));
+      OneShot.recv replChn end
+
+    end
+  \end{lstlisting}
+
+
 A program analysis that describes communication topologies of channels has practical benefits
 in at least two ways.  It can highlight which channels are candidates for optimized
 implementations of communication; or in a language extension allowing the specification of
@@ -240,6 +330,41 @@ control information, so the original approaches to these analyses are known as c
 analyses or CFAs.  With the control flow information, other data flow analyses like available
 expression analysis and liveness analysis can provide greater coverage.
 
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+  let
+    val w = 4
+    val x = ref 1
+    val y = ref 2
+    val z = (!x + 1) + (!y + 2) + (w - 3)
+    val w = 1 in
+    y := 0;
+    (!y + 2) - (!x + 1) * (w - 3) end
+  \end{lstlisting}
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+  let 
+    val x = 1  
+    val y = 2
+    val z = ref (4 * 73)
+    val x = 4 in 
+    z := 1; 
+    x * !z end
+  \end{lstlisting}
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+
+  let 
+    val f = fn x => x 1
+    val g = fn y => y + 2
+    val h = fn z => z + 3 in 
+    (f g) + (f h) end
+
+\end{lstlisting}
+
+
+
+
 Analyses can be described in a variety of ways.  An algorithm that take programs as input and
 produce behavior information as output are necessary for automation in compilers.  A
 specification that states a proposition in terms of programs and execution information may be
@@ -298,49 +423,6 @@ work.  While trying to prove soundness of the analysis, the proof assistant woul
 proof unless I provided derivation of facts that I believed to be false.  I determined that my
 intuition was correct but my definitions had errors.  After correcting the errors, I was able
 to complete the proof, such that the proof checker was satisfied.
-
-Although Isabelle is described as a proof assistant[17], it is really a generic system for
-processing any kind of code.  The code could be proofs, propositions, programs, or types.  The
-processing could be checking proofs, interpreting programs, or translating code.  Code and
-logics for processing code are defined by users using its meta-language Standard ML, and other
-user-defined languages.  Isabelle/HOL is a higher-order logic built from Isabelle's primitives
-and other logics.  It is useful for both programming and proving.  Its ability to check that
-proofs satisfy propositions is simply one instance of its verification capabilities.  It can
-also check that program terms satisfy types, similar to other programming systems for ML.
-Proofs and propositions are analogous to terms and types, respectively, yet Isabelle/HOL treats
-the two concepts distinctly.  The practical uses for terms are quite different from that of
-proofs.  If a term satisfies a type, then the term has utility for the data or computation it
-represents.  The type is only valuable for confirming or denying the usage of a term.  In
-contrast, once a proof satisfies a proposition, the proof becomes irrelevant, while the
-proposition is elevated to a theorem.  The theorem is useful on its own without regard to any
-particular proof.
-
-Similar to other programming languages, type bool can be satisfied by values True or False. In
-contrast to other programming languages, additional syntax, or data constructors, can be
-defined to satisfy the type bool.  A constructor can take any number of terms of any types as
-input in order to create a boolean term. Although these new terms could be used in programs,
-just as True and False are, their main utility is in theorem proving.  In Isabelle/HOL,
-propositions are isomorphic to terms of type bool.  The constructors are defined with a set of
-inference rules, where each inference rule defines the conditions sufficient for a
-construction to be valid, and at least one of the enumerated conditions is necessary for a
-valid construction .  In other words, the constructor is equivalent to the boolean sum of all
-the conditions.  The proposition definitions in terms of inference rules, or inductive
-definitions, are analogous to datatype definitions, just as propositions are analogous to
-types.
-
-
-The definitions of list and sorted can be combined with definitions of natural numbers to form
-propositions.  Note that Isabelle/HOL's list is defined with syntactic sugar. hd \# tl can be
-used instead of Cons hd tl, and [a, b, c] is a \# b \# c \# Nil.  In Isabelle/HOL, propositions
-may be proved by applying the inference rules.  The method rule is used to work backwards from
-the goal until no further conditions need to be satisfied.  Theorems may also be proved
-forwards from axioms, theorems or assumptions to the goal, using other methods like drule or
-erule.
-
-
-In truth, True and False are not primitive values, but actually just named instances of other
-propositions converted to boolean terms.   False is defined to be the absurd statement that all
-propositions are valid.
 
 
 \section{Hypothesis}
@@ -414,6 +496,16 @@ Analyzing and optimizing Concurrent ML would require treating the language as an
 implementing its features as primitives would make the most sense.  Thus, one can think of the
 implementation shown here as an intermediate representation presented with concrete syntax.
 
+\begin{lstlisting}[language=ML, style=codestyle1]
+  signature CHAN = sig
+    type 'a chan 
+    val channel : unit -> 'a chan
+    val send : 'a chan * 'a -> unit
+    val recv : 'a chan -> 'a
+    end     
+\end{lstlisting}
+
+
 The benefits of specialization would be much more significant ins multiprocessor
 implementations rather than single processor implementations.  A single processor
 implementation could avoid overhead caused by contention to acquire locks, by coupling the
@@ -459,6 +551,65 @@ additional condition and empty cell in the associated queue.  It releases the lo
 the enqueued condition.  Once a sending thread signals on the same condition, the recv
 operation returns with the value deposited in the cell by a sending thread.
 
+\begin{lstlisting}[language=ML, style=codestyle1]
+
+  structure ManyToManyChan : CHAN = struct
+    type message_queue = 'a option ref queue
+
+    datatype 'a chan_content = 
+      Send of (condition * 'a) queue | 
+      Recv of (condition * 'a option ref) queue | 
+      Inac
+
+    datatype 'a chan =
+      Chn of 'a chan_content ref * mutex_lock 
+
+    fun channel () = Chn (ref Inac, mutexLock ())
+
+    fun send (Chn (conRef, lock)) m = 
+      acquire lock;
+      (case !conRef of
+        Recv q => let
+          val (recvCond, mopRef) = dequeue q in
+          mopRef := Some m;
+          if (isEmpty q) then conRef := Inac else (); 
+          release lock; signal recvCond; () end |
+        Send q => let
+          val sendCond = condition () in
+          enqueue (q, (sendCond, m));
+          release lock; wait sendCond; () end |
+        Inac => let
+          val sendCond = condition () in
+          conRef := Send (queue [(sendCond, m)]);
+          release lock; wait sendCond; () end)
+
+    fun recv (Chn (conRef, lock)) =  
+      acquire lock;
+      (case !conRef of 
+        Send q => let
+          val (sendCond, m) = dequeue q in
+          if (isEmpty q) then
+            conRef := Inac
+          else
+            (); 
+          release lock; signal sendCond; m end |
+        Recv q => let
+          val recvCond = condition ()
+          val mopRef = ref None in
+          enqueue (q, (recvCond, mopRef));
+          release lock; wait recvCond;
+          valOf (!mopRef) end |
+        Inac => let
+          val recvCond = condition ()
+          val mopRef = ref None in
+          conRef := Recv (queue [(recvCond, mopRef)]);
+          release lock; wait recvCond;
+          valOf (!mopRef) end)
+
+    end
+
+  \end{lstlisting}
+
 
 Implementation of fan-out channels, compared to that of many-to-many channels, requires fewer
 steps to synchronize and can execute more steps outside of critical regions, which reduces
@@ -489,7 +640,110 @@ there is already a thread trying to receive, then it updates the state to inacti
 the lock.  Then it signals on the state's associated condition, which is waited on by a sending
 thread, and returns the states' associated message.
 
+  \begin{lstlisting}[language=ML, style=codestyle1]
+
+    structure FanOutChan : CHAN = struct
+
+    datatype 'a chan_content =
+      Send of condition * 'a |
+      Recv of (condition * 'a option ref) queue  |
+      Inac
+
+    datatype 'a chan =
+      Chn of 'a chan_content ref * mutex_lock
+
+    fun channel () = Chn (ref Inac, mutexLock ())
+
+    fun send (Chn (conRef, lock)) m = let
+      val sendCond = condition () in
+      case cas (conRef, Inac, Send (sendCond, m)) of
+        Inac => (* conRef already set *)
+          wait sendCond; () |
+        Recv q => 
+        (* the current thread is
+          * the only one that updates from this state *)
+          acquire lock;
+          (let
+            val (recvCond, mopRef) = dequeue q in
+            mopRef := Some m; 
+            if (isEmpty q) then conRef := Inac else (); 
+            release lock; signal (recvCond);
+            () end) |
+        Send _ => raise NeverHappens end
+
+    fun recv (Chn (conRef, lock)) =
+      acquire lock;
+      (case !conRef of
+        Inac => let
+          val recvCond = condition ()
+          val mopRef = ref None in
+          conRef := Recv (queue [(recvCond, mopRef)]);
+          release lock; wait recvCond;
+          valOf (!mopRef) end |
+        Recv q => let
+          val recvCond = condition () 
+          val mopRef = ref None in
+          enqueue (q, (recvCond, mopRef));
+          release lock; wait recvCond;
+          valOf (!mopRef) end |
+        Send (sendCond, m) =>
+          conRef := Inac;
+          release lock;
+          signal sendCond;
+          m end) 
+
+    end 
+  \end{lstlisting}
+
 The implementation of fan-in channels is very similar to that of fan-out channels.
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+  structure FanInChan : CHAN = struct
+
+  datatype 'a chan_content =
+    Send of (condition * 'a) queue |
+    Recv of condition * 'a option ref |
+    Inac
+
+  datatype 'a chan =
+    Chn of 'a chan_content ref * mutex_lock
+
+  fun channel () = Chn (ref Inac, mutexLock ())
+
+  fun send (Chn (conRef, lock)) m = 
+    acquire lock;
+    case !conRef of
+    Recv (recvCond, mopRef) => 
+      mopRef := Some m; conRef := Inac;
+      release lock; signal recvCond;
+      () |
+    Send q => let
+      val sendCond = condition () in
+      enqueue (q, (sendCond, m));
+      release lock; wait sendCond;
+      () end |
+    Inac => let
+      val sendCond = condition () in
+      conRef := Send (queue [(sendCond, m)])
+      release lock; wait sendCond; () end 
+
+  fun recv (Chn (conRef, lock)) = let
+    val recvCond = condition () 
+    val mopRef = ref None in
+    case cas (conRef, Inac, Recv (recvCond, mopRef)) of
+      Inac => (* conRef already set *)
+        wait recvCond; valOf (!mopRef) |
+      Send q =>
+        (* the current thread is the only one
+        -* that updates the state from this state *)
+        acquire lock;
+        (let
+          val (sendCond, m) = dequeue q in
+          if (isEmpty q) then conRef := Inac else (); 
+          release lock; signal sendCond; m end) |
+      Recv _ => raise NeverHappens end end
+
+  \end{lstlisting}
 
 a one-to-one channel can also be in one of three possible states, but there is no associated
 lock. Additional, none of the states are associated with queues.  Instead, there is a possible
@@ -519,6 +773,49 @@ update the state from the state of a thread trying to send, and no thread modifi
 particular state, so no locks are necessary.  Likewise, the recv operation should never
 witness the state of another thread already trying to receive, if it is truly one-to-one.
 
+\begin{lstlisting}[language=ML, style=codestyle1]
+
+structure OneToOneChan : CHAN = struct
+
+  datatype 'a chan_content =
+    Send of condition * 'a |
+    Recv of condition * 'a option ref |
+    Inac  
+
+  datatype 'a chan = Chn of 'a chan_content ref
+
+  fun channel () = Chn (ref Inac)
+
+  fun send (Chn conRef) m = let
+    val sendCond = condition () in
+    case cas (conRef, Inac, Send (sendCond, m)) of
+      Inac => 
+        (* conRef already set to Send *)
+        wait sendCond; () |
+      Recv (recvCond, mopRef) =>
+        (* the current thread is the only one
+        -* that accesses conRef for this state *)
+        mopRef := Some m; conRef := Inac;
+        signal recvCond; () |
+      Send _ => raise NeverHappens end end
+
+
+  fun recv (Chn conRef) = let
+    val recvCond = condition ();
+    val mopRef = ref None in
+    case cas (conRef, Inac, Recv (recvCond, mopRef)) of
+      Inac => (* conRef already set to Recv*)
+        wait recvCond; valOf (!mopRef) |
+      Send (sendCond, m) =>
+        (* the current thread is the only one
+        -* that accesses conRef for this state *)
+        conRef := Inac; signal sendCond; m |
+      Recv _ => raise NeverHappens end end 
+
+  end
+  \end{lstlisting}
+
+
 
 A one-shot channel consists of the same possible states as a one-to-one channel, but is
 additionally associated with a mutex lock, to account for the fact that multiple threads may
@@ -540,6 +837,53 @@ receiving threads will know to not progress.  If the state is that of a thread t
 receive on the channel, the it acquires the lock, which should block the current thread
 forever, if there truly is only one send ever.
 
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+  structure OneShotChan : CHAN = struct
+
+  datatype 'a chan_content =
+    Send of condition * 'a |
+    Recv of condition * 'a option ref |
+    Inac  
+
+  datatype 'a chan = Chn of 'a chan_content ref * mutex_lock
+
+  fun channel () = Chn (ref Inac, lock ())
+
+  fun send (Chn (conRef, lock)) m = let
+    val sendCond = condition () in
+    case (conRef, Inac, Send (sendCond, m)) of
+      Inac =>
+        (* conRef already set to Send*)
+        wait sendCond; () |
+      Recv (recvCond, mopRef) =>
+        mopRef := Some m; signal recvCond;
+        () |
+      Send _ => raise NeverHappens end end
+
+
+  fun recv (Chn (conRef, lock)) = let
+    val recvCond = condition ()
+    val mopRef = ref None in
+    case (conRef, Inac, Recv (recvCond, mopRef)) of
+      Inac =>
+        (* conRef already set to Recv*)
+        wait recvCond; valOf (!mopRef) |
+      Send (sendCond, m) =>
+        acquire lock; signal sendCond;
+        (* never relases lock;
+        -* blocks others forever *)
+        m |
+      Recv _ =>
+        acquire lock;
+        (* never able to acquire lock;
+        -* blocked forever *)
+        raise NeverHappens end end
+
+  end
+  \end{lstlisting}
+
+
 An even more restrictive version of a channel with at most one send could be used if it's
 determined that the number of receiving threads is at most one.  The one-shot-to-one channel is
 composed of a possibly empty cell, a condition for a sending thread to wait on, and a condition
@@ -548,6 +892,29 @@ for a receiving thread to wait on.
 The send operation deposits the message in the cell, signals on the recvCond, waits on the
 sendCond, and then returns the unit value.  The recv operation waits on the recvCond, signals
 on the sendCond and then returns the deposited message.
+
+
+\begin{lstlisting}[language=ML, style=codestyle1]
+structure OneShotToOneChan : CHAN = struct
+
+  datatype 'a chan =
+    Chn of condition * condition * 'a option ref
+
+  fun channel () =
+    Chn (condition (), condition (), ref None)
+
+  fun send (Chn (sendCond, recvCond, mopRef)) m =
+    mopRef := Some m; signal recvCond;  
+    wait sendCond; ()
+
+  fun recv (Chn (sendCond, recvCond, mopRef)) =
+    wait recvCond; signal sendCond;
+    valOf (!mopRef)
+
+  end
+  \end{lstlisting}
+
+
 
 Although there are proofs that the communication topologies are sound with respect to the
 semantics, it would additionally be important to have proofs that the above specialized
@@ -2927,2000 +3294,8 @@ lemma not_static_inclusive_sound:
 
 \section{Mathematical Artifacts}
 
-\begin{lstlisting}[language=ML, style=codestyle1]
-  type thread_id
-  val spawn : (unit -> unit) -> thread_id
-
-  type 'a chan
-  val channel : unit -> 'a chan
-  val recv : 'a chan -> 'a
-  val send : ('a chan * 'a) -> unit
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-
-  signature SERV = sig 
-    type serv
-    val make : unit -> serv
-    val call : serv * int -> int
-  end
-
-  structure Serv : SERV = struct 
-    datatype serv = S of (int * int chan) chan 
-
-    fun make () = let 
-      val reqChn = channel ()
-      fun loop state = let
-        val (v, replCh) = recv reqChn in 
-        send (replCh, state);
-        loop v end in
-      spawn (fn () => loop 0);
-      S reqChn end 
-
-    fun call (server, v) = let 
-      val S reqChn = server
-      val replChn = channel () in 
-      send (reqCh, (v, replCh));
-      recv replChn end end
-
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-
-  type 'a event
-  val sync : 'a event -> 'a
-  val recvEvt : 'a chan -> 'a event
-  val sendEvt : 'a chan * 'a -> unit event
-  val choose : 'a event * 'a event -> 'a event
-
-  fun send (ch, v) = sync (sendEvt (ch, v))
-  fun recv v = sync (recvEvt v)
-
-  val thenEvt : 'a event * ('a -> 'b event) -> 'b event
-
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-  val server = Serv.make ()
-  val _ = spawn (fn () => Serv.call (server, 35))
-  val _ = spawn (fn () => 
-    Serv.call (server, 12); 
-    Serv.call (server, 13))
-  val _ = spawn (fn () => Serv.call (server, 81))
-  val _ = spawn (fn () => Serv.call (server, 44))
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-  structure Serv : SERV = struct 
-    datatype serv = S of (int * int chan) chan 
-
-    fun make () = let 
-
-      val reqChn = FanIn.channel()
-
-      fun loop state = let
-        val (v, replCh) = FanIn.recv reqChn in 
-        OneShot.send (replCh, state);
-        loop v end in
-
-      spawn (fn () => loop 0);
-      S reqChn end 
-
-    fun call (server, v) = let 
-      val S reqChn = server
-      val replChn = OneShot.channel () in 
-      FanIn.send (reqCh, (v, replCh));
-      OneShot.recv replChn end
-
-    end
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-  let
-    val w = 4
-    val x = ref 1
-    val y = ref 2
-    val z = (!x + 1) + (!y + 2) + (w - 3)
-    val w = 1 in
-    y := 0;
-    (!y + 2) - (!x + 1) * (w - 3) end
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-  let 
-    val x = 1  
-    val y = 2
-    val z = ref (4 * 73)
-    val x = 4 in 
-    z := 1; 
-    x * !z end
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-
-  let 
-    val f = fn x => x 1
-    val g = fn y => y + 2
-    val h = fn z => z + 3 in 
-    (f g) + (f h) end
-
-\end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  datatype 'a list = Nil | Cons 'a ('a list)
-
-  inductive
-    sorted ::
-      ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$%
-      'a list %$\Rightarrow$% bool where
-    Nil : sorted P Nil |
-    Single : sorted P (Cons x Nil) |
-    Cons :
-      P x y %$\Longrightarrow$%
-      sorted P (Cons y ys) %$\Longrightarrow$%
-      sorted P (Cons x (Cons y ys))
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  datatype nat = Z | S nat 
-
-  inductive
-    lte ::
-      nat %$\Rightarrow$% nat %$\Rightarrow$% bool where
-    Eq : lte n n |
-    Lt : lte n1 n2 %$\Longrightarrow$% lte n1 (S n2)
-
-  theorem "
-    sorted lte
-      (Cons (Z) (Cons (S Z)
-        (Cons (S Z) (Cons
-          (S (S (S Z))) Nil))))"
-    apply (rule Cons)
-    apply (rule Lt)
-    apply (rule Eq)
-    apply (rule Cons)
-    apply (rule Eq)
-    apply (rule Cons)
-    apply (rule Lt)
-    apply (rule Lt)
-    apply (rule Eq)
-    apply (rule Single)
-    done
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  definition True :: bool where 
-    True %$\equiv$% ((%$\lambda$%x ::bool. x) = (%$\lambda$%x. x))
-
-  definition False :: bool where 
-    False %$\equiv$% (%$\forall$%P. P)
-
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-  signature CHAN = sig
-    type 'a chan 
-    val channel : unit -> 'a chan
-    val send : 'a chan * 'a -> unit
-    val recv : 'a chan -> 'a
-    end     
-\end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-
-  structure ManyToManyChan : CHAN = struct
-    type message_queue = 'a option ref queue
-
-    datatype 'a chan_content = 
-      Send of (condition * 'a) queue | 
-      Recv of (condition * 'a option ref) queue | 
-      Inac
-
-    datatype 'a chan =
-      Chn of 'a chan_content ref * mutex_lock 
-
-    fun channel () = Chn (ref Inac, mutexLock ())
-
-    fun send (Chn (conRef, lock)) m = 
-      acquire lock;
-      (case !conRef of
-        Recv q => let
-          val (recvCond, mopRef) = dequeue q in
-          mopRef := Some m;
-          if (isEmpty q) then conRef := Inac else (); 
-          release lock; signal recvCond; () end |
-        Send q => let
-          val sendCond = condition () in
-          enqueue (q, (sendCond, m));
-          release lock; wait sendCond; () end |
-        Inac => let
-          val sendCond = condition () in
-          conRef := Send (queue [(sendCond, m)]);
-          release lock; wait sendCond; () end)
-
-    fun recv (Chn (conRef, lock)) =  
-      acquire lock;
-      (case !conRef of 
-        Send q => let
-          val (sendCond, m) = dequeue q in
-          if (isEmpty q) then
-            conRef := Inac
-          else
-            (); 
-          release lock; signal sendCond; m end |
-        Recv q => let
-          val recvCond = condition ()
-          val mopRef = ref None in
-          enqueue (q, (recvCond, mopRef));
-          release lock; wait recvCond;
-          valOf (!mopRef) end |
-        Inac => let
-          val recvCond = condition ()
-          val mopRef = ref None in
-          conRef := Recv (queue [(recvCond, mopRef)]);
-          release lock; wait recvCond;
-          valOf (!mopRef) end)
-
-    end
-
-  \end{lstlisting}
-
-  \begin{lstlisting}[language=ML, style=codestyle1]
-
-    structure FanOutChan : CHAN = struct
-
-    datatype 'a chan_content =
-      Send of condition * 'a |
-      Recv of (condition * 'a option ref) queue  |
-      Inac
-
-    datatype 'a chan =
-      Chn of 'a chan_content ref * mutex_lock
-
-    fun channel () = Chn (ref Inac, mutexLock ())
-
-    fun send (Chn (conRef, lock)) m = let
-      val sendCond = condition () in
-      case cas (conRef, Inac, Send (sendCond, m)) of
-        Inac => (* conRef already set *)
-          wait sendCond; () |
-        Recv q => 
-        (* the current thread is
-          * the only one that updates from this state *)
-          acquire lock;
-          (let
-            val (recvCond, mopRef) = dequeue q in
-            mopRef := Some m; 
-            if (isEmpty q) then conRef := Inac else (); 
-            release lock; signal (recvCond);
-            () end) |
-        Send _ => raise NeverHappens end
-
-    fun recv (Chn (conRef, lock)) =
-      acquire lock;
-      (case !conRef of
-        Inac => let
-          val recvCond = condition ()
-          val mopRef = ref None in
-          conRef := Recv (queue [(recvCond, mopRef)]);
-          release lock; wait recvCond;
-          valOf (!mopRef) end |
-        Recv q => let
-          val recvCond = condition () 
-          val mopRef = ref None in
-          enqueue (q, (recvCond, mopRef));
-          release lock; wait recvCond;
-          valOf (!mopRef) end |
-        Send (sendCond, m) =>
-          conRef := Inac;
-          release lock;
-          signal sendCond;
-          m end) 
-
-    end 
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-  structure FanInChan : CHAN = struct
-
-  datatype 'a chan_content =
-    Send of (condition * 'a) queue |
-    Recv of condition * 'a option ref |
-    Inac
-
-  datatype 'a chan =
-    Chn of 'a chan_content ref * mutex_lock
-
-  fun channel () = Chn (ref Inac, mutexLock ())
-
-  fun send (Chn (conRef, lock)) m = 
-    acquire lock;
-    case !conRef of
-    Recv (recvCond, mopRef) => 
-      mopRef := Some m; conRef := Inac;
-      release lock; signal recvCond;
-      () |
-    Send q => let
-      val sendCond = condition () in
-      enqueue (q, (sendCond, m));
-      release lock; wait sendCond;
-      () end |
-    Inac => let
-      val sendCond = condition () in
-      conRef := Send (queue [(sendCond, m)])
-      release lock; wait sendCond; () end 
-
-  fun recv (Chn (conRef, lock)) = let
-    val recvCond = condition () 
-    val mopRef = ref None in
-    case cas (conRef, Inac, Recv (recvCond, mopRef)) of
-      Inac => (* conRef already set *)
-        wait recvCond; valOf (!mopRef) |
-      Send q =>
-        (* the current thread is the only one
-        -* that updates the state from this state *)
-        acquire lock;
-        (let
-          val (sendCond, m) = dequeue q in
-          if (isEmpty q) then conRef := Inac else (); 
-          release lock; signal sendCond; m end) |
-      Recv _ => raise NeverHappens end end
-
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-
-structure OneToOneChan : CHAN = struct
-
-  datatype 'a chan_content =
-    Send of condition * 'a |
-    Recv of condition * 'a option ref |
-    Inac  
-
-  datatype 'a chan = Chn of 'a chan_content ref
-
-  fun channel () = Chn (ref Inac)
-
-  fun send (Chn conRef) m = let
-    val sendCond = condition () in
-    case cas (conRef, Inac, Send (sendCond, m)) of
-      Inac => 
-        (* conRef already set to Send *)
-        wait sendCond; () |
-      Recv (recvCond, mopRef) =>
-        (* the current thread is the only one
-        -* that accesses conRef for this state *)
-        mopRef := Some m; conRef := Inac;
-        signal recvCond; () |
-      Send _ => raise NeverHappens end end
-
-
-  fun recv (Chn conRef) = let
-    val recvCond = condition ();
-    val mopRef = ref None in
-    case cas (conRef, Inac, Recv (recvCond, mopRef)) of
-      Inac => (* conRef already set to Recv*)
-        wait recvCond; valOf (!mopRef) |
-      Send (sendCond, m) =>
-        (* the current thread is the only one
-        -* that accesses conRef for this state *)
-        conRef := Inac; signal sendCond; m |
-      Recv _ => raise NeverHappens end end 
-
-  end
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-  structure OneShotChan : CHAN = struct
-
-  datatype 'a chan_content =
-    Send of condition * 'a |
-    Recv of condition * 'a option ref |
-    Inac  
-
-  datatype 'a chan = Chn of 'a chan_content ref * mutex_lock
-
-  fun channel () = Chn (ref Inac, lock ())
-
-  fun send (Chn (conRef, lock)) m = let
-    val sendCond = condition () in
-    case (conRef, Inac, Send (sendCond, m)) of
-      Inac =>
-        (* conRef already set to Send*)
-        wait sendCond; () |
-      Recv (recvCond, mopRef) =>
-        mopRef := Some m; signal recvCond;
-        () |
-      Send _ => raise NeverHappens end end
-
-
-  fun recv (Chn (conRef, lock)) = let
-    val recvCond = condition ()
-    val mopRef = ref None in
-    case (conRef, Inac, Recv (recvCond, mopRef)) of
-      Inac =>
-        (* conRef already set to Recv*)
-        wait recvCond; valOf (!mopRef) |
-      Send (sendCond, m) =>
-        acquire lock; signal sendCond;
-        (* never relases lock;
-        -* blocks others forever *)
-        m |
-      Recv _ =>
-        acquire lock;
-        (* never able to acquire lock;
-        -* blocked forever *)
-        raise NeverHappens end end
-
-  end
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1]
-structure OneShotToOneChan : CHAN = struct
-
-  datatype 'a chan =
-    Chn of condition * condition * 'a option ref
-
-  fun channel () =
-    Chn (condition (), condition (), ref None)
-
-  fun send (Chn (sendCond, recvCond, mopRef)) m =
-    mopRef := Some m; signal recvCond;  
-    wait sendCond; ()
-
-  fun recv (Chn (sendCond, recvCond, mopRef)) =
-    wait recvCond; signal sendCond;
-    valOf (!mopRef)
-
-  end
-  \end{lstlisting}
-
 
 \section{Syntax}
-
-\begin{lstlisting}[style=codestyle1]
-
-  datatype var = Var string
-
-  datatype exp = 
-    Let var boundexp exp |
-    Rslt var
-
-  boundexp =
-    Unt |
-    MkChn |
-    Prim prim |
-    Spwn exp |
-    Sync var |
-    Fst var |
-    Snd var |
-    Case var var exp var exp |
-    App var var and
-
-  prim = 
-    SendEvt var var |
-    RecvEvt var |
-    Pair var var |
-    Lft var |
-    Rht var |
-    Abs var var ex
-
-\end{lstlisting}
-
-
-
-\section{Dynamic Semantics}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  datatype ctrl_label = 
-    LNxt var | LSpwn var | LCall var | LRtn var
-
-  type_synonym ctrl_path = (ctrl_label list)
-
-  datatype chan = Chn ctrl_path var
-
-  datatype val = 
-    VUnt | VChn chan | VClsr prim (var %$\rightharpoonup$% val)
-
-  datatype ctn = Ctn var exp (var %$\rightharpoonup$% val)  
-
-  datatype state = Stt exp (var %$\rightharpoonup$% val) (ctn list) 
-
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  inductive
-    seq_step ::
-      bind * (var %$\rightharpoonup$% val)) %$\Rightarrow$% val %$\Rightarrow$% bool where
-    LetUnt : 
-      seq_step (Unt, env) VUnt |
-    LetPrim :
-      seq_step (Prim p, env) (VClsr p env) |
-    LetFst :
-      env xp = Some (VClsr (Pair x1 x2) envp) %$\Longrightarrow$%
-      envp x1 = Some v %$\Longrightarrow$% 
-      seq_step (Fst xp, env) v |
-    LetSnd : 
-      env xp = Some (VClsr (Pair x1 x2) envp) %$\Longrightarrow$%  
-      envp x2 = Some v %$\Longrightarrow$% 
-      seq_step (Snd xp, env) v
-
-
-  \end{lstlisting}
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-
-  inductive
-    seq_step_up ::
-      bind * (var %$\rightharpoonup$% val)) %$\Rightarrow$%
-      exp * val_env %$\Rightarrow$% bool where 
-    LetCaseLft :
-      env xs = Some (VClsr (Lft xl') envl) %$\Longrightarrow$%
-      envl xl' = Some vl %$\Longrightarrow$%
-      seq_step_up
-        (Case xs xl el xr er, env)
-        (el, env(xl %$\mapsto$% vl)) |
-    LetCaseRht : 
-      env xs = Some (VClsr (Rht xr') envr) %$\Longrightarrow$% 
-      envr xr' = Some vr %$\Longrightarrow$%
-      seq_step_up
-        (Case xs xl el xr er, env)
-        (er, env(xr %$\mapsto$% vr)) |
-    LetApp :
-      env f = Some (VClsr (Abs fp xp el) envl) %$\Longrightarrow$% 
-      env xa = Some va  %$\Longrightarrow$% 
-      seq_step_up
-        (App f xa, env)
-        (el, envl(
-          fp %$\mapsto$% (VClsr (Abs fp xp el) envl),
-          xp %$\mapsto$% va))
-
-  \end{lstlisting}
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-
-  type_synonym cmmn_set = (ctrl_path * chan * ctrl_path) set
-
-  type_synonym trace_pool = ctrl_path %$\rightharpoonup$% state
-
-  inductive
-    leaf ::
-      trace_pool %$\Rightarrow$% ctrl_path %$\Rightarrow$% bool where
-    intro :
-      trpl pi %$\neq$% None %$\Longrightarrow$% 
-      (%$\nexists$% pi' . trpl pi' %$\neq$% None %$\land$% strict_prefix pi pi') %$\Longrightarrow$%  
-      leaf trpl pi
-
-  \end{lstlisting}
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  inductive
-    concur_step ::
-      trace_pool * cmmn_set %$\Rightarrow$%
-      trace_pool * cmmn_set %$\Rightarrow$%
-      bool where 
-    Seq_Sttep_Down :
-      leaf trpl pi %$\Longrightarrow$%
-      trpl pi = Some
-        (Stt (Rslt x) env
-          ((Ctn xk ek envk) # k)) %$\Longrightarrow$%
-      env x = Some v %$\Longrightarrow$%
-      concur_step
-        (trpl, ys)
-        (trpl(pi @ [LRtn xk] %$\mapsto$%
-          (Stt ek (envk(xk %$\mapsto$% v)) k)), ys) |
-    Seq_Step :
-      leaf trpl pi %$\Longrightarrow$%
-      trpl pi = Some
-        (Stt (Let x  b e) env k) %$\Longrightarrow$%
-      seq_step (b, env) v%$\Longrightarrow$%
-      concur_step
-        (trpl, ys)
-        (trpl(pi @ [LNxt x] %$\mapsto$%
-          (Stt e (env(x %$\mapsto$% v)) k), ys) |
-    Seq_Step_Up : 
-      leaf trpl pi %$\Longrightarrow$%
-      trpl pi = Some
-        (Stt (Let x b e) env k) %$\Longrightarrow$%
-      seq_step_up (b, env) (e', env') %$\Longrightarrow$%
-      concur_step
-        (trpl, ys)
-        (trpl(pi @ [LCall x] %$\mapsto$%
-          (Stt e' env'
-            ((Ctn x e env) # k))), ys) |
-    LetMkCh : 
-      leaf trpl pi %$\Longrightarrow$%
-      trpl pi = Some (Stt (Let x MkChn e) env k) %$\Longrightarrow$%
-      concur_step
-        (trpl, ys)
-        (trpl(pi @ [LNxt x] %$\mapsto$%
-          (Stt e (env(x %$\mapsto$% (VChn (Chn pi x)))) k)), ys) |
-    LetSpwn :
-      leaf trpl pi %$\Longrightarrow$%
-      trpl pi = Some
-        (Stt (Let x (Spwn ec) e) env k) %$\Longrightarrow$%
-      concur_step
-        (trpl, ys)
-        (trpl(
-          pi @ [LNxt x] %$\mapsto$%
-              (St e (env(x %$\mapsto$% VUnt)) k), 
-          pi @ [LSpwn x] %$\mapsto$%
-              (St ec env []), ys) |
-    LetSync :
-      leaf trpl pis %$\Longrightarrow$%
-      trpl pis = Some
-        (Stt (Let xs (Sync xse) es) envs ks) %$\Longrightarrow$%
-      envs xse = Some
-        (VClsr (SendEvt xsc xm) envse) %$\Longrightarrow$%
-      leaf trpl pir  %$\Longrightarrow$%
-      trpl pir = Some
-        (Stt (Let xr (Sync xre) er) envr kr) %$\Longrightarrow$%
-      envr xre = Some
-        (VClsr (RecvEvt xrc) envre) %$\Longrightarrow$%
-      envse xsc = Some (VChn c) %$\Longrightarrow$%
-      envre xrc = Some (VChn c) %$\Longrightarrow$%
-      envse xm = Some vm %$\Longrightarrow$%
-      concur_step
-        (trpl, ys)
-        (trpl(
-          pis @ [LNxt xs] %$\mapsto$%
-            (Stt es (envs(xs %$\mapsto$% VUnt)) ks), 
-          pir @ [LNxt xr] %$\mapsto$%
-            (Stt er (envr(xr %$\mapsto$% vm)) kr)), 
-          ys %$\cup$% {(pis, c, pir)})
-
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive
-    star ::
-      ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$%
-      'a %$\Rightarrow$% 'a %$\Rightarrow$% bool for r where
-    refl : star r x x |
-    step : r x y %$\Longrightarrow$% star r y z %$\Longrightarrow$% star r x z
-  \end{lstlisting}
-
-
-
-\section{Dynamic Communication}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive
-    is_send_path ::
-      trace_pool %$\Rightarrow$% chan %$\Rightarrow$%
-      control_path %$\Rightarrow$% bool where
-    intro :
-      trpl piy = Some
-        (Stt (Let xy (Sync xe) en) env k) %$\Longrightarrow$%
-      env xe = Some
-        (VClsr (SendEvt xsc xm) enve) %$\Longrightarrow$%
-      enve xsc = Some (VChn c) %$\Longrightarrow$%
-      is_send_path trpl c piy
-
-  inductive
-    is_recv_path ::
-      trace_pool %$\Rightarrow$% chan %$\Rightarrow$%
-      control_path %$\Rightarrow$% bool where
-    intro :
-      trpl piy = Some
-        (Stt (Let xy (Sync xe) en) env k) %$\Longrightarrow$%
-      env xe = Some
-        (VClsr (RecvEvt xrc) enve) %$\Longrightarrow$%
-      enve xrc = Some (VChn c) %$\Longrightarrow$%
-      is_recv_path trpl c piy
-
-  \end{lstlisting}
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  inductive
-    every_two ::
-      ('a %$\Rightarrow$% bool) %$\Rightarrow$%
-      ('a %$\Rightarrow$% 'a %$\Rightarrow$% bool) %$\Rightarrow$% bool where
-    intro : (%$\forall$% pi1 pi2 .
-        p x1 %$\longrightarrow$%
-        p x2 %$\longrightarrow$%
-        r x1 x2) %$\Longrightarrow$%
-      every_two p r
-
-  inductive
-    ordered ::
-      'a list %$\Rightarrow$% 'a list %$\Rightarrow$% bool where
-    left : prefix pi1 pi2 %$\Longrightarrow$% ordered pi1 pi2 |
-    right : prefix pi2 pi1 %$\Longrightarrow$% ordered pi1 pi2
-
-  \end{lstlisting}
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  inductive one_shot :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
-    intro :
-      every_two
-        (is_send_path trpl c) op= %$\Longrightarrow$% 
-      one_shot trpl c
-
-  inductive fan_out :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
-    intro :
-      every_two
-        (is_send_path trpl c) ordered %$\Longrightarrow$%
-      fan_out trpl c
-
-  inductive fan_in :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
-    intro :
-      every_two
-        (is_recv_path trpl c) ordered %$\Longrightarrow$% 
-      fan_in trpl c
-
-  inductive one_to_one :: trace_pool %$\Rightarrow$% chan %$\Rightarrow$% bool where
-    intro :
-      fan_out trpl c %$\Longrightarrow$%
-      fan_in trpl c %$\Longrightarrow$% 
-      one_to_one trpl c
-
-  \end{lstlisting}
-
-
-\section{Static Semantics}
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  datatype abstract_value =
-    AChn var |
-    AUnt |
-    APrim prim
-
-  type_synonym abstract_env = var %$\Rightarrow$% abstract_value set
-
-  fun rslt_var :: exp %$\Rightarrow$% var where
-    rslt_var (Rslt x) = x |
-    rslt_var (Let _ _ e) = (rslt_var e)
-
-  \end{lstlisting}
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-
-  inductive
-    static_eval_exp ::
-      abstract_env * abstract_env %$\Rightarrow$%
-      exp %$\Rightarrow$% bool where
-    Rslt :
-      static_eval_exp (V, C) (Rslt x) |
-    let_unt :
-      {AUnt} %$\subseteq$% env_a x %$\Longrightarrow$%
-      static_eval_exp (V, C) e %$\Longrightarrow$% 
-      static_eval_exp (V, C) (Let x Unt e) |
-    let_chan : 
-      {AChn x} %$\subseteq$% env_a x  %$\Longrightarrow$%
-      static_eval_exp (V, C) e %$\Longrightarrow$%
-      static_eval_exp (V, C) (Let x (MkChn) e) |
-    let_send_evt : 
-      {APrim (SendEvt xc xm)} %$\subseteq$% env_a x %$\Longrightarrow$%
-      static_eval_exp (V, C) e %$\Longrightarrow$% 
-      static_eval_exp (V, C)
-        (Let x (Prim (SendEvt xc xm)) e) |
-    let_recv_evt :
-      {APrim (RecvEvt xc)} %$\subseteq$% env_a x %$\Longrightarrow$%
-      static_eval_exp (V, C) e %$\Longrightarrow$% 
-      static_eval_exp (V, C)
-        (Let x (Prim (RecvEvt xc)) e) |
-    let_pair : 
-      {APrim (Pair x1 x2)} %$\subseteq$% env_a x %$\Longrightarrow$%
-      static_eval_exp (V, C) e %$\Longrightarrow$% 
-      static_eval_exp (V, C) (Let x (Pair x1 x2) e) |
-    let_left : 
-      {APrim (Left xp)} %$\subseteq$% env_a x %$\Longrightarrow$%
-      static_eval_exp (V, C) e %$\Longrightarrow$% 
-      static_eval_exp (V, C) (Let x (Left xp) e) |
-    let_right :
-      {APrim (Right xp)} %$\subseteq$% env_a x %$\Longrightarrow$%
-      static_eval_exp (V, C) e %$\Longrightarrow$% 
-      static_eval_exp (V, C) (Let x (Right xp) e) |
-    let_abs : 
-      {APrim (Abs f' x' e')} %$\subseteq$% env_a f' %$\Longrightarrow$%
-      static_eval_exp (V, C) e' %$\Longrightarrow$%
-      {APrim (Abs f' x' e')} %$\subseteq$% env_a x %$\Longrightarrow$%
-      static_eval_exp (V, C) e %$\Longrightarrow$% 
-      static_eval_exp (V, C) (Let x (Abs f' x' e') e) |
-    let_spawn :
-      {AUnt} %$\subseteq$% env_a x %$\Longrightarrow$%
-      static_eval_exp (V, C) ec %$\Longrightarrow$% 
-      static_eval_exp (V, C) e %$\Longrightarrow$%  
-      static_eval_exp (V, C) (Let x (Spwn ec) e) |
-    let_sync  : 
-      %$\forall$% xsc xm xc . 
-        (APrim (SendEvt xsc xm)) %$\in$% env_a xe %$\longrightarrow$% 
-        AChn xc %$\in$% env_a xsc %$\longrightarrow$%
-        {AUnt} %$\subseteq$% env_a x %$\land$% env_a xm %$\subseteq$% C xc %$\Longrightarrow$%
-      %$\forall$% xrc xc . 
-        (APrim (RecvEvt xrc)) %$\in$% env_a xe %$\longrightarrow$%
-        AChn xc %$\in$% env_a xrc %$\longrightarrow$%
-        C xc %$\subseteq$% env_a x %$\Longrightarrow$%
-      static_eval_exp (V, C) e %$\Longrightarrow$%  
-      static_eval_exp (V, C) (Let x (Syync xe) e) |
-    let_fst : 
-      %$\forall$% x1 x2.
-        (APrim (Pair x1 x2)) %$\in$% env_a xp %$\longrightarrow$%
-        env_a x1 %$\subseteq$% env_a x %$\Longrightarrow$% 
-      static_eval_exp (V, C) e %$\Longrightarrow$% 
-      static_eval_exp (V, C) (Let x (Fst xp) e) |
-    let_snd : 
-    %$\forall$% x1 x2 .
-      (APrim (Pair x1 x2) %$\in$% env_a xp %$\longrightarrow$%
-      env_a x2 %$\subseteq$% env_a x %$\Longrightarrow$% 
-    static_eval_exp (V, C) e %$\Longrightarrow$% 
-    static_eval_exp (V, C) (Let x (Snd xp) e) |
-  let_case :
-    %$\forall$% xl' .
-      (APrim (Left xl')) %$\in$% env_a xs %$\longrightarrow$%
-        env_a xl' %$\subseteq$% env_a xl %$\land$% env_a (rslt_var el) %$\subseteq$% env_a x %$\land$%
-        static_eval_exp (V, C) el %$\Longrightarrow$%
-    %$\forall$% xr' .
-      (APrim (Right xr')) %$\in$% env_a xs %$\longrightarrow$%
-        env_a xr' %$\subseteq$% env_a xr %$\land$% env_a (rslt_var er) %$\subseteq$% env_a x %$\land$%
-        static_eval_exp (V, C) er %$\Longrightarrow$%
-        static_eval_exp (V, C) e %$\Longrightarrow$% 
-      static_eval_exp (V, C) (Let x (Case xs xl el xr er) e) |
-  let_app :
-    %$\forall$% f' x' e' .
-      (APrim (Abs f' x' e') %$\in$% env_a f %$\longrightarrow$%
-      env_a xa %$\subseteq$% env_a x' %$\land$%
-      env_a (rslt_var e') %$\subseteq$% env_a x %$\Longrightarrow$% 
-    static_eval_exp (V, C) e %$\Longrightarrow$% 
-    static_eval_exp (V, C) (Let x (App f xa) e)
-
-  \end{lstlisting}
-
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive static_reachable :: exp %$\Rightarrow$% exp %$\Rightarrow$% bool where
-    Refl :
-      static_reachable e e | 
-    let_Spawn_Child
-      static_reachable ec e %$\Longrightarrow$%
-      static_reachable (Let x (Spwn ec) en) e |
-    let_Case_Left :
-      static_reachable el e %$\Longrightarrow$%
-      static_reachable (Let x (case xs xl el xr er) en) e |
-    let_Case_Right :
-      static_reachable er e %$\Longrightarrow$%
-      static_reachable (Let x (case xs xl el xr er) en) e |
-    let_Abs_Body : "
-      static_reachable eb e %$\Longrightarrow$%
-      static_reachable (Let x (Abs f xp eb) en) e | 
-    Let :
-      static_reachable en e %$\Longrightarrow$%
-      static_reachable (Let x b en) e
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-
-  fun abstract :: val %$\Rightarrow$% abstract_value where
-    abstract VUnt = AUnt |
-    abstract VChn (Chn pi x) = AChn x |
-    abstract VClsr p env = APrim p
-
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-locale semantics_sound =
-  assumes
-    exp_always_not_static_bound_sound :
-      env' x = Some v %$\Longrightarrow$%
-      (V, C) static_eval e %$\Longrightarrow$%
-      ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], H) star concur_step (trpl', H') %$\Longrightarrow$%
-      trpl' pi = Some (Stt e' env' k') %$\Longrightarrow$%
-      {|v|} %$\subseteq$% env_a x and
-
-    exp_always_exp_not_static_reachable_sound: 
-      ([[] %$\mapsto$% (Stt e0 (%$\lambda$% _ . None) [])], {}) star concur_step (trpl', H') %$\Longrightarrow$%
-      trpl' pi' = Some (Stt e' env' k') %$\Longrightarrow$%
-      static_reachable e0 e'
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  inductive 
-    static_eval_val ::
-      abstract_env * abstract_env %$\Rightarrow$% val %$\Rightarrow$% bool and  
-    static_eval_env ::
-      abstract_env * abstract_env %$\Rightarrow$% val_env %$\Rightarrow$% bool where
-    Unt :
-      static_eval_val (V, C) VUnt |
-    Chan :
-      static_eval_val (V, C) VChn c |
-    SendEvt :
-      static_eval_env (V, C) env %$\Longrightarrow$%
-      static_eval_val (V, C) (VClsr (SendEvt _ _) env) |
-    RecvEvt :
-      static_eval_env (V, C) env %$\Longrightarrow$%
-      static_eval_val (V, C) (VClsr (RecvEvt _) env) |
-    Left :
-      static_eval_env (V, C) env %$\Longrightarrow$%
-      static_eval_val (V, C) (VClsr (Left _) env) |
-    Right :
-      static_eval_env (V, C) env %$\Longrightarrow$%
-      static_eval_val (V, C) (VClsr (Right _) env) |
-    Abs :
-      {(APrim (Abs f x e)} %$\subseteq$% env_a f %$\Longrightarrow$% 
-      static_eval_exp (V, C) e %$\Longrightarrow$% 
-      static_eval_env (V, C) env %$\Longrightarrow$%
-      static_eval_val (V, C) (VClsr (Abs f x e) env) |
-    Pair :
-      static_eval_env (V, C) env %$\Longrightarrow$%
-      static_eval_val (V, C) (VClsr (Pair _ _) env) |
-    intro :  
-      %$\forall$% x v .
-        env x = Some v %$\longrightarrow$%
-        {abstract v} %$\subseteq$% env_a x %$\land$% static_eval_val (V, C) v %$\Longrightarrow$%
-      static_eval_env (V, C) env
-
-  \end{lstlisting}
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  inductive static_eval_stack ::
-    abstract_env * abstract_env %$\Rightarrow$%
-    abstract_value set %$\Rightarrow$% cont list %$\Rightarrow$% bool where
-    Empty :
-      static_eval_stack (V, C) valset [] |
-    Nonempty : 
-      valset %$\subseteq$% env_a x %$\Longrightarrow$%
-      static_eval_exp (V, C) e %$\Longrightarrow$%
-      static_eval_env (V, C) env %$\Longrightarrow$%
-      static_eval_stack (V, C) (V (rslt_var e)) k %$\Longrightarrow$%
-      static_eval_stack (V, C) valset ((Ctn x e env) # k)
-
-
-  inductive static_eval_state ::
-    abstract_env * abstract_env %$\Rightarrow$%
-    state %$\Rightarrow$% bool where
-    intro :
-      static_eval_exp (V, C) e %$\Longrightarrow$%
-      static_eval_env (V, C) env %$\Longrightarrow$%
-      static_eval_stack (V, C) (V (rslt_var e)) k %$\Longrightarrow$%
-      static_eval_state (V, C) (Stt e env k)
-
-  inductive static_eval_pool ::
-    abstract_env * abstract_env %$\Rightarrow$%
-    trace_pool %$\Rightarrow$% bool where
-    intro :
-      %$\forall$% pi st .
-        trpl pi = Some st %$\longrightarrow$%
-        static_eval_state (V, C) st %$\Longrightarrow$% 
-      static_eval_pool (V, C) trpl
-
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  theorem static_eval_preserved_under_concur_step :
-    static_eval_pool (V, C) trpl %$\Longrightarrow$% 
-    concur_step (trpl, ys) (trpl', ys') %$\Longrightarrow$%
-    static_stati_eval_pool (V, C) trpl'
-  proof sketch
-  qed
-
-  theorem static_eval_preserved_under_concur_step_star :
-    static_eval_pool (V, C) trpl %$\Longrightarrow$% 
-    star concur_step (trpl, ys) (trpl', ys')  %$\Longrightarrow$% 
-    static_concur_step (V, C) trpl'
-  proof sketch
-  qed
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  theorem trace_pool_snapshot_not_static_bound_sound :
-    env x = Some v %$\Longrightarrow$%
-    trpl pi = Some (Stt e env k) %$\Longrightarrow$%
-    static_eval_pool (V, C) trpl %$\Longrightarrow$%
-    {abstract v} %$\subseteq$% env_a x
-  proof sketch
-  qed
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  theorem trace_pool_always_not_static_bound_sound :
-    env' x = Some v %$\Longrightarrow$%
-    static_eval_pool (V, C) trpl %$\Longrightarrow$% 
-    star concur_step (trpl, ys) (trpl', ys') %$\Longrightarrow$%
-    trpl' pi = Some (Stt e' env' k') %$\Longrightarrow$%
-    {abstract v} %$\subseteq$% env_a x
-  proof sketch
-  qed
-
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  inductive
-    static_reachable_left :: exp %$\Rightarrow$% exp %$\Rightarrow$% bool where
-    Refl :
-      static_reachable_left e0 e0 | 
-    let_Spawn_Child :
-      static_reachable_left e0 (Let x (Spwn ec) en)%$\Longrightarrow$%
-      static_reachable_left e0 ec |
-    let_Case_Left :
-      static_reachable_left e0 (Let x (case xs xl el xr er) en) %$\Longrightarrow$%
-      static_reachable_left e0 el |
-    let_Case_Right :
-      static_reachable_left e0 (Let x (case xs xl el xr er) en) %$\Longrightarrow$%
-      static_reachable_left e0 er |
-    let_Abs_Body :
-      static_reachable_left e0 (Let x (Abs f xp eb) en) %$\Longrightarrow$%
-      static_reachable_left e0 eb | 
-    Let :
-      static_reachable_left e0 (Let x b en) %$\Longrightarrow$%
-      static_reachable_left e0 en
-
-  inductive
-    static_reachable_over_prim :: exp %$\Rightarrow$% prim %$\Rightarrow$% bool where
-    SendEvt :
-      static_reachable_over_prim e0 (SendEvt xC xM) |
-    RecvEvt :
-      static_reachable_over_prim e0 (RecvEvt xC) |
-    Pair :
-      static_reachable_over_prim e0 (Pair x1 x2) |
-    Left :
-      static_reachable_over_prim e0 (Left x) |
-    Right :
-      static_reachable_over_prim e0 (Right x) |
-    Abs :
-      static_reachable_left e0 eb %$\Longrightarrow$%
-      static_reachable_over_prim e0 (Abs fp xp eb) 
-
-  inductive 
-    static_reachable_over_env :: exp %$\Rightarrow$% env %$\Rightarrow$% bool and
-    static_reachable_over_val :: exp %$\Rightarrow$% val %$\Rightarrow$% bool where
-    VUnt :
-      static_reachable_over_val e0 VUnt |
-    VChn :
-      static_reachable_over_val e0 (VChn c) |
-    VClsr : "
-      static_reachable_over_prim e0 p %$\Longrightarrow$%
-      static_reachable_over_env e0 env' %$\Longrightarrow$%
-      static_reachable_over_val e0 (VClsr p env') |
-    intro : "
-      %$\forall$% x v .
-        env x = Some v %$\longrightarrow$%
-        static_reachable_over_val e0 v %$\Longrightarrow$%
-      static_reachable_over_env e0 env
-
-  inductive
-    static_reachable_over_stack ::
-      exp %$\Rightarrow$% cont list %$\Rightarrow$% bool where
-    Empty :
-      static_reachable_over_stack e0 [] |
-    Nonempty :
-      static_reachable_left e0 ek %$\Longrightarrow$%
-      static_reachable_over_env e0 envk %$\Longrightarrow$%
-      static_reachable_over_stack e0 k %$\Longrightarrow$%
-      static_reachable_over_stack e0 ((Ctn xk ek envk) # k)
-
-  inductive
-    static_reachable_over_state ::
-      exp %$\Rightarrow$% state %$\Rightarrow$% bool where
-    intro :
-      static_reachable_left e0 e %$\Longrightarrow$%
-      static_reachable_over_env e0 env %$\Longrightarrow$%
-      static_reachable_over_stack e0 k %$\Longrightarrow$%
-      static_reachable_over_state e0 (Ctn e env k)
-
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  lemma static_reachable_trans :
-    static_reachable ez ey %$\Longrightarrow$%
-    static_reachable ey ex %$\Longrightarrow$%
-    static_reachable ez ex
-  proof sketch 
-  qed
-
-
-  lemma static_reachable_over_state_preserved :
-    concur_step (trpl, ys) (trpl', ys') %$\Longrightarrow$%
-    %$\forall$% pi st.
-      trpl pi = Some st %$\longrightarrow$%
-      static_reachable_over_state e0 st %$\Longrightarrow$%
-    trpl' pi' = Some st' %$\Longrightarrow$%
-    static_reachable_over_state e0 st'
-  proof sketch 
-  qed
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  lemma state_always_exp_not_static_reachable_sound :
-    star concur_step (trpl0, ys0) (trpl', ys') %$\Longrightarrow$%
-    trpl0 = [[] %$\mapsto$% (Stt e0 (%$\lambda$% _ . None) [])] %$\Longrightarrow$%
-    trpl' pi' = Some st' %$\Longrightarrow$%
-    static_reachable_over_state e0 st'
-  proof sketch
-  qed
-
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-    interpretation semantics_sound
-    proof sketch
-    qed
-  \end{lstlisting}
-
-\section{Static Communication}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-locale communication_sound =
-  fixes 
-    static_one_shot :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool and
-    static_fan_out :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool and 
-    static_fan_in :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool and
-    static_one_to_one :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool
-
-  assumes 
-    static_one_shot_sound:
-      static_one_shot env_a e xC %$\Longrightarrow$%
-      static_eval (V, C) e %$\Longrightarrow$%
-      star concur_step ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {}) (trpl', H') %$\Longrightarrow$%
-      one_shot trpl' (Ch pi xC) and
-
-    static_fan_out_sound: 
-      static_fan_out env_a e xC %$\Longrightarrow$%
-      (V, C) static_eval e %$\Longrightarrow$%
-      star concur_step ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {}) (trpl', H') %$\Longrightarrow$%
-      fan_out trpl' (Ch pi xC) and
-
-    static_fan_in_sound:
-      static_fan_in env_a e xC %$\Longrightarrow$%
-      (V, C) static_eval e %$\Longrightarrow$%
-      star concur_step ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {}) (trpl', H') %$\Longrightarrow$%
-      fan_in trpl' (Ch pi xC) and
-
-    static_one_to_one_sound: "
-      static_one_to_one env_a e xC %$\Longrightarrow$%
-      (V, C) static_eval e %$\Longrightarrow$%
-      star concur_step ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {}) (trpl', H') %$\Longrightarrow$%
-      one_to_one trpl' (Ch pi xC)"
-  \end{lstlisting}
-
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  datatype label = NLet var | NRslt var
-
-  fun top_label :: exp %$\Rightarrow$% label where
-    top_label (Let x b e) = NLet x |
-    top_label (Rslt y) = NRslt y
-
-  type_synonym label_set = label set
-
-  type_synonym label_map = label %$\Rightarrow$% var set
-
-  inductive
-    static_static_send_label ::
-      abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
-      var %$\Rightarrow$% label %$\Rightarrow$% bool where
-    intro:
-      {AChn xC} %$\subseteq$% env_a xSC %$\Longrightarrow$%
-      {APrim (SendEvt xSC xM)} %$\subseteq$% env_a xE %$\Longrightarrow$%
-      static_reachable e (Let x (Sync xE) e') %$\Longrightarrow$%
-      static_static_send_label env_a e xC (NLet x)
-
-  inductive
-    static_static_recv_label ::
-      abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
-      var %$\Rightarrow$% label %$\Rightarrow$% bool where
-    intro:
-      {AChn xC} %$\subseteq$% env_a xRC %$\Longrightarrow$%
-      {APrim (RecvEvt xRC)} %$\subseteq$% env_a xE %$\Longrightarrow$%
-      static_reachable e (Let x (Sync xE) e') %$\Longrightarrow$%
-      static_static_recv_label env_a e xC (NLet x)
-
-  \end{lstlisting}
-
-\section{Static Communication part A}
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  datatype mode = ENxt | ESpwn | ECall | ERtn
-
-  type_synonym transition = label * mode * label
-
-  type_synonym transition_set = transition set
-
-  type_synonym step = label * mode
-
-  type_synonym abstract_path = step list
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive
-    static_traversable ::
-      abstract_env %$\Rightarrow$%
-      (label * mode * label) set %$\Rightarrow$%
-      exp %$\Rightarrow$% bool  where
-    Rslt:
-      static_traversable env_a graph (Rslt x) |
-    let_Unit:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph e  %$\Longrightarrow$%
-      static_traversable env_a graph (Let x Unt e) |
-    let_Chan:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x MkChn e) |
-    let_SendEvt:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x = (SendEvt xc xm) e) |
-    let_RecvEvt:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x = (RecvEvt xc) in e) |
-    let_Pair:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x (Pair x1 x2) e) |
-    let_Left:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x (Lft xp) e) |
-    let_Right:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x (Rht xp) e)" |
-    let_Abs:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph eb %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x (Abs f xp eb) e) |
-    let_Spawn:
-      {
-        (NLet x, ENxt, top_label e),
-        (NLet x, ESpwn, top_label ec)}
-        %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph ec %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x (Spwn ec)  e) |
-    let_Sync:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x (Sync xSE) e) |
-    let_Fst:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x (Fst xp) e) |
-    let_Snd:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x (Snd xp) e) |
-    let_Case:
-      {
-        (NLet x, ECall, top_label el),
-        (NLet x, ECall, top_label er),
-        (NRslt (rslt_var el), ERtn, top_label e),
-        (NRslt (rslt_var er), ERtn, top_label e)}
-        %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph el %$\Longrightarrow$%
-      static_traversable env_a graph er %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable env_a graph (Let x (Case xs xl el xr er) e) |
-    let_App:
-      %$\forall$% fp xp eb .
-        APrim (Abs fp xp eb) %$\in$% env_a f %$\longrightarrow$%
-        {
-          (NLet x, ECall, top_label eb),
-          (NRslt (rslt_var eb), ERtn, top_label e)}
-          %$\subseteq$% F %$\Longrightarrow$%
-        static_traversable env_a graph e %$\Longrightarrow$%
-        static_traversable env_a graph (Let x (App f xa) e)
-
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive static_traceable ::
-    abstract_env %$\Rightarrow$%
-      transition_set %$\Rightarrow$% label %$\Rightarrow$%
-      (label %$\Rightarrow$% bool) %$\Rightarrow$%
-      abstract_path %$\Rightarrow$% bool where
-  Empty:
-    is_end start %$\Longrightarrow$%
-    static_traceable env_a F start is_end [] |
-  Edge:
-    is_end end %$\Longrightarrow$%
-    {(start, edge, end)} %$\subseteq$% F %$\Longrightarrow$%
-    static_traceable env_a F start is_end [(start, edge)] |
-  Step:
-    static_traceable env_a F middle is_end ((middle, edge') # path) %$\Longrightarrow$%
-    {(start, edge, middle)} %$\subseteq$% F %$\Longrightarrow$%
-    static_traceable env_a F start is_end ((start, edge) # (middle, edge') # path)
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive static_inclusive ::
-    abstract_path %$\Rightarrow$% abstract_path %$\Rightarrow$% bool where
-  Prefix1:
-    prefix pi1 pi2 %$\Longrightarrow$%
-    static_inclusive pi1 pi2 |
-  Prefix2:
-    prefix pi2 pi1 %$\Longrightarrow$%
-    static_inclusive pi1 pi2 |
-  Spawn1:
-    static_inclusive (pi @ (NLet x, ESpwn) # pi1) (pi @ (NLet x, ENxt) # pi2) |
-  Spawn2:
-    static_inclusive (pi @ (NLet x, ENxt) # pi1) (pi @ (NLet x, ESpwn) # pi2)
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive
-    singular ::
-      abstract_path %$\Rightarrow$%
-      abstract_path %$\Rightarrow$% bool where
-  equal:
-    pi1 = pi2 %$\Longrightarrow$% 
-    singular pi1 pi2 |
-  exclusive:
-    %$\not$% (static_inclusive pi1 pi2) %$\Longrightarrow$% 
-    singular pi1 pi2
-
-  inductive
-    noncompetitive ::
-      abstract_path %$\Rightarrow$% abstract_path %$\Rightarrow$% bool where
-    ordered:
-      ordered pi1 pi2 %$\Longrightarrow$% 
-      noncompetitive pi1 pi2 |
-    exclusive:
-      %$\not$% (not_inclusive pi1 pi2) %$\Longrightarrow$% 
-      noncompetitive pi1 pi2
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive
-    static_one_shot ::
-      abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
-      var %$\Rightarrow$% bool where
-    Sync:
-      every_two
-        (static_traceable env_a F (top_label e)
-          (static_static_send_label env_a e xC))
-        singular %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_one_shot env_a e xC 
-
-    inductive
-      static_one_to_one ::
-        abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
-        var %$\Rightarrow$% bool where
-      Sync:
-        every_two
-          (static_traceable env_a F
-            (top_label e) (static_static_send_label env_a e xC))
-          noncompetitive %$\Longrightarrow$%
-        every_two
-          (static_traceable env_a F
-            (top_label e) (static_static_recv_label env_a e xC))
-          noncompetitive %$\Longrightarrow$%
-        static_traversable env_a graph e %$\Longrightarrow$%
-        static_one_to_one env_a e xC 
-
-  inductive
-    static_fan_out ::
-      abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
-      var %$\Rightarrow$% bool where
-    Sync:
-      every_two
-        (static_traceable env_a F
-          (top_label e) (static_static_send_label env_a e xC))
-        noncompetitive %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_fan_out env_a e xC 
-
-  inductive
-    static_fan_in ::
-      abstract_env %$\Rightarrow$% exp %$\Rightarrow$%
-      var %$\Rightarrow$% bool where
-    Sync:
-      every_two (static_traceable env_a F (top_label e) (static_static_recv_label env_a e xC)) noncompetitive %$\Longrightarrow$%
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_fan_in env_a e xC
-
-    \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-locale communication_sound_A = 
-  Static_Communication.communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one
-    \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive paths_correspond ::
-    control_path %$\Rightarrow$% abstract_path %$\Rightarrow$% bool where
-    Empty:
-      paths_correspond [] [] |
-    Next:
-      paths_correspond pi path %$\Longrightarrow$%
-      paths_correspond (pi @ [LNext x]) (path @ [(NLet x, ENxt)]) |
-    Spawn:
-      paths_correspond pi path %$\Longrightarrow$%
-      paths_correspond (pi @ [LSpawn x]) (path @ [(NLet x, ESpwn)]) |
-    Call:
-      paths_correspond pi path %$\Longrightarrow$%
-      paths_correspond (pi @ [LCall x]) (path @ [(NLet x, ECall)])  |
-    Rtn:
-      paths_correspond pi path %$\Longrightarrow$%
-      paths_correspond (pi @ [LRtn x]) (path @ [(NRslt x, ERtn)]) 
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  lemma not_static_inclusive_sound: "
-    star concur_step
-      ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
-      (trpl', ys') %$\Longrightarrow$% 
-    trpl' pi1 %$\neq$% None %$\Longrightarrow$% 
-    trpl' pi2 %$\neq$% None %$\Longrightarrow$% 
-    paths_correspond pi1 path1 %$\Longrightarrow$%
-    paths_correspond pi2 path2 %$\Longrightarrow$%
-    static_inclusive path1 path2"
-
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive 
-    static_traversable_env ::
-      abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% env %$\Rightarrow$% bool and
-    static_traversable_val ::
-      abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% val %$\Rightarrow$% bool where
-    Intro:
-      %$\forall$% x v .
-        env x = Some v %$\longrightarrow$%
-        {rslt_var v} %$\subseteq$% env_a x %$\land$% static_traversable_val env_a F v %$\Longrightarrow$%
-      static_traversable_env env_a F env |
-
-    Unit:
-      static_traversable_val env_a F VUnit |
-    Chan:
-      static_traversable_val env_a F (VChn c) |
-    SendEvt:
-      static_traversable_env env_a F env %$\Longrightarrow$%
-      static_traversable_val env_a F (VClsr (SendEvt _ _) env) |
-    RecvEvt:
-      static_traversable_env env_a F env %$\Longrightarrow$%
-      static_traversable_val env_a F (VClsr (RecvEvt _) env) |
-    Left:
-      static_traversable_env env_a F env %$\Longrightarrow$%
-      static_traversable_val env_a F (VClsr (Left _) env) |
-    Right:
-      static_traversable_env env_a F env %$\Longrightarrow$%
-      static_traversable_val env_a F (VClsr (Right _) env) |
-    Abs:
-      static_traversable env_a graph e %$\Longrightarrow$% 
-      static_traversable_env env_a F  env %$\Longrightarrow$%
-      static_traversable_val env_a F (VClsr (Abs f x e) env) |
-  Pair:
-    static_traversable_env env_a F env %$\Longrightarrow$%
-    static_traversable_val env_a F (VClsr (Pair _ _) env) 
-
-
-
-  inductive static_traversable_stack ::
-    abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% cont list %$\Rightarrow$% bool where
-    Empty:
-      static_traversable_stack env_a F [] |
-    Nonempty:
-      static_traversable env_a graph e %$\Longrightarrow$%
-      static_traversable_env env_a F env %$\Longrightarrow$%
-      static_traversable_stack env_a F k %$\Longrightarrow$% 
-      static_traversable_stack env_a F ((Ctn x e env) # k))
-
-  inductive
-    static_traversable_pool ::
-      abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$%
-      trace_pool %$\Rightarrow$% bool  where
-    Intro:
-      %$\forall$% pi e env k .
-        E pi = Some (Stt e env k) %$\longrightarrow$% 
-        static_traversable env_a graph e %$\land$%
-        static_traversable_env env_a F env %$\land$%
-        static_traversable_stack env_a F k %$\Longrightarrow$% 
-      static_traversable_pool env_a F E
-
-  \end{lstlisting}
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-
-  lemma static_traversable_pool_preserved_star: "
-    static_traversable_pool env_a F
-      ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])]) %$\Longrightarrow$%
-    static_eval (V, C) e %$\Longrightarrow$%
-    trpl' pi = Some (Stt (Let x b en) envk) %$\Longrightarrow$%
-    star concur_step
-      ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
-      (trpl', ys') %$\Longrightarrow$%
-    is_end (NLet x) %$\Longrightarrow$%
-    static_traversable_pool env_a F trpl' "
-  proof sketch
-  qed
-
-lemma static_traversable_pool_implies_static_traceable: "
-  trpl' pi = Some (Stt (Let x b in en) env k) %$\Longrightarrow$%
-  concur_step
-    ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
-    (trpl', ys') %$\Longrightarrow$% 
-  static_eval (V, C) e %$\Longrightarrow$%
-  static_traversable_pool env_a F trpl' %$\Longrightarrow$%
-  is_end (NLet x) %$\Longrightarrow$%
-  %$\exists$% path . 
-    paths_correspond pi path %$\land$%
-    static_traceable env_a F (top_label e) is_end path "
-  proof sketch
-  qed
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  lemma not_static_traceable_sound: "
-  trpl' pi = Some (Stt (Let x b en) env k) %$\Longrightarrow$%
-  star concur_step
-    ([[] %$\mapsto$% (Stt e (%$\lambda$% _ . None) [])], {})
-    (trpl', ys') %$\Longrightarrow$% 
-  static_eval (V, C) e %$\Longrightarrow$%
-  static_traversable env_a graph e %$\Longrightarrow$%
-  is_end (NLet x) %$\Longrightarrow$%
-  %$\exists$% path . 
-    paths_correspond pi path %$\land$%
-    static_traceable env_a F (top_label e) is_end path
-  proof sketch
-  qed
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-
-  interpretation communication_sound_A
-    proof -
-
-  \end{lstlisting}
-
-
-
-\section{Static Communication part B}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-datatype mode = ENxt | ESpwn | ESend var | ECall | ERtn var
-
-type_synonym transition = (label * mode * label)
-
-type_synonym transition_set = transition set
-
-type_synonym step = (label * mode)
-
-type_synonym abstract_path = step list
-  \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  inductive static_traversable :: abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% (var %$\Rightarrow$% label %$\Rightarrow$% bool) %$\Rightarrow$% exp %$\Rightarrow$% bool  where
-    result:
-        static_traversable env_a graph static_recv_site (Rslt x) |
-    let_Unit:
-        {(NLet x , ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-        static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-        static_traversable env_a graph static_recv_site (Let x Unt e) |
-    let_Chan:
-        {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-        static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-        static_traversable env_a graph static_recv_site (Let x MkChn e) |
-  let_SendEvt:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site (Let x (Prim (SendEvt xc xm)) e)" |
-  let_RecvEvt:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site (Let x (Prim (RecvEvt xc)) e) |
-  let_Pair:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site (Let x (Prim (Pair x1 x2)) e) |
-  let_Left:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site (Let x (Prim (Lft xp)) e) |
-  let_Right:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site (Let x (Prim (Rght xp)) e) |
-  let_Abs:
-    {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-    static_traversable env_a graph static_recv_site eb %$\Longrightarrow$%
-    static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-    static_traversable env_a graph static_recv_site (Let x (Prim (Abs f xp eb)) e) |
-  let_Spawn:
-    {(NLet x, ENxt, top_label e),
-      (NLet x, ESpawn, top_label ec)} %$\subseteq$% F %$\Longrightarrow$%
-    static_traversable env_a graph static_recv_site ec %$\Longrightarrow$%
-    static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-    static_traversable env_a graph static_recv_site (Let x (Spwn ec) e) |
-  let_Sync:
-    {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-    (%$\forall$% xSC xM xC y .
-      {^SendEvt xSC xM} %$\subseteq$% env_a xSE %$\longrightarrow$%
-      {AChan xC} %$\subseteq$% env_a xSC %$\longrightarrow$%
-      static_recv_site xC (NLet y) %$\longrightarrow$%
-      {(NLet x, ESend xSE, NLet y)} %$\subseteq$% F) %$\Longrightarrow$%
-    static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-    static_traversable env_a graph static_recv_site (Let x (Sync xSE) e) |
-  let_Fst:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site (Let x (Fst xp) e) |
-  let_Snd:
-      {(NLet x, ENxt, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site (Let x (Snd xp) e) |
-  let_Case:
-      {
-        (NLet x, ECall, top_label el),
-        (NLet x, ECall, top_label er),
-        (NRslt (rslt_var el), ERtn x, top_label e),
-        (NRslt (rslt_var er), ERtn x, top_label e)} %$\subseteq$% F %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site el %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site er %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site (Let x (Case xs xl el xr er) e) |
-  let_App:
-      (%$\forall$% f' xp eb . ^Abs f' xp eb %$\in$% env_a f %$\longrightarrow$%
-        {(NLet x, ECall, top_label eb),
-          (NRslt (rslt_var eb), ERtn x, top_label e)} %$\subseteq$% F) %$\Longrightarrow$%
-      static_traversable env_a graph static_recv_site e %$\Longrightarrow$%
-    static_traversable env_a graph static_recv_site (Let x (App f xa) e)
-
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-inductive 
-  static_built_on_chan :: "abstract_env %$\Rightarrow$% label_map %$\Rightarrow$% var %$\Rightarrow$% var %$\Rightarrow$% bool"
-where
-  Chan:
-      AChn xc %$\in$% env_a x %$\Longrightarrow$% 
-      static_built_on_chan env_a entr xc x |
-  SendEvt: 
-      APrim (SendEvt xsc xm) %$\in$% env_a x %$\Longrightarrow$% 
-      static_built_on_chan env_a entr xc xsc %$\lor$% static_built_on_chan env_a entr xc xm %$\Longrightarrow$% 
-      static_built_on_chan env_a entr xc x |
-  RecvEvt:
-    APrim (RecvEvt xrc) %$\in$% env_a x %$\Longrightarrow$% 
-    static_built_on_chan env_a entr xc xrc %$\Longrightarrow$% 
-    static_built_on_chan env_a entr xc x |
-  Pair:
-      APrim (Pair x1 x2) %$\in$% env_a x %$\Longrightarrow$%
-      static_built_on_chan env_a entr xc x1 %$\lor$% static_built_on_chan env_a entr xc x2 %$\Longrightarrow$% 
-      static_built_on_chan env_a entr xc x |
-  Left:
-      APrim (Left xa) %$\in$% env_a x %$\Longrightarrow$% 
-      static_built_on_chan env_a entr xc xa %$\Longrightarrow$% 
-    static_built_on_chan env_a entr xc x |
-  Right:
-      APrim (Right xa) %$\in$% env_a x %$\Longrightarrow$% 
-      static_built_on_chan env_a entr xc xa %$\Longrightarrow$% 
-      static_built_on_chan env_a entr xc x |
-  Abs:
-    APrim (Abs f xp eb) %$\in$% env_a x %$\Longrightarrow$% 
-    %$\not$% Set.is_empty (entr (labelLabel eb) - {xp}) %$\Longrightarrow$%
-    static_built_on_chan env_a entr xc x 
-  \end{lstlisting}
-
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  fun chan_set ::
-    abstract_env %$\Rightarrow$% label_map %$\Rightarrow$% var %$\Rightarrow$% var %$\Rightarrow$% var set" where
-    chan_set env_a entr xc x = (if (static_built_on_chan env_a entr xc x) then {x} else {})
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  inductive static_live_chan ::
-    abstract_env %$\Rightarrow$% label_map %$\Rightarrow$% label_map %$\Rightarrow$% var %$\Rightarrow$% exp %$\Rightarrow$% bool where
-    Result:
-      chan_set env_a entr xc y = entr (NRslt y) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Rslt y) |
-  Let_Unit:
-      static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-      entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-      exit (NLet x) = entr (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Let x Unt e) |
-  Let_Chan:
-    static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-    entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-    (exit (NLet x) - {x}) = entr (NLet x) %$\Longrightarrow$%
-    static_live_chan env_a entr exit xc (Let x MkChn e) |
-  Let_SendEvt:
-    static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-    entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-    (exit (NLet x) - {x}) %$\cup$% chan_set env_a entr xc xsc %$\cup$%
-      chan_set env_a entr xc xm = entr (NLet x) %$\Longrightarrow$%
-    static_live_chan env_a entr exit xc (Let x (Prim (SendEvt xsc xm)) e) |
-  Let_RecvEvt:
-    static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-    entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-    (exit (NLet x) - {x}) %$\cup$% chan_set env_a entr xc xrc = entr (NLet x) %$\Longrightarrow$%
-    static_live_chan env_a entr exit xc (Let x (Prim (RecvEvt xrc)) e) |
-  Let_Pair:
-      static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-      entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-      (exit (NLet x) - {x}) %$\cup$%  chan_set env_a entr xc x1 %$\cup$%
-        chan_set env_a entr xc x2 = entr (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Let x (Prim (Pair x1 x2)) e) |
-  Let_Left:
-      static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-      entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-      (exit (NLet x) - {x}) %$\cup$% chan_set env_a entr xc xa = entr (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Let x (Prim (Lft xa)) e) |
-  Let_Right:
-      static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-      entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-      (exit (NLet x) - {x}) %$\cup$% chan_set env_a entr xc xa = entr (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Let x (Prim (Rght xa)) e) |
-  Let_Abs:
-      static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-      entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc eb %$\Longrightarrow$%
-      (exit (NLet x) - {x}) %$\cup$%
-        (entr (top_label eb) - {xp}) = entr (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Let x (Prim (Abs f xp eb)) e) |
-  Let_Spawn:
-      static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc ec %$\Longrightarrow$%
-      entr (top_label e) %$\cup$% entr (top_label ec) = exit (NLet x) %$\Longrightarrow$%
-      (exit (NLet x) - {x}) = entr (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Let x (Spwn ec) e) |
-  Let_Sync:
-      static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-      entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-      (exit (NLet x) - {x}) %$\cup$% chan_set env_a entr xc xe = entr (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Let x (Sync xe) e) |
-  Let_Fst:
-      static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-      entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-      (exit (NLet x) - {x}) %$\cup$% chan_set env_a entr xc xa = entr (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Let x (Fst xa) e) |
-  Let_Snd:
-      static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-      entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-      (exit (NLet x) - {x}) %$\cup$% chan_set env_a entr xc xa = entr (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Let x (Snd xa) e) |
-  Let_Case:
-      static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-      entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc el %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc er %$\Longrightarrow$%
-      (exit (NLet x) - {x}) %$\cup$% chan_set env_a entr xc xs %$\cup$% 
-      (entr (top_label el) - {xl}) %$\cup$%
-      (entr (top_label er) - {xr}) = entr (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Let x (Case xs xl el xr er) e) |
-  Let_App:
-      static_live_chan env_a entr exit xc e %$\Longrightarrow$%
-      entr (top_label e) = exit (NLet x) %$\Longrightarrow$%
-      (exit (NLet x) - {x}) %$\cup$%
-      chan_set env_a entr xc f %$\cup$%
-      chan_set env_a entr xc xa = entr (NLet x) %$\Longrightarrow$%
-      static_live_chan env_a entr exit xc (Let x (App f xa) e)
-
-
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  inductive static_traceable ::
-    transition_set %$\Rightarrow$% label
-    %$\Rightarrow$% abstract_path %$\Rightarrow$% bool" where
-    Empty:
-      static_traceable F end [] |
-    Edge:
-      (start, edge, end) %$\in$% F %$\Longrightarrow$%
-      static_traceable F end [(start, edge)] |
-    Step:
-      static_traceable F end ((middle, edge') # post) %$\Longrightarrow$%
-      (start, edge, middle) %$\in$% F %$\Longrightarrow$%
-      path = [(start, edge), (middle, edge')] @ post %$\Longrightarrow$%
-      static_traceable F end path
-
-  \end{lstlisting}
-
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  inductive static_live_traversable :: "transition_set %$\Rightarrow$% label_map %$\Rightarrow$% label_map %$\Rightarrow$% transition %$\Rightarrow$% bool"  where
-  Next: "
-    (l, ENxt, l') %$\in$% F %$\Longrightarrow$%
-    %$\not$% Set.is_empty (exit l) %$\Longrightarrow$%
-    %$\not$% Set.is_empty (entr l') %$\Longrightarrow$%
-    static_live_traversable F entr exit (l, ENxt, l')
-  " |
-  Spawn: "
-    (l, ESpwn, l') %$\in$% F %$\Longrightarrow$%
-    %$\not$% Set.is_empty (exit l) %$\Longrightarrow$%
-    %$\not$% Set.is_empty (entr l') %$\Longrightarrow$%
-    static_live_traversable F entr exit (l, ESpwn, l')
-  " |
-  Call_Live_Outer: "
-    (l, ECall, l') %$\in$% F %$\Longrightarrow$%
-    %$\not$% Set.is_empty (exit l) %$\Longrightarrow$%
-    static_live_traversable F entr exit (l, ECall, l')
-  " |
-  Call_Live_Inner: "
-    (l, ECall, l') %$\in$% F %$\Longrightarrow$%
-    %$\not$% Set.is_empty (entr l') %$\Longrightarrow$%
-    static_live_traversable F entr exit (l, ECall, l')
-  " |
-  Return: "
-    (l, ERtn x, l') %$\in$% F %$\Longrightarrow$%
-    %$\not$% Set.is_empty (entr l') %$\Longrightarrow$%
-    static_live_traversable F entr exit (l, ERtn x, l')
-  " |
-  Send: "
-    ((NLet xSend), ESend xE, (NLet xRecv)) %$\in$% F %$\Longrightarrow$%
-    {xE} %$\subseteq$% (entr (NLet xSend)) %$\Longrightarrow$%
-    static_live_traversable F entr exit ((NLet xSend), ESend xE, (NLet xRecv))
-    "
-    
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  
-inductive static_live_traceable :: "abstract_env %$\Rightarrow$% transition_set %$\Rightarrow$% label_map %$\Rightarrow$% label_map %$\Rightarrow$% label %$\Rightarrow$% (label %$\Rightarrow$% bool) %$\Rightarrow$% abstract_path %$\Rightarrow$% bool" where
-  Empty:
-    is_end start %$\Longrightarrow$%
-    static_live_traceable env_a F entr exit start is_end [] |
-  Edge:
-    is_end end %$\Longrightarrow$%
-    static_live_traversable F entr exit (start, edge, end) %$\Longrightarrow$%
-    static_live_traceable env_a F entr exit start is_end [(start, edge)] |
-  Step:
-    static_live_traceable env_a F entr exit middle is_end ((middle, edge') # path) %$\Longrightarrow$%
-    static_live_traversable F entr exit (start, edge, middle) %$\Longrightarrow$%
-    static_live_traceable env_a F entr exit start is_end ((start, edge) # (middle, edge') # path) |
-  Pre_Return:
-    static_live_traceable env_a F entr exit (NRslt y) is_end ((NRslt y, ERtn x) # post) %$\Longrightarrow$%
-    static_traceable  F (NRslt y) pre %$\Longrightarrow$%
-    %$\not$% static_balanced (pre @ [(NRslt y, ERtn x)]) %$\Longrightarrow$%
-    %$\not$% Set.is_empty (exit (NLet x)) %$\Longrightarrow$%
-    path = pre @ (NRslt y, ERtn x) # post %$\Longrightarrow$%
-    static_live_traceable env_a F entr exit start is_end path
-    
-  \end{lstlisting}
-
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  
-  inductive static_inclusive ::
-    abstract_path %$\Rightarrow$% abstract_path %$\Rightarrow$% bool where
-  Prefix1:
-    prefix pi1 pi2 %$\Longrightarrow$%
-    pi1 static_inclusive pi2 |
-  Prefix2:
-    prefix pi2 pi1 %$\Longrightarrow$%
-    pi1 static_inclusive pi2 |
-  Spawn1:
-    static_inclusive (pi @ (NLet x, ESpwn) # pi1) (pi @ (NLet x, ENxt) # pi2) |
-  Spawn2:
-    static_inclusive (pi @ (NLet x, ENxt) # pi1 static_inclusive) (pi @ (NLet x, ESpwn) # pi2) |
-  Send1: 
-    static_inclusive (pi @ (NLet x, ESend xE) # pi1) (pi @ (NLet x, ENxt) # pi2) |
-  Send2:
-    static_inclusive (pi @ (NLet x, ENxt) # pi1) (pi @ (NLet x, ESend xE) # pi2)
-    
-  \end{lstlisting}
-
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-
-  
-  inductive singular ::
-    abstract_path %$\Rightarrow$% abstract_path %$\Rightarrow$% bool where
-    equal:
-      pi1 = pi2 %$\Longrightarrow$% 
-      singular pi1 pi2 |
-    exclusive:
-      %$\not$% (pi1 static_inclusive pi2) %$\Longrightarrow$% 
-      singular pi1 pi2
-
-    inductive noncompetitive ::
-      abstract_path %$\Rightarrow$% abstract_path %$\Rightarrow$% bool" where
-  ordered:
-    ordered pi1 pi2 %$\Longrightarrow$% 
-    noncompetitive pi1 pi2 |
-  exclusive:
-    %$\not$% (pi1 static_inclusive pi2) %$\Longrightarrow$% 
-    noncompetitive pi1 pi2
-
-inductive static_one_shot :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool where
-  Sync:
-    every_two (static_live_traceable env_a F entr exit (NLet xC) (static_send_label env_a e xC)) singular %$\Longrightarrow$%
-    static_live_chan env_a entr exit xC e %$\Longrightarrow$%
-    static_traversable env_a graph (static_recv_label env_a e) e %$\Longrightarrow$%
-    static_one_shot env_a e xC
-
-inductive static_one_to_one :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool where
-  Sync:
-    every_two (static_live_traceable env_a F entr exit (NLet xC) (static_send_label env_a e xC)) noncompetitive %$\Longrightarrow$%
-    every_two (static_live_traceable env_a F entr exit (NLet xC) (static_recv_label env_a e xC)) noncompetitive %$\Longrightarrow$%
-    static_live_chan env_a entr exit xC e %$\Longrightarrow$%
-    static_traversable env_a graph (static_recv_label env_a e) e %$\Longrightarrow$%
-    static_one_to_one env_a e xC
-
-inductive static_fan_out :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool where
-  Sync:
-    every_two (static_live_traceable env_a F entr exit (NLet xC) (static_send_label env_a e xC)) noncompetitive %$\Longrightarrow$%
-    static_live_chan env_a entr exit xC e %$\Longrightarrow$%
-    static_traversable env_a graph (static_recv_label env_a e) e %$\Longrightarrow$%
-    static_fan_out env_a e xC
-
-inductive static_fan_in :: abstract_env %$\Rightarrow$% exp %$\Rightarrow$% var %$\Rightarrow$% bool where
-  Sync:
-    every_two (static_live_traceable env_a F entr exit (NLet xC) (static_recv_label env_a e xC)) noncompetitive %$\Longrightarrow$%
-    static_live_chan env_a entr exit xC e %$\Longrightarrow$%
-    static_traversable env_a graph (static_recv_label env_a e) e %$\Longrightarrow$%
-    static_fan_in env_a e xC
-
-  \end{lstlisting}
-    
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-locale communication_sound_B =
-  Static_Communication.communication_sound static_one_shot static_fan_out static_fan_in static_one_to_one
-    \end{lstlisting}
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-interpretation communication_sound_B
-proof sketch
-qed
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-
-  \end{lstlisting}
-
 
 \begin{lstlisting}[style=codestyle1, escapechar=\%]
 
@@ -4962,15 +3337,6 @@ qed
   () 
 
   \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  \end{lstlisting}
-
-
-\begin{lstlisting}[style=codestyle1, escapechar=\%]
-  \end{lstlisting}
-
 
 
 \end{document}
