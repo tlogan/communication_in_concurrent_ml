@@ -196,37 +196,37 @@ one-shot.
 
 \begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
   type thread_id
-  program_value spawn : (unit -> unit) -> thread_id
+  val spawn : (unit -> unit) -> thread_id
 
   type 'a chan
-  program_value channel : unit -> 'a chan
-  program_value recv : 'a channel -> 'a
-  program_value send : ('a channel * 'a) -> unit
+  val channel : unit -> 'a chan
+  val recv : 'a channel -> 'a
+  val send : ('a channel * 'a) -> unit
   \end{lstlisting}
 
 \begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
 
   signature SERV = sig 
     type serv
-    program_value make : unit -> serv
-    program_value call : serv * int -> int
+    val make : unit -> serv
+    val call : serv * int -> int
   end
 
   structure Serv : SERV = struct 
     datatype serv = S of (int * int chan) channel 
 
     fun make () = let 
-      program_value reqChn = channel ()
+      val reqChn = channel ()
       fun loop state = let
-        program_value (v, replCh) = recv reqChn in 
+        val (v, replCh) = recv reqChn in 
         send (replCh, state);
         loop v end in
       spawn (fn () => loop 0);
       S reqChn end 
 
     fun call (server, v) = let 
-      program_value S reqChn = server
-      program_value replChn = channel () in 
+      val S reqChn = server
+      val replChn = channel () in 
       send (reqCh, (v, replCh));
       recv replChn end end
 
@@ -235,26 +235,26 @@ one-shot.
 \begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
 
   type 'a event
-  program_value sync : 'a event -> 'a
-  program_value recvEvt : 'a channel -> 'a event
-  program_value sendEvt : 'a channel * 'a -> unit event
-  program_value choose : 'a event * 'a event -> 'a event
+  val sync : 'a event -> 'a
+  val recvEvt : 'a channel -> 'a event
+  val sendEvt : 'a channel * 'a -> unit event
+  val choose : 'a event * 'a event -> 'a event
 
   fun send (ch, v) = sync (sendEvt (ch, v))
   fun recv v = sync (recvEvt v)
 
-  program_value thenEvt : 'a event * ('a -> 'b event) -> 'b event
+  val thenEvt : 'a event * ('a -> 'b event) -> 'b event
 
   \end{lstlisting}
 
 \begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
-  program_value server = Serv.make ()
-  program_value _ = spawn (fn () => Serv.call (server, 35))
-  program_value _ = spawn (fn () => 
+  val server = Serv.make ()
+  val _ = spawn (fn () => Serv.call (server, 35))
+  val _ = spawn (fn () => 
     Serv.call (server, 12); 
     Serv.call (server, 13))
-  program_value _ = spawn (fn () => Serv.call (server, 81))
-  program_value _ = spawn (fn () => Serv.call (server, 44))
+  val _ = spawn (fn () => Serv.call (server, 81))
+  val _ = spawn (fn () => Serv.call (server, 44))
   \end{lstlisting}
 
 \begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
@@ -263,10 +263,10 @@ one-shot.
 
     fun make () = let 
 
-      program_value reqChn = FanIn.channel()
+      val reqChn = FanIn.channel()
 
       fun loop state = let
-        program_value (v, replCh) = FanIn.recv reqChn in 
+        val (v, replCh) = FanIn.recv reqChn in 
         OneShot.send (replCh, state);
         loop v end in
 
@@ -274,8 +274,8 @@ one-shot.
       S reqChn end 
 
     fun call (server, v) = let 
-      program_value S reqChn = server
-      program_value replChn = OneShot.channel () in 
+      val S reqChn = server
+      val replChn = OneShot.channel () in 
       FanIn.send (reqCh, (v, replCh));
       OneShot.recv replChn end
 
@@ -361,21 +361,21 @@ expression analysis and liveness analysis can provide greater coverage.
 
 \begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
   let
-    program_value w = 4
-    program_value x = ref 1
-    program_value y = ref 2
-    program_value z = (!x + 1) + (!y + 2) + (w - 3)
-    program_value w = 1 in
+    val w = 4
+    val x = ref 1
+    val y = ref 2
+    val z = (!x + 1) + (!y + 2) + (w - 3)
+    val w = 1 in
     y := 0;
     (!y + 2) - (!x + 1) * (w - 3) end
   \end{lstlisting}
 
 \begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
   let 
-    program_value x = 1  
-    program_value y = 2
-    program_value z = ref (4 * 73)
-    program_value x = 4 in 
+    val x = 1  
+    val y = 2
+    val z = ref (4 * 73)
+    val x = 4 in 
     z := 1; 
     x * !z end
   \end{lstlisting}
@@ -383,9 +383,9 @@ expression analysis and liveness analysis can provide greater coverage.
 \begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
 
   let 
-    program_value f = fn x => x 1
-    program_value g = fn y => y + 2
-    program_value h = fn z => z + 3 in 
+    val f = fn x => x 1
+    val g = fn y => y + 2
+    val h = fn z => z + 3 in 
     (f g) + (f h) end
 
 \end{lstlisting}
@@ -525,9 +525,9 @@ implementation shown here as an intermediate representation presented with concr
 \begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
   signature CHANNEL = sig
     type 'a channel 
-    program_value channel : unit -> 'a chan
-    program_value send : 'a channel * 'a -> unit
-    program_value recv : 'a channel -> 'a
+    val channel : unit -> 'a chan
+    val send : 'a channel * 'a -> unit
+    val recv : 'a channel -> 'a
     end     
 \end{lstlisting}
 
@@ -596,16 +596,16 @@ operation returns with the value deposited in the cell by a sending thread.
       acquire lock;
       (case !conRef of
         Recv q => let
-          program_value (recvCond, mopRef) = dequeue q in
+          val (recvCond, mopRef) = dequeue q in
           mopRef := Some m;
           if (isEmpty q) then conRef := Inac else (); 
           release lock; signal recvCond; () end |
         Send q => let
-          program_value sendCond = condition () in
+          val sendCond = condition () in
           enqueue (q, (sendCond, m));
           release lock; wait sendCond; () end |
         Inac => let
-          program_value sendCond = condition () in
+          val sendCond = condition () in
           conRef := Send (queue [(sendCond, m)]);
           release lock; wait sendCond; () end)
 
@@ -613,21 +613,21 @@ operation returns with the value deposited in the cell by a sending thread.
       acquire lock;
       (case !conRef of 
         Send q => let
-          program_value (sendCond, m) = dequeue q in
+          val (sendCond, m) = dequeue q in
           if (isEmpty q) then
             conRef := Inac
           else
             (); 
           release lock; signal sendCond; m end |
         Recv q => let
-          program_value recvCond = condition ()
-          program_value mopRef = ref None in
+          val recvCond = condition ()
+          val mopRef = ref None in
           enqueue (q, (recvCond, mopRef));
           release lock; wait recvCond;
           valOf (!mopRef) end |
         Inac => let
-          program_value recvCond = condition ()
-          program_value mopRef = ref None in
+          val recvCond = condition ()
+          val mopRef = ref None in
           conRef := Recv (queue [(recvCond, mopRef)]);
           release lock; wait recvCond;
           valOf (!mopRef) end)
@@ -681,7 +681,7 @@ thread, and returns the states' associated message.
     fun channel () = Chn (ref Inac, mutexLock ())
 
     fun send (Chn (conRef, lock)) m = let
-      program_value sendCond = condition () in
+      val sendCond = condition () in
       case cas (conRef, Inac, Send (sendCond, m)) of
         Inac => (* conRef already set *)
           wait sendCond; () |
@@ -690,7 +690,7 @@ thread, and returns the states' associated message.
           * the only one that updates from this state *)
           acquire lock;
           (let
-            program_value (recvCond, mopRef) = dequeue q in
+            val (recvCond, mopRef) = dequeue q in
             mopRef := Some m; 
             if (isEmpty q) then conRef := Inac else (); 
             release lock; signal (recvCond);
@@ -701,14 +701,14 @@ thread, and returns the states' associated message.
       acquire lock;
       (case !conRef of
         Inac => let
-          program_value recvCond = condition ()
-          program_value mopRef = ref None in
+          val recvCond = condition ()
+          val mopRef = ref None in
           conRef := Recv (queue [(recvCond, mopRef)]);
           release lock; wait recvCond;
           valOf (!mopRef) end |
         Recv q => let
-          program_value recvCond = condition () 
-          program_value mopRef = ref None in
+          val recvCond = condition () 
+          val mopRef = ref None in
           enqueue (q, (recvCond, mopRef));
           release lock; wait recvCond;
           valOf (!mopRef) end |
@@ -744,18 +744,18 @@ The implementation of fan-in channels is very similar to that of fan-out channel
       release lock; signal recvCond;
       () |
     Send q => let
-      program_value sendCond = condition () in
+      val sendCond = condition () in
       enqueue (q, (sendCond, m));
       release lock; wait sendCond;
       () end |
     Inac => let
-      program_value sendCond = condition () in
+      val sendCond = condition () in
       conRef := Send (queue [(sendCond, m)])
       release lock; wait sendCond; () end 
 
   fun recv (Chn (conRef, lock)) = let
-    program_value recvCond = condition () 
-    program_value mopRef = ref None in
+    val recvCond = condition () 
+    val mopRef = ref None in
     case cas (conRef, Inac, Recv (recvCond, mopRef)) of
       Inac => (* conRef already set *)
         wait recvCond; valOf (!mopRef) |
@@ -764,7 +764,7 @@ The implementation of fan-in channels is very similar to that of fan-out channel
         -* that updates the state from this state *)
         acquire lock;
         (let
-          program_value (sendCond, m) = dequeue q in
+          val (sendCond, m) = dequeue q in
           if (isEmpty q) then conRef := Inac else (); 
           release lock; signal sendCond; m end) |
       Recv _ => raise NeverHappens end end
@@ -813,7 +813,7 @@ structure OneToOneChan : CHANNEL = struct
   fun channel () = Chn (ref Inac)
 
   fun send (Chn conRef) m = let
-    program_value sendCond = condition () in
+    val sendCond = condition () in
     case cas (conRef, Inac, Send (sendCond, m)) of
       Inac => 
         (* conRef already set to Send *)
@@ -827,8 +827,8 @@ structure OneToOneChan : CHANNEL = struct
 
 
   fun recv (Chn conRef) = let
-    program_value recvCond = condition ();
-    program_value mopRef = ref None in
+    val recvCond = condition ();
+    val mopRef = ref None in
     case cas (conRef, Inac, Recv (recvCond, mopRef)) of
       Inac => (* conRef already set to Recv*)
         wait recvCond; valOf (!mopRef) |
@@ -877,7 +877,7 @@ forever, if there truly is only one send ever.
   fun channel () = Chn (ref Inac, lock ())
 
   fun send (Chn (conRef, lock)) m = let
-    program_value sendCond = condition () in
+    val sendCond = condition () in
     case (conRef, Inac, Send (sendCond, m)) of
       Inac =>
         (* conRef already set to Send*)
@@ -889,8 +889,8 @@ forever, if there truly is only one send ever.
 
 
   fun recv (Chn (conRef, lock)) = let
-    program_value recvCond = condition ()
-    program_value mopRef = ref None in
+    val recvCond = condition ()
+    val mopRef = ref None in
     case (conRef, Inac, Recv (recvCond, mopRef)) of
       Inac =>
         (* conRef already set to Recv*)
