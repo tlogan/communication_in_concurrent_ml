@@ -8,7 +8,24 @@
  
 \usepackage{listings}
 \usepackage{color}
-\usepackage{pxfonts}
+
+
+%%\usepackage{pxfonts}
+\usepackage[T1]{fontenc}
+\usepackage{libertine}%% Only as example for the romans/sans fonts
+\usepackage[scaled=0.85]{beramono}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breakatwhitespace=false,     
+  breaklines=true,         
+  captionpos=b,          
+  keepspaces=true,         
+  showspaces=false,        
+  showstringspaces=false,
+  showtabs=false,          
+  tabsize=2
+}
  
 \lstdefinelanguage{logic}{
   morekeywords={
@@ -21,17 +38,6 @@
   }
 }
  
-\lstdefinestyle{codestyle1}{
-  basicstyle=\ttfamily\small,
-  breakatwhitespace=false,     
-  breaklines=true,         
-  captionpos=b,          
-  keepspaces=true,         
-  showspaces=false,        
-  showstringspaces=false,
-  showtabs=false,          
-  tabsize=2
-}
 
 
 \title{Formal Theory of Communication Topology in Concurrent ML}
@@ -48,8 +54,8 @@
 \section{Summary}
 For this master's thesis, I have developed a formal framework for analysis of
 a concurrent language, along with an initial formal analysis.  The language under analysis is
-a very simplied version of Concurremlt ML \cite{concurrent_ml}. The formal analysis is a
-recast of an informal analysis developed by Xiao and Reppy \cite{specialization}. It
+a very simplied version of \textit{Concurrent ML} \cite{concurrent_ml}. The formal analysis
+is a recast of an informal analysis developed by Xiao and Reppy \cite{specialization}. It
 categorizes communication described by the language into simple topologies. One description of
 topologigies is static; that is, it describes topologies in terms of the finite structure of
 programs.  Another description is dynamic; that is, it describes topologies in terms of running
@@ -82,11 +88,11 @@ is for programs that interact with humans, in which a program has to process var
 while remaining responsive to subsequent user inputs, and it must continually provide the user
 feedback with latest information it has processed.
 
-Concurrent ML is a particularly elengant concurrent programming language.
+\textit{Concurrent ML} is a particularly elengant concurrent programming language.
 It features threads, which are pieces of code allowed to have a wide range of
 evaluation orders relative to code encapsulated in other threads. Its synchronization
 mechanism can mandate the execution order between parts of separate threads. It is often the
-case that synchronization is necessary when data is shared. Thus, in Concurrent ML,
+case that synchronization is necessary when data is shared. Thus, in \textit{Concurrent ML},
 synchronization and data sharing mechanisms are actually subsumed by a uniform communication
 mechanism. Threads are spawned asynchronously; that is, the parent thread need not wait for the
 spawned thread to terminate before it resumes evaluation. Indeed, if that were the case, then
@@ -94,39 +100,78 @@ threads would be useless. Additional threads can be spawned in order to share da
 asynchronously, which can provide better usability or performance in some instances.
 
 
-
-
-----Edit From Here----
-
 Threads communicate by having shared access to a common channel.  A channel can be used to
 either send data or receive data.  When a thread sends on a channel, another thread must
 receive on the same channel before the sending thread can continue.  Likewise, when a thread
 receives on a channel, another thread must send on the same channel before the receiving thread
 can continue.
 
-A given channel can have any arbitrary number of threads sending or receiving data on it over
-the course of the program's execution.  Listing 1 and Listing 2 give a simple example derived
-from Reppy's book Concurrent Programming in ML[8] that illustrates these essential features of
-Concurrent ML.
+\begin{lstlisting}[language=ML, escapechar=\%]
+  type thread_id
+  val spawn : (unit -> unit) -> thread_id
 
-The server implementation, given in Listing 2, defines a server that holds a number state.
-When a client gives the server a number v, the server gives back state, and holds onto v to as
-its new state, which it gives to the next client and so on.  A request and reply is equivalent
-to reading and writing a mutable cell in isolation.  The function make makes a new server.  It
-creates a new channel reqCh, from which the server will receive requests.  The sever behavior
-is defined by the infinite loop loop, which takes a number as the state of each iteration.
-Each iteration, the server tries to receive requests on reqCh.  It expects the request to be
-composed of a number v and a channel replCh, through which to reply.  Once a request has been
-received, it sends the current state back to the client through replCh by calling
-send (replCh, state).  It initiates the next iteration of the loop by calling loop with a new
-state from the client.  The server is created with a new thread by calling
-spawn (fn () => loop 0).   A handle to the new server is returned as reqCh wrapped in the
-constructor S.  The function call makes a request to a server server with a number v and
-returns the number from the server's reply.  It extracts the request channel reqCh from the
-server handle and creates a new channel replCh, from which the client will receive replies.
-It makes a request to the server with the number v and the reply channel replCh by calling
-send (reqCh, (v, replCh)).  Then it receives the reply with the new number by calling recv
-replCh.
+  type 'a chan
+  val channel : unit -> 'a chan
+  val recv : 'a chan -> 'a
+  val send : ('a chan * 'a) -> unit
+  \end{lstlisting}
+
+A given channel can have any arbitrary number of threads sending or receiving data on it over
+the course of the program's execution. A simple example, derived from Reppy's book
+\textit{Concurrent Programming in ML} \cite{concurrent_ml}, illustrates these essential
+features.
+
+The implementation of \lstinline{Serv} defines a server that holds a number in its state.
+When a client gives the server a number \lstinline{v}, the server gives back the number in
+its state, and updates its state with the number \lstinline{v}.  The next client request will
+get the number \lstinline{v}, and so on. Essentially, a request and reply is equivalent
+to reading and writing a mutable cell in isolation. The function \lstinline{make} makes a new
+server, by creating a new channel \lstinline{reqCh}, and a loop \lstinline{loop} which listens
+for requests. The loop expects the request to be composed of a number \lstinline{v} and a
+channel \lstinline{replCh}. It sends its current state's number on \lstinline{replCh} and
+update's the loop's state with the request's number \lstinline{v}, by calling the loop with a
+new that number. The server is created with a new thread with the initial state \lstinline{0}
+by calling \lstinline[language=ML]{spawn (fn () => loop 0)}. The request channel is returned
+as the handle to the server.  The function \lstinline{call} makes a request to the passed in
+server server \lstinline{server} with a number \lstinline{v} and returns a number from the
+server. Internally, it extracts the request channel \lstinline{reqCh} from the
+server handle and creates a new channel \lstinline{replCh}. It makes a request to the server
+with the number \lstinline{v} and the reply channel \lstinline{replCh} by calling
+\lstinline{send (reqCh, (v, replCh))}. Then it receives the reply with the new number by
+calling \lstinline{recv replCh}.
+
+
+\begin{lstlisting}[language=ML, escapechar=\%]
+
+  signature SERV = sig 
+    type serv
+    val make : unit -> serv
+    val call : serv * int -> int
+    end
+
+  structure Serv : SERV = struct 
+    datatype serv = S of (int * int chan) channel 
+
+    fun make () = let 
+      val reqChn = channel ()
+      fun loop state = let
+        val (v, replCh) = recv reqChn in 
+        send (replCh, state);
+        loop v end in
+      spawn (fn () => loop 0);
+      S reqChn end 
+
+    fun call (server, v) = let 
+      val S reqChn = server
+      val replChn = channel () in 
+      send (reqCh, (v, replCh));
+      recv replChn end
+
+    end
+
+  \end{lstlisting}
+
+----Edit From Here----
 
 Reppy's original design of Concurrent ML allows for events other than sending and receiving to
 be triggered by synchronization.  One such event chooses between one of many events to
@@ -180,45 +225,8 @@ the channel once and the server sends on the channel once, so each instance of r
 one-shot.
 
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
-  type thread_id
-  val spawn : (unit -> unit) -> thread_id
 
-  type 'a chan
-  val channel : unit -> 'a chan
-  val recv : 'a channel -> 'a
-  val send : ('a channel * 'a) -> unit
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
-
-  signature SERV = sig 
-    type serv
-    val make : unit -> serv
-    val call : serv * int -> int
-  end
-
-  structure Serv : SERV = struct 
-    datatype serv = S of (int * int chan) channel 
-
-    fun make () = let 
-      val reqChn = channel ()
-      fun loop state = let
-        val (v, replCh) = recv reqChn in 
-        send (replCh, state);
-        loop v end in
-      spawn (fn () => loop 0);
-      S reqChn end 
-
-    fun call (server, v) = let 
-      val S reqChn = server
-      val replChn = channel () in 
-      send (reqCh, (v, replCh));
-      recv replChn end end
-
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
 
   type 'a event
   val sync : 'a event -> 'a
@@ -233,7 +241,7 @@ one-shot.
 
   \end{lstlisting}
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
   val server = Serv.make ()
   val _ = spawn (fn () => Serv.call (server, 35))
   val _ = spawn (fn () => 
@@ -243,7 +251,7 @@ one-shot.
   val _ = spawn (fn () => Serv.call (server, 44))
   \end{lstlisting}
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
   structure Serv : SERV = struct 
     datatype serv = S of (int * int chan) channel 
 
@@ -345,7 +353,7 @@ analyses or CFAs.  With the control flow information, other data flow analyses l
 expression analysis and liveness analysis can provide greater coverage.
 
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
   let
     val w = 4
     val x = ref 1
@@ -356,7 +364,7 @@ expression analysis and liveness analysis can provide greater coverage.
     (!y + 2) - (!x + 1) * (w - 3) end
   \end{lstlisting}
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
   let 
     val x = 1  
     val y = 2
@@ -366,7 +374,7 @@ expression analysis and liveness analysis can provide greater coverage.
     x * !z end
   \end{lstlisting}
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
 
   let 
     val f = fn x => x 1
@@ -508,7 +516,7 @@ Analyzing and optimizing Concurrent ML would require treating the language as an
 implementing its features as primitives would make the most sense.  Thus, one can think of the
 implementation shown here as an intermediate representation presented with concrete syntax.
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
   signature CHANNEL = sig
     type 'a channel 
     val channel : unit -> 'a chan
@@ -563,7 +571,7 @@ additional condition and empty cell in the associated queue.  It releases the lo
 the enqueued condition.  Once a sending thread signals on the same condition, the recv
 operation returns with the value deposited in the cell by a sending thread.
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
 
   structure ManyToManyChan : CHANNEL = struct
     type message_queue = 'a option ref queue
@@ -652,7 +660,7 @@ there is already a thread trying to receive, then it updates the state to inacti
 the lock.  Then it signals on the state's associated condition, which is waited on by a sending
 thread, and returns the states' associated message.
 
-  \begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+  \begin{lstlisting}[language=ML, escapechar=\%]
 
     structure FanOutChan : CHANNEL = struct
 
@@ -709,7 +717,7 @@ thread, and returns the states' associated message.
 
 The implementation of fan-in channels is very similar to that of fan-out channels.
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
   structure FanInChan : CHANNEL = struct
 
   datatype 'a chan_content =
@@ -785,7 +793,7 @@ update the state from the state of a thread trying to send, and no thread modifi
 particular state, so no locks are necessary.  Likewise, the recv operation should never
 witness the state of another thread already trying to receive, if it is truly one-to-one.
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
 
 structure OneToOneChan : CHANNEL = struct
 
@@ -850,7 +858,7 @@ receive on the channel, the it acquires the lock, which should block the current
 forever, if there truly is only one send ever.
 
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
   structure OneShotChan : CHANNEL = struct
 
   datatype 'a chan_content =
@@ -906,7 +914,7 @@ sendCond, and then returns the unit value.  The recv operation waits on the recv
 on the sendCond and then returns the deposited message.
 
 
-\begin{lstlisting}[language=ML, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=ML, escapechar=\%]
 structure OneShotToOneChan : CHANNEL = struct
 
   datatype 'a channel =
@@ -981,7 +989,7 @@ eagerly evaluted inputs, rather than expression.  A control path is basically de
 of bound names, where the names are in order of their respective constructs' evaluation. The
 names are also annoted with information related to aspects of the control flow. 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 datatype name = Name string
 
@@ -1027,7 +1035,7 @@ seq\_eval because they do not evaluate to values in one step and require updatin
 information about the mode of the transition. 
 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 datatype program_point =
   LNxt name | LSpwn name | LCll name | LRtn name 
 
@@ -1045,7 +1053,7 @@ type environment =
 \end{lstlisting}
 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 predicate seq_eval of expression -> environment -> program_value -> bool:
 only
 (%$\forall$% env . 
@@ -1085,7 +1093,7 @@ application expression.
 
 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate call_eval of expression -> env -> program -> env -> bool:
 only
@@ -1160,7 +1168,7 @@ the let expression is used, and the environment is updated with the value associ
 send event's second argument.   Additionally, the communication set is updated with the send
 and receive paths, and the channel that is communicated on. 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 datatype continuation =
   Ctn name program env
@@ -1273,7 +1281,7 @@ channel are ordered. The one to one predicates states that there is no competiti
 the receiving or the sending ends of a channel. 
 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate is_send_path of pool -> channel -> program_path -> bool:
 only
@@ -1395,7 +1403,7 @@ first argument is a right case, then the right name is bound to the abstract val
 case, the right binding name is ound to the result value of the right expression, and the
 bindings and communication are outputs for the right expression. 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 datatype static_value =
   SChn name | SUnt | SPrm primitive 
@@ -1558,7 +1566,7 @@ application, then the abstract value of the second argument of application (the 
 argument) is bound to the abstraction's parameter name, and the resulting abstract value of the
 abstraction is bound the the let binding name.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 
 predicate static_reachable of program -> program -> bool:
@@ -1616,7 +1624,7 @@ a given abstract channel, in a given a program with given abstract value binding
 receive label predicate state that a label might represent a synchronization to receive on a
 given abstract channel, in a given program with given abstract value bindings. 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 datatype label = NLet name | NResult var
 
@@ -1696,7 +1704,7 @@ abstraction might be traversable, and the returning transition from the result o
 abstracted expression to the sequenced expression.  Additionally, the traversable transitions
 are traversable transitions for the sequenced expression. 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 datatype mode = MNxt | MSpwn | MCll | MRtn
 
@@ -1840,7 +1848,7 @@ the first static\_point to the second static\_point, and the path from the secon
 traceable.
 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate static_traceable of
   transition set -> label -> (label -> bool) -> static_path -> bool:
@@ -1869,7 +1877,7 @@ greater precision, since if two paths cannot occur in the same run of a program,
 to be counted towards the communication topology. 
 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate static_inclusive of static_path -> static_path -> bool:
 
@@ -1902,7 +1910,7 @@ same run of a program. The static one shot predicate states that there is at mos
 to syncrhonize to send on an abstract channel in a run of a given program with given abstract
 value bindings.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate singular of static_path -> static_path -> bool:
 only
@@ -1943,7 +1951,7 @@ run of a given program.
 
 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate static_one_shot of static_environment -> program -> name -> bool:
 only
@@ -2031,7 +2039,7 @@ The static predicates for communication topologies should be generalizations of 
 compute the topologies from programs. The soundness of the static predicates must be provable
 to be certain that statically described topologies are also observed when running the program.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 -----
 theorem static_one_shot_sound: 
 
@@ -2097,7 +2105,7 @@ Lemma not\_static\_send\_site\_sound states that if a program is run to reach a 
 a send event, then the label corresponding to the syncrhonization expression is statically
 identified as a send site.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 ------
 
 lemma not_static_inclusive_sound:
@@ -2167,7 +2175,7 @@ definition of static\_traversable for expressions, but provides information abou
 static program with a fixed number of logical steps, which would otherwise only be decucible by a
 varying number of logical steps dependent on location of an expression in a program.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 
 predicate static_traversable_val of static_environment -> transition_set -> program_value -> bool:
@@ -2276,7 +2284,7 @@ static\_traversable, the generalized versions of static\_eval are designed to pr
 value bindings across program execution static points, and also provide direct access to abstract
 binding information in a fixed number of logical steps. 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 fun abstract of program_value -> static_value:
   abstract VUnt = SUnt and 
@@ -2337,7 +2345,7 @@ only
 
 \end{lstlisting}
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate static_eval_env of static_environment -> static_environment -> env -> bool:
 
@@ -2396,7 +2404,7 @@ The lemma also relies on the definition of static\_traversable\_pool
 and lemma static\_traversable\_pool\_preserved to deduce abstract transition information about the
 pool containing the traced path.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate star_left of ('a -> 'a -> bool) -> 'a -> 'a -> bool:
 only
@@ -2430,7 +2438,7 @@ lemma star\_implies\_star\_left follows from induction on star and star\_left\_t
 which follows from induction on the latter star\_left.  A similar approach deduces the
 fact that star\_left implies star.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 lemma not_static_traceable_pool_sound:
 %$\forall$% prog0 pool convo path x b e' env stack evn_a convo_a prog_a is_end .
@@ -2465,7 +2473,7 @@ bindings from static\_eval\_pool.
 Lemma not\_static\_bound\_sound follows from static\_eval\_pool\_preserved, which results from
 induction on star concurrent\_eval.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 lemma static_eval_pool_preserved:
 %$\forall$% pool convo pool' convo' env_a convo_a .
@@ -2482,7 +2490,7 @@ lemma not\_static\_send\_site\_sound is proved using the lemmas
 send\_chan\_not\_static\_bound\_sound, not\_static\_bound\_sound, and
 not\_static\_reachable\_sound.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 lemma send_chan_not_static_bound_sound:
 %$\forall$% prog0 pool convo env_a convo_a path x x_e e' env stack x_sc x_m env_e path_c x_c .
@@ -2538,7 +2546,7 @@ The lemma not\_static\_reachable\_sound follows the the definitions of star\_lef
 static\_reachable\_left, its generalizations and the the lemma not\_static\_reachable\_pool\_sound.
 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate static_reachable_left of program -> program -> bool:
 
@@ -2698,7 +2706,7 @@ the send site to the receive site of a syncrhonization is included in the static
 the sending mode, as indicated by the new definition of static\_traversable.  Modes for typical
 control flow of sequencing, calling, returning, and spawning are also included transitions.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 datatype mode = MNxt | MSpwn | ESend name | MCll | MRtn
 
 type transition = label * mode * label
@@ -2842,7 +2850,7 @@ static\_built\_on\_chan states that a variable is bound to some structure contai
 In the case where the tracked variable might be a function abstraction, the channel simply
 needs to be live in the body of the abstraction, for the variable to be considered built on it.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate static_built_on_chan of
   static_environment -> label_map -> name -> name -> bool:
@@ -2909,7 +2917,7 @@ variables are live at the entry of that program point.  The exit map maps a prog
 set of variables built on the given channel, if those variabes are live at the exit of that
 program point.
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate static_live_chan of static_environment -> label_map -> label_map -> name -> program -> bool:
     
@@ -3074,7 +3082,7 @@ static program, and is considered live with respect to given entry and exit func
 static\_live\_traceable states that an entire abstract path exists in some static program and is live with
 respect to some entry and and exit functions.   
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate static_live_traversable of
   transition_set -> label_map -> label_map -> transition -> bool:
@@ -3154,7 +3162,7 @@ given paths can occur in a run of program.  The noncompetitve predicate states t
 given paths do not compete in any run of a program. 
 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate static_inclusive of
   static_path -> static_path -> bool:
@@ -3215,7 +3223,7 @@ predicates based on static programs trimmed down to contain only the parts where
 live. The general structure of the predicate definitions is overall similar to that of the
 analgous lower precision definitions. 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 predicate static_one_shot of static_environment -> program -> name -> bool:
 
@@ -3292,7 +3300,7 @@ that hold for a dynamic path which corresponds to the abstract path module the c
 analysis.  These reasoning strategies are demonstrated by the theorem static\_one\_shot\_sound. 
 
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 theorem static_one_shot_sound:
 
@@ -3319,7 +3327,7 @@ to correlate with the given dynamic path.  In the higher precision analysis, the
 between the two kinds of paths is not so simple, and finding a description of the abstract
 that correlates with the dynamic path is much more challenging.  
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 predicate paths_correspond of program_path -> static_path -> bool:
 only
 
@@ -3435,7 +3443,7 @@ lemma not_static_inclusive_sound:
 
 \section{Syntax}
 
-\begin{lstlisting}[language=logic, style=codestyle1, escapechar=\%]
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 
   let lp = fun lp x => 
