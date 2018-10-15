@@ -71,25 +71,32 @@ defined by a small-step operational semantics. The static semantics is an instan
 
 
 \section{Overview}
-Concurrent programming languages provide features to specify a range of evaluation orders
-between steps of distinct expressions.  The freedom to choose from a number of possible
-evaluation orders has certain advantages.  Conceptually distinct tasks may need to overlap in
-time, but are easier to understand if they are written as distinct expressions.  Concurrent
-languages may also allow the evaluation order between steps of expressions to be
-nondeterministic or unrestricted.  If it's not necessary for tasks to be ordered in a precise
-way, then it may be better that the program allow arbitrary ordering and let a scheduler find
-an execution order based on runtime conditions and policies of fairness.  A common use case for
-concurrent languages is GUI programming, in which a program has to process various requests
-while remaining responsive to subsequent user inputs and continually providing the user with
-the latest information it has processed. Concurrent ML is a concurrent programming language.
-It offers a thread abstraction, which is a piece of code allowed to have a wide range of
-evaluation orders relative to code encapsulated in other threads.  The language provides a
-synchronization mechanism that can specify the execution order between parts of expressions in
-separate threads.  It is often the case that synchronization is necessary when data is shared.
-Thus, in Concurrent ML, synchronization and data sharing mechanisms are actually subsumed by a
-uniform communication mechanism.  Additional thread abstractions can be used for sharing data
-asynchronously, which can provide better usability or performance in some instances. A thread
-in Concurrent ML, is created using the spawn primitive.
+In programming languages, concurreny is a program structuring technique that allows evaluation
+steps to hop back and forth between disjoint syntactc structures within a program. It is useful
+when conceptually distinct tasks need to overlap in time, but are easier to understand if they
+are written as distinct structrues within the program. Concurrent languages may also allow the
+evaluation order between steps of expressions to be nondeterministic. If it's not necessary for
+tasks to be ordered in a precise way, then it may be better to allow a static or dynamic
+scheduler pick the most efficient execution order. A common use case for concurrent languages
+is for programs that interact with humans, in which a program has to process various requests
+while remaining responsive to subsequent user inputs, and it must continually provide the user
+feedback with latest information it has processed.
+
+Concurrent ML is a particularly elengant concurrent programming language.
+It features threads, which are pieces of code allowed to have a wide range of
+evaluation orders relative to code encapsulated in other threads. Its synchronization
+mechanism can mandate the execution order between parts of separate threads. It is often the
+case that synchronization is necessary when data is shared. Thus, in Concurrent ML,
+synchronization and data sharing mechanisms are actually subsumed by a uniform communication
+mechanism. Threads are spawned asynchronously; that is, the parent thread need not wait for the
+spawned thread to terminate before it resumes evaluation. Indeed, if that were the case, then
+threads would be useless. Additional threads can be spawned in order to share data
+asynchronously, which can provide better usability or performance in some instances.
+
+
+
+
+----Edit From Here----
 
 Threads communicate by having shared access to a common channel.  A channel can be used to
 either send data or receive data.  When a thread sends on a channel, another thread must
