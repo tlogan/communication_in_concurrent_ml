@@ -59,13 +59,15 @@ have been developed so far, one with lower precision, and one with higher precis
 precision analysis is closer to the work by Reppy and Xiao, but has greater complexity than the
 lower precision analysis. The proofs for the soundness theorem of the lower precision analysis
 have been mechannically verified using Isabelle \cite{isabelle}, while the higher precision
-analysis is currently under development. The definitions used in this formal theory differ
+analysis is currently under development. Indeed, one of the motivations for placing the theory
+in a formal setting is to enable gradual extension of analysis and language without introducing
+uncaught bugs in the definitions or proofs. The definitions used in this formal theory differ
 significantly from that of Reppy and Xiao, in order to aid formal reasoning. Although the
 definitions are structurally quite different, their philsophocial equivalence is hopefully
 apparent. Thus, recasting Reppy and Xiao's work was far more nuanced than a straight forward
 syntactic transliteration. In this formal theory, the dynamic semantics of Concurrent ML is
 defined by a small-step operational semantics. The static semantics is an instance of 0CFA
-\cite{0cfa}, defined in terms of nonequational constraints \cite{}.
+\cite{0cfa}, defined in terms of nonequational constraints \cite{program_analysis}.
 
 
 \section{Overview}
