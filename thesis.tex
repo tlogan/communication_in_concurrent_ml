@@ -10,36 +10,6 @@
 \usepackage{color}
 \usepackage{pxfonts}
  
-\iffalse
-  \definecolor{codegreen}{rgb}{0,0.6,0}
-  \definecolor{codegray}{rgb}{0.5,0.5,0.5}
-  \definecolor{codepurple}{rgb}{0.58,0,0.82}
-  \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-  backgroundcolor=\color{backcolour},   
-  commentstyle=\color{codegreen},
-  keywordstyle=\color{magenta},
-  numberstyle=\small\color{codegray},
-  stringstyle=\color{codepurple},
-
-
-
-    numbers=left,
-    numbersep=1em,
-    numberstyle=\tiny\color{red}\noaccsupp,
-    frame=single,
-    framesep=\fboxsep,
-    framerule=\fboxrule,
-    rulecolor=\color{red},
-    xleftmargin=\dimexpr\fboxsep+\fboxrule\relax,
-    xrightmargin=\dimexpr\fboxsep+\fboxrule\relax,
-    breaklines=true,
-    tabsize=2,
-    columns=flexible,
-
-  numbers=left,          
-  numbersep=.5em,          
-\fi
-
 \lstdefinelanguage{logic}{
   morekeywords={
     datatype,
@@ -50,8 +20,6 @@
     and, or, not
   }
 }
-
-
  
 \lstdefinestyle{codestyle1}{
   basicstyle=\ttfamily\small,
@@ -64,9 +32,6 @@
   showtabs=false,          
   tabsize=2
 }
- 
-
-
 
 
 \title{Formal Theory of Communication Topology in Concurrent ML}
@@ -81,14 +46,26 @@
 
 
 \section{Summary}
-The goal of this master's thesis is to the develop formal and mechanically verified proofs of
-useful properties about communication in Concurrent ML[8, 9].  This work will build on Reppy
-and Xiao's static analysis for computing sound approximations of communication
-topologies[11, 16].  I will define a small-step operational semantics for Concurrent ML and a
-constraint-based static analysis[5] that describes all possible communications with varying
-precision.  I will prove that the analysis is sound with respect to the semantics.  The
-semantics, analysis, propositions, proofs, and theorems will rely on Isabelle/HOL[6, 7, 14, 15]
-as the formal language of reasoning.  The proofs will be mechanically checked by Isabelle[17].
+For this master's thesis, I have developed a formal framework for analysis of
+a concurrent language, along with an initial formal analysis.  The language under analysis is
+a very simplied version of Concurremlt ML \cite{concurrent_ml}. The formal analysis is a
+recast of an informal analysis developed by Xiao and Reppy \cite{specialization}. It
+categorizes communication described by the language into simple topologies. One description of
+topologigies is static; that is, it describes topologies in terms of the finite structure of
+programs.  Another description is dynamic; that is, it describes topologies in terms of running
+a program for an arbitrary number of steps. The main formal theorem states that the static
+analysis is sound with respect to the dynamic analysis. Two versions of the static analysis
+have been developed so far, one with lower precision, and one with higher precision. The higher
+precision analysis is closer to the work by Reppy and Xiao, but has greater complexity than the
+lower precision analysis. The proofs for the soundness theorem of the lower precision analysis
+have been mechannically verified using Isabelle \cite{isabelle}, while the higher precision
+analysis is currently under development. The definitions used in this formal theory differ
+significantly from that of Reppy and Xiao, in order to aid formal reasoning. Although the
+definitions are structurally quite different, their philsophocial equivalence is hopefully
+apparent. Thus, recasting Reppy and Xiao's work was far more nuanced than a straight forward
+syntactic transliteration. In this formal theory, the dynamic semantics of Concurrent ML is
+defined by a small-step operational semantics. The static semantics is an instance of 0CFA
+\cite{0cfa}, defined in terms of nonequational constraints \cite{}.
 
 
 \section{Overview}
@@ -402,7 +379,7 @@ first part generates a comprehensive set of data structures representing constra
 program points, mirroring the specification's description, and the second part solves the
 constraints.
 
-For a subset of Concurrent ML without event combinators, Reppy and  Xiao developed an
+For a subseteq of Concurrent ML without event combinators, Reppy and  Xiao developed an
 efficient algorithmic analysis that determines for each channel all abstract threads that send
 and receive on it.  The algorithm depends on each primitive operation in the program being
 labeled with a program point.  A sequence of program points ordered in a valid execution
@@ -980,7 +957,7 @@ I do not formally prove that the specialized implementations are behaviorally eq
 generic implementation, but I suggest some plausible example implementations.
 
 \section{Syntax Definitions}
-The relations are defined over a simple language featuring a small subset of Concurrent ML
+The relations are defined over a simple language featuring a small subseteq of Concurrent ML
 features. The features include recursive function abstraction with application, left and right
 construction with pattern matching, pair construction with first and second projections, send
 and receive event construction with synchronization, channel creation, thread spawning, and
@@ -1504,14 +1481,14 @@ only
         (SPrm (SendEvt x_sc x_m)) %$\in$% env_a x_e and 
         SChn x_c %$\in$% env_a x_sc 
       then
-        SUnt %$\in$% env_a x and env_a x_m %$\subset$% convo_a x_c) and
+        SUnt %$\in$% env_a x and env_a x_m %$\subseteq$% convo_a x_c) and
 
     (%$\forall$% x_rc x_c . 
       if
         (SPrm (RecvEvt x_rc)) %$\in$% env_a x_e and 
         SChn x_c %$\in$% env_a x_rc and 
       then
-        convo_a x_c %$\subset$% env_a x) and
+        convo_a x_c %$\subseteq$% env_a x) and
 
     static_eval env_a convo_a e'
   then
@@ -1520,7 +1497,7 @@ only
 (%$\forall$% env_a x_p x convo_a e' . 
   if
     (%$\forall$% x1 x2 . if (SPrm (Pair x1 x2)) %$\in$% env_a x_p then
-      env_a x1 %$\subset$% env_a x) and
+      env_a x1 %$\subseteq$% env_a x) and
     static_eval env_a convo_a e'
   then
     static_eval env_a convo_a (Let x (Fst x_p) e')) and
@@ -1528,7 +1505,7 @@ only
 (%$\forall$% env_a x_p x convo_a e' . 
   if
     (%$\forall$% x1 x2 . if (SPrm (Pair x1 x2)) %$\in$% env_a x_p then
-      env_a x2 %$\subset$% env_a x) and
+      env_a x2 %$\subseteq$% env_a x) and
     static_eval env_a convo_a e'
   then
     static_eval env_a convo_a (Let x (Snd x_p) e')) and
@@ -1536,13 +1513,13 @@ only
 (%$\forall$% env_a x_s x_l e_l x convo_a x_r e_r e' . 
   if
     (%$\forall$% x_c . if (SPrm (Lft x_c)) %$\in$% env_a x_s then 
-      env_a x_c %$\subset$% env_a x_l and
-      env_a (result_name e_l) %$\subset$% env_a x and
+      env_a x_c %$\subseteq$% env_a x_l and
+      env_a (result_name e_l) %$\subseteq$% env_a x and
       static_eval env_a convo_a e_l) and
 
     (%$\forall$% x_c . if (SPrm (Rght x_c)) %$\in$% env_a x_s then 
-      env_a x_c %$\subset$% env_a x_r and
-      env_a (result_name e_r) %$\subset$% env_a x and
+      env_a x_c %$\subseteq$% env_a x_r and
+      env_a (result_name e_r) %$\subseteq$% env_a x and
       static_eval env_a convo_a e_r) and
 
     static_eval env_a convo_a e'
@@ -1552,8 +1529,8 @@ only
 (%$\forall$% env_a f x_a x convo_a e' . 
   if
     (%$\forall$% f_p x_p e_b . if (SPrm (Abs f_p x_p e_b)) %$\in$% env_a f then 
-      env_a x_a %$\subset$% env_a x_p and 
-      env_a (result_name e_b) %$\subset$% env_a x) and
+      env_a x_a %$\subseteq$% env_a x_p and 
+      env_a (result_name e_b) %$\subseteq$% env_a x) and
 
     static_eval env_a convo_a e'
   then
@@ -1647,7 +1624,7 @@ only
 (%$\forall$% prog0 x x_e e' x_sc x_m env_a x_c .
   if
     static_reachable prog0 (Let x (Sync x_e) e') and
-    (SPrm (SendEvt x_sc x_m)) %$\subset$% env_a x_e and 
+    (SPrm (SendEvt x_sc x_m)) %$\subseteq$% env_a x_e and 
     (SChn x_c) %$\in$% env_a x_sc
   then
     static_send_label env_a prog0 x_c (NLet x))
@@ -1791,7 +1768,7 @@ only
 (%$\forall$% x e' e_c prog_a env_a.
   if
     {(NLet x, MNxt, top_label e'),
-      (NLet x, MSpwn, top_label e_c)} %$\subset$% prog_a and
+      (NLet x, MSpwn, top_label e_c)} %$\subseteq$% prog_a and
     static_traversable env_a prog_a e_c and
     static_traversable env_a prog_a e'
   then
@@ -1823,7 +1800,7 @@ only
     {(NLet x, MCll, top_label e_l),
       (NLet x, MCll, top_label e_r),
       (NResult (result_name e_l), MRtn, top_label e'),
-      (NResult (result_name e_r), MRtn, top_label e')} %$\subset$% prog_a and
+      (NResult (result_name e_r), MRtn, top_label e')} %$\subseteq$% prog_a and
     static_traversable env_a prog_a e_l and
     static_traversable env_a prog_a e_r and
     static_traversable env_a prog_a e'
@@ -1834,7 +1811,7 @@ only
   if
     (%$\forall$% f_p x_p e_b . if (SPrm (Abs f_p x_p e_b)) %$\in$% env_a f then 
       {(NLet x, MCll, top_label e_b),
-        (NResult (result_name e_b), MRtn, top_label e')} %$\subset$% prog_a) and
+        (NResult (result_name e_b), MRtn, top_label e')} %$\subseteq$% prog_a) and
 
     static_traversable env_a prog_a e'
   then
@@ -2254,7 +2231,7 @@ only
 
 (%$\forall$% y e prog_a env_a prog_a env stack x env .
   if 
-    {(NResult y, MRtn, top_label e)} %$\subset$% prog_a and
+    {(NResult y, MRtn, top_label e)} %$\subseteq$% prog_a and
     static_traversable env_a prog_a e and
     static_traversable_env env_a prog_a env and
     static_traversable_stack env_a prog_a (result_name e) stack 
@@ -2335,7 +2312,7 @@ only
 
 (%$\forall$% f x_p e_b env_a convo_a env .
   if
-    {APrim (Abs f x_p e_b)} %$\subset$% env_a f and 
+    {APrim (Abs f x_p e_b)} %$\subseteq$% env_a f and 
     static_eval env_a convo_a e_b and 
     static_eval_env env_a convo_a env
   then
@@ -2360,7 +2337,7 @@ only
 (%$\forall$% env_a convo_a env .
   if
     (%$\forall$% x v . if env x = Some v then
-      {abstract v} %$\subset$% env_a x and
+      {abstract v} %$\subseteq$% env_a x and
       static_eval_val env_a convo_a v)
   then 
     static_eval_env env_a convo_a env)
@@ -2375,7 +2352,7 @@ only
 
 (%$\forall$% res_a env_a convo_a . 
   if 
-    res_a %$\subset$% env_a x and
+    res_a %$\subseteq$% env_a x and
     static_eval env_a convo_a e and
     static_eval_env env_a convo_a env and
     static_eval_stack env_a convo_a env_a (result_name e) stack 
@@ -2791,7 +2768,7 @@ only
 (%$\forall$% x e' e_c prog_a env_a.
   if
     {(NLet x, MNxt, top_label e'),
-      (NLet x, MSpwn, top_label e_c)} %$\subset$% prog_a and
+      (NLet x, MSpwn, top_label e_c)} %$\subseteq$% prog_a and
     static_traversable env_a prog_a e_c and
     static_traversable env_a prog_a e'
   then
@@ -2830,7 +2807,7 @@ only
     {(NLet x, MCll, top_label e_l),
       (NLet x, MCll, top_label e_r),
       (NResult (result_name e_l), MRtn, top_label e'),
-      (NResult (result_name e_r), MRtn, top_label e')} %$\subset$% prog_a and
+      (NResult (result_name e_r), MRtn, top_label e')} %$\subseteq$% prog_a and
     static_traversable env_a prog_a e_l and
     static_traversable env_a prog_a e_r and
     static_traversable env_a prog_a e'
@@ -2841,7 +2818,7 @@ only
   if
     (%$\forall$% f_p x_p e_b . if (SPrm (Abs f_p x_p e_b)) %$\in$% env_a f then 
       {(NLet x, MCll, top_label e_b),
-        (NResult (result_name e_b), MRtn, top_label e')} %$\subset$% prog_a) and
+        (NResult (result_name e_b), MRtn, top_label e')} %$\subseteq$% prog_a) and
 
     static_traversable env_a prog_a e'
   then
@@ -2932,44 +2909,44 @@ only
 (%$\forall$% env_a entr x_c y exit .
   if
     (if (static_built_on_chan env_a entr x_c y) then
-      {y} %$\subset$% entr (NResult y))
+      {y} %$\subseteq$% entr (NResult y))
   then
     static_live_chan env_a entr exit x_c (Rslt y)) and
 
 (%$\forall$% exit x entr e' env_a x_c .
   if 
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e'
   then 
     static_live_chan env_a entr exit x_c (Let x Unt e')) and
 
 (%$\forall$% exit x entr e' env_a x_c .
   if
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e'
   then 
     static_live_chan env_a entr exit x_c (Let x MkChn e')) and
 
 (%$\forall$% exit x entr env_a x_c x_sc x_m e' x_c .
   if
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
     (if static_built_on_chan env_a entr x_c x_sc then
-      {x_sc} %$\subset$% entr (NLet x)) and
+      {x_sc} %$\subseteq$% entr (NLet x)) and
     (if static_built_on_chan env_a entr x_c x_m then 
-      {x_m} %$\subset$% entr (NLet x)) and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+      {x_m} %$\subseteq$% entr (NLet x)) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e'
   then
     static_live_chan env_a entr exit x_c (Let x (Prim (SendEvt x_sc x_m)) e')) and
 
 (%$\forall$% exit x entr env_a x_c x_r .    
   if
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
     (if static_built_on_chan env_a entr x_c x_r then
-      {x_r} %$\subset$% entr (NLet x)) and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+      {x_r} %$\subseteq$% entr (NLet x)) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e'
   then
     static_live_chan env_a entr exit x_c (Let x (Prim (RecvEvt x_rc)) e')) and
@@ -2977,49 +2954,49 @@ only
 
 (%$\forall$% exit x entr env_a e_c x1 x2 e' .
   if
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
     (if static_built_on_chan env_a entr x_c x1 then
-      {x_1} %$\subset$% entr (NLet x)) and
+      {x_1} %$\subseteq$% entr (NLet x)) and
     (if static_built_on_chan env_a entr x_c x2 then
-      {x2} %$\subset$% entr (NLet x)) and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+      {x2} %$\subseteq$% entr (NLet x)) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e'
   then
     static_live_chan env_a entr exit x_c (Let x (Prim (Pair x1 x2)) e')) and
 
 (%$\forall$% exit x entr env_a x_c x_a e' . 
   if
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
     (if static_built_on_chan env_a entr x_c x_a then
-      {x_a} %$\subset$% entr (NLet x)) and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+      {x_a} %$\subseteq$% entr (NLet x)) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e'
   then
     static_live_chan env_a entr exit x_c (Let x (Prim (Lft x_a)) e')) and
 
 (%$\forall$% exit x entr env_a x_c x_a e' . 
   if
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
     (if static_built_on_chan env_a entr x_c x_a then
-      {x_a} %$\subset$% entr (NLet x))
-    entr (top_label e) %$\subset$% exit (NLet x) and
+      {x_a} %$\subseteq$% entr (NLet x))
+    entr (top_label e) %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e
   then
     static_live_chan env_a entr exit x_c (Let x (Prim (Rght x_a)) e)) and
 
 (%$\forall$%  exit x entr e_b x_p x env_a x_c e' f . 
   if
-    (exit (NLet x) - {x}) %$\cup$% (entr (top_label e_b) - {x_p}) %$\subset$% entr (NLet x) and
+    (exit (NLet x) - {x}) %$\cup$% (entr (top_label e_b) - {x_p}) %$\subseteq$% entr (NLet x) and
     static_live_chan env_a entr exit x_c e_b and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e'
   then
     static_live_chan env_a entr exit x_c (Let x (Prim (Abs f x_p e_b)) e')) and
 
 (%$\forall$% exit x entr e' e_c x_c env_a .
   if
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
-    entr (top_label e') %$\cup$% entr (top_label e_c) %$\subset$% exit (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
+    entr (top_label e') %$\cup$% entr (top_label e_c) %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e_c and
     static_live_chan env_a entr exit x_c e'
   then
@@ -3027,56 +3004,56 @@ only
 
 (%$\forall$% exit x entr env_a x_c x_e e' .
   if
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
     (if static_built_on_chan env_a entr x_c x_e then
-      {x_e} %$\subset$% entr (NLet x)) and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+      {x_e} %$\subseteq$% entr (NLet x)) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e' and
   then
     static_live_chan env_a entr exit x_c (Let x (Sync x_e) e')) and
 
 (%$\forall$% exit x entr env_a x_c x_a e' .
   if
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
     (if static_built_on_chan env_a entr x_c x_a then
-      {x_a} %$\subset$% entr (NLet x)) and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+      {x_a} %$\subseteq$% entr (NLet x)) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e'
   then
     static_live_chan env_a entr exit x_c (Let x (Fst x_a) e')) and
 
 (%$\forall$% exit x entr env_a x_c x_a e' .
   if 
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
     (if static_built_on_chan env_a entr x_c x_a then
-      {x_a} %$\subset$% entr (NLet x)) and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+      {x_a} %$\subseteq$% entr (NLet x)) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e'
   then
     static_live_chan env_a entr exit x_c (Let x (Snd x_a) e')) and
 
 (%$\forall$% exit x entr e_l x_l e_r x_r env_a x_c x_s e' .
   if 
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
-    (entr (top_label e_l) - {x_l}) %$\subset$% entr (NLet x) and
-    (entr (top_label e_r) - {x_r}) %$\subset$% entr (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
+    (entr (top_label e_l) - {x_l}) %$\subseteq$% entr (NLet x) and
+    (entr (top_label e_r) - {x_r}) %$\subseteq$% entr (NLet x) and
     (if static_built_on_chan env_a entr x_c x_s then
-      {x_s} %$\subset$% entr (NLet x)) and
+      {x_s} %$\subseteq$% entr (NLet x)) and
     static_live_chan env_a entr exit x_c e_l and
     static_live_chan env_a entr exit x_c e_r and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e'
   then 
     static_live_chan env_a entr exit x_c (Let x (Case x_s x_l e_l x_r e_r) e')) and
 
 (%$\forall$% exit x entr env_a x_c x_a f e' .
   if
-    (exit (NLet x) - {x}) %$\subset$% entr (NLet x) and
+    (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
     (if static_built_on_chan env_a entr x_c x_a then
-      {x_a} %$\subset$% entr (NLet x)) and
+      {x_a} %$\subseteq$% entr (NLet x)) and
     (if static_built_on_chan env_a entr x_c f then
-      {f} %$\subset$% entr (NLet x)) and
-    entr (top_label e') %$\subset$% exit (NLet x) and
+      {f} %$\subseteq$% entr (NLet x)) and
+    entr (top_label e') %$\subseteq$% exit (NLet x) and
     static_live_chan env_a entr exit x_c e'
   then
     static_live_chan env_a entr exit x_c (Let x (App f x_a) e'))
@@ -3128,7 +3105,7 @@ only
 (%$\forall$% x_send x_evt x_recv prog_a entr exit .
   if
     ((NLet x_send), ESend x_evt, (NLet x_recv)) %$\in$% prog_a and 
-    {x_evt} %$\subset$% (entr (NLet x_send))
+    {x_evt} %$\subseteq$% (entr (NLet x_send))
   then
     static_live_traversable prog_a entr exit ((NLet x_send), ESend x_evt, (NLet x_recv)))
 
@@ -3385,7 +3362,7 @@ only
     pool (path_r @ (LNxt x_r) # path_sfx) = Some stt and 
     pool path_s = Some (Stt (Let x_s (Sync x_se) e_sy) env_sy stack_sy) and
     pool path_r = Some (Stt (Let x_r (Sync x_re) e_ry) env_ry stack_ry) and
-    {(path_s, c_c, path_r)} %$\subset$% convo and 
+    {(path_s, c_c, path_r)} %$\subseteq$% convo and 
     dynamic_built_on_chan_var env_ry c x_r and 
     paths_correspond_mod_chan pool convo c path_s path_a_pre and
     paths_correspond path_sfx path_a_sfx
