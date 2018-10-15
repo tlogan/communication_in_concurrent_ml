@@ -34,7 +34,10 @@
     fun,
     predicate,
     only, if, then, else,
-    and, or, not
+    and, or, not,
+    lemma,
+    theorem,
+    of
   }
 }
  
@@ -75,7 +78,6 @@ syntactic transliteration. In this formal theory, the dynamic semantics of Concu
 defined by a small-step operational semantics. The static semantics is an instance of 0CFA
 \cite{0cfa}, defined in terms of nonequational constraints \cite{program_analysis}.
 
-
 \section{Overview}
 In programming languages, concurreny is a program structuring technique that allows evaluation
 steps to hop back and forth between disjoint syntactc structures within a program. It is useful
@@ -93,12 +95,11 @@ It features threads, which are pieces of code allowed to have a wide range of
 evaluation orders relative to code encapsulated in other threads. Its synchronization
 mechanism can mandate the execution order between parts of separate threads. It is often the
 case that synchronization is necessary when data is shared. Thus, in \textit{Concurrent ML},
-synchronization and data sharing mechanisms are actually subsumed by a uniform communication
-mechanism. Threads are spawned asynchronously; that is, the parent thread need not wait for the
-spawned thread to terminate before it resumes evaluation. Indeed, if that were the case, then
-threads would be useless. Additional threads can be spawned in order to share data
-asynchronously, which can provide better usability or performance in some instances.
-
+synchronization is inherent in communication. Threads are spawned asynchronously; that is, the
+parent thread need not wait for the spawned thread to terminate before it resumes evaluation.
+Indeed, if that were the case, then threads would be useless. Additional threads can be spawned
+in order to share data asynchronously, which can provide better usability or performance under
+some circumstances.
 
 Threads communicate by having shared access to a common channel.  A channel can be used to
 either send data or receive data.  When a thread sends on a channel, another thread must
@@ -171,27 +172,49 @@ calling \lstinline{recv replCh}.
 
   \end{lstlisting}
 
+
+\textit{Concurrent ML} actually allows for events other than sending and receiving to
+occur during synchronization. In fact, the syncronization mechanism is decoupled from
+events, like sending and receiving, much in the same way that function application is decoupled
+from function abstraction. Sending and receiving events are represented by \lstinline{sendEvt}
+and \lstinline{recvEvt} and synchronization is represented by \lstinline{sync}.
+
+\begin{lstlisting}[language=ML, escapechar=\%]
+
+  type 'a event
+  val sync : 'a event -> 'a
+
+  val recvEvt : 'a channel -> 'a event
+  val sendEvt : 'a channel * 'a -> unit event
+
+  fun send (ch, v) = sync (sendEvt (ch, v))
+  fun recv v = sync (recvEvt v)
+
+  \end{lstlisting}
+
+An advantageous consequence of decoupling syncronization from events, is that events can be
+combined with other events via event combinators, and synchronized on exactly once. One such
+event combinator is \lstinline{choose}, which constructs a new event consisting of two
+constiuent events, such that when sycnronized on, exactly one of the two events may take
+effect. There are many other useful combinators, such as the \lstinline{wrap} and
+\lstinline{guard} combinators designed by Reppy[8]. Additionally, Donnelly and Fluet extended
+\textit{Concurrent ML} with the \lstinline{then} combinator described in their work on
+transactional events \cite{transactional_events}. Transactional events enable more robust
+structuring of programs by allowing non-isolated code to be turned into isolated code via
+the \lstinline{then} combinator, rather than duplicating code with the addition of stronger
+isolation. When the event constructed by the \lstinline{then} combinator is is synchronized on,
+either all of its constituent events and abstractions evaluate in isolation, or none evaluates.
+
+\begin{lstlisting}[language=ML, escapechar=\%]
+
+  val choose : 'a event * 'a event -> 'a event
+  val then : 'a event * ('a -> 'b event) -> 'b event
+
+  \end{lstlisting}
+
 ----Edit From Here----
 
-Reppy's original design of Concurrent ML allows for events other than sending and receiving to
-be triggered by synchronization.  One such event chooses between one of many events to
-synchronize on.  Only one of the events is chosen for synchronization, but all choices must be
-represented.  Thus, event synchronization must be separated from event values, similar to the
-way function application is separated from function abstraction.  send and recv are just
-shorthand for synchronization on send and receive events, respectively.
-
-
-choose is an example of an event combinator; a way to construct an event from other events.
-Reppy's book on Concurrent ML offers explanations of many other useful combinators, such as the
-wrap and guard combinators[8].  Donnelly and Fluet extended Concurrent ML with the
-transactional event combinator thenEvt[1].  Transactional events provide a technique for
-describing tasks that sometimes execute in isolation and sometimes don't.  Achieving similar
-results without transactional events would require duplication of code in multiple threads,
-resulting in code that is brittle under modification.
-
-When  thenEvt is synchronized on, either all of its constituent events and abstractions
-evaluate in isolation, or none evaluate.
-
+\section{Syncrhonization Implementation}
 
 A uniprocessor implementation of synchronous communication is inexpensive.  Using a fairly
 course-grain interleaving, the communication on a channel can proceed by checking if the
@@ -226,20 +249,6 @@ one-shot.
 
 
 
-\begin{lstlisting}[language=ML, escapechar=\%]
-
-  type 'a event
-  val sync : 'a event -> 'a
-  val recvEvt : 'a channel -> 'a event
-  val sendEvt : 'a channel * 'a -> unit event
-  val choose : 'a event * 'a event -> 'a event
-
-  fun send (ch, v) = sync (sendEvt (ch, v))
-  fun recv v = sync (recvEvt v)
-
-  val thenEvt : 'a event * ('a -> 'b event) -> 'b event
-
-  \end{lstlisting}
 
 \begin{lstlisting}[language=ML, escapechar=\%]
   val server = Serv.make ()
