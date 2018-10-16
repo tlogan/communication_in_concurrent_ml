@@ -143,7 +143,6 @@ calling \lstinline{recv replCh}.
 
 
 \begin{lstlisting}[language=ML, escapechar=\%]
-
   signature SERV = sig 
     type serv
     val make : unit -> serv
@@ -151,6 +150,7 @@ calling \lstinline{recv replCh}.
     end
 
   structure Serv : SERV = struct 
+
     datatype serv = S of (int * int chan) channel 
 
     fun make () = let 
@@ -169,7 +169,6 @@ calling \lstinline{recv replCh}.
       recv replChn end
 
     end
-
   \end{lstlisting}
 
 
@@ -180,7 +179,6 @@ from function abstraction. Sending and receiving events are represented by \lsti
 and \lstinline{recvEvt} and synchronization is represented by \lstinline{sync}.
 
 \begin{lstlisting}[language=ML, escapechar=\%]
-
   type 'a event
   val sync : 'a event -> 'a
 
@@ -189,7 +187,6 @@ and \lstinline{recvEvt} and synchronization is represented by \lstinline{sync}.
 
   fun send (ch, v) = sync (sendEvt (ch, v))
   fun recv v = sync (recvEvt v)
-
   \end{lstlisting}
 
 An advantageous consequence of decoupling syncronization from events, is that events can be
@@ -198,18 +195,17 @@ event combinator is \lstinline{choose}, which constructs a new event consisting 
 constiuent events, such that when sycnronized on, exactly one of the two events may take
 effect. There are many other useful combinators, such as the \lstinline{wrap} and
 \lstinline{guard} combinators designed by Reppy[8]. Additionally, Donnelly and Fluet extended
-\textit{Concurrent ML} with the \lstinline{then} combinator described in their work on
+\textit{Concurrent ML} with the \lstinline{thenEvt} combinator described in their work on
 transactional events \cite{transactional_events}. Transactional events enable more robust
 structuring of programs by allowing non-isolated code to be turned into isolated code via
-the \lstinline{then} combinator, rather than duplicating code with the addition of stronger
-isolation. When the event constructed by the \lstinline{then} combinator is is synchronized on,
-either all of its constituent events and abstractions evaluate in isolation, or none evaluates.
+the \lstinline{thenEvt} combinator, rather than duplicating code with the addition of stronger
+isolation. When the event constructed by the \lstinline{thenEvt} combinator is is synchronized
+on, either all of its constituent events and abstractions evaluate in isolation, or none
+evaluates.
 
 \begin{lstlisting}[language=ML, escapechar=\%]
-
   val choose : 'a event * 'a event -> 'a event
-  val then : 'a event * ('a -> 'b event) -> 'b event
-
+  val thenEvt : 'a event * ('a -> 'b event) -> 'b event
   \end{lstlisting}
 
 \section{Syncrhonization Implementation}
@@ -223,32 +219,26 @@ before dispatching. A multiprocessor implementation, on the other hand, must con
 competing threads may exists, therefore peform additional checks. Addtionally, there may be 
 overhead in sharing data between processors due to memory hiearchy designs \cite{}. 
 
-One way to lower synchronization and communication costs is to specialize the implementation
-for channels that have no more than one process ever sending or receiving on them.
+One way to lower synchronization and communication costs is to use specialized implementations
+for channels that have no more than one thread ever sending or receiving on them.  These
+specialized implementations would avoid unnecessary checks for competing threads.
+Concurrent ML does not feature multiple kinds of channels distinguished by their communication
+topologies, i.e. the number of threads that may end up sending or receiving on the channels.
+However, channels can be classified into various topologies simply by counting the number of
+threads per channel during the execution of a program.  A many-to-many channel has any number
+of sending threads and receiving threads; a fan-out channel has one or no sending thread and
+any number of receiving threads; a fan-in channel has any number of sending threads and one or
+no receiving threads; a one-to-one channel has one or none of each; a one-shot channel has
+exactly one sending attempt.
 
-----Edit From Here----
-
-Channels known to have only one sender or one receiver can have lower communication costs than those with arbitrary number of senders and arbitrary number of receivers, since some of the
-cost of handling competing threads can be avoided.  Concurrent ML does not provide language
-features for multiple types of channels distinguished by their communication topologies, or the
-number of threads that may end up sending or receiving on it.  However, channels can be
-classified into various topologies based on their potential communication.  A many-to-many
-channel has any number of senders and receivers; a fan-out channel has one sender and any
-number of receivers; a fan-in channel has any number of senders and exactly one receiver; a
-one-to-one channel has exactly one of each; a one-shot channel has exactly one sender, one
-receiver, and sends data only once.  The server implementation in Listing 2  with the following
-calling code exhibits these topologies.
-
-
-Since there are four threads that make calls to the server, the server's particular reqCh has
-four senders.  Servers are created with only one thread listening for requests, so the reqCh of
-this server has just one receiver.  So the server's reqCh is classified as fan-in.  Each use of
-call creates a distinct new channel replCh for receiving data.  The function call receives on
-the channel once and the server sends on the channel once, so each instance of replCh is
+The implementation of \lstinline{Serv} is annoted to indicate the communication topologies
+derived from its usage. Since there are four threads that make calls to the server, the
+server's particular \lstinline{reqCh} has four senders.  Servers are created with only one
+thread listening for requests, so the \lstinline{reqCh} of this server has just one receiver.
+So the server's \lstinline{reqCh} is classified as fan-in. Each use of call creates a distinct
+new channel \lstinline{replCh} for receiving data.  The function call receives on the channel
+once and the server sends on the channel once, so each instance of \lstinline{replCh} is
 one-shot.
-
-
-
 
 \begin{lstlisting}[language=ML, escapechar=\%]
   val server = Serv.make ()
@@ -262,17 +252,15 @@ one-shot.
 
 \begin{lstlisting}[language=ML, escapechar=\%]
   structure Serv : SERV = struct 
+
     datatype serv = S of (int * int chan) channel 
 
     fun make () = let 
-
-      val reqChn = FanIn.channel()
-
+      val reqChn = FanIn.channel ()
       fun loop state = let
         val (v, replCh) = FanIn.recv reqChn in 
         OneShot.send (replCh, state);
         loop v end in
-
       spawn (fn () => loop 0);
       S reqChn end 
 
@@ -285,40 +273,33 @@ one-shot.
     end
   \end{lstlisting}
 
+The right implementation choice can be determined by counting the number threads used during
+the execution of a program. However, some programs run forever, so it may never be possible to
+count all the threads. Instead, by using a static analysis it's possible to determine an
+estimate from the finite structure of programs. A static analysis that describes communication
+topologies of channels has practical benefits in at least two ways.  It can highlight which
+channels are candidates for optimized implementations of communication; or in a language
+extension allowing the specification of specialized channels, it can conservatively verify
+their correct usage. Without a static analysis to check the usage of the special channels, one
+could inadvertently use a one-shot channel for a channel that has multiple senders, thus
+violating the intended semantics. 
 
-A program analysis that describes communication topologies of channels has practical benefits
-in at least two ways.  It can highlight which channels are candidates for optimized
-implementations of communication; or in a language extension allowing the specification of
-restricted channels, it can conservatively verify the correct usage of restricted channels.
-Listing 2 demonstrates the language extension based on an example from Reppy and Xiao[11].
-
-
-Without a static analysis to check the usage of the special channels, one could inadvertently
-use a one-shot channel for a channel that has multiple senders, resulting in runtime behavior
-inconsistent with the general semantics of channel synchronization.
-
-The utility of the program analysis additionally depends on it being informative, sound, and
-computable.  The analysis is informative iff there exist programs about which the analysis
-describes information that is not directly observable.  The analysis is sound iff the
-information it describes about a program is the same or less precise than the operational
+The utility of the static analysis additionally depends on it being precise, sound, and
+computable. The analysis is precise iff there exist programs about which the analysis
+describes information that is not directly observable. The analysis is sound iff the
+information it describes about a program is the same or less precise than the dynamic
 semantics of the program. The analysis is computable iff there exists an algorithm that
 determines all the values described by the analysis on any input program.
 
-Program analyses, like operational semantics, describe information about the execution or
-behavior of programs.  Yet, while an operational semantics may be viewed as ground truth, the
-correctness of an analysis is derived from its relation to an operational semantics.  In
-practice, program analyses often describe computable information with respect to operational
-semantics that are universal and capable of describing uncomputable information.  To allow for
-computability, program analyses often describe approximate information.
+There are a large number of static analyses with a variety of practical uses. The most familiar
+kind of static analyses are type systems.  A type system statically evaluates expressions
+in programs to abstract categories known as types. In a sound type system, if an expression is
+well typed, then it can be dynamically evaluated (without error). Some expressions cannot be
+typed, indicating the possiblity that the expression cannot be dynamically evaluated. Type
+systems can improve debugging by pointing out errors that may be infrequently executed. They
+can also improve execution speeds of safe languages by rendering dynamic checks unnecessary.  
 
-There are a large number of program analyses with a variety of practical uses.  Some
-constructions of programs might be considered bad, by describing operations that don't make
-sense, like True * 5 / “hello”, or accessing the 7th element of an array with 6 elements.  A
-type systems, or static semantics, is an analysis that can help ensure programs are well
-constructed.  It describes how programs and expressions can be composed, such that the programs
-won't get stuck or result in certain kinds of undesired behavior.  Type systems can improve
-debugging by pointing out errors that may be infrequently executed.  They can also improve
-execution speeds of safe languages by rendering some runtime checks unnecessary.  
+---- Edit From Here ----
 
 Other analyses are useful for describing opportunities for program optimizations.  Many
 analyses used for optimizations describe how data flows with information related to every point
