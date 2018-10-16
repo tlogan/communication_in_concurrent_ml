@@ -299,27 +299,58 @@ typed, indicating the possiblity that the expression cannot be dynamically evalu
 systems can improve debugging by pointing out errors that may be infrequently executed. They
 can also improve execution speeds of safe languages by rendering dynamic checks unnecessary.  
 
+Other kinds of analysis are useful for describing opportunities for program optimizations.
+A data flow analysis describes how data flows from one point to another in the program.
+A data flow analysis for available expressions tracks the expressions have already been
+computed by every program point. Using this information, redundant code can be detected and
+removed to improve performance.
+
+In the following example, an analysis for available expressions would track
+\lstinline{(!x + 1)} and \lstinline{(w - 3)} to remain available from line 5 all the way until
+the end of the program, meaning those two redudandt expressions in line 8 can be swapped with
+the results of their evaluation. In contrast, \lstinline{(!y + 2)} would be tracked as avaiable
+from line 5 until line 7. It would be unavailable after line 7 because the number in
+\lstinline{y} is modifided in line 7, changing the how the expression would evaluate after
+that.
+
+\begin{lstlisting}[language=ML, escapechar=\%]
+  1. let
+  2.   val w = 4
+  3.   val x = ref 1
+  4.   val y = ref 2
+  5.   val z = (!x + 1) + (!y + 2) + (w - 3)
+  6.   val w = 1 in
+  7.   y := 0;
+  8.   (!y + 2) - (!x + 1) * (w - 3) end
+  \end{lstlisting}
+
+
+
+A dataflow analysis for liveness tracks the set of stored valued that are used in the
+remainder of the program. Using this information, unused code can
+be detected and removed to improve performance. There are other uses of this analysis, as well.
+In this work, the liveness of channels is tracked to distinguish between distinct channels with
+the same name. 
+
+In the following example, an analysis for liveness of values stored in names and references
+would track \lstinline{x} to be live from line 7 until line 5. Above line 5 there are no uses
+of \lstinline{x}, so it would not be live. Since the name \lstinline{x} at line 2 is not used,
+line 2 can be removed. The reference contained in \lstinline{z} would be
+live from line 7 until line 6, where it is assigned. There is no deference of lstinline{z}
+above line 6, so it not live from there until the beginning. Since the reference contained in
+\lstlinline{z} is not live at line 4, line 4 can be removed.
+
+\begin{lstlisting}[language=ML, escapechar=\%]
+  1. let 
+  2.   val x = 1  
+  3.   val y = 2
+  4.   val z = ref (4 * 73)
+  5.   val x = 4 in 
+  6.   z := 1; 
+  7.   x * !z end
+  \end{lstlisting}
+
 ---- Edit From Here ----
-
-Other analyses are useful for describing opportunities for program optimizations.  Many
-analyses used for optimizations describe how data flows with information related to every point
-in the program.  Each point refers to a term, from which the small-step semantics may take a
-step.  Some programs may mention the same expression multiple times, possibly resulting in
-redundant computations.  These redundant computations can be detected by available expressions
-analysis, one of many data flow analyses.  An available expressions analysis describes which
-expressions must have been computed by each program point.
-
-The expression (!x + 1) is available by line 9 but (!y + 2) and (w - 3) are not, because y was
-modified in line 8 and w was rebound in line 6. Another inefficiency is that programs may
-perform computations, but then ignore their results.  Such dead code can be detected by a
-liveness analysis.  The analysis describes for each program point, the set of variables and
-references whose values might be used in the remainder of the program.
-
-Since the variables x and z and the dereference !z are used in line 8, they are live at line
-7.  Since z is reassigned at line 7, !z is no longer live at line 6.  Since x is bound at line
-5 and not used above, it is not live at line 4 and above.  Since z is bound at 4 and not used
-above, it is not live at line 3 and above. The liveness information demonstrates that the
-expression (4 * 73) doesn't need to be computed, and lines 2 and 3 can simply be removed.
 
 The information at each program point is derived from control structures in the program that
 dictate how information may flow between program points.  Some uses of control structures are
@@ -341,28 +372,6 @@ historical motivation for describing the abstract value information was really f
 control information, so the original approaches to these analyses are known as control flow
 analyses or CFAs.  With the control flow information, other data flow analyses like available
 expression analysis and liveness analysis can provide greater coverage.
-
-
-\begin{lstlisting}[language=ML, escapechar=\%]
-  let
-    val w = 4
-    val x = ref 1
-    val y = ref 2
-    val z = (!x + 1) + (!y + 2) + (w - 3)
-    val w = 1 in
-    y := 0;
-    (!y + 2) - (!x + 1) * (w - 3) end
-  \end{lstlisting}
-
-\begin{lstlisting}[language=ML, escapechar=\%]
-  let 
-    val x = 1  
-    val y = 2
-    val z = ref (4 * 73)
-    val x = 4 in 
-    z := 1; 
-    x * !z end
-  \end{lstlisting}
 
 \begin{lstlisting}[language=ML, escapechar=\%]
 
