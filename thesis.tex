@@ -338,7 +338,7 @@ of \lstinline{x}, so it would not be live. Since the name \lstinline{x} at line 
 line 2 can be removed. The reference contained in \lstinline{z} would be
 live from line 7 until line 6, where it is assigned. There is no deference of lstinline{z}
 above line 6, so it not live from there until the beginning. Since the reference contained in
-\lstlinline{z} is not live at line 4, line 4 can be removed.
+\lstinline{z} is not live at line 4, line 4 can be removed.
 
 \begin{lstlisting}[language=ML, escapechar=\%]
   1. let 
@@ -350,17 +350,22 @@ above line 6, so it not live from there until the beginning. Since the reference
   7.   x * !z end
   \end{lstlisting}
 
----- Edit From Here ----
+The information at each program point is derived from control structures in the program, which
+dictate how information flows between program points. Some uses of control structures are
+literally represented in the syntax, such as the sequencing of namings and assignments in the
+previous examples. Other uses of control structures may be indirectly represented through
+names. Function application is a control structure that allows a calling piece of code to
+flow into a function abstraction's code.  Function abstractions can be named, which allows
+multiple pieces of code to all flow into into the same section of code. The name adds an
+additional step in order to determine uncover control structures, and determine data flow.
+Additionally, in languages with higher order functions and recursion, such as those in the Lisp
+and ML families, it may be impossible to determine all the function abstractions that higher
+order function parameters resolve to. However, a control flow analysis can reveal a good
+approximation of the control structures and values that have been obfuscated by higher order
+function abstraction. 
 
-The information at each program point is derived from control structures in the program that
-dictate how information may flow between program points.  Some uses of control structures are
-represented as literals in the syntax, while other uses are expressions that may evaluate to
-control structures, or function parameters that may bind to control structures.  Function
-abstraction is a control structure allowing multiple parts of a program to flow into a section
-of code via a binding.  In ML, function abstractions are higher order, and may be unknown
-without some form of evaluation.  These control structures may be revealed by an abstract value
-flow analysis, which associates each program point with a set of abstract values that the
-point's expression may evaluate to.
+
+---- Edit From Here ----
 
 
 The abstract values of f, g, h are simply their let bound expressions {fn x => x 1},

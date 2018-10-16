@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  15 OCT 2018 23:02
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  16 OCT 2018 08:07
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -788,103 +788,103 @@ ter-mined by count-ing the num-ber threads
 
 [5] [6] [7] [8] [9] [10] [11] [12]
 LaTeX Font Info:    Font shape `T1/fvm/m/it' in size <9> not available
-(Font)              Font shape `T1/fvm/m/sl' tried instead on input line 670.
+(Font)              Font shape `T1/fvm/m/sl' tried instead on input line 684.
 LaTeX Font Info:    Font shape `T1/fvm/m/sl' will be
-(Font)              scaled to size 7.65005pt on input line 670.
+(Font)              scaled to size 7.65005pt on input line 684.
  [13] [14] [15] [16] [17] [18] [19] [20]
 [21] [22] [23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34] [35]
-[36] [37] [38]
-Overfull \hbox (1.64879pt too wide) in paragraph at lines 2019--2027
+[36] [37] [38] [39]
+Overfull \hbox (1.64879pt too wide) in paragraph at lines 2033--2041
 \T1/LinuxLibertineT-TLF/m/n/10 trace pool that re-sults from run-ning the pro-g
 ram. The lemma for static_fan_out_sound
  []
 
-[39] [40]
-Overfull \hbox (24.35178pt too wide) in paragraph at lines 2080--2085
+[40]
+Overfull \hbox (24.35178pt too wide) in paragraph at lines 2094--2099
 \T1/LinuxLibertineT-TLF/m/n/10 tions of static_fan_out and fan_out. The three m
 ain lem-mas are not_static_send_site_sound,
  []
 
 [41]
-Overfull \hbox (34.72224pt too wide) in paragraph at lines 2152--2167
+Overfull \hbox (34.72224pt too wide) in paragraph at lines 2166--2181
 []\T1/LinuxLibertineT-TLF/m/n/10 The gen-er-al-iza-tion of static_traversable i
 s cap-tured in the pred-i-cates static_traversable_val,
  []
 
 
-Overfull \hbox (3.34985pt too wide) in paragraph at lines 2152--2167
+Overfull \hbox (3.34985pt too wide) in paragraph at lines 2166--2181
 \T1/LinuxLibertineT-TLF/m/n/10 static_traversable_env, static_traversable_stack
 , and static_traversable_pool. The gen-
  []
 
-[42] [43]
-Overfull \hbox (19.49931pt too wide) in paragraph at lines 2269--2276
+[42] [43] [44]
+Overfull \hbox (19.49931pt too wide) in paragraph at lines 2283--2290
 []\T1/LinuxLibertineT-TLF/m/n/10 The ab-stract pro-gram tran-si-tions de-scribe
 d by the var-i-ous ver-sions of static_traversable
  []
 
-[44] [45] [46]
-Overfull \hbox (81.70833pt too wide) in paragraph at lines 2384--2392
+[45] [46]
+Overfull \hbox (81.70833pt too wide) in paragraph at lines 2398--2406
 \T1/LinuxLibertineT-TLF/m/n/10 Lemma not_static_traceable_sound fol-lows from t
 he gen-er-al-ized lemma not_static_traceable_pool_sound,
  []
 
 
-Overfull \hbox (16.74481pt too wide) in paragraph at lines 2384--2392
+Overfull \hbox (16.74481pt too wide) in paragraph at lines 2398--2406
 \T1/LinuxLibertineT-TLF/m/n/10 lemma fol-lows from lemma static_traversable_poo
 l_preserved_star, the pred-i-cate star_left
  []
 
 [47]
-Overfull \hbox (74.42839pt too wide) in paragraph at lines 2479--2482
+Overfull \hbox (74.42839pt too wide) in paragraph at lines 2493--2496
 []\T1/LinuxLibertineT-TLF/m/n/10 lemma not_static_send_site_sound is proved us-
 ing the lem-mas send_chan_not_static_bound_sound,
  []
 
 [48]
-Overfull \hbox (10.11113pt too wide) in paragraph at lines 2519--2528
+Overfull \hbox (10.11113pt too wide) in paragraph at lines 2533--2542
 []\T1/LinuxLibertineT-TLF/m/n/10 Both send_chan_not_static_bound_sound, and not
 _static_bound_sound fol-low from
  []
 
 
-Overfull \hbox (35.72653pt too wide) in paragraph at lines 2519--2528
+Overfull \hbox (35.72653pt too wide) in paragraph at lines 2533--2542
 \T1/LinuxLibertineT-TLF/m/n/10 static_eval_pool_preserved_star de-scr-bied pre-
 vi-ously. The lemma not_static_reachable_sound
  []
 
 
-Overfull \hbox (31.98497pt too wide) in paragraph at lines 2535--2537
+Overfull \hbox (31.98497pt too wide) in paragraph at lines 2549--2551
 \T1/LinuxLibertineT-TLF/m/n/10 static_reachable_left, its gen-er-al-iza-tions a
 nd the the lemma not_static_reachable_pool_sound. 
  []
 
-[49] [50] [51] [52] [53] [54] [55]
-Overfull \hbox (1.06502pt too wide) in paragraph at lines 2903--2909
+[49] [50] [51] [52] [53] [54] [55] [56]
+Overfull \hbox (1.06502pt too wide) in paragraph at lines 2917--2923
 []\T1/LinuxLibertineT-TLF/m/n/10 Using the pred-i-cate static_built_on_chan, th
 e pred-i-cate static_live_chan com-pletes
  []
 
-[56] [57] [58] [59] [60] [61] [62]
-Overfull \hbox (8.5413pt too wide) in paragraph at lines 3210--3215
+[57] [58] [59] [60] [61] [62]
+Overfull \hbox (8.5413pt too wide) in paragraph at lines 3224--3229
 []\T1/LinuxLibertineT-TLF/m/n/10 The pred-i-cates static_one_shot, static_one_t
 o_one, static_fan_out, and static_fan_in
  []
 
 [63]
-Overfull \hbox (4.65294pt too wide) in paragraph at lines 3281--3281
+Overfull \hbox (4.65294pt too wide) in paragraph at lines 3295--3295
 []\T1/LinuxLibertineT-TLF/b/n/14.4 Reasoning Stat-egy for Static Com-mu-ni-ca-t
 ion with
  []
 
 [64]
-Overfull \hbox (74.20578pt too wide) in paragraph at lines 3307--3319
+Overfull \hbox (74.20578pt too wide) in paragraph at lines 3321--3333
 \T1/LinuxLibertineT-TLF/m/n/10 ab-stract paths, which is de-scribed by the pred
 -i-cates paths_correspond and paths_correspond_mod_chan.
  []
 
 
-Overfull \hbox (37.49796pt too wide) in paragraph at lines 3307--3319
+Overfull \hbox (37.49796pt too wide) in paragraph at lines 3321--3333
 \T1/LinuxLibertineT-TLF/m/n/10 Ad-di-tion-ally the the-o-rem fol-lows from not_
 static_traceable_sound, not_static_inclusive_sound
  []
@@ -897,7 +897,7 @@ LaTeX Warning: There were undefined references.
 Here is how much of TeX's memory you used:
  6241 strings out of 493014
  87898 string characters out of 6133351
- 350205 words of memory out of 5000000
+ 344205 words of memory out of 5000000
  9684 multiletter control sequences out of 15000+600000
  54864 words of font info for 63 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -915,7 +915,7 @@ local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/te
 xlive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/20
 16/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texm
 f-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (69 pages, 389850 bytes).
+Output written on thesis.pdf (69 pages, 389740 bytes).
 PDF statistics:
  267 PDF objects out of 1000 (max. 8388607)
  185 compressed objects within 2 object streams
