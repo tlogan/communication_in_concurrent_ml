@@ -43,7 +43,7 @@
  
 
 
-\title{Formal Theory of Communication Topology in Concurrent ML}
+\title{Formal Theory of Concurrent ML}
 \author{Thomas Logan}
 \begin{document}
 
@@ -212,23 +212,23 @@ either all of its constituent events and abstractions evaluate in isolation, or 
 
   \end{lstlisting}
 
+\section{Syncrhonization Implementation}
+The implementation of synchronization requires determining which threads should 
+synchronization, and which threads should be dispatched. The more amount of information needed
+to determine this scheduling, the higher the performance penality. A uniprocessor
+implementation of synchronization can have very little penalty. Since only one thread can make
+progress at a time, only one thread requests synchronization at a time, meaning the scheduler
+won't waste steps checking for threads competing for the same synchronization opportunity,
+before dispatching. A multiprocessor implementation, on the other hand, must consider that
+competing threads may exists, therefore peform additional checks. Addtionally, there may be 
+overhead in sharing data between processors due to memory hiearchy designs \cite{}. 
+
+One way to lower synchronization and communication costs is to specialize the implementation
+for channels that have no more than one process ever sending or receiving on them.
+
 ----Edit From Here----
 
-\section{Syncrhonization Implementation}
-
-A uniprocessor implementation of synchronous communication is inexpensive.  Using a fairly
-course-grain interleaving, the communication on a channel can proceed by checking if the
-channel is in one of two possible states: either a corresponding thread is waiting or there's
-nothing waiting.  The implementation doesn't need to consider states where competing threads
-are also trying to communicate on the same channel, since the course-grain interleaving ensures
-that competing threads have made no partial communication progress.  In a multiprocessor
-setting, threads can run in parallel and multiple threads can simultaneously make partial
-progress on the same channel.  The multiprocessor implementation of communication is more
-expensive than that of the uniprocessor, since it must consider additional states related to
-competing threads making partial communication progress.[10]
-
-Channels known to have only one sender or one receiver can have lower communication costs than
-those with arbitrary number of senders and arbitrary number of receivers, since some of the
+Channels known to have only one sender or one receiver can have lower communication costs than those with arbitrary number of senders and arbitrary number of receivers, since some of the
 cost of handling competing threads can be avoided.  Concurrent ML does not provide language
 features for multiple types of channels distinguished by their communication topologies, or the
 number of threads that may end up sending or receiving on it.  However, channels can be
