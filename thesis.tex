@@ -958,21 +958,16 @@ with a syntax directed structure, which gives strong evidence of computability. 
 I do not formally prove that the specialized implementations are behaviorally equivalent to a
 generic implementation, but I suggest some plausible example implementations.
 
-\section{Syntax Definitions}
-The relations are defined over a simple language featuring a small subset of Concurrent ML
-features. The features include recursive function abstraction with application, left and right
-construction with pattern matching, pair construction with first and second projections, send
-and receive event construction with synchronization, channel creation, thread spawning, and
-unit literal.  The syntax and semantics are defined in a peculiar way to enable relations
-between static and dynamic properties of the language.  A primititive construct is one that
-contains references to names but cannot be evaulated any further. Send and receive events,
-left and right constructs, pairs, and function abstractions are primitive constructs.
-
-The syntax is in a very restrictive administrative normal form (ANF), in which every value or
-evaluatable construct is bound to a name.  Furthermore, constructs only accept names for
-eagerly evaluted inputs, rather than expression.  A control path is basically defined as a list
-of bound names, where the names are in order of their respective constructs' evaluation. The
-names are also annoted with information related to aspects of the control flow. 
+\section{Syntax}
+The syntax used in this formal theory contains a very small subset of
+\textit{Concurrent ML}'s features. The features include recursive function abstraction with
+application, left and right construction with pattern matching, pair construction with first
+and second projections, sending and receiving event construction with synchronization,
+channel creation, thread spawning, and the unit literal. The syntax is defined in a way to
+make it possible to relate the dynamic semantics of programs to the syntax programs.
+The syntax is in a very restrictive administrative normal form (ANF), in which every expression
+is bound to a name. Furthermore, expression only accept names in place of eagerly evaluted
+inputs. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
 
