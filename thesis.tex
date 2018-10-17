@@ -9,10 +9,11 @@
 \usepackage{listings}
 \usepackage{color}
 
+\usepackage{graphicx}
+\graphicspath{ {./} }
 
-%%\usepackage{pxfonts}
 \usepackage[T1]{fontenc}
-\usepackage{libertine}%% Only as example for the romans/sans fonts
+\usepackage{libertine}
 \usepackage[scaled=0.85]{beramono}
 
 \lstset{
@@ -357,39 +358,19 @@ previous examples. Other uses of control structures may be indirectly represente
 names. Function application is a control structure that allows a calling piece of code to
 flow into a function abstraction's code.  Function abstractions can be named, which allows
 multiple pieces of code to all flow into into the same section of code. The name adds an
-additional step in order to determine uncover control structures, and determine data flow.
+additional step in to uncover control structures, and determine data flow.
 Additionally, in languages with higher order functions and recursion, such as those in the Lisp
-and ML families, it may be impossible to determine all the function abstractions that higher
-order function parameters resolve to. However, a control flow analysis can reveal a good
+and ML families, it may be impossible to determine all the function abstractions that
+expressions resolve to. However, a control flow analysis can reveal a good
 approximation of the control structures and values that have been obfuscated by higher order
-function abstraction. 
+function abstractions.  Uncovering the the control structures depends on resolving expressions
+to values, and resolving expressions to values depends on on unconvering the control
+structures. The mutual dependency means that control flow analysis is a form of
+static semantics that describes approximate evaluations of programs. In this work, control flow
+analysis for tracking certain kinds of values, like channels and events, in addition to
+constructing precise data flow analysis. 
 
-
----- Edit From Here ----
-
-
-The abstract values of f, g, h are simply their let bound expressions {fn x => x 1},
-{fn y => y + 2},  {fn z => z + 3}, respectively.  x has the abstract values of
-{fn y => y + 2, fn z => z + 3}, so x 1 has the abstract values of {3, 4}; (f g) has abstract
-values of {3, 4}.  Since the abstract values depend on the flow of information, which depends
-on the abstract values, the description of abstract values is inductive or recursive.  The
-historical motivation for describing the abstract value information was really for its the
-control information, so the original approaches to these analyses are known as control flow
-analyses or CFAs.  With the control flow information, other data flow analyses like available
-expression analysis and liveness analysis can provide greater coverage.
-
-\begin{lstlisting}[language=ML, escapechar=\%]
-
-  let 
-    val f = fn x => x 1
-    val g = fn y => y + 2
-    val h = fn z => z + 3 in 
-    (f g) + (f h) end
-
-\end{lstlisting}
-
-
-
+---- Continue Edit From Here ----
 
 Analyses can be described in a variety of ways.  An algorithm that take programs as input and
 produce behavior information as output are necessary for automation in compilers.  A
@@ -400,7 +381,7 @@ first part generates a comprehensive set of data structures representing constra
 program points, mirroring the specification's description, and the second part solves the
 constraints.
 
-For a subseteq of Concurrent ML without event combinators, Reppy and  Xiao developed an
+For a subset of Concurrent ML without event combinators, Reppy and  Xiao developed an
 efficient algorithmic analysis that determines for each channel all abstract threads that send
 and receive on it.  The algorithm depends on each primitive operation in the program being
 labeled with a program point.  A sequence of program points ordered in a valid execution
@@ -978,7 +959,7 @@ I do not formally prove that the specialized implementations are behaviorally eq
 generic implementation, but I suggest some plausible example implementations.
 
 \section{Syntax Definitions}
-The relations are defined over a simple language featuring a small subseteq of Concurrent ML
+The relations are defined over a simple language featuring a small subset of Concurrent ML
 features. The features include recursive function abstraction with application, left and right
 construction with pattern matching, pair construction with first and second projections, send
 and receive event construction with synchronization, channel creation, thread spawning, and
@@ -1013,9 +994,9 @@ datatype
 
   primitive = 
     SendEvt name name | RecvEvt name |
-    Pair name var |
+    Pair name name |
     Lft name | Rght name |
-    Abs name var exp
+    Abs name name exp
 
   \end{lstlisting}
 
@@ -1414,7 +1395,7 @@ datatype static_value =
 
 type static_environment = name -> static_value set
 
-fun result_name of program -> var:
+fun result_name of program -> name:
 
 (%$\forall$% x .
   result_name (Rslt x) = x) and
@@ -3442,10 +3423,8 @@ lemma not_static_inclusive_sound:
 
 
 
-\section{Mathematical Artifacts}
 
-
-\section{Syntax}
+\section{Analysis of Example Program}
 
 \begin{lstlisting}[language=logic, escapechar=\%]
 
@@ -3488,7 +3467,6 @@ lemma not_static_inclusive_sound:
 
   \end{lstlisting}
 
-
+  \includegraphics[scale=0.4]{cml_graph.pdf}
+  
 \end{document}
-\end{document}
-{Document}
