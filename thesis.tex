@@ -55,6 +55,7 @@
 \pagenumbering{arabic}
 
 
+----Edit Start----
 \section{Summary}
 For this master's thesis, I have developed a formal framework for analysis of
 a concurrent language, along with an initial formal analysis.  The language under analysis is
@@ -370,7 +371,7 @@ static semantics that describes approximate evaluations of programs. In this wor
 analysis for tracking certain kinds of values, like channels and events, in addition to
 constructing precise data flow analysis. 
 
----- Continue Edit From Here ----
+----Edit End----
 
 Analyses can be described in a variety of ways.  An algorithm that take programs as input and
 produce behavior information as output are necessary for automation in compilers.  A
@@ -958,6 +959,7 @@ with a syntax directed structure, which gives strong evidence of computability. 
 I do not formally prove that the specialized implementations are behaviorally equivalent to a
 generic implementation, but I suggest some plausible example implementations.
 
+----Edit Start---
 \section{Syntax}
 The syntax used in this formal theory contains a very small subset of
 \textit{Concurrent ML}'s features. The features include recursive function abstraction with
@@ -970,146 +972,162 @@ is bound to a name. Furthermore, expression only accept names in place of eagerl
 inputs. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
-
 datatype name = Name string
 
-datatype 
-  program = 
-    Let name expression program |
-    Rslt name and 
+  datatype 
+    program = 
+      Let name expression program |
+      Rslt name and 
 
-  expression = 
-    Unt | MkChn |
-    Prim primitive |
-    Spwn program |
-    Sync name |
-    Fst name | Snd name |
-    Case name name program name program |
-    App name name and 
+    expression = 
+      Unt | MkChn |
+      Prim primitive |
+      Spwn program |
+      Sync name |
+      Fst name | Snd name |
+      Case name name program name program |
+      App name name and 
 
-  primitive = 
-    SendEvt name name | RecvEvt name |
-    Pair name name |
-    Lft name | Rght name |
-    Abs name name exp
+    primitive = 
+      SendEvt name name | RecvEvt name |
+      Pair name name |
+      Lft name | Rght name |
+      Abs name name exp
+  \end{lstlisting}
 
+\section{Dynamic Semantics}
+The dynamic semantics described how programs evaluate to values.  A history of execution is
+represented a list of binding names, or resulting names, along with modes of control, such as
+sequencing, spawning, calling, or returning. Channels have no literal representation, but each
+time a channel is created, it is uniquely identified by the history of the execution up until
+that point. Primitive expressions are not simplified.  Instead, primitives are evaluated to
+closures consisting of the primitive syntax, along with an environment that maps its
+constituent names to their values.
+
+\begin{lstlisting}[language=logic, escapechar=\%]
+  datatype dynamic_point =
+    DNxt name | DSpwn name | DCll name | DRtn name 
+
+  type dynamic_path = dynamic_point list
+
+  datatype channel =
+    Chan dynamic_path name 
+
+  datatype dynamic_value = 
+    VUnt | VChn channel | VPrm primitive (name -> dynamic_value option)
+
+  type environment =
+    name -> dynamic_value option
   \end{lstlisting}
 
 
-The unit literal corresponds to a unit value. A dynamic channel value is uniquely identified by
-the full control path up to the point of channel creation along with the name bound to the
-channel creation construct. The value of a primitive construct is a closure over the construct
-with an environment that maps the names to further values.
-
-\section{Dynamic Semantics Definitions}
-
-Bound expressions of the unit literal, primitive constructs, and first and second constructs
-can be evalued to values in one step. The seq\_eval relation describes the evaluation of bound
-expressions with environments to values. The unit construct simply evaluates to the unit
-value.  A primitive construct is simply wrapped up with the environment.  The first projection is
-evaluated to the abstract value of the first argument of the associated pair. The second
-projection is evaluated to the abstract value of the second argument of the associated pair.
-
-Other constructs for spawn, application, and case matching cannot be described with the
-seq\_eval because they do not evaluate to values in one step and require updating additional
-information about the mode of the transition. 
-
+The evaluation of some expressions results in sequencing, meaning there is no coordination
+with other threads, and there is no backtracking. These expressions are the
+unit literal, primitives, pairs, and first and second projections. The evaluation depends only
+on the syntax and an environment for looking up the values of names within the syntax.
+Additionally, all these expressions evaluate to values in a single step.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
-datatype program_point =
-  LNxt name | LSpwn name | LCll name | LRtn name 
+  predicate seq_eval of expression -> environment -> dynamic_value -> bool:
+    only
+    (%$\forall$% env . 
+        seq_eval Unt env VUnt) and
+    (%$\forall$% p env .
+        seq_eval (Prim p) env (VPrm p env)) and
+    (%$\forall$% env x_p x1 x2 env_p v. 
+      if
+        env x_p = Some (VPrm (Pair x1 x2) env_p) and
+        env_p x1 = Some v
+      then
+        seq_eval (Fst x_p) env v) and
+    (%$\forall$% env x_p x1 x2 env_p v . 
+      if
+        env x_p = Some (VPrm (Pair x1 x2) env_p) and 
+        env_p x2 = Some v 
+      then
+        seq_eval (Snd x_p) env v)
+  \end{lstlisting}
 
-type program_path = program_point list
-
-datatype channel =
-  Chan program_path name 
-
-datatype program_value = 
-  VUnt | VChn channel | VPrm primitive (name -> program_value option)
-
-type environment =
-  name -> program_value option
-
-\end{lstlisting}
-
-
-\begin{lstlisting}[language=logic, escapechar=\%]
-predicate seq_eval of expression -> environment -> program_value -> bool:
-only
-(%$\forall$% env . 
-    seq_eval Unt env VUnt) and
-(%$\forall$% p env .
-    seq_eval (Prim p) env (VPrm p env)) and
-(%$\forall$% env x_p x1 x2 env_p v. 
-  if
-    env x_p = Some (VPrm (Pair x1 x2) env_p) and
-    env_p x1 = Some v
-  then
-    seq_eval (Fst x_p) env v) and
-(%$\forall$% env x_p x1 x2 env_p v . 
-  if
-    env x_p = Some (VPrm (Pair x1 x2) env_p) and 
-    env_p x2 = Some v 
-  then
-    seq_eval (Snd x_p) env v)
-
-\end{lstlisting}
-
-
-The seq\_eval up relation handles the evaluation of function application and case pattern
-matching. These bound expressions with associated environments are evalued to full expressions
-along with a new environment.  Case matching is evaluated based on the case of the construct's
-first argument. If the first argument is a left case, then the case matching is evauluated to
-the left expression along with an environment updated with a name specified for use in that
-expression. The value associated with the left case pattern is bound to the specified name in
-the new environment. If the first argument is a right case, then then the case matching is
-evaluated to the right expression along with an environment updated with a name specified for
-use in that expression. The value associated with the right case is bound to the specified
-name in the new environment. Function application evaluates to the expression within the
-applied function abstraction, along with the function abstraction's environment with a couple
-of modifications. The environment is updated with the recursive function name bound to the
-function abstraction, and the parameter name is bound to the function argument specified in the
-application expression. 
-
-
+The evaluation of expressions for application, and matching result in calling, which leads 
+backtracking after the called programs are evaluated. The evaluation depends on the syntax
+and an environment for looking up the values of names within the syntax.
+The expressions are evaluated to a called program, and a new evironment that will
+later be used in evaluation of the called program. For matching, either the left or the right
+program is called, and the environment is updated with the corresponding name mapping to the
+value extracted from the pattern. For application, the program inside of an applied abstraction
+is called, and the environment is updated with the abstraction's parameter mapped to the
+application's argument. The environment is also updated with the recursive name mapped to the
+same applied abstraction.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
-
-predicate call_eval of expression -> env -> program -> env -> bool:
-only
-(%$\forall$% env x_s x_c env_s v x_l e_l x_r e_r .
-  if
-    env x_s = Some (VPrm (Lft x_c) env_s) and
-    env_s x_c = Some v
-  then
-    call_eval (Case x_s x_l e_l x_r e_r) env e_l (env(x_l -> v))) and
-
-(%$\forall$% env x_s x_c env_s v x_l e_l x_r e_r .
-  if 
-    env x_s = Some (VPrm (Rght x_c) env_s); 
-    env_s x_c = Some v
-  then
-    call_eval (Case x_s x_l e_l x_r e_r) env e_r (env(x_r -> v))) and
-
-(%$\forall$% env f f_p x_p e_b env_l x_a v .
-  if 
-    env f = Some (VPrm (Abs f_p x_p e_b) env_l); 
-    env_l x_a = Some v
-  then
-    call_eval (App f x_a) env e_b (
-      env_l(f_p -> (VPrm (Abs f_p x_p e_b) env_l), x_p -> v)))
+  predicate call_eval of expression -> env -> program -> env -> bool:
+    only
+    (%$\forall$% env x_s x_c env_s v x_l e_l x_r e_r .
+      if
+        env x_s = Some (VPrm (Lft x_c) env_s) and
+        env_s x_c = Some v
+      then
+        call_eval (Case x_s x_l e_l x_r e_r) env e_l (env(x_l -> v))) and
+    (%$\forall$% env x_s x_c env_s v x_l e_l x_r e_r .
+      if 
+        env x_s = Some (VPrm (Rght x_c) env_s); 
+        env_s x_c = Some v
+      then
+        call_eval (Case x_s x_l e_l x_r e_r) env e_r (env(x_r -> v))) and
+    (%$\forall$% env f f_p x_p e_b env_l x_a v .
+      if 
+        env f = Some (VPrm (Abs f_p x_p e_b) env_l); 
+        env_l x_a = Some v
+      then
+        call_eval (App f x_a) env e_b (
+          env_l(f_p -> (VPrm (Abs f_p x_p e_b) env_l), x_p -> v)))
+  \end{lstlisting}
   
 
-\end{lstlisting}
-  
 
-A continuation is composed of a name, an expression and an environment.  It represents an
-expression and environment that should be evaluated once the name can be resolved to a value.
-A state is composed of an expression, an evnironment, and a stack of continuations.
-It represents information that might be evaluted to another state in the present of control
-path information.  A trace pool associated control paths with states.  The associated control
-path represent the path taken to reach the associated state. The leaf predicate desribes that a
-path is has no descendants within a trace pool.  
+Backtracking is made possible by recording the programs that have been side stepped and
+returned to later. In addition to the syntactic program, the environment for resolving the
+program's names, and an unresolved name are also recorded together to form a continuation. 
+The initial state of execution consists of a program, an empty environment, and an empty stack
+of continuations. With each sequential step, the program is reduced to a subprogram, and the
+environment is updated with the name bound to the value of the expression. Each time a
+subprogram is side stepped to evaluate a dependent expression, a continuation is formed around
+it and pushed onto a stack of continuations. A continuation is popped of the stack when a
+state's program is reduces to a result program.  A pool of states keeps track of all the states
+that have been reached through the evalation of an initial program.  Each state is indexed by
+the dynamic path taken to reach it. A pool's leaf path indicates a state that has yet to be
+evaluated. Additionally, The conversation between threads is also recorded as a set of
+correspondances consisting of the path to the sending state, the path to the receiving state,
+and the channel used for communication.  
+
+\begin{lstlisting}[language=logic, escapechar=\%]
+  datatype continuation =
+    Ctn name program env
+
+  type stack = continuation list
+
+  datatype state =
+    Stt program env stack 
+
+  type pool =
+    dynamic_path -> state option
+
+  predicate leaf of pool -> dynamic_path -> bool:
+    only
+    (%$\forall$% pool path stt .
+      if
+        pool path = Some stt and 
+        (%$\nexists$% path' stt' .
+          (pool path' = Some stt') and
+          (strict_prefix path path'))
+      then
+        leaf pool path)
+
+  type conversation =
+    (dynamic_path * channel * dynamic_path) set
+  \end{lstlisting}
+
+----Edit End---
 
 The concurent\_eval relation describes the evaluation of a trace pool to another tracel pool.
 Trace pools grow montonicially with respect to evaluation, retaining a full history.  A trace
@@ -1148,29 +1166,8 @@ the let expression is used, and the environment is updated with the value associ
 send event's second argument.   Additionally, the communication set is updated with the send
 and receive paths, and the channel that is communicated on. 
 
+
 \begin{lstlisting}[language=logic, escapechar=\%]
-
-datatype continuation =
-  Ctn name program env
-
-type stack = continuation list
-
-datatype state =
-  Stt program env (continuation list)
-
-type pool =
-  program_path -> state option
-
-predicate leaf of pool -> program_path -> bool
-(%$\forall$% pool path stt .
-  if
-    pool path = Some stt and 
-    (%$\nexists$% path' stt' . (pool path' = Some stt') and (strict_prefix path path'))
-  then
-    leaf pool path)
-
-type conversation =
-  (program_path * channel * program_path) set
 
 
 predicate concurrent_eval of pool -> conversation -> pool -> conversation -> bool: 
@@ -1183,7 +1180,7 @@ only
   then
     concurrent_eval
       pool convo
-      (pool(path @ [LRtn x] -> (Stt e_k env_k(x_k -> v) stack'))) convo) and
+      (pool(path @ [DRtn x] -> (Stt e_k env_k(x_k -> v) stack'))) convo) and
 
 (%$\forall$% pool path x b e' env stack v .
   if 
@@ -1191,7 +1188,7 @@ only
     pool path = Some (Stt (Let x b e') env stack) and
     seq_eval b env v
   then
-    concurrent_eval pool convo (pool(path @ [LNxt x] -> (Stt e (env(x -> v)) stack))) convo)
+    concurrent_eval pool convo (pool(path @ [DNxt x] -> (Stt e (env(x -> v)) stack))) convo)
 
 (%$\forall$% pool path x b e' env stack e_u env_u convo .
   if 
@@ -1201,7 +1198,7 @@ only
   then
     concurrent_eval
       pool convo
-      (pool(path @ [LCll x] -> (Stt e_u env_u ((Ctn x e' env) # stack)) convo)
+      (pool(path @ [DCll x] -> (Stt e_u env_u ((Ctn x e' env) # stack)) convo)
 
 (%$\forall$% pool path x e' env stack .
   if 
@@ -1210,7 +1207,7 @@ only
   then
     concurrent_eval
       pool convo 
-      (pool(path @ [LNxt x] -> (Stt e' (env(x -> (VChn (Chan path x)))) stack))) convo) and
+      (pool(path @ [DNxt x] -> (Stt e' (env(x -> (VChn (Chan path x)))) stack))) convo) and
 
 (%$\forall$% pool path x e_c e' env stack convo .
   if 
@@ -1220,8 +1217,8 @@ only
     concurrent_eval
     pool convo 
     (pool(
-        path @ [LNxt x] -> (Stt e' (env(x -> VUnt)) stack),
-        path @ [LSpwn x] -> (Stt e_c env []))) convo) and
+        path @ [DNxt x] -> (Stt e' (env(x -> VUnt)) stack),
+        path @ [DSpwn x] -> (Stt e_c env []))) convo) and
 
 (%$\forall$% pool path_s path x_s x_se e_s env_s stack_s x_sc x_m env_se
   path_r x_r x_re e_r env_r stack_r x_rc env_re c convo .
@@ -1239,8 +1236,8 @@ only
     concurrent_eval
       pool convo
       (pool(
-          path_s @ [LNxt x_s] -> (Stt e_s (env_s(xs -> VUnt)) stack_s), 
-          path_r @ [LNxt x_r] -> (Stt e_r (env_r(x_r -> v_m))stack_r))) 
+          path_s @ [DNxt x_s] -> (Stt e_s (env_s(xs -> VUnt)) stack_s), 
+          path_r @ [DNxt x_r] -> (Stt e_r (env_r(x_r -> v_m))stack_r))) 
       (convo %$\cup$% {(path_s, c, path_r)}))
 
 \end{lstlisting}
@@ -1263,7 +1260,7 @@ the receiving or the sending ends of a channel.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
 
-predicate is_send_path of pool -> channel -> program_path -> bool:
+predicate is_send_path of pool -> channel -> dynamic_path -> bool:
 only
 (%$\forall$% pool path x x_e e' env stack x_sc x_m env_e c.
   if
@@ -1273,7 +1270,7 @@ only
   then
     is_send_path pool c path)
 
-predicate is_recv_path of pool -> channel -> program_path -> bool:
+predicate is_recv_path of pool -> channel -> dynamic_path -> bool:
 only
 (%$\forall$% poo path x x_e e' env stack x_rc env_e c .
   then
@@ -2158,7 +2155,7 @@ varying number of logical steps dependent on location of an expression in a prog
 \begin{lstlisting}[language=logic, escapechar=\%]
 
 
-predicate static_traversable_val of static_environment -> transition_set -> program_value -> bool:
+predicate static_traversable_val of static_environment -> transition_set -> dynamic_value -> bool:
 
 only
 
@@ -2266,7 +2263,7 @@ binding information in a fixed number of logical steps.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
 
-fun abstract of program_value -> static_value:
+fun abstract of dynamic_value -> static_value:
   abstract VUnt = SUnt and 
   (%$\forall$% path x . 
     abstract (VChn (Chan path x)) = SChn x) and
@@ -2274,7 +2271,7 @@ fun abstract of program_value -> static_value:
     abstract (VPrm primitive env) = SPrm prim)
 
 predicate static_eval_value of
-  static_environment -> abstract_convo -> program_value -> bool: 
+  static_environment -> abstract_convo -> dynamic_value -> bool: 
 
 only
 
@@ -2583,7 +2580,7 @@ only
   then
     static_reachable_over_prim prog0 (Abs f x_p e_b))
 
-predicate static_reachable_val of program -> program_value -> bool:
+predicate static_reachable_val of program -> dynamic_value -> bool:
 only
 (%$\forall$% prog0 .
     static_reachable_over_val prog0 VUnt) and
@@ -3308,7 +3305,7 @@ between the two kinds of paths is not so simple, and finding a description of th
 that correlates with the dynamic path is much more challenging.  
 
 \begin{lstlisting}[language=logic, escapechar=\%]
-predicate paths_correspond of program_path -> static_path -> bool:
+predicate paths_correspond of dynamic_path -> static_path -> bool:
 only
 
 paths_correspond [] [] and
@@ -3317,46 +3314,46 @@ paths_correspond [] [] and
   if
     paths_correspond path path_a
   then
-    paths_correspond (path @ [LNxt x]) (path_a @ [(NLet x, MNxt)])) and
+    paths_correspond (path @ [DNxt x]) (path_a @ [(NLet x, MNxt)])) and
 
 (%$\forall$% path path_a x .
   if
     paths_correspond path path_a
   then
-    paths_correspond (path @ [LSpwn x]) (path_a @ [(NLet x, MSpwn)])) and
+    paths_correspond (path @ [DSpwn x]) (path_a @ [(NLet x, MSpwn)])) and
 
 (%$\forall$% path path_a x .
   if
     paths_correspond path path_a
   then
-    paths_correspond (path @ [LCll x]) (path_a @ [(NLet x, MCll)])) and
+    paths_correspond (path @ [DCll x]) (path_a @ [(NLet x, MCll)])) and
 
 (%$\forall$% path path_a x .
   if
     paths_correspond path path_a
   then
-    paths_correspond (path @ [LRtn x]) (path_a @ [(NResult x, MRtn)]))
+    paths_correspond (path @ [DRtn x]) (path_a @ [(NResult x, MRtn)]))
 
 
 predicate paths_correspond_mod_chan of 
-  pool -> conversation -> channel -> program_path -> static_path -> bool:
+  pool -> conversation -> channel -> dynamic_path -> static_path -> bool:
 
 only
 
 (%$\forall$% pool path_c x_c path_sfx stt path_a convo .
   if
-    pool (path_c @ (LNxt x_c) # path_sfx) = Some stt and
-    paths_correspond ((LNxt x_c) # path_sfx) path_a
+    pool (path_c @ (DNxt x_c) # path_sfx) = Some stt and
+    paths_correspond ((DNxt x_c) # path_sfx) path_a
   then
     paths_correspond_mod_chan
       (pool, convo) (Chan path_c x_c)
-      (path_c @ (LNxt x_c) # path_sfx) path_a
+      (path_c @ (DNxt x_c) # path_sfx) path_a
    ) and
 
 (%$\forall$% pool path_r x_r path_sfx stt  path_s x_s x_se e_sy env_sy stack_sy
   x_re e_ry env_ry stack_ry c_c convo c path_a_re path_a_sfx . 
   if
-    pool (path_r @ (LNxt x_r) # path_sfx) = Some stt and 
+    pool (path_r @ (DNxt x_r) # path_sfx) = Some stt and 
     pool path_s = Some (Stt (Let x_s (Sync x_se) e_sy) env_sy stack_sy) and
     pool path_r = Some (Stt (Let x_r (Sync x_re) e_ry) env_ry stack_ry) and
     {(path_s, c_c, path_r)} %$\subseteq$% convo and 
@@ -3365,7 +3362,7 @@ only
     paths_correspond path_sfx path_a_sfx
   then
     paths_correspond_mod_chan pool convo c
-      (path_r @ (LNxt x_r) # path_sfx)
+      (path_r @ (DNxt x_r) # path_sfx)
       (path_a_pre @ (NLet x_s, ESend x_se) # (NLet x_r, MNxt) # path_a_sfx))
 
 
