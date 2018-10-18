@@ -1048,7 +1048,7 @@ Additionally, all these expressions evaluate to values in a single step.
         seq_eval (Snd x_p) env v)
   \end{lstlisting}
 
-The evaluation of expressions for application, and matching result in calling, which leads 
+The evaluation of expressions for application, and matching result in calling, which leads to
 backtracking after the called programs are evaluated. The evaluation depends on the syntax
 and an environment for looking up the values of names within the syntax.
 The expressions are evaluated to a called program, and a new evironment that will
@@ -1127,122 +1127,149 @@ and the channel used for communication.
     (dynamic_path * channel * dynamic_path) set
   \end{lstlisting}
 
-----Edit End---
+The evaluation of a program may involve evaluation of multiple threads concurrently and also
+communication between threads. Since pools contain multiple states and paths, they can
+accomodate multiple threads as well.  A single evaluation step depends on one pool and
+evaluates to a new pool based on one or more states in that pool. The initial pool for a
+program contains just one state indexed by an empty path. The state contains the program, an
+empty environment, and an empty stack. The pool will grow strictly larger with each evaluation
+step, maintaining a full history. Each step adds new states and paths extended from previous
+ones, and each point in the path indicates the mode of transition to take to reach the state.
+Only states indexed by leaf paths are used to evaluate to the next pool.
 
-The concurent\_eval relation describes the evaluation of a trace pool to another tracel pool.
-Trace pools grow montonicially with respect to evaluation, retaining a full history.  A trace
-pool is evaluated to a new trace pool based only on information associated with leaf paths and
-their associated states.  If a leaf path is associated with a bound expresion that can be
-evaluated to a value in one sequential step, then the trace pool is updated with the leaf path
-extended by a label indicating a sequential transition, and the extended path is associated
-with the let binding's next expression and the leaf path's associated environment updated with
-the value bound to the let binding's name.  If the bound expression can be evaluated to an
-expression and a new environment, then the leaf path is extended with a label indicating a
-calling transition.  The extended path is associated with the the new expression and new
-environment resulting from the evaluation of the bound expression, and the name and expression
-of the let binding are pushed onto the stack to be evaluated in later steps.  If a leaf path is
-associated with a result expression, then the trace pool is updated with the leaf path extended
-with a label indicating a returning transition.  The new path is associated with a state
-containing the expression popped from the continuation stack and the environment popped from
-the stack and updated with continuation's name bound to the result's associated value.  If a
-leaf path is associated with a channel creation construct, then the trace pool is updated with
-the leaf path extended with a sequential transition, and its associated state contains the next
-expression, and an environment updated with a new channel value.  If a leaf path is associated
-with a let expression binding to a spawn contstruct, then the trace pool is updated with two
+A sequencing evaluation step of a program picks a leaf state and reilies on
+sequential evaluation of its top expression. It updates the state's environment with the
+value of the expression, leaves the stack unchanged, and reduces the program to the next
+subprogram. A calling evaluation step relies on the calling evaluation of a state's top
+expression. The binding name, subprogram, environment are pushed on to the stack, and the new
+state gets its program and environment from the evaluation of the expression. 
+
+For the evaluation a leaf path pointing to a result program, a continuation is popped of the
+stack, the new state's program is taken from the continuation, and the new state's environment
+is taken from the continuation and modified with the result value.
+
+In the case of channel creation, the evaluation updates the state's environment with the
+value of a channel consisting of the path leading to its creation; it leaves the stack
+unchanged and reduces the program to the next subprogram.
+
+In the case of spawning, the evaluation updates the state's environment with the
+unit value, leaves the stack unchanged, and reduces the program to the next subprogram.
+Additionally, it generates a another state consisting of the spawning expression's child
+program, the same environment unchagned, and an empty stack.
+
+the evaluation updates is updated with two
 new paths extending the leaf path.  For one, the leaf path is extended with a sequential label
 whose state has the next expression and the environment updated with the unit value bound to
 the let binding name, and the original continuation stack. For the other, the leaf path
 extended with a label indicating a spawning transition.  Its state has the spawned expression,
 the original environment, and an empty continuation stack. 
 
-If two leaves in the trace pool correspond to synchronization constructs on the same channel,
-where one synchronizes on a send event and the other synchronizes on a receive event, then the
-trace pool is updated with two new paths extending the two synchronizing leaf paths.  The leaf
-path for the send event is extended by a label indicating sequential transition.  For its state
-, the next expression of the let expression is used, and the environment is updated with the
-unit value bound to the let expression name.  The leaf path for the receive event is also
-extended by a label indicating sequential transition.  For its state, the next expression of
-the let expression is used, and the environment is updated with the value associated with the
-send event's second argument.   Additionally, the communication set is updated with the send
-and receive paths, and the channel that is communicated on. 
+In the case where two leaf paths in the pool correspond to synchronization on the same channel,
+and one synchronizes on a send event and the other synchronizes on a receive event, then
+evaluation updates the pool with two new paths and corresponding states.
+It updates the send event's state with its subprogram, the environment udpates with the unit
+value, and the stack unchanged.  It updates the receive event's state with its subprogram, the
+environment updates with the sent value, and the stack unchanged.
+
+Additionally, the conversation is updated with the sending and receiving paths, and the channel
+that the syncrhonization used for communication. 
 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
+  predicate dynamic_eval of
+    pool -> conversation -> pool -> conversation -> bool: 
+    only
+    (%$\forall$% pool path x env x_k e_k env_k stack' v convo .
+      if
+        leaf pool path and
+        pool path = Some (Stt
+          (Rslt x) env ((Ctn x_k e_k env_k) # stack')
+          ) and
+        env x = Some v
+      then
+        dynamic_eval
+          pool convo
+          (pool(path @ [DRtn x] -> (Stt e_k env_k(x_k -> v) stack')))
+          convo
+      ) and
+    (%$\forall$% pool path x b e' env stack v .
+      if 
+        leaf pool path and
+        pool path = Some (Stt (Let x b e') env stack) and
+        seq_eval b env v
+      then
+        dynamic_eval
+          pool convo
+          (pool(path @ [DNxt x] -> (Stt e (env(x -> v)) stack)))
+          convo
+      ) and
+    (%$\forall$% pool path x b e' env stack e_u env_u convo .
+      if 
+        leaf pool path and 
+        pool path = Some (Stt (Let x b e') env stack) and
+        call_eval b env e_u env_u
+      then
+        dynamic_eval
+          pool convo
+          (pool(path @ [DCll x] ->
+            (Stt e_u env_u ((Ctn x e' env) # stack))
+          convo
+      ) and
+    (%$\forall$% pool path x e' env stack .
+      if 
+        leaf pool path and
+        pool path = Some (Stt (Let x MkChn e') env stack)
+      then
+        dynamic_eval
+          pool convo 
+          (pool(path @ [DNxt x] ->
+            (Stt e' (env(x -> (VChn (Chan path x)))) stack)))
+          convo
+      ) and
+    (%$\forall$% pool path x e_c e' env stack convo .
+      if 
+        leaf pool path and 
+        pool path = Some (Stt (Let x (Spwn e_c) e') env stack)
+      then
+        dynamic_eval
+        pool convo 
+        (pool(
+            path @ [DNxt x] -> (Stt e' (env(x -> VUnt)) stack),
+            path @ [DSpwn x] -> (Stt e_c env [])))
+        convo
+      ) and
+    (%$\forall$% pool path_s path x_s x_se e_s env_s stack_s x_sc x_m env_se
+      path_r x_r x_re e_r env_r stack_r x_rc env_re c convo .
+      if 
+        leaf pool path_s and
+        pool path_s = Some (Stt
+          (Let x_s (Sync x_se) e_s) env_s stack_s) and
+        env_s x_se = Some (VPrm
+          (SendEvt x_sc x_m) env_se) and
+        leaf pool path_r and
+        pool path_r = Some (Stt
+          (Let x_r (Sync x_re) e_r) env_r stack_r) and
+        env_r x_re = Some (VPrm
+          (RecvEvt x_rc) env_re) and
+        env_se x_sc = Some (VChn c) and
+        env_re x_rc = Some (VChn c) and 
+        env_se x_m = Some v_m
+      then
+        dynamic_eval
+          pool convo
+          (pool(
+              path_s @ [DNxt x_s] ->
+                (Stt e_s (env_s(xs -> VUnt)) stack_s), 
+              path_r @ [DNxt x_r] ->
+                (Stt e_r (env_r(x_r -> v_m))stack_r))) 
+          (convo %$\cup$% {(path_s, c, path_r)})
+      )
+  \end{lstlisting}
 
 
-predicate concurrent_eval of pool -> conversation -> pool -> conversation -> bool: 
-only
-(%$\forall$% pool path x env x_k e_k env_k stack' v convo .
-  if
-    leaf pool path and
-    pool path = Some (Stt (Rslt x) env ((Ctn x_k e_k env_k) # stack')) and
-    env x = Some v
-  then
-    concurrent_eval
-      pool convo
-      (pool(path @ [DRtn x] -> (Stt e_k env_k(x_k -> v) stack'))) convo) and
+----Edit End---
 
-(%$\forall$% pool path x b e' env stack v .
-  if 
-    leaf pool path and
-    pool path = Some (Stt (Let x b e') env stack) and
-    seq_eval b env v
-  then
-    concurrent_eval pool convo (pool(path @ [DNxt x] -> (Stt e (env(x -> v)) stack))) convo)
-
-(%$\forall$% pool path x b e' env stack e_u env_u convo .
-  if 
-    leaf pool path and 
-    pool path = Some (Stt (Let x b e') env stack) and
-    call_eval b env e_u env_u
-  then
-    concurrent_eval
-      pool convo
-      (pool(path @ [DCll x] -> (Stt e_u env_u ((Ctn x e' env) # stack)) convo)
-
-(%$\forall$% pool path x e' env stack .
-  if 
-    leaf pool path and
-    pool path = Some (Stt (Let x MkChn e') env stack)
-  then
-    concurrent_eval
-      pool convo 
-      (pool(path @ [DNxt x] -> (Stt e' (env(x -> (VChn (Chan path x)))) stack))) convo) and
-
-(%$\forall$% pool path x e_c e' env stack convo .
-  if 
-    leaf pool path and 
-    pool path = Some (Stt (Let x (Spwn e_c) e') env stack)
-  then
-    concurrent_eval
-    pool convo 
-    (pool(
-        path @ [DNxt x] -> (Stt e' (env(x -> VUnt)) stack),
-        path @ [DSpwn x] -> (Stt e_c env []))) convo) and
-
-(%$\forall$% pool path_s path x_s x_se e_s env_s stack_s x_sc x_m env_se
-  path_r x_r x_re e_r env_r stack_r x_rc env_re c convo .
-  if 
-    leaf pool path_s and
-    pool path_s = Some (Stt (Let x_s (Sync x_se) e_s) env_s stack_s) and
-    env_s x_se = Some (VPrm (SendEvt x_sc x_m) env_se) and
-    leaf pool path_r and
-    pool path_r = Some (Stt (Let x_r (Sync x_re) e_r) env_r stack_r) and
-    env_r x_re = Some (VPrm (RecvEvt x_rc) env_re) and
-    env_se x_sc = Some (VChn c) and
-    env_re x_rc = Some (VChn c) and 
-    env_se x_m = Some v_m
-  then
-    concurrent_eval
-      pool convo
-      (pool(
-          path_s @ [DNxt x_s] -> (Stt e_s (env_s(xs -> VUnt)) stack_s), 
-          path_r @ [DNxt x_r] -> (Stt e_r (env_r(x_r -> v_m))stack_r))) 
-      (convo %$\cup$% {(path_s, c, path_r)}))
-
-\end{lstlisting}
-
-\section{Dynamic Communication Definitions}
+\section{Dynamic Communication Classification}
 
 The one shot predicate states that in a trace pool, there is only one control path that
 synchronizes and sends on a given channel. Whether or not two attempts to synchronize on a
@@ -1256,6 +1283,9 @@ receive on a channel are ordered. The fan out predicate states that there is no 
 the sending end of a channel, by stating that any two paths that syncronize to send on a
 channel are ordered. The one to one predicates states that there is no competition on either
 the receiving or the sending ends of a channel. 
+
+
+
 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -2024,7 +2054,7 @@ theorem static_one_shot_sound:
 if
   static_eval env_a convo_a prog0 and 
   static_one_shot env_a prog0 x_c and 
-  star concurrent_eval [[] -> (Stt prog0 [->] [])] {} pool convo
+  star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo
 then
   one_shot pool (Chan path_c x_c)
 
@@ -2034,7 +2064,7 @@ theorem static_fan_out_sound:
   if 
     static_eval env_a convo_a prog0 and 
     static_fan_out env_a prog0 x_c and 
-    star concurrent_eval [[] -> (Stt prog0 [->] [])] {} pool convo
+    star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo
   then
     fan_out pool (Chan path_c x_c)" 
 
@@ -2045,7 +2075,7 @@ theorem static_fan_in_sound:
   if
     static_eval env_a convo_a prog0 and 
     static_fan_in env_a prog0 x_c and 
-    star concurrent_eval [[] -> (Stt e [->] [])] {} pool convo
+    star dynamic_eval [[] -> (Stt e [->] [])] {} pool convo
   then
     fan_in pool (Chan path_c x_c)
 
@@ -2056,7 +2086,7 @@ theorem static_one_to_one_sound:
   if
     static_eval env_a, convo_a prog0 and 
     static_one_to_one env_a prog0 x_c and
-    star concurrent_eval [[] -> (Stt prog0 [->] [])] {} pool convo
+    star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo
   then
     one_to_one pool (Chan path_c x_c)
 
@@ -2089,7 +2119,7 @@ lemma not_static_inclusive_sound:
 
 %$\forall$% prog0 pool convo path1 stt1 path2 stt2 path_a1 path_a2 . 
   if
-    star concurrent_eval [[] -> (Stt prog0 [->] [])] {} pool convo
+    star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo
     pool path1 = Some stt1 and 
     pool path2 = Some stt2 and 
     paths_correspond path1 path_a1 and 
@@ -2102,7 +2132,7 @@ lemma not_static_traceable_sound:
 
 %$\forall$% prog0 pool convo path x b e' env stack evn_a convo_a prog_a is_end .
   if
-    star concurrent_eval ([[] -> (Stt prog0 [->] [])], {}) (pool, convo) and 
+    star dynamic_eval ([[] -> (Stt prog0 [->] [])], {}) (pool, convo) and 
     pool path = Some (Stt (Let x b e') env stack) and 
     static_eval env_a convo_a prog0 and 
     static_traversable env_a prog_a prog0 and 
@@ -2118,7 +2148,7 @@ lemma not_static_send_site_sound:
 
 %$\forall$% prog0 pool convo path x x_e e' env stack x_sc x_m env' path_c x_c .
   if
-    star concurrent_eval [[] -> (Stt prog0 [->] [])] {} pool convo and 
+    star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo and 
     pool path = Some (Stt (Let x (Sync x_e) e') env stack) and 
     env x_e = Some (VPrm (SendEvt x_sc x_m) env') and 
     env' x_sc = Some (VChn (Chan path_c x_c)) and 
@@ -2420,7 +2450,7 @@ fact that star\_left implies star.
 lemma not_static_traceable_pool_sound:
 %$\forall$% prog0 pool convo path x b e' env stack evn_a convo_a prog_a is_end .
   if
-    star concurrent_eval ([[] -> (Stt prog0 [->] [])], {}) (pool, convo) and 
+    star dynamic_eval ([[] -> (Stt prog0 [->] [])], {}) (pool, convo) and 
     pool path = Some (Stt (Let x b e') env stack) and 
     static_eval env_a convo_a prog0 and 
     static_traversable env_a prog_a pool and 
@@ -2433,7 +2463,7 @@ lemma not_static_traceable_pool_sound:
 lemma static_traversable_pool_preserved_star:
 %$\forall$% prog0 pool convo env_a convo_a prog_a .
   if
-    star concurrent_eval [[] -> (Stt prog0 [->] [])] {} pool convo and 
+    star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo and 
     static_eval env_a convo_a prog0 and
     static_traversable_pool env_a prog_a [[] -> (Stt prog0 [->] [])]
   then
@@ -2455,7 +2485,7 @@ induction on star concurrent\_eval.
 lemma static_eval_pool_preserved:
 %$\forall$% pool convo pool' convo' env_a convo_a .
   if
-    star concurrent_eval pool convo pool' convo' 
+    star dynamic_eval pool convo pool' convo' 
     static_eval_pool env_a convo_a pool
   then
     static_eval_pool env_a convo_a pool'
@@ -2472,7 +2502,7 @@ not\_static\_reachable\_sound.
 lemma send_chan_not_static_bound_sound:
 %$\forall$% prog0 pool convo env_a convo_a path x x_e e' env stack x_sc x_m env_e path_c x_c .
   if
-    star concurrent_eval [[] -> (Stt prog0 [->] [])], {} pool convo and
+    star dynamic_eval [[] -> (Stt prog0 [->] [])], {} pool convo and
     static_eval env_a convo_a prog0 and
     pool path = Some (Stt (Let x (Sync x_e) e') env stack) and
     env_y x_e = Some (VPrm (SendEvt x_sc x_m) env_e) and
@@ -2484,7 +2514,7 @@ lemma send_chan_not_static_bound_sound:
 lemma not_static_bound_sound:
 %$\forall$% prog0 pool convo env_a convo_a path e env stack x v .
   if
-    star concurrent_eval [[] -> (Stt prog0 [->] [])] {} pool convo and
+    star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo and
     static_eval env_a convo_a prog0 and 
     pool path = Some (Stt e env stack) and 
     env x = Some v
@@ -2495,7 +2525,7 @@ lemma not_static_bound_sound:
 lemma not_static_reachable_sound:
 %$\forall$% prog0 pool convo env_a convo_a path e env stack .
   if
-    star concurrent_eval [[] -> (Stt prog0 [->] [])] {} pool convo and
+    star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo and
     pool path = Some (Stt e env stack)
   then
     static_reachable prog0 e
@@ -2628,7 +2658,7 @@ only
 lemma not_static_reachable_pool_sound:
 (%$\forall$% prog0 pool .
   if
-    star concurrent_eval [[] -> (Stt prog0 [->] [])], {} pool convo 
+    star dynamic_eval [[] -> (Stt prog0 [->] [])], {} pool convo 
   then
     static_reachable_over_pool prog0 pool)
 
@@ -3283,7 +3313,7 @@ theorem static_one_shot_sound:
 
 %$\forall$% prog0 pool convo env_a convo_a x_c path_x . 
   if
-    star concurrent_eval [[] -> (Stt prog0 [->] []] {} pool convo and
+    star dynamic_eval [[] -> (Stt prog0 [->] []] {} pool convo and
     static_eval env_a convo_a prog0 and
     static_one_shot env_a prog0 x_c
   then 
@@ -3371,7 +3401,7 @@ lemma not_static_traceable_sound:
 %$\forall$% prog0 pool convo path x b e' env stack env_a convo_a
   entr exit x_c prog_a is_end path_c  . 
   if
-    star concurrent_eval [[] -> (Stt prog0 [->] [])] {} pool convo and
+    star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo and
     pool path = Some (Stt (Let x b e') env stack) and
     static_eval env_a convo_a prog0 and
     static_live_chan env_a entr exit x_c prog0 and
@@ -3387,7 +3417,7 @@ lemma not_static_inclusive_sound:
 %$\forall$% prog0 pool convo env_a entr exit x_c prog_a convo_a
   path1 stt1 path_c path_a1 path2 stt2 path_a2 .
   if
-    star concurrent_eval [[] -> (Stt prog0 [->] [])] {} pool convo and 
+    star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo and 
     static_live_chan env_a entr exit x_c prog0 and 
     static_traversable env_a prog_a prog0 and 
     static_eval env_a convo_a prog0 and 
