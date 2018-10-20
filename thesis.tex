@@ -227,8 +227,8 @@ Concurrent ML does not feature multiple kinds of channels distinguished by their
 topologies, i.e. the number of threads that may end up sending or receiving on the channels.
 However, channels can be classified into various topologies simply by counting the number of
 threads per channel during the execution of a program.  A many-to-many channel has any number
-of sending threads and receiving threads; a fan-out channel has one or no sending thread and
-any number of receiving threads; a fan-in channel has any number of sending threads and one or
+of sending threads and receiving threads; a one-to-many channel has one or no sending thread and
+any number of receiving threads; a many-to-one channel has any number of sending threads and one or
 no receiving threads; a one-to-one channel has one or none of each; a one-shot channel has
 exactly one sending attempt.
 
@@ -236,7 +236,7 @@ The implementation of \lstinline{Serv} is annoted to indicate the communication 
 derived from its usage. Since there are four threads that make calls to the server, the
 server's particular \lstinline{reqCh} has four senders.  Servers are created with only one
 thread listening for requests, so the \lstinline{reqCh} of this server has just one receiver.
-So the server's \lstinline{reqCh} is classified as fan-in. Each use of call creates a distinct
+So the server's \lstinline{reqCh} is classified as many-to-one. Each use of call creates a distinct
 new channel \lstinline{replCh} for receiving data.  The function call receives on the channel
 once and the server sends on the channel once, so each instance of \lstinline{replCh} is
 one-shot.
@@ -404,7 +404,7 @@ points to all possible control paths leading into the respective program points.
 CFA's mappings to abstract values, the algorithm determines the program points for sends and
 receives per channel variable.  Then it uses the mapping to control paths to determine all
 control paths that send or receive on each channel, from which it classifies channels as
-one-shot, one-to-one, fan-in, fan-out, or many-to-many.
+one-shot, one-to-one, many-to-one, one-to-many, or many-to-many.
 
 Reppy and Xiao informally prove soundness of their analysis by showing that their analysis
 claims that more than one thread sends (or receives) on a channel if the execution allows more
@@ -435,13 +435,13 @@ to complete the proof, such that the proof checker was satisfied.
 \section{Hypothesis}
 I will derive a static analysis from Reppy and Xiao's algorithm, describing for each channel in
 a program, all threads that possibly send or receive on the channel.  Additionally, it will
-classify channels as one-shot, one-to-one, fan-out, fan-in, or many-to-many.  Instead of
+classify channels as one-shot, one-to-one, one-to-many, many-to-one, or many-to-many.  Instead of
 Serrano's algorithm[18] for the CFA used in Reppy and Xiao's algorithm, I will define a
 constraint-based specification and algorithm for the CFA.  The method of determining topologies
 will be fairly similar to Reppy and Xiao's.  The analysis of this work will also consider event
 combinators, which are not considered in Reppy and Xiao's work.  I will show that the static
 analysis is informative by demonstrating programs for which the static analysis classifies some
-channels as fan-in, fan-out, and so on.  I will show that the static analysis is sound by
+channels as many-to-one, one-to-many, and so on.  I will show that the static analysis is sound by
 showing that for any program, the execution of the program results in the same sends and
 receives or fewer compared to the possible sends and receives described by the analysis.  I
 will show that the static analysis is computable by demonstrating the existence of a
@@ -511,7 +511,7 @@ implementation shown here as an intermediate representation presented with concr
 \end{lstlisting}
 
 
-The benefits of specialization would be much more significant ins multiprocessor
+The benefits of specialization would be much more significant in multiprocessor
 implementations rather than single processor implementations.  A single processor
 implementation could avoid overhead caused by contention to acquire locks, by coupling the
 implementation of channels with scheduling and only scheduling send and recv operations when no
@@ -616,7 +616,7 @@ operation returns with the value deposited in the cell by a sending thread.
   \end{lstlisting}
 
 
-Implementation of fan-out channels, compared to that of many-to-many channels, requires fewer
+Implementation of one-to-many channels, compared to that of many-to-many channels, requires fewer
 steps to synchronize and can execute more steps outside of critical regions, which reduces
 contention for locks.  A channel is composed of a lock and one of three possible states, as is
 the case for many-to-many channels.  However, the state of a thread trying to send need only be
@@ -700,7 +700,7 @@ thread, and returns the states' associated message.
     end 
   \end{lstlisting}
 
-The implementation of fan-in channels is very similar to that of fan-out channels.
+The implementation of many-to-one channels is very similar to that of one-to-many channels.
 
 \begin{lstlisting}[language=ML, escapechar=\%]
   structure FanInChan : CHANNEL = struct
@@ -993,7 +993,8 @@ inputs.
   \end{lstlisting}
 
 \section{Dynamic Semantics}
-The dynamic semantics described how programs evaluate to values.  A history of execution is
+The dynamic semantics is described by how programs evaluate to values.
+A history of execution is
 represented a list of binding names, or resulting names, along with modes of control, such as
 sequencing, spawning, calling, or returning. Channels have no literal representation, but each
 time a channel is created, it is uniquely identified by the history of the execution up until
@@ -1272,12 +1273,12 @@ channel are competitive can be determined by
 looking at the control paths of the trace pool. If two paths are ordered, that is, one is the
 prefix of the other and vice versa, then the dynamic semantics states that they necessarily
 occur in sequence, so the shorter path must synchronize before the longer path. Two paths may
-be competitive only if they are unordered. The fan in predicate states that there is no
+be competitive only if they are unordered. The many-to-one predicate states that there is no
 competition on the receiving end of a channel, by stating that any two paths that synchonize to
-receive on a channel are ordered. The fan out predicate states that there is no competition on
-the sending end of a channel, by stating that any two paths that syncronize to send on a
-channel are ordered. The one to one predicates states that there is no competition on either
-the receiving or the sending ends of a channel. 
+receive on a channel are ordered. The one-to-many predicate states that there is no
+competition on the sending end of a channel, by stating that any two paths that syncronize to
+send on a channel are ordered. The one to one predicates states that there is no competition on
+either the receiving or the sending ends of a channel. 
 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -1325,49 +1326,49 @@ the receiving or the sending ends of a channel.
       then
         one_shot pool c)
 
-  predicate fan_out of pool -> channel -> bool:
+  predicate one_to_many of pool -> channel -> bool:
     only
     (%$\forall$% pool c .
       if
         every_two (is_send_path pool c) ordered
       then
-        fan_out pool c)
+        one_to_many pool c)
 
-  predicate fan_in of pool -> channel -> bool:
+  predicate many_to_one of pool -> channel -> bool:
     only
     (%$\forall$% pool c .
       if
         every_two (is_recv_path pool c) ordered
       then
-        fan_in pool c)
+        many_to_one pool c)
 
   predicate one_to_one of pool -> channel -> bool:
     only
     (%$\forall$% pool c.
       if
-        fan_out pool c and 
-        fan_in pool c
+        one_to_many pool c and 
+        many_to_one pool c
       then
         one_to_one pool c)
   \end{lstlisting}
 
-----Edit End---
 
 \section{Static Semantics Definitions}
+The static semantics are described by sets of static values that might be the evaluations of
+expressions associated with names in a program.  It is also described by subprograms that might
+be reached from a larger program. The static semantics helps to deduce static informaiton about
+channels and events, which is crucial for statically deducing information about synchronization
+on channels and communication topologies.
 
-In order to determine communication topologies with some decent amount of precision, it is
-necessary to determine values associated with expressions and names of a program.  In a
-language that allows inifinite recursion, it is not always possible to determine the exact
-values. However, it's not absolutely necessary. Approximations of the dynamic values are
-good enough.
-
-static values are aproximations that consist of the static unit value, static channels, and
-static primitive values.
-The static unit value is actually no less precise than the dynamic unit value.
-The static channel
-is identified only by the name at which it is created, rather than the full control path that
-leads up to it.  The static primitive values are simply the primitive syntax without an
-environment for looking up its named arguments. 
+The static values consist of the static unit value, static channels, and static primitive
+values. The static unit value is no less precise than the dynamic unit value, but
+static channels and static primivitive values are imprecise versions of their dynamic
+counterparts. The static channel is identified only by the name it binds to at creation time,
+rather than the full path that leads up to its creation.  A static primitive value is simply a
+primitive expression without an environment for looking up its named arguments. The static
+enviroment contains the internal evalutaion results by associating names to static values.
+In order to find the return value of a program, it is useful to fetch the name embedded
+within its result subprogram of the program.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   datatype static_value =
@@ -1382,7 +1383,9 @@ environment for looking up its named arguments.
       result_name (Let x b e') = (result_name e))
   \end{lstlisting}
 
-The static evaluation predicate is a relation from an input program to two outputs, each a map
+----Edit End---
+
+The static evaluation is a control flow analysis described by relation from an input program to two outputs, each a map
 of names to sets of abstract values.  A set of abstract values can be thought as a further
 abstraction, allowing less precision. The first output represents a the values that might bind
 to names.  The second output represents values that might be passed over channels.
@@ -1931,8 +1934,8 @@ The static one to one predicate states that there is at most one thread attempti
 one thread attempting to receive on a given channel at any time during a run of a given
 program.
 
-The static fan out predicate states that there is at most one thread attempting to send on a
-given channel at any time during a run of a given program. The static fan in predicate states
+The static one-to-many predicate states that there is at most one thread attempting to send on a
+given channel at any time during a run of a given program. The static many-to-one predicate states
 that there is at most one thread attempting to receive on a given channel at any time during a
 run of a given program. 
 
@@ -1962,7 +1965,7 @@ run of a given program.
       then
         static_one_to_one env_a e x_c)
 
-  predicate static_fan_out of static_environment -> program -> name -> bool:
+  predicate static_one_to_many of static_environment -> program -> name -> bool:
     only
     (%$\forall$% prog_a e env_a x_c .
       if
@@ -1971,9 +1974,9 @@ run of a given program.
           noncompetitive) and
         static_traversable env_a prog_a e
       then
-        static_fan_out env_a e x_c) 
+        static_one_to_many env_a e x_c) 
 
-  predicate static_fan_in of static_environment -> program -> name -> bool:
+  predicate static_many_to_one of static_environment -> program -> name -> bool:
     only
     (%$\forall$% prog_a e env_a x_c .
       if
@@ -1982,7 +1985,7 @@ run of a given program.
           noncompetitive) and
         static_traversable env_a prog_a e
       then
-        static_fan_in env_a e x_c) 
+        static_many_to_one env_a e x_c) 
 \end{lstlisting}
 
 \section{Formal Reasoning}
@@ -2014,7 +2017,7 @@ any corresponding dynamic channel is classified as one shot over any trace pool 
 from running the program.  The lemma for static\_fan\_out\_sound states that if an abstract
 channel is statically classified as fan\_out for a given program and an abstract environment
 derived from that program, then any corresponding concrete channel is classified as fan\_out
-over any pool that results from running the program.  The lemmas for soundness of fan in, and
+over any pool that results from running the program.  The lemmas for soundness of many-to-one, and
 one to one follow similar patterns. 
 
 The static predicates for communication topologies should be generalizations of procedures that
@@ -2031,23 +2034,23 @@ theorem static_one_shot_sound:
     then
       one_shot pool (Chan path_c x_c)
 
-theorem static_fan_out_sound:
+theorem static_one_to_many_sound:
   %$\forall$% env_a convo_a prog0 x_c pool convo path_c. 
     if 
       static_eval env_a convo_a prog0 and 
-      static_fan_out env_a prog0 x_c and 
+      static_one_to_many env_a prog0 x_c and 
       star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo
     then
-      fan_out pool (Chan path_c x_c)
+      one_to_many pool (Chan path_c x_c)
 
-theorem static_fan_in_sound:
+theorem static_many_to_one_sound:
   %$\forall$% env_a convo_a prog0 x_c pool convo path_c. 
     if
       static_eval env_a convo_a prog0 and 
-      static_fan_in env_a prog0 x_c and 
+      static_many_to_one env_a prog0 x_c and 
       star dynamic_eval [[] -> (Stt e [->] [])] {} pool convo
     then
-      fan_in pool (Chan path_c x_c)
+      many_to_one pool (Chan path_c x_c)
 
 theorem static_one_to_one_sound:
   %$\forall$% env_a convo_a prog0 x_c pool convo path_c. 
@@ -3128,7 +3131,7 @@ analgous lower precision definitions.
       then
         static_one_to_one env_a e x_c)
 
-  predicate static_fan_out of static_environment -> program -> name -> bool:
+  predicate static_one_to_many of static_environment -> program -> name -> bool:
     only
     (%$\forall$% prog_a entr exit x_c env_a e .
       if
@@ -3138,9 +3141,9 @@ analgous lower precision definitions.
         static_live_chan env_a entr exit x_c e and
         static_traversable env_a prog_a e
       then
-        static_fan_out env_a e x_c)
+        static_one_to_many env_a e x_c)
 
-  predicate static_fan_in of static_environment -> program -> name -> bool:
+  predicate static_many_to_one of static_environment -> program -> name -> bool:
     only
     (%$\forall$% prog_a entr exit x_c env_a e .
       if
@@ -3150,7 +3153,7 @@ analgous lower precision definitions.
         static_live_chan env_a entr exit x_c e and
         static_traversable env_a prog_a e
       then
-        static_fan_in env_a e x_c)
+        static_many_to_one env_a e x_c)
   \end{lstlisting}
 
 
