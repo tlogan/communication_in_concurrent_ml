@@ -1383,16 +1383,20 @@ within its result subprogram of the program.
       result_name (Let x b e') = (result_name e))
   \end{lstlisting}
 
+
+The static evaluation is a control flow analysis described by relation from an input program
+to two outputs, each a static environment. The first output contains names associated with the
+evaluations of expressions that bind to those names in the program. The second output contains
+names associated with values that might be sent over channels identified by those name.
+
+The definition of static evaluation is syntax-directed, meaning it should be possible to
+prove any correct evaluation simply by unraveling the program in to smaller and smaller
+programs, until a theorem or axiom is induced. The definition also appears to allow
+deterministic reasoning. With both determinism and termination, it would be possible to compute
+the static evaluation outputs from the input program. This certainly appears likely, but it has
+not been formally proven in this work.
+
 ----Edit End---
-
-The static evaluation is a control flow analysis described by relation from an input program to two outputs, each a map
-of names to sets of abstract values.  A set of abstract values can be thought as a further
-abstraction, allowing less precision. The first output represents a the values that might bind
-to names.  The second output represents values that might be passed over channels.
-
-The definition for static evaluation is nondeterministic, but its syntax-directed structure
-suggests a refinement to computable definition, thus proving soundness with this definition
-should be sufficient to prove soundness for the more practical computable definition.
 
 For a result expression, there may be any abstract value bindings or communication. For all let
 expressions, the bindings and communication are outputs for the next expression. For unit
