@@ -1570,17 +1570,10 @@ reachable from its sub program.
       )
   \end{lstlisting}
 
-\section{Static Communication}
-The static communication is described an estimation of the static paths that communicate on
-static channels. To describe communication statically, it is helpful to identify the entry
+To describe communication statically, it is helpful to identify the entry
 point of each subprogram with a short description. The entry point of a let-binding is
 identified by the binding name, and indication that it's a let-binding. The entry point of a
 result is indicated by its embedded name, and indication that it's a result.
-
-The static send entry point classification means that an entry point might represent a
-sycnronization to send on a given abstract channel.
-The static receive entry point classification means that an entry point might represent a
-synchronization to receive on a given abstract channel. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   datatype entry_point = NLet name | NResult var
@@ -1593,6 +1586,18 @@ synchronization to receive on a given abstract channel.
 
   type entry_point_map = entry_point -> name set
 
+\end{lstlisting}
+
+\section{Static Communication}
+The static communication is described an estimation of the static paths that communicate on
+static channels.
+
+The static send entry point classification means that an entry point might represent a
+sycnronization to send on a given abstract channel.
+The static receive entry point classification means that an entry point might represent a
+synchronization to receive on a given abstract channel. 
+
+\begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_send_entry_point of
     static_environment -> program -> name -> entry_point -> bool:
     only
