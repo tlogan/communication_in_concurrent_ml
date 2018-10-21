@@ -2104,29 +2104,22 @@ lemma not_static_send_site_sound:
 
 \end{lstlisting}
 
-----Edit End----
+The soundness of lack of static traceability is proved by generalizing
+static traversability and static evalulation over pools, such that information about a point in the
+program can be deduced by a fixed number of logical steps regardless of the location of the program
+point or the size of the program. Without such generalization, it would be possibe to prove soundness
+for a fixed program, but not any arbitrary program.
 
-Lemma not\_static\_traceable\_sound is proved by generalizing static\_traversable and static\_eval
-over pools, such that information about the a point in the program can be deduced by a fixed
-number of static\_points regardless of where the location of the program point or the size of the
-program.  Without such generalization, it would be possibe to prove soundness for a fixed
-program, but not an arbitrary programs.
-
-The generalization of static\_traversable is captured in the predicates static\_traversable\_val,
-static\_traversable\_env, static\_traversable\_stack, and static\_traversable\_pool.  The
-generalization is designed to have two main features.  First, the static information that
-describes one pool should also describe subsequent pools from running the program, as
-information shifts from the expression to the environment, and stack.  Second, certain should
-be described directly by a fixed number of logical steps, in constract to its representation in
-the original predicate, which requires knowledge of features particular context in a program.
-Most of the rules simply state that the nearest subexpression is statically traversable, and
-static\_traversable offers direct information about statically described static\_points in a program.
-The exception is in the definition of static\_traversable\_stack, in the rule for a nonempty
-stack, where there is the additional clause that the edge from a return point to the entry_point of
-the continuation expression exists in the static\_program.  This information is consistent with the
-definition of static\_traversable for expressions, but provides information about an edge in the
-static program with a fixed number of logical steps, which would otherwise only be decucible by a
-varying number of logical steps dependent on location of an expression in a program.
+The generalization of static traversability is composed of in static traversable over values,
+static traversability over environments, static traversability over stacks, and static traversabiliy
+over pools.
+In most cases, it simply states that a subprogram of some semantic element is also statically
+traversable. The exception is in the case of  static traversability over a non-empty stack, where
+there is an additional condition that the transition from a result point to the entry_point of
+the continuation program exists in the static program. This information is consistent with static
+traversability over programs, but provides direct information about a transition in the
+static program, which would otherwise only be decucible by a varying number of logical steps
+depending on the program.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_traversable_val of
@@ -2224,6 +2217,9 @@ varying number of logical steps dependent on location of an expression in a prog
       then
           static_traversable_pool env_a prog_a pool)
   \end{lstlisting}
+
+
+----Edit End----
 
 The abstract program transitions described by the various versions of static\_traversable are
 dependent on abstract value bindings (in the application case), which are described by the
