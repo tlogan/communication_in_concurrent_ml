@@ -2002,13 +2002,13 @@ to less flexible relations.
         sorted_b (xs @ [y] @ [z]))
   \end{lstlisting}
 
-The lemma for soundness of static one-shot classification states that if a static channel is
+The theorem for soundness of static one-shot classification states that if a static channel is
 statically classified as one-shot for a given program and static environment consistent with the
 program, then any corresponding dynamic channel is classified as one-shot over any pool that results
-from running the program. The lemma for soundness of static fan-out classification states that if
+from running the program. The theorem for soundness of static fan-out classification states that if
 a static channel is statically classified as fan-out for a given program and static environment
 consistent with that program, then any corresponding dyanmic channel is classified as fan-out
-over any pool that results from running the program.  The lemmas for soundness of many-to-one
+over any pool that results from running the program.  The theorems for soundness of many-to-one
 classification and one-to-one classification follow the same pattern. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -2049,24 +2049,21 @@ theorem static_one_to_one_sound:
       one_to_one pool (Chan path_c x_c)
 
 \end{lstlisting}
-----Edit End----
-Theorem static\_fan\_out\_sound is proved by a few simpler lemmas and the definitions
-of static\_fan\_out and fan\_out.  The three main lemmas are not\_static\_send\_site\_sound,
-not\_static\_inclusive\_sound, and not\_static\_traceable\_sound.  Additionally, the inductive
-definition paths\_corresponds, which simply relates abstract paths to concrete paths,
-is helpful. 
 
-Lemma not\_static\_inclusive\_sound states that if any two paths traced by running a programm
-correspond two abstract paths that are statically inclusive.  It follows from a straight
-forward case analysis of static\_inclusive.
+The soundness theorem for static fan-out classification is proved by a few simpler lemmas and the
+definitions of static and dynaic fan-out classification.  The three main lemmas state the soundness of
+the lack of static traceability, the soundness of the lack of inclusiveness, and the soundness of a
+program point not being a static send site. These lemmas depend on a correspondance between static
+paths and dynamic paths, which is bijective for the lower precision analysis. 
 
-Lemma not\_static\_traceable\_sound states that if running a programming traces a concrete
-path, and a static\_program contains the statically traversable static\_points of the program, then there is an
-abstract path corresponding to the traced concrete path is statically traceable.   
-
-Lemma not\_static\_send\_site\_sound states that if a program is run to reach a synchronization on
-a send event, then the entry_point corresponding to the syncrhonization expression is statically
-identified as a send site.
+The lemma for soundness of lack of static inclusiveness states that any two dynamic paths traced by
+running a programm correspond to statically inclusive static paths. It follows from a straight
+forward case analysis of static inclusivity. The lemma for soundness of lack of static tracebility
+states that for any dynamic path traced by running a program, there is a corresponding static path
+that is statically traceable.
+The lemma for soundness of a program point not being a static send site states that running a program
+reaches a syncrhonization on a sending event, then that synchronization is statically identified as a
+send site by its entry point.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
 
@@ -2106,6 +2103,8 @@ lemma not_static_send_site_sound:
       static_send_entry_point env_a prog0 x_c (NLet x)
 
 \end{lstlisting}
+
+----Edit End----
 
 Lemma not\_static\_traceable\_sound is proved by generalizing static\_traversable and static\_eval
 over pools, such that information about the a point in the program can be deduced by a fixed
