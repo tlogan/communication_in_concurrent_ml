@@ -1794,19 +1794,12 @@ traversable transitions for the sequenced subprogram.
       )
   \end{lstlisting}
 
-
-----Edit End---
-
-
-The static traceability means states that an abstract control path can be traced according to
-a set of transitions from a starting entry_point to a final entry_point matching a given condition.  An
-empty path might be traceable if the start entry_point is also the final entry_point.  A path of one
-static point might be traceable if its entry_point is the required start entry_point, and there is a
-transition containing the static point and the transition's destination entry_point meets the final
-entry_point requirement.
-For a path of two or more static points, the first entry_point is the start entry_point, there is a
-transition from the first static point to the second static point, and the path from the
-second static point onward also might be traceable.
+The static traceability means that a static path with a given starting point, and ending
+condition, can be traced by traversing the transitions in a static program.
+The empty path is statically traceable if the starting point meets the ending condition.
+Otherwise, a path is statically traceable if the last static point corresponds to a transition
+that meets the ending condition, and the longest strict prefix of the path is statically
+traceable.  
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_traceable of
@@ -1827,9 +1820,9 @@ second static point onward also might be traceable.
       static_traceable prog_a start is_end (path @ [(middle, mode)]))
   \end{lstlisting}
 
-The static inclusive predicate states that two abstract paths represent might be traversed in
+The static inclusion means that two static paths might be traced in
 the same run of a program. Ordered paths might be inclusive, and also a path that diverges
-from another at a spawn transition might be inclusive.  This concept is useful for achieving
+from another at a spawn transition might be inclusive. This concept is useful for achieving
 greater precision, since if two paths cannot occur in the same run of a program, only one needs
 to be counted towards the communication topology. 
 
@@ -1860,11 +1853,10 @@ to be counted towards the communication topology.
       )
   \end{lstlisting}
 
-The singular predicate states that two paths are the same or cannot occur in the same run of a
-program. The noncompetitive predicates states that two paths are ordered or cannot occur in the
-same run of a program. The static one shot predicate states that there is at most one attempt
-to syncrhonize to send on an abstract channel in a run of a given program with given abstract
-value bindings.
+
+The singularness means that two paths are the same or only of them can occur in a given run of
+a program. The noncompetitiveness means states that two paths can't compete during a run of a
+program, since they are ordered or cannot occur in the same run of a program.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate singular of static_path -> static_path -> bool:
@@ -1896,14 +1888,19 @@ value bindings.
 \end{lstlisting}
 
 
-The static one to one predicate states that there is at most one thread attempting to send and
-one thread attempting to receive on a given channel at any time during a run of a given
-program.
+The static one shot classification means that there is at most one attempt
+to syncrhonize to send on a static channel in any run of a given program.
 
-The static one-to-many predicate states that there is at most one thread attempting to send on a
-given channel at any time during a run of a given program. The static many-to-one predicate states
-that there is at most one thread attempting to receive on a given channel at any time during a
-run of a given program. 
+The static one-to-one classification means that there is at most one thread that attempts to
+send and at most one thread that attempts to receive on a given static channel for any time
+during a run of a given program.
+
+The static one-to-many classification means that there is at most one thread that attempts to
+send on a given static channel at any time during a run of a given program, but there may be
+many threads that attempt to receive on the channel. The static many-to-one predicate means
+that there may be many threads that attepmt to send on a static channel, but there is at most
+one thread that attempts to receive on the channel for any time during a run of a given
+program.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_one_shot of static_environment -> program -> name -> bool:
@@ -1953,6 +1950,8 @@ run of a given program.
       then
         static_many_to_one env_a e x_c) 
 \end{lstlisting}
+
+----Edit End---
 
 \section{Formal Reasoning}
 The reasoning involved in proving each soundness theorem is based around breaking the
