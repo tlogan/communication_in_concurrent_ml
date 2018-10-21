@@ -2218,16 +2218,18 @@ depending on the program.
           static_traversable_pool env_a prog_a pool)
   \end{lstlisting}
 
-
-----Edit End----
-
-The abstract program transitions described by the various versions of static\_traversable are
-dependent on abstract value bindings (in the application case), which are described by the
-static\_eval predicate.  Thus generalized versions of static evaluation enables further
-deduction of abstract program transitions.  As with the generalized versions of
-static\_traversable, the generalized versions of static\_eval are designed to preserve abstract
-value bindings across program execution static points, and also provide direct access to abstract
-binding information in a fixed number of logical steps. 
+The transitions described by the various versions of static traversability depend on static
+environments in order to look up the control flow in the application case. The static environment
+results from the static evaluation of the program that is dynamically evaluated. Thus, generalized
+versions of static evaluation enable further deduction about transitions.
+As with the generalized versions of static traversability,
+the generalized versions of static evaluation are designed to preserve static environments across
+dynamic evaluations of pools. They also provide direct access to binding information from names to
+static values in a fixed number of logical steps. Static evaluation of programs correlates program
+syntax to static values, but the generalized static evaluations correlate dynamic semantic structures,
+like, value, environments, and stacks, to static values. The abstraction function relates dynamic
+values to static values and helps the larger goal of relating dynamic semantic elements to static
+values and static environments.    
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   fun abstract of dynamic_value -> static_value:
@@ -2282,9 +2284,7 @@ binding information in a fixed number of logical steps.
       then
         static_eval_val env_a convo_a
           (VPrm (Pair x1 x2) env))
-\end{lstlisting}
 
-\begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_eval_env of
     static_environment -> static_environment -> env -> bool:
     only 
@@ -2326,6 +2326,9 @@ binding information in a fixed number of logical steps.
       then 
         static_eval_pool env_a convo_a pool)
   \end{lstlisting}
+
+
+----Edit End----
 
 Lemma not\_static\_traceable\_sound follows from the generalized lemma
 not\_static\_traceable\_pool\_sound, which contains the generalized premise of
