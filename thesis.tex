@@ -1267,18 +1267,19 @@ that the syncrhonization used for communication.
 
 \section{Dynamic Communication Classification}
 
-The one shot predicate states that in a trace pool, there is only one control path that
-synchronizes and sends on a given channel. Whether or not two attempts to synchronize on a
-channel are competitive can be determined by
-looking at the control paths of the trace pool. If two paths are ordered, that is, one is the
-prefix of the other and vice versa, then the dynamic semantics states that they necessarily
-occur in sequence, so the shorter path must synchronize before the longer path. Two paths may
-be competitive only if they are unordered. The many-to-one predicate states that there is no
-competition on the receiving end of a channel, by stating that any two paths that synchonize to
-receive on a channel are ordered. The one-to-many predicate states that there is no
-competition on the sending end of a channel, by stating that any two paths that syncronize to
-send on a channel are ordered. The one to one predicates states that there is no competition on
-either the receiving or the sending ends of a channel. 
+The dynamic one shot classification is described by pool where there is only one dynamic path
+that synchronizes and sends on a given channel. Whether or not two attempts to
+synchronize on a channel are competitive can be determined by
+looking at the paths of the pool. If two paths are ordered, that is, one is the
+prefix of the other or vice versa, then necessarily
+occur in sequence, so the shorter path synchronizes before the longer path. Two paths may
+be competitive only if they are unordered. The dynamic many-to-one classification means that
+there is no competition on the receiving end of a channel; any two paths that synchonize to
+receive on a channel are ordered. The dynamic one-to-many classification means that there
+is no competition on the sending end of a channel; any two paths that syncronize to
+send on a channel are ordered. The dynamic one-to-one classification means that there is no
+competition on either the receiving or the sending ends of a channel; any two paths that
+syncrhonize on a channel are necessarily ordered for either end of the channel. 
 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -1354,12 +1355,11 @@ either the receiving or the sending ends of a channel.
 
 
 \section{Static Semantics Definitions}
-The static semantics are described by sets of static values that might be the evaluations of
-expressions associated with names in a program.  It is also described by subprograms that might
-be reached from a larger program. The static semantics helps to deduce static informaiton about
-channels and events, which is crucial for statically deducing information about synchronization
-on channels and communication topologies.
-
+The static semantics is described by an estimation of intermediate static values and subpograms
+that might result from running a program.    
+The static semantics helps to deduce static informaiton about channels and events, which is
+crucial for statically deducing information about synchronization on channels and
+communication topologies.
 The static values consist of the static unit value, static channels, and static primitive
 values. The static unit value is no less precise than the dynamic unit value, but
 static channels and static primivitive values are imprecise versions of their dynamic
@@ -1367,8 +1367,8 @@ counterparts. The static channel is identified only by the name it binds to at c
 rather than the full path that leads up to its creation.  A static primitive value is simply a
 primitive expression without an environment for looking up its named arguments. The static
 enviroment contains the internal evalutaion results by associating names to static values.
-In order to find the return value of a program, it is useful to fetch the name embedded
-within its result subprogram of the program.
+In order to find the return value of a program or subprogram, it is useful to fetch the name
+embedded within its result subprogram.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   datatype static_value =
@@ -1384,7 +1384,7 @@ within its result subprogram of the program.
   \end{lstlisting}
 
 
-The static evaluation is a control flow analysis described by relation from an input program
+The static evaluation is a control flow analysis described by a relation from an input program
 to two outputs, each a static environment. The first output contains names associated with the
 evaluations of expressions that bind to those names in the program. The second output contains
 names associated with values that might be sent over channels identified by those name.
@@ -1395,37 +1395,6 @@ programs, until a theorem or axiom is induced. The definition also appears to al
 deterministic reasoning. With both determinism and termination, it would be possible to compute
 the static evaluation outputs from the input program. This certainly appears likely, but it has
 not been formally proven in this work.
-
-----Edit End---
-
-For a result expression, there may be any abstract value bindings or communication. For all let
-expressions, the bindings and communication are outputs for the next expression. For unit
-binding, the binding name is bound to the abstract unit. For channel creation, the binding name
-is bound to an abstract channel identified by the same binding name. For all primtive contruct
-bindings, the binding name is bound to the abstract primtive value represented by the primitive
-construct.  Additionaly for the primitive construct of function abstraction, the the recursive
-parameter to the function abstraction is bound to the function abstraction, and the bindings
-and communication are also outputs for the function abstraction's internal expression. For
-spawn, the bindings and communication are also outputs for the spawned expression, and the the
-binding name is bound to the abstract unit.
-
-For synchronization, if the send event is bound to the syncrhonization argument, then the
-binding name is bound to abstract unit, and the send event's channel communicates the argument
-associated with the send event's message argument.  If the receive event is bound to the
-synchronization argument, then the binding name is bound to the abstract value communicated by
-the receive event's channel.
-
-For the first projection, if its argument is a pair, then the binding name is bound to the
-abastract value associated with the pair's first argument.  For the second projection, if its
-argument is a pair, then the binding name is bound to the abstract value associated with the
-pair's second argument.  
-
-For the case matching, if its first argument is a left case, then the left name is bound to the
-abstract value of the left case, the let binding name is bound to the result value of the left
-expression, and the bindings and communication are outputs for the left expression.  If its
-first argument is a right case, then the right name is bound to the abstract value of the right
-case, the right binding name is ound to the result value of the right expression, and the
-bindings and communication are outputs for the right expression. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_eval of
@@ -1457,7 +1426,7 @@ bindings and communication are outputs for the right expression.
       ) and
     (%$\forall$% x_c env_a x convo_a e' . 
       if 
-        (SPrm(RecvEvt x_c)) %$\in$% env_a x and
+        (SPrm (RecvEvt x_c)) %$\in$% env_a x and
         static_eval env_a convo_a e'
       then
         static_eval env_a convo_a (Let x (Prim (RecvEvt x_c)) e')
@@ -1559,16 +1528,9 @@ bindings and communication are outputs for the right expression.
       )
   \end{lstlisting}
 
-
-The static reachable predicate states that an expression can be reached from another
-expression, by simply stating that an expression is reachable from itself,  and an expression
-is reachable from an initial expression, if it is also reachable from the sub expressions of
-the initial expression.  
-
-For function application, if a function abstraction is bound to the first argument of
-application, then the abstract value of the second argument of application (the function
-argument) is bound to the abstraction's parameter name, and the resulting abstract value of the
-abstraction is bound the the let binding name.
+The static reachability is described by subprograms that might be reached from a larger
+program.  A program is reachable from itself. An initial program might also reach any that is
+reachable from its sub program.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_reachable of program -> program -> bool:
@@ -1609,6 +1571,9 @@ abstraction is bound the the let binding name.
   \end{lstlisting}
 
 \section{Static Communication}
+
+
+----Edit End---
 
 To describe communication statically, yet also somewhat precisely, it will be advantageous to
 describe every expression in a with a short description.  There are two forms of expressions,
