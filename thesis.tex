@@ -1649,8 +1649,6 @@ transition to its subprogram. A static path is a list of static points.
   type static_path = static_point list
   \end{lstlisting}
 
-----Edit End---
-
 The static traversability means that a set of transitions describes all the transitions
 that might be traversed for a program, given bindings of abstract values.  For a result
 expression, any transition might be traversed.  For all let expressions, except those binding
@@ -1662,19 +1660,21 @@ function abstraction.  For binding to spawning, the spawning transition from the
 to the spawned expression might be traversed, and the traversable transitions are also
 traversable transitions for the spawned expression.
 
-For binding to matching expressions, the the calling transition from the top expression to the left
-case expression might be traversable, and the calling transition from the top expression to the
-right case expression might be traversable.  The returning transition from the result of the
-left case expression to the sequenced expression might be traversable, and the returning
-transition from the result of the right case expression to the sequenced expression might be
-traversable.  Additionally, the traversable transitions are traversable transitions the left
-case expression, right case expression, and the sequenced expression.   
+In the case of matching, the the calling transition from the top program to
+the left subprogram might be traversable, and
+the calling transition from the top program to the
+right subprogram might be traversable.  The returning transition from the result of the
+left subprogram to the sequenced subprogram might be traversable, and the returning
+transition from the result of the right subprogram to the sequenced subprogram might be
+traversable.  Additionally, the traversable transitions for the top program are also
+traversable transitions the left subprogram, right subprogram, and the sequenced subprogram.   
 
-For binding to function application, if the applied name is acutally bound to a function
-abstraction, then a calling transition from the top expression to the inner expression of the
-abstraction might be traversable, and the returning transition from the result of the function
-abstracted expression to the sequenced expression.  Additionally, the traversable transitions
-are traversable transitions for the sequenced expression. 
+In the case of application, if the applied name is acutally bound to a function
+abstraction, then a calling transition from the top program to the abstraction's subprogram
+might be traversable, and the returning transition from the result of the function
+abstraction to the sequenced subprogram might be traversable.
+Additionally, the traversable transitions for the top program are also
+traversable transitions for the sequenced subprogram. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_traversable of
@@ -1793,6 +1793,9 @@ are traversable transitions for the sequenced expression.
         static_traversable env_a prog_a (Let x (App f x_a) e')
       )
   \end{lstlisting}
+
+
+----Edit End---
 
 
 The static traceability means states that an abstract control path can be traced according to
