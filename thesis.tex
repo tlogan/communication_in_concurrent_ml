@@ -1951,43 +1951,65 @@ program.
         static_many_to_one env_a e x_c) 
 \end{lstlisting}
 
-----Edit End---
-
 \section{Formal Reasoning}
-The reasoning involved in proving each soundness theorem is based around breaking the
-goal into simpler subgoals, and generalizing assumptions to create useful induction
-hypotheses.  It is often useful to create helper definitions that can be deduced from premises
-and enable general reasoning across arbitrary programs. A frequent pattern is to define
+The reasoning involved in proving the soundness of each communication topology classification
+is based around breaking the goal into simpler subgoals, and generalizing assumptions to create
+useful induction hypotheses.  It is often useful to create helper definitions that can be deduced
+from premises of the theorem being proved and enable general reasoning across arbitrary programs.
+A frequent pattern is to define
 predicates in terms of semantic structures, like the environment, stack, and pool, and deduce 
-the use of these predicates on the initial program state. 
+the instantiation of these predicates on the initial program state. 
 
-Some parts of the generalized predicate definitions exist simply to prove that they imply uses
-of the original expression predicate. However, the reason for the existence of the generalized
-definitions is to allow direct access to properties that would otherwise be deeply nested in an
-inductive structure and inaccessble for proofs.
+Some aspects of the generalized predicate definitions exist simply to prove that they imply
+instantiations of the original program based predicates. However, the generalized
+definitions exist in order to allow direct access to properties that would otherwise be deeply nested
+in an inductive structure and inaccessble by a predictable number of logical steps for an arbitrary
+program.
 
 One of the most difficult aspects of formal reasoning is in developing adequate definitions.
 It is often possible to define a single semantics in multiple ways.
 For instance, the sortedness of a list could be defined in terms of the sortedness of its tail
-or in terms of the sortedness of its longest strict prefix.  To prove theorems relating
+or in terms of the sortedness of its longest strict prefix. To prove theorems relating
 sortedness to other relations, it may be important that the other relations are inductively
-defined on the same subpart of the list.  Some relations may only be definable on the tail,
-while others are defineable on only the strict prefix.  In such cases, it would be necessary to
+defined on the same subpart of the list. Some relations may only be definable on the tail,
+while others can be defined only on the strict prefix. In such cases, it is necessary to
 define sortedness in two ways, and prove their equivalence, in order to prove theorems relating
 to less flexible relations.
 
-The lemma for soundness of static one shot states that if an abstract channel is statically
-classified as one shot for a given program, and value bindings derived from the program, then
-any corresponding dynamic channel is classified as one shot over any trace pool that results
-from running the program.  The lemma for static\_fan\_out\_sound states that if an abstract
-channel is statically classified as fan\_out for a given program and an abstract environment
-derived from that program, then any corresponding concrete channel is classified as fan\_out
-over any pool that results from running the program.  The lemmas for soundness of many-to-one, and
-one to one follow similar patterns. 
+\begin{lstlisting}[language=logic, escapechar=\%]
+  predicate sorted_a of nat list -> nat list -> bool:
+    only
+    (sorted_a []) and
+    (%$\forall$%  x .
+        sorted_a [x]) and
+    (%$\forall$%  x y zs .
+      if 
+        x %$\leq$% y and
+        sorted_a (y # zs)
+      then
+        sorted_a (x # y # zs))
 
-The static predicates for communication topologies should be generalizations of procedures that
-compute the topologies from programs. The soundness of the static predicates must be provable
-to be certain that statically described topologies are also observed when running the program.
+  predicate sorted_b of nat list -> nat list -> bool:
+    only
+    (sorted_b []) and
+    (%$\forall$%  x .
+        sorted_b [x]) and
+    (%$\forall$%  xs y z .
+      if 
+        sorted_b (xs @ [y]) and
+        y %$\leq$% z 
+      then
+        sorted_b (xs @ [y] @ [z]))
+  \end{lstlisting}
+
+The lemma for soundness of static one-shot classification states that if a static channel is
+statically classified as one-shot for a given program and static environment consistent with the
+program, then any corresponding dynamic channel is classified as one-shot over any pool that results
+from running the program. The lemma for soundness of static fan-out classification states that if
+a static channel is statically classified as fan-out for a given program and static environment
+consistent with that program, then any corresponding dyanmic channel is classified as fan-out
+over any pool that results from running the program.  The lemmas for soundness of many-to-one
+classification and one-to-one classification follow the same pattern. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
 theorem static_one_shot_sound: 
@@ -2027,7 +2049,7 @@ theorem static_one_to_one_sound:
       one_to_one pool (Chan path_c x_c)
 
 \end{lstlisting}
-
+----Edit End----
 Theorem static\_fan\_out\_sound is proved by a few simpler lemmas and the definitions
 of static\_fan\_out and fan\_out.  The three main lemmas are not\_static\_send\_site\_sound,
 not\_static\_inclusive\_sound, and not\_static\_traceable\_sound.  Additionally, the inductive
