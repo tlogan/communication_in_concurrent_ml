@@ -384,7 +384,7 @@ constraints.
 For a subset of Concurrent ML without event combinators, Reppy and  Xiao developed an
 efficient algorithmic analysis that determines for each channel all abstract threads that send
 and receive on it.  The algorithm depends on each primitive operation in the program being
-labeled with a program point.  A sequence of program points ordered in a valid execution
+entry_pointed with a program point.  A sequence of program points ordered in a valid execution
 sequence forms a control path.  Distinction between threads in a program can be inferred from
 whether or not their control paths diverge.  
 
@@ -1155,10 +1155,10 @@ Additionally, it generates a another state consisting of the spawning expression
 program, the same environment unchagned, and an empty stack.
 
 the evaluation updates is updated with two
-new paths extending the leaf path.  For one, the leaf path is extended with a sequential label
+new paths extending the leaf path.  For one, the leaf path is extended with a sequential entry_point
 whose state has the next expression and the environment updated with the unit value bound to
 the let binding name, and the original continuation stack. For the other, the leaf path
-extended with a label indicating a spawning transition.  Its state has the spawned expression,
+extended with an entry_point indicating a spawning transition.  Its state has the spawned expression,
 the original environment, and an empty continuation stack. 
 
 In the case where two leaf paths in the pool correspond to synchronization on the same channel,
@@ -1571,39 +1571,30 @@ reachable from its sub program.
   \end{lstlisting}
 
 \section{Static Communication}
+The static communication is described an estimation of the static paths that communicate on
+static channels. To describe communication statically, it is helpful to identify the entry
+point of each subprogram with a short description. The entry point of a let-binding is
+identified by the binding name, and indication that it's a let-binding. The entry point of a
+result is indicated by its embedded name, and indication that it's a result.
 
-
-----Edit End---
-
-To describe communication statically, yet also somewhat precisely, it will be advantageous to
-describe every expression in a with a short description.  There are two forms of expressions,
-let binding expressions and result expressions.  A let binding expression is associated with a
-label indicating its form and contains the name used for its first binding. A result
-expression is associated with a label indicating its form and contains the name of the result's
-argument.  The dynamic description also contains labels for representing the mode of
-transition, which are slightly different due to the differences in how the static and dynamic
-relations can be defined.  Since a goal of the static relations is that they imply a computable
-refinement, there is an additional restriction to consider, resulting in the slightly different
-labeling of transitions between expressions.    
-
-the static send label predicate states that a label might represent a sycnronization to send on
-a given abstract channel, in a given a program with given abstract value bindings.  The static
-receive label predicate state that a label might represent a synchronization to receive on a
-given abstract channel, in a given program with given abstract value bindings. 
+The static send entry point classification means that an entry point might represent a
+sycnronization to send on a given abstract channel.
+The static receive entry point classification means that an entry point might represent a
+synchronization to receive on a given abstract channel. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
-  datatype label = NLet name | NResult var
+  datatype entry_point = NLet name | NResult var
 
-  fun top_label of program -> label:
+  fun top_entry_point of program -> entry_point:
     (%$\forall$% x b e' . 
-      top_label (Let x b e') = NLet x) and
+      top_entry_point (Let x b e') = NLet x) and
     (%$\forall$% x . 
-      top_label (Rslt x) = NResult x)
+      top_entry_point (Rslt x) = NResult x)
 
-  type label_map = label -> name set
+  type entry_point_map = entry_point -> name set
 
-  predicate static_send_label of
-    static_environment -> program -> name -> label -> bool:
+  predicate static_send_entry_point of
+    static_environment -> program -> name -> entry_point -> bool:
     only
     (%$\forall$% prog0 x x_e e' x_sc x_m env_a x_c .
       if
@@ -1611,10 +1602,10 @@ given abstract channel, in a given program with given abstract value bindings.
         (SPrm (SendEvt x_sc x_m)) %$\subseteq$% env_a x_e and 
         (SChn x_c) %$\in$% env_a x_sc
       then
-        static_send_label env_a prog0 x_c (NLet x))
+        static_send_entry_point env_a prog0 x_c (NLet x))
 
-  predicate static_recv_label of
-    static_environment -> program -> name -> label -> bool:
+  predicate static_recv_entry_point of
+    static_environment -> program -> name -> entry_point -> bool:
     only
     (%$\forall$% prog0 x x_e e' x_rc env_a x_c .
       if
@@ -1622,8 +1613,10 @@ given abstract channel, in a given program with given abstract value bindings.
         (SPrm (RecvEvt x_rc)) %$\in$% env_a x_e and 
         (SChn x_c) %$\in$% env_a x_rc 
       then
-        static_recv_label env_a prog0 x_c (NLet x))
+        static_recv_entry_point env_a prog0 x_c (NLet x))
   \end{lstlisting}
+
+----Edit End---
 
 -----low precision // no live channel analysis ----
 Reppy and Xiao's work relies on detecting the liveness of channels in order to gain higher
@@ -1641,16 +1634,16 @@ completed.
 
 For the simpler version, there are four kinds of control edges, indicating how one point in a
 program transitions to another point in a program.  The modes of transition are sequencing,
-calling, spawning, and returning. A transition is a triplet of a label, representing a point in
-the progra, a control edge, and another label.  A static\_point is just a label and a mode,
-without the destination label.  A static\_path is a list of static\_points.  
+calling, spawning, and returning. A transition is a triplet of an entry_point, representing a point in
+the progra, a control edge, and another entry_point.  A static\_point is just an entry_point and a mode,
+without the destination entry_point.  A static\_path is a list of static\_points.  
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   datatype mode = MNxt | MSpwn | MCll | MRtn
 
-  type transition = label * mode * label
+  type transition = entry_point * mode * entry_point
 
-  type static_point = label * mode
+  type static_point = entry_point * mode
 
   type static_path = static_point list
   \end{lstlisting}
@@ -1689,56 +1682,56 @@ are traversable transitions for the sequenced expression.
       ) and
     (%$\forall$% x e' prog_a env_a  .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x Unt e')
       ) and
     (%$\forall$% x e' prog_a env_a  .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x MkChn e')
       ) and
     (%$\forall$% x e' prog_a env_a  x_c x_m .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Prim (SendEvt x_c x_m)) e')
       ) and
     (%$\forall$% x e' prog_a env_a x_c .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Prim (RecvEvt x_c)) e')
       ) and
     (%$\forall$% x e' prog_a env_a x1 x2 .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Prim (Pair x1 x2)) e')
       ) and
     (%$\forall$% x e' prog_a env_a x_s .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Prim (Lft x_s)) e')
       )
     (%$\forall$% x e' prog_a env_a x_s .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Prim (Rght x_s)) e')
       ) and
     (%$\forall$% x e' prog_a env_a e_b f x_p .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e' and
         static_traversable env_a prog_a e_b
       then
@@ -1746,8 +1739,8 @@ are traversable transitions for the sequenced expression.
       ) and
     (%$\forall$% x e' e_c prog_a env_a.
       if
-        {(NLet x, MNxt, top_label e'),
-          (NLet x, MSpwn, top_label e_c)} %$\subseteq$% prog_a and
+        {(NLet x, MNxt, top_entry_point e'),
+          (NLet x, MSpwn, top_entry_point e_c)} %$\subseteq$% prog_a and
         static_traversable env_a prog_a e_c and
         static_traversable env_a prog_a e'
       then
@@ -1755,31 +1748,31 @@ are traversable transitions for the sequenced expression.
 
     (%$\forall$% x e' prog_a env_a x_se .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Sync x_se) e')) and
 
     (%$\forall$% x e' prog_a env_a x_p .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e' and
       then
         static_traversable env_a prog_a (Let x (Fst x_p) e')) and
 
     (%$\forall$% x e' prog_a env_a x_p .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e' and
       then
         static_traversable env_a prog_a (Let x (Snd x_p) e')) and
 
     (%$\forall$% x e_l e_r e' prog_a env_a x_s .
       if
-        {(NLet x, MCll, top_label e_l),
-          (NLet x, MCll, top_label e_r),
-          (NResult (result_name e_l), MRtn, top_label e'),
-          (NResult (result_name e_r), MRtn, top_label e')} %$\subseteq$% prog_a and
+        {(NLet x, MCll, top_entry_point e_l),
+          (NLet x, MCll, top_entry_point e_r),
+          (NResult (result_name e_l), MRtn, top_entry_point e'),
+          (NResult (result_name e_r), MRtn, top_entry_point e')} %$\subseteq$% prog_a and
         static_traversable env_a prog_a e_l and
         static_traversable env_a prog_a e_r and
         static_traversable env_a prog_a e'
@@ -1789,8 +1782,8 @@ are traversable transitions for the sequenced expression.
     (%$\forall$%  env_a f x e' x x_a .
       if
         (%$\forall$% f_p x_p e_b . if (SPrm (Abs f_p x_p e_b)) %$\in$% env_a f then 
-          {(NLet x, MCll, top_label e_b),
-            (NResult (result_name e_b), MRtn, top_label e')} %$\subseteq$% prog_a) and
+          {(NLet x, MCll, top_entry_point e_b),
+            (NResult (result_name e_b), MRtn, top_entry_point e')} %$\subseteq$% prog_a) and
 
         static_traversable env_a prog_a e'
       then
@@ -1799,36 +1792,34 @@ are traversable transitions for the sequenced expression.
   \end{lstlisting}
 
 
-The static traceable predicate states that an abstract control path can be traced according to
-a set of transitions from a starting label to a final label matching a given condition.  An
-empty path might be traceable if the start label is also the final label.  A path of one
-static\_point
-might be traceable if its label is the required start label, and there is a transition
-containing the static\_point and the transition's destination label meets the final label requirement.
-For a path of two or more static\_points, the first label is the start label, there is a transition from
-the first static\_point to the second static\_point, and the path from the second static\_point onward also might be
-traceable.
+The static traceability means states that an abstract control path can be traced according to
+a set of transitions from a starting entry_point to a final entry_point matching a given condition.  An
+empty path might be traceable if the start entry_point is also the final entry_point.  A path of one
+static point might be traceable if its entry_point is the required start entry_point, and there is a
+transition containing the static point and the transition's destination entry_point meets the final
+entry_point requirement.
+For a path of two or more static points, the first entry_point is the start entry_point, there is a
+transition from the first static point to the second static point, and the path from the
+second static point onward also might be traceable.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
+  predicate static_traceable of
+    transition set -> entry_point -> (entry_point -> bool) -> static_path -> bool:
+    only
+    (%$\forall$% start prog_a is_end .
+    if
+      is_end start
+    then
+      static_traceable prog_a start is_end []) and
 
-predicate static_traceable of
-  transition set -> label -> (label -> bool) -> static_path -> bool:
-only
-(%$\forall$% start prog_a is_end .
-  if
-    is_end start
-  then
-    static_traceable prog_a start is_end []) and
-
-(%$\forall$%  prog_a star middle path is_end end mode .
-  if 
-    static_traceable prog_a start (%$\lambda$% l . l = middle) path and
-    is_end end and
-    (middle, mode, end) %$\in$% prog_a 
-  then
-    static_traceable prog_a start is_end (path @ [(middle, mode)]))
-
-\end{lstlisting}
+    (%$\forall$%  prog_a star middle path is_end end mode .
+    if 
+      static_traceable prog_a start (%$\lambda$% l . l = middle) path and
+      is_end end and
+      (middle, mode, end) %$\in$% prog_a 
+    then
+      static_traceable prog_a start is_end (path @ [(middle, mode)]))
+  \end{lstlisting}
 
 The static inclusive predicate states that two abstract paths represent might be traversed in
 the same run of a program. Ordered paths might be inclusive, and also a path that diverges
@@ -1914,7 +1905,7 @@ run of a given program.
     (%$\forall$% prog_a e env_a x_c .
       if
         every_two
-          (static_traceable prog_a (top_label e) (static_send_label env_a e x_c))
+          (static_traceable prog_a (top_entry_point e) (static_send_entry_point env_a e x_c))
           singular and
         static_traversable env_a prog_a e
       then
@@ -1925,10 +1916,10 @@ run of a given program.
     (%$\forall$% prog_a e env_a x_c .
       if
         (every_two
-          (static_traceable prog_a (top_label e) (static_send_label env_a e x_c))
+          (static_traceable prog_a (top_entry_point e) (static_send_entry_point env_a e x_c))
           noncompetitive) and 
         (every_two
-          (static_traceable prog_a (top_label e) (static_recv_label env_a e x_c))
+          (static_traceable prog_a (top_entry_point e) (static_recv_entry_point env_a e x_c))
           noncompetitive) and 
         static_traversable env_a prog_a e
       then
@@ -1939,7 +1930,7 @@ run of a given program.
     (%$\forall$% prog_a e env_a x_c .
       if
         (every_two
-          (static_traceable prog_a (top_label e) (static_send_label env_a e x_c))
+          (static_traceable prog_a (top_entry_point e) (static_send_entry_point env_a e x_c))
           noncompetitive) and
         static_traversable env_a prog_a e
       then
@@ -1950,7 +1941,7 @@ run of a given program.
     (%$\forall$% prog_a e env_a x_c .
       if
         (every_two
-          (static_traceable prog_a (top_label e) (static_recv_label env_a e x_c))
+          (static_traceable prog_a (top_entry_point e) (static_recv_entry_point env_a e x_c))
           noncompetitive) and
         static_traversable env_a prog_a e
       then
@@ -2047,7 +2038,7 @@ path, and a static\_program contains the statically traversable static\_points o
 abstract path corresponding to the traced concrete path is statically traceable.   
 
 Lemma not\_static\_send\_site\_sound states that if a program is run to reach a synchronization on
-a send event, then the label corresponding to the syncrhonization expression is statically
+a send event, then the entry_point corresponding to the syncrhonization expression is statically
 identified as a send site.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -2074,7 +2065,7 @@ lemma not_static_traceable_sound:
     then
       %$\exists$% path_a . 
         paths_correspond path path_a and 
-        static_traceable prog_a (top_label prog0) is_end path_a
+        static_traceable prog_a (top_entry_point prog0) is_end path_a
 
 lemma not_static_send_site_sound:
   %$\forall$% prog0 pool convo path x x_e e' env stack x_sc x_m env' path_c x_c .
@@ -2085,7 +2076,7 @@ lemma not_static_send_site_sound:
       env' x_sc = Some (VChn (Chan path_c x_c)) and 
       static_eval env_a convo_a prog0
     then 
-      static_send_label env_a prog0 x_c (NLet x)
+      static_send_entry_point env_a prog0 x_c (NLet x)
 
 \end{lstlisting}
 
@@ -2105,7 +2096,7 @@ the original predicate, which requires knowledge of features particular context 
 Most of the rules simply state that the nearest subexpression is statically traversable, and
 static\_traversable offers direct information about statically described static\_points in a program.
 The exception is in the definition of static\_traversable\_stack, in the rule for a nonempty
-stack, where there is the additional clause that the edge from a return point to the label of
+stack, where there is the additional clause that the edge from a return point to the entry_point of
 the continuation expression exists in the static\_program.  This information is consistent with the
 definition of static\_traversable for expressions, but provides information about an edge in the
 static program with a fixed number of logical steps, which would otherwise only be decucible by a
@@ -2184,7 +2175,7 @@ varying number of logical steps dependent on location of an expression in a prog
       ) and
     (%$\forall$% y e prog_a env_a prog_a env stack x env .
       if 
-        {(NResult y, MRtn, top_label e)} %$\subseteq$% prog_a and
+        {(NResult y, MRtn, top_entry_point e)} %$\subseteq$% prog_a and
         static_traversable env_a prog_a e and
         static_traversable_env env_a prog_a env and
         static_traversable_stack env_a prog_a (result_name e) stack 
@@ -2370,7 +2361,7 @@ fact that star\_left implies star.
       then
         %$\exists$% path_a . 
           paths_correspond path path_a and 
-          static_traceable prog_a (top_label prog0) is_end path_a
+          static_traceable prog_a (top_entry_point prog0) is_end path_a
 
   lemma static_traversable_pool_preserved_star:
     %$\forall$% prog0 pool convo env_a convo_a prog_a .
@@ -2608,11 +2599,11 @@ control flow of sequencing, calling, returning, and spawning are also included t
 \begin{lstlisting}[language=logic, escapechar=\%]
   datatype mode = MNxt | MSpwn | ESend name | MCll | MRtn
 
-  type transition = label * mode * label
+  type transition = entry_point * mode * entry_point
 
-  type static_point_label = label * mode
+  type static_point_entry_point = entry_point * mode
 
-  type static_path = static_point_label list
+  type static_path = static_point_entry_point list
 \end{lstlisting}
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -2622,69 +2613,69 @@ control flow of sequencing, calling, returning, and spawning are also included t
         static_traversable env_a prog_a (Rslt x)) and
     (%$\forall$% x e' prog_a env_a  .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x Unt e')) and
     (%$\forall$% x e' prog_a env_a  .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x MkChn e')) and
     (%$\forall$% x e' prog_a env_a  x_c x_m .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Prim (SendEvt x_c x_m)) e')) and
     (%$\forall$% x e' prog_a env_a x_c .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Prim (RecvEvt x_c)) e')) and
     (%$\forall$% x e' prog_a env_a x1 x2 .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Prim (Pair x1 x2)) e')) and
     (%$\forall$% x e' prog_a env_a x_s .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Prim (Lft x_s)) e'))
     (%$\forall$% x e' prog_a env_a x_s .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Prim (Rght x_s)) e')) and
     (%$\forall$% x e' prog_a env_a e_b f x_p .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e' and
         static_traversable env_a prog_a e_b
       then
         static_traversable env_a prog_a (Let x (Prim (Abs f x_p e_b)) e')) and
     (%$\forall$% x e' e_c prog_a env_a.
       if
-        {(NLet x, MNxt, top_label e'),
-          (NLet x, MSpwn, top_label e_c)} %$\subseteq$% prog_a and
+        {(NLet x, MNxt, top_entry_point e'),
+          (NLet x, MSpwn, top_entry_point e_c)} %$\subseteq$% prog_a and
         static_traversable env_a prog_a e_c and
         static_traversable env_a prog_a e'
       then
         static_traversable env_a prog_a (Let x (Spwn e_c) e')) and
     (%$\forall$% x e' prog_a env_a x_se .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         (%$\forall$% x_sc x_m x_c y.
           if
             (SPrm (SendEvt x_sc x_m)) %$\in$% env_a xSE and 
             (SChn x_c) %$\in$% env_a x_sc and
-            static_recv_label env_a e' x_c (NLet y)
+            static_recv_entry_point env_a e' x_c (NLet y)
           then
             (NLet x, ESend x_se, NLet y) %$\in$% F) and
         static_traversable env_a prog_a e'
@@ -2692,22 +2683,22 @@ control flow of sequencing, calling, returning, and spawning are also included t
         static_traversable env_a prog_a (Let x (Sync x_se) e')) and
     (%$\forall$% x e' prog_a env_a x_p .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e' and
       then
         static_traversable env_a prog_a (Let x (Fst x_p) e')) and
     (%$\forall$% x e' prog_a env_a x_p .
       if
-        (NLet x , MNxt, top_label e') %$\in$% prog_a and
+        (NLet x , MNxt, top_entry_point e') %$\in$% prog_a and
         static_traversable env_a prog_a e' and
       then
         static_traversable env_a prog_a (Let x (Snd x_p) e')) and
     (%$\forall$% x e_l e_r e' prog_a env_a x_s .
       if
-        {(NLet x, MCll, top_label e_l),
-          (NLet x, MCll, top_label e_r),
-          (NResult (result_name e_l), MRtn, top_label e'),
-          (NResult (result_name e_r), MRtn, top_label e')} %$\subseteq$% prog_a and
+        {(NLet x, MCll, top_entry_point e_l),
+          (NLet x, MCll, top_entry_point e_r),
+          (NResult (result_name e_l), MRtn, top_entry_point e'),
+          (NResult (result_name e_r), MRtn, top_entry_point e')} %$\subseteq$% prog_a and
         static_traversable env_a prog_a e_l and
         static_traversable env_a prog_a e_r and
         static_traversable env_a prog_a e'
@@ -2716,8 +2707,8 @@ control flow of sequencing, calling, returning, and spawning are also included t
     (%$\forall$%  env_a f x e' x x_a .
       if
         (%$\forall$% f_p x_p e_b . if (SPrm (Abs f_p x_p e_b)) %$\in$% env_a f then 
-          {(NLet x, MCll, top_label e_b),
-            (NResult (result_name e_b), MRtn, top_label e')} %$\subseteq$% prog_a) and
+          {(NLet x, MCll, top_entry_point e_b),
+            (NResult (result_name e_b), MRtn, top_entry_point e')} %$\subseteq$% prog_a) and
 
         static_traversable env_a prog_a e'
       then
@@ -2733,7 +2724,7 @@ needs to be live in the body of the abstraction, for the variable to be consider
 \begin{lstlisting}[language=logic, escapechar=\%]
 
   predicate static_built_on_chan of
-    static_environment -> label_map -> name -> name -> bool:
+    static_environment -> entry_point_map -> name -> name -> bool:
     only
     (%$\forall$% x_c env_a x entr .
       if 
@@ -2775,7 +2766,7 @@ needs to be live in the body of the abstraction, for the variable to be consider
     (%$\forall$% f x_p e_b .
       if
         (SPrm (Abs f x_p e_b)) %$\in$% env_a x and
-        not ((entr (top_label e_b) - {x_p}) = {})
+        not ((entr (top_entry_point e_b) - {x_p}) = {})
       then
         static_built_on_chan env_a entr x_c x)
   \end{lstlisting}
@@ -2790,7 +2781,7 @@ program point.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_live_chan of
-    static_environment -> label_map -> label_map -> name -> program -> bool:
+    static_environment -> entry_point_map -> entry_point_map -> name -> program -> bool:
     only
     (%$\forall$% env_a entr x_c y exit .
       if
@@ -2801,14 +2792,14 @@ program point.
     (%$\forall$% exit x entr e' env_a x_c .
       if 
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e'
       then 
         static_live_chan env_a entr exit x_c (Let x Unt e')) and
     (%$\forall$% exit x entr e' env_a x_c .
       if
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e'
       then 
         static_live_chan env_a entr exit x_c (Let x MkChn e')) and
@@ -2819,7 +2810,7 @@ program point.
           {x_sc} %$\subseteq$% entr (NLet x)) and
         (if static_built_on_chan env_a entr x_c x_m then 
           {x_m} %$\subseteq$% entr (NLet x)) and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e'
       then
         static_live_chan env_a entr exit x_c
@@ -2829,7 +2820,7 @@ program point.
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
         (if static_built_on_chan env_a entr x_c x_r then
           {x_r} %$\subseteq$% entr (NLet x)) and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e'
       then
         static_live_chan env_a entr exit x_c
@@ -2841,7 +2832,7 @@ program point.
           {x_1} %$\subseteq$% entr (NLet x)) and
         (if static_built_on_chan env_a entr x_c x2 then
           {x2} %$\subseteq$% entr (NLet x)) and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e'
       then
         static_live_chan env_a entr exit x_c (Let x (Prim (Pair x1 x2)) e')) and
@@ -2850,7 +2841,7 @@ program point.
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
         (if static_built_on_chan env_a entr x_c x_a then
           {x_a} %$\subseteq$% entr (NLet x)) and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e'
       then
         static_live_chan env_a entr exit x_c (Let x (Prim (Lft x_a)) e')) and
@@ -2859,16 +2850,16 @@ program point.
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
         (if static_built_on_chan env_a entr x_c x_a then
           {x_a} %$\subseteq$% entr (NLet x))
-        entr (top_label e) %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e) %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e
       then
         static_live_chan env_a entr exit x_c (Let x (Prim (Rght x_a)) e)) and
     (%$\forall$%  exit x entr e_b x_p x env_a x_c e' f . 
       if
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
-        (entr (top_label e_b) - {x_p}) %$\subseteq$% entr (NLet x) and
+        (entr (top_entry_point e_b) - {x_p}) %$\subseteq$% entr (NLet x) and
         static_live_chan env_a entr exit x_c e_b and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e'
       then
         static_live_chan env_a entr exit x_c
@@ -2876,7 +2867,7 @@ program point.
     (%$\forall$% exit x entr e' e_c x_c env_a .
       if
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
-        entr (top_label e') %$\cup$% entr (top_label e_c) %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\cup$% entr (top_entry_point e_c) %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e_c and
         static_live_chan env_a entr exit x_c e'
       then
@@ -2887,7 +2878,7 @@ program point.
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
         (if static_built_on_chan env_a entr x_c x_e then
           {x_e} %$\subseteq$% entr (NLet x)) and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e' and
       then
         static_live_chan env_a entr exit x_c
@@ -2897,7 +2888,7 @@ program point.
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
         (if static_built_on_chan env_a entr x_c x_a then
           {x_a} %$\subseteq$% entr (NLet x)) and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e'
       then
         static_live_chan env_a entr exit x_c (Let x (Fst x_a) e')) and
@@ -2907,7 +2898,7 @@ program point.
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
         (if static_built_on_chan env_a entr x_c x_a then
           {x_a} %$\subseteq$% entr (NLet x)) and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e'
       then
         static_live_chan env_a entr exit x_c
@@ -2915,13 +2906,13 @@ program point.
     (%$\forall$% exit x entr e_l x_l e_r x_r env_a x_c x_s e' .
       if 
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
-        (entr (top_label e_l) - {x_l}) %$\subseteq$% entr (NLet x) and
-        (entr (top_label e_r) - {x_r}) %$\subseteq$% entr (NLet x) and
+        (entr (top_entry_point e_l) - {x_l}) %$\subseteq$% entr (NLet x) and
+        (entr (top_entry_point e_r) - {x_r}) %$\subseteq$% entr (NLet x) and
         (if static_built_on_chan env_a entr x_c x_s then
           {x_s} %$\subseteq$% entr (NLet x)) and
         static_live_chan env_a entr exit x_c e_l and
         static_live_chan env_a entr exit x_c e_r and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e'
       then 
         static_live_chan env_a entr exit x_c (Let x (Case x_s x_l e_l x_r e_r) e')) and
@@ -2932,7 +2923,7 @@ program point.
           {x_a} %$\subseteq$% entr (NLet x)) and
         (if static_built_on_chan env_a entr x_c f then
           {f} %$\subseteq$% entr (NLet x)) and
-        entr (top_label e') %$\subseteq$% exit (NLet x) and
+        entr (top_entry_point e') %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e'
       then
         static_live_chan env_a entr exit x_c (Let x (App f x_a) e'))
@@ -2945,7 +2936,7 @@ respect to some entry and and exit functions.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_live_traversable of
-    transition_set -> label_map -> label_map -> transition -> bool:
+    transition_set -> entry_point_map -> entry_point_map -> transition -> bool:
     only
     (%$\forall$% l l' prog_a exit entr . 
       if
@@ -2982,8 +2973,8 @@ respect to some entry and and exit functions.
           ((NLet x_send), ESend x_evt, (NLet x_recv)))
 
   predicate static_live_traceable of
-    static_environment -> transition_set -> label_map -> label_map ->
-    label -> (label -> bool) -> static_path -> bool:
+    static_environment -> transition_set -> entry_point_map -> entry_point_map ->
+    entry_point -> (entry_point -> bool) -> static_path -> bool:
     only
     (%$\forall$% is_end start env_a prog_a entr exit .
       if
@@ -3078,7 +3069,7 @@ analgous lower precision definitions.
       if
         every_two
           (static_live_traceable prog_a entr exit
-            (NLet x_c) (static_send_label env_a e x_c))
+            (NLet x_c) (static_send_entry_point env_a e x_c))
           singular and 
         static_live_chan env_a entr exit x_c e and 
         static_traversable env_a prog_a e
@@ -3090,10 +3081,10 @@ analgous lower precision definitions.
     (%$\forall$% prog_a entr exit x_c env_a e .
       if
         every_two
-          (static_live_traceable prog_a entr exit (NLet x_c) (static_send_label env_a e x_c))
+          (static_live_traceable prog_a entr exit (NLet x_c) (static_send_entry_point env_a e x_c))
           noncompetitive and 
         every_two
-          (static_live_traceable prog_a entr exit (NLet x_c) (static_recv_label env_a e x_c))
+          (static_live_traceable prog_a entr exit (NLet x_c) (static_recv_entry_point env_a e x_c))
           noncompetitive and
           static_live_chan env_a entr exit x_c e and
           static_traversable env_a prog_a e
@@ -3105,7 +3096,7 @@ analgous lower precision definitions.
     (%$\forall$% prog_a entr exit x_c env_a e .
       if
         every_two
-          (static_live_traceable prog_a entr exit (NLet x_c) (static_send_label env_a e x_c))
+          (static_live_traceable prog_a entr exit (NLet x_c) (static_send_entry_point env_a e x_c))
           noncompetitive and
         static_live_chan env_a entr exit x_c e and
         static_traversable env_a prog_a e
@@ -3117,7 +3108,7 @@ analgous lower precision definitions.
     (%$\forall$% prog_a entr exit x_c env_a e .
       if
         every_two
-          (static_live_traceable prog_a entr exit (NLet x_c) (static_recv_label env_a e x_c))
+          (static_live_traceable prog_a entr exit (NLet x_c) (static_recv_entry_point env_a e x_c))
           noncompetitive and 
         static_live_chan env_a entr exit x_c e and
         static_traversable env_a prog_a e
@@ -3257,11 +3248,11 @@ that correlates with the dynamic path is much more challenging.
         pool path1 = Some stt1 and 
         paths_correspond_mod_chan pool convo (Chan path_c x_c) path1 path_a1 and 
         static_live_traceable prog_a entr exit
-          (NLet x_c) (static_send_label env_a prog0 x_c) path_a1 and 
+          (NLet x_c) (static_send_entry_point env_a prog0 x_c) path_a1 and 
         pool path2 = Some stt2 and 
         paths_correspond_mod_chan pool convo (Chan path_c x_c) path2 path_a2 and 
         static_live_traceable prog_a entr exit
-          (NLet x_c) (static_send_label env_a prog0 x_c) path_a2
+          (NLet x_c) (static_send_entry_point env_a prog0 x_c) path_a2
       then
         static_inclusive path_a1 path_a2
   \end{lstlisting}
