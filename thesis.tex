@@ -1621,27 +1621,23 @@ synchronization to receive on a given abstract channel.
         static_recv_entry_point env_a prog0 x_c (NLet x))
   \end{lstlisting}
 
-----Edit End---
-
------low precision // no live channel analysis ----
 Reppy and Xiao's work relies on detecting the liveness of channels in order to gain higher
-precision in the communication analysis.  Since formal proofs are inherently complicated and
-packed with details, I decided to leave out the static analysis initially in order to simplify
-the problem and remove certain complications in formally proving soundness.
+precision in the static classification of communication. Since formal proofs are inherently
+complicated with numerous details, it was easier to first formally prove soundness for a
+version without the added complication of considering livness of channel.
 
-However, I have purposely
-structured the definitions to make adding live channel analysis to the definition fairly  
-straight forward with just a few alterations to the definitions.  In section ? I expand on
-these alterations and outline a strategy that I belive will result in formal proofs of
-soundness,
-although the actual formal proof of the version with live channel analysis has not yet been
-completed.  
+The definitions are purposely structured to allow adding live channel analysis to the
+definition fairly straight forward with just a few alterations.  Section ? expands on
+these alterations and outlines a strategy that is likely to result in formal proofs of
+soundness, although the actual formal proof of the version with live channel analysis is
+not yet been complete.  
 
-For the simpler version, there are four kinds of control edges, indicating how one point in a
-program transitions to another point in a program.  The modes of transition are sequencing,
-calling, spawning, and returning. A transition is a triplet of an entry_point, representing a point in
-the progra, a control edge, and another entry_point.  A static\_point is just an entry_point and a mode,
-without the destination entry_point.  A static\_path is a list of static\_points.  
+For the version lower precision version without the liveness of channels, there are four modes,
+indicating how the entry point in a program transitions to the entry point in its subprograms.
+The modes of transition are sequencing, calling, spawning, and returning. A transition is a
+triplet of an entry point of a program, a mode of transition, and an entry point of a
+subprogram. A static point is just a program's entry point along with the mode it uses to
+transition to its subprogram. A static path is a list of static points.  
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   datatype mode = MNxt | MSpwn | MCll | MRtn
@@ -1653,7 +1649,9 @@ without the destination entry_point.  A static\_path is a list of static\_points
   type static_path = static_point list
   \end{lstlisting}
 
-the static traversable predicate states that a set of transitions describes all the transitions
+----Edit End---
+
+The static traversability means that a set of transitions describes all the transitions
 that might be traversed for a program, given bindings of abstract values.  For a result
 expression, any transition might be traversed.  For all let expressions, except those binding
 to case matching and function application, the sequential transition from the top expression to
