@@ -2628,9 +2628,9 @@ control flow of sequencing, calling, returning, and spawning are also included t
 
   type transition = entry_point * mode * entry_point
 
-  type static_point_entry_point = entry_point * mode
+  type static_point = entry_point * mode
 
-  type static_path = static_point_entry_point list
+  type static_path = static_point list
 \end{lstlisting}
 
 \begin{lstlisting}[language=logic, escapechar=\%]
