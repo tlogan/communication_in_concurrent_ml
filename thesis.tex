@@ -2068,42 +2068,41 @@ syncrhonization on a sending event, then that synchronization is statically iden
 send site by its entry point.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
+  lemma not_static_traceable_sound:
+    %$\forall$% prog0 pool convo path x b e' env stack evn_a convo_a prog_a is_end .
+      if
+        star dynamic_eval ([[] -> (Stt prog0 [->] [])], {}) (pool, convo) and 
+        pool path = Some (Stt (Let x b e') env stack) and 
+        static_eval env_a convo_a prog0 and 
+        static_traversable env_a prog_a prog0 and 
+        is_end (NLet x)
+      then
+        %$\exists$% path_a . 
+          paths_correspond path path_a and 
+          static_traceable prog_a (top_entry_point prog0) is_end path_a
 
-lemma not_static_inclusive_sound:
-  %$\forall$% prog0 pool convo path1 stt1 path2 stt2 path_a1 path_a2 . 
-    if
-      star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo
-      pool path1 = Some stt1 and 
-      pool path2 = Some stt2 and 
-      paths_correspond path1 path_a1 and 
-      paths_correspond path2 path_a2
-    then
-      static_inclusive path_a1 path_a2
+  lemma not_static_inclusive_sound:
+    %$\forall$% prog0 pool convo path1 stt1 path2 stt2 path_a1 path_a2 . 
+      if
+        star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo
+        pool path1 = Some stt1 and 
+        pool path2 = Some stt2 and 
+        paths_correspond path1 path_a1 and 
+        paths_correspond path2 path_a2
+      then
+        static_inclusive path_a1 path_a2
 
-lemma not_static_traceable_sound:
-  %$\forall$% prog0 pool convo path x b e' env stack evn_a convo_a prog_a is_end .
-    if
-      star dynamic_eval ([[] -> (Stt prog0 [->] [])], {}) (pool, convo) and 
-      pool path = Some (Stt (Let x b e') env stack) and 
-      static_eval env_a convo_a prog0 and 
-      static_traversable env_a prog_a prog0 and 
-      is_end (NLet x)
-    then
-      %$\exists$% path_a . 
-        paths_correspond path path_a and 
-        static_traceable prog_a (top_entry_point prog0) is_end path_a
 
-lemma not_static_send_site_sound:
-  %$\forall$% prog0 pool convo path x x_e e' env stack x_sc x_m env' path_c x_c .
-    if
-      star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo and 
-      pool path = Some (Stt (Let x (Sync x_e) e') env stack) and 
-      env x_e = Some (VPrm (SendEvt x_sc x_m) env') and 
-      env' x_sc = Some (VChn (Chan path_c x_c)) and 
-      static_eval env_a convo_a prog0
-    then 
-      static_send_entry_point env_a prog0 x_c (NLet x)
-
+  lemma not_static_send_site_sound:
+    %$\forall$% prog0 pool convo path x x_e e' env stack x_sc x_m env' path_c x_c .
+      if
+        star dynamic_eval [[] -> (Stt prog0 [->] [])] {} pool convo and 
+        pool path = Some (Stt (Let x (Sync x_e) e') env stack) and 
+        env x_e = Some (VPrm (SendEvt x_sc x_m) env') and 
+        env' x_sc = Some (VChn (Chan path_c x_c)) and 
+        static_eval env_a convo_a prog0
+      then 
+        static_send_entry_point env_a prog0 x_c (NLet x)
 \end{lstlisting}
 
 The soundness of lack of static traceability is proved by generalizing
@@ -2398,23 +2397,7 @@ The lemma for the soundness of the generalized form follows from the generalized
 of static traceability. The preservation of static traversability over pools is proved by the
 equivalence between star and its leftward variant, and induction on the leftward variant.
 
-----Edit End---
-
-Lemma static\_traversable\_pool\_preserved\_star follows from induction on star's equivalent
-star\_left and lemma static\_eval\_pool\_preserved\_star, and the information about abstract
-bindings from static\_eval\_pool.
-Lemma not\_static\_bound\_sound follows from static\_eval\_pool\_preserved, which results from
-induction on star concurrent\_eval.
-
-\begin{lstlisting}[language=logic, escapechar=\%]
-  lemma static_eval_pool_preserved:
-    %$\forall$% pool convo pool' convo' env_a convo_a .
-      if
-        star dynamic_eval pool convo pool' convo' 
-        static_eval_pool env_a convo_a pool
-      then
-        static_eval_pool env_a convo_a pool'
-\end{lstlisting}
+-------------
 
 lemma not\_static\_send\_site\_sound is proved using the lemmas   
 send\_chan\_not\_static\_bound\_sound, not\_static\_bound\_sound, and
@@ -2450,10 +2433,22 @@ not\_static\_reachable\_sound.
         pool path = Some (Stt e env stack)
       then
         static_reachable prog0 e
-\end{lstlisting}
+\begin{lstlisting}[language=logic, escapechar=\%]
 
 Both send\_chan\_not\_static\_bound\_sound, and not\_static\_bound\_sound follow from
-static\_eval\_pool\_preserved\_star descrbied previously.
+static\_eval\_pool\_preserved\_star.
+
+\begin{lstlisting}[language=logic, escapechar=\%]
+  lemma static_eval_pool_preserved:
+    %$\forall$% pool convo pool' convo' env_a convo_a .
+      if
+        star dynamic_eval pool convo pool' convo' 
+        static_eval_pool env_a convo_a pool
+      then
+        static_eval_pool env_a convo_a pool'
+\end{lstlisting}
+
+
 The lemma not\_static\_reachable\_sound relies on the helper definition static\_reachable\_left
 and generalizations based on that.
 The definition of static\_reachable is syntax-directed in order to potray a clear connection to
@@ -2461,15 +2456,6 @@ a computable algorithm that can determine the reachable expression from an initi
 However, to show that an expression is reachable from the initial program, it is necessary
 show that each intermediate expression is reachable from the initial expression.  Thus, the
 induction should be from the end to the begininng of the program.
-
-The predicate static\_reachable follows
-from static\_reachable\_left, and it enables unraveling the reachable
-information from the end to the beggining.  Likewise, induction on star\_left is used, instead
-of star, to unravel the semantics from the end to the beginning, keeping the inital program in
-context foreach step. 
-
-The lemma not\_static\_reachable\_sound follows the the definitions of star\_left,
-static\_reachable\_left, its generalizations and the the lemma not\_static\_reachable\_pool\_sound.
 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -2570,6 +2556,15 @@ static\_reachable\_left, its generalizations and the the lemma not\_static\_reac
       then
         static_reachable_over_pool prog0 pool)
 
+  \end{lstlisting}
+
+The predicate static\_reachable follows
+from static\_reachable\_left, and it enables unraveling the reachable
+information from the end to the beggining.  Likewise, induction on star\_left is used, instead
+of star, to unravel the semantics from the end to the beginning, keeping the inital program in
+context foreach step. 
+
+\begin{lstlisting}[language=logic, escapechar=\%]
   lemma not_static_reachable_pool_sound:
     %$\forall$% prog0 pool .
       if
@@ -2579,9 +2574,8 @@ static\_reachable\_left, its generalizations and the the lemma not\_static\_reac
 
   \end{lstlisting}
 
-lemma static\_reachable\_left\_implies\_static\_reachable follows from induction on
-static\_reachable\_left and static\_reachable\_trans, which follows from induction on
-static\_reachable.
+The lemma not\_static\_reachable\_sound follows the the definitions of star\_left,
+static\_reachable\_left, its generalizations and the the lemma not\_static\_reachable\_pool\_sound.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   lemma static_reachable_left_implies_static_reachable:
@@ -2599,6 +2593,11 @@ static\_reachable.
       then
         static_reachable e1 e3
   \end{lstlisting}
+
+
+lemma static\_reachable\_left\_implies\_static\_reachable follows from induction on
+static\_reachable\_left and static\_reachable\_trans, which follows from induction on
+static\_reachable.
 
 
 \section{Static Communication Classification with Channel Liveness }
