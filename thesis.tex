@@ -2397,11 +2397,11 @@ The lemma for the soundness of the generalized form follows from the generalized
 of static traceability. The preservation of static traversability over pools is proved by the
 equivalence between star and its leftward variant, and induction on the leftward variant.
 
--------------
-
-lemma not\_static\_send\_site\_sound is proved using the lemmas   
-send\_chan\_not\_static\_bound\_sound, not\_static\_bound\_sound, and
-not\_static\_reachable\_sound.
+The lemma for soundness of a static point not being a send site is proved using the lemma for
+soundness of a name in a sending event of a syncrhonization not statically binding to a static
+channel value, and the lemma for soundess of a name in any state's environment not statically binding
+to a static value.  Since only send sites are relevant the soundness of lack of static reachability is
+used to ensure that the static point discussed is indeed a send site. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   lemma send_chan_not_static_bound_sound:
@@ -2435,8 +2435,11 @@ not\_static\_reachable\_sound.
         static_reachable prog0 e
 \begin{lstlisting}[language=logic, escapechar=\%]
 
-Both send\_chan\_not\_static\_bound\_sound, and not\_static\_bound\_sound follow from
-static\_eval\_pool\_preserved\_star.
+Both the soundness of a name in a sending event of a syncrhonization not statically binding
+to a static
+channel value, and the soundess of a name in any state's environment not statically binding
+to a static value from the preservation of static evaluation over multiple steps of dynamic
+evaluation.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   lemma static_eval_pool_preserved:
