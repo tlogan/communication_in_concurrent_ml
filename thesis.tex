@@ -1155,11 +1155,12 @@ Additionally, it generates a another state consisting of the spawning expression
 program, the same environment unchagned, and an empty stack.
 
 the evaluation updates is updated with two
-new paths extending the leaf path.  For one, the leaf path is extended with a sequential entry_point
-whose state has the next expression and the environment updated with the unit value bound to
+new paths extending the leaf path.  For one, the leaf path is extended with a sequential
+entry_point whose state has the next expression and the environment updated
+with the unit value bound to
 the let binding name, and the original continuation stack. For the other, the leaf path
-extended with an entry_point indicating a spawning transition.  Its state has the spawned expression,
-the original environment, and an empty continuation stack. 
+extended with an entry_point indicating a spawning transition.  Its state has the spawned
+expression, the original environment, and an empty continuation stack. 
 
 In the case where two leaf paths in the pool correspond to synchronization on the same channel,
 and one synchronizes on a send event and the other synchronizes on a receive event, then
@@ -1962,8 +1963,10 @@ the instantiation of these predicates on the initial program state.
 
 Some aspects of the generalized predicate definitions exist simply to prove that they imply
 instantiations of the original program based predicates. However, the generalized
-definitions exist in order to allow direct access to properties that would otherwise be deeply nested
-in an inductive structure and inaccessble by a predictable number of logical steps for an arbitrary
+definitions exist in order to allow direct access to properties that would
+otherwise be deeply nested
+in an inductive structure and inaccessble by a predictable number of
+logical steps for an arbitrary
 program.
 
 One of the most difficult aspects of formal reasoning is in developing adequate definitions.
@@ -2051,18 +2054,17 @@ theorem static_one_to_one_sound:
 \end{lstlisting}
 
 The soundness theorem for static fan-out classification is proved by a few simpler lemmas and the
-definitions of static and dynaic fan-out classification.  The three main lemmas state the soundness of
-the lack of static traceability, the soundness of the lack of inclusiveness, and the soundness of a
-program point not being a static send site. These lemmas depend on a correspondance between static
-paths and dynamic paths, which is bijective for the lower precision analysis. 
-
-The lemma for soundness of lack of static inclusiveness states that any two dynamic paths traced by
-running a programm correspond to statically inclusive static paths. It follows from a straight
-forward case analysis of static inclusivity. The lemma for soundness of lack of static tracebility
-states that for any dynamic path traced by running a program, there is a corresponding static path
-that is statically traceable.
-The lemma for soundness of a program point not being a static send site states that running a program
-reaches a syncrhonization on a sending event, then that synchronization is statically identified as a
+definitions of static and dynaic fan-out classification.  The three main lemmas state the
+soundness of the lack of static traceability, the soundness of the lack of inclusiveness, and
+the soundness of a program point not being a static send site. These lemmas depend on a
+correspondance between static paths and dynamic paths, which is bijective for the lower
+precision analysis. The lemma for soundness of lack of static inclusiveness states that any two
+dynamic paths traced by running a programm correspond to statically inclusive static paths. It
+follows from a straight forward case analysis of static inclusivity. The lemma for soundness of
+lack of static tracebility states that for any dynamic path traced by running a program, there
+is a corresponding static path that is statically traceable. The lemma for soundness of a
+program point not being a static send site states that running a program reaches a
+syncrhonization on a sending event, then that synchronization is statically identified as a
 send site by its entry point.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -2105,14 +2107,14 @@ lemma not_static_send_site_sound:
 \end{lstlisting}
 
 The soundness of lack of static traceability is proved by generalizing
-static traversability and static evalulation over pools, such that information about a point in the
-program can be deduced by a fixed number of logical steps regardless of the location of the program
-point or the size of the program. Without such generalization, it would be possibe to prove soundness
-for a fixed program, but not any arbitrary program.
+static traversability and static evalulation over pools, such that information about a point in
+the program can be deduced by a fixed number of logical steps regardless of the location of the
+program point or the size of the program. Without such generalization, it would be possibe to
+prove soundness for a fixed program, but not any arbitrary program.
 
 The generalization of static traversability is composed of in static traversable over values,
-static traversability over environments, static traversability over stacks, and static traversabiliy
-over pools.
+static traversability over environments, static traversability over stacks, and static
+traversabiliy over pools.
 In most cases, it simply states that a subprogram of some semantic element is also statically
 traversable. The exception is in the case of  static traversability over a non-empty stack, where
 there is an additional condition that the transition from a result point to the entry_point of
@@ -2220,16 +2222,17 @@ depending on the program.
 
 The transitions described by the various versions of static traversability depend on static
 environments in order to look up the control flow in the application case. The static environment
-results from the static evaluation of the program that is dynamically evaluated. Thus, generalized
+results from the static evaluation of the program that is dynamically evaluated. Thus,
+generalized
 versions of static evaluation enable further deduction about transitions.
 As with the generalized versions of static traversability,
 the generalized versions of static evaluation are designed to preserve static environments across
-dynamic evaluations of pools. They also provide direct access to binding information from names to
-static values in a fixed number of logical steps. Static evaluation of programs correlates program
-syntax to static values, but the generalized static evaluations correlate dynamic semantic structures,
-like, value, environments, and stacks, to static values. The abstraction function relates dynamic
-values to static values and helps the larger goal of relating dynamic semantic elements to static
-values and static environments.    
+dynamic evaluations of pools. They also provide direct access to binding information from names
+to static values in a fixed number of logical steps. Static evaluation of programs correlates
+program syntax to static values, but the generalized static evaluations correlate dynamic
+semantic structures, like, value, environments, and stacks, to static values. The abstraction
+function relates dynamic values to static values and helps the larger goal of relating dynamic
+semantic elements to static values and static environments.    
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   fun abstract of dynamic_value -> static_value:
@@ -2328,20 +2331,10 @@ values and static environments.
   \end{lstlisting}
 
 
-----Edit End----
-
-Lemma not\_static\_traceable\_sound follows from the generalized lemma
-not\_static\_traceable\_pool\_sound, which contains the generalized premise of
-static\_traversable\_pool. The generalized lemma follows from lemma
-static\_traversable\_pool\_preserved\_star, the predicate star\_left and its equivalence to star,
-and induction on star\_left. star\_left inductively defines a a binary relation as unraveling
-from right to left, rather than left to right.  In the case of steps through a program, it
-unravels the execution from the end to the beginning, which enables deducing traceablity of a
-path from its slightly shorter predecessor.  
-
-The lemma also relies on the definition of static\_traversable\_pool
-and lemma static\_traversable\_pool\_preserved to deduce abstract transition information about the
-pool containing the traced path.
+A variant of star that inducts toward the left of the transitive connection is helpful for
+relating dynamic traceability to static traceability, since it mirrors the direction that way
+paths grow, which influenced the choice of induction in the definition of static
+traceability.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate star_left of ('a -> 'a -> bool) -> 'a -> 'a -> bool:
@@ -2350,16 +2343,16 @@ pool containing the traced path.
       star_left r z z) and
     (%$\forall$% r x y z .
       if
-        star_left R x y and R y z
+        star_left r x y and r y z
       then
-        star_left R x z)
+        star_left r x z)
 
   lemma star_implies_star_left:
     %$\forall$% r x y .
       if
-        star R x z
+        star r x z
       then
-        star_left R x z
+        star_left r x z
 
   lemma star_left_trans:
     %$\forall$% r x y z .
@@ -2370,9 +2363,11 @@ pool containing the traced path.
         star_left r x z
 \end{lstlisting}
 
-lemma star\_implies\_star\_left follows from induction on star and star\_left\_trans,
-which follows from induction on the latter star\_left.  A similar approach deduces the
-fact that star\_left implies star.
+The soundness of lack of static traceability follows from the generalized lemma
+of soundness of lack of static traceability over pools, which contains the generalized premise of
+static traceability, and also it follows from the lemma of preservation of static
+traversability over pools from an initial pool to any pool resulting from multiple steps of
+dynamic evaluation.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   lemma not_static_traceable_pool_sound:
@@ -2397,6 +2392,13 @@ fact that star\_left implies star.
       then
         static_traversable_pool env_a prog_a pool 
 \end{lstlisting}
+
+
+The lemma for the soundness of the generalized form follows from the generalized definitions
+of static traceability. The preservation of static traversability over pools is proved by the
+equivalence between star and its leftward variant, and induction on the leftward variant.
+
+----Edit End---
 
 Lemma static\_traversable\_pool\_preserved\_star follows from induction on star's equivalent
 star\_left and lemma static\_eval\_pool\_preserved\_star, and the information about abstract
@@ -2613,7 +2615,8 @@ can be enhanced with additional information about the liveness of channels.  By 
 analysis to only the sub portion of the program wher a particular channel is live, the analysis
 is able to ignore duplicate instances of channels, thus gain higher precision. 
 
-The sub portion of the program is represented by a static program containing all reachable nodes in the
+The sub portion of the program is represented by a static program containing all
+reachable nodes in the
 part of a program where a given channel is live, and transitive transitions to any of those
 nodes from the channel creation point.  To maintain connetions between a channel creation
 portion of the program and a thread that received the channel as a message, transitions from
