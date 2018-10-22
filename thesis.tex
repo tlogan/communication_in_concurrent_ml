@@ -2451,15 +2451,14 @@ evaluation.
         static_eval_pool env_a convo_a pool'
 \end{lstlisting}
 
-
-The lemma not\_static\_reachable\_sound relies on the helper definition static\_reachable\_left
-and generalizations based on that.
-The definition of static\_reachable is syntax-directed in order to potray a clear connection to
+The lemma for soundness of lack of static rechability relies on the a reformulation of
+static rechability that inducts on the left program.
+The definition of static reachability is syntax-directed in order to potray a clear connection to
 a computable algorithm that can determine the reachable expression from an initial program.
-However, to show that an expression is reachable from the initial program, it is necessary
+However, to show that an expression is reachable from the initial program, it is necessary to
 show that each intermediate expression is reachable from the initial expression.  Thus, the
-induction should be from the end to the begininng of the program.
-
+induction needs to enable unraveling the goals from the end to the begininng of the program,
+maintaining the intial program state in context for each subgoal .
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_reachable_left of program -> program -> bool:
@@ -2561,11 +2560,8 @@ induction should be from the end to the begininng of the program.
 
   \end{lstlisting}
 
-The predicate static\_reachable follows
-from static\_reachable\_left, and it enables unraveling the reachable
-information from the end to the beggining.  Likewise, induction on star\_left is used, instead
-of star, to unravel the semantics from the end to the beginning, keeping the inital program in
-context foreach step. 
+The soundness of lack of reachbility follows the the definitions a generalized form of soundness over
+pools.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   lemma not_static_reachable_pool_sound:
@@ -2577,8 +2573,11 @@ context foreach step.
 
   \end{lstlisting}
 
-The lemma not\_static\_reachable\_sound follows the the definitions of star\_left,
-static\_reachable\_left, its generalizations and the the lemma not\_static\_reachable\_pool\_sound.
+
+The soudness over pools follows from the lemma that the leftward static reachability implies the
+rightward (and syntax-directed) static reachability, and the equivalence between star and the
+leftward star.  It relies on induction of the leftward star and constructs the static rechability
+proposition using the leftward definition.  
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   lemma static_reachable_left_implies_static_reachable:
@@ -2598,10 +2597,12 @@ static\_reachable\_left, its generalizations and the the lemma not\_static\_reac
   \end{lstlisting}
 
 
-lemma static\_reachable\_left\_implies\_static\_reachable follows from induction on
-static\_reachable\_left and static\_reachable\_trans, which follows from induction on
-static\_reachable.
+The lemma that the leftward variant of static reachability implies the syntax-directed static
+reachability follows from induction on the leftward static reachability and the transitivity of static
+reachability, which follows from induction on static reachability.
 
+
+----Edit End----
 
 \section{Static Communication Classification with Channel Liveness }
 
