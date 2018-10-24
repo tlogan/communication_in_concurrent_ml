@@ -384,7 +384,7 @@ constraints.
 For a subset of Concurrent ML without event combinators, Reppy and  Xiao developed an
 efficient algorithmic analysis that determines for each channel all abstract threads that send
 and receive on it.  The algorithm depends on each primitive operation in the program being
-program_ided with a program point.  A sequence of program points ordered in a valid execution
+labeled with a program point.  A sequence of program points ordered in a valid execution
 sequence forms a control path.  Distinction between threads in a program can be inferred from
 whether or not their control paths diverge.  
 
@@ -1154,12 +1154,12 @@ unit value, leaves the stack unchanged, and reduces the program to the next subp
 Additionally, it generates a another state consisting of the spawning expression's child
 program, the same environment unchagned, and an empty stack.
 
-the evaluation updates is updated with two
+the evaluation is updated with two
 new paths extending the leaf path.  For one, the leaf path is extended with a sequential
-program_id whose state has the next expression and the environment updated
+program point whose state has the next expression and the environment updated
 with the unit value bound to
 the let binding name, and the original continuation stack. For the other, the leaf path
-extended with an program_id indicating a spawning transition.  Its state has the spawned
+extended with an program point indicating a spawning transition.  Its state has the spawned
 expression, the original environment, and an empty continuation stack. 
 
 In the case where two leaf paths in the pool correspond to synchronization on the same channel,
@@ -1890,7 +1890,7 @@ program, since they are ordered or cannot occur in the same run of a program.
 \end{lstlisting}
 
 
-The static one shot classification means that there is at most one attempt
+The static one-shot classification means that there is at most one attempt
 to syncrhonize to send on a static channel in any run of a given program.
 
 The static one-to-one classification means that there is at most one thread that attempts to
@@ -2117,8 +2117,9 @@ static traversability over environments, static traversability over stacks, and 
 traversabiliy over pools.
 In most cases, it simply states that a subprogram of some semantic element is also statically
 traversable. The exception is in the case of  static traversability over a non-empty stack, where
-there is an additional condition that the transition from a result point to the program_id of
-the continuation program exists in the static program. This information is consistent with static
+there is an additional condition that the transition from a result site to the program identifier
+of the continuation program exists in the static program.
+This information is consistent with static
 traversability over programs, but provides direct information about a transition in the
 static program, which would otherwise only be decucible by a varying number of logical steps
 depending on the program.
@@ -2434,7 +2435,7 @@ used to ensure that the static point discussed is indeed a send site.
         pool path = Some (Stt e env stack)
       then
         static_reachable prog0 e
-\begin{lstlisting}[language=logic, escapechar=\%]
+\end{lstlisting}
 
 Both the soundness of a name in a sending event of a syncrhonization not statically binding
 to a static
@@ -2970,15 +2971,12 @@ program identifier.
         static_live_chan env_a entr exit x_c (Let x (App f x_a) e'))
   \end{lstlisting}
 
-----Edit End----
-
-The predicate static\_live\_traversable states that an abstraction transition exists in some
-static program, and is considered live with respect to given entry and exit functions.  The predicate
-static\_live\_traceable states that an entire abstract path exists in some static program and is live with
-respect to some entry and and exit functions.   
+The static liveness of a transition is described by checking if a transition exists in a whole
+static program, and if it meets certain criteria with respect to the entry and exit liveness
+functions. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
-  predicate static_live_traversable of
+  predicate static_live_transition of
     transition_set -> program_id_map -> program_id_map -> transition -> bool:
     only
     (%$\forall$% l l' prog_a exit entr . 
@@ -2987,35 +2985,40 @@ respect to some entry and and exit functions.
         not (exit l = {}) and
         not (entr l' = {})
       then
-        static_live_traversable prog_a entr exit (l, MNxt, l')) and
+        static_live_transition prog_a entr exit (l, MNxt, l')) and
     (%$\forall$% l l' prog_a exit entr .
       if
         (l, MSpwn, l') %$\in$% prog_a and 
         not (exit l = {}) and
         not (entr l' = {})
       then
-        static_live_traversable prog_a entr exit (l, MSpwn, l')) and
+        static_live_transition prog_a entr exit (l, MSpwn, l')) and
     (%$\forall$% l l' prog_a exit entr .
       if
         (l, MCll, l') %$\in$% prog_a and
         (not (exit l = {})) or (not (entr l' = {}))
       then
-        static_live_traversable prog_a entr exit (l, MCll, l')) and
+        static_live_transition prog_a entr exit (l, MCll, l')) and
     (%$\forall$% l l' prog_a entr exit .
       if
         (l, MRtn, l') %$\in$% prog_a and
         not (entr l' = {})
       then
-        static_live_traversable prog_a entr exit (l, MRtn, l')) and
+        static_live_transition prog_a entr exit (l, MRtn, l')) and
     (%$\forall$% x_send x_evt x_recv prog_a entr exit .
       if
         ((NLet x_send), ESend x_evt, (NLet x_recv)) %$\in$% prog_a and 
         {x_evt} %$\subseteq$% (entr (NLet x_send))
       then
-        static_live_traversable prog_a entr exit
+        static_live_transition prog_a entr exit
           ((NLet x_send), ESend x_evt, (NLet x_recv)))
+  \end{lstlisting}
 
-  predicate static_live_traceable of
+The static traceability for the higher precision analysis states that an entire static path can be
+trace through some static program and is live with respect to some entry and and exit functions.
+
+\begin{lstlisting}[language=logic, escapechar=\%]
+  predicate static_traceable of
     static_environment -> transition_set -> program_id_map -> program_id_map ->
     program_id -> (program_id -> bool) -> static_path -> bool:
     only
@@ -3023,27 +3026,26 @@ respect to some entry and and exit functions.
       if
         is_end start
       then
-        static_live_traceable prog_a entr exit start is_end []) and
+        static_traceable prog_a entr exit start is_end []) and
     (%$\forall$% prog_a entr exit start middle path is_end mode. 
       if
-        static_live_traceable prog_a entr exit start (%$\lambda$% l . l = middle) path and 
+        static_traceable prog_a entr exit start (%$\lambda$% l . l = middle) path and 
         (is_end end) and
-        static_live_traversable prog_a entr exit (middle, mode, end) 
+        static_live_transition prog_a entr exit (middle, mode, end) 
       then
-        static_live_traceable prog_a entr exit start is_end (path @ [(middle, mode)])
+        static_traceable prog_a entr exit start is_end (path @ [(middle, mode)])
   \end{lstlisting}
 
 As with the lower precision analysis, the higher precision analysis relies on recognizing
-whether or not two paths can actually occur within in a single run of a program.  The predicate
-static\_inclusive describes relationship between paths for those paths to possible occur within
-the same run of the program.  In contrast to the analogous definition for the lower precision
-alysis, the higher precision definition needs to consider paths with the containing the
+whether or not two paths can actually occur within in a single run of a program. The static
+inclusiveness states which paths might occur within the same run of the program.
+In contrast to the analogous definition for the lower precision
+alysis, the higher precision definition needs to consider paths containing the
 sending mode.  As mentioned earlier, the path from the synchronization on sending to the
 syncrhonization on receiving is necessary to ensure that all uses of a channel are reachable
-from the channel's creation point.  The singular predicate states that only one of the two
-given paths can occur in a run of program.  The noncompetitve predicate states that the two
+from the channel's creation site.  The singularness means that only one of the two
+given paths can occur in a run of program.  The noncompetitveness means that the two
 given paths do not compete in any run of a program. 
-
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_inclusive of
@@ -3081,7 +3083,6 @@ given paths do not compete in any run of a program.
       then
         singular path1 path2)
 
-
   predicate noncompetitive of static_path -> static_path -> bool:
     only
     (%$\forall$% path1 path2 . 
@@ -3098,12 +3099,8 @@ given paths do not compete in any run of a program.
       )
   \end{lstlisting}
 
-
-The predicates static\_one\_shot, static\_one\_to\_one, static\_fan\_out, and static\_fan\_in describe
-the communication topologies with higher precision that the original definitions by using the
-predicates based on static programs trimmed down to contain only the parts where a given channel is
-live. The general structure of the predicate definitions is overall similar to that of the
-analgous lower precision definitions. 
+The communication topology classifications are described using the liveness properties, but are
+otherwise similar to the lower precision classifications.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_one_shot of static_environment -> program -> name -> bool:
@@ -3111,7 +3108,7 @@ analgous lower precision definitions.
     (%$\forall$% prog_a entr exit x_c env_a e . 
       if
         every_two
-          (static_live_traceable prog_a entr exit
+          (static_traceable prog_a entr exit
             (NLet x_c) (static_send_site env_a e x_c))
           singular and 
         static_live_chan env_a entr exit x_c e and 
@@ -3124,10 +3121,10 @@ analgous lower precision definitions.
     (%$\forall$% prog_a entr exit x_c env_a e .
       if
         every_two
-          (static_live_traceable prog_a entr exit (NLet x_c) (static_send_site env_a e x_c))
+          (static_traceable prog_a entr exit (NLet x_c) (static_send_site env_a e x_c))
           noncompetitive and 
         every_two
-          (static_live_traceable prog_a entr exit (NLet x_c) (static_recv_program_id env_a e x_c))
+          (static_traceable prog_a entr exit (NLet x_c) (static_recv_program_id env_a e x_c))
           noncompetitive and
           static_live_chan env_a entr exit x_c e and
           static_traversable env_a prog_a e
@@ -3139,7 +3136,7 @@ analgous lower precision definitions.
     (%$\forall$% prog_a entr exit x_c env_a e .
       if
         every_two
-          (static_live_traceable prog_a entr exit (NLet x_c) (static_send_site env_a e x_c))
+          (static_traceable prog_a entr exit (NLet x_c) (static_send_site env_a e x_c))
           noncompetitive and
         static_live_chan env_a entr exit x_c e and
         static_traversable env_a prog_a e
@@ -3151,7 +3148,7 @@ analgous lower precision definitions.
     (%$\forall$% prog_a entr exit x_c env_a e .
       if
         every_two
-          (static_live_traceable prog_a entr exit (NLet x_c) (static_recv_program_id env_a e x_c))
+          (static_traceable prog_a entr exit (NLet x_c) (static_recv_program_id env_a e x_c))
           noncompetitive and 
         static_live_chan env_a entr exit x_c e and
         static_traversable env_a prog_a e
@@ -3159,7 +3156,7 @@ analgous lower precision definitions.
         static_many_to_one env_a e x_c)
   \end{lstlisting}
 
-
+----Edit End----
 
 \section{Reasoning Stategy for Channel Liveness}
 To prove soundess of the commounication topology classification, it should be possible to use
@@ -3278,7 +3275,7 @@ that correlates with the dynamic path is much more challenging.
       then
         (%$\exists$% path_a . 
           paths_correspond_mod_chan pool convo (Chan path_c x_c) path path_a and 
-          static_live_traceable prog_a entr exit (NLet x_c) is_end path_a)
+          static_traceable prog_a entr exit (NLet x_c) is_end path_a)
 
   lemma not_static_inclusive_sound:
     %$\forall$% prog0 pool convo env_a entr exit x_c prog_a convo_a
@@ -3290,11 +3287,11 @@ that correlates with the dynamic path is much more challenging.
         static_eval env_a convo_a prog0 and 
         pool path1 = Some stt1 and 
         paths_correspond_mod_chan pool convo (Chan path_c x_c) path1 path_a1 and 
-        static_live_traceable prog_a entr exit
+        static_traceable prog_a entr exit
           (NLet x_c) (static_send_site env_a prog0 x_c) path_a1 and 
         pool path2 = Some stt2 and 
         paths_correspond_mod_chan pool convo (Chan path_c x_c) path2 path_a2 and 
-        static_live_traceable prog_a entr exit
+        static_traceable prog_a entr exit
           (NLet x_c) (static_send_site env_a prog0 x_c) path_a2
       then
         static_inclusive path_a1 path_a2
