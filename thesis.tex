@@ -2759,8 +2759,8 @@ For the liveness of channel analysis, it is necessary to track any name that bin
 containing a a channel of interest, since any use of that name could indicate a use of the
 channel. In the case where the tracked name might be a function abstraction, the channel simply
 needs to be live in the body of the abstraction, for the variable to be considered built on it.
-An entry map contains the names built on the channel that might be live at then entrance of each
-program identifier.
+An entry function contains the names built on the channel that might be live at then entrance
+of each program identifier.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
 
@@ -2813,12 +2813,12 @@ program identifier.
   \end{lstlisting}
 
 
-Using the predicate static\_built\_on\_chan, the predicate static\_live\_chan completes the
-description of channel liveness in terms of entry functions and exit functions. The entry
-function maps a program point to a set of variables built on the given channel, if those
-variables are live at the entry of that program point.  The exit map maps a program point to a
+The static liveness of a channel is described in terms of entry functions and
+exit functions. The entry function maps a program point to a set of variables built on
+the given channel, if those variables are live at the entry of that program identifier.
+The exit function maps a program point to a
 set of variables built on the given channel, if those variabes are live at the exit of that
-program point.
+program identifier.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_live_chan of
@@ -2969,6 +2969,8 @@ program point.
       then
         static_live_chan env_a entr exit x_c (Let x (App f x_a) e'))
   \end{lstlisting}
+
+----Edit End----
 
 The predicate static\_live\_traversable states that an abstraction transition exists in some
 static program, and is considered live with respect to given entry and exit functions.  The predicate
