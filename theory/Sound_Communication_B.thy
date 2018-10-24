@@ -236,11 +236,11 @@ lemma not_static_inclusive_sound: "
 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path1 \<Longrightarrow>
+  static_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path1 \<Longrightarrow>
   
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-  static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path2 \<Longrightarrow>
+  static_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path2 \<Longrightarrow>
 
   static_inclusive path1 path2
 "
@@ -273,10 +273,10 @@ lemma static_equality_sound: "
   
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path1 \<Longrightarrow>
+  static_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path1 \<Longrightarrow>
   
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-  static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path2 \<Longrightarrow>
+  static_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path2 \<Longrightarrow>
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
 
   \<pi>1 = \<pi>2
@@ -298,7 +298,7 @@ shows "
   E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow> isEnd (top_label e') \<longrightarrow>
   (\<exists> path . 
     paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
-    static_live_traceable F Ln Lx (NLet xC) isEnd path)"
+    static_traceable F Ln Lx (NLet xC) isEnd path)"
   sorry
 
 lemma not_static_traceable_sound: "
@@ -310,7 +310,7 @@ lemma not_static_traceable_sound: "
   isEnd (NLet x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
-    static_live_traceable F Ln Lx (NLet xC) isEnd path
+    static_traceable F Ln Lx (NLet xC) isEnd path
 "
   sorry
 (*  use induction on star_left concur_step along with deep definition of static_traversable *)
@@ -325,7 +325,7 @@ lemma send_not_static_traceable_sound: "
   static_traversable V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
-    static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC) pathSync"
+    static_traceable F Ln Lx (NLet xC) (static_send_label V e xC) pathSync"
  apply (unfold is_send_path.simps; auto)
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in label_not_send_site_sound; auto?)
   apply (frule not_static_traceable_sound; auto?)
@@ -335,7 +335,7 @@ done
 
 
 theorem static_one_shot_sound': "
-  every_two (static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC)) singular \<Longrightarrow>
+  every_two (static_traceable F Ln Lx (NLet xC) (static_send_label V e xC)) singular \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   static_traversable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -370,7 +370,7 @@ TO DO LATER:
 *)
 
 theorem noncompetitive_send_to_ordered_send: "
-  every_two (static_live_traceable F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
+  every_two (static_traceable F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   static_traversable V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -397,7 +397,7 @@ theorem static_fan_out_sound: "
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two (static_live_traceable F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
+   every_two (static_traceable F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
    static_traversable V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>

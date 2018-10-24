@@ -3159,16 +3159,21 @@ otherwise similar to the lower precision classifications.
 ----Edit End----
 
 \section{Reasoning Stategy for Channel Liveness}
-To prove soundess of the commounication topology classification, it should be possible to use
+To prove soundess of the communication topology classification, it should be possible to use
 previous techniques of generalizing propositions over pools and other semantic components,
 along with finding equivalent representaitons of propositions that vary in the inductive
 subcomponent. One thing that will make carrying out the formal proof particulary tricky is
-that paths in the dynamic semantics do not correspond one to one with abstract paths in the
-static program used for static analysis.  Essentially, it will be necessary to show that static
-properties that hold for some abstract path are related in some fashion to dyamic properties
-that hold for a dynamic path which corresponds to the abstract path module the channel under
-analysis.  These reasoning strategies are demonstrated by the theorem static\_one\_shot\_sound.
+that dynamic paths in the dynamic semantics need to corresponding to static paths from
+the trimmed static programs, which might also contain sending transitions, instead of the dynamic
+paths spawning transitions.  The correspondance between these dynamic paths and static paths
+is not bijective, as it is for the lower precision analysis. However, finding a satisfactory
+correspondance for each dynamic and static path is critical for proving soundness.
 
+Essentially, it will be necessary to show that static
+properties that hold for some static path are related in some fashion to dyamic properties
+that hold for a dynamic path which corresponds to the static path modulo the channel under
+analysis. These reasoning strategies are demonstrated by the theorem for soudness of
+one-shot classification.
 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -3182,18 +3187,90 @@ analysis.  These reasoning strategies are demonstrated by the theorem static\_on
         one_shot pool (Chan path_c x_c)
   \end{lstlisting}
 
-The theorem static\_one\_shot\_sound depends on correlating dynamic paths with abstract paths,
-which is described by the predicates paths\_correspond and paths\_correspond\_mod\_chan.
-Additionally the theorem follows from not\_static\_traceable\_sound,
-not\_static\_inclusive\_sound and not\_send\_site\_sound.  The reasoning for the latter one, is
-identical to that of the lower precision analysis, but the the reasoning for the former two is
-significantly more complicated and not yet completed.  The complication arises from the
-correlation between dynamic paths and abstract paths.  The proofs depend on finding an abstract
-path that depends on a given dynamic path.  In the lower precision analysi the
-correlation was straight forward.  There was only one possible abstract path to choose for it
-to correlate with the given dynamic path.  In the higher precision analysis, the relationship
-between the two kinds of paths is not so simple, and finding a description of the abstract
-that correlates with the dynamic path is much more challenging.  
+The theorem for soudness of one-shot classification depends on
+correlating dynamic paths with static paths.
+
+\begin{lstlisting}[language=logic, escapechar=\%]
+  predicate paths_correspond of dynamic_path -> static_path -> bool:
+    only
+    paths_correspond [] []
+      and
+    (%$\forall$% path path_a x .
+      if
+        paths_correspond path path_a
+      then
+        paths_correspond
+          (path @ [DNxt x])
+          (path_a @ [(NLet x, MNxt)])
+      ) and
+    (%$\forall$% path path_a x .
+      if
+        paths_correspond path path_a
+      then
+        paths_correspond
+          (path @ [DSpwn x])
+          (path_a @ [(NLet x, MSpwn)])
+      ) and
+    (%$\forall$% path path_a x .
+      if
+        paths_correspond path path_a
+      then
+        paths_correspond
+          (path @ [DCll x])
+          (path_a @ [(NLet x, MCll)])
+      ) and
+    (%$\forall$% path path_a x .
+      if
+        paths_correspond path path_a
+      then
+        paths_correspond
+          (path @ [DRtn x])
+          (path_a @ [(NResult x, MRtn)])
+      )
+
+  predicate paths_correspond_mod_chan of 
+    pool -> conversation -> channel ->
+    dynamic_path -> static_path -> bool:
+    only
+    (%$\forall$% pool path_c x_c path_sfx stt path_a convo .
+      if
+        pool (path_c @ (DNxt x_c) # path_sfx) = Some stt and
+        paths_correspond ((DNxt x_c) # path_sfx) path_a
+      then
+        paths_correspond_mod_chan
+          (pool, convo) (Chan path_c x_c)
+          (path_c @ (DNxt x_c) # path_sfx) path_a
+      ) and
+    (%$\forall$% pool path_r x_r path_sfx stt  path_s x_s x_se e_sy env_sy stack_sy
+      x_re e_ry env_ry stack_ry c_c convo c path_a_re path_a_sfx . 
+      if
+        pool (path_r @ (DNxt x_r) # path_sfx) = Some stt and 
+        pool path_s = Some (Stt (Let x_s (Sync x_se) e_sy) env_sy stack_sy) and
+        pool path_r = Some (Stt (Let x_r (Sync x_re) e_ry) env_ry stack_ry) and
+        {(path_s, c_c, path_r)} %$\subseteq$% convo and 
+        dynamic_built_on_chan_var env_ry c x_r and 
+        paths_correspond_mod_chan pool convo c path_s path_a_pre and
+        paths_correspond path_sfx path_a_sfx
+      then
+        paths_correspond_mod_chan pool convo c
+          (path_r @ (DNxt x_r) # path_sfx)
+          (path_a_pre @ (NLet x_s, ESend x_se) # (NLet x_r, MNxt) # path_a_sfx)
+      )
+
+\end{lstlisting}
+
+Additionally the soudness theorem follows from the soundness of lack of static traceability, the
+soundness of lack of static inclusiveness, and the soundness of a program site not being a
+sending site. 
+The reasoning about the sending site is identical to that of the lower precision analysis, but
+the the reasoning for the former two is significantly more complicated and not yet completed.
+The complication arises from the
+correlation between dynamic paths and static paths.  The proofs depend on finding a static 
+path that depends on a given dynamic path. In the lower precision analysis the
+correlation was straight forward. There was only one possible static path to choose for it
+to correlate with the given dynamic path. In the higher precision analysis, the relationship
+between the two kinds of paths is not so simple, and finding a description of the static path
+that correlates with the dynamic path is much more challenging.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate paths_correspond of dynamic_path -> static_path -> bool:
