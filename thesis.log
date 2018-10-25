@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  25 OCT 2018 09:56
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  25 OCT 2018 10:21
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -846,26 +846,26 @@ LaTeX Font Info:    Font shape `T1/fvm/m/it' in size <9> not available
 LaTeX Font Info:    Font shape `T1/fvm/m/sl' will be
 (Font)              scaled to size 7.65005pt on input line 455.
  [8] [9] [10] [11] [12] [13] [14] [15] [16]
-Overfull \hbox (0.92992pt too wide) in paragraph at lines 898--902
+Overfull \hbox (0.92992pt too wide) in paragraph at lines 896--900
 []\T1/LinuxLibertineT-TLF/m/n/10 The static re-la-tions are de-fined with a syn
 -tax di-rected struc-ture, which gives strong
  []
 
 [17] [18] [19] [20]
-Overfull \hbox (1.82973pt too wide) in paragraph at lines 1060--1070
+Overfull \hbox (1.82973pt too wide) in paragraph at lines 1058--1068
 []\T1/LinuxLibertineT-TLF/m/n/10 The eval-u-a-tion of ex-pres-sions for ap-pli-
 ca-tion, and match-ing re-sult in call-ing, which
  []
 
 [21] [22] [23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34] [35]
 [36] [37] [38] [39] [40] [41]
-Overfull \hbox (12.77339pt too wide) in paragraph at lines 2121--2126
+Overfull \hbox (12.77339pt too wide) in paragraph at lines 2123--2128
 []\T1/LinuxLibertineT-TLF/m/n/10 The sound-ness of lack of static trace-abil-it
 y is proved by gen-er-al-iz-ing static traversabil-
  []
 
 [42] [43] [44] [45] [46] [47] [48] [49] [50]
-Overfull \hbox (3.55743pt too wide) in paragraph at lines 2633--2638
+Overfull \hbox (3.55743pt too wide) in paragraph at lines 2643--2648
 \T1/LinuxLibertineT-TLF/m/n/10 pre-ci-sion anal-y-sis, which can bet-ter dif-fe
 r-en-ti-ate be-tween dis-tinct chan-nels. A trimmed
  []
@@ -874,7 +874,7 @@ r-en-ti-ate be-tween dis-tinct chan-nels. A trimmed
 [66] <cml_graph.pdf, id=225, 737.75626pt x 1155.31625pt>
 File: cml_graph.pdf Graphic file (type pdf)
  <use cml_graph.pdf>
-Package pdftex.def Info: cml_graph.pdf used on input line 3391.
+Package pdftex.def Info: cml_graph.pdf used on input line 3404.
 (pdftex.def)             Requested size: 295.09727pt x 462.11832pt.
 
 [67] [68 <./cml_graph.pdf>] (./thesis.aux)
@@ -885,7 +885,7 @@ LaTeX Warning: There were undefined references.
 Here is how much of TeX's memory you used:
  6734 strings out of 493014
  96367 string characters out of 6133351
- 418086 words of memory out of 5000000
+ 422086 words of memory out of 5000000
  10136 multiletter control sequences out of 15000+600000
  54864 words of font info for 63 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -903,7 +903,7 @@ local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/te
 xlive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/20
 16/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texm
 f-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (69 pages, 419954 bytes).
+Output written on thesis.pdf (69 pages, 419506 bytes).
 PDF statistics:
  279 PDF objects out of 1000 (max. 8388607)
  194 compressed objects within 2 object streams
