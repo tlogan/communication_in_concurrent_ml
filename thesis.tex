@@ -893,7 +893,7 @@ checker was satisfied.
 \section{Formal Theory}
 
 The definitions and theorems of this work were constructed in the formal language of Isabelle/HOL,
-to enable mechanical verification of the correctness of the proofs.  However, the formal logic used
+to enable mechanical verification of the correctness of the proofs. However, the formal logic used
 for presentation in this paper has been somewhat modified from Isabelle's syntax. 
 To aid the development of formal proofs, the analyses are stated using non-algorithmic specifications.
 The static relations are defined
@@ -908,24 +908,24 @@ In order to relate the static analyses to the operational semantics, I
 borrowed Reppy and Xiao's strategy of stepping between sets of control paths and
 their associated terms.
 
-It is neccessary to prove additional flow soundness theorems en route to
-proving communication topology soundness.  Restricting the grammar to a form that requires
-every abstraction and application to be bound to a name would allow the operational
-semantics to maintain static term information necessary for proofs of flow soundness \cite{}.
-The semantics would be defined as an environment based operational semantics, rather than a
-substitution based operational semantics.  By avoiding simplification of terms in the
-operational semantics, it is possible to relate the abstract values of the analysis to the
-values produced by the operational semantics, which in turn is relied on to prove 
+It is neccessary to prove additional soundness theorems about the static semantics en route to
+proving soundness of communication classification. Restricting the grammar to a form that requires
+every abstraction and application to be bound to a name allows the operational
+semantics to maintain static program information necessary for proofs of soundness \cite{}.
+The semantics are defined as an environment based operational semantics, rather than a
+substitution based operational semantics. By avoiding simplification of terms in the
+operational semantics, it is possible to relate the abstract values of the static semantics to the
+values produced by the dynamic semantics, which in turn is relied on to prove 
 soundness of the static semantics.
 
-I incorporated the restricted grammar and the environment based semantics into this work.
-The restricted grammar is impractical for a programer to write, yet it is still practical for
+The restricted ANF grammar is impractical for a programer to write, yet it is still practical for
 a language under automated analysis since there is a straightforward procedure to transform
-more flexible grammars into the restricted form as demonstrated by Flanagan et al [2].
-Additionally, the restricted grammar melds nicely with the control path semantics.  Instead of
-defining additional meta-syntax for program points of primitive operations, I simply use
-the required names of the restricted grammar to identify program points, and control paths
-simply be sequences of let bound names. A modification of the example Server
+more flexible and user-friendly grammars into the
+restricted form as demonstrated by Flanagan et al \cite{}.
+Additionally, the restricted grammar melds nicely with the control path semantics.
+Instead of relying on additional meta-syntax for program points of primitive operations, the analysis 
+can simply use the required names of the restricted grammar to identify locations in the program.
+Control paths are simply sequences of let bound names. A modification of the example Server
 implementation in ML illustrates the restrictive grammar applied to Concurrent ML.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
