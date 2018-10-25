@@ -221,19 +221,18 @@ competing threads may exists, therefore perform additional checks. Additionally,
 overhead in sharing data between processors due to memory hierarchy designs \cite{}. 
 
 One way to lower synchronization and communication costs is to use specialized implementations
-for channels that have no more than one thread ever sending or receiving on them.  These
+for channels that never have more than one thread ever sending or receiving on them. These
 specialized implementations would avoid unnecessary checks for competing threads.
 Concurrent ML does not feature multiple kinds of channels distinguished by their communication
 topologies, i.e. the number of threads that may end up sending or receiving on the channels.
 However, channels can be classified into various topologies simply by counting the number of
 threads per channel during the execution of a program.  A many-to-many channel has any number
 of sending threads and receiving threads;
-a one-to-many channel has one or no sending thread and
+a one-to-many channel has at most one sending thread and
 any number of receiving threads;
-a many-to-one channel has any number of sending threads and one or
-no receiving threads; a one-to-one channel has one or none of each;
-a one-shot channel has
-exactly one sending attempt.
+a many-to-one channel has any number of sending threads and at most one receiving thread;
+a one-to-one channel has one or none of each;
+a one-shot channel has exactly one sending attempt.
 
 The implementation of \lstinline{Serv} is annotated to indicate the communication topologies
 derived from its usage. Since there are four threads that make calls to the server, the
@@ -279,16 +278,19 @@ one-shot.
   \end{lstlisting}
 
 \section{Implementation}
-We describe possible implementations of specialized and unspecialized Concurrent ML using
+Some hypothetical implementations of specialized and generic Concurrent ML illustrate opportunities
+for cheaper synchronization. These implementaitons use 
 feasible low-level thread-centric features such as wait and poll.  The thread-centric approach
 allows us to focus on optimizations common to many implementations by decoupling the
-implementation of communication features from thread scheduling and management.  Depending on
-the low level features provided by existing language implementations, Concurrent ML could be
-implemented in terms of lower level features, as is the case in SML/NJ and MLton.  It could
-also be implemented as primitive features within a compiler and runtime or interpreter.
-Analyzing and optimizing Concurrent ML would require treating the language as an object, so
-implementing its features as primitives would make the most sense.  Thus, one can think of the
-implementation shown here as an intermediate representation presented with concrete syntax.
+implementation of communication features from thread scheduling and management. However, a
+lower level view or scheduler-centric view of synchronization might offer more opportunites
+for optimization.
+
+Depending on the features provided by existing language implementations,
+Concurrent ML could be implemented in as a library, as in the case in SML/NJ and MLton.
+It could also be implemented as features of a language within a compiler and runtime or interpreter.
+Thus, the implementations shown here can be viewed either as a library or as an intermediate
+representation within a compiler or interpreter presented with concrete syntax.
 
 \begin{lstlisting}[language=ML, escapechar=\%]
   signature CHANNEL = sig
@@ -299,48 +301,50 @@ implementation shown here as an intermediate representation presented with concr
     end     
 \end{lstlisting}
 
-
 The benefits of specialization would be much more significant in multiprocessor
-implementations rather than single processor implementations.  A single processor
+implementations than in uniprocessor implementations. A uniprocessor
 implementation could avoid overhead caused by contention to acquire locks, by coupling the
-implementation of channels with scheduling and only scheduling send and recv operations when no
-other pending operations have yet to start or have already finished.  Reppy's implementation of
+implementation of channels with scheduling and only scheduling the sending and receiving
+operations when no other pending operations have yet to start or have already finished.
+Reppy's implementation of
 Concurrent ML uses SML/NJ's first class continuations to implement scheduling and communication
-as one with low overhead.  However, a multiprocessor implementation would allow threads to run
-on different processors for increased parallelism and would not be able to mandate when threads
-are attempted relative to others without losing the parallel advantage.  The cost of trying to
-achieve parallelism is increased overhead due to contention over acquiring locks.
+as one with very low overhead. In contrast, a multiprocessor implementation would allow threads to run
+on different processors for increased parallelism, therefore it would not be able to mandate when
+threads attempt synchronization relative to others without losing the parallel advantage.
+The cost of trying to achieve parallelism is increased overhead due to contention over acquiring
+synchronization rights. 
 
 A channel can be in one of three states.  Either some threads are trying to send through it,
-some threads are trying to receive from it, or no threads are trying to send or receive.
-Additionally a channel is composed of a mutex lock, so that send and recv operations can yield
-to each other when updating the channel state.  When multiple threads are trying to send on a
+some threads are trying to receive from it, or no threads are trying to send or receive on it.
+Additionally a channel is composed of a mutex lock, so that sending and receiving operations can yield
+to each other when updating the channel state. When multiple threads are trying to send on a
 channel, the channel is associated with a queue consisting of messages to be sent, along with
 conditions waited on by sending threads. When multiple threads are trying to receive on a
-channel, the channel is associated with a queue consisting of initially empty cells accessible
-by receiving threads and conditions waited on by the receiving threads. The three states are
-represented by the datatype chan\_content.  The channel is represented by the channel datatype,
-which is composed of a reference to chan\_content and a mutex lock.  
+channel, the channel is associated with a queue consisting of initially empty cells that are accessible
+by receiving threads and conditions waited on by the receiving threads. The channel content holds the
+three potential states and their associated content of queues and conditions.
+The channel is composed of the channel content and also a mutext lock that regulates access to
+the channel content.
 
-The send operation acquires the channel's lock to ensure that it updates the channel based on
+The sending operation acquires the channel's lock to ensure that it updates the channel based on
 any one of its latest state.  If there are threads trying to receive from the channel, the send
 operation dequeues an item from the state's associated queue.  The item consists of a condition
 waited on by a receiving thread and an empty cell that can be accessed by the receiving thread.
 It deposits the message in the cell and signals on the condition, updates the channel state to
 inactive if there are no further receiving threads waiting, then releases the lock, signals on
 the condition and returns the unit value.  If there are no threads trying to receive from the
-channel, the send operation updates the channel state to that of trying to send with an
+channel, the sending operation updates the channel state to that of trying to send with an
 additional condition and message in the associated queue.  It releases the lock and waits on
 the enqueued condition.  Once a receiving thread signals on the same condition, the send
 operation returns with the unit value.
 
-The recv operation acquires the channel's lock to ensure that it updates the channel based on
+The receiving operation acquires the channel's lock to ensure that it updates the channel based on
 any one of its latest state.  If there are threads trying to send on the channel, the recv
 operation dequeues an item from the state's associated queue.  The item consists of a condition
 waited on by a sending thread along with a message to be sent.  It signals the condition and
 updates the channel state to inactive if there are no further sending threads waiting, then
 releases the lock and returns the sent message.  If there are no threads trying to send on the
-channel, the recv operation updates the channel state to that of trying to receive with an
+channel, the receiving operation updates the channel state to that of trying to receive with an
 additional condition and empty cell in the associated queue.  It releases the lock and waits on
 the enqueued condition.  Once a sending thread signals on the same condition, the recv
 operation returns with the value deposited in the cell by a sending thread.
@@ -412,11 +416,11 @@ contention for locks.  A channel is composed of a lock and one of three possible
 the case for many-to-many channels.  However, the state of a thread trying to send need only be
 associated with one condition and one message.  
 
-The send operation checks if the channel's state is inactive and tries to use the
+The sending operation checks if the channel's state is inactive and tries to use the
 compare-and-swap operator to transactionally update the state of the channel to that of trying to
 send.  If successful, it simply waits on sendCond, the condition that a receiving thread will
 signal on, and then returns the unit value.  If the transactional update fails and the state is
-that of threads trying to receive on the channel, then the send operation acquires the lock,
+that of threads trying to receive on the channel, then the sending operation acquires the lock,
 then dequeues an item from the associated queue where the item consists of recvCond, a
 condition waited on by a receiving thread, and a cell for depositing the message to that
 receiving thread.  It deposits the message in the cell, updates the state to inactive there are
@@ -424,13 +428,13 @@ no further items on the queue, then releases the lock.  Then it signals on the c
 returns the unit value. The lock is acquired after the state is determined to be that of
 threads trying to receive, since the expectation is that the current thread is the only one
 that tries to update the channel from that state.  If the communication topology analysis were
-incorrect and and there were actually multiple threads that could call the send operation, then
+incorrect and and there were actually multiple threads that could call the sending operation, then
 there might be data races.  Likewise, due to the expectation of a single thread sending on the
-channel, the send operation should never witness the state of threads already trying to send.
+channel, the sending operation should never witness the state of threads already trying to send.
 
-The recv operation acquires the lock and checks the state of the channel, just as the recv
+The receiving operation acquires the lock and checks the state of the channel, just as the recv
 operation for many-to-many channels.  If the channel is in a state where there is no already
-trying to send, then it behaves the same as the recv operation of many-to-many channels. If
+trying to send, then it behaves the same as the receiving operation of many-to-many channels. If
 there is already a thread trying to receive, then it updates the state to inactive and releases
 the lock.  Then it signals on the state's associated condition, which is waited on by a sending
 thread, and returns the states' associated message.
@@ -544,7 +548,7 @@ a one-to-one channel can also be in one of three possible states, but there is n
 lock. Additional, none of the states are associated with queues.  Instead, there is a possible
 state of a thread trying to send, with a condition and a message, or a possible state of a
 thread trying to receive with a condition and an empty cell, or a possible inactive state.
-The send operation checks if the channel's state is inactive and tries to use the
+The sending operation checks if the channel's state is inactive and tries to use the
 compare-and-swap operator to transactionally update the state of the channel to that of trying to
 send.  If successful, it simply waits on sendCond, the condition that a receiving thread will
 signal on, and then returns the unit value.  If the transactional update fails and the state is
@@ -553,10 +557,10 @@ associated cell, updates the channel state to inactive, then signals on the stat
 condition and returns the unit value.  If the communication analysis for the channel is
 correctly one-to-one, then there should be no other thread trying update the state from the
 state of a thread trying to receive, and no thread modifies that particular state, so no locks
-are necessary.  Likewise, the send operation should never witness the state of another thread
+are necessary.  Likewise, the sending operation should never witness the state of another thread
 already trying to send, if it is truly one-to-one.
 
-The recv operation checks if the channel's state is inactive and tries to use the
+The receiving operation checks if the channel's state is inactive and tries to use the
 compare-and-swap operator to transactionally update the state of the channel to that of trying
 to receive.  If successful, it simply waits on recvCond, the condition that a sending thread
 will signal on after it deposits a message, and then returns the deposited message.  If the
@@ -565,7 +569,7 @@ then it updates the channel state to inactive, then signals on the state's assoc
 condition and returns the message associated with the sending thread.  If the communication
 analysis for the channel is correctly one-to-one, then there should be no other thread trying
 update the state from the state of a thread trying to send, and no thread modifies that
-particular state, so no locks are necessary.  Likewise, the recv operation should never
+particular state, so no locks are necessary.  Likewise, the receiving operation should never
 witness the state of another thread already trying to receive, if it is truly one-to-one.
 
 \begin{lstlisting}[language=ML, escapechar=\%]
@@ -614,12 +618,12 @@ A one-shot channel consists of the same possible states as a one-to-one channel,
 additionally associated with a mutex lock, to account for the fact that multiple threads may
 try to receive on the channel, even though only at most one message is ever sent.
 
-The send operation is like that of one-to-one channels, except that if the state is that of a
+The sending operation is like that of one-to-one channels, except that if the state is that of a
 thread trying to receive, it simply deposits the message and signals on the associated
 condition, without updating the channel's state to inactive, which would be unnecessary, since
 no further attempts to send are expected.
 
-The recv operation checks if the channel's state is inactive and tries to use the
+The receiving operation checks if the channel's state is inactive and tries to use the
 compare-and-swap operator to transactionally update the state of the channel to that of trying
 to receive.  If successful, it simply waits on recvCond, the condition that a sending thread
 will signal on after it deposits a message, and then returns the deposited message.  If the
@@ -681,8 +685,8 @@ determined that the number of receiving threads is at most one.  The one-shot-to
 composed of a possibly empty cell, a condition for a sending thread to wait on, and a condition
 for a receiving thread to wait on.
 
-The send operation deposits the message in the cell, signals on the recvCond, waits on the
-sendCond, and then returns the unit value.  The recv operation waits on the recvCond, signals
+The sending operation deposits the message in the cell, signals on the recvCond, waits on the
+sendCond, and then returns the unit value.  The receiving operation waits on the recvCond, signals
 on the sendCond and then returns the deposited message.
 
 
