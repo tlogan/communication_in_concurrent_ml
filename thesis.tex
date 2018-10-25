@@ -55,7 +55,7 @@
 \pagenumbering{arabic}
 
 
-\section{Abstract}
+\section{Introduction}
 For this master's thesis, I have developed a formal framework for analysis of
 a concurrent language, along with an initial formal analysis.  The language under analysis is
 a very simplied version of \textit{Concurrent ML} \cite{concurrent_ml}. The formal analysis
@@ -79,7 +79,7 @@ syntactic transliteration. In this formal theory, the dynamic semantics of Concu
 defined by a small-step operational semantics. The static semantics is an instance of 0CFA
 \cite{0cfa}, defined in terms of nonequational constraints \cite{program_analysis}.
 
-\section{Introduction}
+\section{Conurrent Language}
 In programming languages, concurreny is a program structuring technique that allows evaluation
 steps to hop back and forth between disjoint syntactc structures within a program. It is useful
 when conceptually distinct tasks need to overlap in time, but are easier to understand if they
@@ -209,9 +209,10 @@ evaluates.
   val thenEvt : 'a event * ('a -> 'b event) -> 'b event
   \end{lstlisting}
 
-\section{Syncrhonization Implementation}
-The implementation of synchronization requires determining which threads should 
-synchronization, and which threads should be dispatched. The more amount of information needed
+\section{Syncrhonization}
+Synchronization of sending threads and receiving threads
+requires determining which threads should wait, and which threads should be dispatched.
+The more amount of information needed
 to determine this scheduling, the higher the performance penality. A uniprocessor
 implementation of synchronization can have very little penalty. Since only one thread can make
 progress at a time, only one thread requests synchronization at a time, meaning the scheduler
@@ -227,16 +228,20 @@ Concurrent ML does not feature multiple kinds of channels distinguished by their
 topologies, i.e. the number of threads that may end up sending or receiving on the channels.
 However, channels can be classified into various topologies simply by counting the number of
 threads per channel during the execution of a program.  A many-to-many channel has any number
-of sending threads and receiving threads; a one-to-many channel has one or no sending thread and
-any number of receiving threads; a many-to-one channel has any number of sending threads and one or
-no receiving threads; a one-to-one channel has one or none of each; a one-shot channel has
+of sending threads and receiving threads;
+a one-to-many channel has one or no sending thread and
+any number of receiving threads;
+a many-to-one channel has any number of sending threads and one or
+no receiving threads; a one-to-one channel has one or none of each;
+a one-shot channel has
 exactly one sending attempt.
 
 The implementation of \lstinline{Serv} is annoted to indicate the communication topologies
 derived from its usage. Since there are four threads that make calls to the server, the
 server's particular \lstinline{reqCh} has four senders.  Servers are created with only one
 thread listening for requests, so the \lstinline{reqCh} of this server has just one receiver.
-So the server's \lstinline{reqCh} is classified as many-to-one. Each use of call creates a distinct
+So the server's \lstinline{reqCh} is classified as many-to-one.
+Each use of call creates a distinct
 new channel \lstinline{replCh} for receiving data.  The function call receives on the channel
 once and the server sends on the channel once, so each instance of \lstinline{replCh} is
 one-shot.
@@ -273,221 +278,6 @@ one-shot.
 
     end
   \end{lstlisting}
-
-The right implementation choice can be determined by counting the number threads used during
-the execution of a program. However, some programs run forever, so it may never be possible to
-count all the threads. Instead, by using a static analysis it's possible to determine an
-estimate from the finite structure of programs. A static analysis that describes communication
-topologies of channels has practical benefits in at least two ways.  It can highlight which
-channels are candidates for optimized implementations of communication; or in a language
-extension allowing the specification of specialized channels, it can conservatively verify
-their correct usage. Without a static analysis to check the usage of the special channels, one
-could inadvertently use a one-shot channel for a channel that has multiple senders, thus
-violating the intended semantics. 
-
-The utility of the static analysis additionally depends on it being precise, sound, and
-computable. The analysis is precise iff there exist programs about which the analysis
-describes information that is not directly observable. The analysis is sound iff the
-information it describes about a program is the same or less precise than the dynamic
-semantics of the program. The analysis is computable iff there exists an algorithm that
-determines all the values described by the analysis on any input program.
-
-There are a large number of static analyses with a variety of practical uses. The most familiar
-kind of static analyses are type systems.  A type system statically evaluates expressions
-in programs to abstract categories known as types. In a sound type system, if an expression is
-well typed, then it can be dynamically evaluated (without error). Some expressions cannot be
-typed, indicating the possiblity that the expression cannot be dynamically evaluated. Type
-systems can improve debugging by pointing out errors that may be infrequently executed. They
-can also improve execution speeds of safe languages by rendering dynamic checks unnecessary.  
-
-Other kinds of analysis are useful for describing opportunities for program optimizations.
-A data flow analysis describes how data flows from one point to another in the program.
-A data flow analysis for available expressions tracks the expressions have already been
-computed by every program point. Using this information, redundant code can be detected and
-removed to improve performance.
-
-In the following example, an analysis for available expressions would track
-\lstinline{(!x + 1)} and \lstinline{(w - 3)} to remain available from line 5 all the way until
-the end of the program, meaning those two redudandt expressions in line 8 can be swapped with
-the results of their evaluation. In contrast, \lstinline{(!y + 2)} would be tracked as avaiable
-from line 5 until line 7. It would be unavailable after line 7 because the number in
-\lstinline{y} is modifided in line 7, changing the how the expression would evaluate after
-that.
-
-\begin{lstlisting}[language=ML, escapechar=\%]
-  1. let
-  2.   val w = 4
-  3.   val x = ref 1
-  4.   val y = ref 2
-  5.   val z = (!x + 1) + (!y + 2) + (w - 3)
-  6.   val w = 1 in
-  7.   y := 0;
-  8.   (!y + 2) - (!x + 1) * (w - 3) end
-  \end{lstlisting}
-
-
-
-A dataflow analysis for liveness tracks the set of stored valued that are used in the
-remainder of the program. Using this information, unused code can
-be detected and removed to improve performance. There are other uses of this analysis, as well.
-In this work, the liveness of channels is tracked to distinguish between distinct channels with
-the same name. 
-
-In the following example, an analysis for liveness of values stored in names and references
-would track \lstinline{x} to be live from line 7 until line 5. Above line 5 there are no uses
-of \lstinline{x}, so it would not be live. Since the name \lstinline{x} at line 2 is not used,
-line 2 can be removed. The reference contained in \lstinline{z} would be
-live from line 7 until line 6, where it is assigned. There is no deference of lstinline{z}
-above line 6, so it not live from there until the beginning. Since the reference contained in
-\lstinline{z} is not live at line 4, line 4 can be removed.
-
-\begin{lstlisting}[language=ML, escapechar=\%]
-  1. let 
-  2.   val x = 1  
-  3.   val y = 2
-  4.   val z = ref (4 * 73)
-  5.   val x = 4 in 
-  6.   z := 1; 
-  7.   x * !z end
-  \end{lstlisting}
-
-The information at each program point is derived from control structures in the program, which
-dictate how information flows between program points. Some uses of control structures are
-literally represented in the syntax, such as the sequencing of namings and assignments in the
-previous examples. Other uses of control structures may be indirectly represented through
-names. Function application is a control structure that allows a calling piece of code to
-flow into a function abstraction's code.  Function abstractions can be named, which allows
-multiple pieces of code to all flow into into the same section of code. The name adds an
-additional step in to uncover control structures, and determine data flow.
-Additionally, in languages with higher order functions and recursion, such as those in the Lisp
-and ML families, it may be impossible to determine all the function abstractions that
-expressions resolve to. However, a control flow analysis can reveal a good
-approximation of the control structures and values that have been obfuscated by higher order
-function abstractions.  Uncovering the the control structures depends on resolving expressions
-to values, and resolving expressions to values depends on on unconvering the control
-structures. The mutual dependency means that control flow analysis is a form of
-static semantics that describes approximate evaluations of programs. In this work, control flow
-analysis for tracking certain kinds of values, like channels and events, in addition to
-constructing precise data flow analysis. 
-
---------
-
-Analyses can be described in a variety of ways.  An algorithm that take programs as input and
-produce behavior information as output are necessary for automation in compilers.  A
-specification that states a proposition in terms of programs and execution information may be
-more suitable for showing clarity of meaning and correctness with respect to the operational
-semantics.  The specification can be translated into an algorithm involving two parts.  The
-first part generates a comprehensive set of data structures representing constraints of all
-program points, mirroring the specification's description, and the second part solves the
-constraints.
-
-For a subset of Concurrent ML without event combinators, Reppy and  Xiao developed an
-efficient algorithmic analysis that determines for each channel all abstract threads that send
-and receive on it.  The algorithm depends on each primitive operation in the program being
-labeled with a program point.  A sequence of program points ordered in a valid execution
-sequence forms a control path.  Distinction between threads in a program can be inferred from
-whether or not their control paths diverge.  
-
-The algorithm proceeds in multiple steps that produce intermediate data structures, used for
-efficient lookup in the subsequent steps.  It starts with a control-flow analysis[12, 13] that
-results in multiple mappings. One mapping is from variables to abstract values that may bind to
-the variables.  Another mapping is from channel-bound variables to abstract values that are
-sent on the respective channels.  Another is from function-bound variables to abstract values
-that are the result of respective function applications.  It constructs a control-flow graph 
-with possible paths for pattern matching and thread spawning determined directly from the
-primitives used in the program.  Relying on information from the mappings to abstract values,
-it constructs the possible paths of execution via function application and channel
-communication.  It uses the graph for live variable analysis of channels, which limits the
-scope for the remaining analysis.  Using the spawn and application edges of the control-flow
-graph, the algorithm then performs a data-flow analysis to determine a mapping from program
-points to all possible control paths leading into the respective program points.  Using the
-CFA's mappings to abstract values, the algorithm determines the program points for sends and
-receives per channel variable.  Then it uses the mapping to control paths to determine all
-control paths that send or receive on each channel, from which it classifies channels as
-one-shot, one-to-one, many-to-one, one-to-many, or many-to-many.
-
-Reppy and Xiao informally prove soundness of their analysis by showing that their analysis
-claims that more than one thread sends (or receives) on a channel if the execution allows more
-than one to send (or receive) on a that channel.  The proof of soundness depends on the
-ability to relate the execution of a program to the static analysis of a program.  The static
-analysis describes threads in terms of control paths, since it can only describe threads in
-terms of statically available information. Thus, in order to describe the relationship between
-the threads of the static analysis and the operational semantics, the operational semantics is
-defined as stepping between sets of control paths paired with terms.  Divergent control paths
-are added whenever a new thread is spawned.
-
-The syntax, semantics, and analysis need to describe many details.  Proving propositions
-relating all of these definitions requires manipulation of all those details.  To ensure the
-correctness of proofs, it is necessary to check that there are no subtle errors in the
-definitions or proofs.  Proofs in general require many subtle manipulations of symbols.  The
-difference between a false statement and a true statement can often be difficult to spot, since
-the two may be very similar lexically.  However, a mechanical proof checker, such as the one in
-Isabelle, has no difficulty discerning between valid and invalid derivations of statements.
-Mechanical checking of proofs can notify us of errors in the proofs or definitions far better
-and faster than manual checking.  I have already benefitted from Isabelle's proof checker in
-order to correctly define the language semantics and abstract value flow analysis for this
-work.  While trying to prove soundness of the analysis, the proof assistant would not accept my
-proof unless I provided derivation of facts that I believed to be false.  I determined that my
-intuition was correct but my definitions had errors.  After correcting the errors, I was able
-to complete the proof, such that the proof checker was satisfied.
-
-
-\section{Hypothesis}
-I will derive a static analysis from Reppy and Xiao's algorithm, describing for each channel in
-a program, all threads that possibly send or receive on the channel.  Additionally, it will
-classify channels as one-shot, one-to-one, one-to-many, many-to-one, or many-to-many.  Instead of
-Serrano's algorithm[18] for the CFA used in Reppy and Xiao's algorithm, I will define a
-constraint-based specification and algorithm for the CFA.  The method of determining topologies
-will be fairly similar to Reppy and Xiao's.  The analysis of this work will also consider event
-combinators, which are not considered in Reppy and Xiao's work.  I will show that the static
-analysis is informative by demonstrating programs for which the static analysis classifies some
-channels as many-to-one, one-to-many, and so on.  I will show that the static analysis is sound by
-showing that for any program, the execution of the program results in the same sends and
-receives or fewer compared to the possible sends and receives described by the analysis.  I
-will show that the static analysis is computable by demonstrating the existence of a
-computable function that takes any program as input and generates all sends and receives
-described by the analysis.
-
-
-\section{Evaluation}
-The main contributions of this work will be formal and mechanically verified proofs of
-communication properties of Concurrent ML, including an analysis derived from Reppy and Xiao's
-analysis.  This work extends that of Reppy and Xiao by demonstrating formal proofs of soundness
-and extending the analysis to encompass event combinators for choice and transactions.
-
-
-\section{Architecture}
-To enable mechanical verification of the correctness of the proofs, I will construct the
-semantics, analysis and theorems in the formal language of Isabelle/HOL.  To aid the
-development of formal proofs, I will design the analysis as a declarative specification as
-opposed to an algorithm.  However, the declarative analysis will make the proof of
-computability less direct.  To aid the scrutiny of the theorems' adequacy, I will express the
-definitions and propositions with the fewest number of structures, judgements, inferences rules
-, and axioms necessary. In order to relate the analysis to the operational semantics, I will
-borrow Reppy and Xiao's strategy of stepping between sets of control paths tied to terms.
-
-In this thesis work, I'm interested in communication topology soundness, rather than flow
-soundness.  Nevertheless, I will need to prove additional flow soundness theorems en route to
-proving communication topology soundness.  Restricting the grammar to a form that requires
-every abstraction and application to be bound to a variable would allow the operational
-semantics to maintain static term information necessary for proofs of flow soundness[3, 5].
-The semantics would be defined as an environment based operational semantics, rather than a
-substitution based operational semantics.  By avoiding simplification of terms in the
-operational semantics, it will be possible to relate the abstract values of the analysis to the
-values produced by the operational semantics, which in turn is relied on to prove flow
-soundness.
-
-
-I will incorporate the restricted grammar and the environment based semantics into this work.
-The restricted grammar is impractical for a programmer to write, yet it is still practical for
-a language under automated analysis since there is a straight forward procedure to transform
-more flexible grammars into the restricted form as demonstrated by Flanagan et al [2].
-Additionally, the restricted grammar melds nicely with the control path semantics.  Instead of
-defining additional meta-syntax for program points of primitive operations, I can simply use
-the required variables of the restricted grammar to identify program points, and control paths
-will simply be sequences of let bound variables. A modification of Listing 2 illustrates the
-restrictive grammar applied to Concurrent ML.
-
 
 \section{Implementation}
 We describe possible implementations of specialized and unspecialized Concurrent ML using
@@ -616,7 +406,8 @@ operation returns with the value deposited in the cell by a sending thread.
   \end{lstlisting}
 
 
-Implementation of one-to-many channels, compared to that of many-to-many channels, requires fewer
+Implementation of one-to-many channels, compared to that of many-to-many channels,
+requires fewer
 steps to synchronize and can execute more steps outside of critical regions, which reduces
 contention for locks.  A channel is composed of a lock and one of three possible states, as is
 the case for many-to-many channels.  However, the state of a thread trying to send need only be
@@ -920,16 +711,175 @@ on the sendCond and then returns the deposited message.
   \end{lstlisting}
 
 
-
 Although there are proofs that the communication topologies are sound with respect to the
 semantics, it would additionally be important to have proofs that the above specialized
 implementations are equivalent to the many-to-many implementation under the assumption of
 particular communication topologies.
 
 
-\section{Objectives}
-If an algorithm for synchronization is specific to a maxiumum number of threads, it may be more
-efficient than an algorithm that is generic for any number of threads.  For instance, if there
+\section{Static Analysis}
+The right implementation choice can be determined by counting the number threads used during
+the execution of a program. However, some programs run forever, so it may never be possible to
+count all the threads. Instead, by using a static analysis it's possible to determine an
+estimate from the finite structure of programs. A static analysis that describes communication
+topologies of channels has practical benefits in at least two ways.  It can highlight which
+channels are candidates for optimized implementations of communication; or in a language
+extension allowing the specification of specialized channels, it can conservatively verify
+their correct usage. Without a static analysis to check the usage of the special channels, one
+could inadvertently use a one-shot channel for a channel that has multiple senders, thus
+violating the intended semantics. 
+
+The utility of the static analysis additionally depends on it being precise, sound, and
+computable. The analysis is precise iff there exist programs about which the analysis
+describes information that is not directly observable. The analysis is sound iff the
+information it describes about a program is the same or less precise than the dynamic
+semantics of the program. The analysis is computable iff there exists an algorithm that
+determines all the values described by the analysis on any input program.
+
+There are a large number of static analyses with a variety of practical uses. The most familiar
+kind of static analyses are type systems.  A type system statically evaluates expressions
+in programs to abstract categories known as types. In a sound type system, if an expression is
+well typed, then it can be dynamically evaluated (without error). Some expressions cannot be
+typed, indicating the possiblity that the expression cannot be dynamically evaluated. Type
+systems can improve debugging by pointing out errors that may be infrequently executed. They
+can also improve execution speeds of safe languages by rendering dynamic checks unnecessary.  
+
+Other kinds of analysis are useful for describing opportunities for program optimizations.
+A data flow analysis describes how data flows from one point to another in the program.
+A data flow analysis for available expressions tracks the expressions have already been
+computed by every program point. Using this information, redundant code can be detected and
+removed to improve performance.
+
+In the following example, an analysis for available expressions would track
+\lstinline{(!x + 1)} and \lstinline{(w - 3)} to remain available from line 5 all the way until
+the end of the program, meaning those two redudandt expressions in line 8 can be swapped with
+the results of their evaluation. In contrast, \lstinline{(!y + 2)} would be tracked as avaiable
+from line 5 until line 7. It would be unavailable after line 7 because the number in
+\lstinline{y} is modifided in line 7, changing the how the expression would evaluate after
+that.
+
+\begin{lstlisting}[language=ML, escapechar=\%]
+  1. let
+  2.   val w = 4
+  3.   val x = ref 1
+  4.   val y = ref 2
+  5.   val z = (!x + 1) + (!y + 2) + (w - 3)
+  6.   val w = 1 in
+  7.   y := 0;
+  8.   (!y + 2) - (!x + 1) * (w - 3) end
+  \end{lstlisting}
+
+
+
+A dataflow analysis for liveness tracks the set of stored valued that are used in the
+remainder of the program. Using this information, unused code can
+be detected and removed to improve performance. There are other uses of this analysis, as well.
+In this work, the liveness of channels is tracked to distinguish between distinct channels with
+the same name. 
+
+In the following example, an analysis for liveness of values stored in names and references
+would track \lstinline{x} to be live from line 7 until line 5. Above line 5 there are no uses
+of \lstinline{x}, so it would not be live. Since the name \lstinline{x} at line 2 is not used,
+line 2 can be removed. The reference contained in \lstinline{z} would be
+live from line 7 until line 6, where it is assigned. There is no deference of lstinline{z}
+above line 6, so it not live from there until the beginning. Since the reference contained in
+\lstinline{z} is not live at line 4, line 4 can be removed.
+
+\begin{lstlisting}[language=ML, escapechar=\%]
+  1. let 
+  2.   val x = 1  
+  3.   val y = 2
+  4.   val z = ref (4 * 73)
+  5.   val x = 4 in 
+  6.   z := 1; 
+  7.   x * !z end
+  \end{lstlisting}
+
+The information at each program point is derived from control structures in the program, which
+dictate how information flows between program points. Some uses of control structures are
+literally represented in the syntax, such as the sequencing of namings and assignments in the
+previous examples. Other uses of control structures may be indirectly represented through
+names. Function application is a control structure that allows a calling piece of code to
+flow into a function abstraction's code.  Function abstractions can be named, which allows
+multiple pieces of code to all flow into into the same section of code. The name adds an
+additional step in to uncover control structures, and determine data flow.
+Additionally, in languages with higher order functions and recursion, such as those in the Lisp
+and ML families, it may be impossible to determine all the function abstractions that
+expressions resolve to. However, a control flow analysis can reveal a good
+approximation of the control structures and values that have been obfuscated by higher order
+function abstractions.  Uncovering the the control structures depends on resolving expressions
+to values, and resolving expressions to values depends on on unconvering the control
+structures. The mutual dependency means that control flow analysis is a form of
+static semantics that describes approximate evaluations of programs. In this work, control flow
+analysis for tracking certain kinds of values, like channels and events, in addition to
+constructing precise data flow analysis. 
+
+\section{Specification}
+Analyses can be described in a variety of ways.  An algorithm that take programs as input and
+produce behavior information as output are necessary for automation in compilers.  A
+specification that states a proposition in terms of programs and execution information may be
+more suitable for showing clarity of meaning and correctness with respect to the operational
+semantics.  The specification can be translated into an algorithm involving two parts.  The
+first part generates a comprehensive set of data structures representing constraints of all
+program points, mirroring the specification's description, and the second part solves the
+constraints.
+
+For a subset of Concurrent ML without event combinators, Reppy and  Xiao developed an
+efficient algorithmic analysis that determines for each channel all abstract threads that send
+and receive on it.  The algorithm depends on each primitive operation in the program being
+labeled with a program point.  A sequence of program points ordered in a valid execution
+sequence forms a control path.  Distinction between threads in a program can be inferred from
+whether or not their control paths diverge.  
+
+The algorithm proceeds in multiple steps that produce intermediate data structures, used for
+efficient lookup in the subsequent steps.  It starts with a control-flow analysis \cite{} that
+results in multiple mappings. One mapping is from variables to abstract values that may bind to
+the variables. Another mapping is from channel-bound variables to abstract values that are
+sent on the respective channels. Another is from function-bound variables to abstract values
+that are the result of respective function applications.  It constructs a control-flow graph 
+with possible paths for pattern matching and thread spawning determined directly from the
+primitives used in the program.  Relying on information from the mappings to abstract values,
+it constructs the possible paths of execution via function application and channel
+communication.  It uses the graph for live variable analysis of channels, which limits the
+scope for the remaining analysis.  Using the spawn and application edges of the control-flow
+graph, the algorithm then performs a data-flow analysis to determine a mapping from program
+points to all possible control paths leading into the respective program points.  Using the
+CFA's mappings to abstract values, the algorithm determines the program points for sends and
+receives per channel variable.  Then it uses the mapping to control paths to determine all
+control paths that send or receive on each channel, from which it classifies channels as
+one-shot, one-to-one, many-to-one, one-to-many, or many-to-many.
+
+\section{Soundness}
+Reppy and Xiao informally prove soundness of their analysis by showing that their analysis
+claims that more than one thread sends (or receives) on a channel if the execution allows more
+than one to send (or receive) on a that channel.  The proof of soundness depends on the
+ability to relate the execution of a program to the static analysis of a program.  The static
+analysis describes threads in terms of control paths, since it can only describe threads in
+terms of statically available information. Thus, in order to describe the relationship between
+the threads of the static analysis and the operational semantics, the operational semantics is
+defined as stepping between sets of control paths paired with terms.  Divergent control paths
+are added whenever a new thread is spawned.
+
+The syntax, semantics, and analysis need to describe many details.  Proving propositions
+relating all of these definitions requires manipulation of all those details.  To ensure the
+correctness of proofs, it is necessary to check that there are no subtle errors in the
+definitions or proofs.  Proofs in general require many subtle manipulations of symbols.  The
+difference between a false statement and a true statement can often be difficult to spot, since
+the two may be very similar lexically.  However, a mechanical proof checker, such as the one in
+Isabelle, has no difficulty discerning between valid and invalid derivations of statements.
+Mechanical checking of proofs can notify us of errors in the proofs or definitions far better
+and faster than manual checking.  I have already benefitted from Isabelle's proof checker in
+order to correctly define the language semantics and abstract value flow analysis for this
+work.  While trying to prove soundness of the analysis, the proof assistant would not accept my
+proof unless I provided derivation of facts that I believed to be false.  I determined that my
+intuition was correct but my definitions had errors. After correcting the errors, I was able
+to complete the proof, such that the proof checker was satisfied.
+
+\section{Formal Theory}
+An algorithm for synchronization that is specialized to handle one thread on
+either end of the channel may be more
+efficient than an algorithm that is generic to handle any number of threads.
+For instance, if there
 is only ever one thread sending and one thread receiving on a channel, then no locks are
 needed, which saves time.  However, if there are multiple senders and multiple receivers, then
 some form of locks or trials and aborts would be needed, which is costly.
@@ -954,6 +904,76 @@ The static relations are defined
 with a syntax directed structure, which gives strong evidence of computability.  Additionally,
 I do not formally prove that the specialized implementations are behaviorally equivalent to a
 generic implementation, but I suggest some plausible example implementations.
+
+To enable mechanical verification of the correctness of the proofs, I constructed the
+semantics, analysis and theorems in the formal language of Isabelle/HOL.  To aid the
+development of formal proofs, I designed the analysis as a declarative specification as
+opposed to an algorithm.  However, the declarative analysis made the proof of
+computability less direct.  To aid the scrutiny of the theorems' adequacy, I expressed the
+definitions and propositions with the fewest number of structures, judgements, inferences rules
+, and axioms necessary. In order to relate the analysis to the operational semantics, I
+borrowed Reppy and Xiao's strategy of stepping between sets of control paths tied to terms.
+
+In this thesis work, I'm interested in communication topology soundness, rather than flow
+soundness.  Nevertheless, I needed to prove additional flow soundness theorems en route to
+proving communication topology soundness.  Restricting the grammar to a form that requires
+every abstraction and application to be bound to a variable would allow the operational
+semantics to maintain static term information necessary for proofs of flow soundness \cite{}.
+The semantics would be defined as an environment based operational semantics, rather than a
+substitution based operational semantics.  By avoiding simplification of terms in the
+operational semantics, it is possible to relate the abstract values of the analysis to the
+values produced by the operational semantics, which in turn is relied on to prove 
+soundness of the static semantics.
+
+I incorporated the restricted grammar and the environment based semantics into this work.
+The restricted grammar is impractical for a programmer to write, yet it is still practical for
+a language under automated analysis since there is a straight forward procedure to transform
+more flexible grammars into the restricted form as demonstrated by Flanagan et al [2].
+Additionally, the restricted grammar melds nicely with the control path semantics.  Instead of
+defining additional meta-syntax for program points of primitive operations, I simply use
+the required variables of the restricted grammar to identify program points, and control paths
+simply be sequences of let bound variables. A modification of the example Server
+implementation in ML illustrates the restrictive grammar applied to Concurrent ML.
+
+\begin{lstlisting}[language=logic, escapechar=\%]
+  let lp = fun lp x => 
+    let z1 = case x of 
+      L y => let z2 = lp y in z2 |
+      R () => let z3 = () in z3
+      in ()
+    in
+
+  let mksr = fun _ x => 
+    let ch1 = mkChan ()  in
+    let z4 = (lp (L (L (R ()))) in
+    let srv = fun srv x  =>
+      let p = sync (recv_evt ch1) in
+      let v1 = fst p in
+      let ch2 = snd p in 
+      let z5 = sync (send_evt ch2 x) in
+      let z6 = srv v1 in ()
+      in
+    let z7 = spawn (
+      let z8 = srv (R ()) in ()) in
+    ch1 in
+
+  let rqst = fun _ pair =>
+    let ch3 = fst pair in
+    let v2 = snd pair in
+    let ch4 = channel () in
+    let z9 = sync (send_evt ch3 (v2, ch4)) in
+    let v3 = sync (recv_evt ch4) in
+    v3 in
+
+  let srvr = mksr () in
+  let z10 = spawn ( 
+    let z11 = rqst (srvr, R ()) in ())
+    in
+  let z12 = rqst (srvr, L (R ())) in
+  () 
+  \end{lstlisting}
+
+
 
 ----Edit Start---
 
@@ -3156,16 +3176,15 @@ otherwise similar to the lower precision classifications.
         static_many_to_one env_a e x_c)
   \end{lstlisting}
 
-----Edit End----
-
 \section{Reasoning Stategy for Channel Liveness}
 To prove soundess of the communication topology classification, it should be possible to use
 previous techniques of generalizing propositions over pools and other semantic components,
 along with finding equivalent representaitons of propositions that vary in the inductive
 subcomponent. One thing that will make carrying out the formal proof particulary tricky is
 that dynamic paths in the dynamic semantics need to corresponding to static paths from
-the trimmed static programs, which might also contain sending transitions, instead of the dynamic
-paths spawning transitions.  The correspondance between these dynamic paths and static paths
+the trimmed static programs, which might also contain sending transitions,
+instead of the dynamic paths spawning transitions.
+The correspondance between these dynamic paths and static paths
 is not bijective, as it is for the lower precision analysis. However, finding a satisfactory
 correspondance for each dynamic and static path is critical for proving soundness.
 
@@ -3376,43 +3395,6 @@ that correlates with the dynamic path is much more challenging.
 
 \section{Analysis of Example Program}
 
-\begin{lstlisting}[language=logic, escapechar=\%]
-  let lp = fun lp x => 
-    let z1 = case x of 
-      L y => let z2 = lp y in z2 |
-      R () => let z3 = () in z3
-      in ()
-    in
-
-  let mksr = fun _ x => 
-    let ch1 = mkChan ()  in
-    let z4 = (lp (L (L (R ()))) in
-    let srv = fun srv x  =>
-      let p = sync (recv_evt ch1) in
-      let v1 = fst p in
-      let ch2 = snd p in 
-      let z5 = sync (send_evt ch2 x) in
-      let z6 = srv v1 in ()
-      in
-    let z7 = spawn (
-      let z8 = srv (R ()) in ()) in
-    ch1 in
-
-  let rqst = fun _ pair =>
-    let ch3 = fst pair in
-    let v2 = snd pair in
-    let ch4 = channel () in
-    let z9 = sync (send_evt ch3 (v2, ch4)) in
-    let v3 = sync (recv_evt ch4) in
-    v3 in
-
-  let srvr = mksr () in
-  let z10 = spawn ( 
-    let z11 = rqst (srvr, R ()) in ())
-    in
-  let z12 = rqst (srvr, L (R ())) in
-  () 
-  \end{lstlisting}
 
   \includegraphics[scale=0.4]{cml_graph.pdf}
   
