@@ -41,10 +41,9 @@
     of
   }
 }
- 
 
 
-\title{Formal Theory of Concurrent ML}
+\title{Formal Static Analysis of Synchronization}
 \author{Thomas Logan}
 \begin{document}
 
@@ -209,7 +208,7 @@ evaluates.
   val thenEvt : 'a event * ('a -> 'b event) -> 'b event
   \end{lstlisting}
 
-\section{Syncrhonization}
+\section{Synchronization}
 Synchronization of sending threads and receiving threads
 requires determining which threads should wait, and which threads should be dispatched.
 The more amount of information needed
@@ -611,8 +610,6 @@ structure OneToOneChan : CHANNEL = struct
   end
   \end{lstlisting}
 
-
-
 A one-shot channel consists of the same possible states as a one-to-one channel, but is
 additionally associated with a mutex lock, to account for the fact that multiple threads may
 try to receive on the channel, even though only at most one message is ever sent.
@@ -679,7 +676,6 @@ forever, if there truly is only one send ever.
   end
   \end{lstlisting}
 
-
 An even more restrictive version of a channel with at most one send could be used if it's
 determined that the number of receiving threads is at most one.  The one-shot-to-one channel is
 composed of a possibly empty cell, a condition for a sending thread to wait on, and a condition
@@ -715,7 +711,6 @@ Although there are proofs that the communication topologies are sound with respe
 semantics, it would additionally be important to have proofs that the above specialized
 implementations are equivalent to the many-to-many implementation under the assumption of
 particular communication topologies.
-
 
 \section{Static Analysis}
 The right implementation choice can be determined by counting the number threads used during
@@ -768,8 +763,6 @@ that.
   7.   y := 0;
   8.   (!y + 2) - (!x + 1) * (w - 3) end
   \end{lstlisting}
-
-
 
 A dataflow analysis for liveness tracks the set of stored valued that are used in the
 remainder of the program. Using this information, unused code can
@@ -973,9 +966,6 @@ implementation in ML illustrates the restrictive grammar applied to Concurrent M
   () 
   \end{lstlisting}
 
-
-
-----Edit Start---
 
 \section{Syntax}
 The syntax used in this formal theory contains a very small subset of
@@ -1284,9 +1274,7 @@ that the syncrhonization used for communication.
       )
   \end{lstlisting}
 
-
-
-\section{Dynamic Communication Classification}
+\section{Dynamic Communication}
 
 The dynamic one shot classification is described by pool where there is only one dynamic path
 that synchronizes and sends on a given channel. Whether or not two attempts to
@@ -1375,7 +1363,7 @@ syncrhonize on a channel are necessarily ordered for either end of the channel.
   \end{lstlisting}
 
 
-\section{Static Semantics Definitions}
+\section{Static Semantics}
 The static semantics is described by an estimation of intermediate static values and subpograms
 that might result from running a program.    
 The static semantics helps to deduce static informaiton about channels and events, which is
@@ -1973,11 +1961,13 @@ program.
         static_many_to_one env_a e x_c) 
 \end{lstlisting}
 
-\section{Formal Reasoning}
+\section{Reasoning}
 The reasoning involved in proving the soundness of each communication topology classification
 is based around breaking the goal into simpler subgoals, and generalizing assumptions to create
-useful induction hypotheses.  It is often useful to create helper definitions that can be deduced
-from premises of the theorem being proved and enable general reasoning across arbitrary programs.
+useful induction hypotheses.  It is often useful to
+create helper definitions that can be deduced
+from premises of the theorem being proved and enable
+general reasoning across arbitrary programs.
 A frequent pattern is to define
 predicates in terms of semantic structures, like the environment, stack, and pool, and deduce 
 the instantiation of these predicates on the initial program state. 
@@ -2027,9 +2017,12 @@ to less flexible relations.
   \end{lstlisting}
 
 The theorem for soundness of static one-shot classification states that if a static channel is
-statically classified as one-shot for a given program and static environment consistent with the
-program, then any corresponding dynamic channel is classified as one-shot over any pool that results
-from running the program. The theorem for soundness of static fan-out classification states that if
+statically classified as one-shot for a given program and
+static environment consistent with the
+program, then any corresponding dynamic channel is classified
+as one-shot over any pool that results
+from running the program. The theorem for soundness of
+static fan-out classification states that if
 a static channel is statically classified as fan-out for a given program and static environment
 consistent with that program, then any corresponding dyanmic channel is classified as fan-out
 over any pool that results from running the program.  The theorems for soundness of many-to-one
@@ -2074,7 +2067,8 @@ theorem static_one_to_one_sound:
 
 \end{lstlisting}
 
-The soundness theorem for static fan-out classification is proved by a few simpler lemmas and the
+The soundness theorem for static fan-out classification is proved
+by a few simpler lemmas and the
 definitions of static and dynaic fan-out classification.  The three main lemmas state the
 soundness of the lack of static traceability, the soundness of the lack of inclusiveness, and
 the soundness of a program point not being a static send site. These lemmas depend on a
@@ -2136,8 +2130,10 @@ The generalization of static traversability is composed of in static traversable
 static traversability over environments, static traversability over stacks, and static
 traversabiliy over pools.
 In most cases, it simply states that a subprogram of some semantic element is also statically
-traversable. The exception is in the case of  static traversability over a non-empty stack, where
-there is an additional condition that the transition from a result site to the program identifier
+traversable. The exception is in the case of
+static traversability over a non-empty stack, where
+there is an additional condition that the transition
+from a result site to the program identifier
 of the continuation program exists in the static program.
 This information is consistent with static
 traversability over programs, but provides direct information about a transition in the
@@ -2242,12 +2238,14 @@ depending on the program.
   \end{lstlisting}
 
 The transitions described by the various versions of static traversability depend on static
-environments in order to look up the control flow in the application case. The static environment
+environments in order to look up the control flow in the application case.
+The static environment
 results from the static evaluation of the program that is dynamically evaluated. Thus,
 generalized
 versions of static evaluation enable further deduction about transitions.
 As with the generalized versions of static traversability,
-the generalized versions of static evaluation are designed to preserve static environments across
+the generalized versions of static evaluation are designed to
+preserve static environments across
 dynamic evaluations of pools. They also provide direct access to binding information from names
 to static values in a fixed number of logical steps. Static evaluation of programs correlates
 program syntax to static values, but the generalized static evaluations correlate dynamic
@@ -2385,7 +2383,8 @@ traceability.
 \end{lstlisting}
 
 The soundness of lack of static traceability follows from the generalized lemma
-of soundness of lack of static traceability over pools, which contains the generalized premise of
+of soundness of lack of static traceability over pools, which contains
+the generalized premise of
 static traceability, and also it follows from the lemma of preservation of static
 traversability over pools from an initial pool to any pool resulting from multiple steps of
 dynamic evaluation.
@@ -2421,8 +2420,9 @@ equivalence between star and its leftward variant, and induction on the leftward
 
 The lemma for soundness of a static point not being a send site is proved using the lemma for
 soundness of a name in a sending event of a syncrhonization not statically binding to a static
-channel value, and the lemma for soundess of a name in any state's environment not statically binding
-to a static value.  Since only send sites are relevant the soundness of lack of static reachability is
+channel value, and the lemma for soundess of a name in any state's environment
+not statically binding to a static value.  Since only send sites are relevant
+the soundness of lack of static reachability is
 used to ensure that the static point discussed is indeed a send site. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -2475,7 +2475,8 @@ evaluation.
 
 The lemma for soundness of lack of static rechability relies on the a reformulation of
 static rechability that inducts on the left program.
-The definition of static reachability is syntax-directed in order to potray a clear connection to
+The definition of static reachability is syntax-directed in
+order to potray a clear connection to
 a computable algorithm that can determine the reachable expression from an initial program.
 However, to show that an expression is reachable from the initial program, it is necessary to
 show that each intermediate expression is reachable from the initial expression.  Thus, the
@@ -2582,8 +2583,8 @@ maintaining the intial program state in context for each subgoal .
 
   \end{lstlisting}
 
-The soundness of lack of reachbility follows the the definitions a generalized form of soundness over
-pools.
+The soundness of lack of reachbility follows the the definitions
+a generalized form of soundness over pools.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   lemma not_static_reachable_pool_sound:
@@ -2596,9 +2597,10 @@ pools.
   \end{lstlisting}
 
 
-The soudness over pools follows from the lemma that the leftward static reachability implies the
-rightward (and syntax-directed) static reachability, and the equivalence between star and the
-leftward star.  It relies on induction of the leftward star and constructs the static rechability
+The soudness over pools follows from the lemma that the leftward
+static reachability implies the rightward (and syntax-directed) static reachability,
+and the equivalence between star and the leftward star.  It relies on induction of the
+leftward star and constructs the static rechability
 proposition using the leftward definition.  
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -2624,7 +2626,7 @@ reachability follows from induction on the leftward static reachability and the
 transitivity of static
 reachability, which follows from induction on static reachability.
 
-\section{Static Communication Classification with Channel Liveness }
+\section{Higher Precision Communication}
 In many programs, channels are created within function abstractions.  The function abstractions
 may be applied multiple times, creating multiple distinct channels with each application.
 It may be that each channel is used just once and then discarded.  However, the static
@@ -2644,13 +2646,14 @@ A trimmed static program is specialized for a particular dynamic channel.  From 
 point, it must contain transitive transitions to all the program points where the
 channel is live. It should also be as small as possible, for higher precision.
 
-In the whole static program used in the previous analysis, a spawning transition connects a child
-thread to the rest of the program.  For a trimmed static program, it may be clear the channel of
-interest is not created until after the spawn point, so there is not need to include the spawning
-transition.  However, later on in the program it may become apparent that the channel of interest
-is sent via another channel to that spawned thread.  Since there is no spawning transition already
-connecting that thread to the trimmed static program, a transition with a sending mode is used
-between the send site and the receive site of syncrhonization. Modes for typical control flow of
+In the whole static program used in the previous analysis, a spawning transition
+connects a child thread to the rest of the program.  For a trimmed static program,
+it may be clear the channel of interest is not created until after the spawn point,
+so there is not need to include the spawning transition.  However, later on in the
+program it may become apparent that the channel of interest is sent via another channel to
+that spawned thread.  Since there is no spawning transition already connecting that
+thread to the trimmed static program, a transition with a sending mode is used between the
+send site and the receive site of syncrhonization. Modes for typical control flow of
 sequencing, calling, returning, and spawning are also included transitions.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
@@ -2663,8 +2666,8 @@ sequencing, calling, returning, and spawning are also included transitions.
   type static_path = static_point list
 \end{lstlisting}
 
-Static traversability is similar to that of the previous analysis.  However, it must additionally
-consider transitions with the sending mode. 
+Static traversability is similar to that of the previous analysis.
+However, it must additionally consider transitions with the sending mode. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_traversable of static_environment -> transition_set -> program -> bool:
@@ -2929,7 +2932,8 @@ program identifier.
     (%$\forall$% exit x entr e' e_c x_c env_a .
       if
         (exit (NLet x) - {x}) %$\subseteq$% entr (NLet x) and
-        entr (top_program_id e') %$\cup$% entr (top_program_id e_c) %$\subseteq$% exit (NLet x) and
+        entr (top_program_id e') %$\subseteq$% exit (NLet x) and
+        entr (top_program_id e_c) %$\subseteq$% exit (NLet x) and
         static_live_chan env_a entr exit x_c e_c and
         static_live_chan env_a entr exit x_c e'
       then
@@ -3034,8 +3038,9 @@ functions.
           ((NLet x_send), ESend x_evt, (NLet x_recv)))
   \end{lstlisting}
 
-The static traceability for the higher precision analysis states that an entire static path can be
-trace through some static program and is live with respect to some entry and and exit functions.
+The static traceability for the higher precision analysis states
+that an entire static path can be trace through some static program and
+is live with respect to some entry and and exit functions.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_traceable of
@@ -3119,8 +3124,8 @@ given paths do not compete in any run of a program.
       )
   \end{lstlisting}
 
-The communication topology classifications are described using the liveness properties, but are
-otherwise similar to the lower precision classifications.
+The communication topology classifications are described using the liveness properties, but
+are otherwise similar to the lower precision classifications.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_one_shot of static_environment -> program -> name -> bool:
@@ -3176,7 +3181,7 @@ otherwise similar to the lower precision classifications.
         static_many_to_one env_a e x_c)
   \end{lstlisting}
 
-\section{Reasoning Stategy for Channel Liveness}
+\section{Higher Precision Reasoning Strategy}
 To prove soundess of the communication topology classification, it should be possible to use
 previous techniques of generalizing propositions over pools and other semantic components,
 along with finding equivalent representaitons of propositions that vary in the inductive
@@ -3278,9 +3283,9 @@ correlating dynamic paths with static paths.
 
 \end{lstlisting}
 
-Additionally the soudness theorem follows from the soundness of lack of static traceability, the
-soundness of lack of static inclusiveness, and the soundness of a program site not being a
-sending site. 
+Additionally the soudness theorem follows from the soundness of lack of static traceability,
+the soundness of lack of static inclusiveness,
+and the soundness of a program site not being a sending site. 
 The reasoning about the sending site is identical to that of the lower precision analysis, but
 the the reasoning for the former two is significantly more complicated and not yet completed.
 The complication arises from the
