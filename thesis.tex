@@ -710,9 +710,25 @@ on the sendCond and then returns the deposited message.
     end
   \end{lstlisting}
 
+The example implementations of generic synchronization and specialized synchronization suggest
+that cost savings of specialized implementation are significant. For example, if you know that
+a channel has at most one sending thread and one receiving thread, then you will
+lower synchronization costs by
+using an implementation that is specialized for one-to-one communication.  To be certain that
+the new program with the specialized implementation behaves the same as the original program
+with the generic implementation, you need to be certain of three basic properties: that the
+specialized program behaves the same given one-to-one communication; that you have a procedure
+to determine the one-to-one communication topology, and that the relation between the
+procedure's input program and output topology upper bound is sound with respect to the semantics
+of the program.  
 
-Although there are proofs that the communication topologies are sound with respect to the
-semantics, it would additionally be important to have proofs that the above specialized
+Spending your energy to determine the topologies for each unique program and then verifying
+them for each program would be exhausting. Instead, you would probably rather have a generic
+procedure that can compute communication topologies for any program in a language, along with
+a proof that the procedure is sound with respect to the programing language.
+
+This work discusses proofs that the communication topologies are sound with respect to the
+semantics. Additionally, it would be important to have proofs that the above specialized
 implementations are equivalent to the many-to-many implementation under the assumption of
 particular communication topologies.
 
@@ -768,7 +784,7 @@ that.
   8.   (!y + 2) - (!x + 1) * (w - 3) end
   \end{lstlisting}
 
-A dataflow analysis for liveness tracks the set of stored valued that are used in the
+A data flow analysis for liveness tracks the set of stored valued that are used in the
 remainder of the program. Using this information, unused code can
 be detected and removed to improve performance. There are other uses of this analysis, as well.
 In this work, the liveness of channels is tracked to distinguish between distinct channels with
@@ -807,25 +823,27 @@ approximation of the control structures and values that have been obfuscated by 
 function abstractions.  Uncovering the the control structures depends on resolving expressions
 to values, and resolving expressions to values depends on on uncovering the control
 structures. The mutual dependency means that control flow analysis is a form of
-static semantics that describes approximate evaluations of programs. In this work, control flow
-analysis for tracking certain kinds of values, like channels and events, in addition to
+static semantics that describes abstract evaluations of programs. In this work, control flow
+analysis is used for tracking certain kinds of values, like channels and events, in addition to
 constructing precise data flow analysis. 
 
 \section{Specification}
-Analyses can be described in a variety of ways.  An algorithm that take programs as input and
-produce behavior information as output are necessary for automation in compilers.  A
-specification that states a proposition in terms of programs and execution information may be
-more suitable for showing clarity of meaning and correctness with respect to the operational
-semantics.  The specification can be translated into an algorithm involving two parts.  The
-first part generates a comprehensive set of data structures representing constraints of all
-program points, mirroring the specification's description, and the second part solves the
-constraints.
+Analyses can be described in a variety of ways. A computable algorithm that take programs
+as input and produces information about the behavior as output is ideal for automation. A
+non-algorithmic relation (without an inherent deterministic reasoner),
+stated in terms of programs and execution information, may be
+more suitable for clarity of meaning and correctness with respect to the operational
+semantics. However, a non-algorithmic relation can be translated into an algorithm.
+One rather mechanical method essentially involves
+specifying a reasoner associated with the relation. 
+First, the reasoner generates a comprehensive set of data structures representing
+constraints from the relation's description, then the reasoner the constraints.
 
-For a subset of Concurrent ML without event combinators, Reppy and  Xiao developed an
-efficient algorithmic analysis that determines for each channel all abstract threads that send
-and receive on it.  The algorithm depends on each primitive operation in the program being
-labeled with a program point.  A sequence of program points ordered in a valid execution
-sequence forms a control path.  Distinction between threads in a program can be inferred from
+For a subset of Concurrent ML without event combinators, Reppy and Xiao developed an
+efficient algorithm that determines for each channel, all possible threads that send
+and receive on it. The algorithm depends on each primitive operation in the program being
+labeled with a program point. A sequence of program points ordered in a valid execution
+sequence forms a control path. Distinction between threads in a program can be inferred from
 whether or not their control paths diverge.  
 
 The algorithm proceeds in multiple steps that produce intermediate data structures, used for
@@ -847,72 +865,50 @@ control paths that send or receive on each channel, from which it classifies cha
 one-shot, one-to-one, many-to-one, one-to-many, or many-to-many.
 
 \section{Soundness}
-Reppy and Xiao informally prove soundness of their analysis by showing that their analysis
-claims that more than one thread sends (or receives) on a channel if the execution allows more
-than one to send (or receive) on a that channel.  The proof of soundness depends on the
-ability to relate the execution of a program to the static analysis of a program.  The static
+Reppy and Xiao informally prove soundness of their analysis by showing that their static analysis
+determines that more than one thread sends (or receives) on a channel if the execution allows more
+than one to send (or receive) on that channel. The proof of soundness depends on the
+ability to relate the execution of a program to the static analysis of a program. The static
 analysis describes threads in terms of control paths, since it can only describe threads in
 terms of statically available information. Thus, in order to describe the relationship between
 the threads of the static analysis and the operational semantics, the operational semantics is
-defined as stepping between sets of control paths paired with terms.  Divergent control paths
+defined as stepping between sets of control paths paired with terms. Divergent control paths
 are added whenever a new thread is spawned.
 
-The syntax, semantics, and analysis need to describe many details.  Proving propositions
-relating all of these definitions requires manipulation of all those details.  To ensure the
-correctness of proofs, it is necessary to check that there are no subtle errors in the
-definitions or proofs.  Proofs in general require many subtle manipulations of symbols.  The
+The semantics and analysis must contain many details. To ensure the
+correctness of proofs, it is necessary to check that there are no subtle errors in either the 
+definitions or proofs. Proofs in general require many subtle manipulations of symbols. The
 difference between a false statement and a true statement can often be difficult to spot, since
-the two may be very similar lexically.  However, a mechanical proof checker, such as the one in
-Isabelle, has no difficulty discerning between valid and invalid derivations of statements.
-Mechanical checking of proofs can notify us of errors in the proofs or definitions far better
-and faster than manual checking.  I have already benefited from Isabelle's proof checker in
-order to correctly define the language semantics and abstract value flow analysis for this
-work.  While trying to prove soundness of the analysis, the proof assistant would not accept my
-proof unless I provided derivation of facts that I believed to be false.  I determined that my
-intuition was correct but my definitions had errors. After correcting the errors, I was able
-to complete the proof, such that the proof checker was satisfied.
+the two may be very similar lexically. However, a mechanical proof checker, such as that of 
+Isabelle, has no difficulty discerning between valid and invalid derivations.
+Mechanical checking of proofs can notify users of errors in the proofs or definitions far better
+and faster than manual checking. This work has greatly benefited from Isabelle's proof checker in
+order to correctly define the language semantics, control flow analysis, communication analysis,
+and other helpful definitions. For instance, some bugs in the definintions were found trying to prove
+soundness. The proof checker would not accept the proof unless I provided facts that
+should be false, indicating that the definitions did not state my intentions.
+After correcting the errors in the definitions, the proof was completed such that the proof
+checker was satisfied.
 
 \section{Formal Theory}
-An algorithm for synchronization that is specialized to handle one thread on
-either end of the channel may be more
-efficient than an algorithm that is generic to handle any number of threads.
-For instance, if there
-is only ever one thread sending and one thread receiving on a channel, then no locks are
-needed, which saves time.  However, if there are multiple senders and multiple receivers, then
-some form of locks or trials and aborts would be needed, which is costly.
 
-The example implementations of generic synchronization and specialized synchronization suggest
-that cost savings of specialized implementation are significant.  For example, if you know that
-a channel has at most one sender and one receiver, then you will lower synchronization costs by
-using an implementation that is specialized for one-to-one communication.  To be certain that
-the new program with the specialized implementation behaves the same as the original program
-with the generic implementation, you need to be certain of three basic properties: that the
-specialized program behaves the same given one-to-one communication; that you have a procedure
-to determine the oneo-to-one communication topology, and that the relation between the
-procedure's input program and output topology upper bound is sound with respect to the semantics
-of the program.  
-
-Spending your energy to determine the topologies for each unique program and then verifying
-them for each program would be exhausting. Instead, you would probably rather have a generic
-procedure that can compute communication topologies for any program in a language, along with
-a proof that the procedure is sound with respect to the programing language.
-
+The definitions and theorems of this work were constructed in the formal language of Isabelle/HOL,
+to enable mechanical verification of the correctness of the proofs.  However, the formal logic used
+for presentation in this paper has been somewhat modified from Isabelle's syntax. 
+To aid the development of formal proofs, the analyses are stated using non-algorithmic specifications.
 The static relations are defined
-with a syntax directed structure, which gives strong evidence of computability.  Additionally,
-I do not formally prove that the specialized implementations are behaviorally equivalent to a
-generic implementation, but I suggest some plausible example implementations.
+with syntax-directed structures, providing strong evidence of computability.
+That is, a relation about a program could be described by the same relation on a subprogram,
+but certainly not by the original program, or a larger program.
+This work does not contain formal proofs that  the specialized implementations are
+behaviorally equivalent to a generic implementation, but the example implementations
+should provide good for that.
 
-To enable mechanical verification of the correctness of the proofs, I constructed the
-semantics, analysis and theorems in the formal language of Isabelle/HOL.  To aid the
-development of formal proofs, I designed the analysis as a declarative specification as
-opposed to an algorithm.  However, the declarative analysis made the proof of
-computability less direct.  To aid the scrutiny of the theorems' adequacy, I expressed the
-definitions and propositions with the fewest number of structures, judgements, inferences rules
-, and axioms necessary. In order to relate the analysis to the operational semantics, I
-borrowed Reppy and Xiao's strategy of stepping between sets of control paths tied to terms.
+In order to relate the static analyses to the operational semantics, I
+borrowed Reppy and Xiao's strategy of stepping between sets of control paths and
+their associated terms.
 
-In this thesis work, I'm interested in communication topology soundness, rather than flow
-soundness.  Nevertheless, I needed to prove additional flow soundness theorems en route to
+It is neccessary to prove additional flow soundness theorems en route to
 proving communication topology soundness.  Restricting the grammar to a form that requires
 every abstraction and application to be bound to a name would allow the operational
 semantics to maintain static term information necessary for proofs of flow soundness \cite{}.
