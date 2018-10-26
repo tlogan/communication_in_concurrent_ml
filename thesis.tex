@@ -327,7 +327,7 @@ The channel is composed of the channel content and also a mutext lock that regul
 the channel content.
 
 The sending operation acquires the channel's lock to ensure that it updates the channel based on
-any one of its latest state.  If there are threads trying to receive from the channel, the send
+any one of its latest state.  If there are threads trying to receive from the channel, the sending 
 operation dequeues an item from the state's associated queue.  The item consists of a condition
 waited on by a receiving thread and an empty cell that can be accessed by the receiving thread.
 It deposits the message in the cell and signals on the condition, updates the channel state to
@@ -335,18 +335,18 @@ inactive if there are no further receiving threads waiting, then releases the lo
 the condition and returns the unit value.  If there are no threads trying to receive from the
 channel, the sending operation updates the channel state to that of trying to send with an
 additional condition and message in the associated queue.  It releases the lock and waits on
-the enqueued condition.  Once a receiving thread signals on the same condition, the send
+the enqueued condition.  Once a receiving thread signals on the same condition, the sending 
 operation returns with the unit value.
 
 The receiving operation acquires the channel's lock to ensure that it updates the channel based on
-any one of its latest state.  If there are threads trying to send on the channel, the recv
+any one of its latest state.  If there are threads trying to send on the channel, the receiving 
 operation dequeues an item from the state's associated queue.  The item consists of a condition
 waited on by a sending thread along with a message to be sent.  It signals the condition and
 updates the channel state to inactive if there are no further sending threads waiting, then
 releases the lock and returns the sent message.  If there are no threads trying to send on the
 channel, the receiving operation updates the channel state to that of trying to receive with an
 additional condition and empty cell in the associated queue.  It releases the lock and waits on
-the enqueued condition.  Once a sending thread signals on the same condition, the recv
+the enqueued condition.  Once a sending thread signals on the same condition, the receiving 
 operation returns with the value deposited in the cell by a sending thread.
 
 \begin{lstlisting}[language=ML, escapechar=\%]
@@ -432,7 +432,7 @@ incorrect and and there were actually multiple threads that could call the sendi
 there might be data races.  Likewise, due to the expectation of a single thread sending on the
 channel, the sending operation should never witness the state of threads already trying to send.
 
-The receiving operation acquires the lock and checks the state of the channel, just as the recv
+The receiving operation acquires the lock and checks the state of the channel, just as the receiving
 operation for many-to-many channels.  If the channel is in a state where there is no already
 trying to send, then it behaves the same as the receiving operation of many-to-many channels. If
 there is already a thread trying to receive, then it updates the state to inactive and releases
@@ -1598,9 +1598,8 @@ of a result is indicated by its embedded name, and indication that it's a result
 \end{lstlisting}
 
 \section{Static Communication}
-The static communication is described an estimation of the static paths that communicate on
+The static communication is described by an estimation of the static paths that communicate on
 static channels.
-
 The static send site classification means that an program identifier might represent a
 sycnronization to send on a given abstract channel.
 The static receive site classification means that an program identifier might represent a
