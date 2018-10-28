@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  28 OCT 2018 14:18
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  28 OCT 2018 17:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -847,32 +847,32 @@ LaTeX Font Info:    Font shape `T1/fvm/m/sl' will be
 (Font)              scaled to size 7.65005pt on input line 467.
  [9] [10] [11] [12] [13] [14] [15] [16] [17] [18]
 [19] [20]
-Overfull \hbox (1.82973pt too wide) in paragraph at lines 1065--1075
+Overfull \hbox (1.82973pt too wide) in paragraph at lines 1079--1089
 []\T1/LinuxLibertineT-TLF/m/n/10 The eval-u-a-tion of ex-pres-sions for ap-pli-
 ca-tion, and match-ing re-sult in call-ing, which
  []
 
-
-Overfull \hbox (7.76631pt too wide) in paragraph at lines 1102--1116
+[21]
+Overfull \hbox (7.76631pt too wide) in paragraph at lines 1116--1130
 []\T1/LinuxLibertineT-TLF/m/n/10 Backtracking is made pos-si-ble by record-ing 
 the pro-grams that have been sidestepped
  []
 
-[21] [22] [23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34] [35]
-[36] [37] [38] <cml_graph.pdf, id=135, 737.75626pt x 1155.31625pt>
+[22] [23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34] [35] [36]
+[37] [38] <cml_graph.pdf, id=135, 737.75626pt x 1155.31625pt>
 File: cml_graph.pdf Graphic file (type pdf)
 
 <use cml_graph.pdf>
-Package pdftex.def Info: cml_graph.pdf used on input line 1985.
+Package pdftex.def Info: cml_graph.pdf used on input line 1999.
 (pdftex.def)             Requested size: 295.09727pt x 462.11832pt.
  [39] [40 <./cml_graph.pdf>] [41] [42]
-Overfull \hbox (12.77339pt too wide) in paragraph at lines 2146--2151
+Overfull \hbox (12.77339pt too wide) in paragraph at lines 2160--2165
 []\T1/LinuxLibertineT-TLF/m/n/10 The sound-ness of lack of static trace-abil-it
 y is proved by gen-er-al-iz-ing static traversabil-
  []
 
 [43] [44] [45] [46] [47] [48] [49] [50] [51] [52]
-Overfull \hbox (3.55743pt too wide) in paragraph at lines 2666--2671
+Overfull \hbox (3.55743pt too wide) in paragraph at lines 2680--2685
 \T1/LinuxLibertineT-TLF/m/n/10 pre-ci-sion anal-y-sis, which can bet-ter dif-fe
 r-en-ti-ate be-tween dis-tinct chan-nels. A trimmed
  []
@@ -884,10 +884,10 @@ LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 6736 strings out of 493014
- 96412 string characters out of 6133351
- 416155 words of memory out of 5000000
- 10138 multiletter control sequences out of 15000+600000
+ 6749 strings out of 493014
+ 96507 string characters out of 6133351
+ 416177 words of memory out of 5000000
+ 10151 multiletter control sequences out of 15000+600000
  54864 words of font info for 63 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  38i,6n,74p,232b,1697s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -904,7 +904,7 @@ local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/te
 xlive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/20
 16/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texm
 f-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (70 pages, 420185 bytes).
+Output written on thesis.pdf (70 pages, 419455 bytes).
 PDF statistics:
  282 PDF objects out of 1000 (max. 8388607)
  196 compressed objects within 2 object streams

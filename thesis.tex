@@ -44,8 +44,8 @@
 
 \lstdefinelanguage{normal_lang}{
   morekeywords={
-    let, in, fun,
-    mkChan, sync, fst, snd, L, R,
+    let, in, rslt, fun, unt, pair,
+    mk_chn, sync, fst, snd, lft, rght,
     spawn, case, of, send_evt, recv_evt
   }
 }
@@ -931,47 +931,61 @@ a language under automated analysis since there is a straightforward procedure t
 more flexible and user-friendly grammars into the
 restricted form as demonstrated by Flanagan et al \cite{}.
 Additionally, the restricted grammar melds nicely with the control path semantics.
-Instead of relying on additional meta-syntax for program points of primitive operations, the analysis 
-can simply use the required names of the restricted grammar to identify locations in the program.
+Instead of relying on additional meta-syntax for program points of primitive operations,
+the analysis 
+can simply use the required names of the restricted grammar to identify
+locations in the program.
 Control paths are simply sequences of let bound names. A modification of the example Server
-implementation in ML illustrates the restrictive grammar applied to Concurrent ML. In order
-to preserve space and readability, the grammar used
-in this example is not quite as strict as one that will be used the for
-formal semantics and analysis.
+implementation in ML illustrates the restrictive grammar applied to Concurrent ML.
 
 \begin{lstlisting}[language=normal_lang, escapechar=\%]
-  let lp = fun lp x => 
-    let z1 = case x of 
-      L y => let z2 = lp y in z2 |
-      R () => let z3 = () in z3 in
-    () in
+  let u1 = unt in
+  let r1 = rght u1 in
+  let l1 = lft r1 in
+  let l2 = lft l1 in
 
-  let mksr = fun _ x => 
-    let ch1 = mkChan ()  in
-    let z4 = (lp (L (L (R ()))) in
-    let srv = fun srv x  =>
-      let p = sync (recv_evt ch1) in
-      let v1 = fst p in
-      let ch2 = snd p in 
-      let z5 = sync (send_evt ch2 x) in
-      let z6 = srv v1 in () in
+  let lp = (fun lp' x1 => 
+    let z1 = case x1 of 
+      lft y1 => let z2 = lp' y1 in z2 |
+      rght y2 => rslt u1 in
+    rslt u1) in
+
+  let mksr = (fun _ x2 => 
+    let k1 = mk_chn in
+    let z4 = lp l2 in
+    let srv = fun srv x2 =>
+      let e1 = recv_evt k1 in
+      let p1 = sync e1 in
+      let v1 = fst p1 in
+      let k2 = snd p1 in 
+      let e2 = send_evt k2 x2 in
+      let z5 = sync e2 in
+      let z6 = srv v1 in
+      rslt u1 in
     let z7 = spawn (
-      let z8 = srv (R ()) in ()) in
-    ch1 in
+      let z8 = srv r1 in
+      rslt u1) in
+    rslt k1) in
 
-  let rqst = fun _ pair =>
-    let ch3 = fst pair in
-    let v2 = snd pair in
-    let ch4 = channel () in
-    let z9 = sync (send_evt ch3 (v2, ch4)) in
-    let v3 = sync (recv_evt ch4) in
-    v3 in
+  let rqst = (fun _ x3 =>
+    let k3 = fst x3 in
+    let v2 = snd x3 in
+    let k4 = mk_chn in
+    let p2 = pair v2 k4 in
+    let e3 = send_evt k3 p2 in
+    let z9 = sync e3 in
+    let e4 = recv_evt k4 in
+    let v3 = sync e4 in
+    rslt v3) in
 
-  let srvr = mksr () in
+  let srvr = mksr u1 in
   let z10 = spawn ( 
-    let z11 = rqst (srvr, R ()) in ()) in
-  let z12 = rqst (srvr, L (R ())) in
-  () 
+    let p3 = pair srvr r1 in
+    let z11 = rqst p3 in
+    rslt u1) in
+  let p4 = pair srvr l1 in
+  let z12 = rqst p4 in
+  rslt u1 
   \end{lstlisting}
 
 \section{Syntax}
