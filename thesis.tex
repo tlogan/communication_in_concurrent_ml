@@ -943,9 +943,8 @@ formal semantics and analysis.
   let lp = fun lp x => 
     let z1 = case x of 
       L y => let z2 = lp y in z2 |
-      R () => let z3 = () in z3
-      in ()
-    in
+      R () => let z3 = () in z3 in
+    () in
 
   let mksr = fun _ x => 
     let ch1 = mkChan ()  in
@@ -955,8 +954,7 @@ formal semantics and analysis.
       let v1 = fst p in
       let ch2 = snd p in 
       let z5 = sync (send_evt ch2 x) in
-      let z6 = srv v1 in ()
-      in
+      let z6 = srv v1 in () in
     let z7 = spawn (
       let z8 = srv (R ()) in ()) in
     ch1 in
@@ -971,12 +969,10 @@ formal semantics and analysis.
 
   let srvr = mksr () in
   let z10 = spawn ( 
-    let z11 = rqst (srvr, R ()) in ())
-    in
+    let z11 = rqst (srvr, R ()) in ()) in
   let z12 = rqst (srvr, L (R ())) in
   () 
   \end{lstlisting}
-
 
 \section{Syntax}
 The syntax used in this formal theory contains a very small subset of
@@ -1394,7 +1390,7 @@ embedded within its result subprogram.
   datatype static_value =
     SChn name | SUnt | SPrm primitive 
 
-  type static_environment = name -> static_value set
+  type static_value_map = name -> static_value set
 
   fun result_name of program -> name:
     (%$\forall$% x .
@@ -1418,7 +1414,7 @@ not been formally proven in this work.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_eval of
-    static_environment -> static_environment -> program -> bool:
+    static_value_map -> static_value_map -> program -> bool:
     only
     (%$\forall$% env_a convo_a x .
       static_eval env_a convo_a (Rslt x)
@@ -1548,6 +1544,18 @@ not been formally proven in this work.
       )
   \end{lstlisting}
 
+
+It is very straightforward to follow the rules of static evaluation in order to build up
+a functions mapping names to static values. The example server implementation is helpful for
+demonstrating this informal procedure.  Since the example uses a slightly more relaxed grammar
+than the formal one just specified, the exampled derived static values don't
+correspond exactly to the formal defition.  This slight relaxation is purely cosmetic in order
+to improve readility.
+
+\begin{lstlisting}[language=logic, escapechar=\%]
+  \end{lstlisting}
+
+
 The static reachability is described by subprograms that might be reached from a larger
 program.  A program is reachable from itself. An initial program might also reach any that is
 reachable from its sub program.
@@ -1590,6 +1598,8 @@ reachable from its sub program.
       )
   \end{lstlisting}
 
+
+\section{Static Communication}
 To describe communication statically, it is helpful to identify the entry
 point of each subprogram with a short description. The program identifier of a let-binding is
 identified by the binding name, and indication that it's a let-binding. The program identifier
@@ -1608,7 +1618,6 @@ of a result is indicated by its embedded name, and indication that it's a result
 
 \end{lstlisting}
 
-\section{Static Communication}
 The static communication is described by an estimation of the static paths that communicate on
 static channels.
 The static send site classification means that an program identifier might represent a
@@ -1618,7 +1627,7 @@ synchronization to receive on a given abstract channel.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_send_site of
-    static_environment -> program -> name -> program_id -> bool:
+    static_value_map -> program -> name -> program_id -> bool:
     only
     (%$\forall$% prog0 x x_e e' x_sc x_m env_a x_c .
       if
@@ -1629,7 +1638,7 @@ synchronization to receive on a given abstract channel.
         static_send_site env_a prog0 x_c (NLet x))
 
   predicate static_recv_program_id of
-    static_environment -> program -> name -> program_id -> bool:
+    static_value_map -> program -> name -> program_id -> bool:
     only
     (%$\forall$% prog0 x x_e e' x_rc env_a x_c .
       if
@@ -1700,7 +1709,7 @@ traversable transitions for the sequenced subprogram.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_traversable of
-    static_environment -> static_program -> program -> bool:
+    static_value_map -> static_program -> program -> bool:
     only
     (%$\forall$% env_a prog_a x .
       static_traversable env_a prog_a (Rslt x)
@@ -1925,7 +1934,7 @@ one thread that attempts to receive on the channel for any time during a run of 
 program.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
-  predicate static_one_shot of static_environment -> program -> name -> bool:
+  predicate static_one_shot of static_value_map -> program -> name -> bool:
     only
     (%$\forall$% prog_a e env_a x_c .
       if
@@ -1936,7 +1945,7 @@ program.
       then
         static_one_shot prog_a e x_c)
 
-  predicate static_one_to_one of static_environment -> program -> name -> bool:
+  predicate static_one_to_one of static_value_map -> program -> name -> bool:
     only
     (%$\forall$% prog_a e env_a x_c .
       if
@@ -1950,7 +1959,7 @@ program.
       then
         static_one_to_one env_a e x_c)
 
-  predicate static_one_to_many of static_environment -> program -> name -> bool:
+  predicate static_one_to_many of static_value_map -> program -> name -> bool:
     only
     (%$\forall$% prog_a e env_a x_c .
       if
@@ -1961,7 +1970,7 @@ program.
       then
         static_one_to_many env_a e x_c) 
 
-  predicate static_many_to_one of static_environment -> program -> name -> bool:
+  predicate static_many_to_one of static_value_map -> program -> name -> bool:
     only
     (%$\forall$% prog_a e env_a x_c .
       if
@@ -2156,7 +2165,7 @@ depending on the program.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_traversable_val of
-    static_environment -> static_program -> dynamic_value -> bool:
+    static_value_map -> static_program -> dynamic_value -> bool:
     only
     (%$\forall$% env_a prog_a .
       static_traversable_val env_a prog_a VUnt
@@ -2209,7 +2218,7 @@ depending on the program.
       )
 
   predicate static_traversable_env of
-    static_environment -> static_program -> env -> bool: 
+    static_value_map -> static_program -> env -> bool: 
     only 
     (%$\forall$% env_a prog_a env .
       if
@@ -2219,7 +2228,7 @@ depending on the program.
         static_traversable_env env_a prog_a env) 
 
   predicate static_traversable_stack of
-    static_environment -> static_program ->
+    static_value_map -> static_program ->
     name -> continuation list -> bool:
     only
     (%$\forall$% env_a prog_a y .
@@ -2236,7 +2245,7 @@ depending on the program.
       )
 
   predicate static_traversable_pool of
-    static_environment -> static_program -> pool -> bool:
+    static_value_map -> static_program -> pool -> bool:
     only
     (%$\forall$% env_a prog_a pool .
       if
@@ -2276,7 +2285,7 @@ semantic elements to static values and static environments.
       abstract (VPrm primitive env) = SPrm prim)
 
   predicate static_eval_value of
-    static_environment -> abstract_convo -> dynamic_value -> bool: 
+    static_value_map -> abstract_convo -> dynamic_value -> bool: 
     only
     (%$\forall$% env_a convo_a .
       static_eval_val env_a convo_a VUnit) and
@@ -2322,7 +2331,7 @@ semantic elements to static values and static environments.
           (VPrm (Pair x1 x2) env))
 
   predicate static_eval_env of
-    static_environment -> static_environment -> env -> bool:
+    static_value_map -> static_value_map -> env -> bool:
     only 
     (%$\forall$% env_a convo_a env .
       if
@@ -2333,7 +2342,7 @@ semantic elements to static values and static environments.
         static_eval_env env_a convo_a env)
 
   predicate static_eval_stack of
-    static_environment -> static_environment ->
+    static_value_map -> static_value_map ->
     static_value set -> continuation list -> bool:
     only 
     (%$\forall$% env_a convo_a res_a .
@@ -2348,7 +2357,7 @@ semantic elements to static values and static environments.
         static_eval_stack env_a convo_a res_a ((Ctn x e env) # stack))
 
   predicate static_eval_pool of
-    static_environment -> static_environment -> pool -> bool:
+    static_value_map -> static_value_map -> pool -> bool:
     only
     (%$\forall$% env_a convo_a pool .
       if
@@ -2684,7 +2693,7 @@ Static traversability is similar to that of the previous analysis.
 However, it must additionally consider transitions with the sending mode. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
-  predicate static_traversable of static_environment -> static_program -> program -> bool:
+  predicate static_traversable of static_value_map -> static_program -> program -> bool:
     only
     (%$\forall$% env_a prog_a x .
         static_traversable env_a prog_a (Rslt x)) and
@@ -2803,7 +2812,7 @@ of each program identifier.
 \begin{lstlisting}[language=logic, escapechar=\%]
 
   predicate static_built_on_chan of
-    static_environment -> program_id_map -> name -> name -> bool:
+    static_value_map -> program_id_map -> name -> name -> bool:
     only
     (%$\forall$% x_c env_a x entr .
       if 
@@ -2860,7 +2869,7 @@ program identifier.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_live_chan of
-    static_environment -> program_id_map -> program_id_map -> name -> program -> bool:
+    static_value_map -> program_id_map -> program_id_map -> name -> program -> bool:
     only
     (%$\forall$% env_a entr x_c y exit .
       if
@@ -3058,7 +3067,7 @@ is live with respect to some entry and and exit functions.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_traceable of
-    static_environment -> static_program -> program_id_map -> program_id_map ->
+    static_value_map -> static_program -> program_id_map -> program_id_map ->
     program_id -> (program_id -> bool) -> static_path -> bool:
     only
     (%$\forall$% is_end start env_a prog_a entr exit .
@@ -3142,7 +3151,7 @@ The communication topology classifications are described using the liveness prop
 are otherwise similar to the lower precision classifications.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
-  predicate static_one_shot of static_environment -> program -> name -> bool:
+  predicate static_one_shot of static_value_map -> program -> name -> bool:
     only
     (%$\forall$% prog_a entr exit x_c env_a e . 
       if
@@ -3155,7 +3164,7 @@ are otherwise similar to the lower precision classifications.
       then
         static_one_shot V e x_c)
 
-  predicate static_one_to_one of static_environment -> program -> name -> bool:
+  predicate static_one_to_one of static_value_map -> program -> name -> bool:
     only
     (%$\forall$% prog_a entr exit x_c env_a e .
       if
@@ -3170,7 +3179,7 @@ are otherwise similar to the lower precision classifications.
       then
         static_one_to_one env_a e x_c)
 
-  predicate static_one_to_many of static_environment -> program -> name -> bool:
+  predicate static_one_to_many of static_value_map -> program -> name -> bool:
     only
     (%$\forall$% prog_a entr exit x_c env_a e .
       if
@@ -3182,7 +3191,7 @@ are otherwise similar to the lower precision classifications.
       then
         static_one_to_many env_a e x_c)
 
-  predicate static_many_to_one of static_environment -> program -> name -> bool:
+  predicate static_many_to_one of static_value_map -> program -> name -> bool:
     only
     (%$\forall$% prog_a entr exit x_c env_a e .
       if
