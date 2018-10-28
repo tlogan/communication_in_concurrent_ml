@@ -42,6 +42,14 @@
   }
 }
 
+\lstdefinelanguage{normal_lang}{
+  morekeywords={
+    let, in, fun,
+    mkChan, sync, fst, snd, L, R,
+    spawn, case, of, send_evt, recv_evt
+  }
+}
+
 
 \title{Formal Static Analysis of Synchronization}
 \author{Thomas Logan}
@@ -926,9 +934,12 @@ Additionally, the restricted grammar melds nicely with the control path semantic
 Instead of relying on additional meta-syntax for program points of primitive operations, the analysis 
 can simply use the required names of the restricted grammar to identify locations in the program.
 Control paths are simply sequences of let bound names. A modification of the example Server
-implementation in ML illustrates the restrictive grammar applied to Concurrent ML.
+implementation in ML illustrates the restrictive grammar applied to Concurrent ML. In order
+to preserve space and readability, the grammar used
+in this example is not quite as strict as one that will be used the for
+formal semantics and analysis.
 
-\begin{lstlisting}[language=logic, escapechar=\%]
+\begin{lstlisting}[language=normal_lang, escapechar=\%]
   let lp = fun lp x => 
     let z1 = case x of 
       L y => let z2 = lp y in z2 |
@@ -1653,6 +1664,8 @@ transition to its subprogram. A static path is a list of static points.
 
   type transition = program_id * mode * program_id
 
+  type static_program = transition set
+
   type static_point = program_id * mode
 
   type static_path = static_point list
@@ -1687,7 +1700,7 @@ traversable transitions for the sequenced subprogram.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_traversable of
-    static_environment -> transition_set -> program -> bool:
+    static_environment -> static_program -> program -> bool:
     only
     (%$\forall$% env_a prog_a x .
       static_traversable env_a prog_a (Rslt x)
@@ -1960,6 +1973,8 @@ program.
         static_many_to_one env_a e x_c) 
 \end{lstlisting}
 
+\includegraphics[scale=0.4]{cml_graph.pdf}
+
 \section{Reasoning}
 The reasoning involved in proving the soundness of each communication topology classification
 is based around breaking the goal into simpler subgoals, and generalizing assumptions to create
@@ -2141,7 +2156,7 @@ depending on the program.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_traversable_val of
-    static_environment -> transition_set -> dynamic_value -> bool:
+    static_environment -> static_program -> dynamic_value -> bool:
     only
     (%$\forall$% env_a prog_a .
       static_traversable_val env_a prog_a VUnt
@@ -2194,7 +2209,7 @@ depending on the program.
       )
 
   predicate static_traversable_env of
-    static_environment -> transition_set -> env -> bool: 
+    static_environment -> static_program -> env -> bool: 
     only 
     (%$\forall$% env_a prog_a env .
       if
@@ -2204,7 +2219,7 @@ depending on the program.
         static_traversable_env env_a prog_a env) 
 
   predicate static_traversable_stack of
-    static_environment -> transition_set ->
+    static_environment -> static_program ->
     name -> continuation list -> bool:
     only
     (%$\forall$% env_a prog_a y .
@@ -2221,7 +2236,7 @@ depending on the program.
       )
 
   predicate static_traversable_pool of
-    static_environment -> transition_set -> pool -> bool:
+    static_environment -> static_program -> pool -> bool:
     only
     (%$\forall$% env_a prog_a pool .
       if
@@ -2669,7 +2684,7 @@ Static traversability is similar to that of the previous analysis.
 However, it must additionally consider transitions with the sending mode. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
-  predicate static_traversable of static_environment -> transition_set -> program -> bool:
+  predicate static_traversable of static_environment -> static_program -> program -> bool:
     only
     (%$\forall$% env_a prog_a x .
         static_traversable env_a prog_a (Rslt x)) and
@@ -3000,7 +3015,7 @@ functions.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_live_transition of
-    transition_set -> program_id_map -> program_id_map -> transition -> bool:
+    static_program -> program_id_map -> program_id_map -> transition -> bool:
     only
     (%$\forall$% l l' prog_a exit entr . 
       if
@@ -3043,7 +3058,7 @@ is live with respect to some entry and and exit functions.
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   predicate static_traceable of
-    static_environment -> transition_set -> program_id_map -> program_id_map ->
+    static_environment -> static_program -> program_id_map -> program_id_map ->
     program_id -> (program_id -> bool) -> static_path -> bool:
     only
     (%$\forall$% is_end start env_a prog_a entr exit .
@@ -3397,10 +3412,6 @@ that correlates with the dynamic path is much more challenging.
         static_inclusive path_a1 path_a2
   \end{lstlisting}
 
-\section{Analysis of Example Program}
-
-
-  \includegraphics[scale=0.4]{cml_graph.pdf}
   
 \end{document}
 

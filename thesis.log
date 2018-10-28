@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  25 OCT 2018 21:58
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  28 OCT 2018 13:31
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -682,26 +682,26 @@ Package: beramono 2004/01/31 (WaS)
 ) (./thesis.aux)
 \openout1 = `thesis.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 48.
-LaTeX Font Info:    ... okay on input line 48.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 48.
-LaTeX Font Info:    ... okay on input line 48.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 48.
-LaTeX Font Info:    ... okay on input line 48.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 48.
-LaTeX Font Info:    ... okay on input line 48.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 48.
-LaTeX Font Info:    ... okay on input line 48.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 48.
-LaTeX Font Info:    ... okay on input line 48.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 48.
-LaTeX Font Info:    Try loading font information for TS1+cmr on input line 48.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 56.
+LaTeX Font Info:    ... okay on input line 56.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 56.
+LaTeX Font Info:    ... okay on input line 56.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 56.
+LaTeX Font Info:    ... okay on input line 56.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 56.
+LaTeX Font Info:    ... okay on input line 56.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 56.
+LaTeX Font Info:    ... okay on input line 56.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 56.
+LaTeX Font Info:    ... okay on input line 56.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 56.
+LaTeX Font Info:    Try loading font information for TS1+cmr on input line 56.
 (/usr/local/texlive/2016/texmf-dist/tex/latex/base/ts1cmr.fd
 File: ts1cmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
-LaTeX Font Info:    ... okay on input line 48.
+LaTeX Font Info:    ... okay on input line 56.
 LaTeX Font Info:    Try loading font information for T1+LinuxLibertineT-TLF on 
-input line 48.
+input line 56.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/libertine/T1LinuxLibertineT-TLF.f
 d
@@ -709,7 +709,7 @@ File: T1LinuxLibertineT-TLF.fd 2012/11/26 (autoinst) Font definitions for T1/Li
 nuxLibertineT-TLF.
 )
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 10.0pt on input line 48.
+(Font)              scaled to size 10.0pt on input line 56.
 \c@lstlisting=\count109
  (/usr/local/texlive/2016/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -770,15 +770,15 @@ e
 \c@mv@tabular=\count116
 \c@mv@boldtabular=\count117
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 17.28pt on input line 50.
+(Font)              scaled to size 17.28pt on input line 58.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 12.0pt on input line 50.
-LaTeX Font Info:    Try loading font information for U+msa on input line 50.
+(Font)              scaled to size 12.0pt on input line 58.
+LaTeX Font Info:    Try loading font information for U+msa on input line 58.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 50.
+LaTeX Font Info:    Try loading font information for U+msb on input line 58.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -786,28 +786,28 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 {/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 14.4pt on input line 57.
+(Font)              scaled to size 14.4pt on input line 65.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 14.4pt on input line 57.
+(Font)              scaled to size 14.4pt on input line 65.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
-(Font)              scaled to size 10.0pt on input line 60.
+(Font)              scaled to size 10.0pt on input line 68.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 10.0pt on input line 60.
+(Font)              scaled to size 10.0pt on input line 68.
 
 
-LaTeX Warning: Citation `concurrent_ml' on page 1 undefined on input line 60.
+LaTeX Warning: Citation `concurrent_ml' on page 1 undefined on input line 68.
 
 
-LaTeX Warning: Citation `specialization' on page 1 undefined on input line 61.
+LaTeX Warning: Citation `specialization' on page 1 undefined on input line 69.
 
 
-LaTeX Warning: Citation `isabelle' on page 1 undefined on input line 70.
+LaTeX Warning: Citation `isabelle' on page 1 undefined on input line 78.
 
 
-LaTeX Warning: Citation `0cfa' on page 1 undefined on input line 79.
+LaTeX Warning: Citation `0cfa' on page 1 undefined on input line 87.
 
 
-LaTeX Warning: Citation `program_analysis' on page 1 undefined on input line 79
+LaTeX Warning: Citation `program_analysis' on page 1 undefined on input line 87
 .
 
 [1] (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/lstlang1.sty
@@ -816,78 +816,78 @@ File: lstlang1.sty 2015/06/04 1.6 listings language file
 (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/lstlang2.sty
 File: lstlang2.sty 2015/06/04 1.6 listings language file
 )
-LaTeX Font Info:    Try loading font information for T1+fvm on input line 110.
+LaTeX Font Info:    Try loading font information for T1+fvm on input line 118.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/bera/t1fvm.fd
 File: t1fvm.fd 2004/09/07 scalable font definitions for T1/fvm.
 )
 LaTeX Font Info:    Font shape `T1/fvm/m/n' will be
-(Font)              scaled to size 8.50006pt on input line 110.
+(Font)              scaled to size 8.50006pt on input line 118.
 LaTeX Font Info:    Font shape `T1/fvm/m/n' will be
-(Font)              scaled to size 7.65005pt on input line 110.
+(Font)              scaled to size 7.65005pt on input line 118.
 LaTeX Font Info:    Font shape `T1/fvm/bx/n' in size <9> not available
-(Font)              Font shape `T1/fvm/b/n' tried instead on input line 111.
+(Font)              Font shape `T1/fvm/b/n' tried instead on input line 119.
 LaTeX Font Info:    Font shape `T1/fvm/b/n' will be
-(Font)              scaled to size 7.65005pt on input line 111.
+(Font)              scaled to size 7.65005pt on input line 119.
 
 
-LaTeX Warning: Citation `concurrent_ml' on page 2 undefined on input line 122.
+LaTeX Warning: Citation `concurrent_ml' on page 2 undefined on input line 130.
 
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 9.0pt on input line 157.
+(Font)              scaled to size 9.0pt on input line 165.
 [2]
 
 LaTeX Warning: Citation `transactional_events' on page 3 undefined on input lin
-e 199.
+e 207.
 
 [3] [4] [5] [6] [7] [8]
 LaTeX Font Info:    Font shape `T1/fvm/m/it' in size <9> not available
-(Font)              Font shape `T1/fvm/m/sl' tried instead on input line 459.
+(Font)              Font shape `T1/fvm/m/sl' tried instead on input line 467.
 LaTeX Font Info:    Font shape `T1/fvm/m/sl' will be
-(Font)              scaled to size 7.65005pt on input line 459.
+(Font)              scaled to size 7.65005pt on input line 467.
  [9] [10] [11] [12] [13] [14] [15] [16] [17] [18]
 [19] [20]
-Overfull \hbox (1.82973pt too wide) in paragraph at lines 1058--1068
+Overfull \hbox (1.82973pt too wide) in paragraph at lines 1069--1079
 []\T1/LinuxLibertineT-TLF/m/n/10 The eval-u-a-tion of ex-pres-sions for ap-pli-
 ca-tion, and match-ing re-sult in call-ing, which
  []
 
 
-Overfull \hbox (7.76631pt too wide) in paragraph at lines 1095--1109
+Overfull \hbox (7.76631pt too wide) in paragraph at lines 1106--1120
 []\T1/LinuxLibertineT-TLF/m/n/10 Backtracking is made pos-si-ble by record-ing 
 the pro-grams that have been sidestepped
  []
 
 [21] [22] [23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34] [35]
-[36] [37] [38] [39] [40] [41]
-Overfull \hbox (12.77339pt too wide) in paragraph at lines 2122--2127
+[36] [37] [38] <cml_graph.pdf, id=135, 737.75626pt x 1155.31625pt>
+File: cml_graph.pdf Graphic file (type pdf)
+
+<use cml_graph.pdf>
+Package pdftex.def Info: cml_graph.pdf used on input line 1976.
+(pdftex.def)             Requested size: 295.09727pt x 462.11832pt.
+ [39 <./cml_graph.pdf>] [40] [41]
+Overfull \hbox (12.77339pt too wide) in paragraph at lines 2137--2142
 []\T1/LinuxLibertineT-TLF/m/n/10 The sound-ness of lack of static trace-abil-it
 y is proved by gen-er-al-iz-ing static traversabil-
  []
 
-[42] [43] [44] [45] [46] [47] [48] [49] [50]
-Overfull \hbox (3.55743pt too wide) in paragraph at lines 2642--2647
+[42] [43] [44] [45] [46] [47] [48] [49] [50] [51]
+Overfull \hbox (3.55743pt too wide) in paragraph at lines 2657--2662
 \T1/LinuxLibertineT-TLF/m/n/10 pre-ci-sion anal-y-sis, which can bet-ter dif-fe
 r-en-ti-ate be-tween dis-tinct chan-nels. A trimmed
  []
 
-[51] [52] [53] [54] [55] [56] [57] [58] [59] [60] [61] [62] [63] [64] [65]
-[66] <cml_graph.pdf, id=225, 737.75626pt x 1155.31625pt>
-File: cml_graph.pdf Graphic file (type pdf)
- <use cml_graph.pdf>
-Package pdftex.def Info: cml_graph.pdf used on input line 3403.
-(pdftex.def)             Requested size: 295.09727pt x 462.11832pt.
-
-[67] [68 <./cml_graph.pdf>] (./thesis.aux)
+[52] [53] [54] [55] [56] [57] [58] [59] [60] [61] [62] [63] [64] [65] [66]
+[67] [68] (./thesis.aux)
 
 LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 6732 strings out of 493014
- 96344 string characters out of 6133351
- 422040 words of memory out of 5000000
- 10134 multiletter control sequences out of 15000+600000
+ 6736 strings out of 493014
+ 96414 string characters out of 6133351
+ 418155 words of memory out of 5000000
+ 10138 multiletter control sequences out of 15000+600000
  54864 words of font info for 63 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  38i,6n,74p,232b,1697s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -904,7 +904,7 @@ local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/te
 xlive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/20
 16/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texm
 f-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (69 pages, 418848 bytes).
+Output written on thesis.pdf (69 pages, 419351 bytes).
 PDF statistics:
  279 PDF objects out of 1000 (max. 8388607)
  194 compressed objects within 2 object streams
