@@ -3403,3 +3403,20 @@ that correlates with the dynamic path is much more challenging.
   \includegraphics[scale=0.4]{cml_graph.pdf}
   
 \end{document}
+
+\section{Future Work}
+The formal syntax, semantics, and communication analysis of this work form the basis of
+a framework for studying concurrency abstractions, synchronization mechanisms, and their
+applications. These language features enable the construction of reactive programs, which
+have separation of parts that are conceptually distinct distinct, yet still depend on each
+other.
+This work has kicked off the framework with a formal communication analysis that has practical
+applications in aiding optimizations for parallel computation.  In the future additional
+analyses can be built on the existing semantics, in order to verify the correctness of feature
+extensions or optimizations. Extending the semantics to handle event combinators for choosing
+between events, sequencencing events, guardining events, among others, would be an important
+next step.  One might also want to extend the language with syntax the identify blocks of code
+that should be deterministic, along with a corresponding analysis that checks if such code is
+deterministic \cite[]. Other analyses could aid optimizations for incremental computation
+\cite[], by transforming a program into one that detects dynamically altered dependencies and
+only recomputes those data with altered dependencies.
