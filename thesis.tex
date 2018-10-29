@@ -15,6 +15,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{libertine}
 \usepackage[scaled=0.85]{beramono}
+\usepackage[export]{adjustbox}
 
 \lstset{
   basicstyle=\ttfamily\small,
@@ -947,24 +948,27 @@ implementation in ML illustrates the restrictive grammar applied to Concurrent M
   let lp = (fun lp' x1 => 
     let z1 = case x1 of 
       lft y1 => let z2 = lp' y1 in z2 |
-      rght y2 => rslt u1 in
-    rslt u1) in
+      rght y2 => let u2 = unt in rslt u2 in
+    let u3 = unt in
+    rslt u3) in
 
   let mksr = (fun _ x2 => 
     let k1 = mk_chn in
     let z4 = lp l2 in
-    let srv = fun srv x2 =>
+    let srv = fun srv' x2 =>
       let e1 = recv_evt k1 in
       let p1 = sync e1 in
       let v1 = fst p1 in
       let k2 = snd p1 in 
       let e2 = send_evt k2 x2 in
       let z5 = sync e2 in
-      let z6 = srv v1 in
-      rslt u1 in
+      let z6 = srv' v1 in
+      let u4 = unt in
+      rslt u4 in
     let z7 = spawn (
       let z8 = srv r1 in
-      rslt u1) in
+      let u5 = unt in
+      rslt u5) in
     rslt k1) in
 
   let rqst = (fun _ x3 =>
@@ -982,10 +986,10 @@ implementation in ML illustrates the restrictive grammar applied to Concurrent M
   let z10 = spawn ( 
     let p3 = pair srvr r1 in
     let z11 = rqst p3 in
-    rslt u1) in
+    rslt z11) in
   let p4 = pair srvr l1 in
   let z12 = rqst p4 in
-  rslt u1 
+  rslt z12
   \end{lstlisting}
 
 \section{Syntax}
@@ -1996,7 +2000,7 @@ program.
         static_many_to_one env_a e x_c) 
 \end{lstlisting}
 
-\includegraphics[scale=0.4]{cml_graph.pdf}
+\includegraphics[width=1.0\textwidth, left]{cml_graph.pdf}
 
 \section{Reasoning}
 The reasoning involved in proving the soundness of each communication topology classification
