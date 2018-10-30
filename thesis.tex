@@ -1609,6 +1609,56 @@ the program, incrementally adding more static values for each name in the progra
 
 ----TO DO--- shoe complete static environment and static conversation functions
 \begin{lstlisting}[language=logic, escapechar=\%]
+  fun server_static_env of name -> static_vale set:
+    (%$\forall$% x . server_static_env x =
+      if x = (Nm "u1") then {SUnt} else
+      if x = (Nm "r1") then {} else
+      if x = (Nm "l1") then {} else
+      if x = (Nm "l2") then {} else
+      if x = (Nm "lp") then {} else
+      if x = (Nm "lp'") then {} else
+      if x = (Nm "x1'") then {} else
+      if x = (Nm "z1") then {} else
+      if x = (Nm "y1") then {} else
+      if x = (Nm "z2") then {} else
+      if x = (Nm "y2") then {} else
+      if x = (Nm "u2") then {} else
+      if x = (Nm "u3") then {} else
+      if x = (Nm "mksr") then {} else
+      if x = (Nm "x2") then {} else
+      if x = (Nm "k1") then {} else
+      if x = (Nm "z4") then {} else
+      if x = (Nm "srv") then {} else
+      if x = (Nm "srv") then {} else
+      if x = (Nm "e1") then {} else
+      if x = (Nm "p1") then {} else
+      if x = (Nm "v1") then {} else
+      if x = (Nm "k2") then {} else
+      if x = (Nm "e2") then {} else
+      if x = (Nm "z5") then {} else
+      if x = (Nm "z6") then {} else
+      if x = (Nm "u4") then {} else
+      if x = (Nm "z7") then {} else
+      if x = (Nm "z8") then {} else
+      if x = (Nm "u5") then {} else
+      if x = (Nm "rqst") then {} else
+      if x = (Nm "x3") then {} else
+      if x = (Nm "k3") then {} else
+      if x = (Nm "v2") then {} else
+      if x = (Nm "k4") then {} else
+      if x = (Nm "p2") then {} else
+      if x = (Nm "e3") then {} else
+      if x = (Nm "z9") then {} else
+      if x = (Nm "e4") then {} else
+      if x = (Nm "v3") then {} else
+      if x = (Nm "srvr") then {} else
+      if x = (Nm "z10") then {} else
+      if x = (Nm "p3") then {} else
+      if x = (Nm "z11") then {} else
+      if x = (Nm "p4") then {} else
+      if x = (Nm "z12") then {} else
+      {})
+  
   \end{lstlisting}
 
 
