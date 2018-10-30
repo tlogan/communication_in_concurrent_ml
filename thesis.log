@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  30 OCT 2018 07:09
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  30 OCT 2018 08:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -903,21 +903,21 @@ the pro-grams that have been sidestepped
 File: cml_graph.pdf Graphic file (type pdf)
 
 <use cml_graph.pdf>
-Package pdftex.def Info: cml_graph.pdf used on input line 2027.
+Package pdftex.def Info: cml_graph.pdf used on input line 2040.
 (pdftex.def)             Requested size: 345.0pt x 541.909pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 2027--2028
+Overfull \hbox (15.0pt too wide) in paragraph at lines 2040--2041
 [][] 
  []
 
 [39] [40 <./cml_graph.pdf>] [41] [42]
-Overfull \hbox (12.77339pt too wide) in paragraph at lines 2188--2193
+Overfull \hbox (12.77339pt too wide) in paragraph at lines 2201--2206
 []\T1/LinuxLibertineT-TLF/m/n/10 The sound-ness of lack of static trace-abil-it
 y is proved by gen-er-al-iz-ing static traversabil-
  []
 
 [43] [44] [45] [46] [47] [48] [49] [50] [51] [52]
-Overfull \hbox (3.55743pt too wide) in paragraph at lines 2708--2713
+Overfull \hbox (3.55743pt too wide) in paragraph at lines 2721--2726
 \T1/LinuxLibertineT-TLF/m/n/10 pre-ci-sion anal-y-sis, which can bet-ter dif-fe
 r-en-ti-ate be-tween dis-tinct chan-nels. A trimmed
  []
@@ -929,10 +929,10 @@ LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 7280 strings out of 493014
- 105328 string characters out of 6133351
+ 7281 strings out of 493014
+ 105333 string characters out of 6133351
  427074 words of memory out of 5000000
- 10657 multiletter control sequences out of 15000+600000
+ 10658 multiletter control sequences out of 15000+600000
  54864 words of font info for 63 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  38i,6n,74p,232b,1697s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -949,7 +949,7 @@ local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/te
 xlive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/20
 16/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texm
 f-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (70 pages, 422827 bytes).
+Output written on thesis.pdf (70 pages, 424100 bytes).
 PDF statistics:
  282 PDF objects out of 1000 (max. 8388607)
  196 compressed objects within 2 object streams

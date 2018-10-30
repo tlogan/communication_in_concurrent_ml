@@ -1028,7 +1028,7 @@ is bound to a name. Furthermore, expression only accept names in place of eagerl
 inputs. 
 
 \begin{lstlisting}[language=logic, escapechar=\%]
-  datatype name = Name string
+  datatype name = Nm string
 
   datatype 
     program = 
@@ -1464,7 +1464,7 @@ not been formally proven in this work.
     (%$\forall$% env_a x convo_a e' .
       if 
         SUnt %$\in$% env_a x and
-        static_eval env_a convo_a e
+        static_eval env_a convo_a e'
       then
         static_eval env_a convo_a (Let x Unt e')
       ) and
@@ -1586,13 +1586,26 @@ not been formally proven in this work.
       )
   \end{lstlisting}
 
-
 It is very straightforward to follow the rules of static evaluation in order to build up
-a functions mapping names to static values. The example server implementation is helpful for
-demonstrating this informal procedure.  Since the example uses a slightly more relaxed grammar
-than the formal one just specified, the exampled derived static values don't
-correspond exactly to the formal defition.  This slight relaxation is purely cosmetic in order
-to improve readility.
+functions mapping names to static values for the static environment and the static conversation.
+The example server implementation is helpful for demonstrating this informal procedure.
+We start at the top of the program and pick a rule from the definition of static evaluation that
+could hold. Then we choose the smallest function that satifies that rule's conditions. 
+In the server implementation, the program starts with \\
+\lstinline[language=normal_lang, mathescape]{let u1 = unt in ...}, which only matches the rule concluding with \\
+\lstinline[language=logic, mathescape]{static_eval env_a convo_a (Let (Nm "u1") Unt ...)}. 
+The premises for that rule require that 
+\lstinline[language=logic, mathescape]{SUnt $\in$ env_a u1 and static_eval env_a convo_a ...}.\\
+Therefore, we choose the smallest function we can determine so far for the static environment
+\lstinline{env_a}. The smallest function we can determine for 
+\lstinline[language=logic, mathescape]{SUnt $\in$ env_a (Nm "u1")} is 
+\lstinline[language=logic, mathescape]|$\lambda$ x . if x = (Nm "u1") then {SUnt} else {}|. \\
+Since
+there's no premise that directly states what's required of the static conversation, we can
+simply choose an empty set to start with. The second premise is an inductive static evaluation on
+the subprogram, which indicates that we should repeat this procedure again for the remainder of
+the program, incrementally adding more static values for each name in the program.
+
 
 \begin{lstlisting}[language=logic, escapechar=\%]
   \end{lstlisting}
