@@ -89,7 +89,8 @@ defined by a small-step operational semantics. The static semantics is an instan
 
 \section{Concurrent Language}
 In programing languages, concurrency is a program structuring technique that allows evaluation
-steps to hop back and forth between disjoint syntactic structures within a program. It is useful
+steps to hop back and forth between disjoint syntactic structures within a program.
+It is useful
 when conceptually distinct tasks need to overlap in time, but are easier to understand if they
 are written as distinct structures within the program. Concurrent languages may also allow the
 evaluation order between steps of expressions to be nondeterministic. If it's not necessary for
@@ -287,7 +288,8 @@ one-shot.
   \end{lstlisting}
 
 \section{Implementation}
-Some hypothetical implementations of specialized and generic Concurrent ML illustrate opportunities
+Some hypothetical implementations of specialized and generic
+Concurrent ML illustrate opportunities
 for cheaper synchronization. These implementaitons use 
 feasible low-level thread-centric features such as wait and poll.  The thread-centric approach
 allows us to focus on optimizations common to many implementations by decoupling the
@@ -297,7 +299,8 @@ for optimization.
 
 Depending on the features provided by existing language implementations,
 Concurrent ML could be implemented in as a library, as in the case in SML/NJ and MLton.
-It could also be implemented as features of a language within a compiler and runtime or interpreter.
+It could also be implemented as features of
+a language within a compiler and runtime or interpreter.
 Thus, the implementations shown here can be viewed either as a library or as an intermediate
 representation within a compiler or interpreter presented with concrete syntax.
 
@@ -317,26 +320,34 @@ implementation of channels with scheduling and only scheduling the sending and r
 operations when no other pending operations have yet to start or have already finished.
 Reppy's implementation of
 Concurrent ML uses SML/NJ's first class continuations to implement scheduling and communication
-as one with very low overhead. In contrast, a multiprocessor implementation would allow threads to run
-on different processors for increased parallelism, therefore it would not be able to mandate when
+as one with very low overhead. In contrast, a multiprocessor
+implementation would allow threads to run
+on different processors for increased parallelism,
+therefore it would not be able to mandate when
 threads attempt synchronization relative to others without losing the parallel advantage.
-The cost of trying to achieve parallelism is increased overhead due to contention over acquiring
+The cost of trying to achieve parallelism
+is increased overhead due to contention over acquiring
 synchronization rights. 
 
 A channel can be in one of three states.  Either some threads are trying to send through it,
 some threads are trying to receive from it, or no threads are trying to send or receive on it.
-Additionally a channel is composed of a mutex lock, so that sending and receiving operations can yield
+Additionally a channel is composed of a mutex lock,
+so that sending and receiving operations can yield
 to each other when updating the channel state. When multiple threads are trying to send on a
 channel, the channel is associated with a queue consisting of messages to be sent, along with
 conditions waited on by sending threads. When multiple threads are trying to receive on a
-channel, the channel is associated with a queue consisting of initially empty cells that are accessible
-by receiving threads and conditions waited on by the receiving threads. The channel content holds the
+channel, the channel is associated with a queue consisting of
+initially empty cells that are accessible
+by receiving threads and conditions waited on by
+the receiving threads. The channel content holds the
 three potential states and their associated content of queues and conditions.
 The channel is composed of the channel content and also a mutext lock that regulates access to
 the channel content.
 
-The sending operation acquires the channel's lock to ensure that it updates the channel based on
-any one of its latest state.  If there are threads trying to receive from the channel, the sending 
+The sending operation acquires the channel's lock to
+ensure that it updates the channel based on
+any one of its latest state.  If there are threads trying
+to receive from the channel, the sending 
 operation dequeues an item from the state's associated queue.  The item consists of a condition
 waited on by a receiving thread and an empty cell that can be accessed by the receiving thread.
 It deposits the message in the cell and signals on the condition, updates the channel state to
@@ -347,8 +358,10 @@ additional condition and message in the associated queue.  It releases the lock 
 the enqueued condition.  Once a receiving thread signals on the same condition, the sending 
 operation returns with the unit value.
 
-The receiving operation acquires the channel's lock to ensure that it updates the channel based on
-any one of its latest state.  If there are threads trying to send on the channel, the receiving 
+The receiving operation acquires the channel's lock
+to ensure that it updates the channel based on
+any one of its latest state.  If there are threads
+trying to send on the channel, the receiving 
 operation dequeues an item from the state's associated queue.  The item consists of a condition
 waited on by a sending thread along with a message to be sent.  It signals the condition and
 updates the channel state to inactive if there are no further sending threads waiting, then
@@ -426,7 +439,8 @@ the case for many-to-many channels.  However, the state of a thread trying to se
 associated with one condition and one message.  
 
 The sending operation checks if the channel's state is inactive and tries to use the
-compare-and-swap operator to transactionally update the state of the channel to that of trying to
+compare-and-swap operator to transactionally update the state of
+the channel to that of trying to
 send.  If successful, it simply waits on sendCond, the condition that a receiving thread will
 signal on, and then returns the unit value.  If the transactional update fails and the state is
 that of threads trying to receive on the channel, then the sending operation acquires the lock,
@@ -437,14 +451,18 @@ no further items on the queue, then releases the lock.  Then it signals on the c
 returns the unit value. The lock is acquired after the state is determined to be that of
 threads trying to receive, since the expectation is that the current thread is the only one
 that tries to update the channel from that state.  If the communication topology analysis were
-incorrect and and there were actually multiple threads that could call the sending operation, then
-there might be data races.  Likewise, due to the expectation of a single thread sending on the
-channel, the sending operation should never witness the state of threads already trying to send.
+incorrect and and there were actually multiple threads that could call the sending operation,
+then there might be data races.  Likewise, due to the expectation of a single thread
+sending on the
+channel, the sending operation should never witness the state of
+threads already trying to send.
 
-The receiving operation acquires the lock and checks the state of the channel, just as the receiving
+The receiving operation acquires the lock and checks
+the state of the channel, just as the receiving
 operation for many-to-many channels.  If the channel is in a state where there is no already
-trying to send, then it behaves the same as the receiving operation of many-to-many channels. If
-there is already a thread trying to receive, then it updates the state to inactive and releases
+trying to send, then it behaves the same as the receiving operation of many-to-many channels.
+If there is already a thread trying to receive, then it updates the state to inactive and
+releases
 the lock.  Then it signals on the state's associated condition, which is waited on by a sending
 thread, and returns the states' associated message.
 
@@ -558,7 +576,8 @@ lock. Additional, none of the states are associated with queues.  Instead, there
 state of a thread trying to send, with a condition and a message, or a possible state of a
 thread trying to receive with a condition and an empty cell, or a possible inactive state.
 The sending operation checks if the channel's state is inactive and tries to use the
-compare-and-swap operator to transactionally update the state of the channel to that of trying to
+compare-and-swap operator to transactionally update the state of the channel to that of
+trying to
 send.  If successful, it simply waits on sendCond, the condition that a receiving thread will
 signal on, and then returns the unit value.  If the transactional update fails and the state is
 that of a thread trying to receive on the channel, then it deposits the message in the state's
@@ -566,7 +585,8 @@ associated cell, updates the channel state to inactive, then signals on the stat
 condition and returns the unit value.  If the communication analysis for the channel is
 correctly one-to-one, then there should be no other thread trying update the state from the
 state of a thread trying to receive, and no thread modifies that particular state, so no locks
-are necessary.  Likewise, the sending operation should never witness the state of another thread
+are necessary.  Likewise, the sending operation
+should never witness the state of another thread
 already trying to send, if it is truly one-to-one.
 
 The receiving operation checks if the channel's state is inactive and tries to use the
@@ -627,7 +647,8 @@ A one-shot channel consists of the same possible states as a one-to-one channel,
 additionally associated with a mutex lock, to account for the fact that multiple threads may
 try to receive on the channel, even though only at most one message is ever sent.
 
-The sending operation is like that of one-to-one channels, except that if the state is that of a
+The sending operation is like that of one-to-one channels,
+except that if the state is that of a
 thread trying to receive, it simply deposits the message and signals on the associated
 condition, without updating the channel's state to inactive, which would be unnecessary, since
 no further attempts to send are expected.
@@ -695,8 +716,8 @@ composed of a possibly empty cell, a condition for a sending thread to wait on, 
 for a receiving thread to wait on.
 
 The sending operation deposits the message in the cell, signals on the recvCond, waits on the
-sendCond, and then returns the unit value.  The receiving operation waits on the recvCond, signals
-on the sendCond and then returns the deposited message.
+sendCond, and then returns the unit value.  The receiving operation waits on the recvCond,
+signals on the sendCond and then returns the deposited message.
 
 
 \begin{lstlisting}[language=ML, escapechar=\%]
@@ -728,8 +749,8 @@ the new program with the specialized implementation behaves the same as the orig
 with the generic implementation, you need to be certain of three basic properties: that the
 specialized program behaves the same given one-to-one communication; that you have a procedure
 to determine the one-to-one communication topology, and that the relation between the
-procedure's input program and output topology upper bound is sound with respect to the semantics
-of the program.  
+procedure's input program and output topology upper bound is sound with respect to the
+semantics of the program.  
 
 Spending your energy to determine the topologies for each unique program and then verifying
 them for each program would be exhausting. Instead, you would probably rather have a generic
@@ -777,7 +798,8 @@ removed to improve performance.
 In the following example, an analysis for available expressions would track
 \lstinline{(!x + 1)} and \lstinline{(w - 3)} to remain available from line 5 all the way until
 the end of the program, meaning those two redundant expressions in line 8 can be swapped with
-the results of their evaluation. In contrast, \lstinline{(!y + 2)} would be tracked as available
+the results of their evaluation. In contrast, \lstinline{(!y + 2)} would be tracked as
+available
 from line 5 until line 7. It would be unavailable after line 7 because the number in
 \lstinline{y} is modified in line 7, changing the how the expression would evaluate after
 that.
@@ -893,7 +915,8 @@ Isabelle, has no difficulty discerning between valid and invalid derivations.
 Mechanical checking of proofs can notify users of errors in the proofs or definitions far better
 and faster than manual checking. This work has greatly benefited from Isabelle's proof checker in
 order to correctly define the language semantics, control flow analysis, communication analysis,
-and other helpful definitions. For instance, some bugs in the definintions were found trying to prove
+and other helpful definitions. For instance, some bugs in the
+definintions were found trying to prove
 soundness. The proof checker would not accept the proof unless I provided facts that
 should be false, indicating that the definitions did not state my intentions.
 After correcting the errors in the definitions, the proof was completed such that the proof
@@ -904,7 +927,8 @@ checker was satisfied.
 The definitions and theorems of this work were constructed in the formal language of Isabelle/HOL,
 to enable mechanical verification of the correctness of the proofs. However, the formal logic used
 for presentation in this paper has been somewhat modified from Isabelle's syntax. 
-To aid the development of formal proofs, the analyses are stated using non-algorithmic specifications.
+To aid the development of formal proofs,
+the analyses are stated using non-algorithmic specifications.
 The static relations are defined
 with syntax-directed structures, providing strong evidence of computability.
 That is, a relation about a program could be described by the same relation on a subprogram,
