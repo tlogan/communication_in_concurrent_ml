@@ -1592,7 +1592,8 @@ The example server implementation is helpful for demonstrating this informal pro
 We start at the top of the program and pick a rule from the definition of static evaluation that
 could hold. Then we choose the smallest function that satifies that rule's conditions. 
 In the server implementation, the program starts with \\
-\lstinline[language=normal_lang, mathescape]{let u1 = unt in ...}, which only matches the rule concluding with \\
+\lstinline[language=normal_lang, mathescape]{let u1 = unt in ...}, which only matches
+the rule concluding with \\
 \lstinline[language=logic, mathescape]{static_eval env_a convo_a (Let (Nm "u1") Unt ...)}. 
 The premises for that rule require that 
 \lstinline[language=logic, mathescape]{SUnt $\in$ env_a u1 and static_eval env_a convo_a ...}.\\
@@ -1606,7 +1607,7 @@ simply choose an empty set to start with. The second premise is an inductive sta
 the subprogram, which indicates that we should repeat this procedure again for the remainder of
 the program, incrementally adding more static values for each name in the program.
 
-
+----TO DO--- shoe complete static environment and static conversation functions
 \begin{lstlisting}[language=logic, escapechar=\%]
   \end{lstlisting}
 
