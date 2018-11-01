@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  30 OCT 2018 09:12
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  1 NOV 2018 07:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -886,44 +886,43 @@ LaTeX Font Info:    Font shape `T1/fvm/m/it' in size <9> not available
 LaTeX Font Info:    Font shape `T1/fvm/m/sl' will be
 (Font)              scaled to size 7.65005pt on input line 486.
  [9] [10] [11] [12] [13] [14] [15] [16] [17] [18]
-[19] [20]
-Overfull \hbox (1.82973pt too wide) in paragraph at lines 1107--1117
+[19]
+Overfull \hbox (1.82973pt too wide) in paragraph at lines 1053--1063
 []\T1/LinuxLibertineT-TLF/m/n/10 The eval-u-a-tion of ex-pres-sions for ap-pli-
 ca-tion, and match-ing re-sult in call-ing, which
  []
 
-[21]
-Overfull \hbox (7.76631pt too wide) in paragraph at lines 1144--1158
+[20]
+Overfull \hbox (7.76631pt too wide) in paragraph at lines 1090--1104
 []\T1/LinuxLibertineT-TLF/m/n/10 Backtracking is made pos-si-ble by record-ing 
 the pro-grams that have been sidestepped
  []
 
-[22] [23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34] [35] [36]
-[37] [38] [39] <cml_graph.pdf, id=138, 1403.2425pt x 2204.235pt>
-File: cml_graph.pdf Graphic file (type pdf)
-
-<use cml_graph.pdf>
-Package pdftex.def Info: cml_graph.pdf used on input line 2091.
-(pdftex.def)             Requested size: 345.0pt x 541.909pt.
-
-Overfull \hbox (15.0pt too wide) in paragraph at lines 2091--2092
-[][] 
- []
-
-[40] [41 <./cml_graph.pdf>] [42] [43]
-Overfull \hbox (12.77339pt too wide) in paragraph at lines 2252--2257
+[21] [22] [23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34] [35]
+[36] [37] [38] [39] [40] [41] [42]
+Overfull \hbox (12.77339pt too wide) in paragraph at lines 2244--2249
 []\T1/LinuxLibertineT-TLF/m/n/10 The sound-ness of lack of static trace-abil-it
 y is proved by gen-er-al-iz-ing static traversabil-
  []
 
-[44] [45] [46] [47] [48] [49] [50] [51] [52] [53]
-Overfull \hbox (3.55743pt too wide) in paragraph at lines 2772--2777
+[43] [44] [45] [46] [47] [48] [49] [50] [51] [52]
+Overfull \hbox (3.55743pt too wide) in paragraph at lines 2764--2769
 \T1/LinuxLibertineT-TLF/m/n/10 pre-ci-sion anal-y-sis, which can bet-ter dif-fe
 r-en-ti-ate be-tween dis-tinct chan-nels. A trimmed
  []
 
-[54] [55] [56] [57] [58] [59] [60] [61] [62] [63] [64] [65] [66] [67] [68]
-[69] [70] (./thesis.aux)
+[53] [54] [55] [56] [57] [58] [59] [60] [61] [62] [63] [64]
+<cml_graph.pdf, id=218, 1403.2425pt x 2204.235pt>
+File: cml_graph.pdf Graphic file (type pdf)
+ <use cml_graph.pdf>
+Package pdftex.def Info: cml_graph.pdf used on input line 3365.
+(pdftex.def)             Requested size: 345.0pt x 541.909pt.
+
+Overfull \hbox (15.0pt too wide) in paragraph at lines 3365--3366
+[][] 
+ []
+
+[65] [66 <./cml_graph.pdf>] [67] [68] [69] [70] [71] (./thesis.aux)
 
 LaTeX Warning: There were undefined references.
 
@@ -931,7 +930,7 @@ LaTeX Warning: There were undefined references.
 Here is how much of TeX's memory you used:
  7283 strings out of 493014
  105371 string characters out of 6133351
- 427074 words of memory out of 5000000
+ 425074 words of memory out of 5000000
  10660 multiletter control sequences out of 15000+600000
  54864 words of font info for 63 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -949,10 +948,10 @@ local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/te
 xlive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/20
 16/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texm
 f-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (71 pages, 425093 bytes).
+Output written on thesis.pdf (72 pages, 426405 bytes).
 PDF statistics:
- 285 PDF objects out of 1000 (max. 8388607)
- 198 compressed objects within 2 object streams
+ 288 PDF objects out of 1000 (max. 8388607)
+ 200 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 

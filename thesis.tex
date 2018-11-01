@@ -960,61 +960,7 @@ Instead of relying on additional meta-syntax for program points of primitive ope
 the analysis 
 can simply use the required names of the restricted grammar to identify
 locations in the program.
-Control paths are simply sequences of let bound names. A modification of the example Server
-implementation in ML illustrates the restrictive grammar applied to Concurrent ML.
-
-\begin{lstlisting}[language=normal_lang, escapechar=\%]
-  let u1 = unt in
-  let r1 = rght u1 in
-  let l1 = lft r1 in
-  let l2 = lft l1 in
-
-  let lp = (fun lp' x1 => 
-    let z1 = case x1 of 
-      lft y1 => let z2 = lp' y1 in z2 |
-      rght y2 => let u2 = unt in rslt u2 in
-    let u3 = unt in
-    rslt u3) in
-
-  let mksr = (fun _ x2 => 
-    let k1 = mk_chn in
-    let z4 = lp l2 in
-    let srv = fun srv' x2 =>
-      let e1 = recv_evt k1 in
-      let p1 = sync e1 in
-      let v1 = fst p1 in
-      let k2 = snd p1 in 
-      let e2 = send_evt k2 x2 in
-      let z5 = sync e2 in
-      let z6 = srv' v1 in
-      let u4 = unt in
-      rslt u4 in
-    let z7 = spawn (
-      let z8 = srv r1 in
-      let u5 = unt in
-      rslt u5) in
-    rslt k1) in
-
-  let rqst = (fun _ x3 =>
-    let k3 = fst x3 in
-    let v2 = snd x3 in
-    let k4 = mk_chn in
-    let p2 = pair v2 k4 in
-    let e3 = send_evt k3 p2 in
-    let z9 = sync e3 in
-    let e4 = recv_evt k4 in
-    let v3 = sync e4 in
-    rslt v3) in
-
-  let srvr = mksr u1 in
-  let z10 = spawn ( 
-    let p3 = pair srvr r1 in
-    let z11 = rqst p3 in
-    rslt z11) in
-  let p4 = pair srvr l1 in
-  let z12 = rqst p4 in
-  rslt z12
-  \end{lstlisting}
+Control paths are simply sequences of let bound names.
 
 \section{Syntax}
 The syntax used in this formal theory contains a very small subset of
@@ -1586,9 +1532,58 @@ not been formally proven in this work.
       )
   \end{lstlisting}
 
+
+
+\begin{lstlisting}[language=normal_lang, escapechar=\%]
+  let u1 = unt in
+  let r1 = rght u1 in
+  let l1 = lft r1 in
+  let l2 = lft l1 in
+
+  let mksr = (fun _ x2 => 
+    let k1 = mk_chn in
+    let srv = fun srv' x3 =>
+      let e1 = recv_evt k1 in
+      let p1 = sync e1 in
+      let v1 = fst p1 in
+      let k2 = snd p1 in 
+      let e2 = send_evt k2 x3 in
+      let z5 = sync e2 in
+      let z6 = srv' v1 in
+      let u4 = unt in
+      rslt u4 in
+    let z7 = spawn (
+      let z8 = srv r1 in
+      let u5 = unt in
+      rslt u5) in
+    rslt k1) in
+
+  let rqst = (fun _ x3 =>
+    let k3 = fst x3 in
+    let v2 = snd x3 in
+    let k4 = mk_chn in
+    let p2 = pair v2 k4 in
+    let e3 = send_evt k3 p2 in
+    let z9 = sync e3 in
+    let e4 = recv_evt k4 in
+    let v3 = sync e4 in
+    rslt v3) in
+
+  let srvr = mksr u1 in
+  let z10 = spawn ( 
+    let p3 = pair srvr r1 in
+    let z11 = rqst p3 in
+    rslt z11) in
+  let p4 = pair srvr l1 in
+  let z12 = rqst p4 in
+  rslt z12
+  \end{lstlisting}
+
+
 It is very straightforward to follow the rules of static evaluation in order to build up
 functions mapping names to static values for the static environment and the static conversation.
 The example server implementation is helpful for demonstrating this informal procedure.
+
 We start at the top of the program and pick a rule from the definition of static evaluation that
 could hold. Then we choose the smallest function that satifies that rule's conditions. 
 In the server implementation, the program starts with \\
@@ -1605,31 +1600,30 @@ Since
 there's no premise that directly states what's required of the static conversation, we can
 simply choose an empty set to start with. The second premise is an inductive static evaluation on
 the subprogram, which indicates that we should repeat this procedure again for the remainder of
-the program, incrementally adding more static values for each name in the program.
+the program, incrementally adding more static values for each name in the program.  We then repeat
+the procedure from the top of the program until there's nothing more to add to the functions.
 
 ----TO DO--- shoe complete static environment and static conversation functions
 \begin{lstlisting}[language=logic, escapechar=\%]
   fun server_static_env of name -> static_vale set:
     (%$\forall$% x . server_static_env x =
       if x = (Nm "u1") then {SUnt} else
-      if x = (Nm "r1") then {} else
-      if x = (Nm "l1") then {} else
-      if x = (Nm "l2") then {} else
-      if x = (Nm "lp") then {} else
-      if x = (Nm "lp'") then {} else
-      if x = (Nm "x1'") then {} else
-      if x = (Nm "z1") then {} else
-      if x = (Nm "y1") then {} else
-      if x = (Nm "z2") then {} else
-      if x = (Nm "y2") then {} else
-      if x = (Nm "u2") then {} else
-      if x = (Nm "u3") then {} else
-      if x = (Nm "mksr") then {} else
-      if x = (Nm "x2") then {} else
-      if x = (Nm "k1") then {} else
-      if x = (Nm "z4") then {} else
+      if x = (Nm "r1") then {SPrm (Rght (Nm "u1"))} else
+      if x = (Nm "l1") then {SPrm (Lft (Nm "r1"))} else
+      if x = (Nm "l2") then {SPrm (Lft (Nm "l1"))} else
+      if x = (Nm "x1'") then {SUnt} else
+      if x = (Nm "z1") then {SUnt} else
+      if x = (Nm "y1") then {(Lft (Nm "r1")), (Rght (Nm "u1"))} else
+      if x = (Nm "z2") then {SUnt} else
+      if x = (Nm "y2") then {SUnt} else
+      if x = (Nm "u2") then {SUnt} else
+      if x = (Nm "u3") then {SUnt} else
+      if x = (Nm "mksr") then {SPrm (Abs (Nm _), ...)} else
+      if x = (Nm "x2") then {SUnt} else
+      if x = (Nm "k1") then {SChn (Nm "k1"))} else
       if x = (Nm "srv") then {} else
-      if x = (Nm "srv") then {} else
+      if x = (Nm "srv'") then {} else
+      if x = (Nm "x3") then {} else
       if x = (Nm "e1") then {} else
       if x = (Nm "p1") then {} else
       if x = (Nm "v1") then {} else
@@ -2087,8 +2081,6 @@ program.
       then
         static_many_to_one env_a e x_c) 
 \end{lstlisting}
-
-\includegraphics[width=1.0\textwidth, left]{cml_graph.pdf}
 
 \section{Reasoning}
 The reasoning involved in proving the soundness of each communication topology classification
@@ -3309,6 +3301,68 @@ are otherwise similar to the lower precision classifications.
       then
         static_many_to_one env_a e x_c)
   \end{lstlisting}
+
+
+A slightly modified version of the server implementation demonstrates the usage of channel liveness
+analysis, and liveness traversabilitiy of programs.  An additional loop has been added to the
+server implementation.  The loop basically just wastes time, but is used to demontrate how
+traversability handles recursion that does not contain any channel of interest. 
+
+\begin{lstlisting}[language=normal_lang, escapechar=\%]
+  let u1 = unt in
+  let r1 = rght u1 in
+  let l1 = lft r1 in
+  let l2 = lft l1 in
+
+  let lp = (fun lp' x1 => 
+    let z1 = case x1 of 
+      lft y1 => let z2 = lp' y1 in z2 |
+      rght y2 => let u2 = unt in rslt u2 in
+    let u3 = unt in
+    rslt u3) in
+
+  let mksr = (fun _ x2 => 
+    let k1 = mk_chn in
+    let z4 = lp l2 in
+    let srv = fun srv' x3 =>
+      let e1 = recv_evt k1 in
+      let p1 = sync e1 in
+      let v1 = fst p1 in
+      let k2 = snd p1 in 
+      let e2 = send_evt k2 x3 in
+      let z5 = sync e2 in
+      let z6 = srv' v1 in
+      let u4 = unt in
+      rslt u4 in
+    let z7 = spawn (
+      let z8 = srv r1 in
+      let u5 = unt in
+      rslt u5) in
+    rslt k1) in
+
+  let rqst = (fun _ x3 =>
+    let k3 = fst x3 in
+    let v2 = snd x3 in
+    let k4 = mk_chn in
+    let p2 = pair v2 k4 in
+    let e3 = send_evt k3 p2 in
+    let z9 = sync e3 in
+    let e4 = recv_evt k4 in
+    let v3 = sync e4 in
+    rslt v3) in
+
+  let srvr = mksr u1 in
+  let z10 = spawn ( 
+    let p3 = pair srvr r1 in
+    let z11 = rqst p3 in
+    rslt z11) in
+  let p4 = pair srvr l1 in
+  let z12 = rqst p4 in
+  rslt z12
+  \end{lstlisting}
+
+
+\includegraphics[width=1.0\textwidth, left]{cml_graph.pdf}
 
 \section{Higher Precision Reasoning Strategy}
 To prove soundness of the communication topology classification, it should be possible to use
