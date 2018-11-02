@@ -46,7 +46,7 @@
 \lstdefinelanguage{normal_lang}{
   morekeywords={
     let, in, rslt, fun, unt, pair,
-    mk_chn, sync, fst, snd, lft, rght,
+    chn, mk_chn, sync, fst, snd, lft, rght,
     spawn, case, of, send_evt, recv_evt
   }
 }
@@ -1532,7 +1532,10 @@ not been formally proven in this work.
       )
   \end{lstlisting}
 
-
+It is very straightforward to follow the rules of static evaluation in order to build up
+functions mapping names to static values for the static environment and the static conversation.
+The example server implementation recasted into the ANF grammar is helpful for demonstrating this
+informal procedure.
 
 \begin{lstlisting}[language=normal_lang, escapechar=\%]
   let u1 = unt in
@@ -1558,9 +1561,9 @@ not been formally proven in this work.
       rslt u5) in
     rslt k1) in
 
-  let rqst = (fun _ x3 =>
-    let k3 = fst x3 in
-    let v2 = snd x3 in
+  let rqst = (fun _ x4 =>
+    let k3 = fst x4 in
+    let v2 = snd x4 in
     let k4 = mk_chn in
     let p2 = pair v2 k4 in
     let e3 = send_evt k3 p2 in
@@ -1571,18 +1574,14 @@ not been formally proven in this work.
 
   let srvr = mksr u1 in
   let z10 = spawn ( 
-    let p3 = pair srvr r1 in
+    let p3 = pair srvr l1 in
     let z11 = rqst p3 in
     rslt z11) in
-  let p4 = pair srvr l1 in
+  let p4 = pair srvr l2 in
   let z12 = rqst p4 in
   rslt z12
   \end{lstlisting}
 
-
-It is very straightforward to follow the rules of static evaluation in order to build up
-functions mapping names to static values for the static environment and the static conversation.
-The example server implementation is helpful for demonstrating this informal procedure.
 
 We start at the top of the program and pick a rule from the definition of static evaluation that
 could hold. Then we choose the smallest function that satifies that rule's conditions. 
@@ -1602,57 +1601,58 @@ simply choose an empty set to start with. The second premise is an inductive sta
 the subprogram, which indicates that we should repeat this procedure again for the remainder of
 the program, incrementally adding more static values for each name in the program.  We then repeat
 the procedure from the top of the program until there's nothing more to add to the functions.
+To make the presentation clear, the syntactic sugar \lstinline|(r1 -> {right u1}, ...)| is used 
+to mean
+\lstinline[mathescape]|$\lambda$ x . if x = (Nm "r1") then {SPrm (Rght (Nm "u1"))} else ... else {}|.
+The representation of static values closely resembles the concrete syntax.
 
-----TO DO--- shoe complete static environment and static conversation functions
-\begin{lstlisting}[language=logic, escapechar=\%]
-  fun server_static_env of name -> static_vale set:
-    (%$\forall$% x . server_static_env x =
-      if x = (Nm "u1") then {SUnt} else
-      if x = (Nm "r1") then {SPrm (Rght (Nm "u1"))} else
-      if x = (Nm "l1") then {SPrm (Lft (Nm "r1"))} else
-      if x = (Nm "l2") then {SPrm (Lft (Nm "l1"))} else
-      if x = (Nm "x1'") then {SUnt} else
-      if x = (Nm "z1") then {SUnt} else
-      if x = (Nm "y1") then {(Lft (Nm "r1")), (Rght (Nm "u1"))} else
-      if x = (Nm "z2") then {SUnt} else
-      if x = (Nm "y2") then {SUnt} else
-      if x = (Nm "u2") then {SUnt} else
-      if x = (Nm "u3") then {SUnt} else
-      if x = (Nm "mksr") then {SPrm (Abs (Nm _), ...)} else
-      if x = (Nm "x2") then {SUnt} else
-      if x = (Nm "k1") then {SChn (Nm "k1"))} else
-      if x = (Nm "srv") then {} else
-      if x = (Nm "srv'") then {} else
-      if x = (Nm "x3") then {} else
-      if x = (Nm "e1") then {} else
-      if x = (Nm "p1") then {} else
-      if x = (Nm "v1") then {} else
-      if x = (Nm "k2") then {} else
-      if x = (Nm "e2") then {} else
-      if x = (Nm "z5") then {} else
-      if x = (Nm "z6") then {} else
-      if x = (Nm "u4") then {} else
-      if x = (Nm "z7") then {} else
-      if x = (Nm "z8") then {} else
-      if x = (Nm "u5") then {} else
-      if x = (Nm "rqst") then {} else
-      if x = (Nm "x3") then {} else
-      if x = (Nm "k3") then {} else
-      if x = (Nm "v2") then {} else
-      if x = (Nm "k4") then {} else
-      if x = (Nm "p2") then {} else
-      if x = (Nm "e3") then {} else
-      if x = (Nm "z9") then {} else
-      if x = (Nm "e4") then {} else
-      if x = (Nm "v3") then {} else
-      if x = (Nm "srvr") then {} else
-      if x = (Nm "z10") then {} else
-      if x = (Nm "p3") then {} else
-      if x = (Nm "z11") then {} else
-      if x = (Nm "p4") then {} else
-      if x = (Nm "z12") then {} else
-      {})
-  
+
+\begin{lstlisting}[language=normal_lang, escapechar=\%]
+  val server_static_env of name -> static_vale set:
+    server_static_env = (
+      u1 -> {unt},
+      r1 -> {rght u1},
+      l1 -> {lft r1},
+      l2 -> {lft l1},
+      mksr -> {fun  _ x2 => ...},
+      x2 -> {unt},
+      k1 -> {chn k1},
+      srv -> {fun srv' x3 => ...},
+      srv' -> {fun srv' x3 => ...},
+      x3 -> {rght u1, lft r1, lft l1},
+      e1 -> {recv_evt k1},
+      p1 -> {pair v2 k4},
+      v1 -> {lft r1, lft l1},
+      k2 -> {chn k4},
+      e2 -> {send_evt k2 x3},
+      z5 -> {unt},
+      z6 -> {unt},
+      u4 -> {unt},
+      z7 -> {unt},
+      z8 -> {unt},
+      u5 -> {unt},
+      rqst -> {fun _ x4 => ...},
+      x4 -> {pair srvr l1, pair srvr l2},
+      k3 -> {chn k1},
+      v2 -> {lft r1, lft l1},
+      k4 -> {chn k4},
+      p2 -> {pair v2 k4},
+      e3 -> {send_evt k3 p2},
+      z9 -> {unt},
+      e4 -> {recv_evt k4},
+      v3 -> {rght u1, lft r1, lft r2},
+      srvr -> {chn k1},
+      z10 -> {unt},
+      p3 -> {pair srvr l1},
+      z11 -> {rght u1, lft r2},
+      p4 -> {pair srvr l2},
+      z12 -> {rght u1, lft l1})
+
+  val server_static_convo of name -> static_vale set:
+    server_static_convo = (
+      k1 -> {pair v2 k4},
+      k4 -> {rght u1, lft l1, lft l2}
+      )
   \end{lstlisting}
 
 
@@ -3340,9 +3340,9 @@ traversability handles recursion that does not contain any channel of interest.
       rslt u5) in
     rslt k1) in
 
-  let rqst = (fun _ x3 =>
-    let k3 = fst x3 in
-    let v2 = snd x3 in
+  let rqst = (fun _ x4 =>
+    let k3 = fst x4 in
+    let v2 = snd x4 in
     let k4 = mk_chn in
     let p2 = pair v2 k4 in
     let e3 = send_evt k3 p2 in
@@ -3353,10 +3353,10 @@ traversability handles recursion that does not contain any channel of interest.
 
   let srvr = mksr u1 in
   let z10 = spawn ( 
-    let p3 = pair srvr r1 in
+    let p3 = pair srvr l1 in
     let z11 = rqst p3 in
     rslt z11) in
-  let p4 = pair srvr l1 in
+  let p4 = pair srvr l2 in
   let z12 = rqst p4 in
   rslt z12
   \end{lstlisting}
