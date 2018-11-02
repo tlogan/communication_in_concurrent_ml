@@ -34,6 +34,7 @@
     datatype,
     type,
     fun,
+    val,
     predicate,
     only, if, then, else,
     and, or, not,
@@ -46,8 +47,27 @@
 \lstdefinelanguage{normal_lang}{
   morekeywords={
     let, in, rslt, fun, unt, pair,
-    chn, mk_chn, sync, fst, snd, lft, rght,
+    mk_chn, sync, fst, snd, lft, rght,
     spawn, case, of, send_evt, recv_evt
+  }
+}
+
+\lstdefinelanguage{sugar_lang}{
+  morekeywords={
+    datatype,
+    type,
+    fun,
+    val,
+    predicate,
+    only, if, then, else,
+    and, or, not,
+    lemma,
+    theorem,
+    of,
+    fun,
+    rslt, unt, pair,
+    chn, lft, rght,
+    send_evt, recv_evt
   }
 }
 
@@ -1607,7 +1627,7 @@ to mean
 The representation of static values closely resembles the concrete syntax.
 
 
-\begin{lstlisting}[language=normal_lang, escapechar=\%]
+\begin{lstlisting}[language=sugar_lang, escapechar=\%]
   val server_static_env of name -> static_vale set:
     server_static_env = (
       u1 -> {unt},
@@ -1698,9 +1718,6 @@ reachable from its sub program.
       )
   \end{lstlisting}
 
-\includegraphics[width=1.0\textwidth, left]{cml_graph.pdf}
-
-
 \section{Static Communication}
 To describe communication statically, it is helpful to identify the entry
 point of each subprogram with a short description. The program identifier of a let-binding is
@@ -1739,7 +1756,7 @@ synchronization to receive on a given abstract channel.
       then
         static_send_site env_a prog0 x_c (NLet x))
 
-  predicate static_recv_program_id of
+  predicate static_recv_site of
     static_value_map -> program -> name -> program_id -> bool:
     only
     (%$\forall$% prog0 x x_e e' x_rc env_a x_c .
@@ -1748,8 +1765,19 @@ synchronization to receive on a given abstract channel.
         (SPrm (RecvEvt x_rc)) %$\in$% env_a x_e and 
         (SChn x_c) %$\in$% env_a x_rc 
       then
-        static_recv_program_id env_a prog0 x_c (NLet x))
+        static_recv_site env_a prog0 x_c (NLet x))
   \end{lstlisting}
+
+
+In the server implementation, the static channel identified by the name \lstinline{k1} is waited on
+by the server.  It has
+one receiving site in the server abstraction
+at site \lstinline[language=sugar_lang]{let p1} and a sending site
+in the request abstraction at site \lstinline[language=sugar_lang]{let z9}.
+The channel idetifiend by the name \lstinline{k4} is sent with a client's request for
+the server to reply on. It has a receiving site in the request abstraction at
+\lstinline[language=sugar_lang]{let v3} and a sending site in the server abstraction at
+\lstinline[language=sugar_lang]{let z5}.
 
 Reppy and Xiao's work relies on detecting the liveness of channels in order to gain higher
 precision in the static classification of communication. Since formal proofs are inherently
@@ -1927,6 +1955,11 @@ traversable transitions for the sequenced subprogram.
       )
   \end{lstlisting}
 
+The server implementation represented as a graph illustrates how static traversability can interpret
+a static program from a dynamic program.
+
+\includegraphics[width=1.0\textwidth, left]{cml_graph.pdf}
+
 The static traceability means that a static path with a given starting point, and ending
 condition, can be traced by traversing the transitions in a static program.
 The empty path is statically traceable if the starting point meets the ending condition.
@@ -1952,6 +1985,21 @@ traceable.
     then
       static_traceable prog_a start is_end (path @ [(middle, mode)]))
   \end{lstlisting}
+
+In the static program of the server implementation, there are two paths each corresponding to its
+own thread that lead
+to sending on
+static channel \lstinline[language=sugar_lang]{chn k1} and a potentially infinite number of
+paths that lead to receiving on
+channel \lstinline[language=sugar_lang]{chn k1}, but all on the same thread.
+There are an infinite number of paths that lead
+to sending on static channel \lstinline[language=sugar_lang]{chn k4}, and two paths
+that lead to receiving on static channel
+\lstinline[language=sugar_lang]{chn k4}. This is certainly imprecise,
+as the static \lstinline[language=sugar_lang]{chn k4} corresponds to
+multiple distinct dynamic channels, each with just one sender and one receiver.  The higher
+precision analysis discussed in section ? addresses this issue.
+
 
 The static inclusion means that two static paths might be traced in
 the same run of a program. Ordered paths might be inclusive, and also a path that diverges
