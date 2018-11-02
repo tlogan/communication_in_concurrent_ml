@@ -1698,6 +1698,8 @@ reachable from its sub program.
       )
   \end{lstlisting}
 
+\includegraphics[width=1.0\textwidth, left]{cml_graph.pdf}
+
 
 \section{Static Communication}
 To describe communication statically, it is helpful to identify the entry
@@ -3305,8 +3307,12 @@ are otherwise similar to the lower precision classifications.
 
 A slightly modified version of the server implementation demonstrates the usage of channel liveness
 analysis, and liveness traversabilitiy of programs.  An additional loop has been added to the
-server implementation.  The loop basically just wastes time, but is used to demontrate how
-traversability handles recursion that does not contain any channel of interest. 
+server implementation.  The loop basically just wastes time, but it is used to demontrate how
+liveness analysis handles recursion that does not contain any channel of interest.  No channel is
+considered as live in the body of the loop.  However, a channel may be live before the loop is
+called and after the loop returns.  In such a case, the live traceable path from the creation of a
+channel to a point after the loop retains the transitions within the loop, even though the points in
+the loops may not be live according to the entry map.
 
 \begin{lstlisting}[language=normal_lang, escapechar=\%]
   let u1 = unt in
@@ -3362,7 +3368,9 @@ traversability handles recursion that does not contain any channel of interest.
   \end{lstlisting}
 
 
-\includegraphics[width=1.0\textwidth, left]{cml_graph.pdf}
+\includegraphics[width=1.0\textwidth, left]{cml_graph_lp.pdf}
+\includegraphics[width=1.0\textwidth, left]{cml_graph_k1.pdf}
+\includegraphics[width=1.0\textwidth, left]{cml_graph_k4.pdf}
 
 \section{Higher Precision Reasoning Strategy}
 To prove soundness of the communication topology classification, it should be possible to use
