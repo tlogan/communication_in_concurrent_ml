@@ -26,9 +26,9 @@
   showspaces=false,        
   showstringspaces=false,
   showtabs=false,          
-  tabsize=2
+  tabsize=2,
 }
- 
+
 \lstdefinelanguage{logic}{
   morekeywords={
     datatype,
@@ -41,7 +41,16 @@
     lemma,
     theorem,
     of
-  }
+  },
+  mathescape,
+  literate={\\forall}{$\forall$}{1}
+           {\\exists}{$\exists$}{1}
+           {\\subseteq}{$\subseteq$}{1}
+           {\\nexists}{$\nexists$}{1}
+           {\\union}{$\cup$}{1}
+           {\\in}{$\in$}{1}
+           {\\lambda}{$\lambda$}{1}
+           {\\leq}{$\leq$}{1}
 }
 
 \lstdefinelanguage{normal_lang}{
@@ -103,7 +112,7 @@ uncaught bugs in the definitions or proofs. The definitions used in this formal 
 significantly from that of Reppy and Xiao, in order to aid formal reasoning. Although the
 definitions are structurally quite different, their philosophical equivalence is hopefully
 apparent. Thus, recasting Reppy and Xiao's work was far more nuanced than a straightforward
-syntactic transliteration. In this formal theory, the dynamic semantics of Concurrent ML is
+syntactic transliteration. in this formal theory, the dynamic semantics of Concurrent ML is
 defined by a small-step operational semantics. The static semantics is an instance of 0CFA
 \cite{0cfa}, defined in terms of constraints \cite{program_analysis}.
 
@@ -137,7 +146,7 @@ receive on the same channel before the sending thread can continue.  Likewise, w
 receives on a channel, another thread must send on the same channel before the receiving thread
 can continue.
 
-\begin{lstlisting}[language=ML, mathescape]
+\begin{lstlisting}[language=ML]
   type thread_id
   val spawn : (unit -> unit) -> thread_id
 
@@ -203,7 +212,7 @@ calling \lstinline{recv replCh}.
 
 
 \textit{Concurrent ML} actually allows for events other than sending and receiving to
-occur during synchronization. In fact, the synchronization mechanism is decoupled from
+occur during synchronization. in fact, the synchronization mechanism is decoupled from
 events, like sending and receiving, much in the same way that function application is decoupled
 from function abstraction. Sending and receiving events are represented by \lstinline{sendEvt}
 and \lstinline{recvEvt} and synchronization is represented by \lstinline{sync}.
@@ -340,7 +349,7 @@ implementation of channels with scheduling and only scheduling the sending and r
 operations when no other pending operations have yet to start or have already finished.
 Reppy's implementation of
 Concurrent ML uses SML/NJ's first class continuations to implement scheduling and communication
-as one with very low overhead. In contrast, a multiprocessor
+as one with very low overhead. in contrast, a multiprocessor
 implementation would allow threads to run
 on different processors for increased parallelism,
 therefore it would not be able to mandate when
@@ -803,7 +812,7 @@ determines all the values described by the analysis on any input program.
 
 There are a large number of static analyses with a variety of practical uses. The most familiar
 kind of static analyses are type systems.  A type system statically evaluates expressions
-in programs to abstract categories known as types. In a sound type system, if an expression is
+in programs to abstract categories known as types. in a sound type system, if an expression is
 well typed, then it can be dynamically evaluated (without error). Some expressions cannot be
 typed, indicating the possibility that the expression cannot be dynamically evaluated. Type
 systems can improve debugging by pointing out errors that may be infrequently executed. They
@@ -818,7 +827,7 @@ removed to improve performance.
 In the following example, an analysis for available expressions would track
 \lstinline{(!x + 1)} and \lstinline{(w - 3)} to remain available from line 5 all the way until
 the end of the program, meaning those two redundant expressions in line 8 can be swapped with
-the results of their evaluation. In contrast, \lstinline{(!y + 2)} would be tracked as
+the results of their evaluation. in contrast, \lstinline{(!y + 2)} would be tracked as
 available
 from line 5 until line 7. It would be unavailable after line 7 because the number in
 \lstinline{y} is modified in line 7, changing the how the expression would evaluate after
@@ -827,7 +836,7 @@ that.
 \begin{lstlisting}[language=ML, mathescape]
   1. let
   2.   val w = 4
-  3.   val x = ref 1
+  3.   val n = ref 1
   4.   val y = ref 2
   5.   val z = (!x + 1) + (!y + 2) + (w - 3)
   6.   val w = 1 in
@@ -851,12 +860,12 @@ above line 6, so it not live from there until the beginning. Since the reference
 
 \begin{lstlisting}[language=ML, mathescape]
   1. let 
-  2.   val x = 1  
+  2.   val n = 1  
   3.   val y = 2
   4.   val z = ref (4 * 73)
-  5.   val x = 4 in 
+  5.   val n = 4 in 
   6.   z := 1; 
-  7.   x * !z end
+  7.   n * !z end
   \end{lstlisting}
 
 The information at each program point is derived from control structures in the program, which
@@ -874,7 +883,7 @@ approximation of the control structures and values that have been obfuscated by 
 function abstractions.  Uncovering the the control structures depends on resolving expressions
 to values, and resolving expressions to values depends on on uncovering the control
 structures. The mutual dependency means that control flow analysis is a form of
-static semantics that describes abstract evaluations of programs. In this work, control flow
+static semantics that describes abstract evaluations of programs. in this work, control flow
 analysis is used for tracking certain kinds of values, like channels and events, in addition to
 constructing precise data flow analysis. 
 
@@ -944,8 +953,10 @@ checker was satisfied.
 
 \section{Formal Theory}
 
-The definitions and theorems of this work were constructed in the formal language of Isabelle/HOL,
-to enable mechanical verification of the correctness of the proofs. However, the formal logic used
+The definitions and theorems of this work were constructed in the formal
+language of Isabelle/HOL,
+to enable mechanical verification of the correctness of the proofs.
+However, the formal logic used
 for presentation in this paper has been somewhat modified from Isabelle's syntax. 
 To aid the development of formal proofs,
 the analyses are stated using non-algorithmic specifications.
@@ -962,16 +973,19 @@ borrowed Reppy and Xiao's strategy of stepping between sets of control paths and
 their associated terms.
 
 It is neccessary to prove additional soundness theorems about the static semantics en route to
-proving soundness of communication classification. Restricting the grammar to a form that requires
+proving soundness of communication classification. Restricting the grammar to a form that
+requires
 every abstraction and application to be bound to a name allows the operational
-semantics to maintain static program information necessary for proofs of soundness \cite{}.
+semantics to maintain graph information necessary for proofs of soundness \cite{}.
 The semantics are defined as an environment based operational semantics, rather than a
 substitution based operational semantics. By avoiding simplification of terms in the
-operational semantics, it is possible to relate the abstract values of the static semantics to the
+operational semantics, it is possible to relate
+the abstract values of the static semantics to the
 values produced by the dynamic semantics, which in turn is relied on to prove 
 soundness of the static semantics.
 
-The restricted ANF grammar is impractical for a programer to write, yet it is still practical for
+The restricted ANF grammar is impractical
+for a programer to write, yet it is still practical for
 a language under automated analysis since there is a straightforward procedure to transform
 more flexible and user-friendly grammars into the
 restricted form as demonstrated by Flanagan et al \cite{}.
@@ -1053,25 +1067,25 @@ Additionally, all these expressions evaluate to values in a single step.
   predicate seq_eval of expression -> environment -> dynamic_value -> bool:
     only
 
-    ($\forall$ env . 
+    (\forall env . 
         seq_eval Unt env VUnt),
         
-    ($\forall$ p env .
+    (\forall p env .
         seq_eval (Prim p) env (VPrm p env)),
 
-    ($\forall$ env x_p x1 x2 env_p v. 
+    (\forall env n$_p$ n1 n2 env_p v. 
       if
-        env x_p = Some (VPrm (Pair x1 x2) env_p),
-        env_p x1 = Some v
+        env n$_p$ = Some (VPrm (Pair n1 n2) env_p),
+        env_p n1 = Some v
       then
-        seq_eval (Fst x_p) env v),
+        seq_eval (Fst n$_p$) env v),
 
-    ($\forall$ env x_p x1 x2 env_p v . 
+    (\forall env n$_p$ n1 n2 env_p v . 
       if
-        env x_p = Some (VPrm (Pair x1 x2) env_p), 
-        env_p x2 = Some v 
+        env n$_p$ = Some (VPrm (Pair n1 n2) env_p), 
+        env_p n2 = Some v 
       then
-        seq_eval (Snd x_p) env v)
+        seq_eval (Snd n$_p$) env v)
   \end{lstlisting}
 
 The evaluation of expressions for application, and matching result in calling, which leads to
@@ -1089,32 +1103,32 @@ same applied abstraction.
   predicate call_eval of expression -> env -> program -> env -> bool:
     only
 
-    ($\forall$ env x_s x_c env_s v x_l e_l x_r e_r .
+    (\forall env n$_s$ n$_c$ env_s v n$_l$ p$_l$ n$_r$ p$_r$ .
       if
-        env x_s = Some (VPrm (Lft x_c) env_s),
-        env_s x_c = Some v
+        env n$_s$ = Some (VPrm (Lft n$_c$) env_s),
+        env_s n$_c$ = Some v
       then
-        call_eval (Case x_s x_l e_l x_r e_r) env e_l (env(x_l -> v))),
+        call_eval (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) env p$_l$ (env(n$_l$ -> v))),
 
-    ($\forall$ env x_s x_c env_s v x_l e_l x_r e_r .
+    (\forall env n$_s$ n$_c$ env_s v n$_l$ p$_l$ n$_r$ p$_r$ .
       if 
-        env x_s = Some (VPrm (Rght x_c) env_s); 
-        env_s x_c = Some v
+        env n$_s$ = Some (VPrm (Rght n$_c$) env_s); 
+        env_s n$_c$ = Some v
       then
-        call_eval (Case x_s x_l e_l x_r e_r) env e_r (env(x_r -> v))),
+        call_eval (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) env p$_r$ (env(n$_r$ -> v))),
 
-    ($\forall$ env f f_p x_p e_b env_l x_a v .
+    (\forall env n$_f$ n$_f$' n$_p$ p$_b$ env_l n$_a$ v .
       if 
-        env f = Some (VPrm (Abs f_p x_p e_b) env_l); 
-        env_l x_a = Some v
+        env n$_f$ = Some (VPrm (Abs n$_f$' n$_p$ p$_b$) env_l); 
+        env_l n$_a$ = Some v
       then
-        call_eval (App f x_a) env e_b (
-          env_l(f_p -> (VPrm (Abs f_p x_p e_b) env_l), x_p -> v)))
+        call_eval (App n$_f$ n$_a$) env p$_b$ (
+          env_l(n$_f$' -> (VPrm (Abs n$_f$' n$_p$ p$_b$) env_l), n$_p$ -> v)))
   \end{lstlisting}
   
 
 Backtracking is made possible by recording the programs that have been sidestepped and
-returned to them later. In addition to the syntactic program, the environment for resolving the
+returned to them later. in addition to the syntactic program, the environment for resolving the
 program's names, and an unresolved name are also recorded together to form a continuation. 
 The initial state of execution consists of a program, an empty environment, and an empty stack
 of continuations. With each sequential step, the program is reduced to a subprogram, and the
@@ -1143,10 +1157,10 @@ and the channel used for communication.
   predicate leaf of pool -> dynamic_path -> bool:
     only
 
-    ($\forall$ pool path stt .
+    (\forall pool path stt .
       if
         pool path = Some stt,
-        ($\nexists$ path' stt' .
+        (\nexists path' stt' .
           pool path' = Some stt',
           strict_prefix path path')
       then
@@ -1210,89 +1224,89 @@ that the synchronization used for communication.
     pool -> conversation -> pool -> conversation -> bool: 
     only
 
-    ($\forall$ pool path x env x_k e_k env_k stack' v convo .
+    (\forall pool path n env n_k p_k env_k stack' v convo .
       if
         leaf pool path,
         pool path = Some (Stt
-          (Rslt x) env ((Ctn x_k e_k env_k) # stack')),
-        env x = Some v
+          (Rslt n) env ((Ctn n_k p_k env_k) # stack')),
+        env n = Some v
       then
         dynamic_eval
           pool convo
-          (pool(path @ [DRtn x] -> (Stt e_k env_k(x_k -> v) stack')))
+          (pool(path @ [DRtn n] -> (Stt p_k env_k(n_k -> v) stack')))
           convo),
 
-    ($\forall$ pool path x b e' env stack v .
+    (\forall pool path n b p' env stack v .
       if 
         leaf pool path,
-        pool path = Some (Stt (Let x b e') env stack),
+        pool path = Some (Stt (Let n b p') env stack),
         seq_eval b env v
       then
         dynamic_eval
           pool convo
-          (pool(path @ [DNxt x] -> (Stt e (env(x -> v)) stack)))
+          (pool(path @ [DNxt n] -> (Stt p (env(n -> v)) stack)))
           convo),
 
-    ($\forall$ pool path x b e' env stack e_u env_u convo .
+    (\forall pool path n b p' env stack p_u env_u convo .
       if 
         leaf pool path,
-        pool path = Some (Stt (Let x b e') env stack),
-        call_eval b env e_u env_u
+        pool path = Some (Stt (Let n b p') env stack),
+        call_eval b env p_u env_u
       then
         dynamic_eval
           pool convo
-          (pool(path @ [DCll x] ->
-            (Stt e_u env_u ((Ctn x e' env) # stack))
+          (pool(path @ [DCll n] ->
+            (Stt p_u env_u ((Ctn n p' env) # stack))
           convo),
 
-    ($\forall$ pool path x e' env stack .
+    (\forall pool path n p' env stack .
       if 
         leaf pool path,
-        pool path = Some (Stt (Let x MkChn e') env stack)
+        pool path = Some (Stt (Let n MkChn p') env stack)
       then
         dynamic_eval
           pool convo 
-          (pool(path @ [DNxt x] ->
-            (Stt e' (env(x -> (VChn (Chan path x)))) stack)))
+          (pool(path @ [DNxt n] ->
+            (Stt p' (env(n -> (VChn (Chan path x)))) stack)))
           convo),
 
-    ($\forall$ pool path x e_c e' env stack convo .
+    (\forall pool path n p_c p' env stack convo .
       if 
         leaf pool path, 
-        pool path = Some (Stt (Let x (Spwn e_c) e') env stack)
+        pool path = Some (Stt (Let n (Spwn p_c) p') env stack)
       then
         dynamic_eval
         pool convo 
         (pool(
-            path @ [DNxt x] -> (Stt e' (env(x -> VUnt)) stack),
-            path @ [DSpwn x] -> (Stt e_c env [])))
+            path @ [DNxt n] -> (Stt p' (env(n -> VUnt)) stack),
+            path @ [DSpwn n] -> (Stt p_c env [])))
         convo),
 
-    ($\forall$ pool path_s path x_s x_se e_s env_s stack_s x_sc x_m env_se
-      path_r x_r x_re e_r env_r stack_r x_rc env_re c convo .
+    (\forall pool path_s path n$_s$ n$_s$e p_s env_s stack_s n$_s$c n_m env_se
+      path_r n$_r$ n$_r$e p$_r$ env_r stack_r n$_r$c env_re c convo .
       if 
         leaf pool path_s,
         pool path_s = Some (Stt
-          (Let x_s (Sync x_se) e_s) env_s stack_s),
-        env_s x_se = Some (VPrm
-          (SendEvt x_sc x_m) env_se),
+          (Let n$_s$ (Sync n$_s$e) p_s) env_s stack_s),
+        env_s n$_s$e = Some (VPrm
+          (SendEvt n$_s$c n_m) env_se),
         leaf pool path_r,
         pool path_r = Some (Stt
-          (Let x_r (Sync x_re) e_r) env_r stack_r),
-        env_r x_re = Some (VPrm
-          (RecvEvt x_rc) env_re),
-        env_se x_sc = Some (VChn c),
-        env_re x_rc = Some (VChn c), 
-        env_se x_m = Some v_m
+          (Let n$_r$ (Sync n$_r$e) p$_r$) env_r stack_r),
+        env_r n$_r$e = Some (VPrm
+          (RecvEvt n$_r$c) env_re),
+        env_se n$_s$c = Some (VChn c),
+        env_re n$_r$c = Some (VChn c), 
+        env_se n_m = Some v_m
       then
         dynamic_eval
           pool convo
           (pool(
-              path_s @ [DNxt x_s] ->
-                (Stt e_s (env_s(xs -> VUnt)) stack_s), 
-              path_r @ [DNxt x_r] ->
-                (Stt e_r (env_r(x_r -> v_m))stack_r))) 
-          (convo $\cup$ {(path_s, c, path_r)}))
+              path_s @ [DNxt n$_s$] ->
+                (Stt p_s (env_s(n_s -> VUnt)) stack_s), 
+              path_r @ [DNxt n$_r$] ->
+                (Stt p$_r$ (env_r(n$_r$ -> v_m))stack_r))) 
+          (convo \union {(path_s, c, path_r)}))
   \end{lstlisting}
 
 \section{Dynamic Communication}
@@ -1317,43 +1331,43 @@ synchronize on a channel are necessarily ordered for either end of the channel.
     pool -> channel -> dynamic_path -> bool:
     only
 
-    ($\forall$ pool path x x_e e' env stack x_sc x_m env_e c.
+    (\forall pool path n n_e p' env stack n$_s$c n_m env_e c.
       if
-        pool path = Some (Stt (Let x (Sync x_e) e') env stack),
-        env x_e = Some (VPrm (SendEvt x_sc x_m) env_e), 
-        env_e x_sc = Some (VChn c)
+        pool path = Some (Stt (Let n (Sync n_e) p') env stack),
+        env n_e = Some (VPrm (SendEvt n$_s$c n_m) env_e), 
+        env_e n$_s$c = Some (VChn c)
       then
         is_send_path pool c path)
 
   predicate is_recv_path of pool -> channel -> dynamic_path -> bool:
     only
-    ($\forall$ poo path x x_e e' env stack x_rc env_e c .
+    (\forall poo path n n_e p' env stack n$_r$c env_e c .
       then
-        pool path = Some (Stt (Let x (Sync x_e) e') env stack),
-        env x_e = Some (VPrm (RecvEvt x_rc) env_e),
-        env_e x_rc = Some (VChn c)
+        pool path = Some (Stt (Let n (Sync n_e) p') env stack),
+        env n_e = Some (VPrm (RecvEvt n$_r$c) env_e),
+        env_e n$_r$c = Some (VChn c)
       then
         is_recv_path pool c path)
 
   predicate every_two of ('a -> bool) -> ('a -> 'a -> bool) -> bool:
     only
-    ($\forall$ p r .
+    (\forall p r .
       if
-        ($\forall$ path1 path2 .
+        (\forall path1 path2 .
           if p path1, p path2 then r path1 path2)
       then
         every_two p r)
 
   predicate ordered of 'a list -> 'a list -> bool:
     only
-    ($\forall$ path1 path2 . if prefix path1 path2 then
+    (\forall path1 path2 . if prefix path1 path2 then
       ordered path1 path2),
-    ($\forall$ path2 path1 . if prefix path2 path1 then
+    (\forall path2 path1 . if prefix path2 path1 then
       ordered path1 path2)
 
   predicate one_shot of pool -> channel -> bool:
     only
-    ($\forall$ pool c .
+    (\forall pool c .
       if
         every_two (is_send_path pool c) (op =)
       then
@@ -1361,7 +1375,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 
   predicate one_to_many of pool -> channel -> bool:
     only
-    ($\forall$ pool c .
+    (\forall pool c .
       if
         every_two (is_send_path pool c) ordered
       then
@@ -1369,7 +1383,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 
   predicate many_to_one of pool -> channel -> bool:
     only
-    ($\forall$ pool c .
+    (\forall pool c .
       if
         every_two (is_recv_path pool c) ordered
       then
@@ -1377,7 +1391,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 
   predicate one_to_one of pool -> channel -> bool:
     only
-    ($\forall$ pool c.
+    (\forall pool c.
       if
         one_to_many pool c,
         many_to_one pool c
@@ -1387,7 +1401,8 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 
 
 \section{Static Semantics}
-The static semantics is described by an estimation of intermediate static values and subprograms
+The static semantics is described by an estimation of
+intermediate static values and subprograms
 that might result from running a program.    
 The static semantics helps to deduce static information about channels and events, which is
 crucial for statically deducing information about synchronization on channels and
@@ -1409,10 +1424,10 @@ embedded within its result subprogram.
   type static_value_map = name -> static_value set
 
   fun result_name of program -> name:
-    ($\forall$ x .
-      result_name (Rslt x) = x),
-    ($\forall$ x b e' . 
-      result_name (Let x b e') = (result_name e))
+    (\forall n .
+      result_name (Rslt n) = x),
+    (\forall n b p' . 
+      result_name (Let n b p') = (result_name e))
   \end{lstlisting}
 
 
@@ -1432,136 +1447,138 @@ not been formally proven in this work.
   predicate static_eval of
     static_value_map -> static_value_map -> program -> bool:
     only
-    ($\forall$ env_a convo_a x .
-      static_eval env_a convo_a (Rslt x)),
+    (\forall static_env static_convo n .
+      static_eval static_env static_convo (Rslt n)),
 
-    ($\forall$ env_a x convo_a e' .
+    (\forall static_env n static_convo p' .
       if 
-        SUnt $\in$ env_a x,
-        static_eval env_a convo_a e'
+      SUnt \in static_env x,
+        static_eval static_env static_convo p'
       then
-        static_eval env_a convo_a (Let x Unt e')),
+        static_eval static_env static_convo (Let n Unt p')),
 
-    ($\forall$ x env_a convo_a e' .
+    (\forall n static_env static_convo p' .
       if 
-        (SChn x) $\in$ env_a x,
-        static_eval env_a convo_a e'
+        (SChn x) \in static_env x,
+        static_eval static_env static_convo p'
       then  
-        static_eval env_a convo_a (Let x MkChn e')),
+        static_eval static_env static_convo (Let n MkChn p')),
 
-    ($\forall$ x_c x_m env_a x convo_a e' .
+    (\forall n$_c$ n_m static_env n static_convo p' .
       if
-        (SPrm (SendEvt x_c x_m)) $\in$ env_a x,
-        static_eval env_a convo_a e' 
+        (SPrm (SendEvt n$_c$ n_m)) \in static_env x,
+        static_eval static_env static_convo p' 
       then
-        static_eval env_a convo_a (Let x (Prim (SendEvt x_c x_m)) e')),
+        static_eval static_env static_convo (Let n (Prim (SendEvt n$_c$ n_m)) p')),
 
-    ($\forall$ x_c env_a x convo_a e' . 
+    (\forall n$_c$ static_env n static_convo p' . 
       if 
-        (SPrm (RecvEvt x_c)) $\in$ env_a x,
-        static_eval env_a convo_a e'
+        (SPrm (RecvEvt n$_c$)) \in static_env x,
+        static_eval static_env static_convo p'
       then
-        static_eval env_a convo_a (Let x (Prim (RecvEvt x_c)) e')),
+        static_eval static_env static_convo (Let n (Prim (RecvEvt n$_c$)) p')),
 
-    ($\forall$ x1 x2 env_a x convo_a e' .
+    (\forall n1 n2 static_env n static_convo p' .
       if
-        (SPrm (Pair x1 x2)) $\in$ env_a x,
-        static_eval env_a convo_a e'
+        (SPrm (Pair n1 n2)) \in static_env x,
+        static_eval static_env static_convo p'
       then
-        static_eval env_a convo_a (Let x (Prim (Pair x_1 x_2)) e)),
+        static_eval static_env static_convo (Let n (Prim (Pair n_1 n_2)) e)),
 
-    ($\forall$ x_s env_a x convo_a e' .
+    (\forall n$_s$ static_env n static_convo p' .
       if
-        (SPrm(Lft x_s)) $\in$ env_a x,
-        static_eval env_a convo_a e' 
+        (SPrm(Lft n$_s$)) \in static_env x,
+        static_eval static_env static_convo p' 
       then
-        static_eval env_a convo_a (Let x (Prim (Lft x_s)) e')),
+        static_eval static_env static_convo (Let n (Prim (Lft n$_s$)) p')),
 
-    ($\forall$ x_s env_a x convo_a e' .
+    (\forall n$_s$ static_env n static_convo p' .
       if
-        (SPrm(Rght x_s)) $\in$ env_a x, 
-        static_eval env_a convo_a e
+        (SPrm(Rght n$_s$)) \in static_env x, 
+        static_eval static_env static_convo e
       then
-        static_eval env_a convo_a (Let x (Prim (Rght x_s)) e')),
+        static_eval static_env static_convo (Let n (Prim (Rght n$_s$)) p')),
 
-    ($\forall$ f x_p e_b env_a convo_a x e' .
+    (\forall n$_f$ n$_p$ p$_b$ static_env static_convo n p' .
       if
-        (SPrm (Abs f x_p e_b)) $\in$ env_a f, 
-        static_eval env_a convo_a e_b, 
-        (SPrm (Abs f x_p e_b)) $\in$ env_a x, 
-        static_eval env_a convo_a e'
+        (SPrm (Abs n$_f$ n$_p$ p$_b$)) \in static_env f, 
+        static_eval static_env static_convo p$_b$, 
+        (SPrm (Abs n$_f$ n$_p$ p$_b$)) \in static_env x, 
+        static_eval static_env static_convo p'
       then
-        static_eval env_a convo_a (Let x (Prim (Abs f x_p e_b)) e')),
+        static_eval static_env static_convo (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
 
-    ($\forall$ f x_p e_b env_a convo_a x e' .
+    (\forall n$_f$ n$_p$ p$_b$ static_env static_convo n p' .
       if
-        SUnt $\in$ env_a f, 
-        static_eval env_a convo_a e_c, 
-        static_eval env_a convo_a e'
+        SUnt \in static_env f, 
+        static_eval static_env static_convo p_c, 
+        static_eval static_env static_convo p'
       then
-        static_eval env_a convo_a (Let x (Spwn e_c) e')),
+        static_eval static_env static_convo (Let n (Spwn p_c) p')),
 
-    ($\forall$ env_a x_e x convo_a  e'.
+    (\forall static_env n_e n static_convo  p'.
       if
-        ($\forall$ x_sc x_m x_c . 
+        (\forall n$_s$c n_m n$_c$ . 
           if
-            (SPrm (SendEvt x_sc x_m)) $\in$ env_a x_e, 
-            SChn x_c $\in$ env_a x_sc 
+            (SPrm (SendEvt n$_s$c n_m)) \in static_env n_e, 
+            SChn n$_c$ \in static_env n$_s$c 
           then
-            SUnt $\in$ env_a x, env_a x_m $\subseteq$ convo_a x_c),
-        ($\forall$ x_rc x_c . 
+            SUnt \in static_env x, static_env n_m \subseteq static_convo n$_c$),
+        (\forall n$_r$c n$_c$ . 
           if
-            (SPrm (RecvEvt x_rc)) $\in$ env_a x_e,
-            SChn x_c $\in$ env_a x_rc, 
+            (SPrm (RecvEvt n$_r$c)) \in static_env n_e,
+            SChn n$_c$ \in static_env n$_r$c, 
           then
-            convo_a x_c $\subseteq$ env_a x),
-        static_eval env_a convo_a e'
+            static_convo n$_c$ \subseteq static_env x),
+        static_eval static_env static_convo p'
       then
-        static_eval env_a convo_a (Let x (Sync x_e) e')),
+        static_eval static_env static_convo (Let n (Sync n_e) p')),
 
-    ($\forall$ env_a x_p x convo_a e' . 
+    (\forall static_env n$_p$ n static_convo p' . 
       if
-        ($\forall$ x1 x2 . if (SPrm (Pair x1 x2)) $\in$ env_a x_p then
-          env_a x1 $\subseteq$ env_a x),
-        static_eval env_a convo_a e'
+        (\forall n1 n2 . if (SPrm (Pair n1 n2)) \in static_env n$_p$ then
+          static_env n1 \subseteq static_env x),
+        static_eval static_env static_convo p'
       then
-        static_eval env_a convo_a (Let x (Fst x_p) e')),
+        static_eval static_env static_convo (Let n (Fst n$_p$) p')),
 
-    ($\forall$ env_a x_p x convo_a e' . 
+    (\forall static_env n$_p$ n static_convo p' . 
       if
-        ($\forall$ x1 x2 . if (SPrm (Pair x1 x2)) $\in$ env_a x_p then
-          env_a x2 $\subseteq$ env_a x),
-        static_eval env_a convo_a e'
+        (\forall n1 n2 . if (SPrm (Pair n1 n2)) \in static_env n$_p$ then
+          static_env n2 \subseteq static_env x),
+        static_eval static_env static_convo p'
       then
-        static_eval env_a convo_a (Let x (Snd x_p) e')),
+        static_eval static_env static_convo (Let n (Snd n$_p$) p')),
 
-    ($\forall$ env_a x_s x_l e_l x convo_a x_r e_r e' . 
+    (\forall static_env n$_s$ n$_l$ p$_l$ n static_convo n$_r$ p$_r$ p' . 
       if
-        ($\forall$ x_c . if (SPrm (Lft x_c)) $\in$ env_a x_s then 
-          env_a x_c $\subseteq$ env_a x_l,
-          env_a (result_name e_l) $\subseteq$ env_a x,
-          static_eval env_a convo_a e_l),
-        ($\forall$ x_c . if (SPrm (Rght x_c)) $\in$ env_a x_s then 
-          env_a x_c $\subseteq$ env_a x_r, 
-          env_a (result_name e_r) $\subseteq$ env_a x, 
-          static_eval env_a convo_a e_r),
-        static_eval env_a convo_a e'
+        (\forall n$_c$ . if (SPrm (Lft n$_c$)) \in static_env n$_s$ then 
+          static_env n$_c$ \subseteq static_env n$_l$,
+          static_env (result_name p$_l$) \subseteq static_env x,
+          static_eval static_env static_convo p$_l$),
+        (\forall n$_c$ . if (SPrm (Rght n$_c$)) \in static_env n$_s$ then 
+          static_env n$_c$ \subseteq static_env n$_r$, 
+          static_env (result_name p$_r$) \subseteq static_env x, 
+          static_eval static_env static_convo p$_r$),
+        static_eval static_env static_convo p'
       then
-        static_eval env_a convo_a (Let x (Case x_s x_l e_l x_r e_r) e')),
+        static_eval static_env static_convo (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
 
-    ($\forall$ env_a f x_a x convo_a e' . 
+    (\forall static_env n$_f$ n$_a$ n static_convo p' . 
       if
-        ($\forall$ f_p x_p e_b . if (SPrm (Abs f_p x_p e_b)) $\in$ env_a f then 
-          env_a x_a $\subseteq$ env_a x_p, 
-          env_a (result_name e_b) $\subseteq$ env_a x),
-        static_eval env_a convo_a e'
+        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Abs n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
+          static_env n$_a$ \subseteq static_env n$_p$, 
+          static_env (result_name p$_b$) \subseteq static_env x),
+        static_eval static_env static_convo p'
       then
-        static_eval env_a convo_a (Let x (App f x_a) e'))
+        static_eval static_env static_convo (Let n (App n$_f$ n$_a$) p'))
   \end{lstlisting}
 
 It is very straightforward to follow the rules of static evaluation in order to build up
-functions mapping names to static values for the static environment and the static conversation.
-The example server implementation recasted into the ANF grammar is helpful for demonstrating this
+functions mapping names to static values for the static environment
+and the static conversation.
+The example server implementation recasted into the
+ANF grammar is helpful for demonstrating this
 informal procedure.
 
 \begin{lstlisting}[language=normal_lang, mathescape]
@@ -1610,18 +1627,19 @@ informal procedure.
   \end{lstlisting}
 
 
-We start at the top of the program and pick a rule from the definition of static evaluation that
+We start at the top of the program and pick a
+rule from the definition of static evaluation that
 could hold. Then we choose the smallest function that satifies that rule's conditions. 
-In the server implementation, the program starts with \\
+In the server implementation, the program starts with \
 \lstinline[language=normal_lang, mathescape]{let u1 = unt in ...}, which only matches
-the rule concluding with \\
-\lstinline[language=logic, mathescape]{static_eval env_a convo_a (Let (Nm "u1") Unt ...)}. 
+the rule concluding with \
+\lstinline[language=logic, mathescape]{static_eval static_env static_convo (Let (Nm "u1") Unt ...)}. 
 The premises for that rule require that 
-\lstinline[language=logic, mathescape]{SUnt $\in$ env_a u1 and static_eval env_a convo_a ...}.\\
+\lstinline[language=logic, mathescape]{SUnt in static_env u1 and static_eval static_env static_convo ...}.\
 Therefore, we choose the smallest function we can determine so far for the static environment
-\lstinline{env_a}. The smallest function we can determine for 
-\lstinline[language=logic, mathescape]{SUnt $\in$ env_a (Nm "u1")} is 
-\lstinline[language=logic, mathescape]|$\lambda$ x . if x = (Nm "u1") then {SUnt} else {}|. \\
+\lstinline{static_env}. The smallest function we can determine for 
+\lstinline[language=logic]{SUnt in static_env (Nm "u1")} is 
+\lstinline[language=logic]|\lambda n . if n = (Nm "u1") then {SUnt} else {}|. \
 Since
 there's no premise that directly states what's required of the static conversation, we can
 simply choose an empty set to start with. The second premise is an inductive static evaluation on
@@ -1630,7 +1648,7 @@ the program, incrementally adding more static values for each name in the progra
 the procedure from the top of the program until there's nothing more to add to the functions.
 To make the presentation clear, the syntactic sugar \lstinline|(r1 -> {right u1}, ...)| is used 
 to mean
-\lstinline[mathescape]|$\lambda$ x . if x = (Nm "r1") then {SPrm (Rght (Nm "u1"))} else ... else {}|.
+\lstinline[language=logic]|\lambda n . if n = (Nm "r1") then {SPrm (Rght (Nm "u1"))} else ... else {}|.
 The representation of static values closely resembles the concrete syntax.
 
 
@@ -1690,38 +1708,38 @@ reachable from its sub program.
   predicate static_reachable of program -> program -> bool:
     only
 
-    ($\forall$ e .
-      static_reachable e e),
+    (\forall p .
+      static_reachable p e),
 
-    ($\forall$ e_c e_z x e' . 
+    (\forall p_c p_z n p' . 
       if
-        static_reachable e_c e_z
+        static_reachable p_c p_z
       then
-        static_reachable (Let x (Spwn e_c) e') e_z),
+        static_reachable (Let n (Spwn p_c) p') p_z),
 
-    ($\forall$ e_l e_z x x_s x_l x_r e_r e' . 
+    (\forall p$_l$ p_z n n$_s$ n$_l$ n$_r$ p$_r$ p' . 
       if
-        static_reachable e_l e_z
+        static_reachable p$_l$ p_z
       then
-        static_reachable (Let x (Case x_s x_l e_l x_r e_r) e') e_z),
+        static_reachable (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p') p_z),
 
-    ($\forall$ e_r e_z x x_s x_l e_l x_r e' . 
+    (\forall p$_r$ p_z n n$_s$ n$_l$ p$_l$ n$_r$ p' . 
       if
-        static_reachable e_r e_z
+        static_reachable p$_r$ p_z
       then
-        static_reachable (Let x (Case x_s x_l e_l x_r e_r) e') e_z),
+        static_reachable (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p') p_z),
 
-    ($\forall$ e_b e_z x f x_p e_b e' . 
+    (\forall p$_b$ p_z n n$_f$ n$_p$ p$_b$ p' . 
       if
-        static_reachable e_b e_z
+        static_reachable p$_b$ p_z
       then
-        static_reachable (Let x (Prim (Abs f x_p e_b)) e') e_z),
+        static_reachable (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p') p_z),
 
-    ($\forall$ e' e_z x b . 
+    (\forall p' p_z n b . 
       if
-        static_reachable e' e_z
+        static_reachable p' p_z
       then
-        static_reachable (Let x b e') e_z)
+        static_reachable (Let n b p') p_z)
   \end{lstlisting}
 
 \section{Static Communication}
@@ -1734,10 +1752,10 @@ of a result is indicated by its embedded name, and indication that it's a result
   datatype program_id = NLet name | NResult var
 
   fun top_program_id of program -> program_id:
-    ($\forall$ x b e' . 
-      top_program_id (Let x b e') = NLet x),
-    ($\forall$ x . 
-      top_program_id (Rslt x) = NResult x)
+    (\forall n b p' . 
+      top_program_id (Let n b p') = NLet x),
+    (\forall n . 
+      top_program_id (Rslt n) = NResult x)
 
   type program_id_map = program_id -> name set
 
@@ -1754,24 +1772,24 @@ synchronization to receive on a given abstract channel.
   predicate static_send_id of
     static_value_map -> program -> name -> program_id -> bool:
     only
-    ($\forall$ e0 x x_e e' x_sc x_m env_a x_c .
+    (\forall e0 n n_e p' n$_s$c n_m static_env n$_c$ .
       if
-        static_reachable e0 (Let x (Sync x_e) e'),
-        (SPrm (SendEvt x_sc x_m)) $\subseteq$ env_a x_e, 
-        (SChn x_c) $\in$ env_a x_sc
+        static_reachable e0 (Let n (Sync n_e) p'),
+        (SPrm (SendEvt n$_s$c n_m)) \subseteq static_env n_e, 
+        (SChn n$_c$) \in static_env n$_s$c
       then
-        static_send_id env_a e0 x_c (NLet x))
+        static_send_id static_env e0 n$_c$ (NLet x))
 
   predicate static_recv_id of
     static_value_map -> program -> name -> program_id -> bool:
     only
-    ($\forall$ e0 x x_e e' x_rc env_a x_c .
+    (\forall e0 n n_e p' n$_r$c static_env n$_c$ .
       if
-        static_reachable e0 (Let x (Sync x_e) e'),
-        (SPrm (RecvEvt x_rc)) $\in$ env_a x_e, 
-        (SChn x_c) $\in$ env_a x_rc 
+        static_reachable e0 (Let n (Sync n_e) p'),
+        (SPrm (RecvEvt n$_r$c)) \in static_env n_e, 
+        (SChn n$_c$) \in static_env n$_r$c 
       then
-        static_recv_id env_a e0 x_c (NLet x))
+        static_recv_id static_env e0 n$_c$ (NLet x))
   \end{lstlisting}
 
 
@@ -1809,7 +1827,7 @@ transition to its subprogram. A static path is a list of static points.
 
   type transition = program_id * mode * program_id
 
-  type static_program = transition set
+  type graph = transition set
 
   type static_point = program_id * mode
 
@@ -1845,128 +1863,128 @@ traversable transitions for the sequenced subprogram.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_traversable of
-    static_value_map -> static_program -> program -> bool:
+    static_value_map -> graph -> program -> bool:
     only
 
-    ($\forall$ env_a prog_a x .
-      static_traversable env_a prog_a (Rslt x)),
+    (\forall static_env graph n .
+      static_traversable static_env graph (Rslt n)),
 
-    ($\forall$ x e' prog_a env_a  .
+    (\forall n p' graph static_env  .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x Unt e')),
+        static_traversable static_env graph (Let n Unt p')),
 
-    ($\forall$ x e' prog_a env_a  .
+    (\forall n p' graph static_env  .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x MkChn e')),
+        static_traversable static_env graph (Let n MkChn p')),
 
-    ($\forall$ x e' prog_a env_a  x_c x_m .
+    (\forall n p' graph static_env  n$_c$ n_m .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a, 
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph, 
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Prim (SendEvt x_c x_m)) e')),
+        static_traversable static_env graph (Let n (Prim (SendEvt n$_c$ n_m)) p')),
 
-    ($\forall$ x e' prog_a env_a x_c .
+    (\forall n p' graph static_env n$_c$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Prim (RecvEvt x_c)) e')),
+        static_traversable static_env graph (Let n (Prim (RecvEvt n$_c$)) p')),
 
-    ($\forall$ x e' prog_a env_a x1 x2 .
+    (\forall n p' graph static_env n1 n2 .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Prim (Pair x1 x2)) e')),
+        static_traversable static_env graph (Let n (Prim (Pair n1 n2)) p')),
 
-    ($\forall$ x e' prog_a env_a x_s .
+    (\forall n p' graph static_env n$_s$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Prim (Lft x_s)) e')),
+        static_traversable static_env graph (Let n (Prim (Lft n$_s$)) p')),
 
-    ($\forall$ x e' prog_a env_a x_s .
+    (\forall n p' graph static_env n$_s$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Prim (Rght x_s)) e')),
+        static_traversable static_env graph (Let n (Prim (Rght n$_s$)) p')),
 
-    ($\forall$ x e' prog_a env_a e_b f x_p .
+    (\forall n p' graph static_env p$_b$ n$_f$ n$_p$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e', 
-        static_traversable env_a prog_a e_b
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p', 
+        static_traversable static_env graph p$_b$
       then
-        static_traversable env_a prog_a (Let x (Prim (Abs f x_p e_b)) e')),
+        static_traversable static_env graph (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
 
-    ($\forall$ x e' e_c prog_a env_a.
+    (\forall n p' p_c graph static_env.
       if
-        {(NLet x, MNxt, top_program_id e'),
-          (NLet x, MSpwn, top_program_id e_c)} $\subseteq$ prog_a, 
-        static_traversable env_a prog_a e_c, 
-        static_traversable env_a prog_a e'
+        {(NLet x, MNxt, top_program_id p'),
+          (NLet x, MSpwn, top_program_id p_c)} \subseteq graph, 
+        static_traversable static_env graph p_c, 
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Spwn e_c) e')),
+        static_traversable static_env graph (Let n (Spwn p_c) p')),
 
-    ($\forall$ x e' prog_a env_a x_se .
+    (\forall n p' graph static_env n$_s$e .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a, 
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph, 
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Sync x_se) e')),
+        static_traversable static_env graph (Let n (Sync n$_s$e) p')),
 
-    ($\forall$ x e' prog_a env_a x_p .
+    (\forall n p' graph static_env n$_p$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a, 
-        static_traversable env_a prog_a e', 
+        (NLet n , MNxt, top_program_id p') \in graph, 
+        static_traversable static_env graph p', 
       then
-        static_traversable env_a prog_a (Let x (Fst x_p) e')),
+        static_traversable static_env graph (Let n (Fst n$_p$) p')),
 
-    ($\forall$ x e' prog_a env_a x_p .
+    (\forall n p' graph static_env n$_p$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a, 
-        static_traversable env_a prog_a e', 
+        (NLet n , MNxt, top_program_id p') \in graph, 
+        static_traversable static_env graph p', 
       then
-        static_traversable env_a prog_a (Let x (Snd x_p) e')),
+        static_traversable static_env graph (Let n (Snd n$_p$) p')),
 
-    ($\forall$ x e_l e_r e' prog_a env_a x_s .
+    (\forall n p$_l$ p$_r$ p' graph static_env n$_s$ .
       if
-        {(NLet x, MCll, top_program_id e_l),
-          (NLet x, MCll, top_program_id e_r),
-          (NResult (result_name e_l), MRtn, top_program_id e'),
-          (NResult (result_name e_r), MRtn, top_program_id e')} $\subseteq$ prog_a, 
-        static_traversable env_a prog_a e_l, 
-        static_traversable env_a prog_a e_r,
-        static_traversable env_a prog_a e'
+        {(NLet x, MCll, top_program_id p$_l$),
+          (NLet x, MCll, top_program_id p$_r$),
+          (NResult (result_name p$_l$), MRtn, top_program_id p'),
+          (NResult (result_name p$_r$), MRtn, top_program_id p')} \subseteq graph, 
+        static_traversable static_env graph p$_l$, 
+        static_traversable static_env graph p$_r$,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Case x_s x_l e_l x_r e_r) e')),
+        static_traversable static_env graph (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
 
-    ($\forall$  env_a f x e' x x_a .
+    (\forall  static_env n$_f$ n p' n n$_a$ .
       if
-        ($\forall$ f_p x_p e_b . if (SPrm (Abs f_p x_p e_b)) $\in$ env_a f then 
-          {(NLet x, MCll, top_program_id e_b),
-            (NResult (result_name e_b), MRtn, top_program_id e')} $\subseteq$ prog_a),
-        static_traversable env_a prog_a e'
+        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Abs n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
+          {(NLet x, MCll, top_program_id p$_b$),
+            (NResult (result_name p$_b$), MRtn, top_program_id p')} \subseteq graph),
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (App f x_a) e'))
+        static_traversable static_env graph (Let n (App n$_f$ n$_a$) p'))
   \end{lstlisting}
 
 The server implementation represented as a graph illustrates how static traversability can interpret
-a static program from a dynamic program.
+a graph from a dynamic program.
 
 \includegraphics[width=1.3\textwidth, left]{cml_graph.pdf}
 
 The static traceability means that a static path with a given starting point, and ending
-condition, can be traced by traversing the transitions in a static program.
+condition, can be traced by traversing the transitions in a graph.
 The empty path is statically traceable if the starting point meets the ending condition.
 Otherwise, a path is statically traceable if the last static point corresponds to a transition
 that meets the ending condition, and the longest strict prefix of the path is statically
@@ -1977,22 +1995,22 @@ traceable.
     transition set -> program_id -> (program_id -> bool) -> static_path -> bool:
     only
 
-    ($\forall$ start prog_a is_end .
+    (\forall start graph is_end .
       if
         is_end start
       then
-        static_traceable prog_a start is_end []),
+        static_traceable graph start is_end []),
 
-    ($\forall$  prog_a star middle path is_end end mode .
+    (\forall  graph star middle path is_end end mode .
       if 
-        static_traceable prog_a start ($\lambda$ l . l = middle) path, 
+        static_traceable graph start (\lambda l . l = middle) path, 
         is_end end, 
-        (middle, mode, end) $\in$ prog_a 
+        (middle, mode, end) \in graph 
       then
-        static_traceable prog_a start is_end (path @ [(middle, mode)]))
+        static_traceable graph start is_end (path @ [(middle, mode)]))
   \end{lstlisting}
 
-In the static program of the server implementation, there are two paths each corresponding to its
+In the graph of the server implementation, there are two paths each corresponding to its
 own thread that lead
 to sending on
 static channel \lstinline[language=sugar_lang]{chn k1} and a potentially infinite number of
@@ -2017,24 +2035,24 @@ to be counted towards the communication topology.
   predicate static_inclusive of static_path -> static_path -> bool:
     only
 
-    ($\forall$ path1 path2 .
+    (\forall path1 path2 .
       if
         prefix path1 path2
       then
         static_inclusive path1 path2),
 
-    ($\forall$ path2 path1 .
+    (\forall path2 path1 .
       if
         prefix path2 path1
       then
         static_inclusive path1 path2),
 
-    ($\forall$ path x path1 path2 .
+    (\forall path n path1 path2 .
       static_inclusive
         (path @ (NLet x, MSpwn) # path1)
         (path @ (NLet x, MNxt) # path2)),
 
-    ($\forall$ path x path1 path2 .
+    (\forall path n path1 path2 .
       static_inclusive
         (path @ (NLet x, MNxt) # path1)
         (path @ (NLet x, MSpwn) # path2))
@@ -2049,10 +2067,10 @@ program, since they are ordered or cannot occur in the same run of a program.
   predicate singular of static_path -> static_path -> bool:
     only
 
-    ($\forall$ path .
+    (\forall path .
       singular path path),
 
-    ($\forall$ path1 path2 .
+    (\forall path1 path2 .
       if
         not (static_inclusive path1 path2)
       then
@@ -2061,13 +2079,13 @@ program, since they are ordered or cannot occur in the same run of a program.
   predicate noncompetitive of static_path -> static_path -> bool:
     only
 
-    ($\forall$ path1 path2 .
+    (\forall path1 path2 .
       if
         ordered path1 path2
       then
         noncompetitive path1 path2),
 
-    ($\forall$ path1 path2 .
+    (\forall path1 path2 .
       if
         not (static_inclusive path1 path2)
       then
@@ -2092,50 +2110,50 @@ program.
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_one_shot of static_value_map -> program -> name -> bool:
     only
-    ($\forall$ prog_a e env_a x_c .
+    (\forall graph p static_env n$_c$ .
       if
         every_two
-          (static_traceable prog_a (top_program_id e) (static_send_id env_a e x_c))
+          (static_traceable graph (top_program_id e) (static_send_id static_env p n$_c$))
           singular,
-        static_traversable env_a prog_a e
+        static_traversable static_env graph e
       then
-        static_one_shot prog_a e x_c)
+        static_one_shot graph p n$_c$)
 
   predicate static_one_to_one of static_value_map -> program -> name -> bool:
     only
-    ($\forall$ prog_a e env_a x_c .
+    (\forall graph p static_env n$_c$ .
       if
         (every_two
-          (static_traceable prog_a (top_program_id e) (static_send_id env_a e x_c))
+          (static_traceable graph (top_program_id e) (static_send_id static_env p n$_c$))
           noncompetitive), 
         (every_two
-          (static_traceable prog_a (top_program_id e) (static_recv_program_id env_a e x_c))
+          (static_traceable graph (top_program_id e) (static_recv_program_id static_env p n$_c$))
           noncompetitive), 
-        static_traversable env_a prog_a e
+        static_traversable static_env graph e
       then
-        static_one_to_one env_a e x_c)
+        static_one_to_one static_env p n$_c$)
 
   predicate static_one_to_many of static_value_map -> program -> name -> bool:
     only
-    ($\forall$ prog_a e env_a x_c .
+    (\forall graph p static_env n$_c$ .
       if
         (every_two
-          (static_traceable prog_a (top_program_id e) (static_send_id env_a e x_c))
+          (static_traceable graph (top_program_id e) (static_send_id static_env p n$_c$))
           noncompetitive),
-        static_traversable env_a prog_a e
+        static_traversable static_env graph e
       then
-        static_one_to_many env_a e x_c) 
+        static_one_to_many static_env p n$_c$) 
 
   predicate static_many_to_one of static_value_map -> program -> name -> bool:
     only
-    ($\forall$ prog_a e env_a x_c .
+    (\forall graph p static_env n$_c$ .
       if
         (every_two
-          (static_traceable prog_a (top_program_id e) (static_recv_program_id env_a e x_c))
+          (static_traceable graph (top_program_id e) (static_recv_program_id static_env p n$_c$))
           noncompetitive),
-        static_traversable env_a prog_a e
+        static_traversable static_env graph e
       then
-        static_many_to_one env_a e x_c) 
+        static_many_to_one static_env p n$_c$) 
 \end{lstlisting}
 
 \section{Reasoning}
@@ -2163,7 +2181,7 @@ For instance, the sortedness of a list could be defined in terms of the sortedne
 or in terms of the sortedness of its longest strict prefix. To prove theorems relating
 sortedness to other relations, it may be important that the other relations are inductively
 defined on the same subpart of the list. Some relations may only be definable on the tail,
-while others can be defined only on the strict prefix. In such cases, it is necessary to
+while others can be defined only on the strict prefix. in such cases, it is necessary to
 define sortedness in two ways, and prove their equivalence, in order to prove theorems relating
 to less flexible relations.
 
@@ -2173,28 +2191,28 @@ to less flexible relations.
 
     (sorted_a []),
 
-    ($\forall$  x .
+    (\forall  n .
         sorted_a [x]),
 
-    ($\forall$  x y zs .
+    (\forall  n y zs .
       if 
-        x $\leq$ y,
+        n \leq y,
         sorted_a (y # zs)
       then
-        sorted_a (x # y # zs))
+        sorted_a (n # y # zs))
 
   predicate sorted_b of nat list -> nat list -> bool:
     only
 
     (sorted_b []),
 
-    ($\forall$  x .
+    (\forall  n .
         sorted_b [x]),
 
-    ($\forall$  xs y z .
+    (\forall  xs y z .
       if 
         sorted_b (xs @ [y]),
-        y $\leq$ z 
+        y \leq z 
       then
         sorted_b (xs @ [y] @ [z]))
   \end{lstlisting}
@@ -2213,40 +2231,40 @@ classification and one-to-one classification follow the same pattern.
 
 \begin{lstlisting}[language=logic, mathescape]
   theorem static_one_shot_sound: 
-    $\forall$ env_a convo_a e0 x_c pool convo path_c .
+    \forall static_env static_convo e0 n$_c$ pool convo path_c .
       if
-        static_eval env_a convo_a e0, 
-        static_one_shot env_a e0 x_c, 
+        static_eval static_env static_convo e0, 
+        static_one_shot static_env e0 n$_c$, 
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo
       then
-        one_shot pool (Chan path_c x_c)
+        one_shot pool (Chan path_c n$_c$)
 
   theorem static_one_to_many_sound:
-    $\forall$ env_a convo_a e0 x_c pool convo path_c. 
+    \forall static_env static_convo e0 n$_c$ pool convo path_c. 
       if 
-        static_eval env_a convo_a e0, 
-        static_one_to_many env_a e0 x_c, 
+        static_eval static_env static_convo e0, 
+        static_one_to_many static_env e0 n$_c$, 
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo
       then
-        one_to_many pool (Chan path_c x_c)
+        one_to_many pool (Chan path_c n$_c$)
 
   theorem static_many_to_one_sound:
-    $\forall$ env_a convo_a e0 x_c pool convo path_c. 
+    \forall static_env static_convo e0 n$_c$ pool convo path_c. 
       if
-        static_eval env_a convo_a e0, 
-        static_many_to_one env_a e0 x_c, 
-        star dynamic_eval [[] -> (Stt e [->] [])] {} pool convo
+        static_eval static_env static_convo e0, 
+        static_many_to_one static_env e0 n$_c$, 
+        star dynamic_eval [[] -> (Stt p [->] [])] {} pool convo
       then
-        many_to_one pool (Chan path_c x_c)
+        many_to_one pool (Chan path_c n$_c$)
 
   theorem static_one_to_one_sound:
-    $\forall$ env_a convo_a e0 x_c pool convo path_c. 
+    \forall static_env static_convo e0 n$_c$ pool convo path_c. 
       if
-        static_eval env_a, convo_a e0, 
-        static_one_to_one env_a e0 x_c,
+        static_eval static_env, static_convo e0, 
+        static_one_to_one static_env e0 n$_c$,
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo
       then
-        one_to_one pool (Chan path_c x_c)
+        one_to_one pool (Chan path_c n$_c$)
 \end{lstlisting}
 
 The soundness theorem for static fan-out classification is proved
@@ -2266,39 +2284,39 @@ send ID by its program ID.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma not_static_traceable_sound:
-    $\forall$ e0 pool convo path x b e' env stack evn_a convo_a prog_a is_end .
+    \forall e0 pool convo path n b p' env stack evn_a static_convo graph is_end .
       if
         star dynamic_eval ([[] -> (Stt e0 [->] [])], {}) (pool, convo), 
-        pool path = Some (Stt (Let x b e') env stack),
-        static_eval env_a convo_a e0,
-        static_traversable env_a prog_a e0,
+        pool path = Some (Stt (Let n b p') env stack),
+        static_eval static_env static_convo e0,
+        static_traversable static_env graph e0,
         is_end (NLet x)
       then
-        $\exists$ path_a . 
-          paths_correspond path path_a, 
-          static_traceable prog_a (top_program_id e0) is_end path_a
+        exists static_path . 
+          paths_correspond path static_path, 
+          static_traceable graph (top_program_id e0) is_end static_path
 
   lemma not_static_inclusive_sound:
-    $\forall$ e0 pool convo path1 stt1 path2 stt2 path_a1 path_a2 . 
+    \forall e0 pool convo path1 stt1 path2 stt2 static_path1 static_path2 . 
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo
         pool path1 = Some stt1, 
         pool path2 = Some stt2, 
-        paths_correspond path1 path_a1, 
-        paths_correspond path2 path_a2
+        paths_correspond path1 static_path1, 
+        paths_correspond path2 static_path2
       then
-        static_inclusive path_a1 path_a2
+        static_inclusive static_path1 static_path2
 
   lemma not_static_send_id_sound:
-    $\forall$ e0 pool convo path x x_e e' env stack x_sc x_m env' path_c x_c .
+    \forall e0 pool convo path n n_e p' env stack n$_s$c n_m env' path_c n$_c$ .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo, 
-        pool path = Some (Stt (Let x (Sync x_e) e') env stack), 
-        env x_e = Some (VPrm (SendEvt x_sc x_m) env'), 
-        env' x_sc = Some (VChn (Chan path_c x_c)), 
-        static_eval env_a convo_a e0
+        pool path = Some (Stt (Let n (Sync n_e) p') env stack), 
+        env n_e = Some (VPrm (SendEvt n$_s$c n_m) env'), 
+        env' n$_s$c = Some (VChn (Chan path_c n$_c$)), 
+        static_eval static_env static_convo e0
       then 
-        static_send_id env_a e0 x_c (NLet x)
+        static_send_id static_env e0 n$_c$ (NLet x)
 \end{lstlisting}
 
 The soundness of lack of static traceability is proved by generalizing
@@ -2315,106 +2333,106 @@ traversable. The exception is in the case of
 static traversability over a non-empty stack, where
 there is an additional condition that the transition
 from a result id to the program ID
-of the continuation program exists in the static program.
+of the continuation program exists in the graph.
 This information is consistent with static
 traversability over programs, but provides direct information about a transition in the
-static program, which would otherwise only be deducible by a varying number of logical steps
+graph, which would otherwise only be deducible by a varying number of logical steps
 depending on the program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_traversable_val of
-    static_value_map -> static_program -> dynamic_value -> bool:
+    static_value_map -> graph -> dynamic_value -> bool:
     only
 
-    ($\forall$ env_a prog_a .
-      static_traversable_val env_a prog_a VUnt), 
+    (\forall static_env graph .
+      static_traversable_val static_env graph VUnt), 
 
-    ($\forall$ env_a prog_a c .
-      static_traversable_val env_a prog_a (VChn c)),
+    (\forall static_env graph c .
+      static_traversable_val static_env graph (VChn c)),
 
-    ($\forall$ env_a prog_a env x_c x_m.
+    (\forall static_env graph env n$_c$ n_m.
       if
-        static_traversable_env env_a prog_a env 
+        static_traversable_env static_env graph env 
       then 
         static_traversable_val
-          env_a prog_a (VPrm (SendEvt x_c x_m) env)),
+          static_env graph (VPrm (SendEvt n$_c$ n_m) env)),
 
-    ($\forall$ env_a prog_a env x_c.
+    (\forall static_env graph env n$_c$.
       if
-        static_traversable_env env_a prog_a env 
+        static_traversable_env static_env graph env 
       then
         static_traversable_val
-          env_a prog_a (VPrm (RecvEvt x_c) env)),
+          static_env graph (VPrm (RecvEvt n$_c$) env)),
 
-    ($\forall$ env_a prog_a env x_p .
+    (\forall static_env graph env n$_p$ .
       if
-        static_traversable_env env_a prog_a env 
+        static_traversable_env static_env graph env 
       then
         static_traversable_val
-          env_a prog_a (VPrm (Lft x_p) env)),
+          static_env graph (VPrm (Lft n$_p$) env)),
 
-    ($\forall$ env_a prog_a env x_p .
+    (\forall static_env graph env n$_p$ .
       if
-        static_traversable_env env_a prog_a env
+        static_traversable_env static_env graph env
       then
         static_traversable_val
-          env_a prog_a (VPrm (Rght x_p) env)),
+          static_env graph (VPrm (Rght n$_p$) env)),
 
-    ($\forall$ env_a prog_a e_b env f x_p .
+    (\forall static_env graph p$_b$ env n$_f$ n$_p$ .
       if
-        static_traversable env_a prog_a e_b, 
-        static_traversable_env env_a prog_a env
+        static_traversable static_env graph p$_b$, 
+        static_traversable_env static_env graph env
       then
         static_traversable_val
-          env_a F (VPrm (Abs f x_p e_b) env)),
+          static_env n$_f$ (VPrm (Abs n$_f$ n$_p$ p$_b$) env)),
 
-    ($\forall$ env_a prog_a env . 
+    (\forall static_env graph env . 
       if
-        static_traversable_env env_a prog_a env
+        static_traversable_env static_env graph env
       then
         static_traversable_val
-          env_a prog_a (VPrm (Pair x1 x2) env))
+          static_env graph (VPrm (Pair n1 n2) env))
 
   predicate static_traversable_env of
-    static_value_map -> static_program -> env -> bool: 
+    static_value_map -> graph -> env -> bool: 
     only 
-    ($\forall$ env_a prog_a env .
+    (\forall static_env graph env .
       if
-        ($\forall$ x v . if env x = Some v then
-          static_traversable_val env_a prog_a v)
+        (\forall n v . if env n = Some v then
+          static_traversable_val static_env graph v)
       then
-        static_traversable_env env_a prog_a env) 
+        static_traversable_env static_env graph env) 
 
   predicate static_traversable_stack of
-    static_value_map -> static_program ->
+    static_value_map -> graph ->
     name -> continuation list -> bool:
     only
-    ($\forall$ env_a prog_a y .
-      static_traversable_stack env_a prog_a y []),
+    (\forall static_env graph y .
+      static_traversable_stack static_env graph y []),
 
-    ($\forall$ y e prog_a env_a prog_a env stack x env .
+    (\forall y p graph static_env graph env stack n env .
       if 
-        {(NResult y, MRtn, top_program_id e)} $\subseteq$ prog_a,
-        static_traversable env_a prog_a e,
-        static_traversable_env env_a prog_a env,
-        static_traversable_stack env_a prog_a (result_name e) stack 
+        {(NResult y, MRtn, top_program_id e)} \subseteq graph,
+        static_traversable static_env graph e,
+        static_traversable_env static_env graph env,
+        static_traversable_stack static_env graph (result_name e) stack 
       then 
-        static_traversable_stack env_a prog_a y ((Ctn x e env) # stack))
+        static_traversable_stack static_env graph y ((Ctn n p env) # stack))
 
   predicate static_traversable_pool of
-    static_value_map -> static_program -> pool -> bool:
+    static_value_map -> graph -> pool -> bool:
     only
-    ($\forall$ env_a prog_a pool .
+    (\forall static_env graph pool .
       if
-        ($\forall$ path e env stack .
+        (\forall path p env stack .
           if
-            env path = Some (Stt e env stack)
+            env path = Some (Stt p env stack)
           then 
-            static_traversable env_a prog_a e, 
-            static_traversable_env env_a prog_a env, 
-            static_traversable_stack env_a prog_a (result_name e) stack) 
+            static_traversable static_env graph e, 
+            static_traversable_env static_env graph env, 
+            static_traversable_stack static_env graph (result_name e) stack) 
       then
-          static_traversable_pool env_a prog_a pool)
+          static_traversable_pool static_env graph pool)
   \end{lstlisting}
 
 The transitions described by the various versions of static traversability depend on static
@@ -2436,105 +2454,105 @@ semantic elements to static values and static environments.
 \begin{lstlisting}[language=logic, mathescape]
   fun abstract of dynamic_value -> static_value:
     abstract VUnt = SUnt, 
-    ($\forall$ path x . 
+    (\forall path n . 
       abstract (VChn (Chan path x)) = SChn x),
-    ($\forall$ primitive env .
+    (\forall primitive env .
       abstract (VPrm primitive env) = SPrm prim)
 
   predicate static_eval_value of
     static_value_map -> abstract_convo -> dynamic_value -> bool: 
     only
 
-    ($\forall$ env_a convo_a .
-      static_eval_val env_a convo_a VUnit),
+    (\forall static_env static_convo .
+      static_eval_val static_env static_convo VUnit),
 
-    ($\forall$ env_a convo_a c .
-      static_eval_val env_a convo_a (VChn c)),
+    (\forall static_env static_convo c .
+      static_eval_val static_env static_convo (VChn c)),
 
-    ($\forall$ env_a convo_a env x_c x_m .
+    (\forall static_env static_convo env n$_c$ n_m .
       if
-        static_eval_env env_a convo_a env
+        static_eval_env static_env static_convo env
       then
-        static_eval_val env_a convo_a
-          (VPrm (SendEvt x_c x_m) env)),
+        static_eval_val static_env static_convo
+          (VPrm (SendEvt n$_c$ n_m) env)),
 
-    ($\forall$ env_a convo_a env x_c  .
+    (\forall static_env static_convo env n$_c$  .
       if
-        static_eval_env env_a convo_a env
+        static_eval_env static_env static_convo env
       then
-        static_eval_val env_a convo_a
-          (VPrm (RecvEvt x_c) env)),
+        static_eval_val static_env static_convo
+          (VPrm (RecvEvt n$_c$) env)),
 
-    ($\forall$ env_a convo_a env x_p  .
+    (\forall static_env static_convo env n$_p$  .
       if
-        static_eval_env env_a convo_a env
+        static_eval_env static_env static_convo env
       then
-        static_eval_val env_a convo_a
-          (VPrm (Lft x_p) env)),
+        static_eval_val static_env static_convo
+          (VPrm (Lft n$_p$) env)),
         
-    ($\forall$ env_a convo_a env x_p  .
+    (\forall static_env static_convo env n$_p$  .
       if
-        static_eval_env env_a convo_a env
+        static_eval_env static_env static_convo env
       then
-        static_eval_val env_a convo_a
-          (VPrm (Rght x_p) env)),
+        static_eval_val static_env static_convo
+          (VPrm (Rght n$_p$) env)),
 
-    ($\forall$ f x_p e_b env_a convo_a env .
+    (\forall n$_f$ n$_p$ p$_b$ static_env static_convo env .
       if
-        {APrim (Abs f x_p e_b)} $\subseteq$ env_a f, 
-        static_eval env_a convo_a e_b, 
-        static_eval_env env_a convo_a env
+        {APrim (Abs n$_f$ n$_p$ p$_b$)} \subseteq static_env f, 
+        static_eval static_env static_convo p$_b$, 
+        static_eval_env static_env static_convo env
       then
-        static_eval_val env_a convo_a
-          (VPrm (Abs f x_p e_b) env)),
+        static_eval_val static_env static_convo
+          (VPrm (Abs n$_f$ n$_p$ p$_b$) env)),
 
-    ($\forall$ env_a convo_a env x1 x2 .
+    (\forall static_env static_convo env n1 n2 .
       if
-        static_eval_env env_a convo_a env
+        static_eval_env static_env static_convo env
       then
-        static_eval_val env_a convo_a
-          (VPrm (Pair x1 x2) env))
+        static_eval_val static_env static_convo
+          (VPrm (Pair n1 n2) env))
 
   predicate static_eval_env of
     static_value_map -> static_value_map -> env -> bool:
     only 
-    ($\forall$ env_a convo_a env .
+    (\forall static_env static_convo env .
       if
-        ($\forall$ x v . if env x = Some v then
-          {abstract v} $\subseteq$ env_a x,
-          static_eval_val env_a convo_a v)
+        (\forall n v . if env n = Some v then
+          {abstract v} \subseteq static_env x,
+          static_eval_val static_env static_convo v)
       then 
-        static_eval_env env_a convo_a env)
+        static_eval_env static_env static_convo env)
 
   predicate static_eval_stack of
     static_value_map -> static_value_map ->
     static_value set -> continuation list -> bool:
     only 
-    ($\forall$ env_a convo_a res_a .
-      static_eval_stack env_a convo_a res_a []),
-    ($\forall$ res_a env_a convo_a . 
+    (\forall static_env static_convo static_vals .
+      static_eval_stack static_env static_convo static_vals []),
+    (\forall static_vals static_env static_convo . 
       if 
-        res_a $\subseteq$ env_a x,
-        static_eval env_a convo_a e,
-        static_eval_env env_a convo_a env,
-        static_eval_stack env_a convo_a env_a (result_name e) stack 
+        static_vals \subseteq static_env x,
+        static_eval static_env static_convo e,
+        static_eval_env static_env static_convo env,
+        static_eval_stack static_env static_convo static_env (result_name e) stack 
       then
-        static_eval_stack env_a convo_a res_a ((Ctn x e env) # stack))
+        static_eval_stack static_env static_convo static_vals ((Ctn n p env) # stack))
 
   predicate static_eval_pool of
     static_value_map -> static_value_map -> pool -> bool:
     only
-    ($\forall$ env_a convo_a pool .
+    (\forall static_env static_convo pool .
       if
-        ($\forall$ path e env stack .
+        (\forall path p env stack .
           if
-            pool path = Some (Stt e env stack)
+            pool path = Some (Stt p env stack)
           then 
-            static_eval env_a convo_a e,
-            static_eval_env env_a convo_a env,
-            static_eval_stack env_a convo_a env_a (result_name e) stack)
+            static_eval static_env static_convo e,
+            static_eval_env static_env static_convo env,
+            static_eval_stack static_env static_convo static_env (result_name e) stack)
       then 
-        static_eval_pool env_a convo_a pool)
+        static_eval_pool static_env static_convo pool)
   \end{lstlisting}
 
 
@@ -2547,29 +2565,29 @@ traceability.
   predicate star_left of ('a -> 'a -> bool) -> 'a -> 'a -> bool:
     only
 
-    ($\forall$ r z z .
+    (\forall r z z .
       star_left r z z),
 
-    ($\forall$ r x y z .
+    (\forall r n y z .
       if
-        star_left r x y, r y z
+        star_left r n y, r y z
       then
-        star_left r x z)
+        star_left r n z)
 
   lemma star_implies_star_left:
-    $\forall$ r x y .
+    \forall r n y .
       if
-        star r x z
+        star r n z
       then
-        star_left r x z
+        star_left r n z
 
   lemma star_left_trans:
-    $\forall$ r x y z .
+    \forall r n y z .
       if 
-        star_left r x y,
+        star_left r n y,
         star_left r y z 
       then
-        star_left r x z
+        star_left r n z
 \end{lstlisting}
 
 The soundness of lack of static traceability follows from the generalized lemma
@@ -2581,26 +2599,26 @@ dynamic evaluation.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma not_static_traceable_pool_sound:
-    $\forall$ e0 pool convo path x b e' env stack evn_a convo_a prog_a is_end .
+    \forall e0 pool convo path n b p' env stack evn_a static_convo graph is_end .
       if
         star dynamic_eval ([[] -> (Stt e0 [->] [])], {}) (pool, convo), 
-        pool path = Some (Stt (Let x b e') env stack), 
-        static_eval env_a convo_a e0, 
-        static_traversable env_a prog_a pool, 
+        pool path = Some (Stt (Let n b p') env stack), 
+        static_eval static_env static_convo e0, 
+        static_traversable static_env graph pool, 
         is_end (NLet x)
       then
-        $\exists$ path_a . 
-          paths_correspond path path_a, 
-          static_traceable prog_a (top_program_id e0) is_end path_a
+        exists static_path . 
+          paths_correspond path static_path, 
+          static_traceable graph (top_program_id e0) is_end static_path
 
   lemma static_traversable_pool_preserved_star:
-    $\forall$ e0 pool convo env_a convo_a prog_a .
+    \forall e0 pool convo static_env static_convo graph .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo, 
-        static_eval env_a convo_a e0,
-        static_traversable_pool env_a prog_a [[] -> (Stt e0 [->] [])]
+        static_eval static_env static_convo e0,
+        static_traversable_pool static_env graph [[] -> (Stt e0 [->] [])]
       then
-        static_traversable_pool env_a prog_a pool 
+        static_traversable_pool static_env graph pool 
 \end{lstlisting}
 
 
@@ -2617,32 +2635,32 @@ used to ensure that the static point discussed is indeed a send ID.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma send_chan_not_static_bound_sound:
-    $\forall$ e0 pool convo env_a convo_a path
-      x x_e e' env stack x_sc x_m env_e path_c x_c .
+    \forall e0 pool convo static_env static_convo path
+      n n_e p' env stack n$_s$c n_m env_e path_c n$_c$ .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])], {} pool convo,
-        static_eval env_a convo_a e0,
-        pool path = Some (Stt (Let x (Sync x_e) e') env stack),
-        env_y x_e = Some (VPrm (SendEvt x_sc x_m) env_e),
-        env_e x_sc = Some (VChn (Chan path_c x_c))
+        static_eval static_env static_convo e0,
+        pool path = Some (Stt (Let n (Sync n_e) p') env stack),
+        env_y n_e = Some (VPrm (SendEvt n$_s$c n_m) env_e),
+        env_e n$_s$c = Some (VChn (Chan path_c n$_c$))
       then
-        SChn x_c $\in$ env_a x_sc
+        SChn n$_c$ \in static_env n$_s$c
 
   lemma not_static_bound_sound:
-    $\forall$ e0 pool convo env_a convo_a path e env stack x v .
+    \forall e0 pool convo static_env static_convo path p env stack n v .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo,
-        static_eval env_a convo_a e0, 
-        pool path = Some (Stt e env stack), 
-        env x = Some v
+        static_eval static_env static_convo e0, 
+        pool path = Some (Stt p env stack), 
+        env n = Some v
       then
-        abstract v $\in$ env_a x
+        abstract v \in static_env x
 
   lemma not_static_reachable_sound:
-    $\forall$ e0 pool convo env_a convo_a path e env stack .
+    \forall e0 pool convo static_env static_convo path p env stack .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo,
-        pool path = Some (Stt e env stack)
+        pool path = Some (Stt p env stack)
       then
         static_reachable e0 e
 \end{lstlisting}
@@ -2655,12 +2673,12 @@ evaluation.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma static_eval_pool_preserved:
-    $\forall$ pool convo pool' convo' env_a convo_a .
+    \forall pool convo pool' convo' static_env static_convo .
       if
         star dynamic_eval pool convo pool' convo' 
-        static_eval_pool env_a convo_a pool
+        static_eval_pool static_env static_convo pool
       then
-        static_eval_pool env_a convo_a pool'
+        static_eval_pool static_env static_convo pool'
 \end{lstlisting}
 
 The lemma for soundness of lack of static reachability relies on the a reformulation of
@@ -2677,73 +2695,73 @@ maintaining the initial program state in context for each subgoal .
   predicate static_reachable_left of program -> program -> bool:
     only
 
-    ($\forall$ e0 e .
+    (\forall e0 p .
       static_reachable_left e0 e0),
 
-    ($\forall$ e0 x e_c e' .
+    (\forall e0 n p_c p' .
       if 
-        static_reachable_left e0 (Let x (Spwn e_c) e')
+        static_reachable_left e0 (Let n (Spwn p_c) p')
       then
-        static_reachable_left e0 e_c),
+        static_reachable_left e0 p_c),
 
-    ($\forall$ e0 x x_s x_l e_l x_r e_r e' .
+    (\forall e0 n n$_s$ n$_l$ p$_l$ n$_r$ p$_r$ p' .
       if
-        static_reachable_left e0 (Let x (Case x_s x_l e_l x_r e_r) e')
+        static_reachable_left e0 (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')
       then
-        static_reachable_left e0 e_l),
+        static_reachable_left e0 p$_l$),
 
-    ($\forall$ e0 x x_s x_l e_l x_r e_r e' .
+    (\forall e0 n n$_s$ n$_l$ p$_l$ n$_r$ p$_r$ p' .
       if
-        static_reachable_left e0 (Let x (Case x_s x_l e_l x_r e_r) e')
+        static_reachable_left e0 (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')
       then
-        static_reachable_left e0 e_r),
+        static_reachable_left e0 p$_r$),
 
-    ($\forall$ e0 x f x_p e_b e' .
+    (\forall e0 n n$_f$ n$_p$ p$_b$ p' .
       if
-        static_reachable_left e0 (Let x (Prim (Abs f x_p e_b)) e')
+        static_reachable_left e0 (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')
       then
-        static_reachable_left e0 e_b),
+        static_reachable_left e0 p$_b$),
 
-    ($\forall$ e0 x f x_p e_b e' .
+    (\forall e0 n n$_f$ n$_p$ p$_b$ p' .
       if
-        static_reachable_left e0 (Let x b e')
+        static_reachable_left e0 (Let n b p')
       then
-        static_reachable_left e0 e')
+        static_reachable_left e0 p')
 
   predicate static_reachable_over_prim of program -> primitive -> bool:
     only
 
-    ($\forall$ e0 x_c x_m .
-      static_reachable_over_prim e0 (SendEvt x_c x_m)),
+    (\forall e0 n$_c$ n_m .
+      static_reachable_over_prim e0 (SendEvt n$_c$ n_m)),
 
-    ($\forall$ e0 x_c .
-        static_reachable_over_prim e0 (RecvEvt x_c)),
+    (\forall e0 n$_c$ .
+        static_reachable_over_prim e0 (RecvEvt n$_c$)),
 
-    ($\forall$ e0 x1 x2 .
-        static_reachable_over_prim e0 (Pair x1 x2)),
+    (\forall e0 n1 n2 .
+        static_reachable_over_prim e0 (Pair n1 n2)),
 
-    ($\forall$ e0 x_l .
-        static_reachable_over_prim e0 (Lft x_l)),
+    (\forall e0 n$_l$ .
+        static_reachable_over_prim e0 (Lft n$_l$)),
 
-    ($\forall$ e0 x_r
-        static_reachable_over_prim e0 (Rght x_r)),
+    (\forall e0 n$_r$
+        static_reachable_over_prim e0 (Rght n$_r$)),
 
-    ($\forall$ e0 e_b f x_p e_b . 
+    (\forall e0 p$_b$ n$_f$ n$_p$ p$_b$ . 
       if
-        static_reachable_left e0 e_b 
+        static_reachable_left e0 p$_b$ 
       then
-        static_reachable_over_prim e0 (Abs f x_p e_b))
+        static_reachable_over_prim e0 (Abs n$_f$ n$_p$ p$_b$))
 
   predicate static_reachable_val of program -> dynamic_value -> bool:
     only
 
-    ($\forall$ e0 .
+    (\forall e0 .
         static_reachable_over_val e0 VUnt),
 
-    ($\forall$ e0 c .
+    (\forall e0 c .
         static_reachable_over_val e0 (VChn c)),
 
-    ($\forall$ e0 p env .
+    (\forall e0 p env .
       if
         static_reachable_over_prim e0 p, 
         static_reachable_over_env e0 env
@@ -2752,11 +2770,11 @@ maintaining the initial program state in context for each subgoal .
 
   predicate static_reachable_env of program -> env -> bool:
     only
-    ($\forall$ e0 env
+    (\forall e0 env
       if
-        ($\forall$ x v .
+        (\forall n v .
           if
-            env x = Some v
+            env n = Some v
           then
             static_reachable_over_val e0 v)
       then
@@ -2765,21 +2783,21 @@ maintaining the initial program state in context for each subgoal .
   predicate static_reachable_over_stack of
     program -> continuation list -> bool:
     only
-    ($\forall$ e0 .
+    (\forall e0 .
       static_reachable_over_stack e0 []),
-    ($\forall$ e0 e_k env_k stack' .
+    (\forall e0 p_k env_k stack' .
       if
-        static_reachable_left e0 e_k, 
+        static_reachable_left e0 p_k, 
         static_reachable_over_env e0 env_k,
         static_reachable_over_stack e0 stack' 
       then
-        static_reachable_over_stack e0 ((Ctn x_k e_k env_k # stack')))
+        static_reachable_over_stack e0 ((Ctn n_k p_k env_k # stack')))
 
   predicate static_reachable_pool of program -> pool -> bool:
     only
-    ($\forall$ e0 pool .
+    (\forall e0 pool .
       then
-        ($\forall$ path e env stack . if pool path = Some (Stt e env stack) then 
+        (\forall path p env stack . if pool path = Some (Stt p env stack) then 
           static_reachable_left e0 e, 
           static_reachable_over_env e0 env, 
           static_reachable_over_stack e0 stack)
@@ -2793,7 +2811,7 @@ a generalized form of soundness over pools.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma not_static_reachable_pool_sound:
-    $\forall$ e0 pool .
+    \forall e0 pool .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])], {} pool convo 
       then
@@ -2810,14 +2828,14 @@ proposition using the leftward definition.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma static_reachable_left_implies_static_reachable:
-    $\forall$ e0 e. 
+    \forall e0 e. 
       if
         static_reachable_left e0 e
       then
         static_reachable e0 e
 
   lemma static_reachable_trans:
-    $\forall$ e1 e2 e3 .
+    \forall e1 e2 e3 .
       if 
         static_reachable e1 e2,
         static_reachable e2 e3
@@ -2845,19 +2863,19 @@ dynamic channel and the creation of a new dynamic channel with the same name.  T
 truncated program would have just one dynamic channel corresponding to the static channel under
 analysis. 
 
-A trimmed graph structure of static program is used static analysis for this higher precision
+A trimmed graph structure of graph is used static analysis for this higher precision
 analysis, which can better differentiate between distinct channels. 
-A trimmed static program is specialized for a particular dynamic channel.  From the creation
+A trimmed graph is specialized for a particular dynamic channel.  From the creation
 point, it must contain transitive transitions to all the program points where the
 channel is live. It should also be as small as possible, for higher precision.
 
-In the whole static program used in the previous analysis, a spawning transition
-connects a child thread to the rest of the program.  For a trimmed static program,
+In the whole graph used in the previous analysis, a spawning transition
+connects a child thread to the rest of the program.  For a trimmed graph,
 it may be clear the channel of interest is not created until after the spawn point,
 so there is not need to include the spawning transition.  However, later on in the
 program it may become apparent that the channel of interest is sent via another channel to
 that spawned thread.  Since there is no spawning transition already connecting that
-thread to the trimmed static program, a transition with a sending mode is used between the
+thread to the trimmed graph, a transition with a sending mode is used between the
 send ID and the receive ID of synchronization. Modes for typical control flow of
 sequencing, calling, returning, and spawning are also included transitions.
 
@@ -2875,133 +2893,133 @@ Static traversability is similar to that of the previous analysis.
 However, it must additionally consider transitions with the sending mode. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_traversable of static_value_map -> static_program -> program -> bool:
+  predicate static_traversable of static_value_map -> graph -> program -> bool:
     only
     
-    ($\forall$ env_a prog_a x .
-        static_traversable env_a prog_a (Rslt x)),
+    (\forall static_env graph n .
+        static_traversable static_env graph (Rslt n)),
 
-    ($\forall$ x e' prog_a env_a  .
+    (\forall n p' graph static_env  .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x Unt e')),
+        static_traversable static_env graph (Let n Unt p')),
 
-    ($\forall$ x e' prog_a env_a  .
+    (\forall n p' graph static_env  .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x MkChn e')),
+        static_traversable static_env graph (Let n MkChn p')),
 
-    ($\forall$ x e' prog_a env_a  x_c x_m .
+    (\forall n p' graph static_env  n$_c$ n_m .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Prim (SendEvt x_c x_m)) e')),
+        static_traversable static_env graph (Let n (Prim (SendEvt n$_c$ n_m)) p')),
 
-    ($\forall$ x e' prog_a env_a x_c .
+    (\forall n p' graph static_env n$_c$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Prim (RecvEvt x_c)) e')),
+        static_traversable static_env graph (Let n (Prim (RecvEvt n$_c$)) p')),
 
-    ($\forall$ x e' prog_a env_a x1 x2 .
+    (\forall n p' graph static_env n1 n2 .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Prim (Pair x1 x2)) e')),
+        static_traversable static_env graph (Let n (Prim (Pair n1 n2)) p')),
 
-    ($\forall$ x e' prog_a env_a x_s .
+    (\forall n p' graph static_env n$_s$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Prim (Lft x_s)) e')),
+        static_traversable static_env graph (Let n (Prim (Lft n$_s$)) p')),
 
-    ($\forall$ x e' prog_a env_a x_s .
+    (\forall n p' graph static_env n$_s$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e'
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Prim (Rght x_s)) e')),
+        static_traversable static_env graph (Let n (Prim (Rght n$_s$)) p')),
 
-    ($\forall$ x e' prog_a env_a e_b f x_p .
+    (\forall n p' graph static_env p$_b$ n$_f$ n$_p$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e',
-        static_traversable env_a prog_a e_b
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p',
+        static_traversable static_env graph p$_b$
       then
-        static_traversable env_a prog_a (Let x (Prim (Abs f x_p e_b)) e')),
+        static_traversable static_env graph (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
 
-    ($\forall$ x e' e_c prog_a env_a.
+    (\forall n p' p_c graph static_env.
       if
-        {(NLet x, MNxt, top_program_id e'),
-          (NLet x, MSpwn, top_program_id e_c)} $\subseteq$ prog_a,
-        static_traversable env_a prog_a e_c,
-        static_traversable env_a prog_a e'
+        {(NLet x, MNxt, top_program_id p'),
+          (NLet x, MSpwn, top_program_id p_c)} \subseteq graph,
+        static_traversable static_env graph p_c,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Spwn e_c) e')),
+        static_traversable static_env graph (Let n (Spwn p_c) p')),
 
-    ($\forall$ x e' prog_a env_a x_se .
+    (\forall n p' graph static_env n$_s$e .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        ($\forall$ x_sc x_m x_c y.
+        (NLet n , MNxt, top_program_id p') \in graph,
+        (\forall n$_s$c n_m n$_c$ y.
           if
-            (SPrm (SendEvt x_sc x_m)) $\in$ env_a xSE, 
-            (SChn x_c) $\in$ env_a x_sc,
-            static_recv_program_id env_a e' x_c (NLet y)
+            (SPrm (SendEvt n$_s$c n_m)) \in static_env xSE, 
+            (SChn n$_c$) \in static_env n$_s$c,
+            static_recv_program_id static_env p' n$_c$ (NLet y)
           then
-            (NLet x, ESend x_se, NLet y) $\in$ F),
-        static_traversable env_a prog_a e'
+            (NLet x, ESend n$_s$e, NLet y) \in F),
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Sync x_se) e')),
+        static_traversable static_env graph (Let n (Sync n$_s$e) p')),
 
-    ($\forall$ x e' prog_a env_a x_p .
+    (\forall n p' graph static_env n$_p$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e',
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p',
       then
-        static_traversable env_a prog_a (Let x (Fst x_p) e')),
+        static_traversable static_env graph (Let n (Fst n$_p$) p')),
 
-    ($\forall$ x e' prog_a env_a x_p .
+    (\forall n p' graph static_env n$_p$ .
       if
-        (NLet x , MNxt, top_program_id e') $\in$ prog_a,
-        static_traversable env_a prog_a e',
+        (NLet n , MNxt, top_program_id p') \in graph,
+        static_traversable static_env graph p',
       then
-        static_traversable env_a prog_a (Let x (Snd x_p) e')),
+        static_traversable static_env graph (Let n (Snd n$_p$) p')),
 
-    ($\forall$ x e_l e_r e' prog_a env_a x_s .
+    (\forall n p$_l$ p$_r$ p' graph static_env n$_s$ .
       if
-        {(NLet x, MCll, top_program_id e_l),
-          (NLet x, MCll, top_program_id e_r),
-          (NResult (result_name e_l), MRtn, top_program_id e'),
-          (NResult (result_name e_r), MRtn, top_program_id e')} $\subseteq$ prog_a,
-        static_traversable env_a prog_a e_l,
-        static_traversable env_a prog_a e_r,
-        static_traversable env_a prog_a e'
+        {(NLet x, MCll, top_program_id p$_l$),
+          (NLet x, MCll, top_program_id p$_r$),
+          (NResult (result_name p$_l$), MRtn, top_program_id p'),
+          (NResult (result_name p$_r$), MRtn, top_program_id p')} \subseteq graph,
+        static_traversable static_env graph p$_l$,
+        static_traversable static_env graph p$_r$,
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (Case x_s x_l e_l x_r e_r) e')),
+        static_traversable static_env graph (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
         
-    ($\forall$  env_a f x e' x x_a .
+    (\forall  static_env n$_f$ n p' n n$_a$ .
       if
-        ($\forall$ f_p x_p e_b . if (SPrm (Abs f_p x_p e_b)) $\in$ env_a f then 
-          {(NLet x, MCll, top_program_id e_b),
-            (NResult (result_name e_b), MRtn, top_program_id e')} $\subseteq$ prog_a),
+        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Abs n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
+          {(NLet x, MCll, top_program_id p$_b$),
+            (NResult (result_name p$_b$), MRtn, top_program_id p')} \subseteq graph),
 
-        static_traversable env_a prog_a e'
+        static_traversable static_env graph p'
       then
-        static_traversable env_a prog_a (Let x (App f x_a) e'))
+        static_traversable static_env graph (Let n (App n$_f$ n$_a$) p'))
   \end{lstlisting}
 
 
 For the liveness of channel analysis, it is necessary to track any name that binds to structure
 containing a a channel of interest, since any use of that name could indicate a use of the
-channel. In the case where the tracked name might be a function abstraction, the channel simply
+channel. in the case where the tracked name might be a function abstraction, the channel simply
 needs to be live in the body of the abstraction, for the name to be considered built on it.
 An entry function contains the names built on the channel that might be live at the entrance
 of each program ID.
@@ -3011,55 +3029,55 @@ of each program ID.
     static_value_map -> program_id_map -> name -> name -> bool:
     only
 
-    ($\forall$ x_c env_a x entr .
+    (\forall n$_c$ static_env n entr .
       if 
-        SChn x_c $\in$ env_a x 
+        SChn n$_c$ \in static_env n 
       then 
-        static_built_on_chan env_a entr x_c x),
+        static_built_on_chan static_env entr n$_c$ x),
 
-    ($\forall$ x_sc x_m env_a x entr x_c . 
+    (\forall n$_s$c n_m static_env n entr n$_c$ . 
       if
-        (SPrm (SendEvt x_sc x_m)) $\in$ env_a x,
-        (static_built_on_chan env_a entr x_c x_sc or
-          static_built_on_chan env_a entr x_c x_m)
+        (SPrm (SendEvt n$_s$c n_m)) \in static_env x,
+        (static_built_on_chan static_env entr n$_c$ n$_s$c or
+          static_built_on_chan static_env entr n$_c$ n_m)
       then 
-        static_built_on_chan env_a entr x_c x),
+        static_built_on_chan static_env entr n$_c$ x),
 
-    ($\forall$ x_rc env_a x entr x_c . 
+    (\forall n$_r$c static_env n entr n$_c$ . 
       if  
-        (SPrm (RecvEvt x_rc)) $\in$ env_a x,
-        static_built_on_chan env_a entr x_c x_rc
+        (SPrm (RecvEvt n$_r$c)) \in static_env x,
+        static_built_on_chan static_env entr n$_c$ n$_r$c
       then 
-        static_built_on_chan env_a entr x_c x),
+        static_built_on_chan static_env entr n$_c$ x),
 
-    ($\forall$ x1 x2 env_a x entr x_c . 
+    (\forall n1 n2 static_env n entr n$_c$ . 
       if  
-        (SPrm (Pair x1 x2)) $\in$ env_a x,
-        (static_built_on_chan env_a entr x_c x1 or
-          static_built_on_chan env_a entr x_c x2)
+        (SPrm (Pair n1 n2)) \in static_env x,
+        (static_built_on_chan static_env entr n$_c$ n1 or
+          static_built_on_chan static_env entr n$_c$ n2)
       then 
-        static_built_on_chan env_a entr x_c x),
+        static_built_on_chan static_env entr n$_c$ x),
 
-    ($\forall$ x_a env_a x entr x_c .
+    (\forall n$_a$ static_env n entr n$_c$ .
       if
-        (SPrm (Lft x_a)) $\in$ env_a x,
-        static_built_on_chan env_a entr x_c x_a
+        (SPrm (Lft n$_a$)) \in static_env x,
+        static_built_on_chan static_env entr n$_c$ n$_a$
       then 
-        static_built_on_chan env_a entr x_c x),
+        static_built_on_chan static_env entr n$_c$ x),
 
-    ($\forall$ x_a env_a x entr x_c .
+    (\forall n$_a$ static_env n entr n$_c$ .
       if
-        (SPrm (Rght x_a)) $\in$ env_a x,
-        static_built_on_chan env_a entr x_c x_a
+        (SPrm (Rght n$_a$)) \in static_env x,
+        static_built_on_chan static_env entr n$_c$ n$_a$
       then 
-        static_built_on_chan env_a entr x_c x),
+        static_built_on_chan static_env entr n$_c$ x),
 
-    ($\forall$ f x_p e_b .
+    (\forall n$_f$ n$_p$ p$_b$ .
       if
-        (SPrm (Abs f x_p e_b)) $\in$ env_a x,
-        not ((entr (top_program_id e_b) - {x_p}) = {})
+        (SPrm (Abs n$_f$ n$_p$ p$_b$)) \in static_env x,
+        not ((entr (top_program_id p$_b$) - {x_p}) = {})
       then
-        static_built_on_chan env_a entr x_c x)
+        static_built_on_chan static_env entr n$_c$ x)
   \end{lstlisting}
 
 
@@ -3075,233 +3093,233 @@ program ID.
     static_value_map -> program_id_map -> program_id_map -> name -> program -> bool:
     only
 
-    ($\forall$ env_a entr x_c y exit .
+    (\forall static_env entr n$_c$ y exit .
       if
-        (if (static_built_on_chan env_a entr x_c y) then
-          {y} $\subseteq$ entr (NResult y))
+        (if (static_built_on_chan static_env entr n$_c$ y) then
+          {y} \subseteq entr (NResult y))
       then
-        static_live_chan env_a entr exit x_c (Rslt y)),
+        static_live_chan static_env entr exit n$_c$ (Rslt y)),
 
-    ($\forall$ exit x entr e' env_a x_c .
+    (\forall exit n entr p' static_env n$_c$ .
       if 
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p'
       then 
-        static_live_chan env_a entr exit x_c (Let x Unt e')),
-    ($\forall$ exit x entr e' env_a x_c .
+        static_live_chan static_env entr exit n$_c$ (Let n Unt p')),
+    (\forall exit n entr p' static_env n$_c$ .
       if
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p'
       then 
-        static_live_chan env_a entr exit x_c (Let x MkChn e')),
+        static_live_chan static_env entr exit n$_c$ (Let n MkChn p')),
 
-    ($\forall$ exit x entr env_a x_c x_sc x_m e' x_c .
+    (\forall exit n entr static_env n$_c$ n$_s$c n_m p' n$_c$ .
       if
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        (if static_built_on_chan env_a entr x_c x_sc then
-          {x_sc} $\subseteq$ entr (NLet x)),
-        (if static_built_on_chan env_a entr x_c x_m then 
-          {x_m} $\subseteq$ entr (NLet x)),
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        (if static_built_on_chan static_env entr n$_c$ n$_s$c then
+          {x_sc} \subseteq entr (NLet x)),
+        (if static_built_on_chan static_env entr n$_c$ n_m then 
+          {x_m} \subseteq entr (NLet x)),
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan env_a entr exit x_c
-          (Let x (Prim (SendEvt x_sc x_m)) e')),
+        static_live_chan static_env entr exit n$_c$
+          (Let n (Prim (SendEvt n$_s$c n_m)) p')),
 
-    ($\forall$ exit x entr env_a x_c x_r .    
+    (\forall exit n entr static_env n$_c$ n$_r$ .    
       if
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        (if static_built_on_chan env_a entr x_c x_r then
-          {x_r} $\subseteq$ entr (NLet x)),
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        (if static_built_on_chan static_env entr n$_c$ n$_r$ then
+          {x_r} \subseteq entr (NLet x)),
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan env_a entr exit x_c
-          (Let x (Prim (RecvEvt x_rc)) e')),
-    ($\forall$ exit x entr env_a e_c x1 x2 e' .
+        static_live_chan static_env entr exit n$_c$
+          (Let n (Prim (RecvEvt n$_r$c)) p')),
+    (\forall exit n entr static_env p_c n1 n2 p' .
       if
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        (if static_built_on_chan env_a entr x_c x1 then
-          {x_1} $\subseteq$ entr (NLet x)),
-        (if static_built_on_chan env_a entr x_c x2 then
-          {x2} $\subseteq$ entr (NLet x)),
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        (if static_built_on_chan static_env entr n$_c$ n1 then
+          {x_1} \subseteq entr (NLet x)),
+        (if static_built_on_chan static_env entr n$_c$ n2 then
+          {x2} \subseteq entr (NLet x)),
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan env_a entr exit x_c (Let x (Prim (Pair x1 x2)) e')),
+        static_live_chan static_env entr exit n$_c$ (Let n (Prim (Pair n1 n2)) p')),
 
-    ($\forall$ exit x entr env_a x_c x_a e' . 
+    (\forall exit n entr static_env n$_c$ n$_a$ p' . 
       if
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        (if static_built_on_chan env_a entr x_c x_a then
-          {x_a} $\subseteq$ entr (NLet x)),
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        (if static_built_on_chan static_env entr n$_c$ n$_a$ then
+          {x_a} \subseteq entr (NLet x)),
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan env_a entr exit x_c (Let x (Prim (Lft x_a)) e')),
+        static_live_chan static_env entr exit n$_c$ (Let n (Prim (Lft n$_a$)) p')),
 
-    ($\forall$ exit x entr env_a x_c x_a e' . 
+    (\forall exit n entr static_env n$_c$ n$_a$ p' . 
       if
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        (if static_built_on_chan env_a entr x_c x_a then
-          {x_a} $\subseteq$ entr (NLet x))
-        entr (top_program_id e) $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        (if static_built_on_chan static_env entr n$_c$ n$_a$ then
+          {x_a} \subseteq entr (NLet x))
+        entr (top_program_id e) \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ e
       then
-        static_live_chan env_a entr exit x_c (Let x (Prim (Rght x_a)) e)),
-    ($\forall$  exit x entr e_b x_p x env_a x_c e' f . 
+        static_live_chan static_env entr exit n$_c$ (Let n (Prim (Rght n$_a$)) e)),
+    (\forall  exit n entr p$_b$ n$_p$ n static_env n$_c$ p' n$_f$ . 
       if
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        (entr (top_program_id e_b) - {x_p}) $\subseteq$ entr (NLet x),
-        static_live_chan env_a entr exit x_c e_b,
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        (entr (top_program_id p$_b$) - {x_p}) \subseteq entr (NLet x),
+        static_live_chan static_env entr exit n$_c$ p$_b$,
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan env_a entr exit x_c
-          (Let x (Prim (Abs f x_p e_b)) e')),
+        static_live_chan static_env entr exit n$_c$
+          (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
 
-    ($\forall$ exit x entr e' e_c x_c env_a .
+    (\forall exit n entr p' p_c n$_c$ static_env .
       if
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        entr (top_program_id e_c) $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e_c,
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        entr (top_program_id p') \subseteq exit (NLet x),
+        entr (top_program_id p_c) \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p_c,
+        static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan env_a entr exit x_c
-          (Let x (Spwn e_c) e')),
+        static_live_chan static_env entr exit n$_c$
+          (Let n (Spwn p_c) p')),
 
-    ($\forall$ exit x entr env_a x_c x_e e' .
+    (\forall exit n entr static_env n$_c$ n_e p' .
       if
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        (if static_built_on_chan env_a entr x_c x_e then
-          {x_e} $\subseteq$ entr (NLet x)),
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e',
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        (if static_built_on_chan static_env entr n$_c$ n_e then
+          {x_e} \subseteq entr (NLet x)),
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p',
       then
-        static_live_chan env_a entr exit x_c
-          (Let x (Sync x_e) e')),
-    ($\forall$ exit x entr env_a x_c x_a e' .
+        static_live_chan static_env entr exit n$_c$
+          (Let n (Sync n_e) p')),
+    (\forall exit n entr static_env n$_c$ n$_a$ p' .
       if
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        (if static_built_on_chan env_a entr x_c x_a then
-          {x_a} $\subseteq$ entr (NLet x)),
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        (if static_built_on_chan static_env entr n$_c$ n$_a$ then
+          {x_a} \subseteq entr (NLet x)),
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan env_a entr exit x_c (Let x (Fst x_a) e')),
+        static_live_chan static_env entr exit n$_c$ (Let n (Fst n$_a$) p')),
 
-    ($\forall$ exit x entr env_a x_c x_a e' .
+    (\forall exit n entr static_env n$_c$ n$_a$ p' .
       if 
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        (if static_built_on_chan env_a entr x_c x_a then
-          {x_a} $\subseteq$ entr (NLet x)),
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        (if static_built_on_chan static_env entr n$_c$ n$_a$ then
+          {x_a} \subseteq entr (NLet x)),
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan env_a entr exit x_c
-          (Let x (Snd x_a) e')),
+        static_live_chan static_env entr exit n$_c$
+          (Let n (Snd n$_a$) p')),
 
-    ($\forall$ exit x entr e_l x_l e_r x_r env_a x_c x_s e' .
+    (\forall exit n entr p$_l$ n$_l$ p$_r$ n$_r$ static_env n$_c$ n$_s$ p' .
       if 
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        (entr (top_program_id e_l) - {x_l}) $\subseteq$ entr (NLet x),
-        (entr (top_program_id e_r) - {x_r}) $\subseteq$ entr (NLet x),
-        (if static_built_on_chan env_a entr x_c x_s then
-          {x_s} $\subseteq$ entr (NLet x)),
-        static_live_chan env_a entr exit x_c e_l,
-        static_live_chan env_a entr exit x_c e_r,
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        (entr (top_program_id p$_l$) - {x_l}) \subseteq entr (NLet x),
+        (entr (top_program_id p$_r$) - {x_r}) \subseteq entr (NLet x),
+        (if static_built_on_chan static_env entr n$_c$ n$_s$ then
+          {x_s} \subseteq entr (NLet x)),
+        static_live_chan static_env entr exit n$_c$ p$_l$,
+        static_live_chan static_env entr exit n$_c$ p$_r$,
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p'
       then 
-        static_live_chan env_a entr exit x_c (Let x (Case x_s x_l e_l x_r e_r) e')),
+        static_live_chan static_env entr exit n$_c$ (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
 
-    ($\forall$ exit x entr env_a x_c x_a f e' .
+    (\forall exit n entr static_env n$_c$ n$_a$ n$_f$ p' .
       if
-        (exit (NLet x) - {x}) $\subseteq$ entr (NLet x),
-        (if static_built_on_chan env_a entr x_c x_a then
-          {x_a} $\subseteq$ entr (NLet x)),
-        (if static_built_on_chan env_a entr x_c f then
-          {f} $\subseteq$ entr (NLet x)),
-        entr (top_program_id e') $\subseteq$ exit (NLet x),
-        static_live_chan env_a entr exit x_c e'
+        (exit (NLet x) - {x}) \subseteq entr (NLet x),
+        (if static_built_on_chan static_env entr n$_c$ n$_a$ then
+          {x_a} \subseteq entr (NLet x)),
+        (if static_built_on_chan static_env entr n$_c$ n$_f$ then
+          {f} \subseteq entr (NLet x)),
+        entr (top_program_id p') \subseteq exit (NLet x),
+        static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan env_a entr exit x_c (Let x (App f x_a) e'))
+        static_live_chan static_env entr exit n$_c$ (Let n (App n$_f$ n$_a$) p'))
   \end{lstlisting}
 
 The static liveness of a transition is described by checking if a transition exists in a whole
-static program, and if it meets certain criteria with respect to the entry and exit liveness
+graph, and if it meets certain criteria with respect to the entry and exit liveness
 functions. 
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_live_transition of
-    static_program -> program_id_map -> program_id_map -> transition -> bool:
+    graph -> program_id_map -> program_id_map -> transition -> bool:
     only
 
-    ($\forall$ l l' prog_a exit entr . 
+    (\forall l l' graph exit entr . 
       if
-        (l, MNxt, l') $\in$ prog_a,
+        (l, MNxt, l') \in graph,
         not (exit l = {}),
         not (entr l' = {})
       then
-        static_live_transition prog_a entr exit (l, MNxt, l')),
+        static_live_transition graph entr exit (l, MNxt, l')),
 
-    ($\forall$ l l' prog_a exit entr .
+    (\forall l l' graph exit entr .
       if
-        (l, MSpwn, l') $\in$ prog_a, 
+        (l, MSpwn, l') \in graph, 
         not (exit l = {}),
         not (entr l' = {})
       then
-        static_live_transition prog_a entr exit (l, MSpwn, l')),
+        static_live_transition graph entr exit (l, MSpwn, l')),
 
-    ($\forall$ l l' prog_a exit entr .
+    (\forall l l' graph exit entr .
       if
-        (l, MCll, l') $\in$ prog_a,
+        (l, MCll, l') \in graph,
         (not (exit l = {})) or (not (entr l' = {}))
       then
-        static_live_transition prog_a entr exit (l, MCll, l')),
+        static_live_transition graph entr exit (l, MCll, l')),
 
-    ($\forall$ l l' prog_a entr exit .
+    (\forall l l' graph entr exit .
       if
-        (l, MRtn, l') $\in$ prog_a,
+        (l, MRtn, l') \in graph,
         not (entr l' = {})
       then
-        static_live_transition prog_a entr exit (l, MRtn, l')),
+        static_live_transition graph entr exit (l, MRtn, l')),
 
-    ($\forall$ x_send x_evt x_recv prog_a entr exit .
+    (\forall n$_s$end n_evt n$_r$ecv graph entr exit .
       if
-        ((NLet x_send), ESend x_evt, (NLet x_recv)) $\in$ prog_a, 
-        {x_evt} $\subseteq$ (entr (NLet x_send))
+        ((NLet n$_s$end), ESend n_evt, (NLet n$_r$ecv)) \in graph, 
+        {x_evt} \subseteq (entr (NLet n$_s$end))
       then
-        static_live_transition prog_a entr exit
-          ((NLet x_send), ESend x_evt, (NLet x_recv)))
+        static_live_transition graph entr exit
+          ((NLet n$_s$end), ESend n_evt, (NLet n$_r$ecv)))
   \end{lstlisting}
 
 The static traceability for the higher precision analysis states
-that an entire static path can be trace through some static program and
+that an entire static path can be trace through some graph and
 is live with respect to some entry and and exit functions.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_traceable of
-    static_value_map -> static_program -> program_id_map -> program_id_map ->
+    static_value_map -> graph -> program_id_map -> program_id_map ->
     program_id -> (program_id -> bool) -> static_path -> bool:
     only
 
-    ($\forall$ is_end start env_a prog_a entr exit .
+    (\forall is_end start static_env graph entr exit .
       if
         is_end start
       then
-        static_traceable prog_a entr exit start is_end []),
+        static_traceable graph entr exit start is_end []),
 
-    ($\forall$ prog_a entr exit start middle path is_end mode. 
+    (\forall graph entr exit start middle path is_end mode. 
       if
-        static_traceable prog_a entr exit start ($\lambda$ l . l = middle) path, 
+        static_traceable graph entr exit start (\lambda l . l = middle) path, 
         (is_end end),
-        static_live_transition prog_a entr exit (middle, mode, end) 
+        static_live_transition graph entr exit (middle, mode, end) 
       then
-        static_traceable prog_a entr exit start is_end (path @ [(middle, mode)])
+        static_traceable graph entr exit start is_end (path @ [(middle, mode)])
   \end{lstlisting}
 
 As with the lower precision analysis, the higher precision analysis relies on recognizing
@@ -3320,28 +3338,28 @@ given paths do not compete in any run of a program.
     static_path -> static_path -> bool:
     only
 
-    ($\forall$ path1 path2 .
+    (\forall path1 path2 .
       if
         prefix path1 path2 or path2 path1
       then
         static_inclusive path1 path2),
 
-    ($\forall$ path x path1 path2 .
+    (\forall path n path1 path2 .
       static_inclusive
         (path @ (NLet x, MSpwn) # path1)
         (path @ (NLet x, MNxt) # path2)),
 
-    ($\forall$ path x path1 path2 .
+    (\forall path n path1 path2 .
       static_inclusive
         (path @ (NLet x, MNxt) # path1) (
         path @ (NLet x, MSpwn) # path2)),
 
-    ($\forall$ path x path1 path2 .
+    (\forall path n path1 path2 .
       static_inclusive
         (path @ (NLet x, ESend xE) # path1)
         (path @ (NLet x, MNxt) # path2)),
 
-    ($\forall$ path x path1 path2 .
+    (\forall path n path1 path2 .
       static_inclusive
         (path @ (NLet x, MNxt) # path1)
         (path @ (NLet x, ESend xE) # path2))
@@ -3349,10 +3367,10 @@ given paths do not compete in any run of a program.
   predicate singular of static_path -> static_path -> bool:
     only 
 
-    ($\forall$ path .
+    (\forall path .
         singular path path),
 
-    ($\forall$ path1 path2 .
+    (\forall path1 path2 .
       if
         not (static_inclusive path1 path2)
       then
@@ -3361,13 +3379,13 @@ given paths do not compete in any run of a program.
   predicate noncompetitive of static_path -> static_path -> bool:
     only
 
-    ($\forall$ path1 path2 . 
+    (\forall path1 path2 . 
       if
         ordered path1 path2
       then
         noncompetitive path1 path2),
 
-    ($\forall$ path1 path2 .
+    (\forall path1 path2 .
       if
         not (static_inclusive path1 path2)
       then
@@ -3380,55 +3398,55 @@ are otherwise similar to the lower precision classifications.
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_one_shot of static_value_map -> program -> name -> bool:
     only
-    ($\forall$ prog_a entr exit x_c env_a e . 
+    (\forall graph entr exit n$_c$ static_env p . 
       if
         every_two
-          (static_traceable prog_a entr exit
-            (NLet x_c) (static_send_id env_a e x_c))
+          (static_traceable graph entr exit
+            (NLet n$_c$) (static_send_id static_env p n$_c$))
           singular, 
-        static_live_chan env_a entr exit x_c e, 
-        static_traversable env_a prog_a e
+        static_live_chan static_env entr exit n$_c$ e, 
+        static_traversable static_env graph e
       then
-        static_one_shot V e x_c)
+        static_one_shot V p n$_c$)
 
   predicate static_one_to_one of static_value_map -> program -> name -> bool:
     only
-    ($\forall$ prog_a entr exit x_c env_a e .
+    (\forall graph entr exit n$_c$ static_env p .
       if
         every_two
-          (static_traceable prog_a entr exit (NLet x_c) (static_send_id env_a e x_c))
+          (static_traceable graph entr exit (NLet n$_c$) (static_send_id static_env p n$_c$))
           noncompetitive, 
         every_two
-          (static_traceable prog_a entr exit (NLet x_c) (static_recv_program_id env_a e x_c))
+          (static_traceable graph entr exit (NLet n$_c$) (static_recv_program_id static_env p n$_c$))
           noncompetitive,
-          static_live_chan env_a entr exit x_c e,
-          static_traversable env_a prog_a e
+          static_live_chan static_env entr exit n$_c$ e,
+          static_traversable static_env graph e
       then
-        static_one_to_one env_a e x_c)
+        static_one_to_one static_env p n$_c$)
 
   predicate static_one_to_many of static_value_map -> program -> name -> bool:
     only
-    ($\forall$ prog_a entr exit x_c env_a e .
+    (\forall graph entr exit n$_c$ static_env p .
       if
         every_two
-          (static_traceable prog_a entr exit (NLet x_c) (static_send_id env_a e x_c))
+          (static_traceable graph entr exit (NLet n$_c$) (static_send_id static_env p n$_c$))
           noncompetitive,
-        static_live_chan env_a entr exit x_c e,
-        static_traversable env_a prog_a e
+        static_live_chan static_env entr exit n$_c$ e,
+        static_traversable static_env graph e
       then
-        static_one_to_many env_a e x_c)
+        static_one_to_many static_env p n$_c$)
 
   predicate static_many_to_one of static_value_map -> program -> name -> bool:
     only
-    ($\forall$ prog_a entr exit x_c env_a e .
+    (\forall graph entr exit n$_c$ static_env p .
       if
         every_two
-          (static_traceable prog_a entr exit (NLet x_c) (static_recv_program_id env_a e x_c))
+          (static_traceable graph entr exit (NLet n$_c$) (static_recv_program_id static_env p n$_c$))
           noncompetitive, 
-        static_live_chan env_a entr exit x_c e,
-        static_traversable env_a prog_a e
+        static_live_chan static_env entr exit n$_c$ e,
+        static_traversable static_env graph e
       then
-        static_many_to_one env_a e x_c)
+        static_many_to_one static_env p n$_c$)
   \end{lstlisting}
 
 
@@ -3438,7 +3456,7 @@ server implementation.  The loop basically just wastes time, but it is used to d
 liveness analysis treats function abstractions that not contain
 any channel of interest.  No channel is
 considered to be live in the body of the loop.  However, a channel may be live before the loop is
-called and after the loop returns.  In such a case, the live traceable path from the creation of a
+called and after the loop returns.  in such a case, the live traceable path from the creation of a
 channel to a point after the loop retains the transitions within the loop, even though the points in
 the loop may not be live according to the entry map.
 
@@ -3506,7 +3524,7 @@ previous techniques of generalizing propositions over pools and other semantic c
 along with finding equivalent representations of propositions that vary in the inductive
 subcomponent. One thing that will make carrying out the formal proof particularly tricky is
 that dynamic paths in the dynamic semantics need to corresponding to static paths from
-the trimmed static programs, which might also contain sending transitions,
+the trimmed graphs, which might also contain sending transitions,
 instead of the dynamic paths spawning transitions.
 The correspondence between these dynamic paths and static paths
 is not bijective, as it is for the lower precision analysis. However, finding a satisfactory
@@ -3521,13 +3539,13 @@ one-shot classification.
 
 \begin{lstlisting}[language=logic, mathescape]
   theorem static_one_shot_sound:
-    $\forall$ e0 pool convo env_a convo_a x_c path_x . 
+    \forall e0 pool convo static_env static_convo n$_c$ path_x . 
       if
         star dynamic_eval [[] -> (Stt e0 [->] []] {} pool convo,
-        static_eval env_a convo_a e0,
-        static_one_shot env_a e0 x_c
+        static_eval static_env static_convo e0,
+        static_one_shot static_env e0 n$_c$
       then 
-        one_shot pool (Chan path_c x_c)
+        one_shot pool (Chan path_c n$_c$)
   \end{lstlisting}
 
 The theorem for soundness of one-shot classification depends on
@@ -3539,66 +3557,66 @@ correlating dynamic paths with static paths.
 
     paths_correspond [] [],
 
-    ($\forall$ path path_a x .
+    (\forall path static_path n .
       if
-        paths_correspond path path_a
+        paths_correspond path static_path
       then
         paths_correspond
-          (path @ [DNxt x])
-          (path_a @ [(NLet x, MNxt)])),
+          (path @ [DNxt n])
+          (static_path @ [(NLet x, MNxt)])),
 
-    ($\forall$ path path_a x .
+    (\forall path static_path n .
       if
-        paths_correspond path path_a
+        paths_correspond path static_path
       then
         paths_correspond
-          (path @ [DSpwn x])
-          (path_a @ [(NLet x, MSpwn)])),
+          (path @ [DSpwn n])
+          (static_path @ [(NLet x, MSpwn)])),
 
-    ($\forall$ path path_a x .
+    (\forall path static_path n .
       if
-        paths_correspond path path_a
+        paths_correspond path static_path
       then
         paths_correspond
-          (path @ [DCll x])
-          (path_a @ [(NLet x, MCll)])),
+          (path @ [DCll n])
+          (static_path @ [(NLet x, MCll)])),
 
-    ($\forall$ path path_a x .
+    (\forall path static_path n .
       if
-        paths_correspond path path_a
+        paths_correspond path static_path
       then
         paths_correspond
-          (path @ [DRtn x])
-          (path_a @ [(NResult x, MRtn)]))
+          (path @ [DRtn n])
+          (static_path @ [(NResult x, MRtn)]))
 
   predicate paths_correspond_mod_chan of 
     pool -> conversation -> channel ->
     dynamic_path -> static_path -> bool:
     only
 
-    ($\forall$ pool path_c x_c path_sfx stt path_a convo .
+    (\forall pool path_c n$_c$ path_sfx stt static_path convo .
       if
-        pool (path_c @ (DNxt x_c) # path_sfx) = Some stt,
-        paths_correspond ((DNxt x_c) # path_sfx) path_a
+        pool (path_c @ (DNxt n$_c$) # path_sfx) = Some stt,
+        paths_correspond ((DNxt n$_c$) # path_sfx) static_path
       then
         paths_correspond_mod_chan
-          (pool, convo) (Chan path_c x_c)
-          (path_c @ (DNxt x_c) # path_sfx) path_a),
+          (pool, convo) (Chan path_c n$_c$)
+          (path_c @ (DNxt n$_c$) # path_sfx) static_path),
 
-    ($\forall$ pool path_r x_r path_sfx stt  path_s x_s x_se e_sy env_sy stack_sy
-      x_re e_ry env_ry stack_ry c_c convo c path_a_re path_a_sfx . 
+    (\forall pool path_r n$_r$ path_sfx stt  path_s n$_s$ n$_s$e p_sy env_sy stack_sy
+      n$_r$e p$_r$y env_ry stack_ry c_c convo c static_path_re static_path_sfx . 
       if
-        pool (path_r @ (DNxt x_r) # path_sfx) = Some stt, 
-        pool path_s = Some (Stt (Let x_s (Sync x_se) e_sy) env_sy stack_sy),
-        pool path_r = Some (Stt (Let x_r (Sync x_re) e_ry) env_ry stack_ry),
-        {(path_s, c_c, path_r)} $\subseteq$ convo, 
-        dynamic_built_on_chan_var env_ry c x_r, 
-        paths_correspond_mod_chan pool convo c path_s path_a_pre,
-        paths_correspond path_sfx path_a_sfx
+        pool (path_r @ (DNxt n$_r$) # path_sfx) = Some stt, 
+        pool path_s = Some (Stt (Let n$_s$ (Sync n$_s$e) p_sy) env_sy stack_sy),
+        pool path_r = Some (Stt (Let n$_r$ (Sync n$_r$e) p$_r$y) env_ry stack_ry),
+        {(path_s, c_c, path_r)} \subseteq convo, 
+        dynamic_built_on_chan_var env_ry c n$_r$, 
+        paths_correspond_mod_chan pool convo c path_s static_path_pre,
+        paths_correspond path_sfx static_path_sfx
       then
         paths_correspond_mod_chan pool convo c
-          (path_r @ (DNxt x_r) # path_sfx)
-          (path_a_pre @ (NLet x_s, ESend x_se) # (NLet x_r, MNxt) # path_a_sfx))
+          (path_r @ (DNxt n$_r$) # path_sfx)
+          (static_path_pre @ (NLet n$_s$, ESend n$_s$e) # (NLet n$_r$, MNxt) # static_path_sfx))
 \end{lstlisting}
 
 Additionally the soundness theorem follows from the soundness of lack of static traceability,
@@ -3608,9 +3626,9 @@ The reasoning about the sending ID is identical to that of the lower precision a
 the the reasoning for the former two is significantly more complicated and not yet completed.
 The complication arises from the
 correlation between dynamic paths and static paths.  The proofs depend on finding a static 
-path that depends on a given dynamic path. In the lower precision analysis the
+path that depends on a given dynamic path. in the lower precision analysis the
 correlation was straightforward. There was only one possible static path to choose for it
-to correlate with the given dynamic path. In the higher precision analysis, the relationship
+to correlate with the given dynamic path. in the higher precision analysis, the relationship
 between the two kinds of paths is not so simple, and finding a description of the static path
 that correlates with the dynamic path is much more challenging.
 
@@ -3620,100 +3638,100 @@ that correlates with the dynamic path is much more challenging.
 
     paths_correspond [] [],
 
-    ($\forall$ path path_a x .
+    (\forall path static_path n .
       if
-        paths_correspond path path_a
+        paths_correspond path static_path
       then
         paths_correspond
-          (path @ [DNxt x])
-          (path_a @ [(NLet x, MNxt)])),
+          (path @ [DNxt n])
+          (static_path @ [(NLet x, MNxt)])),
 
-    ($\forall$ path path_a x .
+    (\forall path static_path n .
       if
-        paths_correspond path path_a
+        paths_correspond path static_path
       then
         paths_correspond
-          (path @ [DSpwn x])
-          (path_a @ [(NLet x, MSpwn)])),
+          (path @ [DSpwn n])
+          (static_path @ [(NLet x, MSpwn)])),
 
-    ($\forall$ path path_a x .
+    (\forall path static_path n .
       if
-        paths_correspond path path_a
+        paths_correspond path static_path
       then
         paths_correspond
-          (path @ [DCll x])
-          (path_a @ [(NLet x, MCll)])),
+          (path @ [DCll n])
+          (static_path @ [(NLet x, MCll)])),
 
-    ($\forall$ path path_a x .
+    (\forall path static_path n .
       if
-        paths_correspond path path_a
+        paths_correspond path static_path
       then
         paths_correspond
-          (path @ [DRtn x])
-          (path_a @ [(NResult x, MRtn)]))
+          (path @ [DRtn n])
+          (static_path @ [(NResult x, MRtn)]))
 
   predicate paths_correspond_mod_chan of 
     pool -> conversation -> channel ->
     dynamic_path -> static_path -> bool:
     only
-    ($\forall$ pool path_c x_c path_sfx stt path_a convo .
+    (\forall pool path_c n$_c$ path_sfx stt static_path convo .
       if
-        pool (path_c @ (DNxt x_c) # path_sfx) = Some stt,
-        paths_correspond ((DNxt x_c) # path_sfx) path_a
+        pool (path_c @ (DNxt n$_c$) # path_sfx) = Some stt,
+        paths_correspond ((DNxt n$_c$) # path_sfx) static_path
       then
         paths_correspond_mod_chan
-          (pool, convo) (Chan path_c x_c)
-          (path_c @ (DNxt x_c) # path_sfx) path_a
+          (pool, convo) (Chan path_c n$_c$)
+          (path_c @ (DNxt n$_c$) # path_sfx) static_path
       ),
-    ($\forall$ pool path_r x_r path_sfx stt  path_s x_s x_se e_sy env_sy stack_sy
-      x_re e_ry env_ry stack_ry c_c convo c path_a_re path_a_sfx . 
+    (\forall pool path_r n$_r$ path_sfx stt  path_s n$_s$ n$_s$e p_sy env_sy stack_sy
+      n$_r$e p$_r$y env_ry stack_ry c_c convo c static_path_re static_path_sfx . 
       if
-        pool (path_r @ (DNxt x_r) # path_sfx) = Some stt, 
-        pool path_s = Some (Stt (Let x_s (Sync x_se) e_sy) env_sy stack_sy),
-        pool path_r = Some (Stt (Let x_r (Sync x_re) e_ry) env_ry stack_ry),
-        {(path_s, c_c, path_r)} $\subseteq$ convo, 
-        dynamic_built_on_chan_var env_ry c x_r, 
-        paths_correspond_mod_chan pool convo c path_s path_a_pre,
-        paths_correspond path_sfx path_a_sfx
+        pool (path_r @ (DNxt n$_r$) # path_sfx) = Some stt, 
+        pool path_s = Some (Stt (Let n$_s$ (Sync n$_s$e) p_sy) env_sy stack_sy),
+        pool path_r = Some (Stt (Let n$_r$ (Sync n$_r$e) p$_r$y) env_ry stack_ry),
+        {(path_s, c_c, path_r)} \subseteq convo, 
+        dynamic_built_on_chan_var env_ry c n$_r$, 
+        paths_correspond_mod_chan pool convo c path_s static_path_pre,
+        paths_correspond path_sfx static_path_sfx
       then
         paths_correspond_mod_chan pool convo c
-          (path_r @ (DNxt x_r) # path_sfx)
-          (path_a_pre @ (NLet x_s, ESend x_se) # (NLet x_r, MNxt) # path_a_sfx)
+          (path_r @ (DNxt n$_r$) # path_sfx)
+          (static_path_pre @ (NLet n$_s$, ESend n$_s$e) # (NLet n$_r$, MNxt) # static_path_sfx)
       )
 
   lemma not_static_traceable_sound: 
-    $\forall$ e0 pool convo path x b e' env stack env_a convo_a
-      entr exit x_c prog_a is_end path_c  . 
+    \forall e0 pool convo path n b p' env stack static_env static_convo
+      entr exit n$_c$ graph is_end path_c  . 
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo,
-        pool path = Some (Stt (Let x b e') env stack),
-        static_eval env_a convo_a e0,
-        static_live_chan env_a entr exit x_c e0,
-        static_traversable env_a prog_a e0, 
+        pool path = Some (Stt (Let n b p') env stack),
+        static_eval static_env static_convo e0,
+        static_live_chan static_env entr exit n$_c$ e0,
+        static_traversable static_env graph e0, 
         is_end (NLet x)
       then
-        ($\exists$ path_a . 
-          paths_correspond_mod_chan pool convo (Chan path_c x_c) path path_a, 
-          static_traceable prog_a entr exit (NLet x_c) is_end path_a)
+        (exists static_path . 
+          paths_correspond_mod_chan pool convo (Chan path_c n$_c$) path static_path, 
+          static_traceable graph entr exit (NLet n$_c$) is_end static_path)
 
   lemma not_static_inclusive_sound:
-    $\forall$ e0 pool convo env_a entr exit x_c prog_a convo_a
-      path1 stt1 path_c path_a1 path2 stt2 path_a2 .
+    \forall e0 pool convo static_env entr exit n$_c$ graph static_convo
+      path1 stt1 path_c static_path1 path2 stt2 static_path2 .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo, 
-        static_live_chan env_a entr exit x_c e0, 
-        static_traversable env_a prog_a e0, 
-        static_eval env_a convo_a e0, 
+        static_live_chan static_env entr exit n$_c$ e0, 
+        static_traversable static_env graph e0, 
+        static_eval static_env static_convo e0, 
         pool path1 = Some stt1, 
-        paths_correspond_mod_chan pool convo (Chan path_c x_c) path1 path_a1, 
-        static_traceable prog_a entr exit
-          (NLet x_c) (static_send_id env_a e0 x_c) path_a1, 
+        paths_correspond_mod_chan pool convo (Chan path_c n$_c$) path1 static_path1, 
+        static_traceable graph entr exit
+          (NLet n$_c$) (static_send_id static_env e0 n$_c$) static_path1, 
         pool path2 = Some stt2, 
-        paths_correspond_mod_chan pool convo (Chan path_c x_c) path2 path_a2, 
-        static_traceable prog_a entr exit
-          (NLet x_c) (static_send_id env_a e0 x_c) path_a2
+        paths_correspond_mod_chan pool convo (Chan path_c n$_c$) path2 static_path2, 
+        static_traceable graph entr exit
+          (NLet n$_c$) (static_send_id static_env e0 n$_c$) static_path2
       then
-        static_inclusive path_a1 path_a2
+        static_inclusive static_path1 static_path2
   \end{lstlisting}
 
   
@@ -3726,7 +3744,7 @@ applications. These language features enable the construction of reactive progra
 have separation of parts that are conceptually distinct distinct, yet still depend on each
 other.
 This work has kicked off the framework with a formal communication analysis that has practical
-applications in aiding optimizations for parallel computation.  In the future additional
+applications in aiding optimizations for parallel computation.  in the future additional
 analyses can be built on the existing semantics, in order to verify the correctness of feature
 extensions or optimizations. Extending the semantics to handle event combinators for choosing
 between events, sequencencing events, guardining events, among others, would be an important
