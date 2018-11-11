@@ -55,7 +55,7 @@
 
 \lstdefinelanguage{normal_lang}{
   morekeywords={
-    let, in, rslt, fun, unt, pair,
+    bind, rslt, fun, unt, pair,
     mk_chn, sync, fst, snd, lft, rght,
     spawn, case, of, send_evt, recv_evt
   }
@@ -195,17 +195,20 @@ calling \lstinline{recv replCh}.
     fun make () = let 
       val reqCh = channel ()
       fun loop state = let
-        val (v, replCh) = recv reqCh in 
-        send (replCh, state);
-        loop v end in
-      spawn (fn () => loop 0);
-      S reqCh end 
+        val (v, replCh) = recv reqCh
+        val () = send (replCh, state)
+        in loop v
+        end
+      val () = spawn (fn () => loop 0)
+      in S reqCh
+      end 
 
     fun call (server, v) = let 
       val S reqCh = server
-      val replCh = channel () in 
-      send (reqCh, (v, replCh));
-      recv replCh end
+      val replCh = channel () 
+      val () = send (reqCh, (v, replCh))
+      in recv replCh
+      end
 
     end
   \end{lstlisting}
@@ -301,17 +304,20 @@ one-shot.
     fun make () = let 
       val reqCh = FanIn.channel ()
       fun loop state = let
-        val (v, replCh) = FanIn.recv reqCh in 
-        OneShot.send (replCh, state);
-        loop v end in
-      spawn (fn () => loop 0);
-      S reqCh end 
+        val (v, replCh) = FanIn.recv reqCh
+        val () = OneShot.send (replCh, state)
+        in loop v
+        end
+      val () = spawn (fn () => loop 0)
+      in S reqCh
+      end 
 
     fun call (server, v) = let 
       val S reqCh = server
-      val replCh = OneShot.channel () in 
-      FanIn.send (reqCh, (v, replCh));
-      OneShot.recv replCh end
+      val replCh = OneShot.channel ()
+      val () = FanIn.send (reqCh, (v, replCh))
+      in OneShot.recv replCh
+      end
 
     end
   \end{lstlisting}
@@ -419,18 +425,21 @@ operation returns with the value deposited in the cell by a sending thread.
       acquire lock;
       (case !conRef of
         Recv q => let
-          val (recvCond, mopRef) = dequeue q in
-          mopRef := Some m;
-          if (isEmpty q) then conRef := Inac else (); 
-          release lock; signal recvCond; () end |
+          val (recvCond, mopRef) = dequeue q
+          val () = mopRef := Some m
+          val () = if (isEmpty q) then conRef := Inac else ()
+          in release lock; signal recvCond; ()
+          end |
         Send q => let
-          val sendCond = condition () in
-          enqueue (q, (sendCond, m));
-          release lock; wait sendCond; () end |
+          val sendCond = condition ()
+          val () = enqueue (q, (sendCond, m))
+          in release lock; wait sendCond; ()
+          end |
         Inac => let
           val sendCond = condition () in
-          conRef := Send (queue [(sendCond, m)]);
-          release lock; wait sendCond; () end)
+          val () = conRef := Send (queue [(sendCond, m)])
+          in release lock; wait sendCond; ()
+          end)
 
     fun recv (Chn (conRef, lock)) =  
       acquire lock;
@@ -1239,7 +1248,7 @@ that the synchronization used for communication.
     (\forall pool path n b p' env stack v .
       if 
         leaf pool path,
-        pool path = Some (Stt (Let n b p') env stack),
+        pool path = Some (Stt (Bind n b p') env stack),
         seq_eval b env v
       then
         dynamic_eval
@@ -1250,7 +1259,7 @@ that the synchronization used for communication.
     (\forall pool path n b p' env stack p_u env_u convo .
       if 
         leaf pool path,
-        pool path = Some (Stt (Let n b p') env stack),
+        pool path = Some (Stt (Bind n b p') env stack),
         call_eval b env p_u env_u
       then
         dynamic_eval
@@ -1262,7 +1271,7 @@ that the synchronization used for communication.
     (\forall pool path n p' env stack .
       if 
         leaf pool path,
-        pool path = Some (Stt (Let n MkChn p') env stack)
+        pool path = Some (Stt (Bind n MkChn p') env stack)
       then
         dynamic_eval
           pool convo 
@@ -1273,7 +1282,7 @@ that the synchronization used for communication.
     (\forall pool path n p_c p' env stack convo .
       if 
         leaf pool path, 
-        pool path = Some (Stt (Let n (Spwn p_c) p') env stack)
+        pool path = Some (Stt (Bind n (Spwn p_c) p') env stack)
       then
         dynamic_eval
         pool convo 
@@ -1287,12 +1296,12 @@ that the synchronization used for communication.
       if 
         leaf pool path_s,
         pool path_s = Some (Stt
-          (Let n$_s$ (Sync n$_s$e) p_s) env_s stack_s),
+          (Bind n$_s$ (Sync n$_s$e) p_s) env_s stack_s),
         env_s n$_s$e = Some (VPrm
           (SendEvt n$_s$c n_m) env_se),
         leaf pool path_r,
         pool path_r = Some (Stt
-          (Let n$_r$ (Sync n$_r$e) p$_r$) env_r stack_r),
+          (Bind n$_r$ (Sync n$_r$e) p$_r$) env_r stack_r),
         env_r n$_r$e = Some (VPrm
           (RecvEvt n$_r$c) env_re),
         env_se n$_s$c = Some (VChn c),
@@ -1333,7 +1342,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 
     (\forall pool path n n_e p' env stack n$_s$c n_m env_e c.
       if
-        pool path = Some (Stt (Let n (Sync n_e) p') env stack),
+        pool path = Some (Stt (Bind n (Sync n_e) p') env stack),
         env n_e = Some (VPrm (SendEvt n$_s$c n_m) env_e), 
         env_e n$_s$c = Some (VChn c)
       then
@@ -1343,7 +1352,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
     only
     (\forall poo path n n_e p' env stack n$_r$c env_e c .
       then
-        pool path = Some (Stt (Let n (Sync n_e) p') env stack),
+        pool path = Some (Stt (Bind n (Sync n_e) p') env stack),
         env n_e = Some (VPrm (RecvEvt n$_r$c) env_e),
         env_e n$_r$c = Some (VChn c)
       then
@@ -1427,7 +1436,7 @@ embedded within its result subprogram.
     (\forall n .
       result_name (Rslt n) = x),
     (\forall n b p' . 
-      result_name (Let n b p') = (result_name e))
+      result_name (Bind n b p') = (result_name e))
   \end{lstlisting}
 
 
@@ -1455,49 +1464,49 @@ not been formally proven in this work.
       SUnt \in static_env x,
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Let n Unt p')),
+        static_eval static_env static_convo (Bind n Unt p')),
 
     (\forall n static_env static_convo p' .
       if 
         (SChn x) \in static_env x,
         static_eval static_env static_convo p'
       then  
-        static_eval static_env static_convo (Let n MkChn p')),
+        static_eval static_env static_convo (Bind n MkChn p')),
 
     (\forall n$_c$ n_m static_env n static_convo p' .
       if
         (SPrm (SendEvt n$_c$ n_m)) \in static_env x,
         static_eval static_env static_convo p' 
       then
-        static_eval static_env static_convo (Let n (Prim (SendEvt n$_c$ n_m)) p')),
+        static_eval static_env static_convo (Bind n (Prim (SendEvt n$_c$ n_m)) p')),
 
     (\forall n$_c$ static_env n static_convo p' . 
       if 
         (SPrm (RecvEvt n$_c$)) \in static_env x,
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Let n (Prim (RecvEvt n$_c$)) p')),
+        static_eval static_env static_convo (Bind n (Prim (RecvEvt n$_c$)) p')),
 
     (\forall n1 n2 static_env n static_convo p' .
       if
         (SPrm (Pair n1 n2)) \in static_env x,
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Let n (Prim (Pair n_1 n_2)) e)),
+        static_eval static_env static_convo (Bind n (Prim (Pair n_1 n_2)) e)),
 
     (\forall n$_s$ static_env n static_convo p' .
       if
         (SPrm(Lft n$_s$)) \in static_env x,
         static_eval static_env static_convo p' 
       then
-        static_eval static_env static_convo (Let n (Prim (Lft n$_s$)) p')),
+        static_eval static_env static_convo (Bind n (Prim (Lft n$_s$)) p')),
 
     (\forall n$_s$ static_env n static_convo p' .
       if
         (SPrm(Rght n$_s$)) \in static_env x, 
         static_eval static_env static_convo e
       then
-        static_eval static_env static_convo (Let n (Prim (Rght n$_s$)) p')),
+        static_eval static_env static_convo (Bind n (Prim (Rght n$_s$)) p')),
 
     (\forall n$_f$ n$_p$ p$_b$ static_env static_convo n p' .
       if
@@ -1506,7 +1515,7 @@ not been formally proven in this work.
         (SPrm (Abs n$_f$ n$_p$ p$_b$)) \in static_env x, 
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
+        static_eval static_env static_convo (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
 
     (\forall n$_f$ n$_p$ p$_b$ static_env static_convo n p' .
       if
@@ -1514,7 +1523,7 @@ not been formally proven in this work.
         static_eval static_env static_convo p_c, 
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Let n (Spwn p_c) p')),
+        static_eval static_env static_convo (Bind n (Spwn p_c) p')),
 
     (\forall static_env n_e n static_convo  p'.
       if
@@ -1532,7 +1541,7 @@ not been formally proven in this work.
             static_convo n$_c$ \subseteq static_env x),
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Let n (Sync n_e) p')),
+        static_eval static_env static_convo (Bind n (Sync n_e) p')),
 
     (\forall static_env n$_p$ n static_convo p' . 
       if
@@ -1540,7 +1549,7 @@ not been formally proven in this work.
           static_env n1 \subseteq static_env x),
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Let n (Fst n$_p$) p')),
+        static_eval static_env static_convo (Bind n (Fst n$_p$) p')),
 
     (\forall static_env n$_p$ n static_convo p' . 
       if
@@ -1548,7 +1557,7 @@ not been formally proven in this work.
           static_env n2 \subseteq static_env x),
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Let n (Snd n$_p$) p')),
+        static_eval static_env static_convo (Bind n (Snd n$_p$) p')),
 
     (\forall static_env n$_s$ n$_l$ p$_l$ n static_convo n$_r$ p$_r$ p' . 
       if
@@ -1562,7 +1571,7 @@ not been formally proven in this work.
           static_eval static_env static_convo p$_r$),
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
+        static_eval static_env static_convo (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
 
     (\forall static_env n$_f$ n$_a$ n static_convo p' . 
       if
@@ -1571,7 +1580,7 @@ not been formally proven in this work.
           static_env (result_name p$_b$) \subseteq static_env x),
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Let n (App n$_f$ n$_a$) p'))
+        static_eval static_env static_convo (Bind n (App n$_f$ n$_a$) p'))
   \end{lstlisting}
 
 It is very straightforward to follow the rules of static evaluation in order to build up
@@ -1582,47 +1591,47 @@ ANF grammar is helpful for demonstrating this
 informal procedure.
 
 \begin{lstlisting}[language=normal_lang, mathescape]
-  let u1 = unt in
-  let r1 = rght u1 in
-  let l1 = lft r1 in
-  let l2 = lft l1 in
+  bind u1 = unt
+  bind r1 = rght u1
+  bind l1 = lft r1
+  bind l2 = lft l1
 
-  let mksr = (fun _ x2 => 
-    let k1 = mk_chn in
-    let srv = fun srv' x3 =>
-      let e1 = recv_evt k1 in
-      let p1 = sync e1 in
-      let v1 = fst p1 in
-      let k2 = snd p1 in 
-      let e2 = send_evt k2 x3 in
-      let z5 = sync e2 in
-      let z6 = srv' v1 in
-      let u4 = unt in
-      rslt u4 in
-    let z7 = spawn (
-      let z8 = srv r1 in
-      let u5 = unt in
-      rslt u5) in
-    rslt k1) in
+  bind mksr = (fun _ x2 => 
+    bind k1 = mk_chn
+    bind srv = fun srv' x3 =>
+      bind e1 = recv_evt k1
+      bind p1 = sync e1
+      bind v1 = fst p1
+      bind k2 = snd p1 
+      bind e2 = send_evt k2 x3
+      bind z5 = sync e2
+      bind z6 = srv' v1
+      bind u4 = unt
+      rslt u4
+    bind z7 = spawn (
+      bind z8 = srv r1
+      bind u5 = unt
+      rslt u5)
+    rslt k1)
 
-  let rqst = (fun _ x4 =>
-    let k3 = fst x4 in
-    let v2 = snd x4 in
-    let k4 = mk_chn in
-    let p2 = pair v2 k4 in
-    let e3 = send_evt k3 p2 in
-    let z9 = sync e3 in
-    let e4 = recv_evt k4 in
-    let v3 = sync e4 in
-    rslt v3) in
+  bind rqst = (fun _ x4 =>
+    bind k3 = fst x4
+    bind v2 = snd x4
+    bind k4 = mk_chn
+    bind p2 = pair v2 k4
+    bind e3 = send_evt k3 p2
+    bind z9 = sync e3
+    bind e4 = recv_evt k4
+    bind v3 = sync e4
+    rslt v3)
 
-  let srvr = mksr u1 in
-  let z10 = spawn ( 
-    let p3 = pair srvr l1 in
-    let z11 = rqst p3 in
-    rslt z11) in
-  let p4 = pair srvr l2 in
-  let z12 = rqst p4 in
+  bind srvr = mksr u1
+  bind z10 = spawn ( 
+    bind p3 = pair srvr l1
+    bind z11 = rqst p3
+    rslt z11)
+  bind p4 = pair srvr l2
+  bind z12 = rqst p4
   rslt z12
   \end{lstlisting}
 
@@ -1633,7 +1642,7 @@ could hold. Then we choose the smallest function that satifies that rule's condi
 In the server implementation, the program starts with \
 \lstinline[language=normal_lang, mathescape]{let u1 = unt in ...}, which only matches
 the rule concluding with \
-\lstinline[language=logic, mathescape]{static_eval static_env static_convo (Let (Nm "u1") Unt ...)}. 
+\lstinline[language=logic, mathescape]{static_eval static_env static_convo (Bind (Nm "u1") Unt ...)}. 
 The premises for that rule require that 
 \lstinline[language=logic, mathescape]{SUnt in static_env u1 and static_eval static_env static_convo ...}.\
 Therefore, we choose the smallest function we can determine so far for the static environment
@@ -1715,31 +1724,31 @@ reachable from its sub program.
       if
         static_reachable p_c p_z
       then
-        static_reachable (Let n (Spwn p_c) p') p_z),
+        static_reachable (Bind n (Spwn p_c) p') p_z),
 
     (\forall p$_l$ p_z n n$_s$ n$_l$ n$_r$ p$_r$ p' . 
       if
         static_reachable p$_l$ p_z
       then
-        static_reachable (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p') p_z),
+        static_reachable (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p') p_z),
 
     (\forall p$_r$ p_z n n$_s$ n$_l$ p$_l$ n$_r$ p' . 
       if
         static_reachable p$_r$ p_z
       then
-        static_reachable (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p') p_z),
+        static_reachable (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p') p_z),
 
     (\forall p$_b$ p_z n n$_f$ n$_p$ p$_b$ p' . 
       if
         static_reachable p$_b$ p_z
       then
-        static_reachable (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p') p_z),
+        static_reachable (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p') p_z),
 
     (\forall p' p_z n b . 
       if
         static_reachable p' p_z
       then
-        static_reachable (Let n b p') p_z)
+        static_reachable (Bind n b p') p_z)
   \end{lstlisting}
 
 \section{Static Communication}
@@ -1753,7 +1762,7 @@ of a result is indicated by its embedded name, and indication that it's a result
 
   fun top_program_id of program -> program_id:
     (\forall n b p' . 
-      top_program_id (Let n b p') = NLet x),
+      top_program_id (Bind n b p') = NLet x),
     (\forall n . 
       top_program_id (Rslt n) = NResult x)
 
@@ -1774,7 +1783,7 @@ synchronization to receive on a given abstract channel.
     only
     (\forall e0 n n_e p' n$_s$c n_m static_env n$_c$ .
       if
-        static_reachable e0 (Let n (Sync n_e) p'),
+        static_reachable e0 (Bind n (Sync n_e) p'),
         (SPrm (SendEvt n$_s$c n_m)) \subseteq static_env n_e, 
         (SChn n$_c$) \in static_env n$_s$c
       then
@@ -1785,7 +1794,7 @@ synchronization to receive on a given abstract channel.
     only
     (\forall e0 n n_e p' n$_r$c static_env n$_c$ .
       if
-        static_reachable e0 (Let n (Sync n_e) p'),
+        static_reachable e0 (Bind n (Sync n_e) p'),
         (SPrm (RecvEvt n$_r$c)) \in static_env n_e, 
         (SChn n$_c$) \in static_env n$_r$c 
       then
@@ -1874,49 +1883,49 @@ traversable transitions for the sequenced subprogram.
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n Unt p')),
+        static_traversable static_env graph (Bind n Unt p')),
 
     (\forall n p' graph static_env  .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n MkChn p')),
+        static_traversable static_env graph (Bind n MkChn p')),
 
     (\forall n p' graph static_env  n$_c$ n_m .
       if
         (NLet n , MNxt, top_program_id p') \in graph, 
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Prim (SendEvt n$_c$ n_m)) p')),
+        static_traversable static_env graph (Bind n (Prim (SendEvt n$_c$ n_m)) p')),
 
     (\forall n p' graph static_env n$_c$ .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Prim (RecvEvt n$_c$)) p')),
+        static_traversable static_env graph (Bind n (Prim (RecvEvt n$_c$)) p')),
 
     (\forall n p' graph static_env n1 n2 .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Prim (Pair n1 n2)) p')),
+        static_traversable static_env graph (Bind n (Prim (Pair n1 n2)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Prim (Lft n$_s$)) p')),
+        static_traversable static_env graph (Bind n (Prim (Lft n$_s$)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Prim (Rght n$_s$)) p')),
+        static_traversable static_env graph (Bind n (Prim (Rght n$_s$)) p')),
 
     (\forall n p' graph static_env p$_b$ n$_f$ n$_p$ .
       if
@@ -1924,7 +1933,7 @@ traversable transitions for the sequenced subprogram.
         static_traversable static_env graph p', 
         static_traversable static_env graph p$_b$
       then
-        static_traversable static_env graph (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
+        static_traversable static_env graph (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
 
     (\forall n p' p_c graph static_env.
       if
@@ -1933,28 +1942,28 @@ traversable transitions for the sequenced subprogram.
         static_traversable static_env graph p_c, 
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Spwn p_c) p')),
+        static_traversable static_env graph (Bind n (Spwn p_c) p')),
 
     (\forall n p' graph static_env n$_s$e .
       if
         (NLet n , MNxt, top_program_id p') \in graph, 
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Sync n$_s$e) p')),
+        static_traversable static_env graph (Bind n (Sync n$_s$e) p')),
 
     (\forall n p' graph static_env n$_p$ .
       if
         (NLet n , MNxt, top_program_id p') \in graph, 
         static_traversable static_env graph p', 
       then
-        static_traversable static_env graph (Let n (Fst n$_p$) p')),
+        static_traversable static_env graph (Bind n (Fst n$_p$) p')),
 
     (\forall n p' graph static_env n$_p$ .
       if
         (NLet n , MNxt, top_program_id p') \in graph, 
         static_traversable static_env graph p', 
       then
-        static_traversable static_env graph (Let n (Snd n$_p$) p')),
+        static_traversable static_env graph (Bind n (Snd n$_p$) p')),
 
     (\forall n p$_l$ p$_r$ p' graph static_env n$_s$ .
       if
@@ -1966,7 +1975,7 @@ traversable transitions for the sequenced subprogram.
         static_traversable static_env graph p$_r$,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
+        static_traversable static_env graph (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
 
     (\forall  static_env n$_f$ n p' n n$_a$ .
       if
@@ -1975,7 +1984,7 @@ traversable transitions for the sequenced subprogram.
             (NResult (result_name p$_b$), MRtn, top_program_id p')} \subseteq graph),
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (App n$_f$ n$_a$) p'))
+        static_traversable static_env graph (Bind n (App n$_f$ n$_a$) p'))
   \end{lstlisting}
 
 The server implementation represented as a graph illustrates how static traversability can interpret
@@ -2287,7 +2296,7 @@ send ID by its program ID.
     \forall e0 pool convo path n b p' env stack evn_a static_convo graph is_end .
       if
         star dynamic_eval ([[] -> (Stt e0 [->] [])], {}) (pool, convo), 
-        pool path = Some (Stt (Let n b p') env stack),
+        pool path = Some (Stt (Bind n b p') env stack),
         static_eval static_env static_convo e0,
         static_traversable static_env graph e0,
         is_end (NLet x)
@@ -2311,7 +2320,7 @@ send ID by its program ID.
     \forall e0 pool convo path n n_e p' env stack n$_s$c n_m env' path_c n$_c$ .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo, 
-        pool path = Some (Stt (Let n (Sync n_e) p') env stack), 
+        pool path = Some (Stt (Bind n (Sync n_e) p') env stack), 
         env n_e = Some (VPrm (SendEvt n$_s$c n_m) env'), 
         env' n$_s$c = Some (VChn (Chan path_c n$_c$)), 
         static_eval static_env static_convo e0
@@ -2602,7 +2611,7 @@ dynamic evaluation.
     \forall e0 pool convo path n b p' env stack evn_a static_convo graph is_end .
       if
         star dynamic_eval ([[] -> (Stt e0 [->] [])], {}) (pool, convo), 
-        pool path = Some (Stt (Let n b p') env stack), 
+        pool path = Some (Stt (Bind n b p') env stack), 
         static_eval static_env static_convo e0, 
         static_traversable static_env graph pool, 
         is_end (NLet x)
@@ -2640,7 +2649,7 @@ used to ensure that the static point discussed is indeed a send ID.
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])], {} pool convo,
         static_eval static_env static_convo e0,
-        pool path = Some (Stt (Let n (Sync n_e) p') env stack),
+        pool path = Some (Stt (Bind n (Sync n_e) p') env stack),
         env_y n_e = Some (VPrm (SendEvt n$_s$c n_m) env_e),
         env_e n$_s$c = Some (VChn (Chan path_c n$_c$))
       then
@@ -2700,31 +2709,31 @@ maintaining the initial program state in context for each subgoal .
 
     (\forall e0 n p_c p' .
       if 
-        static_reachable_left e0 (Let n (Spwn p_c) p')
+        static_reachable_left e0 (Bind n (Spwn p_c) p')
       then
         static_reachable_left e0 p_c),
 
     (\forall e0 n n$_s$ n$_l$ p$_l$ n$_r$ p$_r$ p' .
       if
-        static_reachable_left e0 (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')
+        static_reachable_left e0 (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')
       then
         static_reachable_left e0 p$_l$),
 
     (\forall e0 n n$_s$ n$_l$ p$_l$ n$_r$ p$_r$ p' .
       if
-        static_reachable_left e0 (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')
+        static_reachable_left e0 (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')
       then
         static_reachable_left e0 p$_r$),
 
     (\forall e0 n n$_f$ n$_p$ p$_b$ p' .
       if
-        static_reachable_left e0 (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')
+        static_reachable_left e0 (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')
       then
         static_reachable_left e0 p$_b$),
 
     (\forall e0 n n$_f$ n$_p$ p$_b$ p' .
       if
-        static_reachable_left e0 (Let n b p')
+        static_reachable_left e0 (Bind n b p')
       then
         static_reachable_left e0 p')
 
@@ -2904,49 +2913,49 @@ However, it must additionally consider transitions with the sending mode.
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n Unt p')),
+        static_traversable static_env graph (Bind n Unt p')),
 
     (\forall n p' graph static_env  .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n MkChn p')),
+        static_traversable static_env graph (Bind n MkChn p')),
 
     (\forall n p' graph static_env  n$_c$ n_m .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Prim (SendEvt n$_c$ n_m)) p')),
+        static_traversable static_env graph (Bind n (Prim (SendEvt n$_c$ n_m)) p')),
 
     (\forall n p' graph static_env n$_c$ .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Prim (RecvEvt n$_c$)) p')),
+        static_traversable static_env graph (Bind n (Prim (RecvEvt n$_c$)) p')),
 
     (\forall n p' graph static_env n1 n2 .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Prim (Pair n1 n2)) p')),
+        static_traversable static_env graph (Bind n (Prim (Pair n1 n2)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Prim (Lft n$_s$)) p')),
+        static_traversable static_env graph (Bind n (Prim (Lft n$_s$)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Prim (Rght n$_s$)) p')),
+        static_traversable static_env graph (Bind n (Prim (Rght n$_s$)) p')),
 
     (\forall n p' graph static_env p$_b$ n$_f$ n$_p$ .
       if
@@ -2954,7 +2963,7 @@ However, it must additionally consider transitions with the sending mode.
         static_traversable static_env graph p',
         static_traversable static_env graph p$_b$
       then
-        static_traversable static_env graph (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
+        static_traversable static_env graph (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
 
     (\forall n p' p_c graph static_env.
       if
@@ -2963,7 +2972,7 @@ However, it must additionally consider transitions with the sending mode.
         static_traversable static_env graph p_c,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Spwn p_c) p')),
+        static_traversable static_env graph (Bind n (Spwn p_c) p')),
 
     (\forall n p' graph static_env n$_s$e .
       if
@@ -2977,21 +2986,21 @@ However, it must additionally consider transitions with the sending mode.
             (NLet x, ESend n$_s$e, NLet y) \in F),
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Sync n$_s$e) p')),
+        static_traversable static_env graph (Bind n (Sync n$_s$e) p')),
 
     (\forall n p' graph static_env n$_p$ .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p',
       then
-        static_traversable static_env graph (Let n (Fst n$_p$) p')),
+        static_traversable static_env graph (Bind n (Fst n$_p$) p')),
 
     (\forall n p' graph static_env n$_p$ .
       if
         (NLet n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p',
       then
-        static_traversable static_env graph (Let n (Snd n$_p$) p')),
+        static_traversable static_env graph (Bind n (Snd n$_p$) p')),
 
     (\forall n p$_l$ p$_r$ p' graph static_env n$_s$ .
       if
@@ -3003,7 +3012,7 @@ However, it must additionally consider transitions with the sending mode.
         static_traversable static_env graph p$_r$,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
+        static_traversable static_env graph (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
         
     (\forall  static_env n$_f$ n p' n n$_a$ .
       if
@@ -3013,7 +3022,7 @@ However, it must additionally consider transitions with the sending mode.
 
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Let n (App n$_f$ n$_a$) p'))
+        static_traversable static_env graph (Bind n (App n$_f$ n$_a$) p'))
   \end{lstlisting}
 
 
@@ -3106,14 +3115,14 @@ program ID.
         entr (top_program_id p') \subseteq exit (NLet x),
         static_live_chan static_env entr exit n$_c$ p'
       then 
-        static_live_chan static_env entr exit n$_c$ (Let n Unt p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n Unt p')),
     (\forall exit n entr p' static_env n$_c$ .
       if
         (exit (NLet x) - {x}) \subseteq entr (NLet x),
         entr (top_program_id p') \subseteq exit (NLet x),
         static_live_chan static_env entr exit n$_c$ p'
       then 
-        static_live_chan static_env entr exit n$_c$ (Let n MkChn p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n MkChn p')),
 
     (\forall exit n entr static_env n$_c$ n$_s$c n_m p' n$_c$ .
       if
@@ -3126,7 +3135,7 @@ program ID.
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
-          (Let n (Prim (SendEvt n$_s$c n_m)) p')),
+          (Bind n (Prim (SendEvt n$_s$c n_m)) p')),
 
     (\forall exit n entr static_env n$_c$ n$_r$ .    
       if
@@ -3137,7 +3146,7 @@ program ID.
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
-          (Let n (Prim (RecvEvt n$_r$c)) p')),
+          (Bind n (Prim (RecvEvt n$_r$c)) p')),
     (\forall exit n entr static_env p_c n1 n2 p' .
       if
         (exit (NLet x) - {x}) \subseteq entr (NLet x),
@@ -3148,7 +3157,7 @@ program ID.
         entr (top_program_id p') \subseteq exit (NLet x),
         static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan static_env entr exit n$_c$ (Let n (Prim (Pair n1 n2)) p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Prim (Pair n1 n2)) p')),
 
     (\forall exit n entr static_env n$_c$ n$_a$ p' . 
       if
@@ -3158,7 +3167,7 @@ program ID.
         entr (top_program_id p') \subseteq exit (NLet x),
         static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan static_env entr exit n$_c$ (Let n (Prim (Lft n$_a$)) p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Prim (Lft n$_a$)) p')),
 
     (\forall exit n entr static_env n$_c$ n$_a$ p' . 
       if
@@ -3168,7 +3177,7 @@ program ID.
         entr (top_program_id e) \subseteq exit (NLet x),
         static_live_chan static_env entr exit n$_c$ e
       then
-        static_live_chan static_env entr exit n$_c$ (Let n (Prim (Rght n$_a$)) e)),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Prim (Rght n$_a$)) e)),
     (\forall  exit n entr p$_b$ n$_p$ n static_env n$_c$ p' n$_f$ . 
       if
         (exit (NLet x) - {x}) \subseteq entr (NLet x),
@@ -3178,7 +3187,7 @@ program ID.
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
-          (Let n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
+          (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
 
     (\forall exit n entr p' p_c n$_c$ static_env .
       if
@@ -3189,7 +3198,7 @@ program ID.
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
-          (Let n (Spwn p_c) p')),
+          (Bind n (Spwn p_c) p')),
 
     (\forall exit n entr static_env n$_c$ n_e p' .
       if
@@ -3200,7 +3209,7 @@ program ID.
         static_live_chan static_env entr exit n$_c$ p',
       then
         static_live_chan static_env entr exit n$_c$
-          (Let n (Sync n_e) p')),
+          (Bind n (Sync n_e) p')),
     (\forall exit n entr static_env n$_c$ n$_a$ p' .
       if
         (exit (NLet x) - {x}) \subseteq entr (NLet x),
@@ -3209,7 +3218,7 @@ program ID.
         entr (top_program_id p') \subseteq exit (NLet x),
         static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan static_env entr exit n$_c$ (Let n (Fst n$_a$) p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Fst n$_a$) p')),
 
     (\forall exit n entr static_env n$_c$ n$_a$ p' .
       if 
@@ -3220,7 +3229,7 @@ program ID.
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
-          (Let n (Snd n$_a$) p')),
+          (Bind n (Snd n$_a$) p')),
 
     (\forall exit n entr p$_l$ n$_l$ p$_r$ n$_r$ static_env n$_c$ n$_s$ p' .
       if 
@@ -3234,7 +3243,7 @@ program ID.
         entr (top_program_id p') \subseteq exit (NLet x),
         static_live_chan static_env entr exit n$_c$ p'
       then 
-        static_live_chan static_env entr exit n$_c$ (Let n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
 
     (\forall exit n entr static_env n$_c$ n$_a$ n$_f$ p' .
       if
@@ -3246,7 +3255,7 @@ program ID.
         entr (top_program_id p') \subseteq exit (NLet x),
         static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan static_env entr exit n$_c$ (Let n (App n$_f$ n$_a$) p'))
+        static_live_chan static_env entr exit n$_c$ (Bind n (App n$_f$ n$_a$) p'))
   \end{lstlisting}
 
 The static liveness of a transition is described by checking if a transition exists in a whole
@@ -3461,55 +3470,55 @@ channel to a point after the loop retains the transitions within the loop, even 
 the loop may not be live according to the entry map.
 
 \begin{lstlisting}[language=normal_lang, mathescape]
-  let u1 = unt in
-  let r1 = rght u1 in
-  let l1 = lft r1 in
-  let l2 = lft l1 in
+  bind u1 = unt
+  bind r1 = rght u1
+  bind l1 = lft r1
+  bind l2 = lft l1
 
-  let lp = (fun lp' x1 => 
-    let z1 = case x1 of 
-      lft y1 => let z2 = lp' y1 in z2 |
-      rght y2 => let u2 = unt in rslt u2 in
-    let u3 = unt in
-    rslt u3) in
+  bind lp = (fun lp' x1 => 
+    bind z1 = case x1 of 
+      lft y1 => bind z2 = lp' y1 z2 |
+      rght y2 => bind u2 = unt rslt u2
+    bind u3 = unt
+    rslt u3)
 
-  let mksr = (fun _ x2 => 
-    let k1 = mk_chn in
-    let z4 = lp l2 in
-    let srv = fun srv' x3 =>
-      let e1 = recv_evt k1 in
-      let p1 = sync e1 in
-      let v1 = fst p1 in
-      let k2 = snd p1 in 
-      let e2 = send_evt k2 x3 in
-      let z5 = sync e2 in
-      let z6 = srv' v1 in
-      let u4 = unt in
-      rslt u4 in
-    let z7 = spawn (
-      let z8 = srv r1 in
-      let u5 = unt in
-      rslt u5) in
-    rslt k1) in
+  bind mksr = (fun _ x2 => 
+    bind k1 = mk_chn
+    bind z4 = lp l2
+    bind srv = fun srv' x3 =>
+      bind e1 = recv_evt k1
+      bind p1 = sync e1
+      bind v1 = fst p1
+      bind k2 = snd p1 
+      bind e2 = send_evt k2 x3
+      bind z5 = sync e2
+      bind z6 = srv' v1
+      bind u4 = unt
+      rslt u4
+    bind z7 = spawn (
+      bind z8 = srv r1
+      bind u5 = unt
+      rslt u5)
+    rslt k1)
 
-  let rqst = (fun _ x4 =>
-    let k3 = fst x4 in
-    let v2 = snd x4 in
-    let k4 = mk_chn in
-    let p2 = pair v2 k4 in
-    let e3 = send_evt k3 p2 in
-    let z9 = sync e3 in
-    let e4 = recv_evt k4 in
-    let v3 = sync e4 in
-    rslt v3) in
+  bind rqst = (fun _ x4 =>
+    bind k3 = fst x4
+    bind v2 = snd x4
+    bind k4 = mk_chn
+    bind p2 = pair v2 k4
+    bind e3 = send_evt k3 p2
+    bind z9 = sync e3
+    bind e4 = recv_evt k4
+    bind v3 = sync e4
+    rslt v3)
 
-  let srvr = mksr u1 in
-  let z10 = spawn ( 
-    let p3 = pair srvr l1 in
-    let z11 = rqst p3 in
-    rslt z11) in
-  let p4 = pair srvr l2 in
-  let z12 = rqst p4 in
+  bind srvr = mksr u1
+  bind z10 = spawn ( 
+    bind p3 = pair srvr l1
+    bind z11 = rqst p3
+    rslt z11)
+  bind p4 = pair srvr l2
+  bind z12 = rqst p4
   rslt z12
   \end{lstlisting}
 
@@ -3607,8 +3616,8 @@ correlating dynamic paths with static paths.
       n$_r$e p$_r$y env_ry stack_ry c_c convo c static_path_re static_path_sfx . 
       if
         pool (path_r @ (DNxt n$_r$) # path_sfx) = Some stt, 
-        pool path_s = Some (Stt (Let n$_s$ (Sync n$_s$e) p_sy) env_sy stack_sy),
-        pool path_r = Some (Stt (Let n$_r$ (Sync n$_r$e) p$_r$y) env_ry stack_ry),
+        pool path_s = Some (Stt (Bind n$_s$ (Sync n$_s$e) p_sy) env_sy stack_sy),
+        pool path_r = Some (Stt (Bind n$_r$ (Sync n$_r$e) p$_r$y) env_ry stack_ry),
         {(path_s, c_c, path_r)} \subseteq convo, 
         dynamic_built_on_chan_var env_ry c n$_r$, 
         paths_correspond_mod_chan pool convo c path_s static_path_pre,
@@ -3687,8 +3696,8 @@ that correlates with the dynamic path is much more challenging.
       n$_r$e p$_r$y env_ry stack_ry c_c convo c static_path_re static_path_sfx . 
       if
         pool (path_r @ (DNxt n$_r$) # path_sfx) = Some stt, 
-        pool path_s = Some (Stt (Let n$_s$ (Sync n$_s$e) p_sy) env_sy stack_sy),
-        pool path_r = Some (Stt (Let n$_r$ (Sync n$_r$e) p$_r$y) env_ry stack_ry),
+        pool path_s = Some (Stt (Bind n$_s$ (Sync n$_s$e) p_sy) env_sy stack_sy),
+        pool path_r = Some (Stt (Bind n$_r$ (Sync n$_r$e) p$_r$y) env_ry stack_ry),
         {(path_s, c_c, path_r)} \subseteq convo, 
         dynamic_built_on_chan_var env_ry c n$_r$, 
         paths_correspond_mod_chan pool convo c path_s static_path_pre,
@@ -3704,7 +3713,7 @@ that correlates with the dynamic path is much more challenging.
       entr exit n$_c$ graph is_end path_c  . 
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool convo,
-        pool path = Some (Stt (Let n b p') env stack),
+        pool path = Some (Stt (Bind n b p') env stack),
         static_eval static_env static_convo e0,
         static_live_chan static_env entr exit n$_c$ e0,
         static_traversable static_env graph e0, 
