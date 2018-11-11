@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  11 NOV 2018 07:56
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  11 NOV 2018 08:43
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -882,85 +882,85 @@ e 241.
 
 [3] [4] [5] [6] [7] [8]
 LaTeX Font Info:    Font shape `T1/fvm/m/it' in size <9> not available
-(Font)              Font shape `T1/fvm/m/sl' tried instead on input line 524.
+(Font)              Font shape `T1/fvm/m/sl' tried instead on input line 526.
 LaTeX Font Info:    Font shape `T1/fvm/m/sl' will be
-(Font)              scaled to size 7.65005pt on input line 524.
+(Font)              scaled to size 7.65005pt on input line 526.
  [9] [10] [11] [12] [13] [14] [15] [16] [17] [18]
 [19]
-Overfull \hbox (1.82973pt too wide) in paragraph at lines 1100--1110
+Overfull \hbox (1.82973pt too wide) in paragraph at lines 1109--1119
 []\T1/LinuxLibertineT-TLF/m/n/10 The eval-u-a-tion of ex-pres-sions for ap-pli-
 ca-tion, and match-ing re-sult in call-ing, which
  []
 
 [20]
-Overfull \hbox (7.76631pt too wide) in paragraph at lines 1139--1153
+Overfull \hbox (7.76631pt too wide) in paragraph at lines 1148--1162
 []\T1/LinuxLibertineT-TLF/m/n/10 Backtracking is made pos-si-ble by record-ing 
 the pro-grams that have been sidestepped
  []
 
 [21] [22] [23] [24] [25] [26] [27] [28] [29] [30]
-Overfull \hbox (0.49341pt too wide) in paragraph at lines 1639--1662
+Overfull \hbox (0.49341pt too wide) in paragraph at lines 1648--1671
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]\T1/Lin
 uxLibertineT-TLF/m/n/10 . There-fore,
  []
 
-[31] [32] [33] [34] [35] [36]
-Overfull \hbox (3.8693pt too wide) in paragraph at lines 1990--1992
+[31] [32] [33] [34] [35] [36] [37]
+Overfull \hbox (3.8693pt too wide) in paragraph at lines 1999--2001
 []\T1/LinuxLibertineT-TLF/m/n/10 The server im-ple-men-ta-tion rep-re-sented as
  a graph il-lus-trates how static traversabil-
  []
 
-[37] <cml_graph.pdf, id=133, 1907.125pt x 2019.545pt>
+<cml_graph.pdf, id=133, 1907.125pt x 2019.545pt>
 File: cml_graph.pdf Graphic file (type pdf)
  <use cml_graph.pdf>
-Package pdftex.def Info: cml_graph.pdf used on input line 1993.
+Package pdftex.def Info: cml_graph.pdf used on input line 2002.
 (pdftex.def)             Requested size: 448.50105pt x 474.93211pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 1993--1994
+Overfull \hbox (15.0pt too wide) in paragraph at lines 2002--2003
 [][] 
  []
 
-[38 <./cml_graph.pdf>] [39] [40] [41] [42] [43] [44]
-Overfull \hbox (12.77339pt too wide) in paragraph at lines 2331--2336
+[38] [39 <./cml_graph.pdf>] [40] [41] [42] [43] [44] [45]
+Overfull \hbox (12.77339pt too wide) in paragraph at lines 2340--2345
 []\T1/LinuxLibertineT-TLF/m/n/10 The sound-ness of lack of static trace-abil-it
 y is proved by gen-er-al-iz-ing static traversabil-
  []
 
-[45] [46] [47] [48] [49] [50] [51] [52] [53] [54] [55] [56] [57] [58] [59]
-[60] [61] [62] [63] [64] [65] [66] [67]
-<cml_graph_lp.pdf, id=255, 1879.02pt x 2094.82625pt>
+[46] [47] [48] [49] [50] [51] [52] [53] [54] [55] [56] [57] [58] [59] [60]
+[61] [62] [63] [64] [65] [66] [67] [68]
+<cml_graph_lp.pdf, id=258, 1879.02pt x 2094.82625pt>
 File: cml_graph_lp.pdf Graphic file (type pdf)
  <use cml_graph_lp.pdf>
-Package pdftex.def Info: cml_graph_lp.pdf used on input line 3526.
+Package pdftex.def Info: cml_graph_lp.pdf used on input line 3535.
 (pdftex.def)             Requested size: 448.50105pt x 499.98767pt.
 
-<cml_graph_k1.pdf, id=256, 2160.07pt x 2223.30624pt>
+<cml_graph_k1.pdf, id=259, 2160.07pt x 2223.30624pt>
 File: cml_graph_k1.pdf Graphic file (type pdf)
  <use cml_graph_k1.pdf>
-Package pdftex.def Info: cml_graph_k1.pdf used on input line 3527.
+Package pdftex.def Info: cml_graph_k1.pdf used on input line 3536.
 (pdftex.def)             Requested size: 448.50105pt x 461.61581pt.
 
-<cml_graph_k4.pdf, id=257, 2034.60126pt x 2197.20876pt>
+<cml_graph_k4.pdf, id=260, 2034.60126pt x 2197.20876pt>
 File: cml_graph_k4.pdf Graphic file (type pdf)
  <use cml_graph_k4.pdf>
-Package pdftex.def Info: cml_graph_k4.pdf used on input line 3528.
+Package pdftex.def Info: cml_graph_k4.pdf used on input line 3537.
 (pdftex.def)             Requested size: 448.50105pt x 484.32617pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 3526--3529
+Overfull \hbox (15.0pt too wide) in paragraph at lines 3535--3538
 [][]
  []
 
-[68] [69 <./cml_graph_lp.pdf>] [70 <./cml_graph_k1.pdf>] [71 <./cml_graph_k4.pd
-f>] [72] [73] [74] [75] [76] (./thesis.aux)
+[69] [70 <./cml_graph_lp.pdf>] [71 <./cml_graph_k1.pdf>] [72 <./cml_graph_k4.pd
+f>] [73] [74] [75] [76] [77] (./thesis.aux)
 
 LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 7314 strings out of 493014
- 105862 string characters out of 6133351
- 415286 words of memory out of 5000000
- 10688 multiletter control sequences out of 15000+600000
+ 7315 strings out of 493014
+ 105874 string characters out of 6133351
+ 418292 words of memory out of 5000000
+ 10689 multiletter control sequences out of 15000+600000
  54864 words of font info for 63 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  38i,6n,74p,232b,1712s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -978,10 +978,10 @@ cal/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texl
 ive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016
 /texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-
 dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (77 pages, 583887 bytes).
+Output written on thesis.pdf (78 pages, 584121 bytes).
 PDF statistics:
- 388 PDF objects out of 1000 (max. 8388607)
- 272 compressed objects within 3 object streams
+ 391 PDF objects out of 1000 (max. 8388607)
+ 274 compressed objects within 3 object streams
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 
