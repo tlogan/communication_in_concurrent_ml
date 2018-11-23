@@ -260,7 +260,7 @@ evaluates.
 \section{Synchronization}
 Synchronization of sending threads and receiving threads
 requires determining which threads should wait, and which threads should be dispatched.
-The more amount of information needed
+The greater the information needed
 to determine this scheduling, the higher the performance penalty. A uniprocessor
 implementation of synchronization can have very little penalty. Since only one thread can make
 progress at a time, only one thread requests synchronization at a time, meaning the scheduler
@@ -283,51 +283,59 @@ a many-to-one channel has any number of sending threads and at most one receivin
 a one-to-one channel has one or none of each;
 a one-shot channel has exactly one sending attempt.
 
-The implementation of \lstinline{Serv} is annotated to indicate the communication topologies
+The following reimplementation of \lstinline{Serv} is annotated to indicate the communication topologies
 derived from its usage. Since there are four threads that make calls to the server, the
 server's particular \lstinline{reqCh} has four senders.  Servers are created with only one
 thread listening for requests, so the \lstinline{reqCh} of this server has just one receiver.
 So the server's \lstinline{reqCh} is classified as many-to-one.
-Each use of call creates a distinct
-new channel \lstinline{replCh} for receiving data.  The function call receives on the channel
+Each application of \lstinline{call} creates a distinct
+new channel \lstinline{replCh} for receiving data.  The function \lstinline{call} receives on the channel
 once and the server sends on the channel once, so each instance of \lstinline{replCh} is
 one-shot.
 
 \begin{lstlisting}[language=ML, mathescape]
   val server = Serv.make ()
   val () = spawn (fn () => Serv.call (server, 35))
-  val () = spawn (fn () => 
-    Serv.call (server, 12); 
-    Serv.call (server, 13))
+  val () =
+    spawn
+    (fn () => 
+      Serv.call (server, 12); 
+      Serv.call (server, 13)
+    )
   val () = spawn (fn () => Serv.call (server, 81))
   val () = spawn (fn () => Serv.call (server, 44))
-  \end{lstlisting}
+\end{lstlisting}
 
 \begin{lstlisting}[language=ML, mathescape]
-  structure Serv : SERV = struct 
+  structure Serv : SERV =
+  struct 
 
     datatype serv = S of (int * int chan) channel 
 
-    fun make () = let 
-      val reqCh = FanIn.channel ()
+    fun make () =
+    let 
+      val reqCh = ManyToOne.channel ()
       fun loop state = let
-        val (v, replCh) = FanIn.recv reqCh
+        val (v, replCh) = ManyToOne.recv reqCh
         val () = OneShot.send (replCh, state)
         in loop v
         end
       val () = spawn (fn () => loop 0)
-      in S reqCh
-      end 
+    in
+      S reqCh
+    end 
 
-    fun call (server, v) = let 
+    fun call (server, v) =
+    let 
       val S reqCh = server
       val replCh = OneShot.channel ()
-      val () = FanIn.send (reqCh, (v, replCh))
-      in OneShot.recv replCh
-      end
-
+      val () = ManyToOne.send (reqCh, (v, replCh))
+    in
+      OneShot.recv replCh
     end
-  \end{lstlisting}
+
+  end
+\end{lstlisting}
 
 \section{Implementation}
 Some hypothetical implementations of specialized and generic
