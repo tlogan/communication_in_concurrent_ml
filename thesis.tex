@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[10pt]{article}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -81,7 +81,7 @@
 }
 
 
-\title{Formal Static Analysis of Synchronization}
+\title{A Mechanized Theory of Concurrency}
 \author{Thomas Logan}
 \begin{document}
 
@@ -93,27 +93,31 @@
 
 
 \section{Introduction}
-For this master's thesis, I have developed a formal framework for analysis of
-a concurrent language, along with an initial formal analysis.  The language under analysis is
+For this master's thesis, I have developed a formal semantics of
+a concurrent language, an initial formal analysis, along with related theorems and formal 
+proofs. The language under analysis is
 a very simplified version of \textit{Concurrent ML} \cite{concurrent_ml}. The formal analysis
-is a recast of an informal analysis developed by Xiao and Reppy \cite{specialization}. It
-categorizes communication described by the language into simple topologies. One description of
+recasts an analysis with informal proofs developed by Reppy and Xiao \cite{specialization}. It
+categorizes communication described by programs into simple topologies. One description of
 topologies is static; that is, it describes topologies in terms of the finite structure of
 programs.  Another description is dynamic; that is, it describes topologies in terms of running
 a program for an arbitrary number of steps. The main formal theorem states that the static
 analysis is sound with respect to the dynamic analysis. Two versions of the static analysis
-have been developed so far, one with lower precision, and one with higher precision. The higher
-precision analysis is closer to the work by Reppy and Xiao, but has greater complexity than the
-lower precision analysis. The proofs for the soundness theorem of the lower precision analysis
+have been developed so far; one with lower precision, and one with higher precision. The higher
+precision analysis is closer to the work by Reppy and Xiao, but contains many more details making
+it more challenging to prove formally than the lower precision analysis.
+The proofs for the soundness theorem of the lower precision analysis
 have been mechanically verified using Isabelle \cite{isabelle}, while the higher precision
-analysis is currently under development. Indeed, one of the motivations for placing the theory
-in a formal setting is to enable gradual extension of analysis and language without introducing
+analysis is currently under development. Indeed, one of the motivations for implementing the analysis 
+in a mechanical setting is to enable gradual extension of analysis and language without introducing
 uncaught bugs in the definitions or proofs. The definitions used in this formal theory differ
-significantly from that of Reppy and Xiao, in order to aid formal reasoning. Although the
-definitions are structurally quite different, their philosophical equivalence is hopefully
-apparent. Thus, recasting Reppy and Xiao's work was far more nuanced than a straightforward
-syntactic transliteration. in this formal theory, the dynamic semantics of Concurrent ML is
-defined by a small-step operational semantics. The static semantics is an instance of 0CFA
+significantly from that of Reppy and Xiao, in order to aid formal reasoning. Thus, recasting
+Reppy and Xiao's work was far more nuanced than a straightforward
+syntactic transliteration.
+Although the definitions are structurally quite different,
+their philosophical equivalence is hopefully apparent. 
+In this formal theory, the dynamic semantics of Concurrent ML is
+an instance of a CEK machine. The static semantics is an instance of 0CFA
 \cite{0cfa}, defined in terms of constraints \cite{program_analysis}.
 
 \section{Concurrent Language}
@@ -134,13 +138,11 @@ It features threads, which are pieces of code allowed to have a wide range of
 evaluation orders relative to code encapsulated in other threads. Its synchronization
 mechanism can mandate the execution order between parts of separate threads. It is often the
 case that synchronization is necessary when data is shared. Thus, in \textit{Concurrent ML},
-synchronization is inherent in communication. Threads are spawned asynchronously; that is, the
-parent thread need not wait for the spawned thread to terminate before it resumes evaluation.
-Indeed, if that were the case, then threads would be useless. Additional threads can be spawned
+synchronization is inherent in communication. Additional threads can be spawned
 in order to share data asynchronously, which can provide better usability or performance under
-some circumstances.
+some circumstances \cite{}.
 
-Threads communicate by having shared access to a common channel.  A channel can be used to
+Threads communicate by having shared access to a common channel. A channel can be used to
 either send data or receive data.  When a thread sends on a channel, another thread must
 receive on the same channel before the sending thread can continue.  Likewise, when a thread
 receives on a channel, another thread must send on the same channel before the receiving thread
@@ -182,17 +184,19 @@ calling \lstinline{recv replCh}.
 
 
 \begin{lstlisting}[language=ML, mathescape]
-  signature SERV = sig 
+  signature SERV =
+  sig 
     type serv
     val make : unit -> serv
     val call : serv * int -> int
-    end
+  end
 
-  structure Serv : SERV = struct 
-
+  structure Serv : SERV =
+  struct 
     datatype serv = S of (int * int chan) channel 
 
-    fun make () = let 
+    fun make () =
+    let 
       val reqCh = channel ()
       fun loop state = let
         val (v, replCh) = recv reqCh
@@ -200,18 +204,21 @@ calling \lstinline{recv replCh}.
         in loop v
         end
       val () = spawn (fn () => loop 0)
-      in S reqCh
-      end 
+    in
+      S reqCh
+    end 
 
-    fun call (server, v) = let 
+    fun call (server, v) =
+    let 
       val S reqCh = server
       val replCh = channel () 
       val () = send (reqCh, (v, replCh))
-      in recv replCh
-      end
-
+    in
+      recv replCh
     end
-  \end{lstlisting}
+
+  end
+\end{lstlisting}
 
 
 \textit{Concurrent ML} actually allows for events other than sending and receiving to
@@ -229,7 +236,7 @@ and \lstinline{recvEvt} and synchronization is represented by \lstinline{sync}.
 
   fun send (ch, v) = sync (sendEvt (ch, v))
   fun recv v = sync (recvEvt v)
-  \end{lstlisting}
+\end{lstlisting}
 
 An advantageous consequence of decoupling synchronization from events, is that events can be
 combined with other events via event combinators, and synchronized on exactly once. One such
@@ -288,12 +295,12 @@ one-shot.
 
 \begin{lstlisting}[language=ML, mathescape]
   val server = Serv.make ()
-  val _ = spawn (fn () => Serv.call (server, 35))
-  val _ = spawn (fn () => 
+  val () = spawn (fn () => Serv.call (server, 35))
+  val () = spawn (fn () => 
     Serv.call (server, 12); 
     Serv.call (server, 13))
-  val _ = spawn (fn () => Serv.call (server, 81))
-  val _ = spawn (fn () => Serv.call (server, 44))
+  val () = spawn (fn () => Serv.call (server, 81))
+  val () = spawn (fn () => Serv.call (server, 44))
   \end{lstlisting}
 
 \begin{lstlisting}[language=ML, mathescape]
@@ -3753,7 +3760,6 @@ that correlates with the dynamic path is much more challenging.
   \end{lstlisting}
 
   
-\end{document}
 
 \section{Future Work}
 The formal syntax, semantics, and communication analysis of this work form the basis of
@@ -3783,3 +3789,6 @@ and that thread is also deterministic.
 Other analyses could aid optimizations for incremental computation
 \cite[], which transforms a program into one that checks for altered dependencies and
 only recomputes the data that depends on altered dependencies.
+
+
+\end{document}
