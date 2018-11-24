@@ -574,8 +574,9 @@ releases the lock. Then it signals on the sending state's condition and returns 
       val sendCond = condition ()
     in
     case (cas (conRef, Inac, Send (sendCond, m))) of
-      Inac => (* conRef already set *)
-      wait sendCond; ()
+      Inac =>
+        (* conRef is already set to sending state by cas *)
+        wait sendCond; ()
     | Recv q =>
       let
         (* the current thread is the only one that updates from this state *)
@@ -669,7 +670,8 @@ The implementation of many-to-one channels is very similar to that of one-to-man
       val mopRef = ref NONE 
     in
     case cas (conRef, Inac, Recv (recvCond, mopRef)) of
-      Inac => (* conRef already set *)
+      Inac =>
+        (* conRef is already set to receving state by cas *)
         wait recvCond; valOf (!mopRef)
     | Send q =>
       let
@@ -724,46 +726,59 @@ witness the state of another thread already trying to receive, if it is truly on
 
 \begin{lstlisting}[language=ML, mathescape]
 
-structure OneToOneChan : CHANNEL = struct
+  structure OneToOneChan : CHANNEL =
+  struct
 
-  datatype 'a chan_content =
-    Send of condition * 'a |
-    Recv of condition * 'a option ref |
-    Inac  
+    datatype 'a chan_content =
+      Send of condition * 'a
+    | Recv of condition * 'a option ref
+    | Inac  
 
-  datatype 'a channel = Chn of 'a chan_content ref
+    datatype 'a channel = Chn of 'a chan_content ref
 
-  fun channel () = Chn (ref Inac)
+    fun channel () = Chn (ref Inac)
 
-  fun send (Chn conRef) m = let
-    val sendCond = condition ()
-    in case (cas (conRef, Inac, Send (sendCond, m))) of
+    fun send (Chn conRef) m =
+    let
+      val sendCond = condition ()
+    in
+    case (cas (conRef, Inac, Send (sendCond, m))) of
       Inac => 
-        (* conRef already set to Send *)
-        wait sendCond |
-      Recv (recvCond, mopRef) =>
-        (* the current thread is the only one that accesses conRef for this state *)
+        (* conRef is already set to sending state by cas *)
+        wait sendCond
+    | Recv (recvCond, mopRef) =>
+        (*
+          the current thread is the only one that
+          accesses conRef for this state
+        *)
         mopRef := SOME m; conRef := Inac;
-        signal recvCond |
-      Send _ => raise NeverHappens
+        signal recvCond
+    | Send _ => raise NeverHappens
     end
 
 
-  fun recv (Chn conRef) = let
-    val recvCond = condition ()
-    val mopRef = ref NONE 
-    in case (cas (conRef, Inac, Recv (recvCond, mopRef))) of
-      Inac => (* conRef already set to Recv*)
-        wait recvCond; valOf (!mopRef) |
-      Send (sendCond, m) =>
-        (* the current thread is the only one
-        -* that accesses conRef for this state *)
-        conRef := Inac; signal sendCond; m |
-      Recv _ => raise NeverHappens
+    fun recv (Chn conRef) =
+    let
+      val recvCond = condition ()
+      val mopRef = ref NONE 
+    in
+    case (cas (conRef, Inac, Recv (recvCond, mopRef))) of
+      Inac =>
+        (* conRef is already set to receiving state by cas *)
+        wait recvCond; valOf (!mopRef)
+    | Send (sendCond, m) =>
+        (*
+          the current thread is the only one
+          that accesses conRef for this state
+        *)
+        conRef := Inac;
+        signal sendCond;
+        m
+    | Recv _ => raise NeverHappens
     end 
 
   end
-  \end{lstlisting}
+\end{lstlisting}
 
 \subsection{One-shot Synchronization}
 
@@ -790,48 +805,53 @@ forever, if there truly is only one send ever.
 
 
 \begin{lstlisting}[language=ML, mathescape]
-  structure OneShotChan : CHANNEL = struct
+  structure OneShotChan : CHANNEL =
+  struct
 
-  datatype 'a chan_content =
-    Send of condition * 'a |
-    Recv of condition * 'a option ref |
-    Inac  
+    datatype 'a chan_content =
+      Send of condition * 'a
+    | Recv of condition * 'a option ref
+    | Inac  
 
-  datatype 'a channel = Chn of 'a chan_content ref * mutex_lock
+    datatype 'a channel = Chn of 'a chan_content ref * mutex_lock
 
-  fun channel () = Chn (ref Inac, lock ())
+    fun channel () = Chn (ref Inac, lock ())
 
-  fun send (Chn (conRef, lock)) m = let
-    val sendCond = condition ()
-    in case (conRef, Inac, Send (sendCond, m)) of
+    fun send (Chn (conRef, lock)) m =
+    let
+      val sendCond = condition ()
+    in
+    case (conRef, Inac, Send (sendCond, m)) of
       Inac =>
-        (* conRef already set to Send*)
-        wait sendCond; () |
-      Recv (recvCond, mopRef) =>
-        mopRef := SOME m; signal recvCond |
-      Send _ => raise NeverHappens
+        (* conRef is already set to sending state by cas *)
+        wait sendCond; ()
+    | Recv (recvCond, mopRef) =>
+        mopRef := SOME m; signal recvCond
+    | Send _ => raise NeverHappens
     end
 
 
-  fun recv (Chn (conRef, lock)) = let
-    val recvCond = condition ()
-    val mopRef = ref NONE 
-    in case (conRef, Inac, Recv (recvCond, mopRef)) of
+    fun recv (Chn (conRef, lock)) =
+    let
+      val recvCond = condition ()
+      val mopRef = ref NONE 
+    in
+    case (conRef, Inac, Recv (recvCond, mopRef)) of
       Inac =>
-        (* conRef already set to Recv*)
-        wait recvCond; valOf (!mopRef) |
-      Send (sendCond, m) =>
+        (* conRef is already set to receiving state by cas*)
+        wait recvCond; valOf (!mopRef)
+    | Send (sendCond, m) =>
         acquire lock; signal sendCond;
         (* never releases lock, so blocks others forever *)
-        m |
-      Recv _ =>
+        m
+    | Recv _ =>
         acquire lock;
         (* never able to acquire lock, so blocked forever *)
         raise NeverHappens
     end
 
   end
-  \end{lstlisting}
+\end{lstlisting}
 
 
 \subsection{One-shot-to-one Synchronization}
