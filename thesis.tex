@@ -454,8 +454,8 @@ the receiving operation returns with the value deposited in the cell.
       (case !conRef of
         Recv q =>
         let
-          val (recvCond, mopRef) = dequeue q
-          val () = mopRef := Some m
+          val (recvCond, msgCell) = dequeue q
+          val () = msgCell := Some m
           val () = if (isEmpty q) then conRef := Inac else ()
         in
           release lock; signal recvCond; ()
@@ -494,20 +494,20 @@ the receiving operation returns with the value deposited in the cell.
       | Recv q =>
         let
           val recvCond = condition ()
-          val mopRef = ref NONE
-          val () = enqueue (q, (recvCond, mopRef))
+          val msgCell = ref NONE
+          val () = enqueue (q, (recvCond, msgCell))
           val () = release lock; wait recvCond
         in
-          valOf (!mopRef)
+          valOf (!msgCell)
         end
       | Inac =>
         let
           val recvCond = condition ()
-          val mopRef = ref NONE 
-          val () = conRef := Recv (queue [(recvCond, mopRef)])
+          val msgCell = ref NONE 
+          val () = conRef := Recv (queue [(recvCond, msgCell)])
           val () = release lock; wait recvCond
         in
-          valOf (!mopRef)
+          valOf (!msgCell)
         end
       )
 
@@ -581,8 +581,8 @@ releases the lock. Then it signals on the sending state's condition and returns 
       let
         (* the current thread is the only one that updates from this state *)
         val () = acquire lock
-        val (recvCond, mopRef) = dequeue q
-        val () = mopRef := SOME m
+        val (recvCond, msgCell) = dequeue q
+        val () = msgCell := SOME m
         val () =
         case (isEmpty q) of
           true => conRef := Inac
@@ -599,20 +599,20 @@ releases the lock. Then it signals on the sending state's condition and returns 
         Inac =>
         let
           val recvCond = condition ()
-          val mopRef = ref NONE 
-          val () = conRef := Recv (queue [(recvCond, mopRef)])
+          val msgCell = ref NONE 
+          val () = conRef := Recv (queue [(recvCond, msgCell)])
           val () = release lock; wait recvCond
         in
-          valOf (!mopRef)
+          valOf (!msgCell)
         end
       | Recv q =>
         let
           val recvCond = condition () 
-          val mopRef = ref NONE 
-          val () = enqueue (q, (recvCond, mopRef))
+          val msgCell = ref NONE 
+          val () = enqueue (q, (recvCond, msgCell))
           val () = release lock; wait recvCond
         in
-          valOf (!mopRef)
+          valOf (!msgCell)
         end
       | Send (sendCond, m) =>
           conRef := Inac;
@@ -645,8 +645,8 @@ The implementation of many-to-one channels is very similar to that of one-to-man
     fun send (Chn (conRef, lock)) m = 
       acquire lock;
       (case !conRef of
-        Recv (recvCond, mopRef) => 
-          mopRef := SOME m; conRef := Inac;
+        Recv (recvCond, msgCell) => 
+          msgCell := SOME m; conRef := Inac;
           release lock; signal recvCond
       | Send q =>
         let
@@ -667,12 +667,12 @@ The implementation of many-to-one channels is very similar to that of one-to-man
     fun recv (Chn (conRef, lock)) =
     let
       val recvCond = condition () 
-      val mopRef = ref NONE 
+      val msgCell = ref NONE 
     in
-    case cas (conRef, Inac, Recv (recvCond, mopRef)) of
+    case cas (conRef, Inac, Recv (recvCond, msgCell)) of
       Inac =>
         (* conRef is already set to receving state by cas *)
-        wait recvCond; valOf (!mopRef)
+        wait recvCond; valOf (!msgCell)
     | Send q =>
       let
          (* the current thread is the only one that updates the state from this state *)
@@ -683,7 +683,9 @@ The implementation of many-to-one channels is very similar to that of one-to-man
            true => conRef := Inac
          | false => ()
       in
-        release lock; signal sendCond; m
+        release lock;
+        signal sendCond;
+        m
       end
     | Recv _ => raise NeverHappens
     end
@@ -695,34 +697,37 @@ The implementation of many-to-one channels is very similar to that of one-to-man
 \subsection{One-to-one Synchronization}
 
 A one-to-one channel can also be in one of three possible states, but there is no associated
-lock. Additionally, none of the states are associated with queues.  Instead, there is a possible
-state of a thread trying to send, with a condition and a message, or a possible state of a
-thread trying to receive with a condition and an empty cell, or a possible inactive state.
-The sending operation checks if the channel's state is inactive and tries to use the
-compare-and-swap operator to transactionally update the state of the channel to that of
-trying to
-send.  If successful, it simply waits on \lstinline{sendCond}, the condition that a receiving thread will
-signal on, and then returns the unit value.  If the transactional update fails and the state is
-that of a thread trying to receive on the channel, then it deposits the message in the state's
-associated cell, updates the channel state to inactive, then signals on the state's associated
-condition and returns the unit value.  If the communication analysis for the channel is
-correctly one-to-one, then there should be no other thread trying update the state from the
-state of a thread trying to receive, and no thread modifies that particular state, so no locks
-are necessary.  Likewise, the sending operation
-should never witness the state of another thread
-already trying to send, if it is truly one-to-one.
+lock. Additionally, none of the states is associated a queue. Instead, the potential states are
+that of a thread trying to send, with a condition and a message, that of a
+thread trying to receive with a condition and an empty cell, or the inactive state.
 
-The receiving operation checks if the channel's state is inactive and tries to use the
-compare-and-swap operator to transactionally update the state of the channel to that of trying
-to receive.  If successful, it simply waits on \lstinline{recvCond}, the condition that a sending thread
-will signal on after it deposits a message, and then returns the deposited message.  If the
-transactional update fails and the state is that of a thread trying to send on the channel,
-then it updates the channel state to inactive, then signals on the state's associated
-condition and returns the message associated with the sending thread.  If the communication
-analysis for the channel is correctly one-to-one, then there should be no other thread trying
-update the state from the state of a thread trying to send, and no thread modifies that
-particular state, so no locks are necessary.  Likewise, the receiving operation should never
-witness the state of another thread already trying to receive, if it is truly one-to-one.
+The sending operation creates a condition \lstinline{sendCond} and checks
+if the channel's state is inactive and tries to use the
+compare-and-swap operator to transactionally update the state of the channel to a
+sending state.
+If successful, it simply waits on it condition \lstinline{sendCond}, then returns the unit value.
+If the transactional update fails and the state is a receiving state,
+then it deposits the message in the receiving state's associated cell,
+updates the channel state to inactive, then signals on the receiving state's 
+condition and returns the unit value.
+If the communication analysis for the channel is
+truly one-to-one, then no other thread will be trying to update the state while in
+the receiving state, so no locks are necessary.
+Additionally, if the channel is truly one-on-one, the sending operation will never
+witness a preexisting sending state since it is running on the one and only sending thread. 
+
+The receiving operation creates a condition and an empty cell,
+then checks if the channel's state is inactive and tries to use the
+compare-and-swap operator to transactionally update the state of the channel to
+the receiving state.  If successful, it simply waits on its condition \lstinline{recvCond}.
+If the transactional update fails and the state is a sending state,
+then it updates the channel state to inactive, then signals on the sending state's
+condition and returns the message held in the sending state.
+If the communication
+analysis for the channel is truly one-to-one, then no other thread will be trying
+trying to send, so no locks are necessary.
+Additionally, if the channel is truly one-to-one, the receiving operation will never
+witness a preexisting receiving state since it is running on the one and only receiving thread.
 
 \begin{lstlisting}[language=ML, mathescape]
 
@@ -746,12 +751,12 @@ witness the state of another thread already trying to receive, if it is truly on
       Inac => 
         (* conRef is already set to sending state by cas *)
         wait sendCond
-    | Recv (recvCond, mopRef) =>
+    | Recv (recvCond, msgCell) =>
         (*
           the current thread is the only one that
           accesses conRef for this state
         *)
-        mopRef := SOME m; conRef := Inac;
+        msgCell := SOME m; conRef := Inac;
         signal recvCond
     | Send _ => raise NeverHappens
     end
@@ -760,12 +765,12 @@ witness the state of another thread already trying to receive, if it is truly on
     fun recv (Chn conRef) =
     let
       val recvCond = condition ()
-      val mopRef = ref NONE 
+      val msgCell = ref NONE 
     in
-    case (cas (conRef, Inac, Recv (recvCond, mopRef))) of
+    case (cas (conRef, Inac, Recv (recvCond, msgCell))) of
       Inac =>
         (* conRef is already set to receiving state by cas *)
-        wait recvCond; valOf (!mopRef)
+        wait recvCond; valOf (!msgCell)
     | Send (sendCond, m) =>
         (*
           the current thread is the only one
@@ -825,8 +830,8 @@ forever, if there truly is only one send ever.
       Inac =>
         (* conRef is already set to sending state by cas *)
         wait sendCond; ()
-    | Recv (recvCond, mopRef) =>
-        mopRef := SOME m; signal recvCond
+    | Recv (recvCond, msgCell) =>
+        msgCell := SOME m; signal recvCond
     | Send _ => raise NeverHappens
     end
 
@@ -834,12 +839,12 @@ forever, if there truly is only one send ever.
     fun recv (Chn (conRef, lock)) =
     let
       val recvCond = condition ()
-      val mopRef = ref NONE 
+      val msgCell = ref NONE 
     in
-    case (conRef, Inac, Recv (recvCond, mopRef)) of
+    case (conRef, Inac, Recv (recvCond, msgCell)) of
       Inac =>
         (* conRef is already set to receiving state by cas*)
-        wait recvCond; valOf (!mopRef)
+        wait recvCond; valOf (!msgCell)
     | Send (sendCond, m) =>
         acquire lock; signal sendCond;
         (* never releases lock, so blocks others forever *)
@@ -875,13 +880,13 @@ signals on the sendCond and then returns the deposited message.
     fun channel () =
       Chn (condition (), condition (), ref NONE)
 
-    fun send (Chn (sendCond, recvCond, mopRef)) m =
-      mopRef := SOME m; signal recvCond;  
+    fun send (Chn (sendCond, recvCond, msgCell)) m =
+      msgCell := SOME m; signal recvCond;  
       wait sendCond; ()
 
-    fun recv (Chn (sendCond, recvCond, mopRef)) =
+    fun recv (Chn (sendCond, recvCond, msgCell)) =
       wait recvCond; signal sendCond;
-      valOf (!mopRef)
+      valOf (!msgCell)
 
     end
   \end{lstlisting}
