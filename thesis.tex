@@ -494,7 +494,7 @@ the receiving operation returns with the value deposited in the cell.
       | Recv q =>
         let
           val recvCond = condition ()
-          val mopRef = ref None in
+          val mopRef = ref NONE
           val () = enqueue (q, (recvCond, mopRef))
           val () = release lock; wait recvCond
         in
@@ -503,7 +503,7 @@ the receiving operation returns with the value deposited in the cell.
       | Inac =>
         let
           val recvCond = condition ()
-          val mopRef = ref None
+          val mopRef = ref NONE 
           val () = conRef := Recv (queue [(recvCond, mopRef)])
           val () = release lock; wait recvCond
         in
@@ -581,7 +581,7 @@ releases the lock. Then it signals on the sending state's condition and returns 
         (* the current thread is the only one that updates from this state *)
         val () = acquire lock
         val (recvCond, mopRef) = dequeue q
-        val () = mopRef := Some m
+        val () = mopRef := SOME m
         val () =
         case (isEmpty q) of
           true => conRef := Inac
@@ -598,7 +598,7 @@ releases the lock. Then it signals on the sending state's condition and returns 
         Inac =>
         let
           val recvCond = condition ()
-          val mopRef = ref None
+          val mopRef = ref NONE 
           val () = conRef := Recv (queue [(recvCond, mopRef)])
           val () = release lock; wait recvCond
         in
@@ -607,7 +607,7 @@ releases the lock. Then it signals on the sending state's condition and returns 
       | Recv q =>
         let
           val recvCond = condition () 
-          val mopRef = ref None
+          val mopRef = ref NONE 
           val () = enqueue (q, (recvCond, mopRef))
           val () = release lock; wait recvCond
         in
@@ -645,7 +645,7 @@ The implementation of many-to-one channels is very similar to that of one-to-man
       acquire lock;
       (case !conRef of
         Recv (recvCond, mopRef) => 
-          mopRef := Some m; conRef := Inac;
+          mopRef := SOME m; conRef := Inac;
           release lock; signal recvCond
       | Send q =>
         let
@@ -666,7 +666,7 @@ The implementation of many-to-one channels is very similar to that of one-to-man
     fun recv (Chn (conRef, lock)) =
     let
       val recvCond = condition () 
-      val mopRef = ref None
+      val mopRef = ref NONE 
     in
     case cas (conRef, Inac, Recv (recvCond, mopRef)) of
       Inac => (* conRef already set *)
@@ -675,7 +675,7 @@ The implementation of many-to-one channels is very similar to that of one-to-man
       let
          (* the current thread is the only one that updates the state from this state *)
          val () = acquire lock
-         val (sendCond, m) = dequeue q in
+         val (sendCond, m) = dequeue q 
          val () =
          case (isEmpty q) of
            true => conRef := Inac
@@ -743,7 +743,7 @@ structure OneToOneChan : CHANNEL = struct
         wait sendCond |
       Recv (recvCond, mopRef) =>
         (* the current thread is the only one that accesses conRef for this state *)
-        mopRef := Some m; conRef := Inac;
+        mopRef := SOME m; conRef := Inac;
         signal recvCond |
       Send _ => raise NeverHappens
     end
@@ -751,7 +751,7 @@ structure OneToOneChan : CHANNEL = struct
 
   fun recv (Chn conRef) = let
     val recvCond = condition ()
-    val mopRef = ref None
+    val mopRef = ref NONE 
     in case (cas (conRef, Inac, Recv (recvCond, mopRef))) of
       Inac => (* conRef already set to Recv*)
         wait recvCond; valOf (!mopRef) |
@@ -808,14 +808,14 @@ forever, if there truly is only one send ever.
         (* conRef already set to Send*)
         wait sendCond; () |
       Recv (recvCond, mopRef) =>
-        mopRef := Some m; signal recvCond |
+        mopRef := SOME m; signal recvCond |
       Send _ => raise NeverHappens
     end
 
 
   fun recv (Chn (conRef, lock)) = let
     val recvCond = condition ()
-    val mopRef = ref None
+    val mopRef = ref NONE 
     in case (conRef, Inac, Recv (recvCond, mopRef)) of
       Inac =>
         (* conRef already set to Recv*)
@@ -853,10 +853,10 @@ signals on the sendCond and then returns the deposited message.
       Chn of condition * condition * 'a option ref
 
     fun channel () =
-      Chn (condition (), condition (), ref None)
+      Chn (condition (), condition (), ref NONE)
 
     fun send (Chn (sendCond, recvCond, mopRef)) m =
-      mopRef := Some m; signal recvCond;  
+      mopRef := SOME m; signal recvCond;  
       wait sendCond; ()
 
     fun recv (Chn (sendCond, recvCond, mopRef)) =
