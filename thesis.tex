@@ -429,9 +429,9 @@ it leaves the state in the sending state.
 Next, it releases the lock and returns the message from the sending state.
 If there are no sending threads on the
 channel, the receiving operation updates the channel state to the receiving state, and enqueues
-a condition and an empty cell.  It releases the lock and waits on
-the enqueued condition.  Once a sending thread signals on the same condition,
-the receiving operation returns with the value deposited in the cell.
+a new condition \lstinline{recvCond} and an empty cell.  It releases the lock and waits on
+the its condition \lstinline{recvCond}.  Once a sending thread signals on its condition,
+the receiving operation returns with the value deposited in its cell.
 
 \begin{lstlisting}[language=ML, mathescape]
 
@@ -552,7 +552,8 @@ the state of the channel, just like the receiving operation for many-to-many cha
 If the channel is in a state where there is no sending thread waiting,
 then it updates the state to receiving, behaving the same as the receiving operation of many-to-many channels.
 If there is already a sending thread waiting, then it updates the state to inactive and
-releases the lock. Then it signals on the sending state's condition and returns the state's associated message.
+releases the lock. Then it signals on the sending state's condition and
+returns the message held in the sending state.
 
 \begin{lstlisting}[language=ML, mathescape]
 
@@ -716,7 +717,7 @@ the receiving state, so no locks are necessary.
 Additionally, if the channel is truly one-on-one, the sending operation will never
 witness a preexisting sending state since it is running on the one and only sending thread. 
 
-The receiving operation creates a condition and an empty cell,
+The receiving operation creates a condition \lstinline{recvCond} and an empty cell,
 then checks if the channel's state is inactive and tries to use the
 compare-and-swap operator to transactionally update the state of the channel to
 the receiving state.  If successful, it simply waits on its condition \lstinline{recvCond}.
@@ -792,21 +793,23 @@ additionally associated with a mutex lock, to account for the fact that multiple
 try to receive on the channel, even though only at most one message is ever sent.
 
 The sending operation is like that of one-to-one channels,
-except that if the state is that of a
-thread trying to receive, it simply deposits the message and signals on the associated
-condition, without updating the channel's state to inactive, which would be unnecessary, since
+except that if the state is a receiving state, it simply deposits the message and signals
+on the receiving state's condition,
+without updating the channel's state to inactive, which would be unnecessary, since
 no further attempts to send are expected.
 
-The receiving operation checks if the channel's state is inactive and tries to use the
-compare-and-swap operator to transactionally update the state of the channel to that of trying
-to receive.  If successful, it simply waits on \lstinline{recvCond}, the condition that a sending thread
-will signal on after it deposits a message, and then returns the deposited message.  If the
-transactional update fails and the state is that of a thread trying to send on the channel,
+The receiving operation creates a condition \lstinline{recvCond} and an empty cell,
+then checks if the channel's state is inactive and tries to use the
+compare-and-swap operator to transactionally update the state of the channel to
+the receiving state.  If successful, it simply waits on its condition \lstinline{recvCond},
+then returns the message deposited in its cell.
+If the transactional update fails and the state is a sending state,
 then it acquires the lock, signals on the state's associated condition and returns the message
-associated with the sending thread, without ever releasing the lock, so that competing
-receiving threads will know to not progress.  If the state is that of a thread trying to
-receive on the channel, the it acquires the lock, which should block the current thread
-forever, if there truly is only one send ever.
+held in the sending state.  It never releases the lock, blocking any additional attempts to receive,
+which is fine if there is truly at most one message ever sent on the channel.
+If the state is a receiving state, then the receiving operation attempts to acquire the lock,
+but it will never actually acquire it since the thread associated with the receiving state will
+never release it.
 
 
 \begin{lstlisting}[language=ML, mathescape]
@@ -862,17 +865,20 @@ forever, if there truly is only one send ever.
 \subsection{One-shot-to-one Synchronization}
 
 An even more restrictive version of a channel with at most one send could be used if it's
-determined that the number of receiving threads is at most one.  The one-shot-to-one channel is
-composed of a possibly empty cell, a condition for a sending thread to wait on, and a condition
-for a receiving thread to wait on.
+determined that the number of receiving threads is at most one,
+such as \lsininline{replCh} in the server example.
+The one-shot-to-one channel is
+composed of a possibly empty message cell, a condition for a sending thread to wait on,
+and a condition for a receiving thread to wait on.
 
-The sending operation deposits the message in the cell, signals on the recvCond, waits on the
-sendCond, and then returns the unit value.  The receiving operation waits on the recvCond,
-signals on the sendCond and then returns the deposited message.
-
+The sending operation deposits the message in the cell, signals on the channel's condition \lstinline{recvCond},
+waits on the condition \lstinline{sendCond}, and then returns the unit value.
+The receiving operation waits on \lstinline{recvCond},
+then signals on \lstinline{sendCond}, then returns the deposited message.
 
 \begin{lstlisting}[language=ML, mathescape]
-  structure OneShotToOneChan : CHANNEL = struct
+  structure OneShotToOneChan : CHANNEL =
+  struct
 
     datatype 'a channel =
       Chn of condition * condition * 'a option ref
@@ -888,9 +894,11 @@ signals on the sendCond and then returns the deposited message.
       wait recvCond; signal sendCond;
       valOf (!msgCell)
 
-    end
-  \end{lstlisting}
+  end
+\end{lstlisting}
 
+
+\subsection{Discussion}
 The example implementations of generic synchronization and specialized synchronization suggest
 that cost savings of specialized implementation are significant. For example, if you know that
 a channel has at most one sending thread and one receiving thread, then you will
@@ -908,14 +916,15 @@ them for each program would be exhausting. Instead, you would probably rather ha
 procedure that can compute communication topologies for any program in a language, along with
 a proof that the procedure is sound with respect to the programing language.
 
-This work discusses proofs that the communication topologies are sound with respect to the
-semantics. Additionally, it would be important to have proofs that the above specialized
+This work discusses proofs that a static analysis to determine communication topologies is
+sound with respect to the dynamic semantics.
+Additionally, it would be important to have proofs that the above specialized
 implementations are equivalent to the many-to-many implementation under the assumption of
 particular communication topologies.
 
 \section{Static Analysis}
 The right implementation choice can be determined by counting the number threads used during
-the execution of a program. However, some programs run forever, so it may never be possible to
+all possible executions of execution of a program. However, some programs run forever, so it may never be possible to
 count all the threads. Instead, by using a static analysis it's possible to determine an
 estimate from the finite structure of programs. A static analysis that describes communication
 topologies of channels has practical benefits in at least two ways.  It can highlight which
