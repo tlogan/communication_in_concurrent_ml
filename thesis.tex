@@ -337,7 +337,7 @@ one-shot.
   end
 \end{lstlisting}
 
-\section{Implementation}
+\section{Implementions of Synchronization}
 Some hypothetical implementations of specialized and generic
 Concurrent ML illustrate opportunities
 for cheaper synchronization. These implementaitons use 
@@ -347,20 +347,21 @@ implementation of communication features from thread scheduling and management. 
 lower level view or scheduler-centric view of synchronization might offer more opportunites
 for optimization.
 
-Depending on the features provided by existing language implementations,
-Concurrent ML could be implemented in as a library, as in the case in SML/NJ and MLton.
-It could also be implemented as features of
-a language within a compiler and runtime or interpreter.
+In a language with low-level support for concurrency,
+Concurrent ML could be implemented as a library,
+which is the case for SML/NJ \cite{} and MLton \cite{}.
+It could also be implemented by a compiler and runtime or interpreter.
 Thus, the implementations shown here can be viewed either as a library or as an intermediate
 representation within a compiler or interpreter presented with concrete syntax.
 
 \begin{lstlisting}[language=ML, mathescape]
-  signature CHANNEL = sig
+  signature CHANNEL =
+  sig
     type 'a channel 
     val channel : unit -> 'a chan
     val send : 'a channel * 'a -> unit
     val recv : 'a channel -> 'a
-    end     
+  end     
 \end{lstlisting}
 
 The benefits of specialization would be much more significant in multiprocessor
@@ -379,57 +380,69 @@ The cost of trying to achieve parallelism
 is increased overhead due to contention over acquiring
 synchronization rights. 
 
-A channel can be in one of three states.  Either some threads are trying to send through it,
-some threads are trying to receive from it, or no threads are trying to send or receive on it.
+
+
+\subsection{Many-to-many Synchronization}
+A channel can be in one of three states.  Either some threads are trying to send on it,
+some threads are trying to receive on it, or no threads are trying to send or receive on it.
 Additionally a channel is composed of a mutex lock,
 so that sending and receiving operations can yield
 to each other when updating the channel state. When multiple threads are trying to send on a
 channel, the channel is associated with a queue consisting of messages to be sent, along with
 conditions waited on by sending threads. When multiple threads are trying to receive on a
 channel, the channel is associated with a queue consisting of
-initially empty cells that are accessible
-by receiving threads and conditions waited on by
-the receiving threads. The channel content holds the
-three potential states and their associated content of queues and conditions.
-The channel is composed of the channel content and also a mutext lock that regulates access to
+initially empty cells that are accessible by receiving threads and
+conditions waited on by the receiving threads.
+The channel content holds one of three three potential states and their
+associated content of queues and conditions.
+The channel is composed of the channel content and also a mutex lock that regulates access to
 the channel content.
 
 The sending operation acquires the channel's lock to
 ensure that it updates the channel based on
-any one of its latest state.  If there are threads trying
-to receive from the channel, the sending 
-operation dequeues an item from the state's associated queue.  The item consists of a condition
-waited on by a receiving thread and an empty cell that can be accessed by the receiving thread.
-It deposits the message in the cell and signals on the condition, updates the channel state to
-inactive if there are no further receiving threads waiting, then releases the lock, signals on
-the condition and returns the unit value.  If there are no threads trying to receive from the
-channel, the sending operation updates the channel state to that of trying to send with an
-additional condition and message in the associated queue.  It releases the lock and waits on
-the enqueued condition.  Once a receiving thread signals on the same condition, the sending 
-operation returns with the unit value.
+its current state.  If the channel is in the receiving state,
+i.e. there are threads trying to receive from the channel,
+then the sending operation dequeues an item from the state's associated queue.
+The item consists of a condition waited on by a receiving thread and an empty cell
+that can be accessed by the receiving thread.
+The sending operation deposits the message in the cell and signals on the receiving state's condition.
+Then, if there are no further receiving threads waiting, it updates the channel's state to inactive; otherwise,
+it leaves the state in the receiving state.
+Next, it releases the lock, signals on the receiving state's condition and returns the unit value.
+
+If there are no threads receiving on the
+channel, the sending operation updates the channel state to the sending state,
+and enqueues a condition and the message.
+It releases the lock and waits on the enqueued condition.
+Once a receiving thread signals on the same condition,
+the sending operation returns with the unit value.
 
 The receiving operation acquires the channel's lock
 to ensure that it updates the channel based on
-any one of its latest state.  If there are threads
-trying to send on the channel, the receiving 
-operation dequeues an item from the state's associated queue.  The item consists of a condition
-waited on by a sending thread along with a message to be sent.  It signals the condition and
-updates the channel state to inactive if there are no further sending threads waiting, then
-releases the lock and returns the sent message.  If there are no threads trying to send on the
-channel, the receiving operation updates the channel state to that of trying to receive with an
-additional condition and empty cell in the associated queue.  It releases the lock and waits on
-the enqueued condition.  Once a sending thread signals on the same condition, the receiving 
-operation returns with the value deposited in the cell by a sending thread.
+its current state.  If there are threads
+sending on the channel, the receiving 
+operation dequeues an item from the sending state's associated queue.  The item consists of a condition
+waited on by a sending thread along with a message.
+The receiving operation signals on the sending state's condition.
+If there are no further sending threads waiting, it updates the channel's state to inactive; otherwise,
+it leaves the state in the sending state.
+Next, it releases the lock and returns the message from the sending state.
+If there are no sending threads on the
+channel, the receiving operation updates the channel state to the receiving state, and enqueues
+a condition and an empty cell.  It releases the lock and waits on
+the enqueued condition.  Once a sending thread signals on the same condition,
+the receiving operation returns with the value deposited in the cell.
 
 \begin{lstlisting}[language=ML, mathescape]
 
-  structure ManyToManyChan : CHANNEL = struct
+  structure ManyToManyChan : CHANNEL =
+  struct
     type message_queue = 'a option ref queue
 
     datatype 'a chan_content = 
-      Send of (condition * 'a) queue | 
-      Recv of (condition * 'a option ref) queue | 
-      Inac
+      Send of (condition * 'a) queue
+    | Recv of (condition * 'a option ref) queue
+    | Inac
 
     datatype 'a channel =
       Chn of 'a chan_content ref * mutex_lock 
@@ -439,146 +452,177 @@ operation returns with the value deposited in the cell by a sending thread.
     fun send (Chn (conRef, lock)) m = 
       acquire lock;
       (case !conRef of
-        Recv q => let
+        Recv q =>
+        let
           val (recvCond, mopRef) = dequeue q
           val () = mopRef := Some m
           val () = if (isEmpty q) then conRef := Inac else ()
-          in release lock; signal recvCond; ()
-          end |
-        Send q => let
+        in
+          release lock; signal recvCond; ()
+        end
+      | Send q =>
+        let
           val sendCond = condition ()
           val () = enqueue (q, (sendCond, m))
-          in release lock; wait sendCond; ()
-          end |
-        Inac => let
+        in
+          release lock; wait sendCond; ()
+        end
+      | Inac =>
+        let
           val sendCond = condition () in
           val () = conRef := Send (queue [(sendCond, m)])
-          in release lock; wait sendCond; ()
-          end)
+        in
+          release lock; wait sendCond; ()
+        end
+      )
 
     fun recv (Chn (conRef, lock)) =  
       acquire lock;
       (case !conRef of 
-        Send q => let
+        Send q =>
+        let
           val (sendCond, m) = dequeue q
-          val () = case (isEmpty q) of 
-            true => conRef := Inac |
-            false => ()
-          in release lock; signal sendCond; m
-          end |
-        Recv q => let
+
+          val () =
+          case (isEmpty q) of 
+            true => conRef := Inac
+          | false => ()
+
+        in
+          release lock; signal sendCond; m
+        end
+      | Recv q =>
+        let
           val recvCond = condition ()
           val mopRef = ref None in
           val () = enqueue (q, (recvCond, mopRef))
           val () = release lock; wait recvCond
-          in valOf (!mopRef)
-          end |
-        Inac => let
+        in
+          valOf (!mopRef)
+        end
+      | Inac =>
+        let
           val recvCond = condition ()
           val mopRef = ref None
           val () = conRef := Recv (queue [(recvCond, mopRef)])
           val () = release lock; wait recvCond
-          in valOf (!mopRef)
-          end)
+        in
+          valOf (!mopRef)
+        end
+      )
 
-    end
+  end
 
-  \end{lstlisting}
+\end{lstlisting}
 
+
+\subsection{One-to-many Synchronization}
 
 Implementation of one-to-many channels, compared to that of many-to-many channels,
 requires fewer
 steps to synchronize and can execute more steps outside of critical regions, which reduces
-contention for locks.  A channel is composed of a lock and one of three possible states, as is
-the case for many-to-many channels.  However, the state of a thread trying to send need only be
-associated with one condition and one message.  
+contention for locks. A channel is composed of a lock and one of three possible states, as is
+the case for many-to-many channels.  However, the state of a thread trying to send only needs
+to be associated with one condition and one message.  
 
 The sending operation checks if the channel's state is inactive and tries to use the
 compare-and-swap operator to transactionally update the state of
 the channel to that of trying to
-send.  If successful, it simply waits on sendCond, the condition that a receiving thread will
-signal on, and then returns the unit value.  If the transactional update fails and the state is
+send.  If successful, it simply waits on the sending thread's condition \lstinline{sendCond}.
+After the receiving thread signal on \lstine{sendCond}, the sending operation returns the unit value.
+If the transactional update fails and the state is
 that of threads trying to receive on the channel, then the sending operation acquires the lock,
-then dequeues an item from the associated queue where the item consists of recvCond, a
-condition waited on by a receiving thread, and a cell for depositing the message to that
-receiving thread.  It deposits the message in the cell, updates the state to inactive there are
-no further items on the queue, then releases the lock.  Then it signals on the condition and
-returns the unit value. The lock is acquired after the state is determined to be that of
+then dequeues an item from the associated queue where the item consists of a receiving condition \lstinline{recvCond},
+and a cell for depositing the message to the receiving thread.
+If there are no further items on the queue, the sending operation updates the state to inactive; otherwise, it
+leaves the state in the receiving state.
+Next, it releases the lock it, then signals on the receiving condition and returns the unit value.
+
+The lock is acquired after the state is determined to be that of
 threads trying to receive, since the expectation is that the current thread is the only one
 that tries to update the channel from that state.  If the communication topology analysis were
 incorrect and and there were actually multiple threads that could call the sending operation,
 then there might be data races.  Likewise, due to the expectation of a single thread
-sending on the
-channel, the sending operation should never witness the state of
-threads already trying to send.
+sending on the channel, the sending operation will never witness the state in the sending state,
+which would mean another thread is in the process of sending a message.
 
 The receiving operation acquires the lock and checks
-the state of the channel, just as the receiving
-operation for many-to-many channels.  If the channel is in a state where there is no already
-trying to send, then it behaves the same as the receiving operation of many-to-many channels.
-If there is already a thread trying to receive, then it updates the state to inactive and
-releases
-the lock.  Then it signals on the state's associated condition, which is waited on by a sending
-thread, and returns the states' associated message.
+the state of the channel, just like the receiving operation for many-to-many channels.
+If the channel is in a state where there is no sending thread,
+then it updates the state to receiving, behaving the same as the receiving operation of many-to-many channels.
+If there is already a sending thread, then it updates the state to inactive and
+releases the lock. Then it signals on the sending state's condition and returns the state's associated message.
 
   \begin{lstlisting}[language=ML, mathescape]
 
-    structure FanOutChan : CHANNEL = struct
+    structure OneToManyChan : CHANNEL = struct
 
     datatype 'a chan_content =
-      Send of condition * 'a |
-      Recv of (condition * 'a option ref) queue  |
-      Inac
+      Send of condition * 'a
+    | Recv of (condition * 'a option ref) queue
+    | Inac
 
     datatype 'a channel =
       Chn of 'a chan_content ref * mutex_lock
 
     fun channel () = Chn (ref Inac, mutexLock ())
 
-    fun send (Chn (conRef, lock)) m = let
+    fun send (Chn (conRef, lock)) m =
+    let
       val sendCond = condition ()
-      in case (cas (conRef, Inac, Send (sendCond, m))) of
-        Inac => (* conRef already set *)
-          wait sendCond; () |
-        Recv q => let
-        (* the current thread is
-          * the only one that updates from this state *)
-          val () = acquire lock
-          val (recvCond, mopRef) = dequeue q
-          val () = mopRef := Some m
-          val () = case (isEmpty q) of
-            true => conRef := Inac |
-            false => ()
-          in release lock; signal (recvCond); ()
-          end |
-        Send _ => raise NeverHappens
+    in
+    case (cas (conRef, Inac, Send (sendCond, m))) of
+      Inac => (* conRef already set *)
+      wait sendCond; ()
+      |
+      Recv q =>
+      let
+        (* the current thread is the only one that updates from this state *)
+        val () = acquire lock
+        val (recvCond, mopRef) = dequeue q
+        val () = mopRef := Some m
+        val () =
+        case (isEmpty q) of
+          true => conRef := Inac
+        | false => ()
+      in
+        release lock; signal (recvCond); ()
       end
+    | Send _ => raise NeverHappens
+    end
 
     fun recv (Chn (conRef, lock)) =
       acquire lock;
       (case !conRef of
-        Inac => let
+        Inac =>
+        let
           val recvCond = condition ()
           val mopRef = ref None
           val () = conRef := Recv (queue [(recvCond, mopRef)])
           val () = release lock; wait recvCond
-          in valOf (!mopRef)
-          end |
-        Recv q => let
+        in
+          valOf (!mopRef)
+        end
+      | Recv q =>
+        let
           val recvCond = condition () 
           val mopRef = ref None
           val () = enqueue (q, (recvCond, mopRef))
           val () = release lock; wait recvCond
-          in valOf (!mopRef)
-          end |
-        Send (sendCond, m) =>
+        in
+          valOf (!mopRef)
+        end
+      | Send (sendCond, m) =>
           conRef := Inac;
           release lock;
           signal sendCond;
-          m) 
+          m
+      ) 
 
     end 
   \end{lstlisting}
+
+\subsection{Many-to-one Synchronization}
 
 The implementation of many-to-one channels is very similar to that of one-to-many channels.
 
@@ -631,6 +675,8 @@ The implementation of many-to-one channels is very similar to that of one-to-man
       Recv _ => raise NeverHappens end end
 
   \end{lstlisting}
+
+\subsection{One-to-one Synchronization}
 
 a one-to-one channel can also be in one of three possible states, but there is no associated
 lock. Additional, none of the states are associated with queues.  Instead, there is a possible
@@ -706,6 +752,8 @@ structure OneToOneChan : CHANNEL = struct
   end
   \end{lstlisting}
 
+\subsection{One-shot Synchronization}
+
 A one-shot channel consists of the same possible states as a one-to-one channel, but is
 additionally associated with a mutex lock, to account for the fact that multiple threads may
 try to receive on the channel, even though only at most one message is ever sent.
@@ -771,6 +819,9 @@ forever, if there truly is only one send ever.
 
   end
   \end{lstlisting}
+
+
+\subsection{One-shot-to-one Synchronization}
 
 An even more restrictive version of a channel with at most one send could be used if it's
 determined that the number of receiving threads is at most one.  The one-shot-to-one channel is
