@@ -1390,7 +1390,8 @@ determines all the values described by the analysis on any input program.
 
 Analyses can be described in a variety of ways. A computable algorithm that take programs
 as input and produces information about the behavior as output is ideal for automation. A
-non-algorithmic relation (i.e. a relation expressed in a language without an inherent evaluator),
+non-algorithmic relation (i.e. a relation expressed in a language without an inherent evaluator
+from some parameters to the others),
 stated in terms of programs and execution information, may be
 more suitable for clarity of meaning and correctness with respect to the operational
 semantics. However, a non-algorithmic relation can be translated into an algorithm.
@@ -1408,11 +1409,11 @@ whether or not their control paths diverge.
 
 The algorithm proceeds in multiple steps that produce intermediate data structures, used for
 efficient lookup in the subsequent steps.  It starts with a control-flow analysis \cite{} that
-results in multiple mappings. One mapping is from names to abstract values that may bind to
+results in multiple mappings. One mapping is from names to abstract values that may be bound to
 the names. Another mapping is from channel-bound names to abstract values that are
 sent on the respective channels. Another is from function-bound names to abstract values
 that are the result of respective function applications.  It constructs a control-flow graph 
-with possible paths for pattern matching and thread spawning determined directly from the
+with possible paths for conditional tests and thread spawning determined directly from the
 primitives used in the program.  Relying on information from the mappings to abstract values,
 it constructs the possible paths of execution via function application and channel
 communication.  It uses the graph for live variable analysis of channels, which limits the
@@ -1436,7 +1437,7 @@ flow into a function abstraction's code.  Function abstractions can be named, wh
 multiple pieces of code to all flow into into the same section of code. The name adds an
 additional step in to uncover control structures, and determine data flow.
 Additionally, in languages with higher order functions and recursion, such as those in the Lisp
-and ML families, it may be impossible to determine all the function abstractions that
+and ML families, it may be impossible to exactly determine all the function abstractions that
 expressions resolve to. However, a control flow analysis can reveal a good
 approximation of the control structures and values that have been obfuscated by higher order
 function abstractions.  Uncovering the the control structures depends on resolving expressions

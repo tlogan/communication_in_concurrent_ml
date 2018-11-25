@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  24 NOV 2018 18:27
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  24 NOV 2018 18:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -902,13 +902,13 @@ the pro-grams that have been sidestepped
  []
 
 [20] [21] [22] [23] [24] [25] [26] [27] [28] [29] [30]
-Overfull \hbox (0.49341pt too wide) in paragraph at lines 1676--1699
+Overfull \hbox (0.49341pt too wide) in paragraph at lines 1677--1700
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]\T1/Lin
 uxLibertineT-TLF/m/n/10 . There-fore,
  []
 
 [31] [32] [33] [34] [35] [36] [37]
-Overfull \hbox (3.8693pt too wide) in paragraph at lines 2027--2029
+Overfull \hbox (3.8693pt too wide) in paragraph at lines 2028--2030
 []\T1/LinuxLibertineT-TLF/m/n/10 The server im-ple-men-ta-tion rep-re-sented as
  a graph il-lus-trates how static traversabil-
  []
@@ -916,55 +916,55 @@ Overfull \hbox (3.8693pt too wide) in paragraph at lines 2027--2029
 <cml_graph.pdf, id=133, 1907.125pt x 2019.545pt>
 File: cml_graph.pdf Graphic file (type pdf)
  <use cml_graph.pdf>
-Package pdftex.def Info: cml_graph.pdf used on input line 2030.
+Package pdftex.def Info: cml_graph.pdf used on input line 2031.
 (pdftex.def)             Requested size: 448.50105pt x 474.93211pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 2030--2031
+Overfull \hbox (15.0pt too wide) in paragraph at lines 2031--2032
 [][] 
  []
 
-[38 <./cml_graph.pdf>] [39] [40] [41] [42] [43] [44]
-Overfull \hbox (12.77339pt too wide) in paragraph at lines 2397--2402
+[38] [39 <./cml_graph.pdf>] [40] [41] [42] [43] [44] [45]
+Overfull \hbox (12.77339pt too wide) in paragraph at lines 2398--2403
 []\T1/LinuxLibertineT-TLF/m/n/10 The sound-ness of lack of static trace-abil-it
 y is proved by gen-er-al-iz-ing static traversabil-
  []
 
-[45] [46] [47] [48] [49] [50] [51] [52] [53] [54] [55] [56] [57] [58] [59]
-[60] [61] [62] [63] [64] [65] [66] [67] [68]
-<cml_graph_lp.pdf, id=258, 1879.02pt x 2094.82625pt>
+[46] [47] [48] [49] [50] [51] [52] [53] [54] [55] [56] [57] [58] [59] [60]
+[61] [62] [63] [64] [65] [66] [67] [68] [69]
+<cml_graph_lp.pdf, id=261, 1879.02pt x 2094.82625pt>
 File: cml_graph_lp.pdf Graphic file (type pdf)
  <use cml_graph_lp.pdf>
-Package pdftex.def Info: cml_graph_lp.pdf used on input line 3592.
+Package pdftex.def Info: cml_graph_lp.pdf used on input line 3593.
 (pdftex.def)             Requested size: 448.50105pt x 499.98767pt.
 
-<cml_graph_k1.pdf, id=259, 2160.07pt x 2223.30624pt>
+<cml_graph_k1.pdf, id=262, 2160.07pt x 2223.30624pt>
 File: cml_graph_k1.pdf Graphic file (type pdf)
  <use cml_graph_k1.pdf>
-Package pdftex.def Info: cml_graph_k1.pdf used on input line 3593.
+Package pdftex.def Info: cml_graph_k1.pdf used on input line 3594.
 (pdftex.def)             Requested size: 448.50105pt x 461.61581pt.
 
-<cml_graph_k4.pdf, id=260, 2034.60126pt x 2197.20876pt>
+<cml_graph_k4.pdf, id=263, 2034.60126pt x 2197.20876pt>
 File: cml_graph_k4.pdf Graphic file (type pdf)
  <use cml_graph_k4.pdf>
-Package pdftex.def Info: cml_graph_k4.pdf used on input line 3594.
+Package pdftex.def Info: cml_graph_k4.pdf used on input line 3595.
 (pdftex.def)             Requested size: 448.50105pt x 484.32617pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 3592--3595
+Overfull \hbox (15.0pt too wide) in paragraph at lines 3593--3596
 [][]
  []
 
-[69] [70 <./cml_graph_lp.pdf>] [71 <./cml_graph_k1.pdf>] [72 <./cml_graph_k4.pd
-f>] [73] [74] [75] [76]
+[70] [71 <./cml_graph_lp.pdf>] [72 <./cml_graph_k1.pdf>] [73 <./cml_graph_k4.pd
+f>] [74] [75] [76] [77]
 
-LaTeX Warning: Citation `.' on page 77 undefined on input line 3835.
-
-
-LaTeX Warning: Citation `' on page 77 undefined on input line 3840.
+LaTeX Warning: Citation `.' on page 78 undefined on input line 3836.
 
 
-LaTeX Warning: Citation `' on page 77 undefined on input line 3840.
+LaTeX Warning: Citation `' on page 78 undefined on input line 3841.
 
-[77] (./thesis.aux)
+
+LaTeX Warning: Citation `' on page 78 undefined on input line 3841.
+
+[78] (./thesis.aux)
 
 LaTeX Warning: There were undefined references.
 
@@ -972,7 +972,7 @@ LaTeX Warning: There were undefined references.
 Here is how much of TeX's memory you used:
  7320 strings out of 493014
  105961 string characters out of 6133351
- 428148 words of memory out of 5000000
+ 416148 words of memory out of 5000000
  10693 multiletter control sequences out of 15000+600000
  60119 words of font info for 65 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -991,10 +991,10 @@ cal/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texl
 ive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016
 /texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-
 dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (78 pages, 584666 bytes).
+Output written on thesis.pdf (79 pages, 584813 bytes).
 PDF statistics:
- 391 PDF objects out of 1000 (max. 8388607)
- 274 compressed objects within 3 object streams
+ 395 PDF objects out of 1000 (max. 8388607)
+ 277 compressed objects within 3 object streams
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 
