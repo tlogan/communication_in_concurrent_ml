@@ -126,7 +126,7 @@ steps to hop back and forth between disjoint syntactic structures within a progr
 It is useful
 when conceptually distinct tasks need to overlap in time, but are easier to understand if they
 are written as distinct structures within the program. Concurrent languages may also allow the
-evaluation order between steps of expressions to be nondeterministic. If it's not necessary for
+evaluation order between steps of terms to be nondeterministic. If it's not necessary for
 tasks to be ordered in a precise way, then it may be better to allow a static or dynamic
 scheduler pick the most efficient execution order. A common use case for concurrent languages
 is for programs that interact with humans, in which a program has to process various requests
@@ -953,50 +953,53 @@ application, left and right construction with pattern matching, pair constructio
 and second projections, sending and receiving event construction with synchronization,
 channel creation, thread spawning, and the unit literal. The syntax is defined in a way to
 make it possible to relate the dynamic semantics of programs to the syntax programs.
-The syntax is in a very restrictive administrative normal form (ANF), in which every expression
-is bound to a name. Furthermore, expression only accept names in place of eagerly evaluated
+The syntax is defined in administrative normal form (ANF) \cite{}, in which every term
+is bound to a name. Furthermore, terms only accept names in place of eagerly evaluated
 inputs. 
 
-Restricting the grammar to a form that requires
-every function and application to be bound to a name allows the operational
-semantics to maintain graph information that simplifies proofs of soundness \cite{}.
+Restricting the grammar to ANF allows the operational semantics
+to maintain graph information by associating values succint names.
+Maintaining the values' ties to the syntax,
+simplifies proofs of soundness, since they must relate dynamic evaluation information
+to static information based on the syntax.
 
-The restricted ANF grammar is impractical
-for a programer to write, yet it is still practical for
-a language under automated analysis since there is a straightforward procedure to transform
-more flexible and user-friendly grammars into the
-restricted form as demonstrated by Flanagan et al \cite{}.
-Additionally, the restricted grammar melds nicely with the control path semantics.
-Instead of relying on additional meta-syntax for program points of primitive operations,
-the analysis 
-can simply use the required names of the restricted grammar to identify
-locations in the program.
-Control paths are simply sequences of bind names.
+Additionally, ANF melds nicely with the semantincs of control paths, which succintly identify
+the the evaluation taken to reach some intermediate result.
+Instead of relying on additional meta-syntax to associate atom operations with identifiers,
+the analysis can simply use the required names of ANF syntax to identify locations in the program.
+
+The ANF syntax is impractical for a programer to write,
+yet it is still practical for a language under automated analysis
+since there is a straightforward procedure to transform
+more user-friendly syntax into ANF as demonstrated by Flanagan et al \cite{}.
 
 
 \begin{lstlisting}[language=logic]
   datatype name = Nm string
 
-  datatype 
-    program = 
-      Bind name expression program |
-      Rslt name and 
+  datatype term = 
+    Bind name complex term 
+  | Rslt name
 
-    expression = 
-      Unt | MkChn |
-      Prim primitive |
-      Spwn program |
-      Sync name |
-      Fst name | Snd name |
-      Case name name program name program |
-      App name name and 
+  and complex = 
+    Unt
+  | MkChn
+  | Atom atom
+  | Spwn term 
+  | Sync name
+  | Fst name
+  | Snd name
+  | Case name name term name term 
+  | App name name
 
-    primitive = 
-      SendEvt name name | RecvEvt name |
-      Pair name name |
-      Lft name | Rght name |
-      Abs name name exp
-  \end{lstlisting}
+  and atom = 
+    SendEvt name name
+  | RecvEvt name
+  | Pair name name
+  | Lft name
+  | Rght name
+  | Fun name name term 
+\end{lstlisting}
 
 \subsection{Dynamic Semantics}
 The dynamic semantics is described by how programs evaluate to values.
@@ -1004,8 +1007,8 @@ A history of execution is
 represented a list of binding names, or resulting names, along with modes of control, such as
 sequencing, spawning, calling, or returning. Channels have no literal representation, but each
 time a channel is created, it is uniquely identified by the history of the execution up until
-that point. Primitive expressions are not simplified.  Instead, primitives are evaluated to
-closures consisting of the primitive syntax, along with an environment that maps its
+that point. atomic terms are not simplified.  Instead, atoms are evaluated to
+closures consisting of the atom syntax, along with an environment that maps its
 constituent names to their values.
 
 In order to relate the static analyses to the operational semantics, I
@@ -1030,27 +1033,27 @@ soundness of the static semantics.
     Chan dynamic_path name 
 
   datatype dynamic_value = 
-    VUnt | VChn channel | VPrm primitive (name -> dynamic_value option)
+    VUnt | VChn channel | VPrm atom (name -> dynamic_value option)
 
   type environment =
     name -> dynamic_value option
   \end{lstlisting}
 
-The evaluation of some expressions results in sequencing, meaning there is no coordination
-with other threads, and there is no backtracking. These expressions are the
-unit literal, primitives, pairs, and first and second projections. The evaluation depends only
+The evaluation of some terms results in sequencing, meaning there is no coordination
+with other threads, and there is no backtracking. These terms are the
+unit literal, atoms, pairs, and first and second projections. The evaluation depends only
 on the syntax and an environment for looking up the values of names within the syntax.
-Additionally, all these expressions evaluate to values in a single step.
+Additionally, all these terms evaluate to values in a single step.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate seq_eval of expression -> environment -> dynamic_value -> bool:
+  predicate seq_eval of complex -> environment -> dynamic_value -> bool:
     only
 
     (\forall env . 
         seq_eval Unt env VUnt),
         
     (\forall p env .
-        seq_eval (Prim p) env (VPrm p env)),
+        seq_eval (Atom p) env (VPrm p env)),
 
     (\forall env n$_p$ n1 n2 env_p v. 
       if
@@ -1067,10 +1070,10 @@ Additionally, all these expressions evaluate to values in a single step.
         seq_eval (Snd n$_p$) env v)
   \end{lstlisting}
 
-The evaluation of expressions for application, and matching result in calling, which leads to
+The evaluation of terms for application, and matching result in calling, which leads to
 backtracking after the called programs are evaluated. The evaluation depends on the syntax
 and an environment for looking up the values of names within the syntax.
-The expressions are evaluated to a called program, and a new environment that will
+The terms are evaluated to a called program, and a new environment that will
 later be used in evaluation of the called program. For matching, either the left or the right
 program is called, and the environment is updated with the corresponding name mapping to the
 value extracted from the pattern. For application, the program inside of an applied abstraction
@@ -1079,7 +1082,7 @@ application's argument. The environment is also updated with the recursive name 
 same applied abstraction.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate call_eval of expression -> env -> program -> env -> bool:
+  predicate call_eval of complex -> env -> term -> env -> bool:
     only
 
     (\forall env n$_s$ n$_c$ env_s v n$_l$ p$_l$ n$_r$ p$_r$ .
@@ -1098,11 +1101,11 @@ same applied abstraction.
 
     (\forall env n$_f$ n$_f$' n$_p$ p$_b$ env_l n$_a$ v .
       if 
-        env n$_f$ = Some (VPrm (Abs n$_f$' n$_p$ p$_b$) env_l); 
+        env n$_f$ = Some (VPrm (Fun n$_f$' n$_p$ p$_b$) env_l); 
         env_l n$_a$ = Some v
       then
         call_eval (App n$_f$ n$_a$) env p$_b$ (
-          env_l(n$_f$' -> (VPrm (Abs n$_f$' n$_p$ p$_b$) env_l), n$_p$ -> v)))
+          env_l(n$_f$' -> (VPrm (Fun n$_f$' n$_p$ p$_b$) env_l), n$_p$ -> v)))
   \end{lstlisting}
   
 
@@ -1111,8 +1114,8 @@ returned to them later. in addition to the syntactic program, the environment fo
 program's names, and an unresolved name are also recorded together to form a continuation. 
 The initial state of execution consists of a program, an empty environment, and an empty stack
 of continuations. With each sequential step, the program is reduced to a subprogram, and the
-environment is updated with the name bound to the value of the expression. Each time a
-subprogram is sidestepped to evaluate a dependent expression, a continuation is formed around
+environment is updated with the name bound to the value of the term. Each time a
+subprogram is sidestepped to evaluate a dependent term, a continuation is formed around
 it and pushed onto a stack of continuations. A continuation is popped of the stack when a
 state's program is reduces to a result program.  A pool of states keeps track of all the states
 that have been reached through the evaluation of an initial program.  Each state is indexed by
@@ -1160,11 +1163,11 @@ ones, and each point in the path indicates the mode of transition to take to rea
 Only states indexed by leaf paths are used to evaluate to the next pool.
 
 A sequencing evaluation step of a program picks a leaf state and relies on
-sequential evaluation of its top expression. It updates the state's environment with the
-value of the expression, leaves the stack unchanged, and reduces the program to the next
+sequential evaluation of its top term. It updates the state's environment with the
+value of the term, leaves the stack unchanged, and reduces the program to the next
 subprogram. A calling evaluation step relies on the calling evaluation of a state's top
-expression. The binding name, subprogram, environment are pushed onto the stack, and the new
-state gets its program and environment from the evaluation of the expression. 
+term. The binding name, subprogram, environment are pushed onto the stack, and the new
+state gets its program and environment from the evaluation of the term. 
 
 For the evaluation a leaf path pointing to a result program, a continuation is popped of the
 stack, the new state's program is taken from the continuation, and the new state's environment
@@ -1176,16 +1179,16 @@ unchanged and reduces the program to the next subprogram.
 
 In the case of spawning, the evaluation updates the state's environment with the
 unit value, leaves the stack unchanged, and reduces the program to the next subprogram.
-Additionally, it generates a another state consisting of the spawning expression's child
+Additionally, it generates a another state consisting of the spawning term's child
 program, the same environment unchanged, and an empty stack.
 
 The evaluation is updated with two
 new paths extending the leaf path.  For one, the leaf path is extended with a sequential
-program point whose state has the next expression and the environment updated
+program point whose state has the next term and the environment updated
 with the unit value bound to
 the bind name, and the original continuation stack. For the other, the leaf path
 extended with an program point indicating a spawning transition.  Its state has the spawned
-expression, the original environment, and an empty continuation stack. 
+term, the original environment, and an empty continuation stack. 
 
 In the case where two leaf paths in the pool correspond to synchronization on the same channel,
 and one synchronizes on a send event and the other synchronizes on a receive event, then
@@ -1410,7 +1413,7 @@ constraints from the relation's description, then the reasoner the constraints.
 
 For a subset of Concurrent ML without event combinators, Reppy and Xiao developed an
 efficient algorithm that determines for each channel, all possible threads that send
-and receive on it. The algorithm depends on each primitive operation in the program being
+and receive on it. The algorithm depends on each atom operation in the program being
 labeled with a program point. A sequence of program points ordered in a valid execution
 sequence forms a control path. Distinction between threads in a program can be inferred from
 whether or not their control paths diverge.  
@@ -1422,7 +1425,7 @@ the names. Another mapping is from channel-bound names to abstract values that a
 sent on the respective channels. Another is from function-bound names to abstract values
 that are the result of respective function applications.  It constructs a control-flow graph 
 with possible paths for conditional tests and thread spawning determined directly from the
-primitives used in the program.  Relying on information from the mappings to abstract values,
+atoms used in the program.  Relying on information from the mappings to abstract values,
 it constructs the possible paths of execution via function application and channel
 communication.  It uses the graph for live variable analysis of channels, which limits the
 scope for the remaining analysis.  Using the spawn and application edges of the control-flow
@@ -1446,10 +1449,10 @@ multiple pieces of code to all flow into into the same section of code. The name
 additional step in to uncover control structures, and determine data flow.
 Additionally, in languages with higher order functions and recursion, such as those in the Lisp
 and ML families, it may be impossible to exactly determine all the function abstractions that
-expressions resolve to. However, a control flow analysis can reveal a good
+terms resolve to. However, a control flow analysis can reveal a good
 approximation of the control structures and values that have been obfuscated by higher order
-function abstractions.  Uncovering the the control structures depends on resolving expressions
-to values, and resolving expressions to values depends on on uncovering the control
+function abstractions.  Uncovering the the control structures depends on resolving terms
+to values, and resolving terms to values depends on on uncovering the control
 structures. The mutual dependency means that control flow analysis is a form of
 static semantics that describes abstract evaluations of programs. in this work, control flow
 analysis is used for tracking certain kinds of values, like channels and events, in addition to
@@ -1462,23 +1465,23 @@ that might result from running a program.
 The static semantics helps to deduce static information about channels and events, which is
 crucial for statically deducing information about synchronization on channels and
 communication topologies.
-The static values consist of the static unit value, static channels, and static primitive
+The static values consist of the static unit value, static channels, and static atom
 values. The static unit value is no less precise than the dynamic unit value, but
-static channels and static primitive values are imprecise versions of their dynamic
+static channels and static atom values are imprecise versions of their dynamic
 counterparts. The static channel is identified only by the name it binds to at creation time,
-rather than the full path that leads up to its creation.  A static primitive value is simply a
-primitive expression without an environment for looking up its named arguments. The static
+rather than the full path that leads up to its creation.  A static atom value is simply a
+atomic term without an environment for looking up its named arguments. The static
 environment contains the internal evaluation results by associating names to static values.
 In order to find the return value of a program or subprogram, it is useful to fetch the name
 embedded within its result subprogram.
 
 \begin{lstlisting}[language=logic, mathescape]
   datatype static_value =
-    SChn name | SUnt | SPrm primitive 
+    SChn name | SUnt | SPrm atom 
 
   type static_value_map = name -> static_value set
 
-  fun result_name of program -> name:
+  fun result_name of term -> name:
     (\forall n .
       result_name (Rslt n) = x),
     (\forall n b p' . 
@@ -1488,7 +1491,7 @@ embedded within its result subprogram.
 
 The static evaluation is a control flow analysis described by a relation from an input program
 to two outputs, each a static environment. The first output contains names associated with the
-evaluations of expressions that bind to those names in the program. The second output contains
+evaluations of terms that bind to those names in the program. The second output contains
 names associated with values that might be sent over channels identified by those name.
 
 The definition of static evaluation is syntax-directed, meaning it should be possible to
@@ -1500,7 +1503,7 @@ not been formally proven in this work.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_eval of
-    static_value_map -> static_value_map -> program -> bool:
+    static_value_map -> static_value_map -> term -> bool:
     only
     (\forall static_env static_convo n .
       static_eval static_env static_convo (Rslt n)),
@@ -1524,44 +1527,44 @@ not been formally proven in this work.
         (SPrm (SendEvt n$_c$ n_m)) \in static_env x,
         static_eval static_env static_convo p' 
       then
-        static_eval static_env static_convo (Bind n (Prim (SendEvt n$_c$ n_m)) p')),
+        static_eval static_env static_convo (Bind n (Atom (SendEvt n$_c$ n_m)) p')),
 
     (\forall n$_c$ static_env n static_convo p' . 
       if 
         (SPrm (RecvEvt n$_c$)) \in static_env x,
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Bind n (Prim (RecvEvt n$_c$)) p')),
+        static_eval static_env static_convo (Bind n (Atom (RecvEvt n$_c$)) p')),
 
     (\forall n1 n2 static_env n static_convo p' .
       if
         (SPrm (Pair n1 n2)) \in static_env x,
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Bind n (Prim (Pair n_1 n_2)) e)),
+        static_eval static_env static_convo (Bind n (Atom (Pair n_1 n_2)) e)),
 
     (\forall n$_s$ static_env n static_convo p' .
       if
         (SPrm(Lft n$_s$)) \in static_env x,
         static_eval static_env static_convo p' 
       then
-        static_eval static_env static_convo (Bind n (Prim (Lft n$_s$)) p')),
+        static_eval static_env static_convo (Bind n (Atom (Lft n$_s$)) p')),
 
     (\forall n$_s$ static_env n static_convo p' .
       if
         (SPrm(Rght n$_s$)) \in static_env x, 
         static_eval static_env static_convo e
       then
-        static_eval static_env static_convo (Bind n (Prim (Rght n$_s$)) p')),
+        static_eval static_env static_convo (Bind n (Atom (Rght n$_s$)) p')),
 
     (\forall n$_f$ n$_p$ p$_b$ static_env static_convo n p' .
       if
-        (SPrm (Abs n$_f$ n$_p$ p$_b$)) \in static_env f, 
+        (SPrm (Fun n$_f$ n$_p$ p$_b$)) \in static_env f, 
         static_eval static_env static_convo p$_b$, 
-        (SPrm (Abs n$_f$ n$_p$ p$_b$)) \in static_env x, 
+        (SPrm (Fun n$_f$ n$_p$ p$_b$)) \in static_env x, 
         static_eval static_env static_convo p'
       then
-        static_eval static_env static_convo (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
+        static_eval static_env static_convo (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')),
 
     (\forall n$_f$ n$_p$ p$_b$ static_env static_convo n p' .
       if
@@ -1621,7 +1624,7 @@ not been formally proven in this work.
 
     (\forall static_env n$_f$ n$_a$ n static_convo p' . 
       if
-        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Abs n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
+        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
           static_env n$_a$ \subseteq static_env n$_p$, 
           static_env (result_name p$_b$) \subseteq static_env x),
         static_eval static_env static_convo p'
@@ -1760,7 +1763,7 @@ program.  A program is reachable from itself. An initial program might also reac
 reachable from its sub program.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_reachable of program -> program -> bool:
+  predicate static_reachable of term -> term -> bool:
     only
 
     (\forall p .
@@ -1788,7 +1791,7 @@ reachable from its sub program.
       if
         static_reachable p$_b$ p_z
       then
-        static_reachable (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p') p_z),
+        static_reachable (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p') p_z),
 
     (\forall p' p_z n b . 
       if
@@ -1806,7 +1809,7 @@ of a result is indicated by its embedded name, and indication that it's a result
 \begin{lstlisting}[language=logic, mathescape]
   datatype program_id = NBind name | NResult var
 
-  fun top_program_id of program -> program_id:
+  fun top_program_id of term -> program_id:
     (\forall n b p' . 
       top_program_id (Bind n b p') = NBind x),
     (\forall n . 
@@ -1825,7 +1828,7 @@ synchronization to receive on a given abstract channel.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_send_id of
-    static_value_map -> program -> name -> program_id -> bool:
+    static_value_map -> term -> name -> program_id -> bool:
     only
     (\forall e0 n n_e p' n$_s$c n_m static_env n$_c$ .
       if
@@ -1836,7 +1839,7 @@ synchronization to receive on a given abstract channel.
         static_send_id static_env e0 n$_c$ (NBind x))
 
   predicate static_recv_id of
-    static_value_map -> program -> name -> program_id -> bool:
+    static_value_map -> term -> name -> program_id -> bool:
     only
     (\forall e0 n n_e p' n$_r$c static_env n$_c$ .
       if
@@ -1891,14 +1894,14 @@ transition to its subprogram. A static path is a list of static points.
 
 The static traversability means that a set of transitions describes all the transitions
 that might be traversed for a program, given bindings of abstract values.  For a result
-expression, any transition might be traversed.  For all bind expressions, except those binding
-to case matching and function application, the sequential transition from the top expression to
-the sequenced expression might be traversable, and the traversable transitions are also the
-traversable transitions for the sequenced expression.  For binding to function abstraction, the
-traversable transitions are also traversable transitions for the inner expression of the
-function abstraction.  For binding to spawning, the spawning transition from the top expression
-to the spawned expression might be traversed, and the traversable transitions are also
-traversable transitions for the spawned expression.
+term, any transition might be traversed.  For all bind terms, except those binding
+to case matching and function application, the sequential transition from the top term to
+the sequenced term might be traversable, and the traversable transitions are also the
+traversable transitions for the sequenced term.  For binding to function abstraction, the
+traversable transitions are also traversable transitions for the inner term of the
+function abstraction.  For binding to spawning, the spawning transition from the top term
+to the spawned term might be traversed, and the traversable transitions are also
+traversable transitions for the spawned term.
 
 In the case of matching, the the calling transition from the top program to
 the left subprogram might be traversable, and
@@ -1918,7 +1921,7 @@ traversable transitions for the sequenced subprogram.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_traversable of
-    static_value_map -> graph -> program -> bool:
+    static_value_map -> graph -> term -> bool:
     only
 
     (\forall static_env graph n .
@@ -1943,35 +1946,35 @@ traversable transitions for the sequenced subprogram.
         (NBind n , MNxt, top_program_id p') \in graph, 
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Prim (SendEvt n$_c$ n_m)) p')),
+        static_traversable static_env graph (Bind n (Atom (SendEvt n$_c$ n_m)) p')),
 
     (\forall n p' graph static_env n$_c$ .
       if
         (NBind n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Prim (RecvEvt n$_c$)) p')),
+        static_traversable static_env graph (Bind n (Atom (RecvEvt n$_c$)) p')),
 
     (\forall n p' graph static_env n1 n2 .
       if
         (NBind n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Prim (Pair n1 n2)) p')),
+        static_traversable static_env graph (Bind n (Atom (Pair n1 n2)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
         (NBind n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Prim (Lft n$_s$)) p')),
+        static_traversable static_env graph (Bind n (Atom (Lft n$_s$)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
         (NBind n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Prim (Rght n$_s$)) p')),
+        static_traversable static_env graph (Bind n (Atom (Rght n$_s$)) p')),
 
     (\forall n p' graph static_env p$_b$ n$_f$ n$_p$ .
       if
@@ -1979,7 +1982,7 @@ traversable transitions for the sequenced subprogram.
         static_traversable static_env graph p', 
         static_traversable static_env graph p$_b$
       then
-        static_traversable static_env graph (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
+        static_traversable static_env graph (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')),
 
     (\forall n p' p_c graph static_env.
       if
@@ -2025,7 +2028,7 @@ traversable transitions for the sequenced subprogram.
 
     (\forall  static_env n$_f$ n p' n n$_a$ .
       if
-        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Abs n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
+        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
           {(NBind x, MCll, top_program_id p$_b$),
             (NResult (result_name p$_b$), MRtn, top_program_id p')} \subseteq graph),
         static_traversable static_env graph p'
@@ -2163,7 +2166,7 @@ one thread that attempts to receive on the channel for any time during a run of 
 program.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_one_shot of static_value_map -> program -> name -> bool:
+  predicate static_one_shot of static_value_map -> term -> name -> bool:
     only
     (\forall graph p static_env n$_c$ .
       if
@@ -2174,7 +2177,7 @@ program.
       then
         static_one_shot graph p n$_c$)
 
-  predicate static_one_to_one of static_value_map -> program -> name -> bool:
+  predicate static_one_to_one of static_value_map -> term -> name -> bool:
     only
     (\forall graph p static_env n$_c$ .
       if
@@ -2188,7 +2191,7 @@ program.
       then
         static_one_to_one static_env p n$_c$)
 
-  predicate static_one_to_many of static_value_map -> program -> name -> bool:
+  predicate static_one_to_many of static_value_map -> term -> name -> bool:
     only
     (\forall graph p static_env n$_c$ .
       if
@@ -2199,7 +2202,7 @@ program.
       then
         static_one_to_many static_env p n$_c$) 
 
-  predicate static_many_to_one of static_value_map -> program -> name -> bool:
+  predicate static_many_to_one of static_value_map -> term -> name -> bool:
     only
     (\forall graph p static_env n$_c$ .
       if
@@ -2468,7 +2471,7 @@ depending on the program.
         static_traversable_env static_env graph env
       then
         static_traversable_val
-          static_env n$_f$ (VPrm (Abs n$_f$ n$_p$ p$_b$) env)),
+          static_env n$_f$ (VPrm (Fun n$_f$ n$_p$ p$_b$) env)),
 
     (\forall static_env graph env . 
       if
@@ -2540,8 +2543,8 @@ semantic elements to static values and static environments.
     abstract VUnt = SUnt, 
     (\forall path n . 
       abstract (VChn (Chan path x)) = SChn x),
-    (\forall primitive env .
-      abstract (VPrm primitive env) = SPrm prim)
+    (\forall atom env .
+      abstract (VPrm atom env) = SPrm atom)
 
   predicate static_eval_value of
     static_value_map -> abstract_convo -> dynamic_value -> bool: 
@@ -2583,12 +2586,12 @@ semantic elements to static values and static environments.
 
     (\forall n$_f$ n$_p$ p$_b$ static_env static_convo env .
       if
-        {APrim (Abs n$_f$ n$_p$ p$_b$)} \subseteq static_env f, 
+        {AAtom (Fun n$_f$ n$_p$ p$_b$)} \subseteq static_env f, 
         static_eval static_env static_convo p$_b$, 
         static_eval_env static_env static_convo env
       then
         static_eval_val static_env static_convo
-          (VPrm (Abs n$_f$ n$_p$ p$_b$) env)),
+          (VPrm (Fun n$_f$ n$_p$ p$_b$) env)),
 
     (\forall static_env static_convo env n1 n2 .
       if
@@ -2769,14 +2772,14 @@ The lemma for soundness of lack of static reachability relies on the a reformula
 static reachability that inducts on the left program.
 The definition of static reachability is syntax-directed in
 order to portray a clear connection to
-a computable algorithm that can determine the reachable expression from an initial program.
-However, to show that an expression is reachable from the initial program, it is necessary to
-show that each intermediate expression is reachable from the initial expression.  Thus, the
+a computable algorithm that can determine the reachable term from an initial program.
+However, to show that an term is reachable from the initial program, it is necessary to
+show that each intermediate term is reachable from the initial term.  Thus, the
 induction needs to enable unraveling the goals from the end to the beginning of the program,
 maintaining the initial program state in context for each subgoal .
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_reachable_left of program -> program -> bool:
+  predicate static_reachable_left of term -> term -> bool:
     only
 
     (\forall e0 p .
@@ -2802,7 +2805,7 @@ maintaining the initial program state in context for each subgoal .
 
     (\forall e0 n n$_f$ n$_p$ p$_b$ p' .
       if
-        static_reachable_left e0 (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')
+        static_reachable_left e0 (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')
       then
         static_reachable_left e0 p$_b$),
 
@@ -2812,31 +2815,31 @@ maintaining the initial program state in context for each subgoal .
       then
         static_reachable_left e0 p')
 
-  predicate static_reachable_over_prim of program -> primitive -> bool:
+  predicate static_reachable_over_atom of term -> atom -> bool:
     only
 
     (\forall e0 n$_c$ n_m .
-      static_reachable_over_prim e0 (SendEvt n$_c$ n_m)),
+      static_reachable_over_atom e0 (SendEvt n$_c$ n_m)),
 
     (\forall e0 n$_c$ .
-        static_reachable_over_prim e0 (RecvEvt n$_c$)),
+        static_reachable_over_atom e0 (RecvEvt n$_c$)),
 
     (\forall e0 n1 n2 .
-        static_reachable_over_prim e0 (Pair n1 n2)),
+        static_reachable_over_atom e0 (Pair n1 n2)),
 
     (\forall e0 n$_l$ .
-        static_reachable_over_prim e0 (Lft n$_l$)),
+        static_reachable_over_atom e0 (Lft n$_l$)),
 
     (\forall e0 n$_r$
-        static_reachable_over_prim e0 (Rght n$_r$)),
+        static_reachable_over_atom e0 (Rght n$_r$)),
 
     (\forall e0 p$_b$ n$_f$ n$_p$ p$_b$ . 
       if
         static_reachable_left e0 p$_b$ 
       then
-        static_reachable_over_prim e0 (Abs n$_f$ n$_p$ p$_b$))
+        static_reachable_over_atom e0 (Fun n$_f$ n$_p$ p$_b$))
 
-  predicate static_reachable_val of program -> dynamic_value -> bool:
+  predicate static_reachable_val of term -> dynamic_value -> bool:
     only
 
     (\forall e0 .
@@ -2847,12 +2850,12 @@ maintaining the initial program state in context for each subgoal .
 
     (\forall e0 p env .
       if
-        static_reachable_over_prim e0 p, 
+        static_reachable_over_atom e0 p, 
         static_reachable_over_env e0 env
       then
         static_reachable_over_val e0 (VPrm p env))
 
-  predicate static_reachable_env of program -> env -> bool:
+  predicate static_reachable_env of term -> env -> bool:
     only
     (\forall e0 env
       if
@@ -2865,7 +2868,7 @@ maintaining the initial program state in context for each subgoal .
         static_reachable_over_env e0 env)
 
   predicate static_reachable_over_stack of
-    program -> continuation list -> bool:
+    term -> continuation list -> bool:
     only
     (\forall e0 .
       static_reachable_over_stack e0 []),
@@ -2877,7 +2880,7 @@ maintaining the initial program state in context for each subgoal .
       then
         static_reachable_over_stack e0 ((Ctn n_k p_k env_k # stack')))
 
-  predicate static_reachable_pool of program -> pool -> bool:
+  predicate static_reachable_pool of term -> pool -> bool:
     only
     (\forall e0 pool .
       then
@@ -2977,7 +2980,7 @@ Static traversability is similar to that of the previous analysis.
 However, it must additionally consider transitions with the sending mode. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_traversable of static_value_map -> graph -> program -> bool:
+  predicate static_traversable of static_value_map -> graph -> term -> bool:
     only
     
     (\forall static_env graph n .
@@ -3002,35 +3005,35 @@ However, it must additionally consider transitions with the sending mode.
         (NBind n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Prim (SendEvt n$_c$ n_m)) p')),
+        static_traversable static_env graph (Bind n (Atom (SendEvt n$_c$ n_m)) p')),
 
     (\forall n p' graph static_env n$_c$ .
       if
         (NBind n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Prim (RecvEvt n$_c$)) p')),
+        static_traversable static_env graph (Bind n (Atom (RecvEvt n$_c$)) p')),
 
     (\forall n p' graph static_env n1 n2 .
       if
         (NBind n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Prim (Pair n1 n2)) p')),
+        static_traversable static_env graph (Bind n (Atom (Pair n1 n2)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
         (NBind n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Prim (Lft n$_s$)) p')),
+        static_traversable static_env graph (Bind n (Atom (Lft n$_s$)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
         (NBind n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Prim (Rght n$_s$)) p')),
+        static_traversable static_env graph (Bind n (Atom (Rght n$_s$)) p')),
 
     (\forall n p' graph static_env p$_b$ n$_f$ n$_p$ .
       if
@@ -3038,7 +3041,7 @@ However, it must additionally consider transitions with the sending mode.
         static_traversable static_env graph p',
         static_traversable static_env graph p$_b$
       then
-        static_traversable static_env graph (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
+        static_traversable static_env graph (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')),
 
     (\forall n p' p_c graph static_env.
       if
@@ -3091,7 +3094,7 @@ However, it must additionally consider transitions with the sending mode.
         
     (\forall  static_env n$_f$ n p' n n$_a$ .
       if
-        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Abs n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
+        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
           {(NBind x, MCll, top_program_id p$_b$),
             (NResult (result_name p$_b$), MRtn, top_program_id p')} \subseteq graph),
 
@@ -3158,7 +3161,7 @@ of each program ID.
 
     (\forall n$_f$ n$_p$ p$_b$ .
       if
-        (SPrm (Abs n$_f$ n$_p$ p$_b$)) \in static_env x,
+        (SPrm (Fun n$_f$ n$_p$ p$_b$)) \in static_env x,
         not ((entr (top_program_id p$_b$) - {x_p}) = {})
       then
         static_built_on_chan static_env entr n$_c$ x)
@@ -3174,7 +3177,7 @@ program ID.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_live_chan of
-    static_value_map -> program_id_map -> program_id_map -> name -> program -> bool:
+    static_value_map -> program_id_map -> program_id_map -> name -> term -> bool:
     only
 
     (\forall static_env entr n$_c$ y exit .
@@ -3210,7 +3213,7 @@ program ID.
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
-          (Bind n (Prim (SendEvt n$_s$c n_m)) p')),
+          (Bind n (Atom (SendEvt n$_s$c n_m)) p')),
 
     (\forall exit n entr static_env n$_c$ n$_r$ .    
       if
@@ -3221,7 +3224,7 @@ program ID.
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
-          (Bind n (Prim (RecvEvt n$_r$c)) p')),
+          (Bind n (Atom (RecvEvt n$_r$c)) p')),
     (\forall exit n entr static_env p_c n1 n2 p' .
       if
         (exit (NBind x) - {x}) \subseteq entr (NBind x),
@@ -3232,7 +3235,7 @@ program ID.
         entr (top_program_id p') \subseteq exit (NBind x),
         static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan static_env entr exit n$_c$ (Bind n (Prim (Pair n1 n2)) p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Atom (Pair n1 n2)) p')),
 
     (\forall exit n entr static_env n$_c$ n$_a$ p' . 
       if
@@ -3242,7 +3245,7 @@ program ID.
         entr (top_program_id p') \subseteq exit (NBind x),
         static_live_chan static_env entr exit n$_c$ p'
       then
-        static_live_chan static_env entr exit n$_c$ (Bind n (Prim (Lft n$_a$)) p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Atom (Lft n$_a$)) p')),
 
     (\forall exit n entr static_env n$_c$ n$_a$ p' . 
       if
@@ -3252,7 +3255,7 @@ program ID.
         entr (top_program_id e) \subseteq exit (NBind x),
         static_live_chan static_env entr exit n$_c$ e
       then
-        static_live_chan static_env entr exit n$_c$ (Bind n (Prim (Rght n$_a$)) e)),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Atom (Rght n$_a$)) e)),
     (\forall  exit n entr p$_b$ n$_p$ n static_env n$_c$ p' n$_f$ . 
       if
         (exit (NBind x) - {x}) \subseteq entr (NBind x),
@@ -3262,7 +3265,7 @@ program ID.
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
-          (Bind n (Prim (Abs n$_f$ n$_p$ p$_b$)) p')),
+          (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')),
 
     (\forall exit n entr p' p_c n$_c$ static_env .
       if
@@ -3480,7 +3483,7 @@ The communication topology classifications are described using the liveness prop
 are otherwise similar to the lower precision classifications.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_one_shot of static_value_map -> program -> name -> bool:
+  predicate static_one_shot of static_value_map -> term -> name -> bool:
     only
     (\forall graph entr exit n$_c$ static_env p . 
       if
@@ -3493,7 +3496,7 @@ are otherwise similar to the lower precision classifications.
       then
         static_one_shot V p n$_c$)
 
-  predicate static_one_to_one of static_value_map -> program -> name -> bool:
+  predicate static_one_to_one of static_value_map -> term -> name -> bool:
     only
     (\forall graph entr exit n$_c$ static_env p .
       if
@@ -3508,7 +3511,7 @@ are otherwise similar to the lower precision classifications.
       then
         static_one_to_one static_env p n$_c$)
 
-  predicate static_one_to_many of static_value_map -> program -> name -> bool:
+  predicate static_one_to_many of static_value_map -> term -> name -> bool:
     only
     (\forall graph entr exit n$_c$ static_env p .
       if
@@ -3520,7 +3523,7 @@ are otherwise similar to the lower precision classifications.
       then
         static_one_to_many static_env p n$_c$)
 
-  predicate static_many_to_one of static_value_map -> program -> name -> bool:
+  predicate static_many_to_one of static_value_map -> term -> name -> bool:
     only
     (\forall graph entr exit n$_c$ static_env p .
       if
