@@ -897,7 +897,6 @@ then signals on \lstinline{sendCond}, then returns the deposited message.
   end
 \end{lstlisting}
 
-
 \subsection{Discussion}
 The example implementations of generic synchronization and specialized synchronization suggest
 that cost savings of specialized implementation are significant. For example, if you know that
@@ -930,8 +929,8 @@ to enable mechanical verification of the correctness of the proofs.
 However, the formal logic used
 for presentation in this paper has been somewhat modified from Isabelle's syntax. 
 To aid the development of formal proofs,
-the analyses are stated using non-algorithmic specifications.
-The static relations definitions are syntax-directed \cite{}, which provides
+the analyses are stated using relational specifications.
+The definitions of static relations are syntax-directed \cite{}, which provides
 strong evidence of computability.
 For a static relation, the proof that it holds for a program is defined
 to depend on the syntactic form of the program.
@@ -939,30 +938,28 @@ The syntax is defined inductively, with syntactic forms constructed of
 substructures of the self-similar and different forms.   
 Likewise, for the definitions of static relations to conform to the
 syntactic structure, the static relations are defined to hold
-by structural induction on the program. Therefore, for any program,
-which is necessarily finite to exist, the static relation is decidable,
-and there is an algorithm to compute the sufficient parameters from the program.
-
+by structural induction on the program.
+Therefore, for any program, the static relation is decidable,
+and there is an algorithm to compute sufficient parameters from a program.
 
 This work does not contain formal proofs that the specialized implementations are
 behaviorally equivalent to a generic implementation, but the example implementations
 should provide good evidence for that.
 
-In order to relate the static analyses to the operational semantics, I
-borrowed Reppy and Xiao's strategy of stepping between sets of control paths and
-their associated terms.
+\subsection{Syntax}
+The syntax used in this formal theory contains a very small subset of
+\textit{Concurrent ML}'s features. The features include recursive function abstraction with
+application, left and right construction with pattern matching, pair construction with first
+and second projections, sending and receiving event construction with synchronization,
+channel creation, thread spawning, and the unit literal. The syntax is defined in a way to
+make it possible to relate the dynamic semantics of programs to the syntax programs.
+The syntax is in a very restrictive administrative normal form (ANF), in which every expression
+is bound to a name. Furthermore, expression only accept names in place of eagerly evaluated
+inputs. 
 
-It is neccessary to prove additional soundness theorems about the static semantics en route to
-proving soundness of communication classification. Restricting the grammar to a form that
-requires
-every abstraction and application to be bound to a name allows the operational
-semantics to maintain graph information necessary for proofs of soundness \cite{}.
-The semantics are defined as an environment based operational semantics, rather than a
-substitution based operational semantics. By avoiding simplification of terms in the
-operational semantics, it is possible to relate
-the abstract values of the static semantics to the
-values produced by the dynamic semantics, which in turn is relied on to prove 
-soundness of the static semantics.
+Restricting the grammar to a form that requires
+every function and application to be bound to a name allows the operational
+semantics to maintain graph information that simplifies proofs of soundness \cite{}.
 
 The restricted ANF grammar is impractical
 for a programer to write, yet it is still practical for
@@ -976,16 +973,6 @@ can simply use the required names of the restricted grammar to identify
 locations in the program.
 Control paths are simply sequences of bind names.
 
-\section{Syntax}
-The syntax used in this formal theory contains a very small subset of
-\textit{Concurrent ML}'s features. The features include recursive function abstraction with
-application, left and right construction with pattern matching, pair construction with first
-and second projections, sending and receiving event construction with synchronization,
-channel creation, thread spawning, and the unit literal. The syntax is defined in a way to
-make it possible to relate the dynamic semantics of programs to the syntax programs.
-The syntax is in a very restrictive administrative normal form (ANF), in which every expression
-is bound to a name. Furthermore, expression only accept names in place of eagerly evaluated
-inputs. 
 
 \begin{lstlisting}[language=logic]
   datatype name = Nm string
@@ -1011,7 +998,7 @@ inputs.
       Abs name name exp
   \end{lstlisting}
 
-\section{Dynamic Semantics}
+\subsection{Dynamic Semantics}
 The dynamic semantics is described by how programs evaluate to values.
 A history of execution is
 represented a list of binding names, or resulting names, along with modes of control, such as
@@ -1020,6 +1007,18 @@ time a channel is created, it is uniquely identified by the history of the execu
 that point. Primitive expressions are not simplified.  Instead, primitives are evaluated to
 closures consisting of the primitive syntax, along with an environment that maps its
 constituent names to their values.
+
+In order to relate the static analyses to the operational semantics, I
+borrowed Reppy and Xiao's strategy of stepping between sets of control paths and
+their associated terms.
+
+The semantics are defined as an environment based operational semantics, rather than a
+substitution based operational semantics. By avoiding simplification of terms in the
+operational semantics, it is possible to relate
+the abstract values of the static semantics to the
+values produced by the dynamic semantics, which in turn is relied on to prove 
+soundness of the static semantics.
+
 
 \begin{lstlisting}[language=logic]
   datatype dynamic_point =
