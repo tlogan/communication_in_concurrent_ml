@@ -231,7 +231,7 @@ and \lstinline{recvEvt} and synchronization is represented by \lstinline{sync}.
   type 'a event
   val sync : 'a event -> 'a
 
-  val recvEvt : 'a channel -> 'a event
+  val recvEvt : 'a chan -> 'a event
   val sendEvt : 'a channel * 'a -> unit event
 
   fun send (ch, v) = sync (sendEvt (ch, v))
@@ -360,7 +360,7 @@ representation within a compiler or interpreter presented with concrete syntax.
     type 'a channel 
     val channel : unit -> 'a chan
     val send : 'a channel * 'a -> unit
-    val recv : 'a channel -> 'a
+    val recv : 'a chan -> 'a
   end     
 \end{lstlisting}
 
@@ -950,7 +950,7 @@ should provide good evidence for that.
 The syntax used in this formal theory contains a very small subset of
 \textit{Concurrent ML}'s features. The features include recursive function abstraction with
 application, left and right construction with pattern matching, pair construction with first
-and second projections, sending and receiving event construction with synchronization,
+and second selections, sending and receiving event construction with synchronization,
 channel creation, thread spawning, and the unit literal. The syntax is defined in a way to
 make it possible to relate the dynamic semantics of programs to the syntax programs.
 The syntax is defined in administrative normal form (ANF) \cite{}, in which every term
@@ -1002,46 +1002,53 @@ more user-friendly syntax into ANF as demonstrated by Flanagan et al \cite{}.
 \end{lstlisting}
 
 \subsection{Dynamic Semantics}
-The dynamic semantics is described by how programs evaluate to values.
-A history of execution is
-represented a list of binding names, or resulting names, along with modes of control, such as
-sequencing, spawning, calling, or returning. Channels have no literal representation, but each
+The dynamic semantics describes how programs evaluate to values.
+A history of execution is represented as a list of steps, where a step is a
+binding name or resulting name of a term, paired with a mode of control indicating
+transitions by sequencing, spawning, calling, or returning.
+Channels have no literal representation, but each
 time a channel is created, it is uniquely identified by the history of the execution up until
-that point. atomic terms are not simplified.  Instead, atoms are evaluated to
+the step of creation. Atomic terms are not simplified. Instead, atoms are evaluated to
 closures consisting of the atom syntax, along with an environment that maps its
 constituent names to their values.
 
 In order to relate the static analyses to the operational semantics, I
-borrowed Reppy and Xiao's strategy of stepping between sets of control paths and
+borrowed Reppy and Xiao's strategy of stepping between sets of execution paths and
 their associated terms.
 
-The semantics are defined as an environment based operational semantics, rather than a
+The semantics are defined as a CEK machine \cite{}, rather than a
 substitution based operational semantics. By avoiding simplification of terms in the
 operational semantics, it is possible to relate
 the abstract values of the static semantics to the
-values produced by the dynamic semantics, which in turn is relied on to prove 
-soundness of the static semantics.
+values produced by the dynamic semantics,
+which in turn is relied on to prove soundness of the static semantics.
 
 
 \begin{lstlisting}[language=logic]
-  datatype dynamic_point =
-    DNxt name | DSpwn name | DCll name | DRtn name 
+  datatype dynamic_step =
+    DNxt name
+  | DSpwn name
+  | DCll name
+  | DRtn name 
 
-  type dynamic_path = dynamic_point list
+  type dynamic_path = dynamic_step list
 
-  datatype channel =
+  datatype chan =
     Chan dynamic_path name 
 
   datatype dynamic_value = 
-    VUnt | VChn channel | VPrm atom (name -> dynamic_value option)
+    VUnt
+  | VChn chan
+  | VPrm atom (name -> dynamic_value option)
 
   type environment =
     name -> dynamic_value option
-  \end{lstlisting}
+\end{lstlisting}
 
-The evaluation of some terms results in sequencing, meaning there is no coordination
-with other threads, and there is no backtracking. These terms are the
-unit literal, atoms, pairs, and first and second projections. The evaluation depends only
+The evaluation of some complex terms results in sequencing, meaning there is no coordination
+with other threads, and there is no need to save terms on
+the continuation stack for later evaluation. These terms are the
+unit literal, atoms, pairs, and first and second selections. The evaluation depends only
 on the syntax and an environment for looking up the values of names within the syntax.
 Additionally, all these terms evaluate to values in a single step.
 
@@ -1159,7 +1166,7 @@ evaluates to a new pool based on one or more states in that pool. The initial po
 program contains just one state indexed by an empty path. The state contains the program, an
 empty environment, and an empty stack. The pool will grow strictly larger with each evaluation
 step, maintaining a full history. Each step adds new states and paths extended from previous
-ones, and each point in the path indicates the mode of transition to take to reach the state.
+ones, and each step in the path indicates the mode of transition to take to reach the state.
 Only states indexed by leaf paths are used to evaluate to the next pool.
 
 A sequencing evaluation step of a program picks a leaf state and relies on
@@ -1169,7 +1176,7 @@ subprogram. A calling evaluation step relies on the calling evaluation of a stat
 term. The binding name, subprogram, environment are pushed onto the stack, and the new
 state gets its program and environment from the evaluation of the term. 
 
-For the evaluation a leaf path pointing to a result program, a continuation is popped of the
+For the evaluation a leaf path steping to a result program, a continuation is popped of the
 stack, the new state's program is taken from the continuation, and the new state's environment
 is taken from the continuation and modified with the result value.
 
@@ -1184,10 +1191,10 @@ program, the same environment unchanged, and an empty stack.
 
 The evaluation is updated with two
 new paths extending the leaf path.  For one, the leaf path is extended with a sequential
-program point whose state has the next term and the environment updated
+program step whose state has the next term and the environment updated
 with the unit value bound to
 the bind name, and the original continuation stack. For the other, the leaf path
-extended with an program point indicating a spawning transition.  Its state has the spawned
+extended with an program step indicating a spawning transition.  Its state has the spawned
 term, the original environment, and an empty continuation stack. 
 
 In the case where two leaf paths in the pool correspond to synchronization on the same channel,
@@ -1310,7 +1317,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate is_send_path of
-    pool -> channel -> dynamic_path -> bool:
+    pool -> chan -> dynamic_path -> bool:
     only
 
     (\forall pool path n n_e p' env stack n$_s$c n_m env_e c.
@@ -1321,7 +1328,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
       then
         is_send_path pool c path)
 
-  predicate is_recv_path of pool -> channel -> dynamic_path -> bool:
+  predicate is_recv_path of pool -> chan -> dynamic_path -> bool:
     only
     (\forall poo path n n_e p' env stack n$_r$c env_e c .
       then
@@ -1347,7 +1354,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
     (\forall path2 path1 . if prefix path2 path1 then
       ordered path1 path2)
 
-  predicate one_shot of pool -> channel -> bool:
+  predicate one_shot of pool -> chan -> bool:
     only
     (\forall pool c .
       if
@@ -1355,7 +1362,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
       then
         one_shot pool c)
 
-  predicate one_to_many of pool -> channel -> bool:
+  predicate one_to_many of pool -> chan -> bool:
     only
     (\forall pool c .
       if
@@ -1363,7 +1370,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
       then
         one_to_many pool c)
 
-  predicate many_to_one of pool -> channel -> bool:
+  predicate many_to_one of pool -> chan -> bool:
     only
     (\forall pool c .
       if
@@ -1371,7 +1378,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
       then
         many_to_one pool c)
 
-  predicate one_to_one of pool -> channel -> bool:
+  predicate one_to_one of pool -> chan -> bool:
     only
     (\forall pool c.
       if
@@ -1414,7 +1421,7 @@ constraints from the relation's description, then the reasoner the constraints.
 For a subset of Concurrent ML without event combinators, Reppy and Xiao developed an
 efficient algorithm that determines for each channel, all possible threads that send
 and receive on it. The algorithm depends on each atom operation in the program being
-labeled with a program point. A sequence of program points ordered in a valid execution
+labeled with a program step. A sequence of program steps ordered in a valid execution
 sequence forms a control path. Distinction between threads in a program can be inferred from
 whether or not their control paths diverge.  
 
@@ -1430,8 +1437,8 @@ it constructs the possible paths of execution via function application and chann
 communication.  It uses the graph for live variable analysis of channels, which limits the
 scope for the remaining analysis.  Using the spawn and application edges of the control-flow
 graph, the algorithm then performs a data-flow analysis to determine a mapping from program
-points to all possible control paths leading into the respective program points.  Using the
-CFA's mappings to abstract values, the algorithm determines the program points for sends and
+steps to all possible control paths leading into the respective program steps.  Using the
+CFA's mappings to abstract values, the algorithm determines the program steps for sends and
 receives per channel name.  Then it uses the mapping to control paths to determine all
 control paths that send or receive on each channel, from which it classifies channels as
 one-shot, one-to-one, many-to-one, one-to-many, or many-to-many.
@@ -1439,8 +1446,8 @@ one-shot, one-to-one, many-to-one, one-to-many, or many-to-many.
 
 
 
-The information at each program point is derived from control structures in the program, which
-dictate how information flows between program points. Some uses of control structures are
+The information at each program step is derived from control structures in the program, which
+dictate how information flows between program steps. Some uses of control structures are
 literally represented in the syntax, such as the sequencing of namings and assignments in the
 previous examples. Other uses of control structures may be indirectly represented through
 names. Function application is a control structure that allows a calling piece of code to
@@ -1802,7 +1809,7 @@ reachable from its sub program.
 
 \section{Static Communication}
 To describe communication statically, it is helpful to identify the entry
-point of each subprogram with a short description. The program ID of a bind is
+step of each subprogram with a short description. The program ID of a bind is
 identified by the binding name, and indication that it's a bind. The program ID
 of a result is indicated by its embedded name, and indication that it's a result.
 
@@ -1877,8 +1884,8 @@ indicating how the program ID transitions to the program ID of one of
 its subprograms.
 The modes of transition are sequencing, calling, spawning, and returning. A transition is a
 triplet of a program ID, a mode of transition, and an program ID of a
-subprogram. A static point is just a program ID along with the mode it uses to
-transition to its subprogram. A static path is a list of static points.  
+subprogram. A static step is just a program ID along with the mode it uses to
+transition to its subprogram. A static path is a list of static steps.  
 
 \begin{lstlisting}[language=logic, mathescape]
   datatype mode = MNxt | MSpwn | MCll | MRtn
@@ -1887,9 +1894,9 @@ transition to its subprogram. A static path is a list of static points.
 
   type graph = transition set
 
-  type static_point = program_id * mode
+  type static_step = program_id * mode
 
-  type static_path = static_point list
+  type static_path = static_step list
   \end{lstlisting}
 
 The static traversability means that a set of transitions describes all the transitions
@@ -2041,10 +2048,10 @@ a graph from a dynamic program.
 
 \includegraphics[width=1.3\textwidth, left]{cml_graph.pdf}
 
-The static traceability means that a static path with a given starting point, and ending
+The static traceability means that a static path with a given starting step, and ending
 condition, can be traced by traversing the transitions in a graph.
-The empty path is statically traceable if the starting point meets the ending condition.
-Otherwise, a path is statically traceable if the last static point corresponds to a transition
+The empty path is statically traceable if the starting step meets the ending condition.
+Otherwise, a path is statically traceable if the last static step corresponds to a transition
 that meets the ending condition, and the longest strict prefix of the path is statically
 traceable.  
 
@@ -2358,14 +2365,14 @@ The soundness theorem for static fan-out classification is proved
 by a few simpler lemmas and the
 definitions of static and dynamic fan-out classification.  The three main lemmas state the
 soundness of the lack of static traceability, the soundness of the lack of inclusiveness, and
-the soundness of a program point not being a static send ID. These lemmas depend on a
+the soundness of a program step not being a static send ID. These lemmas depend on a
 correspondence between static paths and dynamic paths, which is bijective for the lower
 precision analysis. The lemma for soundness of lack of static inclusiveness states that any two
 dynamic paths traced by running a program correspond to statically inclusive static paths. It
 follows from a straightforward case analysis of static inclusivity. The lemma for soundness of
 lack of static traceability states that for any dynamic path traced by running a program, there
 is a corresponding static path that is statically traceable. The lemma for soundness of a
-program point not being a static send ID states that running a program reaches a
+program step not being a static send ID states that running a program reaches a
 synchronization on a sending event, then that synchronization is statically identified as a
 send ID by its program ID.
 
@@ -2407,9 +2414,9 @@ send ID by its program ID.
 \end{lstlisting}
 
 The soundness of lack of static traceability is proved by generalizing
-static traversability and static evaluation over pools, such that information about a point in
+static traversability and static evaluation over pools, such that information about a step in
 the program can be deduced by a fixed number of logical steps regardless of the location of the
-program point or the size of the program. Without such generalization, it would be possible to
+program step or the size of the program. Without such generalization, it would be possible to
 prove soundness for a fixed program, but not any arbitrary program.
 
 The generalization of static traversability is composed of in static traversable over values,
@@ -2713,12 +2720,12 @@ The lemma for the soundness of the generalized form follows from the generalized
 of static traceability. The preservation of static traversability over pools is proved by the
 equivalence between star and its leftward variant, and induction on the leftward variant.
 
-The lemma for soundness of a static point not being a send ID is proved using the lemma for
+The lemma for soundness of a static step not being a send ID is proved using the lemma for
 soundness of a name in a sending event of a synchronization not statically binding to a static
 channel value, and the lemma for soundness of a name in any state's environment
 not statically binding to a static value.  Since only send IDs are relevant
 the soundness of lack of static reachability is
-used to ensure that the static point discussed is indeed a send ID. 
+used to ensure that the static step discussed is indeed a send ID. 
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma send_chan_not_static_bound_sound:
@@ -2953,12 +2960,12 @@ analysis.
 A trimmed graph structure of graph is used static analysis for this higher precision
 analysis, which can better differentiate between distinct channels. 
 A trimmed graph is specialized for a particular dynamic channel.  From the creation
-point, it must contain transitive transitions to all the program points where the
+step, it must contain transitive transitions to all the program steps where the
 channel is live. It should also be as small as possible, for higher precision.
 
 In the whole graph used in the previous analysis, a spawning transition
 connects a child thread to the rest of the program.  For a trimmed graph,
-it may be clear the channel of interest is not created until after the spawn point,
+it may be clear the channel of interest is not created until after the spawn step,
 so there is not need to include the spawning transition.  However, later on in the
 program it may become apparent that the channel of interest is sent via another channel to
 that spawned thread.  Since there is no spawning transition already connecting that
@@ -2971,9 +2978,9 @@ sequencing, calling, returning, and spawning are also included transitions.
 
   type transition = program_id * mode * program_id
 
-  type static_point = program_id * mode
+  type static_step = program_id * mode
 
-  type static_path = static_point list
+  type static_path = static_step list
 \end{lstlisting}
 
 Static traversability is similar to that of the previous analysis.
@@ -3169,9 +3176,9 @@ of each program ID.
 
 
 The static liveness of a channel is described in terms of entry functions and
-exit functions. The entry function maps a program point to a set of names built on
+exit functions. The entry function maps a program step to a set of names built on
 the given channel, if those names are live at the entry of that program ID.
-The exit function maps a program point to a
+The exit function maps a program step to a
 set of names built on the given channel, if those names are live at the exit of that
 program ID.
 
@@ -3544,7 +3551,7 @@ liveness analysis treats function abstractions that not contain
 any channel of interest.  No channel is
 considered to be live in the body of the loop.  However, a channel may be live before the loop is
 called and after the loop returns.  in such a case, the live traceable path from the creation of a
-channel to a point after the loop retains the transitions within the loop, even though the points in
+channel to a step after the loop retains the transitions within the loop, even though the steps in
 the loop may not be live according to the entry map.
 
 \begin{lstlisting}[language=normal_lang, mathescape]
@@ -3677,7 +3684,7 @@ correlating dynamic paths with static paths.
           (static_path @ [(NResult x, MRtn)]))
 
   predicate paths_correspond_mod_chan of 
-    pool -> conversation -> channel ->
+    pool -> conversation -> chan ->
     dynamic_path -> static_path -> bool:
     only
 
@@ -3758,7 +3765,7 @@ that correlates with the dynamic path is much more challenging.
           (static_path @ [(NResult x, MRtn)]))
 
   predicate paths_correspond_mod_chan of 
-    pool -> conversation -> channel ->
+    pool -> conversation -> chan ->
     dynamic_path -> static_path -> bool:
     only
     (\forall pool path_c n$_c$ path_sfx stt static_path convo .
