@@ -931,13 +931,22 @@ However, the formal logic used
 for presentation in this paper has been somewhat modified from Isabelle's syntax. 
 To aid the development of formal proofs,
 the analyses are stated using non-algorithmic specifications.
-The static relations are defined
-with syntax-directed structures, providing strong evidence of computability.
-That is, a relation about a program could be described by the same relation on a subprogram,
-but certainly not by the original program, or a larger program.
-This work does not contain formal proofs that  the specialized implementations are
+The static relations definitions are syntax-directed \cite{}, which provides
+strong evidence of computability.
+For a static relation, the proof that it holds for a program is defined
+to depend on the syntactic form of the program.
+The syntax is defined inductively, with syntactic forms constructed of 
+substructures of the self-similar and different forms.   
+Likewise, for the definitions of static relations to conform to the
+syntactic structure, the static relations are defined to hold
+by structural induction on the program. Therefore, for any program,
+which is necessarily finite to exist, the static relation is decidable,
+and there is an algorithm to compute the sufficient parameters from the program.
+
+
+This work does not contain formal proofs that the specialized implementations are
 behaviorally equivalent to a generic implementation, but the example implementations
-should provide good for that.
+should provide good evidence for that.
 
 In order to relate the static analyses to the operational semantics, I
 borrowed Reppy and Xiao's strategy of stepping between sets of control paths and
