@@ -939,8 +939,11 @@ substructures of the self-similar and different forms.
 Likewise, for the definitions of static relations to conform to the
 syntactic structure, the static relations are defined to hold
 by structural induction on the program.
-Therefore, for any program, the static relation is decidable,
-and there is an algorithm to compute sufficient parameters from a program.
+Therefore, for any program, the static relation is decidable.
+Additionally, for any given program, there should be instances of the other
+parameters that satisfy the static relation, in which case there is an
+algorithm to compute sufficient parameters from a program,
+by following the basic structure of the proof of the static relation.
 
 This work does not contain formal proofs that the specialized implementations are
 behaviorally equivalent to a generic implementation, but the example implementations
