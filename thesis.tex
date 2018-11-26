@@ -1219,21 +1219,19 @@ that the synchronization used for communication.
   predicate dynamic_eval
   of pool -> communication -> pool -> communication -> bool: 
   only
-  (\forall pool path n env n_k p_k env_k stack' v comm .
+  (\forall pool path n env n$_k$ p$_k$ env$_k$ stack' v comm .
     if
       leaf pool path,
-      pool path = Some
-        (
-          Stt (Rslt n) env ((Ctn n_k p_k env_k) # stack')
-        ),
+      pool path = Some (Stt (Rslt n) env ((Ctn n$_k$ p$_k$ env$_k$) # stack')),
       env n = Some v
     then
       dynamic_eval
         pool
         comm
         (pool(
-          path @ [DRtn n] -> (Stt p_k env_k(n_k -> v) stack'))
-        )
+          path @ [DRtn n] ->
+            (Stt p$_k$ env$_k$(n$_k$ -> v) stack')
+        ))
         comm
   ),
   (\forall pool path n b p' env stack v .
@@ -1243,20 +1241,25 @@ that the synchronization used for communication.
       seq_eval b env v
     then
       dynamic_eval
-        pool comm
-        (pool(path @ [DNxt n] -> (Stt p (env(n -> v)) stack)))
+        pool
+        comm
+        (pool(
+          path @ [DNxt n] -> (Stt p (env(n -> v)) stack)
+        ))
         comm
   ),
-  (\forall pool path n b p' env stack p_u env_u comm .
+  (\forall pool path n b p' env stack p$_c$ env$_c$ comm .
     if 
       leaf pool path,
       pool path = Some (Stt (Bind n b p') env stack),
-      call_eval b env p_u env_u
+      call_eval b env p$_c$ env$_c$
     then
       dynamic_eval
-        pool comm
-        (pool(path @ [DCll n] ->
-          (Stt p_u env_u ((Ctn n p' env) # stack))
+        pool
+        comm
+        (pool(
+          path @ [DCll n] -> (Stt p$_c$ env$_c$ ((Ctn n p' env) # stack
+        ))
         comm
   ),
   (\forall pool path n p' env stack .
@@ -1265,54 +1268,58 @@ that the synchronization used for communication.
       pool path = Some (Stt (Bind n MkChn p') env stack)
     then
       dynamic_eval
-        pool comm 
-        (pool(path @ [DNxt n] ->
-          (Stt p' (env(n -> (VChn (Chan path x)))) stack)))
+        pool
+        comm 
+        (pool(
+          path @ [DNxt n] ->
+            (Stt p' (env(n -> (VChn (Chan path x)))) stack)
+        ))
         comm
   ),
-  (\forall pool path n p_c p' env stack comm .
+  (\forall pool path n p$_c$ p' env stack comm .
     if 
       leaf pool path, 
-      pool path = Some (Stt (Bind n (Spwn p_c) p') env stack)
+      pool path = Some (Stt (Bind n (Spwn p$_c$) p') env stack)
     then
       dynamic_eval
       pool comm 
       (pool(
-          path @ [DNxt n] -> (Stt p' (env(n -> VUnt)) stack),
-          path @ [DSpwn n] -> (Stt p_c env [])))
-        comm
+        path @ [DNxt n] -> (Stt p' (env(n -> VUnt)) stack),
+        path @ [DSpwn n] -> (Stt p$_c$ env [])
+      ))
+      comm
   ),
-  (\forall pool path_s path n$_s$ n$_se$ p_s env_s stack_s n$_sc$ n_m env_se
-    path_r n$_r$ n$_r$e p$_r$ env_r stack_r n$_r$c env_re c comm .
+  (\forall pool path$_s$ path n$_s$ n$_se$ p$_s$ env$_s$ stack$_s$ n$_sc$ n$_m$
+    env$_se$ path$_r$ n$_r$ n$_re$ p$_r$ env$_r$ stack$_r$ n$_rc$ env$_re$ c comm .
     if 
-      leaf pool path_s,
-      pool path_s = Some (Stt
-        (Bind n$_s$ (Sync n$_s$e) p_s) env_s stack_s),
-      env_s n$_s$e = Some (VAtm
-        (SendEvt n$_s$c n_m) env_se),
-      leaf pool path_r,
-      pool path_r = Some (Stt
-        (Bind n$_r$ (Sync n$_r$e) p$_r$) env_r stack_r),
-      env_r n$_r$e = Some (VAtm
-        (RecvEvt n$_r$c) env_re),
-      env_se n$_s$c = Some (VChn c),
-      env_re n$_r$c = Some (VChn c), 
-      env_se n_m = Some v_m
+      leaf pool path$_s$,
+      pool path$_s$ = Some
+        (Stt (Bind n$_s$ (Sync n$_se$) p$_s$) env$_s$ stack$_s$),
+      env$_s$ n$_se$ = Some
+        (VAtm (SendEvt n$_sc$ n$_m$) env$_se$),
+      leaf pool path$_r$,
+      pool path$_r$ = Some
+        (Stt (Bind n$_r$ (Sync n$_re$) p$_r$) env$_r$ stack$_r$),
+      env$_r$ n$_r$e = Some
+        (VAtm (RecvEvt n$_rc$) env$_re$),
+      env$_se$ n$_sc$ = Some (VChn c),
+      env$_re$ n$_rc$ = Some (VChn c), 
+      env$_se$ n$_m$ = Some v$_m$
     then
       dynamic_eval
-        pool comm
+        pool
+        comm
         (pool(
-            path_s @ [DNxt n$_s$] ->
-              (Stt p_s (env_s(n_s -> VUnt)) stack_s), 
-            path_r @ [DNxt n$_r$] ->
-              (Stt p$_r$ (env_r(n$_r$ -> v_m))stack_r))) 
-            (comm \union {(path_s, c, path_r)})
+          path$_s$ @ [DNxt n$_s$] -> (Stt p$_s$ (env$_s$(n$_s$ -> VUnt)) stack$_s$), 
+          path$_r$ @ [DNxt n$_r$] -> (Stt p$_r$ (env$_r$(n$_r$ -> v$_m$)) stack$_r$)
+        )) 
+        (comm \union {(path$_s$, c, path$_r$)})
   )
 \end{lstlisting}
 
 \subsection{Dynamic Communication}
 
-The dynamic one shot classification is described by pool where there is only one dynamic path
+The dynamic one shot classification describes pools where there is only one dynamic path
 that synchronizes and sends on a given channel. Whether or not two attempts to
 synchronize on a channel are competitive can be determined by
 looking at the paths of the pool. If two paths are ordered, that is, one is the
@@ -1328,76 +1335,84 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate is_send_path of
-    pool -> chan -> dynamic_path -> bool:
-    only
-
-    (\forall pool path n n_e p' env stack n$_s$c n_m env_e c.
-      if
-        pool path = Some (Stt (Bind n (Sync n_e) p') env stack),
-        env n_e = Some (VAtm (SendEvt n$_s$c n_m) env_e), 
-        env_e n$_s$c = Some (VChn c)
-      then
-        is_send_path pool c path)
+  predicate is_send_path of pool -> chan -> dynamic_path -> bool:
+  only
+  (\forall pool path n n$_e$ p' env stack n$_sc$ n$_m$ env$_e$ c.
+    if
+      pool path = Some (Stt (Bind n (Sync n$_e$) p') env stack),
+      env n$_e$ = Some (VAtm (SendEvt n$_sc$ n$_m$) env$_e$), 
+      env$_e$ n$_sc$ = Some (VChn c)
+    then
+      is_send_path pool c path
+  )
 
   predicate is_recv_path of pool -> chan -> dynamic_path -> bool:
-    only
-    (\forall poo path n n_e p' env stack n$_r$c env_e c .
-      then
-        pool path = Some (Stt (Bind n (Sync n_e) p') env stack),
-        env n_e = Some (VAtm (RecvEvt n$_r$c) env_e),
-        env_e n$_r$c = Some (VChn c)
-      then
-        is_recv_path pool c path)
+  only
+  (\forall pool path n n$_e$ p' env stack n$_r$c env$_e$ c .
+    then
+      pool path = Some (Stt (Bind n (Sync n$_e$) p') env stack),
+      env n$_e$ = Some (VAtm (RecvEvt n$_r$c) env$_e$),
+      env$_e$ n$_r$c = Some (VChn c)
+    then
+      is_recv_path pool c path
+  )
 
   predicate every_two of ('a -> bool) -> ('a -> 'a -> bool) -> bool:
-    only
-    (\forall p r .
-      if
-        (\forall path1 path2 .
-          if p path1, p path2 then r path1 path2)
-      then
-        every_two p r)
+  only
+  (\forall p r .
+    if
+      (\forall path1 path2 .
+        if p path1, p path2 then r path1 path2
+      )
+    then
+      every_two p r
+  )
 
   predicate ordered of 'a list -> 'a list -> bool:
-    only
-    (\forall path1 path2 . if prefix path1 path2 then
-      ordered path1 path2),
-    (\forall path2 path1 . if prefix path2 path1 then
-      ordered path1 path2)
+  only
+  (\forall path1 path2 .
+    if prefix path1 path2 then ordered path1 path2
+  ),
+  (\forall path2 path1 .
+    if prefix path2 path1 then ordered path1 path2
+  )
 
   predicate one_shot of pool -> chan -> bool:
-    only
-    (\forall pool c .
-      if
-        every_two (is_send_path pool c) (op =)
-      then
-        one_shot pool c)
+  only
+  (\forall pool c .
+    if
+      every_two (is_send_path pool c) (op =)
+    then
+      one_shot pool c
+  )
 
   predicate one_to_many of pool -> chan -> bool:
-    only
-    (\forall pool c .
-      if
-        every_two (is_send_path pool c) ordered
-      then
-        one_to_many pool c)
+  only
+  (\forall pool c .
+    if
+      every_two (is_send_path pool c) ordered
+    then
+      one_to_many pool c
+  )
 
   predicate many_to_one of pool -> chan -> bool:
-    only
-    (\forall pool c .
-      if
-        every_two (is_recv_path pool c) ordered
-      then
-        many_to_one pool c)
+  only
+  (\forall pool c .
+    if
+      every_two (is_recv_path pool c) ordered
+    then
+      many_to_one pool c
+  )
 
   predicate one_to_one of pool -> chan -> bool:
-    only
-    (\forall pool c.
-      if
-        one_to_many pool c,
-        many_to_one pool c
-      then
-        one_to_one pool c)
+  only
+  (\forall pool c.
+    if
+      one_to_many pool c,
+      many_to_one pool c
+    then
+      one_to_one pool c
+  )
   \end{lstlisting}
 
 
@@ -1541,12 +1556,12 @@ not been formally proven in this work.
       then  
         static_eval static_env static_comm (Bind n MkChn p')),
 
-    (\forall n$_c$ n_m static_env n static_comm p' .
+    (\forall n$_c$ n$_m$ static_env n static_comm p' .
       if
-        (SPrm (SendEvt n$_c$ n_m)) \in static_env x,
+        (SPrm (SendEvt n$_c$ n$_m$)) \in static_env x,
         static_eval static_env static_comm p' 
       then
-        static_eval static_env static_comm (Bind n (Atom (SendEvt n$_c$ n_m)) p')),
+        static_eval static_env static_comm (Bind n (Atom (SendEvt n$_c$ n$_m$)) p')),
 
     (\forall n$_c$ static_env n static_comm p' . 
       if 
@@ -1593,23 +1608,23 @@ not been formally proven in this work.
       then
         static_eval static_env static_comm (Bind n (Spwn p_c) p')),
 
-    (\forall static_env n_e n static_comm  p'.
+    (\forall static_env n$_e$ n static_comm  p'.
       if
-        (\forall n$_s$c n_m n$_c$ . 
+        (\forall n$_sc$ n$_m$ n$_c$ . 
           if
-            (SPrm (SendEvt n$_s$c n_m)) \in static_env n_e, 
-            SChn n$_c$ \in static_env n$_s$c 
+            (SPrm (SendEvt n$_sc$ n$_m$)) \in static_env n$_e$, 
+            SChn n$_c$ \in static_env n$_sc$ 
           then
-            SUnt \in static_env x, static_env n_m \subseteq static_comm n$_c$),
+            SUnt \in static_env x, static_env n$_m$ \subseteq static_comm n$_c$),
         (\forall n$_r$c n$_c$ . 
           if
-            (SPrm (RecvEvt n$_r$c)) \in static_env n_e,
+            (SPrm (RecvEvt n$_r$c)) \in static_env n$_e$,
             SChn n$_c$ \in static_env n$_r$c, 
           then
             static_comm n$_c$ \subseteq static_env x),
         static_eval static_env static_comm p'
       then
-        static_eval static_env static_comm (Bind n (Sync n_e) p')),
+        static_eval static_env static_comm (Bind n (Sync n$_e$) p')),
 
     (\forall static_env n$_p$ n static_comm p' . 
       if
@@ -1849,21 +1864,21 @@ synchronization to receive on a given abstract channel.
   predicate static_send_id of
     static_value_map -> term -> name -> program_id -> bool:
     only
-    (\forall e0 n n_e p' n$_s$c n_m static_env n$_c$ .
+    (\forall e0 n n$_e$ p' n$_sc$ n$_m$ static_env n$_c$ .
       if
-        static_reachable e0 (Bind n (Sync n_e) p'),
-        (SPrm (SendEvt n$_s$c n_m)) \subseteq static_env n_e, 
-        (SChn n$_c$) \in static_env n$_s$c
+        static_reachable e0 (Bind n (Sync n$_e$) p'),
+        (SPrm (SendEvt n$_sc$ n$_m$)) \subseteq static_env n$_e$, 
+        (SChn n$_c$) \in static_env n$_sc$
       then
         static_send_id static_env e0 n$_c$ (NBind x))
 
   predicate static_recv_id of
     static_value_map -> term -> name -> program_id -> bool:
     only
-    (\forall e0 n n_e p' n$_r$c static_env n$_c$ .
+    (\forall e0 n n$_e$ p' n$_r$c static_env n$_c$ .
       if
-        static_reachable e0 (Bind n (Sync n_e) p'),
-        (SPrm (RecvEvt n$_r$c)) \in static_env n_e, 
+        static_reachable e0 (Bind n (Sync n$_e$) p'),
+        (SPrm (RecvEvt n$_r$c)) \in static_env n$_e$, 
         (SChn n$_c$) \in static_env n$_r$c 
       then
         static_recv_id static_env e0 n$_c$ (NBind x))
@@ -1960,12 +1975,12 @@ traversable transitions for the sequenced subprogram.
       then
         static_traversable static_env graph (Bind n MkChn p')),
 
-    (\forall n p' graph static_env  n$_c$ n_m .
+    (\forall n p' graph static_env  n$_c$ n$_m$ .
       if
         (NBind n , MNxt, top_program_id p') \in graph, 
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Atom (SendEvt n$_c$ n_m)) p')),
+        static_traversable static_env graph (Bind n (Atom (SendEvt n$_c$ n$_m$)) p')),
 
     (\forall n p' graph static_env n$_c$ .
       if
@@ -2414,12 +2429,12 @@ send ID by its program ID.
         static_inclusive static_path1 static_path2
 
   lemma not_static_send_id_sound:
-    \forall e0 pool comm path n n_e p' env stack n$_s$c n_m env' path_c n$_c$ .
+    \forall e0 pool comm path n n$_e$ p' env stack n$_sc$ n$_m$ env' path_c n$_c$ .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm, 
-        pool path = Some (Stt (Bind n (Sync n_e) p') env stack), 
-        env n_e = Some (VAtm (SendEvt n$_s$c n_m) env'), 
-        env' n$_s$c = Some (VChn (Chan path_c n$_c$)), 
+        pool path = Some (Stt (Bind n (Sync n$_e$) p') env stack), 
+        env n$_e$ = Some (VAtm (SendEvt n$_sc$ n$_m$) env'), 
+        env' n$_sc$ = Some (VChn (Chan path_c n$_c$)), 
         static_eval static_env static_comm e0
       then 
         static_send_id static_env e0 n$_c$ (NBind x)
@@ -2456,12 +2471,12 @@ depending on the program.
     (\forall static_env graph c .
       static_traversable_val static_env graph (VChn c)),
 
-    (\forall static_env graph env n$_c$ n_m.
+    (\forall static_env graph env n$_c$ n$_m$.
       if
         static_traversable_env static_env graph env 
       then 
         static_traversable_val
-          static_env graph (VAtm (SendEvt n$_c$ n_m) env)),
+          static_env graph (VAtm (SendEvt n$_c$ n$_m$) env)),
 
     (\forall static_env graph env n$_c$.
       if
@@ -2575,12 +2590,12 @@ semantic elements to static values and static environments.
     (\forall static_env static_comm c .
       static_eval_val static_env static_comm (VChn c)),
 
-    (\forall static_env static_comm env n$_c$ n_m .
+    (\forall static_env static_comm env n$_c$ n$_m$ .
       if
         static_eval_env static_env static_comm env
       then
         static_eval_val static_env static_comm
-          (VAtm (SendEvt n$_c$ n_m) env)),
+          (VAtm (SendEvt n$_c$ n$_m$) env)),
 
     (\forall static_env static_comm env n$_c$  .
       if
@@ -2742,15 +2757,15 @@ used to ensure that the static step discussed is indeed a send ID.
 \begin{lstlisting}[language=logic, mathescape]
   lemma send_chan_not_static_bound_sound:
     \forall e0 pool comm static_env static_comm path
-      n n_e p' env stack n$_s$c n_m env_e path_c n$_c$ .
+      n n$_e$ p' env stack n$_sc$ n$_m$ env$_e$ path_c n$_c$ .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])], {} pool comm,
         static_eval static_env static_comm e0,
-        pool path = Some (Stt (Bind n (Sync n_e) p') env stack),
-        env_y n_e = Some (VAtm (SendEvt n$_s$c n_m) env_e),
-        env_e n$_s$c = Some (VChn (Chan path_c n$_c$))
+        pool path = Some (Stt (Bind n (Sync n$_e$) p') env stack),
+        env_y n$_e$ = Some (VAtm (SendEvt n$_sc$ n$_m$) env$_e$),
+        env$_e$ n$_sc$ = Some (VChn (Chan path_c n$_c$))
       then
-        SChn n$_c$ \in static_env n$_s$c
+        SChn n$_c$ \in static_env n$_sc$
 
   lemma not_static_bound_sound:
     \forall e0 pool comm static_env static_comm path p env stack n v .
@@ -2837,8 +2852,8 @@ maintaining the initial program state in context for each subgoal .
   predicate static_reachable_over_atom of term -> atom -> bool:
     only
 
-    (\forall e0 n$_c$ n_m .
-      static_reachable_over_atom e0 (SendEvt n$_c$ n_m)),
+    (\forall e0 n$_c$ n$_m$ .
+      static_reachable_over_atom e0 (SendEvt n$_c$ n$_m$)),
 
     (\forall e0 n$_c$ .
         static_reachable_over_atom e0 (RecvEvt n$_c$)),
@@ -2891,13 +2906,13 @@ maintaining the initial program state in context for each subgoal .
     only
     (\forall e0 .
       static_reachable_over_stack e0 []),
-    (\forall e0 p_k env_k stack' .
+    (\forall e0 p$_k$ env$_k$ stack' .
       if
-        static_reachable_left e0 p_k, 
-        static_reachable_over_env e0 env_k,
+        static_reachable_left e0 p$_k$, 
+        static_reachable_over_env e0 env$_k$,
         static_reachable_over_stack e0 stack' 
       then
-        static_reachable_over_stack e0 ((Ctn n_k p_k env_k # stack')))
+        static_reachable_over_stack e0 ((Ctn n$_k$ p$_k$ env$_k$ # stack')))
 
   predicate static_reachable_pool of term -> pool -> bool:
     only
@@ -3019,12 +3034,12 @@ However, it must additionally consider transitions with the sending mode.
       then
         static_traversable static_env graph (Bind n MkChn p')),
 
-    (\forall n p' graph static_env  n$_c$ n_m .
+    (\forall n p' graph static_env  n$_c$ n$_m$ .
       if
         (NBind n , MNxt, top_program_id p') \in graph,
         static_traversable static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Atom (SendEvt n$_c$ n_m)) p')),
+        static_traversable static_env graph (Bind n (Atom (SendEvt n$_c$ n$_m$)) p')),
 
     (\forall n p' graph static_env n$_c$ .
       if
@@ -3074,10 +3089,10 @@ However, it must additionally consider transitions with the sending mode.
     (\forall n p' graph static_env n$_s$e .
       if
         (NBind n , MNxt, top_program_id p') \in graph,
-        (\forall n$_s$c n_m n$_c$ y.
+        (\forall n$_sc$ n$_m$ n$_c$ y.
           if
-            (SPrm (SendEvt n$_s$c n_m)) \in static_env xSE, 
-            (SChn n$_c$) \in static_env n$_s$c,
+            (SPrm (SendEvt n$_sc$ n$_m$)) \in static_env xSE, 
+            (SChn n$_c$) \in static_env n$_sc$,
             static_recv_program_id static_env p' n$_c$ (NBind y)
           then
             (NBind x, ESend n$_s$e, NBind y) \in F),
@@ -3141,11 +3156,11 @@ of each program ID.
       then 
         static_built_on_chan static_env entr n$_c$ x),
 
-    (\forall n$_s$c n_m static_env n entr n$_c$ . 
+    (\forall n$_sc$ n$_m$ static_env n entr n$_c$ . 
       if
-        (SPrm (SendEvt n$_s$c n_m)) \in static_env x,
-        (static_built_on_chan static_env entr n$_c$ n$_s$c or
-          static_built_on_chan static_env entr n$_c$ n_m)
+        (SPrm (SendEvt n$_sc$ n$_m$)) \in static_env x,
+        (static_built_on_chan static_env entr n$_c$ n$_sc$ or
+          static_built_on_chan static_env entr n$_c$ n$_m$)
       then 
         static_built_on_chan static_env entr n$_c$ x),
 
@@ -3221,18 +3236,18 @@ program ID.
       then 
         static_live_chan static_env entr exit n$_c$ (Bind n MkChn p')),
 
-    (\forall exit n entr static_env n$_c$ n$_s$c n_m p' n$_c$ .
+    (\forall exit n entr static_env n$_c$ n$_sc$ n$_m$ p' n$_c$ .
       if
         (exit (NBind x) - {x}) \subseteq entr (NBind x),
-        (if static_built_on_chan static_env entr n$_c$ n$_s$c then
+        (if static_built_on_chan static_env entr n$_c$ n$_sc$ then
           {x_sc} \subseteq entr (NBind x)),
-        (if static_built_on_chan static_env entr n$_c$ n_m then 
+        (if static_built_on_chan static_env entr n$_c$ n$_m$ then 
           {x_m} \subseteq entr (NBind x)),
         entr (top_program_id p') \subseteq exit (NBind x),
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
-          (Bind n (Atom (SendEvt n$_s$c n_m)) p')),
+          (Bind n (Atom (SendEvt n$_sc$ n$_m$)) p')),
 
     (\forall exit n entr static_env n$_c$ n$_r$ .    
       if
@@ -3297,16 +3312,16 @@ program ID.
         static_live_chan static_env entr exit n$_c$
           (Bind n (Spwn p_c) p')),
 
-    (\forall exit n entr static_env n$_c$ n_e p' .
+    (\forall exit n entr static_env n$_c$ n$_e$ p' .
       if
         (exit (NBind x) - {x}) \subseteq entr (NBind x),
-        (if static_built_on_chan static_env entr n$_c$ n_e then
+        (if static_built_on_chan static_env entr n$_c$ n$_e$ then
           {x_e} \subseteq entr (NBind x)),
         entr (top_program_id p') \subseteq exit (NBind x),
         static_live_chan static_env entr exit n$_c$ p',
       then
         static_live_chan static_env entr exit n$_c$
-          (Bind n (Sync n_e) p')),
+          (Bind n (Sync n$_e$) p')),
     (\forall exit n entr static_env n$_c$ n$_a$ p' .
       if
         (exit (NBind x) - {x}) \subseteq entr (NBind x),
@@ -3394,13 +3409,13 @@ functions.
       then
         static_live_transition graph entr exit (l, MRtn, l')),
 
-    (\forall n$_s$end n_evt n$_r$ecv graph entr exit .
+    (\forall n$_s$end n$_e$vt n$_r$ecv graph entr exit .
       if
-        ((NBind n$_s$end), ESend n_evt, (NBind n$_r$ecv)) \in graph, 
+        ((NBind n$_s$end), ESend n$_e$vt, (NBind n$_r$ecv)) \in graph, 
         {x_evt} \subseteq (entr (NBind n$_s$end))
       then
         static_live_transition graph entr exit
-          ((NBind n$_s$end), ESend n_evt, (NBind n$_r$ecv)))
+          ((NBind n$_s$end), ESend n$_e$vt, (NBind n$_r$ecv)))
   \end{lstlisting}
 
 The static traceability for the higher precision analysis states
