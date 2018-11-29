@@ -1628,11 +1628,11 @@ Function terms are evaluated similarly to other atomic terms.
   ),
   (\forall n$_f$ n$_p$ p$_b$ static_env static_comm n p' .
     if
-      SUnt \in static_env f, 
-      static_eval static_env static_comm p_c, 
+      SUnt \in static_env n, 
+      static_eval static_env static_comm p$_c$, 
       static_eval static_env static_comm p'
     then
-      static_eval static_env static_comm (Bind n (Spwn p_c) p')
+      static_eval static_env static_comm (Bind n (Spwn p$_c$) p')
   ),
   (\forall static_env n$_e$ n static_comm  p'.
     if
