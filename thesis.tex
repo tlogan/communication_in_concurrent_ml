@@ -949,6 +949,78 @@ This work does not contain formal proofs that the specialized implementations ar
 behaviorally equivalent to a generic implementation, but the example implementations
 should provide good evidence for that.
 
+A static analysis that describes communication
+topologies of channels has practical benefits in at least two ways.  It can highlight which
+channels are candidates for optimized implementations of communication; or in a language
+extension allowing the specification of specialized channels, it can conservatively verify
+their correct usage. Without a static analysis to check the usage of the special channels, one
+could inadvertently use a one-shot channel for a channel that has multiple senders, thus
+violating the intended semantics. 
+
+The utility of the static analysis additionally depends on it being precise, sound, and
+computable. The analysis is precise iff there exist programs about which the analysis
+describes information that is not directly observable. The analysis is sound iff the
+information it describes about a program is the same or less precise than the dynamic
+semantics of the program. The analysis is computable iff there exists an algorithm that
+determines all the values described by the analysis on any input program.
+
+Analyses can be described in a variety of ways. A computable algorithm that take programs
+as input and produces information about the behavior as output is ideal for automation. A
+non-algorithmic relation (i.e. a relation expressed in a language without an inherent evaluator
+from some parameters to the others),
+stated in terms of programs and execution information, may be
+more suitable for clarity of meaning and correctness with respect to the operational
+semantics. However, a non-algorithmic relation can be translated into an algorithm.
+One rather mechanical method essentially involves
+specifying a reasoner associated with the relation. 
+First, the reasoner generates a comprehensive set of data structures representing
+constraints from the relation's description, then the reasoner the constraints.
+
+For a subset of Concurrent ML without event combinators, Reppy and Xiao developed an
+efficient algorithm that determines for each channel, all possible threads that send
+and receive on it. The algorithm depends on each atom operation in the program being
+labeled with a program step. A sequence of program steps ordered in a valid execution
+sequence forms a control path. Distinction between threads in a program can be inferred from
+whether or not their control paths diverge.  
+
+The algorithm proceeds in multiple steps that produce intermediate data structures, used for
+efficient lookup in the subsequent steps.  It starts with a control-flow analysis \cite{} that
+results in multiple mappings. One mapping is from names to abstract values that may be bound to
+the names. Another mapping is from channel-bound names to abstract values that are
+sent on the respective channels. Another is from function-bound names to abstract values
+that are the result of respective function applications.  It constructs a control-flow graph 
+with possible paths for conditional tests and thread spawning determined directly from the
+atoms used in the program.  Relying on information from the mappings to abstract values,
+it constructs the possible paths of execution via function application and channel
+communication.  It uses the graph for live variable analysis of channels, which limits the
+scope for the remaining analysis.  Using the spawn and application edges of the control-flow
+graph, the algorithm then performs a data-flow analysis to determine a mapping from program
+steps to all possible control paths leading into the respective program steps.  Using the
+CFA's mappings to abstract values, the algorithm determines the program steps for sends and
+receives per channel name.  Then it uses the mapping to control paths to determine all
+control paths that send or receive on each channel, from which it classifies channels as
+one-shot, one-to-one, many-to-one, one-to-many, or many-to-many.
+
+The information at each program step is derived from control structures in the program, which
+dictate how information flows between program steps. Some uses of control structures are
+literally represented in the syntax, such as the sequencing of namings and assignments in the
+previous examples. Other uses of control structures may be indirectly represented through
+names. Function application is a control structure that allows a calling piece of code to
+flow into a function function's code.  Function functions can be named, which allows
+multiple pieces of code to all flow into into the same section of code. The name adds an
+additional step in to uncover control structures, and determine data flow.
+Additionally, in languages with higher order functions and recursion, such as those in the Lisp
+and ML families, it may be impossible to exactly determine all the function functions that
+terms resolve to. However, a control flow analysis can reveal a good
+approximation of the control structures and values that have been obfuscated by higher order
+function functions.  Uncovering the the control structures depends on resolving terms
+to values, and resolving terms to values depends on on uncovering the control
+structures. The mutual dependency means that control flow analysis is a form of
+static semantics that describes abstract evaluations of programs. in this work, control flow
+analysis is used for tracking certain kinds of values, like channels and events, in addition to
+constructing precise data flow analysis. 
+
+
 \subsection{Syntax}
 The syntax used in this formal theory contains a very small subset of
 \textit{Concurrent ML}'s features. The features include recursive function function with
@@ -1418,253 +1490,211 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 
 \subsection{Static Semantics}
 
-A static analysis that describes communication
-topologies of channels has practical benefits in at least two ways.  It can highlight which
-channels are candidates for optimized implementations of communication; or in a language
-extension allowing the specification of specialized channels, it can conservatively verify
-their correct usage. Without a static analysis to check the usage of the special channels, one
-could inadvertently use a one-shot channel for a channel that has multiple senders, thus
-violating the intended semantics. 
-
-The utility of the static analysis additionally depends on it being precise, sound, and
-computable. The analysis is precise iff there exist programs about which the analysis
-describes information that is not directly observable. The analysis is sound iff the
-information it describes about a program is the same or less precise than the dynamic
-semantics of the program. The analysis is computable iff there exists an algorithm that
-determines all the values described by the analysis on any input program.
-
-Analyses can be described in a variety of ways. A computable algorithm that take programs
-as input and produces information about the behavior as output is ideal for automation. A
-non-algorithmic relation (i.e. a relation expressed in a language without an inherent evaluator
-from some parameters to the others),
-stated in terms of programs and execution information, may be
-more suitable for clarity of meaning and correctness with respect to the operational
-semantics. However, a non-algorithmic relation can be translated into an algorithm.
-One rather mechanical method essentially involves
-specifying a reasoner associated with the relation. 
-First, the reasoner generates a comprehensive set of data structures representing
-constraints from the relation's description, then the reasoner the constraints.
-
-For a subset of Concurrent ML without event combinators, Reppy and Xiao developed an
-efficient algorithm that determines for each channel, all possible threads that send
-and receive on it. The algorithm depends on each atom operation in the program being
-labeled with a program step. A sequence of program steps ordered in a valid execution
-sequence forms a control path. Distinction between threads in a program can be inferred from
-whether or not their control paths diverge.  
-
-The algorithm proceeds in multiple steps that produce intermediate data structures, used for
-efficient lookup in the subsequent steps.  It starts with a control-flow analysis \cite{} that
-results in multiple mappings. One mapping is from names to abstract values that may be bound to
-the names. Another mapping is from channel-bound names to abstract values that are
-sent on the respective channels. Another is from function-bound names to abstract values
-that are the result of respective function applications.  It constructs a control-flow graph 
-with possible paths for conditional tests and thread spawning determined directly from the
-atoms used in the program.  Relying on information from the mappings to abstract values,
-it constructs the possible paths of execution via function application and channel
-communication.  It uses the graph for live variable analysis of channels, which limits the
-scope for the remaining analysis.  Using the spawn and application edges of the control-flow
-graph, the algorithm then performs a data-flow analysis to determine a mapping from program
-steps to all possible control paths leading into the respective program steps.  Using the
-CFA's mappings to abstract values, the algorithm determines the program steps for sends and
-receives per channel name.  Then it uses the mapping to control paths to determine all
-control paths that send or receive on each channel, from which it classifies channels as
-one-shot, one-to-one, many-to-one, one-to-many, or many-to-many.
-
-
-
-
-The information at each program step is derived from control structures in the program, which
-dictate how information flows between program steps. Some uses of control structures are
-literally represented in the syntax, such as the sequencing of namings and assignments in the
-previous examples. Other uses of control structures may be indirectly represented through
-names. Function application is a control structure that allows a calling piece of code to
-flow into a function function's code.  Function functions can be named, which allows
-multiple pieces of code to all flow into into the same section of code. The name adds an
-additional step in to uncover control structures, and determine data flow.
-Additionally, in languages with higher order functions and recursion, such as those in the Lisp
-and ML families, it may be impossible to exactly determine all the function functions that
-terms resolve to. However, a control flow analysis can reveal a good
-approximation of the control structures and values that have been obfuscated by higher order
-function functions.  Uncovering the the control structures depends on resolving terms
-to values, and resolving terms to values depends on on uncovering the control
-structures. The mutual dependency means that control flow analysis is a form of
-static semantics that describes abstract evaluations of programs. in this work, control flow
-analysis is used for tracking certain kinds of values, like channels and events, in addition to
-constructing precise data flow analysis. 
-
-
-The static semantics is described by an estimation of
-intermediate static values and subprograms
-that might result from running a program.    
-The static semantics helps to deduce static information about channels and events, which is
+The static semantics describes an estimation of intermediate static values and subprograms
+that might result from running a program.  Although the estimations are imprecise with
+respect to the dynamic semantics, they are certainly accurate,
+which is confirmed by the formal proofs of soundness.
+The static semantics enable deduction of static information about channels and events, which is
 crucial for statically deducing information about synchronization on channels and
-communication topologies.
+communication classification.
 The static values consist of the static unit value, static channels, and static atom
 values. The static unit value is no less precise than the dynamic unit value, but
 static channels and static atom values are imprecise versions of their dynamic
 counterparts. The static channel is identified only by the name it binds to at creation time,
-rather than the full path that leads up to its creation.  A static atom value is simply a
-atomic term without an environment for looking up its named arguments. The static
-environment contains the internal evaluation results by associating names to static values.
-In order to find the return value of a program or subprogram, it is useful to fetch the name
-embedded within its result subprogram.
+rather than the full path that leads up to its creation.  A static atom value is simply an
+atomic term without an environment for looking up its named arguments.  The static
+environment contains the internal evaluation results by
+associating names to multiple potential static values.
+Thus, in addition to some static values being imprecise,
+the results of evaluation may be decrease precision even further
+by containinng multiple potential static values. 
+In order to find the return value of a program term, it is useful to fetch the name
+embedded within its eventual result term, which is formally defined by \lstinline{result_name}.
 
 \begin{lstlisting}[language=logic, mathescape]
   datatype static_value =
-    SChn name | SUnt | SPrm atom 
+    SChn name
+  | SUnt
+  | SAtm atom 
 
-  type static_value_map = name -> static_value set
+  type static_value_map =
+    name -> static_value set
 
   fun result_name of term -> name:
-    (\forall n .
-      result_name (Rslt n) = x),
-    (\forall n b p' . 
-      result_name (Bind n b p') = (result_name e))
-  \end{lstlisting}
+  (\forall n .
+    result_name (Rslt n) = x
+  ),
+  (\forall n b p' . 
+    result_name (Bind n b p') = (result_name e)
+  )
+\end{lstlisting}
 
+The static evaluation is a control flow analysis (0CFA)
+that describes a relation between a program term and two static environments.
+The first static environment contains binding names associated with the
+evaluations of terms that are bound to those names in the program.
+The second static environment contains names of channels associated
+with values that might be sent over channels identified by those names.
 
-The static evaluation is a control flow analysis described by a relation from an input program
-to two outputs, each a static environment. The first output contains names associated with the
-evaluations of terms that bind to those names in the program. The second output contains
-names associated with values that might be sent over channels identified by those name.
+The definition of static evaluation is syntax-directed, meaning the form of the syntax
+determines the proof for static evaluation.  Additionally, the proof of a static evaluation
+is definied to be strucutrally inductive following the self-similar structure of the syntax.
+Thus, it should be possible to decide if a static evaluation holds
+by unraveling the program term into smaller and smaller terms,
+until reaching a term without any smaller terms.
+Additionally, for any given program, there should be instances of static environments,
+such that the static evaluation holds, in which case there is likely an
+algorithm to compute the static environments from a program,
+by following the basic structure of the definitional proof of static evaluation.
+This certainly appears likely, but it has not been formally proven in this work.
 
-The definition of static evaluation is syntax-directed, meaning it should be possible to
-prove any correct evaluation simply by unraveling the program in to smaller and smaller
-programs, until a theorem or axiom is induced. The definition also appears to allow
-deterministic reasoning. With both determinism and termination, it would be possible to compute
-the static evaluation outputs from the input program. This certainly appears likely, but it has
-not been formally proven in this work.
+The static evaluation relation is defined in a single definition.
+The definition is fairly uniform and mimics the structure of the syntax.
+The definition for one term form, is no closer to the defintion of one form over another.
+For instance, if a term has a smaller term,
+the static evaluation of the former term is defined
+by the static evaluation of the smaller term,
+whether the former term contains a spawning term, a function term, or a conditional test term.
+In constrast, in the definition of dynamic evaluation,
+the evaluation of certain term forms has greater affinity to some forms than others.
+Conditional test terms are evaluated similarly to application terms. 
+Function terms are evaluated similarly to other atomic terms.
+
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_eval of
-    static_value_map -> static_value_map -> term -> bool:
-    only
-    (\forall static_env static_comm n .
-      static_eval static_env static_comm (Rslt n)),
-
-    (\forall static_env n static_comm p' .
-      if 
+  predicate static_eval
+  of static_value_map -> static_value_map -> term -> bool:
+  only
+  (\forall static_env static_comm n .
+    static_eval static_env static_comm (Rslt n)
+  ),
+  (\forall static_env n static_comm p' .
+    if 
       SUnt \in static_env x,
-        static_eval static_env static_comm p'
-      then
-        static_eval static_env static_comm (Bind n Unt p')),
-
-    (\forall n static_env static_comm p' .
-      if 
-        (SChn x) \in static_env x,
-        static_eval static_env static_comm p'
-      then  
-        static_eval static_env static_comm (Bind n MkChn p')),
-
-    (\forall n$_c$ n$_m$ static_env n static_comm p' .
-      if
-        (SPrm (SendEvt n$_c$ n$_m$)) \in static_env x,
-        static_eval static_env static_comm p' 
-      then
-        static_eval static_env static_comm (Bind n (Atom (SendEvt n$_c$ n$_m$)) p')),
-
-    (\forall n$_c$ static_env n static_comm p' . 
-      if 
-        (SPrm (RecvEvt n$_c$)) \in static_env x,
-        static_eval static_env static_comm p'
-      then
-        static_eval static_env static_comm (Bind n (Atom (RecvEvt n$_c$)) p')),
-
-    (\forall n1 n2 static_env n static_comm p' .
-      if
-        (SPrm (Pair n1 n2)) \in static_env x,
-        static_eval static_env static_comm p'
-      then
-        static_eval static_env static_comm (Bind n (Atom (Pair n_1 n_2)) e)),
-
-    (\forall n$_s$ static_env n static_comm p' .
-      if
-        (SPrm(Lft n$_s$)) \in static_env x,
-        static_eval static_env static_comm p' 
-      then
-        static_eval static_env static_comm (Bind n (Atom (Lft n$_s$)) p')),
-
-    (\forall n$_s$ static_env n static_comm p' .
-      if
-        (SPrm(Rght n$_s$)) \in static_env x, 
-        static_eval static_env static_comm e
-      then
-        static_eval static_env static_comm (Bind n (Atom (Rght n$_s$)) p')),
-
-    (\forall n$_f$ n$_p$ p$_b$ static_env static_comm n p' .
-      if
-        (SPrm (Fun n$_f$ n$_p$ p$_b$)) \in static_env f, 
-        static_eval static_env static_comm p$_b$, 
-        (SPrm (Fun n$_f$ n$_p$ p$_b$)) \in static_env x, 
-        static_eval static_env static_comm p'
-      then
-        static_eval static_env static_comm (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')),
-
-    (\forall n$_f$ n$_p$ p$_b$ static_env static_comm n p' .
-      if
-        SUnt \in static_env f, 
-        static_eval static_env static_comm p_c, 
-        static_eval static_env static_comm p'
-      then
-        static_eval static_env static_comm (Bind n (Spwn p_c) p')),
-
-    (\forall static_env n$_e$ n static_comm  p'.
-      if
-        (\forall n$_sc$ n$_m$ n$_c$ . 
-          if
-            (SPrm (SendEvt n$_sc$ n$_m$)) \in static_env n$_e$, 
-            SChn n$_c$ \in static_env n$_sc$ 
-          then
-            SUnt \in static_env x, static_env n$_m$ \subseteq static_comm n$_c$),
-        (\forall n$_r$c n$_c$ . 
-          if
-            (SPrm (RecvEvt n$_r$c)) \in static_env n$_e$,
-            SChn n$_c$ \in static_env n$_r$c, 
-          then
-            static_comm n$_c$ \subseteq static_env x),
-        static_eval static_env static_comm p'
-      then
-        static_eval static_env static_comm (Bind n (Sync n$_e$) p')),
-
-    (\forall static_env n$_p$ n static_comm p' . 
-      if
-        (\forall n1 n2 . if (SPrm (Pair n1 n2)) \in static_env n$_p$ then
-          static_env n1 \subseteq static_env x),
-        static_eval static_env static_comm p'
-      then
-        static_eval static_env static_comm (Bind n (Fst n$_p$) p')),
-
-    (\forall static_env n$_p$ n static_comm p' . 
-      if
-        (\forall n1 n2 . if (SPrm (Pair n1 n2)) \in static_env n$_p$ then
-          static_env n2 \subseteq static_env x),
-        static_eval static_env static_comm p'
-      then
-        static_eval static_env static_comm (Bind n (Snd n$_p$) p')),
-
-    (\forall static_env n$_s$ n$_l$ p$_l$ n static_comm n$_r$ p$_r$ p' . 
-      if
-        (\forall n$_c$ . if (SPrm (Lft n$_c$)) \in static_env n$_s$ then 
-          static_env n$_c$ \subseteq static_env n$_l$,
-          static_env (result_name p$_l$) \subseteq static_env x,
-          static_eval static_env static_comm p$_l$),
-        (\forall n$_c$ . if (SPrm (Rght n$_c$)) \in static_env n$_s$ then 
-          static_env n$_c$ \subseteq static_env n$_r$, 
-          static_env (result_name p$_r$) \subseteq static_env x, 
-          static_eval static_env static_comm p$_r$),
-        static_eval static_env static_comm p'
-      then
-        static_eval static_env static_comm (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
-
-    (\forall static_env n$_f$ n$_a$ n static_comm p' . 
-      if
-        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
-          static_env n$_a$ \subseteq static_env n$_p$, 
-          static_env (result_name p$_b$) \subseteq static_env x),
-        static_eval static_env static_comm p'
-      then
-        static_eval static_env static_comm (Bind n (App n$_f$ n$_a$) p'))
-  \end{lstlisting}
+      static_eval static_env static_comm p'
+    then
+      static_eval static_env static_comm (Bind n Unt p')
+  ),
+  (\forall n static_env static_comm p' .
+    if 
+      (SChn x) \in static_env x,
+      static_eval static_env static_comm p'
+    then  
+      static_eval static_env static_comm (Bind n MkChn p')
+  ),
+  (\forall n$_c$ n$_m$ static_env n static_comm p' .
+    if
+      (SAtm (SendEvt n$_c$ n$_m$)) \in static_env x,
+      static_eval static_env static_comm p' 
+    then
+      static_eval static_env static_comm (Bind n (Atom (SendEvt n$_c$ n$_m$)) p')
+   ),
+  (\forall n$_c$ static_env n static_comm p' . 
+    if 
+      (SAtm (RecvEvt n$_c$)) \in static_env x,
+      static_eval static_env static_comm p'
+    then
+      static_eval static_env static_comm (Bind n (Atom (RecvEvt n$_c$)) p')
+  ),
+  (\forall n1 n2 static_env n static_comm p' .
+    if
+      (SAtm (Pair n1 n2)) \in static_env x,
+      static_eval static_env static_comm p'
+    then
+      static_eval static_env static_comm (Bind n (Atom (Pair n_1 n_2)) e)
+  ),
+  (\forall n$_s$ static_env n static_comm p' .
+    if
+      (SAtm(Lft n$_s$)) \in static_env x,
+      static_eval static_env static_comm p' 
+    then
+      static_eval static_env static_comm (Bind n (Atom (Lft n$_s$)) p')
+  ),
+  (\forall n$_s$ static_env n static_comm p' .
+    if
+      (SAtm(Rght n$_s$)) \in static_env x, 
+      static_eval static_env static_comm e
+    then
+      static_eval static_env static_comm (Bind n (Atom (Rght n$_s$)) p')
+  ),
+  (\forall n$_f$ n$_p$ p$_b$ static_env static_comm n p' .
+    if
+      (SAtm (Fun n$_f$ n$_p$ p$_b$)) \in static_env f, 
+      static_eval static_env static_comm p$_b$, 
+      (SAtm (Fun n$_f$ n$_p$ p$_b$)) \in static_env x, 
+      static_eval static_env static_comm p'
+    then
+      static_eval static_env static_comm (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')
+  ),
+  (\forall n$_f$ n$_p$ p$_b$ static_env static_comm n p' .
+    if
+      SUnt \in static_env f, 
+      static_eval static_env static_comm p_c, 
+      static_eval static_env static_comm p'
+    then
+      static_eval static_env static_comm (Bind n (Spwn p_c) p')
+  ),
+  (\forall static_env n$_e$ n static_comm  p'.
+    if
+      (\forall n$_sc$ n$_m$ n$_c$ . 
+        if
+          (SAtm (SendEvt n$_sc$ n$_m$)) \in static_env n$_e$, 
+          SChn n$_c$ \in static_env n$_sc$ 
+        then
+          SUnt \in static_env x, static_env n$_m$ \subseteq static_comm n$_c$),
+      (\forall n$_r$c n$_c$ . 
+        if
+          (SAtm (RecvEvt n$_r$c)) \in static_env n$_e$,
+          SChn n$_c$ \in static_env n$_r$c, 
+        then
+          static_comm n$_c$ \subseteq static_env x),
+      static_eval static_env static_comm p'
+    then
+      static_eval static_env static_comm (Bind n (Sync n$_e$) p')
+  ),
+  (\forall static_env n$_p$ n static_comm p' . 
+    if
+      (\forall n1 n2 . if (SAtm (Pair n1 n2)) \in static_env n$_p$ then
+        static_env n1 \subseteq static_env x),
+      static_eval static_env static_comm p'
+    then
+      static_eval static_env static_comm (Bind n (Fst n$_p$) p')
+  ),
+  (\forall static_env n$_p$ n static_comm p' . 
+    if
+      (\forall n1 n2 . if (SAtm (Pair n1 n2)) \in static_env n$_p$ then
+        static_env n2 \subseteq static_env x),
+      static_eval static_env static_comm p'
+    then
+      static_eval static_env static_comm (Bind n (Snd n$_p$) p')
+  ),
+  (\forall static_env n$_s$ n$_l$ p$_l$ n static_comm n$_r$ p$_r$ p' . 
+    if
+      (\forall n$_c$ . if (SAtm (Lft n$_c$)) \in static_env n$_s$ then 
+        static_env n$_c$ \subseteq static_env n$_l$,
+        static_env (result_name p$_l$) \subseteq static_env x,
+        static_eval static_env static_comm p$_l$
+      ),
+      (\forall n$_c$ . if (SAtm (Rght n$_c$)) \in static_env n$_s$ then 
+        static_env n$_c$ \subseteq static_env n$_r$, 
+        static_env (result_name p$_r$) \subseteq static_env x, 
+        static_eval static_env static_comm p$_r$
+      ),
+      static_eval static_env static_comm p'
+    then
+      static_eval static_env static_comm (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')
+  ),
+  (\forall static_env n$_f$ n$_a$ n static_comm p' . 
+    if
+      (\forall n$_f$' n$_p$ p$_b$ . if (SAtm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
+        static_env n$_a$ \subseteq static_env n$_p$, 
+        static_env (result_name p$_b$) \subseteq static_env x)
+      ),
+      static_eval static_env static_comm p'
+    then
+      static_eval static_env static_comm (Bind n (App n$_f$ n$_a$) p')
+  )
+\end{lstlisting}
 
 It is very straightforward to follow the rules of static evaluation in order to build up
 functions mapping names to static values for the static environment
@@ -1740,7 +1770,7 @@ the program, incrementally adding more static values for each name in the progra
 the procedure from the top of the program until there's nothing more to add to the functions.
 To make the presentation clear, the syntactic sugar \lstinline|(r1 -> {right u1}, ...)| is used 
 to mean
-\lstinline[language=logic]|\lambda n . if n = (Nm "r1") then {SPrm (Rght (Nm "u1"))} else ... else {}|.
+\lstinline[language=logic]|\lambda n . if n = (Nm "r1") then {SAtm (Rght (Nm "u1"))} else ... else {}|.
 The representation of static values closely resembles the concrete syntax.
 
 
@@ -1867,7 +1897,7 @@ synchronization to receive on a given abstract channel.
     (\forall e0 n n$_e$ p' n$_sc$ n$_m$ static_env n$_c$ .
       if
         static_reachable e0 (Bind n (Sync n$_e$) p'),
-        (SPrm (SendEvt n$_sc$ n$_m$)) \subseteq static_env n$_e$, 
+        (SAtm (SendEvt n$_sc$ n$_m$)) \subseteq static_env n$_e$, 
         (SChn n$_c$) \in static_env n$_sc$
       then
         static_send_id static_env e0 n$_c$ (NBind x))
@@ -1878,7 +1908,7 @@ synchronization to receive on a given abstract channel.
     (\forall e0 n n$_e$ p' n$_r$c static_env n$_c$ .
       if
         static_reachable e0 (Bind n (Sync n$_e$) p'),
-        (SPrm (RecvEvt n$_r$c)) \in static_env n$_e$, 
+        (SAtm (RecvEvt n$_r$c)) \in static_env n$_e$, 
         (SChn n$_c$) \in static_env n$_r$c 
       then
         static_recv_id static_env e0 n$_c$ (NBind x))
@@ -2062,7 +2092,7 @@ traversable transitions for the sequenced subprogram.
 
     (\forall  static_env n$_f$ n p' n n$_a$ .
       if
-        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
+        (\forall n$_f$' n$_p$ p$_b$ . if (SAtm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
           {(NBind x, MCll, top_program_id p$_b$),
             (NResult (result_name p$_b$), MRtn, top_program_id p')} \subseteq graph),
         static_traversable static_env graph p'
@@ -2578,7 +2608,7 @@ semantic elements to static values and static environments.
     (\forall path n . 
       abstract (VChn (Chan path x)) = SChn x),
     (\forall atom env .
-      abstract (VAtm atom env) = SPrm atom)
+      abstract (VAtm atom env) = SAtm atom)
 
   predicate static_eval_value of
     static_value_map -> abstract_comm -> dynamic_value -> bool: 
@@ -3091,7 +3121,7 @@ However, it must additionally consider transitions with the sending mode.
         (NBind n , MNxt, top_program_id p') \in graph,
         (\forall n$_sc$ n$_m$ n$_c$ y.
           if
-            (SPrm (SendEvt n$_sc$ n$_m$)) \in static_env xSE, 
+            (SAtm (SendEvt n$_sc$ n$_m$)) \in static_env xSE, 
             (SChn n$_c$) \in static_env n$_sc$,
             static_recv_program_id static_env p' n$_c$ (NBind y)
           then
@@ -3128,7 +3158,7 @@ However, it must additionally consider transitions with the sending mode.
         
     (\forall  static_env n$_f$ n p' n n$_a$ .
       if
-        (\forall n$_f$' n$_p$ p$_b$ . if (SPrm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
+        (\forall n$_f$' n$_p$ p$_b$ . if (SAtm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
           {(NBind x, MCll, top_program_id p$_b$),
             (NResult (result_name p$_b$), MRtn, top_program_id p')} \subseteq graph),
 
@@ -3158,7 +3188,7 @@ of each program ID.
 
     (\forall n$_sc$ n$_m$ static_env n entr n$_c$ . 
       if
-        (SPrm (SendEvt n$_sc$ n$_m$)) \in static_env x,
+        (SAtm (SendEvt n$_sc$ n$_m$)) \in static_env x,
         (static_built_on_chan static_env entr n$_c$ n$_sc$ or
           static_built_on_chan static_env entr n$_c$ n$_m$)
       then 
@@ -3166,14 +3196,14 @@ of each program ID.
 
     (\forall n$_r$c static_env n entr n$_c$ . 
       if  
-        (SPrm (RecvEvt n$_r$c)) \in static_env x,
+        (SAtm (RecvEvt n$_r$c)) \in static_env x,
         static_built_on_chan static_env entr n$_c$ n$_r$c
       then 
         static_built_on_chan static_env entr n$_c$ x),
 
     (\forall n1 n2 static_env n entr n$_c$ . 
       if  
-        (SPrm (Pair n1 n2)) \in static_env x,
+        (SAtm (Pair n1 n2)) \in static_env x,
         (static_built_on_chan static_env entr n$_c$ n1 or
           static_built_on_chan static_env entr n$_c$ n2)
       then 
@@ -3181,21 +3211,21 @@ of each program ID.
 
     (\forall n$_a$ static_env n entr n$_c$ .
       if
-        (SPrm (Lft n$_a$)) \in static_env x,
+        (SAtm (Lft n$_a$)) \in static_env x,
         static_built_on_chan static_env entr n$_c$ n$_a$
       then 
         static_built_on_chan static_env entr n$_c$ x),
 
     (\forall n$_a$ static_env n entr n$_c$ .
       if
-        (SPrm (Rght n$_a$)) \in static_env x,
+        (SAtm (Rght n$_a$)) \in static_env x,
         static_built_on_chan static_env entr n$_c$ n$_a$
       then 
         static_built_on_chan static_env entr n$_c$ x),
 
     (\forall n$_f$ n$_p$ p$_b$ .
       if
-        (SPrm (Fun n$_f$ n$_p$ p$_b$)) \in static_env x,
+        (SAtm (Fun n$_f$ n$_p$ p$_b$)) \in static_env x,
         not ((entr (top_program_id p$_b$) - {x_p}) = {})
       then
         static_built_on_chan static_env entr n$_c$ x)
