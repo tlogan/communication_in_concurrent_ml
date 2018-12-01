@@ -106,7 +106,7 @@ analysis is sound with respect to the dynamic analysis. Two versions of the stat
 have been developed so far; one with lower precision, and one with higher precision. The higher
 precision analysis is closer to the work by Reppy and Xiao, but contains many more details making
 it more challenging to prove formally than the lower precision analysis.
-The proofs for the soundness theorem of the lower precision analysis
+The proofs for the soundness theorems of the lower precision analysis
 have been mechanically verified using Isabelle \cite{isabelle}, while the higher precision
 analysis is currently under development. Indeed, one of the motivations for implementing the analysis 
 in a mechanical setting is to enable gradual extension of analysis and language without introducing
@@ -1033,7 +1033,7 @@ is bound to a name. Furthermore, terms only accept names in place of eagerly eva
 inputs. 
 
 Restricting the grammar to ANF allows the operational semantics
-to maintain graph information by associating values succint names.
+to maintain graph information by associating values with succint names.
 Maintaining the values' ties to the syntax,
 simplifies proofs of soundness, since they must relate dynamic evaluation information
 to static information based on the syntax.
@@ -2485,7 +2485,7 @@ synchronization on a sending event, then that synchronization is statically iden
 send ID by its term ID.
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma static_traceable_sound:
+  lemma static_traceable_complete:
   \forall t0 pool comm path n c t' env stack evn_a static_comm graph is_end .
     if
       star dynamic_eval ([[] -> (Stt t0 [->] [])], {}) (pool, comm), 
@@ -2498,7 +2498,7 @@ send ID by its term ID.
         paths_correspond path static_path, 
         static_traceable graph (term_id t0) is_end static_path
 
-  lemma static_inclusive_sound:
+  lemma static_inclusive_complete:
   \forall t0 pool comm path1 stt1 path2 stt2 static_path1 static_path2 . 
     if
       star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm
@@ -2509,7 +2509,7 @@ send ID by its term ID.
     then
       static_inclusive static_path1 static_path2
 
-  lemma static_send_id_sound:
+  lemma static_send_id_complete:
   \forall t0 pool comm path n n$_e$ t' env stack n$_sc$ n$_m$ env' path$_c$ n$_c$ .
     if
       star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm, 
@@ -2521,7 +2521,7 @@ send ID by its term ID.
       static_send_id static_env t0 n$_c$ (NBnd n)
 \end{lstlisting}
 
-The soundness of static traceability is proved by generalizing
+The completeness of static traceability is proved by generalizing
 static acceptance by flows and static evaluation over pools, such that information about a step in
 the program can be deduced by a fixed number of logical steps regardless of the location of the
 program step or the size of the program. Without such generalization, it would be possible to
@@ -2643,7 +2643,7 @@ depending on the program.
 \end{lstlisting}
 
 The flows described by the various versions of static acceptance by flows depend on static
-environments in order to look up the control flow in the application case.
+environments in order to look up the control flow in the case where the term is a function.
 The static environment
 results from the static evaluation of the program that is dynamically evaluated. Thus,
 generalized
@@ -2797,15 +2797,15 @@ traceability.
       star_left r x z
 \end{lstlisting}
 
-The soundness of static traceability follows from the generalized lemma
-of soundness of static traceability over pools, which contains
+The completeness of static traceability follows from the generalized lemma
+of completeness of static traceability over pools, which contains
 the generalized premise of
 static traceability, and also it follows from the lemma of preservation of static
 acceptance by flows over pools from an initial pool to any pool resulting from multiple steps of
 dynamic evaluation.
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma static_traceable_pool_sound:
+  lemma static_traceable_pool_complete:
   \forall t0 pool comm path n c t' env stack evn_a static_comm graph is_end .
     if
       star dynamic_eval ([[] -> (Stt t0 [->] [])], {}) (pool, comm), 
@@ -2829,16 +2829,16 @@ dynamic evaluation.
 \end{lstlisting}
 
 
-The lemma for the soundness of the generalized form follows from the generalized definitions
+The lemma for the completeness of the generalized form follows from the generalized definitions
 of static traceability. The preservation of static acceptance by flows over pools is proved by the
-equivalence between star and its leftward variant, and induction on the leftward variant.
+equivalence between star and its forward variant, and induction on the forward variant.
 
-The lemma for soundness of a static step not being a send ID is proved using the lemma for
-soundness of a name in a sending event of a synchronization not statically binding to a static
-channel value, and the lemma for soundness of a name in any state's environment
-not statically binding to a static value.  Since only send IDs are relevant
-the soundness of static reachability is
-used to ensure that the static step discussed is indeed a send ID. 
+The lemma for completeness of being a send ID classification \lstinline{static_send_id_complete}
+is proved using the lemma for
+soundness of static evaluation for synchronization of a send event,
+and the lemma for soudness of static evaluation.
+Since only send IDs are relevant the completeness of static reachability is
+used to ensure that the static step is indeed a send ID. 
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma send_chan_static_eval_sound:
@@ -2856,14 +2856,14 @@ used to ensure that the static step discussed is indeed a send ID.
   lemma static_eval_sound:
   \forall t0 pool comm static_env static_comm path t env stack n v .
     if
-      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm,
       static_eval static_env static_comm t0, 
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm,
       pool path = Some (Stt t env stack), 
       env n = Some v
     then
-      abstract v \in static_env x
+      abstract v \in static_env n 
 
-  lemma static_reachable_sound:
+  lemma static_reachable_complete:
   \forall t0 pool comm static_env static_comm path t env stack .
     if
       star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm,
@@ -2872,172 +2872,174 @@ used to ensure that the static step discussed is indeed a send ID.
       static_reachable t0 t 
 \end{lstlisting}
 
-Both the soundness of a name in a sending event of a synchronization not statically binding
-to a static
-channel value, and the soundness of a name in any state's environment not statically binding
-to a static value from the preservation of static evaluation over multiple steps of dynamic
-evaluation.
+Both the soundness of static evaluation on the syncrhonization of a send event,
+and the soundness of static evaluation follow from
+the preservation of static evaluation over multiple steps of dynamic evaluation.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma static_eval_pool_preserved:
-    \forall pool comm pool' comm' static_env static_comm .
-      if
-        star dynamic_eval pool comm pool' comm' 
-        static_eval_pool static_env static_comm pool
-      then
-        static_eval_pool static_env static_comm pool'
+  \forall pool comm pool' comm' static_env static_comm .
+    if
+      star dynamic_eval pool comm pool' comm' 
+      static_eval_pool static_env static_comm pool
+    then
+      static_eval_pool static_env static_comm pool'
 \end{lstlisting}
 
-The lemma for soundness of static reachability relies on the a reformulation of
-static reachability that inducts on the left program.
-The definition of static reachability is syntax-directed in
-order to portray a clear connection to
+The lemma for completeness of static reachability relies on the a reformulation of
+static reachability that defined by proofs that induct on a larger term
+containing the reachable term.  This definition is useful for forward derivations
+of reachability relations, however it doesn't offer much guidance for deciding reachability. 
+In constrast, the definition of the original static reachability relation is
+syntax-directed in order to portray a clear connection to
 a computable algorithm that can determine the reachable term from an initial program.
 However, to show that an term is reachable from the initial program, it is necessary to
 show that each intermediate term is reachable from the initial term.  Thus, the
 induction needs to enable unraveling the goals from the end to the beginning of the program,
-maintaining the initial program state in context for each subgoal .
+maintaining the initial program state in context for each subgoal.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_reachable_left of term -> term -> bool:
-    only
-
-    (\forall e0 p .
-      static_reachable_left e0 e0),
-
-    (\forall e0 n p_c p' .
-      if 
-        static_reachable_left e0 (Bind n (Spwn p_c) p')
-      then
-        static_reachable_left e0 p_c),
-
-    (\forall e0 n n$_s$ n$_l$ p$_l$ n$_r$ p$_r$ p' .
-      if
-        static_reachable_left e0 (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')
-      then
-        static_reachable_left e0 p$_l$),
-
-    (\forall e0 n n$_s$ n$_l$ p$_l$ n$_r$ p$_r$ p' .
-      if
-        static_reachable_left e0 (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')
-      then
-        static_reachable_left e0 p$_r$),
-
-    (\forall e0 n n$_f$ n$_p$ p$_b$ p' .
-      if
-        static_reachable_left e0 (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')
-      then
-        static_reachable_left e0 p$_b$),
-
-    (\forall e0 n n$_f$ n$_p$ p$_b$ p' .
-      if
-        static_reachable_left e0 (Bind n b p')
-      then
-        static_reachable_left e0 p')
-
+  predicate static_reachable_forward of term -> term -> bool:
+  only
+  (\forall t0 .
+    static_reachable_forward t0 t0
+  ),
+  (\forall t0 n p$_c$ t' .
+    if 
+      static_reachable_forward t0 (Bind n (Spwn p$_c$) t')
+    then
+      static_reachable_forward t0 p$_c$
+  ),
+  (\forall t0 n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
+    if
+      static_reachable_forward t0 (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+    then
+      static_reachable_forward t0 t$_l$
+  ),
+  (\forall t0 n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
+    if
+      static_reachable_forward t0 (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+    then
+      static_reachable_forward t0 t$_r$
+  ),
+  (\forall t0 n n$_f$ n$_p$ t$_b$ t' .
+    if
+      static_reachable_forward t0 (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
+    then
+      static_reachable_forward t0 t$_b$
+  ),
+  (\forall t0 n n$_f$ n$_p$ t$_b$ t' .
+    if
+      static_reachable_forward t0 (Bind n b t')
+    then
+      static_reachable_forward t0 t'
+  )
   predicate static_reachable_over_atom of term -> atom -> bool:
-    only
-
-    (\forall e0 n$_c$ n$_m$ .
-      static_reachable_over_atom e0 (SendEvt n$_c$ n$_m$)),
-
-    (\forall e0 n$_c$ .
-        static_reachable_over_atom e0 (RecvEvt n$_c$)),
-
-    (\forall e0 n1 n2 .
-        static_reachable_over_atom e0 (Pair n1 n2)),
-
-    (\forall e0 n$_l$ .
-        static_reachable_over_atom e0 (Lft n$_l$)),
-
-    (\forall e0 n$_r$
-        static_reachable_over_atom e0 (Rht n$_r$)),
-
-    (\forall e0 p$_b$ n$_f$ n$_p$ p$_b$ . 
-      if
-        static_reachable_left e0 p$_b$ 
-      then
-        static_reachable_over_atom e0 (Fun n$_f$ n$_p$ p$_b$))
+  only
+  (\forall t0 n$_c$ n$_m$ .
+    static_reachable_over_atom t0 (SendEvt n$_c$ n$_m$)
+  ),
+  (\forall t0 n$_c$ .
+    static_reachable_over_atom t0 (RecvEvt n$_c$)
+  ),
+  (\forall t0 n1 n2 .
+    static_reachable_over_atom t0 (Pair n1 n2)
+  ),
+  (\forall t0 n$_l$ .
+    static_reachable_over_atom t0 (Lft n$_l$)
+  ),
+  (\forall t0 n$_r$
+    static_reachable_over_atom t0 (Rht n$_r$)
+  ),
+  (\forall t0 t$_b$ n$_f$ n$_p$ t$_b$ . 
+    if
+      static_reachable_forward t0 t$_b$ 
+    then
+      static_reachable_over_atom t0 (Fun n$_f$ n$_p$ t$_b$)
+  )
 
   predicate static_reachable_val of term -> dynamic_value -> bool:
-    only
-
-    (\forall e0 .
-        static_reachable_over_val e0 VUnt),
-
-    (\forall e0 c .
-        static_reachable_over_val e0 (VChn c)),
-
-    (\forall e0 p env .
-      if
-        static_reachable_over_atom e0 p, 
-        static_reachable_over_env e0 env
-      then
-        static_reachable_over_val e0 (VAtm p env))
+  only
+  (\forall t0 .
+    static_reachable_over_val t0 VUnt
+  ),
+  (\forall t0 c .
+    static_reachable_over_val t0 (VChn c)
+  ),
+  (\forall t0 p env .
+    if
+      static_reachable_over_atom t0 p, 
+      static_reachable_over_env t0 env
+    then
+      static_reachable_over_val t0 (VAtm p env)
+  )
 
   predicate static_reachable_env of term -> env -> bool:
-    only
-    (\forall e0 env
-      if
-        (\forall n v .
-          if
-            env n = Some v
-          then
-            static_reachable_over_val e0 v)
-      then
-        static_reachable_over_env e0 env)
+  only
+  (\forall t0 env
+    if
+      (\forall n v .
+        if
+          env n = Some v
+        then
+          static_reachable_over_val t0 v
+      )
+    then
+      static_reachable_over_env t0 env
+  )
 
-  predicate static_reachable_over_stack of
-    term -> continuation list -> bool:
-    only
-    (\forall e0 .
-      static_reachable_over_stack e0 []),
-    (\forall e0 p$_k$ env$_k$ stack' .
-      if
-        static_reachable_left e0 p$_k$, 
-        static_reachable_over_env e0 env$_k$,
-        static_reachable_over_stack e0 stack' 
-      then
-        static_reachable_over_stack e0 ((Ctn n$_k$ p$_k$ env$_k$ # stack')))
+  predicate static_reachable_over_stack
+  of term -> continuation list -> bool:
+  only
+  (\forall t0 .
+    static_reachable_over_stack t0 []),
+  (\forall t0 t$_k$ env$_k$ stack' .
+    if
+      static_reachable_forward t0 t$_k$, 
+      static_reachable_over_env t0 env$_k$,
+      static_reachable_over_stack t0 stack' 
+    then
+    static_reachable_over_stack t0 ((Ctn n$_k$ t$_k$ env$_k$ # stack'))
+  )
 
   predicate static_reachable_pool of term -> pool -> bool:
-    only
-    (\forall e0 pool .
-      then
-        (\forall path p env stack . if pool path = Some (Stt p env stack) then 
-          static_reachable_left e0 e, 
-          static_reachable_over_env e0 env, 
-          static_reachable_over_stack e0 stack)
-      then
-        static_reachable_over_pool e0 pool)
+  only
+  (\forall t0 pool .
+    then
+      (\forall path p env stack . if pool path = Some (Stt p env stack) then 
+        static_reachable_forward t0 e, 
+        static_reachable_over_env t0 env, 
+        static_reachable_over_stack t0 stack
+      )
+    then
+      static_reachable_over_pool t0 pool
+  )
 
-  \end{lstlisting}
+\end{lstlisting}
 
-The soundness of static reachability follows the the definitions
-a generalized form of soundness over pools.
+The completeness of static reachability follows the the definitions
+a generalized form of completeness over pools.
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma static_reachable_pool_sound:
-    \forall e0 pool .
-      if
-        star dynamic_eval [[] -> (Stt e0 [->] [])], {} pool comm 
-      then
-        static_reachable_over_pool e0 pool
+  lemma static_reachable_pool_complete:
+  \forall e0 pool .
+    if
+      star dynamic_eval [[] -> (Stt e0 [->] [])], {} pool comm 
+    then
+      static_reachable_over_pool e0 pool
+\end{lstlisting}
 
-  \end{lstlisting}
-
-
-The soundness over pools follows from the lemma that the leftward
+The completeness over pools follows from the lemma that the forward
 static reachability implies the rightward (and syntax-directed) static reachability,
-and the equivalence between star and the leftward star.  It relies on induction of the
-leftward star and constructs the static reachability
-proposition using the leftward definition.  
+and the equivalence between star and the forward star.  It relies on induction of the
+forward star and constructs the static reachability
+proposition using the forward definition.  
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma static_reachable_left_implies_static_reachable:
+  lemma static_reachable_forward_implies_static_reachable:
     \forall e0 e. 
       if
-        static_reachable_left e0 e
+        static_reachable_forward e0 e
       then
         static_reachable e0 e
 
@@ -3051,8 +3053,8 @@ proposition using the leftward definition.
   \end{lstlisting}
 
 
-The lemma that the leftward variant of static reachability implies the syntax-directed static
-reachability follows from induction on the leftward static reachability and the
+The lemma that the forward variant of static reachability implies the syntax-directed static
+reachability follows from induction on the forward static reachability and the
 transitivity of static
 reachability, which follows from induction on static reachability.
 
@@ -3834,9 +3836,8 @@ correlating dynamic paths with static paths.
           (static_path_pre @ (NBnd n$_s$, ESend n$_s$e) # (NBnd n$_r$, MNxt) # static_path_sfx))
 \end{lstlisting}
 
-Additionally the soundness theorem follows from the soundness of static traceability,
-the soundness of static inclusiveness,
-and the soundness of a term ID not being a sending ID. 
+Additionally the soundness theorem follows from the completeness of static traceability,
+the completeness of static inclusiveness, and the completeness of a sending ID classification. 
 The reasoning about the sending ID is identical to that of the lower precision analysis, but
 the the reasoning for the former two is significantly more complicated and not yet completed.
 The complication arises from the
@@ -3914,7 +3915,7 @@ that correlates with the dynamic path is much more challenging.
           (static_path_pre @ (NBnd n$_s$, ESend n$_s$e) # (NBnd n$_r$, MNxt) # static_path_sfx)
       )
 
-  lemma static_traceable_sound: 
+  lemma static_traceable_complete: 
     \forall e0 pool comm path n b p' env stack static_env static_comm
       entr exit n$_c$ graph is_end path_c  . 
       if
@@ -3929,7 +3930,7 @@ that correlates with the dynamic path is much more challenging.
           paths_correspond_mod_chan pool comm (Chan path_c n$_c$) path static_path, 
           static_traceable graph entr exit (NBnd n$_c$) is_end static_path)
 
-  lemma static_inclusive_sound:
+  lemma static_inclusive_complete:
     \forall e0 pool comm static_env entr exit n$_c$ graph static_comm
       path1 stt1 path_c static_path1 path2 stt2 static_path2 .
       if
