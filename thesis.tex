@@ -1892,12 +1892,12 @@ The term ID of a result term is the embedded name, and indication of its use in 
     NBnd name
   | NRslt var
 
-  fun top_term_id of term -> term_id:
+  fun term_id of term -> term_id:
   (\forall n c t' . 
-    top_term_id (Bind n c t') = NBnd x
+    term_id (Bind n c t') = NBnd x
   ),
   (\forall n . 
-    top_term_id (Rslt n) = NRslt x
+    term_id (Rslt n) = NRslt x
   )
   type term_id_map = term_id -> name set
 \end{lstlisting}
@@ -2024,56 +2024,56 @@ accepting flows for the sequenced embedded term.
   ),
   (\forall n t' graph static_env  .
     if
-      (NBnd n , MNxt, top_term_id t') \in graph,
+      (NBnd n , MNxt, term_id t') \in graph,
       static_flows_accept static_env graph t'
     then
       static_flows_accept static_env graph (Bind n Unt t')
   ),
   (\forall n t' graph static_env  .
     if
-      (NBnd n , MNxt, top_term_id t') \in graph,
+      (NBnd n , MNxt, term_id t') \in graph,
       static_flows_accept static_env graph t'
     then
       static_flows_accept static_env graph (Bind n MkChn t')
   ),
   (\forall n t' graph static_env  n$_c$ n$_m$ .
     if
-      (NBnd n , MNxt, top_term_id t') \in graph, 
+      (NBnd n , MNxt, term_id t') \in graph, 
       static_flows_accept static_env graph t'
     then
       static_flows_accept static_env graph (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
   ),
   (\forall n t' graph static_env n$_c$ .
     if
-      (NBnd n , MNxt, top_term_id t') \in graph,
+      (NBnd n , MNxt, term_id t') \in graph,
       static_flows_accept static_env graph t'
     then
       static_flows_accept static_env graph (Bind n (Atom (RecvEvt n$_c$)) t')
   ),
   (\forall n t' graph static_env n1 n2 .
     if
-      (NBnd n , MNxt, top_term_id t') \in graph,
+      (NBnd n , MNxt, term_id t') \in graph,
       static_flows_accept static_env graph t'
     then
       static_flows_accept static_env graph (Bind n (Atom (Pair n1 n2)) t')
   ),
   (\forall n t' graph static_env n$_s$ .
     if
-      (NBnd n , MNxt, top_term_id t') \in graph,
+      (NBnd n , MNxt, term_id t') \in graph,
       static_flows_accept static_env graph t'
     then
       static_flows_accept static_env graph (Bind n (Atom (Lft n$_s$)) t')
   ),
   (\forall n t' graph static_env n$_s$ .
     if
-      (NBnd n , MNxt, top_term_id t') \in graph,
+      (NBnd n , MNxt, term_id t') \in graph,
       static_flows_accept static_env graph t'
     then
       static_flows_accept static_env graph (Bind n (Atom (Rht n$_s$)) t')
   ),
   (\forall n t' graph static_env t$_b$ n$_f$ n$_t$ .
     if
-      (NBnd n , MNxt, top_term_id t') \in graph,
+      (NBnd n , MNxt, term_id t') \in graph,
       static_flows_accept static_env graph t', 
       static_flows_accept static_env graph t$_b$
     then
@@ -2081,8 +2081,8 @@ accepting flows for the sequenced embedded term.
   ),
   (\forall n t' p_c graph static_env.
     if
-      {(NBnd x, MNxt, top_term_id t'),
-        (NBnd x, MSpwn, top_term_id p_c)} \subseteq graph, 
+      {(NBnd x, MNxt, term_id t'),
+        (NBnd x, MSpwn, term_id p_c)} \subseteq graph, 
       static_flows_accept static_env graph p_c, 
       static_flows_accept static_env graph t'
     then
@@ -2090,21 +2090,21 @@ accepting flows for the sequenced embedded term.
   ),
   (\forall n t' graph static_env n$_s$e .
     if
-      (NBnd n , MNxt, top_term_id t') \in graph, 
+      (NBnd n , MNxt, term_id t') \in graph, 
       static_flows_accept static_env graph t'
     then
       static_flows_accept static_env graph (Bind n (Sync n$_s$e) t')
   ),
   (\forall n t' graph static_env n$_t$ .
     if
-      (NBnd n , MNxt, top_term_id t') \in graph, 
+      (NBnd n , MNxt, term_id t') \in graph, 
       static_flows_accept static_env graph t', 
     then
       static_flows_accept static_env graph (Bind n (Fst n$_t$) t')
   ),
   (\forall n t' graph static_env n$_t$ .
     if
-      (NBnd n , MNxt, top_term_id t') \in graph, 
+      (NBnd n , MNxt, term_id t') \in graph, 
       static_flows_accept static_env graph t', 
     then
       static_flows_accept static_env graph (Bind n (Snd n$_t$) t')
@@ -2112,10 +2112,10 @@ accepting flows for the sequenced embedded term.
   (\forall n t$_l$ t$_r$ t' graph static_env n$_s$ .
     if
       {
-        (NBnd x, MCll, top_term_id t$_l$),
-        (NBnd x, MCll, top_term_id t$_r$),
-        (NResult (result_name t$_l$), MRtn, top_term_id t'),
-        (NResult (result_name t$_r$), MRtn, top_term_id t')
+        (NBnd x, MCll, term_id t$_l$),
+        (NBnd x, MCll, term_id t$_r$),
+        (NResult (result_name t$_l$), MRtn, term_id t'),
+        (NResult (result_name t$_r$), MRtn, term_id t')
       } \subseteq graph, 
       static_flows_accept static_env graph t$_l$, 
       static_flows_accept static_env graph t$_r$,
@@ -2127,8 +2127,8 @@ accepting flows for the sequenced embedded term.
     if
       (\forall n$_f$' n$_t$ t$_b$ . if (SAtm (Fun n$_f$' n$_t$ t$_b$)) \in static_env n$_f$ then 
         {
-          (NBnd x, MCll, top_term_id t$_b$),
-          (NResult (result_name t$_b$), MRtn, top_term_id t')
+          (NBnd x, MCll, term_id t$_b$),
+          (NResult (result_name t$_b$), MRtn, term_id t')
         } \subseteq graph
       ),
       static_flows_accept static_env graph t'
@@ -2150,24 +2150,24 @@ that meets the ending condition, and the longest strict prefix of the path is st
 traceable.  
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_traceable of
-    flow set -> term_id -> (term_id -> bool) -> static_path -> bool:
-    only
-
-    (\forall start graph is_end .
-      if
-        is_end start
-      then
-        static_traceable graph start is_end []),
-
-    (\forall  graph star middle path is_end end mode .
-      if 
-        static_traceable graph start (\lambda l . l = middle) path, 
-        is_end end, 
-        (middle, mode, end) \in graph 
-      then
-        static_traceable graph start is_end (path @ [(middle, mode)]))
-  \end{lstlisting}
+  predicate static_traceable
+  of flow set -> term_id -> (term_id -> bool) -> static_path -> bool:
+  only
+  (\forall start graph is_end .
+    if
+      is_end start
+    then
+      static_traceable graph start is_end []
+  ),
+  (\forall  graph star middle path is_end end mode .
+    if 
+      static_traceable graph start (\lambda l . l = middle) path, 
+      is_end end, 
+      (middle, mode, end) \in graph 
+    then
+      static_traceable graph start is_end (path @ [(middle, mode)])
+  )
+\end{lstlisting}
 
 In the graph of the server implementation, there are two paths each corresponding to its
 own thread that lead
@@ -2192,31 +2192,30 @@ to be counted towards the communication topology.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_inclusive of static_path -> static_path -> bool:
-    only
-
-    (\forall path1 path2 .
-      if
-        prefix path1 path2
-      then
-        static_inclusive path1 path2),
-
-    (\forall path2 path1 .
-      if
-        prefix path2 path1
-      then
-        static_inclusive path1 path2),
-
-    (\forall path n path1 path2 .
-      static_inclusive
-        (path @ (NBnd x, MSpwn) # path1)
-        (path @ (NBnd x, MNxt) # path2)),
-
-    (\forall path n path1 path2 .
-      static_inclusive
-        (path @ (NBnd x, MNxt) # path1)
-        (path @ (NBnd x, MSpwn) # path2))
-  \end{lstlisting}
-
+  only
+  (\forall path1 path2 .
+    if
+      prefix path1 path2
+    then
+      static_inclusive path1 path2
+  ),
+  (\forall path2 path1 .
+    if
+      prefix path2 path1
+    then
+      static_inclusive path1 path2
+  ),
+  (\forall path n path1 path2 .
+    static_inclusive
+      (path @ (NBnd x, MSpwn) # path1)
+      (path @ (NBnd x, MNxt) # path2)
+  ),
+  (\forall path n path1 path2 .
+    static_inclusive
+      (path @ (NBnd x, MNxt) # path1)
+      (path @ (NBnd x, MSpwn) # path2)
+  )
+\end{lstlisting}
 
 The singularness means that two paths are the same or only of them can occur in a given run of
 a program. The noncompetitiveness means states that two paths can't compete during a run of a
@@ -2224,95 +2223,107 @@ program, since they are ordered or cannot occur in the same run of a program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate singular of static_path -> static_path -> bool:
-    only
-
-    (\forall path .
-      singular path path),
-
-    (\forall path1 path2 .
-      if
-        not (static_inclusive path1 path2)
-      then
-        singular path1 path2)
+  only
+  (\forall path .
+    singular path path
+  ),
+  (\forall path1 path2 .
+    if
+      not (static_inclusive path1 path2)
+    then
+      singular path1 path2
+  )
 
   predicate noncompetitive of static_path -> static_path -> bool:
-    only
-
-    (\forall path1 path2 .
-      if
-        ordered path1 path2
-      then
-        noncompetitive path1 path2),
-
-    (\forall path1 path2 .
-      if
-        not (static_inclusive path1 path2)
-      then
-        noncompetitive path1 path2)
+  only
+  (\forall path1 path2 .
+    if
+      ordered path1 path2
+    then
+      noncompetitive path1 path2
+  ),
+  (\forall path1 path2 .
+    if
+      not (static_inclusive path1 path2)
+    then
+      noncompetitive path1 path2
+  )
 \end{lstlisting}
 
 
 The static one-shot classification means that there is at most one attempt
 to synchronize to send on a static channel in any run of a given program.
 
+\begin{lstlisting}[language=logic, mathescape]
+  predicate static_one_shot of static_value_map -> term -> name -> bool:
+  only
+  (\forall graph t static_env n$_c$ .
+    if
+      every_two
+        (static_traceable graph (term_id t) (static_send_id static_env t n$_c$))
+        singular,
+      static_flows_accept static_env graph t
+    then
+      static_one_shot graph t n$_c$
+  )
+\end{lstlisting}
+
 The static one-to-one classification means that there is at most one thread that attempts to
 send and at most one thread that attempts to receive on a given static channel for any time
 during a run of a given program.
 
+\begin{lstlisting}[language=logic, mathescape]
+  predicate static_one_to_one of static_value_map -> term -> name -> bool:
+  only
+  (\forall graph t static_env n$_c$ .
+    if
+      every_two
+        (static_traceable graph (term_id t) (static_send_id static_env t n$_c$))
+        noncompetitive, 
+      every_two
+        (static_traceable graph (term_id t) (static_recv_term_id static_env t n$_c$))
+        noncompetitive, 
+      static_flows_accept static_env graph t 
+    then
+      static_one_to_one static_env t n$_c$
+  )
+\end{lstlisting}
+
 The static one-to-many classification means that there is at most one thread that attempts to
 send on a given static channel at any time during a run of a given program, but there may be
-many threads that attempt to receive on the channel. The static many-to-one predicate means
+many threads that attempt to receive on the channel.
+
+\begin{lstlisting}[language=logic, mathescape]
+  predicate static_one_to_many of static_value_map -> term -> name -> bool:
+  only
+  (\forall graph t static_env n$_c$ .
+    if
+      every_two
+        (static_traceable graph (term_id t) (static_send_id static_env t n$_c$))
+        noncompetitive,
+      static_flows_accept static_env graph t 
+    then
+      static_one_to_many static_env t n$_c$
+  ) 
+\end{lstlisting}
+
+The static many-to-one predicate means
 that there may be many threads that attempt to send on a static channel, but there is at most
 one thread that attempts to receive on the channel for any time during a run of a given
 program.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_one_shot of static_value_map -> term -> name -> bool:
-    only
-    (\forall graph p static_env n$_c$ .
-      if
-        every_two
-          (static_traceable graph (top_term_id e) (static_send_id static_env p n$_c$))
-          singular,
-        static_flows_accept static_env graph e
-      then
-        static_one_shot graph p n$_c$)
-
-  predicate static_one_to_one of static_value_map -> term -> name -> bool:
-    only
-    (\forall graph p static_env n$_c$ .
-      if
-        (every_two
-          (static_traceable graph (top_term_id e) (static_send_id static_env p n$_c$))
-          noncompetitive), 
-        (every_two
-          (static_traceable graph (top_term_id e) (static_recv_term_id static_env p n$_c$))
-          noncompetitive), 
-        static_flows_accept static_env graph e
-      then
-        static_one_to_one static_env p n$_c$)
-
-  predicate static_one_to_many of static_value_map -> term -> name -> bool:
-    only
-    (\forall graph p static_env n$_c$ .
-      if
-        (every_two
-          (static_traceable graph (top_term_id e) (static_send_id static_env p n$_c$))
-          noncompetitive),
-        static_flows_accept static_env graph e
-      then
-        static_one_to_many static_env p n$_c$) 
-
   predicate static_many_to_one of static_value_map -> term -> name -> bool:
-    only
-    (\forall graph p static_env n$_c$ .
-      if
-        (every_two
-          (static_traceable graph (top_term_id e) (static_recv_term_id static_env p n$_c$))
-          noncompetitive),
-        static_flows_accept static_env graph e
-      then
-        static_many_to_one static_env p n$_c$) 
+  only
+  (\forall graph t static_env n$_c$ .
+    if
+      every_two
+        (static_traceable graph (term_id t) (static_recv_term_id static_env t n$_c$))
+        noncompetitive,
+      static_flows_accept static_env graph t 
+    then
+      static_many_to_one static_env t n$_c$
+  ) 
 \end{lstlisting}
 
 \subsection{Soundness}
@@ -2482,7 +2493,7 @@ send ID by its term ID.
       then
         exists static_path . 
           paths_correspond path static_path, 
-          static_traceable graph (top_term_id e0) is_end static_path
+          static_traceable graph (term_id e0) is_end static_path
 
   lemma not_static_inclusive_sound:
     \forall e0 pool comm path1 stt1 path2 stt2 static_path1 static_path2 . 
@@ -2600,7 +2611,7 @@ depending on the program.
 
     (\forall y p graph static_env graph env stack n env .
       if 
-        {(NResult y, MRtn, top_term_id e)} \subseteq graph,
+        {(NResult y, MRtn, term_id e)} \subseteq graph,
         static_flows_accept static_env graph e,
         static_flows_accept_env static_env graph env,
         static_flows_accept_stack static_env graph (result_name e) stack 
@@ -2797,7 +2808,7 @@ dynamic evaluation.
       then
         exists static_path . 
           paths_correspond path static_path, 
-          static_traceable graph (top_term_id e0) is_end static_path
+          static_traceable graph (term_id e0) is_end static_path
 
   lemma static_flows_accept_pool_preserved_star:
     \forall e0 pool comm static_env static_comm graph .
@@ -3089,56 +3100,56 @@ However, it must additionally consider flows with the sending mode.
 
     (\forall n p' graph static_env  .
       if
-        (NBnd n , MNxt, top_term_id p') \in graph,
+        (NBnd n , MNxt, term_id p') \in graph,
         static_flows_accept static_env graph p'
       then
         static_flows_accept static_env graph (Bind n Unt p')),
 
     (\forall n p' graph static_env  .
       if
-        (NBnd n , MNxt, top_term_id p') \in graph,
+        (NBnd n , MNxt, term_id p') \in graph,
         static_flows_accept static_env graph p'
       then
         static_flows_accept static_env graph (Bind n MkChn p')),
 
     (\forall n p' graph static_env  n$_c$ n$_m$ .
       if
-        (NBnd n , MNxt, top_term_id p') \in graph,
+        (NBnd n , MNxt, term_id p') \in graph,
         static_flows_accept static_env graph p'
       then
         static_flows_accept static_env graph (Bind n (Atom (SendEvt n$_c$ n$_m$)) p')),
 
     (\forall n p' graph static_env n$_c$ .
       if
-        (NBnd n , MNxt, top_term_id p') \in graph,
+        (NBnd n , MNxt, term_id p') \in graph,
         static_flows_accept static_env graph p'
       then
         static_flows_accept static_env graph (Bind n (Atom (RecvEvt n$_c$)) p')),
 
     (\forall n p' graph static_env n1 n2 .
       if
-        (NBnd n , MNxt, top_term_id p') \in graph,
+        (NBnd n , MNxt, term_id p') \in graph,
         static_flows_accept static_env graph p'
       then
         static_flows_accept static_env graph (Bind n (Atom (Pair n1 n2)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
-        (NBnd n , MNxt, top_term_id p') \in graph,
+        (NBnd n , MNxt, term_id p') \in graph,
         static_flows_accept static_env graph p'
       then
         static_flows_accept static_env graph (Bind n (Atom (Lft n$_s$)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
-        (NBnd n , MNxt, top_term_id p') \in graph,
+        (NBnd n , MNxt, term_id p') \in graph,
         static_flows_accept static_env graph p'
       then
         static_flows_accept static_env graph (Bind n (Atom (Rht n$_s$)) p')),
 
     (\forall n p' graph static_env p$_b$ n$_f$ n$_p$ .
       if
-        (NBnd n , MNxt, top_term_id p') \in graph,
+        (NBnd n , MNxt, term_id p') \in graph,
         static_flows_accept static_env graph p',
         static_flows_accept static_env graph p$_b$
       then
@@ -3146,8 +3157,8 @@ However, it must additionally consider flows with the sending mode.
 
     (\forall n p' p_c graph static_env.
       if
-        {(NBnd x, MNxt, top_term_id p'),
-          (NBnd x, MSpwn, top_term_id p_c)} \subseteq graph,
+        {(NBnd x, MNxt, term_id p'),
+          (NBnd x, MSpwn, term_id p_c)} \subseteq graph,
         static_flows_accept static_env graph p_c,
         static_flows_accept static_env graph p'
       then
@@ -3155,7 +3166,7 @@ However, it must additionally consider flows with the sending mode.
 
     (\forall n p' graph static_env n$_s$e .
       if
-        (NBnd n , MNxt, top_term_id p') \in graph,
+        (NBnd n , MNxt, term_id p') \in graph,
         (\forall n$_sc$ n$_m$ n$_c$ y.
           if
             (SAtm (SendEvt n$_sc$ n$_m$)) \in static_env xSE, 
@@ -3169,24 +3180,24 @@ However, it must additionally consider flows with the sending mode.
 
     (\forall n p' graph static_env n$_p$ .
       if
-        (NBnd n , MNxt, top_term_id p') \in graph,
+        (NBnd n , MNxt, term_id p') \in graph,
         static_flows_accept static_env graph p',
       then
         static_flows_accept static_env graph (Bind n (Fst n$_p$) p')),
 
     (\forall n p' graph static_env n$_p$ .
       if
-        (NBnd n , MNxt, top_term_id p') \in graph,
+        (NBnd n , MNxt, term_id p') \in graph,
         static_flows_accept static_env graph p',
       then
         static_flows_accept static_env graph (Bind n (Snd n$_p$) p')),
 
     (\forall n p$_l$ p$_r$ p' graph static_env n$_s$ .
       if
-        {(NBnd x, MCll, top_term_id p$_l$),
-          (NBnd x, MCll, top_term_id p$_r$),
-          (NResult (result_name p$_l$), MRtn, top_term_id p'),
-          (NResult (result_name p$_r$), MRtn, top_term_id p')} \subseteq graph,
+        {(NBnd x, MCll, term_id p$_l$),
+          (NBnd x, MCll, term_id p$_r$),
+          (NResult (result_name p$_l$), MRtn, term_id p'),
+          (NResult (result_name p$_r$), MRtn, term_id p')} \subseteq graph,
         static_flows_accept static_env graph p$_l$,
         static_flows_accept static_env graph p$_r$,
         static_flows_accept static_env graph p'
@@ -3196,8 +3207,8 @@ However, it must additionally consider flows with the sending mode.
     (\forall  static_env n$_f$ n p' n n$_a$ .
       if
         (\forall n$_f$' n$_p$ p$_b$ . if (SAtm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
-          {(NBnd x, MCll, top_term_id p$_b$),
-            (NResult (result_name p$_b$), MRtn, top_term_id p')} \subseteq graph),
+          {(NBnd x, MCll, term_id p$_b$),
+            (NResult (result_name p$_b$), MRtn, term_id p')} \subseteq graph),
 
         static_flows_accept static_env graph p'
       then
@@ -3263,7 +3274,7 @@ of each term ID.
     (\forall n$_f$ n$_p$ p$_b$ .
       if
         (SAtm (Fun n$_f$ n$_p$ p$_b$)) \in static_env x,
-        not ((entr (top_term_id p$_b$) - {x_p}) = {})
+        not ((entr (term_id p$_b$) - {x_p}) = {})
       then
         static_built_on_chan static_env entr n$_c$ x)
   \end{lstlisting}
@@ -3291,14 +3302,14 @@ term ID.
     (\forall exit n entr p' static_env n$_c$ .
       if 
         (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p'
       then 
         static_live_chan static_env entr exit n$_c$ (Bind n Unt p')),
     (\forall exit n entr p' static_env n$_c$ .
       if
         (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p'
       then 
         static_live_chan static_env entr exit n$_c$ (Bind n MkChn p')),
@@ -3310,7 +3321,7 @@ term ID.
           {x_sc} \subseteq entr (NBnd x)),
         (if static_built_on_chan static_env entr n$_c$ n$_m$ then 
           {x_m} \subseteq entr (NBnd x)),
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
@@ -3321,7 +3332,7 @@ term ID.
         (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
         (if static_built_on_chan static_env entr n$_c$ n$_r$ then
           {x_r} \subseteq entr (NBnd x)),
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
@@ -3333,7 +3344,7 @@ term ID.
           {x_1} \subseteq entr (NBnd x)),
         (if static_built_on_chan static_env entr n$_c$ n2 then
           {x2} \subseteq entr (NBnd x)),
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$ (Bind n (Atom (Pair n1 n2)) p')),
@@ -3343,7 +3354,7 @@ term ID.
         (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
         (if static_built_on_chan static_env entr n$_c$ n$_a$ then
           {x_a} \subseteq entr (NBnd x)),
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$ (Bind n (Atom (Lft n$_a$)) p')),
@@ -3353,16 +3364,16 @@ term ID.
         (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
         (if static_built_on_chan static_env entr n$_c$ n$_a$ then
           {x_a} \subseteq entr (NBnd x))
-        entr (top_term_id e) \subseteq exit (NBnd x),
+        entr (term_id e) \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ e
       then
         static_live_chan static_env entr exit n$_c$ (Bind n (Atom (Rht n$_a$)) e)),
     (\forall  exit n entr p$_b$ n$_p$ n static_env n$_c$ p' n$_f$ . 
       if
         (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
-        (entr (top_term_id p$_b$) - {x_p}) \subseteq entr (NBnd x),
+        (entr (term_id p$_b$) - {x_p}) \subseteq entr (NBnd x),
         static_live_chan static_env entr exit n$_c$ p$_b$,
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
@@ -3371,8 +3382,8 @@ term ID.
     (\forall exit n entr p' p_c n$_c$ static_env .
       if
         (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
-        entr (top_term_id p') \subseteq exit (NBnd x),
-        entr (top_term_id p_c) \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
+        entr (term_id p_c) \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p_c,
         static_live_chan static_env entr exit n$_c$ p'
       then
@@ -3384,7 +3395,7 @@ term ID.
         (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
         (if static_built_on_chan static_env entr n$_c$ n$_e$ then
           {x_e} \subseteq entr (NBnd x)),
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p',
       then
         static_live_chan static_env entr exit n$_c$
@@ -3394,7 +3405,7 @@ term ID.
         (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
         (if static_built_on_chan static_env entr n$_c$ n$_a$ then
           {x_a} \subseteq entr (NBnd x)),
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$ (Bind n (Fst n$_a$) p')),
@@ -3404,7 +3415,7 @@ term ID.
         (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
         (if static_built_on_chan static_env entr n$_c$ n$_a$ then
           {x_a} \subseteq entr (NBnd x)),
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$
@@ -3413,13 +3424,13 @@ term ID.
     (\forall exit n entr p$_l$ n$_l$ p$_r$ n$_r$ static_env n$_c$ n$_s$ p' .
       if 
         (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
-        (entr (top_term_id p$_l$) - {x_l}) \subseteq entr (NBnd x),
-        (entr (top_term_id p$_r$) - {x_r}) \subseteq entr (NBnd x),
+        (entr (term_id p$_l$) - {x_l}) \subseteq entr (NBnd x),
+        (entr (term_id p$_r$) - {x_r}) \subseteq entr (NBnd x),
         (if static_built_on_chan static_env entr n$_c$ n$_s$ then
           {x_s} \subseteq entr (NBnd x)),
         static_live_chan static_env entr exit n$_c$ p$_l$,
         static_live_chan static_env entr exit n$_c$ p$_r$,
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p'
       then 
         static_live_chan static_env entr exit n$_c$ (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
@@ -3431,7 +3442,7 @@ term ID.
           {x_a} \subseteq entr (NBnd x)),
         (if static_built_on_chan static_env entr n$_c$ n$_f$ then
           {f} \subseteq entr (NBnd x)),
-        entr (top_term_id p') \subseteq exit (NBnd x),
+        entr (term_id p') \subseteq exit (NBnd x),
         static_live_chan static_env entr exit n$_c$ p'
       then
         static_live_chan static_env entr exit n$_c$ (Bind n (App n$_f$ n$_a$) p'))
