@@ -2904,11 +2904,11 @@ maintaining the initial program state in context for each subgoal.
   (\forall t0 .
     static_reachable_forward t0 t0
   ),
-  (\forall t0 n p$_c$ t' .
+  (\forall t0 n t$_c$ t' .
     if 
-      static_reachable_forward t0 (Bind n (Spwn p$_c$) t')
+      static_reachable_forward t0 (Bind n (Spwn t$_c$) t')
     then
-      static_reachable_forward t0 p$_c$
+      static_reachable_forward t0 t$_c$
   ),
   (\forall t0 n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
     if
@@ -2930,10 +2930,11 @@ maintaining the initial program state in context for each subgoal.
   ),
   (\forall t0 n n$_f$ n$_p$ t$_b$ t' .
     if
-      static_reachable_forward t0 (Bind n b t')
+      static_reachable_forward t0 (Bind n c t')
     then
       static_reachable_forward t0 t'
   )
+
   predicate static_reachable_over_atom of term -> atom -> bool:
   only
   (\forall t0 n$_c$ n$_m$ .
@@ -2966,12 +2967,12 @@ maintaining the initial program state in context for each subgoal.
   (\forall t0 c .
     static_reachable_over_val t0 (VChn c)
   ),
-  (\forall t0 p env .
+  (\forall t0 t env .
     if
-      static_reachable_over_atom t0 p, 
+      static_reachable_over_atom t0 t, 
       static_reachable_over_env t0 env
     then
-      static_reachable_over_val t0 (VAtm p env)
+      static_reachable_over_val t0 (VAtm t env)
   )
 
   predicate static_reachable_env of term -> env -> bool:
@@ -3006,7 +3007,7 @@ maintaining the initial program state in context for each subgoal.
   only
   (\forall t0 pool .
     then
-      (\forall path p env stack . if pool path = Some (Stt p env stack) then 
+      (\forall path t env stack . if pool path = Some (Stt t env stack) then 
         static_reachable_forward t0 e, 
         static_reachable_over_env t0 env, 
         static_reachable_over_stack t0 stack
@@ -3037,26 +3038,24 @@ proposition using the forward definition.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma static_reachable_forward_implies_static_reachable:
-    \forall e0 e. 
-      if
-        static_reachable_forward e0 e
-      then
-        static_reachable e0 e
+  \forall t0 t. 
+    if
+      static_reachable_forward t0 t
+    then
+      static_reachable t0 t
 
   lemma static_reachable_trans:
-    \forall e1 e2 e3 .
-      if 
-        static_reachable e1 e2,
-        static_reachable e2 e3
-      then
-        static_reachable e1 e3
-  \end{lstlisting}
-
+  \forall t1 t2 t3 .
+    if 
+      static_reachable t1 t2,
+      static_reachable t2 t3
+    then
+      static_reachable t1 t3
+\end{lstlisting}
 
 The lemma that the forward variant of static reachability implies the syntax-directed static
 reachability follows from induction on the forward static reachability and the
-transitivity of static
-reachability, which follows from induction on static reachability.
+transitivity of static reachability, which follows from induction on static reachability.
 
 \section{Higher Precision Communication}
 In many programs, channels are created within function functions.  The function functions
@@ -3089,7 +3088,12 @@ send ID and the receive ID of synchronization. Modes for typical control flow of
 sequencing, calling, returning, and spawning are also included flows.
 
 \begin{lstlisting}[language=logic, mathescape]
-  datatype mode = MNxt | MSpwn | ESend name | MCll | MRtn
+  datatype mode =
+    MNxt
+  | MSpwn
+  | ESend name
+  | MCll
+  | MRtn
 
   type flow = term_id * mode * term_id
 
@@ -3103,126 +3107,126 @@ However, it must additionally consider flows with the sending mode.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_flows_accept of static_value_map -> graph -> term -> bool:
-    only
-    
-    (\forall static_env graph n .
-        static_flows_accept static_env graph (Rslt n)),
+  only
+  (\forall static_env graph n .
+    static_flows_accept static_env graph (Rslt n)
+  ),
+  (\forall n t' graph static_env  .
+    if
+      (NBnd n , MNxt, term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n Unt t')
+  ),
+  (\forall n t' graph static_env  .
+    if
+      (NBnd n , MNxt, term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n MkChn t')
+  ),
+  (\forall n t' graph static_env  n$_c$ n$_m$ .
+    if
+      (NBnd n , MNxt, term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
+  ),
+  (\forall n t' graph static_env n$_c$ .
+    if
+      (NBnd n , MNxt, term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Atom (RecvEvt n$_c$)) t')
+  ),
+  (\forall n t' graph static_env n1 n2 .
+    if
+      (NBnd n , MNxt, term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Atom (Pair n1 n2)) t')
+  ),
+  (\forall n t' graph static_env n$_s$ .
+    if
+      (NBnd n , MNxt, term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+     static_flows_accept static_env graph (Bind n (Atom (Lft n$_s$)) t')
+  ),
+  (\forall n t' graph static_env n$_s$ .
+    if
+      (NBnd n , MNxt, term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Atom (Rht n$_s$)) t')
+  ),
+  (\forall n t' graph static_env t$_b$ n$_f$ n$_p$ .
+    if
+      (NBnd n , MNxt, term_id t') \in graph,
+      static_flows_accept static_env graph t',
+      static_flows_accept static_env graph t$_b$
+    then
+      static_flows_accept static_env graph (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
+  ),
+  (\forall n t' p_c graph static_env.
+    if
+      {(NBnd n, MNxt, term_id t'),
+        (NBnd n, MSpwn, term_id p_c)} \subseteq graph,
+      static_flows_accept static_env graph p_c,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Spwn p_c) t')
+  ),
+  (\forall n t' graph static_env n$_s$e .
+    if
+      (NBnd n , MNxt, term_id t') \in graph,
+      (\forall n$_sc$ n$_m$ n$_c$ y.
+        if
+          (SAtm (SendEvt n$_sc$ n$_m$)) \in static_env xSE, 
+          (SChn n$_c$) \in static_env n$_sc$,
+          static_recv_term_id static_env t' n$_c$ (NBnd y)
+        then
+          (NBnd n, ESend n$_s$e, NBnd y) \in F),
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Sync n$_s$e) t')
+  ),
+  (\forall n t' graph static_env n$_p$ .
+    if
+      (NBnd n , MNxt, term_id t') \in graph,
+      static_flows_accept static_env graph t',
+    then
+      static_flows_accept static_env graph (Bind n (Fst n$_p$) t')
+  ),
+  (\forall n t' graph static_env n$_p$ .
+    if
+      (NBnd n , MNxt, term_id t') \in graph,
+      static_flows_accept static_env graph t',
+    then
+      static_flows_accept static_env graph (Bind n (Snd n$_p$) t')
+  ),
+  (\forall n t$_l$ t$_r$ t' graph static_env n$_s$ .
+    if
+      {(NBnd n, MCll, term_id t$_l$),
+        (NBnd n, MCll, term_id t$_r$),
+        (NResult (result_name t$_l$), MRtn, term_id t'),
+        (NResult (result_name t$_r$), MRtn, term_id t')} \subseteq graph,
+      static_flows_accept static_env graph t$_l$,
+      static_flows_accept static_env graph t$_r$,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+  ),
+  (\forall  static_env n$_f$ n t' n n$_a$ .
+    if
+      (\forall n$_f$' n$_p$ t$_b$ . if (SAtm (Fun n$_f$' n$_p$ t$_b$)) \in static_env n$_f$ then 
+        {(NBnd n, MCll, term_id t$_b$),
+          (NResult (result_name t$_b$), MRtn, term_id t')} \subseteq graph),
 
-    (\forall n p' graph static_env  .
-      if
-        (NBnd n , MNxt, term_id p') \in graph,
-        static_flows_accept static_env graph p'
-      then
-        static_flows_accept static_env graph (Bind n Unt p')),
-
-    (\forall n p' graph static_env  .
-      if
-        (NBnd n , MNxt, term_id p') \in graph,
-        static_flows_accept static_env graph p'
-      then
-        static_flows_accept static_env graph (Bind n MkChn p')),
-
-    (\forall n p' graph static_env  n$_c$ n$_m$ .
-      if
-        (NBnd n , MNxt, term_id p') \in graph,
-        static_flows_accept static_env graph p'
-      then
-        static_flows_accept static_env graph (Bind n (Atom (SendEvt n$_c$ n$_m$)) p')),
-
-    (\forall n p' graph static_env n$_c$ .
-      if
-        (NBnd n , MNxt, term_id p') \in graph,
-        static_flows_accept static_env graph p'
-      then
-        static_flows_accept static_env graph (Bind n (Atom (RecvEvt n$_c$)) p')),
-
-    (\forall n p' graph static_env n1 n2 .
-      if
-        (NBnd n , MNxt, term_id p') \in graph,
-        static_flows_accept static_env graph p'
-      then
-        static_flows_accept static_env graph (Bind n (Atom (Pair n1 n2)) p')),
-
-    (\forall n p' graph static_env n$_s$ .
-      if
-        (NBnd n , MNxt, term_id p') \in graph,
-        static_flows_accept static_env graph p'
-      then
-        static_flows_accept static_env graph (Bind n (Atom (Lft n$_s$)) p')),
-
-    (\forall n p' graph static_env n$_s$ .
-      if
-        (NBnd n , MNxt, term_id p') \in graph,
-        static_flows_accept static_env graph p'
-      then
-        static_flows_accept static_env graph (Bind n (Atom (Rht n$_s$)) p')),
-
-    (\forall n p' graph static_env p$_b$ n$_f$ n$_p$ .
-      if
-        (NBnd n , MNxt, term_id p') \in graph,
-        static_flows_accept static_env graph p',
-        static_flows_accept static_env graph p$_b$
-      then
-        static_flows_accept static_env graph (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')),
-
-    (\forall n p' p_c graph static_env.
-      if
-        {(NBnd n, MNxt, term_id p'),
-          (NBnd n, MSpwn, term_id p_c)} \subseteq graph,
-        static_flows_accept static_env graph p_c,
-        static_flows_accept static_env graph p'
-      then
-        static_flows_accept static_env graph (Bind n (Spwn p_c) p')),
-
-    (\forall n p' graph static_env n$_s$e .
-      if
-        (NBnd n , MNxt, term_id p') \in graph,
-        (\forall n$_sc$ n$_m$ n$_c$ y.
-          if
-            (SAtm (SendEvt n$_sc$ n$_m$)) \in static_env xSE, 
-            (SChn n$_c$) \in static_env n$_sc$,
-            static_recv_term_id static_env p' n$_c$ (NBnd y)
-          then
-            (NBnd n, ESend n$_s$e, NBnd y) \in F),
-        static_flows_accept static_env graph p'
-      then
-        static_flows_accept static_env graph (Bind n (Sync n$_s$e) p')),
-
-    (\forall n p' graph static_env n$_p$ .
-      if
-        (NBnd n , MNxt, term_id p') \in graph,
-        static_flows_accept static_env graph p',
-      then
-        static_flows_accept static_env graph (Bind n (Fst n$_p$) p')),
-
-    (\forall n p' graph static_env n$_p$ .
-      if
-        (NBnd n , MNxt, term_id p') \in graph,
-        static_flows_accept static_env graph p',
-      then
-        static_flows_accept static_env graph (Bind n (Snd n$_p$) p')),
-
-    (\forall n p$_l$ p$_r$ p' graph static_env n$_s$ .
-      if
-        {(NBnd n, MCll, term_id p$_l$),
-          (NBnd n, MCll, term_id p$_r$),
-          (NResult (result_name p$_l$), MRtn, term_id p'),
-          (NResult (result_name p$_r$), MRtn, term_id p')} \subseteq graph,
-        static_flows_accept static_env graph p$_l$,
-        static_flows_accept static_env graph p$_r$,
-        static_flows_accept static_env graph p'
-      then
-        static_flows_accept static_env graph (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
-        
-    (\forall  static_env n$_f$ n p' n n$_a$ .
-      if
-        (\forall n$_f$' n$_p$ p$_b$ . if (SAtm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
-          {(NBnd n, MCll, term_id p$_b$),
-            (NResult (result_name p$_b$), MRtn, term_id p')} \subseteq graph),
-
-        static_flows_accept static_env graph p'
-      then
-        static_flows_accept static_env graph (Bind n (App n$_f$ n$_a$) p'))
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (App n$_f$ n$_a$) t')
+  )
   \end{lstlisting}
 
 
