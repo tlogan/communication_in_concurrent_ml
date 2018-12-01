@@ -541,7 +541,7 @@ Next, it releases the lock it, then signals on the receiving condition and retur
 
 The lock is acquired after the state is determined to be that of
 threads trying to receive, since the expectation is that the current thread is the only one
-that tries to update the channel from that state.  If the communication topology analysis were
+that tries to update the channel from that state.  If the communication classification analysis were
 incorrect and and there were actually multiple threads that could call the sending operation,
 then there might be data races.  Likewise, due to the expectation of a single thread
 sending on the channel, the sending operation will never witness the state in the sending state,
@@ -906,8 +906,8 @@ using an implementation that is specialized for one-to-one communication.  To be
 the new program with the specialized implementation behaves the same as the original program
 with the generic implementation, you need to be certain of three basic properties: that the
 specialized program behaves the same given one-to-one communication; that you have a procedure
-to determine the one-to-one communication topology, and that the relation between the
-procedure's input program and output topology upper bound is sound with respect to the
+to determine the one-to-one communication classification, and that the relation between the
+procedure's input program and output classification upper bound is sound with respect to the
 semantics of the program.  
 
 Spending your energy to determine the topologies for each unique program and then verifying
@@ -2188,7 +2188,7 @@ The static inclusion means that two static paths might be traced in
 the same run of a program. Ordered paths might be inclusive, and also a path that diverges
 from another at a spawn flow might be inclusive. This concept is useful for achieving
 greater precision, since if two paths cannot occur in the same run of a program, only one needs
-to be counted towards the communication topology. 
+to be counted towards the communication classification. 
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_inclusive of static_path -> static_path -> bool:
@@ -2326,7 +2326,7 @@ program.
   ) 
 \end{lstlisting}
 
-\subsection{Soundness}
+\subsection{Formal Reasoning}
 
 Reppy and Xiao informally prove soundness of their analysis by showing that their static analysis
 determines that more than one thread sends (or receives) on a channel if the execution allows more
@@ -2354,9 +2354,7 @@ should be false, indicating that the definitions did not state my intentions.
 After correcting the errors in the definitions, the proof was completed such that the proof
 checker was satisfied.
 
-
-
-The reasoning involved in proving the soundness of each communication topology classification
+The reasoning involved in proving the soundness of each communication classification
 is based around breaking the goal into simpler subgoals, and generalizing assumptions to create
 useful induction hypotheses.  It is often useful to
 create helper definitions that can be deduced
@@ -2385,36 +2383,39 @@ define sortedness in two ways, and prove their equivalence, in order to prove th
 to less flexible relations.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate sorted_a of nat list -> nat list -> bool:
-    only
+  predicate sorted_a of nat list -> bool:
+  only
+  (sorted_left []),
+  (\forall  x .
+    sorted_left [x]
+  ),
+  (\forall x y zs .
+    if 
+      n \leq y,
+      sorted_left (y # zs)
+    then
+      sorted_left (x # y # zs)
+  )
 
-    (sorted_a []),
+  predicate sorted_b of nat list -> bool:
+  only
+  (sorted_right []),
+  (\forall  n .
+    sorted_right [x]
+  ),
+  (\forall  xs y z .
+    if 
+      sorted_right (xs @ [y]),
+      y \leq z 
+    then
+      sorted_right (xs @ [y] @ [z])
+  )
 
-    (\forall  n .
-        sorted_a [x]),
+  lemma sorted_equiv:
+  \forall xs . sorted_left xs \equiv sorted_right xs  
+\end{lstlisting}
 
-    (\forall  n y zs .
-      if 
-        n \leq y,
-        sorted_a (y # zs)
-      then
-        sorted_a (n # y # zs))
-
-  predicate sorted_b of nat list -> nat list -> bool:
-    only
-
-    (sorted_b []),
-
-    (\forall  n .
-        sorted_b [x]),
-
-    (\forall  xs y z .
-      if 
-        sorted_b (xs @ [y]),
-        y \leq z 
-      then
-        sorted_b (xs @ [y] @ [z]))
-  \end{lstlisting}
+\subsection{Soundness}
 
 The theorem for soundness of static one-shot classification states that if a static channel is
 statically classified as one-shot for a given program and
@@ -3591,7 +3592,7 @@ given paths do not compete in any run of a program.
         noncompetitive path1 path2)
   \end{lstlisting}
 
-The communication topology classifications are described using the liveness properties, but
+The communication classifications are described using the liveness properties, but
 are otherwise similar to the lower precision classifications.
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -3726,7 +3727,7 @@ the loop may not be live according to the entry map.
 \includegraphics[width=1.3\textwidth, left]{cml_graph_k4.pdf}
 
 \section{Higher Precision Reasoning Strategy}
-To prove soundness of the communication topology classification, it should be possible to use
+To prove soundness of the communication classification, it should be possible to use
 previous techniques of generalizing propositions over pools and other semantic components,
 along with finding equivalent representations of propositions that vary in the inductive
 subcomponent. One thing that will make carrying out the formal proof particularly tricky is
