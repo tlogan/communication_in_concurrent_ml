@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  1 DEC 2018 15:45
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  1 DEC 2018 15:51
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -946,7 +946,7 @@ LaTeX Warning: There were undefined references.
 Here is how much of TeX's memory you used:
  7305 strings out of 493014
  105759 string characters out of 6133351
- 420141 words of memory out of 5000000
+ 419141 words of memory out of 5000000
  10678 multiletter control sequences out of 15000+600000
  60119 words of font info for 65 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -965,7 +965,7 @@ cal/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texl
 ive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016
 /texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-
 dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (80 pages, 588941 bytes).
+Output written on thesis.pdf (80 pages, 588894 bytes).
 PDF statistics:
  398 PDF objects out of 1000 (max. 8388607)
  279 compressed objects within 3 object streams

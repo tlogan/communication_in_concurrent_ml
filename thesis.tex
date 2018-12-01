@@ -2486,39 +2486,39 @@ send ID by its term ID.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma static_traceable_sound:
-    \forall e0 pool comm path n b p' env stack evn_a static_comm graph is_end .
-      if
-        star dynamic_eval ([[] -> (Stt e0 [->] [])], {}) (pool, comm), 
-        pool path = Some (Stt (Bind n b p') env stack),
-        static_eval static_env static_comm e0,
-        static_flows_accept static_env graph e0,
-        is_end (NBnd x)
-      then
-        exists static_path . 
-          paths_correspond path static_path, 
-          static_traceable graph (term_id e0) is_end static_path
+  \forall t0 pool comm path n c t' env stack evn_a static_comm graph is_end .
+    if
+      star dynamic_eval ([[] -> (Stt t0 [->] [])], {}) (pool, comm), 
+      pool path = Some (Stt (Bind n c t') env stack),
+      static_eval static_env static_comm t0,
+      static_flows_accept static_env graph t0,
+      is_end (NBnd n)
+    then
+      exists static_path . 
+        paths_correspond path static_path, 
+        static_traceable graph (term_id t0) is_end static_path
 
   lemma static_inclusive_sound:
-    \forall e0 pool comm path1 stt1 path2 stt2 static_path1 static_path2 . 
-      if
-        star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm
-        pool path1 = Some stt1, 
-        pool path2 = Some stt2, 
-        paths_correspond path1 static_path1, 
-        paths_correspond path2 static_path2
-      then
-        static_inclusive static_path1 static_path2
+  \forall t0 pool comm path1 stt1 path2 stt2 static_path1 static_path2 . 
+    if
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm
+      pool path1 = Some stt1, 
+      pool path2 = Some stt2, 
+      paths_correspond path1 static_path1, 
+      paths_correspond path2 static_path2
+    then
+      static_inclusive static_path1 static_path2
 
   lemma static_send_id_sound:
-    \forall e0 pool comm path n n$_e$ p' env stack n$_sc$ n$_m$ env' path_c n$_c$ .
-      if
-        star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm, 
-        pool path = Some (Stt (Bind n (Sync n$_e$) p') env stack), 
-        env n$_e$ = Some (VAtm (SendEvt n$_sc$ n$_m$) env'), 
-        env' n$_sc$ = Some (VChn (Chan path_c n$_c$)), 
-        static_eval static_env static_comm e0
-      then 
-        static_send_id static_env e0 n$_c$ (NBnd x)
+  \forall t0 pool comm path n n$_e$ t' env stack n$_sc$ n$_m$ env' path$_c$ n$_c$ .
+    if
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm, 
+      pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack), 
+      env n$_e$ = Some (VAtm (SendEvt n$_sc$ n$_m$) env'), 
+      env' n$_sc$ = Some (VChn (Chan path$_c$ n$_c$)), 
+      static_eval static_env static_comm t0
+    then 
+      static_send_id static_env t0 n$_c$ (NBnd n)
 \end{lstlisting}
 
 The soundness of static traceability is proved by generalizing
@@ -2812,7 +2812,7 @@ dynamic evaluation.
       pool path = Some (Stt (Bind n c t') env stack), 
       static_eval static_env static_comm t0, 
       static_flows_accept static_env graph pool, 
-      is_end (NBnd x)
+      is_end (NBnd n)
     then
       \exists static_path . 
         paths_correspond path static_path, 
@@ -3165,8 +3165,8 @@ However, it must additionally consider flows with the sending mode.
 
     (\forall n p' p_c graph static_env.
       if
-        {(NBnd x, MNxt, term_id p'),
-          (NBnd x, MSpwn, term_id p_c)} \subseteq graph,
+        {(NBnd n, MNxt, term_id p'),
+          (NBnd n, MSpwn, term_id p_c)} \subseteq graph,
         static_flows_accept static_env graph p_c,
         static_flows_accept static_env graph p'
       then
@@ -3181,7 +3181,7 @@ However, it must additionally consider flows with the sending mode.
             (SChn n$_c$) \in static_env n$_sc$,
             static_recv_term_id static_env p' n$_c$ (NBnd y)
           then
-            (NBnd x, ESend n$_s$e, NBnd y) \in F),
+            (NBnd n, ESend n$_s$e, NBnd y) \in F),
         static_flows_accept static_env graph p'
       then
         static_flows_accept static_env graph (Bind n (Sync n$_s$e) p')),
@@ -3202,8 +3202,8 @@ However, it must additionally consider flows with the sending mode.
 
     (\forall n p$_l$ p$_r$ p' graph static_env n$_s$ .
       if
-        {(NBnd x, MCll, term_id p$_l$),
-          (NBnd x, MCll, term_id p$_r$),
+        {(NBnd n, MCll, term_id p$_l$),
+          (NBnd n, MCll, term_id p$_r$),
           (NResult (result_name p$_l$), MRtn, term_id p'),
           (NResult (result_name p$_r$), MRtn, term_id p')} \subseteq graph,
         static_flows_accept static_env graph p$_l$,
@@ -3215,7 +3215,7 @@ However, it must additionally consider flows with the sending mode.
     (\forall  static_env n$_f$ n p' n n$_a$ .
       if
         (\forall n$_f$' n$_p$ p$_b$ . if (SAtm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
-          {(NBnd x, MCll, term_id p$_b$),
+          {(NBnd n, MCll, term_id p$_b$),
             (NResult (result_name p$_b$), MRtn, term_id p')} \subseteq graph),
 
         static_flows_accept static_env graph p'
@@ -3303,157 +3303,157 @@ term ID.
     (\forall static_env entr n$_c$ y exit .
       if
         (if (static_built_on_chan static_env entr n$_c$ y) then
-          {y} \subseteq entr (NResult y))
+          {y} \subseteq entr (NRslt y))
       then
         static_live_chan static_env entr exit n$_c$ (Rslt y)),
 
-    (\forall exit n entr p' static_env n$_c$ .
+    (\forall exit n entr t' static_env n$_c$ .
       if 
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p'
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t'
       then 
-        static_live_chan static_env entr exit n$_c$ (Bind n Unt p')),
-    (\forall exit n entr p' static_env n$_c$ .
+        static_live_chan static_env entr exit n$_c$ (Bind n Unt t')),
+    (\forall exit n entr t' static_env n$_c$ .
       if
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p'
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t'
       then 
-        static_live_chan static_env entr exit n$_c$ (Bind n MkChn p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n MkChn t')),
 
-    (\forall exit n entr static_env n$_c$ n$_sc$ n$_m$ p' n$_c$ .
+    (\forall exit n entr static_env n$_c$ n$_sc$ n$_m$ t' n$_c$ .
       if
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
         (if static_built_on_chan static_env entr n$_c$ n$_sc$ then
-          {x_sc} \subseteq entr (NBnd x)),
+          {x_sc} \subseteq entr (NBnd n)),
         (if static_built_on_chan static_env entr n$_c$ n$_m$ then 
-          {x_m} \subseteq entr (NBnd x)),
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p'
+          {x_m} \subseteq entr (NBnd n)),
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t'
       then
         static_live_chan static_env entr exit n$_c$
-          (Bind n (Atom (SendEvt n$_sc$ n$_m$)) p')),
+          (Bind n (Atom (SendEvt n$_sc$ n$_m$)) t')),
 
     (\forall exit n entr static_env n$_c$ n$_r$ .    
       if
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
         (if static_built_on_chan static_env entr n$_c$ n$_r$ then
-          {x_r} \subseteq entr (NBnd x)),
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p'
+          {x_r} \subseteq entr (NBnd n)),
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t'
       then
         static_live_chan static_env entr exit n$_c$
-          (Bind n (Atom (RecvEvt n$_r$c)) p')),
-    (\forall exit n entr static_env p_c n1 n2 p' .
+          (Bind n (Atom (RecvEvt n$_r$c)) t')),
+    (\forall exit n entr static_env p_c n1 n2 t' .
       if
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
         (if static_built_on_chan static_env entr n$_c$ n1 then
-          {x_1} \subseteq entr (NBnd x)),
+          {x_1} \subseteq entr (NBnd n)),
         (if static_built_on_chan static_env entr n$_c$ n2 then
-          {x2} \subseteq entr (NBnd x)),
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p'
+          {x2} \subseteq entr (NBnd n)),
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t'
       then
-        static_live_chan static_env entr exit n$_c$ (Bind n (Atom (Pair n1 n2)) p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Atom (Pair n1 n2)) t')),
 
-    (\forall exit n entr static_env n$_c$ n$_a$ p' . 
+    (\forall exit n entr static_env n$_c$ n$_a$ t' . 
       if
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
         (if static_built_on_chan static_env entr n$_c$ n$_a$ then
-          {x_a} \subseteq entr (NBnd x)),
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p'
+          {x_a} \subseteq entr (NBnd n)),
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t'
       then
-        static_live_chan static_env entr exit n$_c$ (Bind n (Atom (Lft n$_a$)) p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Atom (Lft n$_a$)) t')),
 
-    (\forall exit n entr static_env n$_c$ n$_a$ p' . 
+    (\forall exit n entr static_env n$_c$ n$_a$ t' . 
       if
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
         (if static_built_on_chan static_env entr n$_c$ n$_a$ then
-          {x_a} \subseteq entr (NBnd x))
-        entr (term_id e) \subseteq exit (NBnd x),
+          {x_a} \subseteq entr (NBnd n))
+        entr (term_id e) \subseteq exit (NBnd n),
         static_live_chan static_env entr exit n$_c$ e
       then
         static_live_chan static_env entr exit n$_c$ (Bind n (Atom (Rht n$_a$)) e)),
-    (\forall  exit n entr p$_b$ n$_p$ n static_env n$_c$ p' n$_f$ . 
+    (\forall  exit n entr p$_b$ n$_p$ n static_env n$_c$ t' n$_f$ . 
       if
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
-        (entr (term_id p$_b$) - {x_p}) \subseteq entr (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+        (entr (term_id p$_b$) - {x_p}) \subseteq entr (NBnd n),
         static_live_chan static_env entr exit n$_c$ p$_b$,
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p'
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t'
       then
         static_live_chan static_env entr exit n$_c$
-          (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')),
+          (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) t')),
 
-    (\forall exit n entr p' p_c n$_c$ static_env .
+    (\forall exit n entr t' p_c n$_c$ static_env .
       if
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
-        entr (term_id p') \subseteq exit (NBnd x),
-        entr (term_id p_c) \subseteq exit (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+        entr (term_id t') \subseteq exit (NBnd n),
+        entr (term_id p_c) \subseteq exit (NBnd n),
         static_live_chan static_env entr exit n$_c$ p_c,
-        static_live_chan static_env entr exit n$_c$ p'
+        static_live_chan static_env entr exit n$_c$ t'
       then
         static_live_chan static_env entr exit n$_c$
-          (Bind n (Spwn p_c) p')),
+          (Bind n (Spwn p_c) t')),
 
-    (\forall exit n entr static_env n$_c$ n$_e$ p' .
+    (\forall exit n entr static_env n$_c$ n$_e$ t' .
       if
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
         (if static_built_on_chan static_env entr n$_c$ n$_e$ then
-          {x_e} \subseteq entr (NBnd x)),
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p',
+          {x_e} \subseteq entr (NBnd n)),
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t',
       then
         static_live_chan static_env entr exit n$_c$
-          (Bind n (Sync n$_e$) p')),
-    (\forall exit n entr static_env n$_c$ n$_a$ p' .
+          (Bind n (Sync n$_e$) t')),
+    (\forall exit n entr static_env n$_c$ n$_a$ t' .
       if
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
         (if static_built_on_chan static_env entr n$_c$ n$_a$ then
-          {x_a} \subseteq entr (NBnd x)),
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p'
+          {x_a} \subseteq entr (NBnd n)),
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t'
       then
-        static_live_chan static_env entr exit n$_c$ (Bind n (Fst n$_a$) p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Fst n$_a$) t')),
 
-    (\forall exit n entr static_env n$_c$ n$_a$ p' .
+    (\forall exit n entr static_env n$_c$ n$_a$ t' .
       if 
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
         (if static_built_on_chan static_env entr n$_c$ n$_a$ then
-          {x_a} \subseteq entr (NBnd x)),
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p'
+          {x_a} \subseteq entr (NBnd n)),
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t'
       then
         static_live_chan static_env entr exit n$_c$
-          (Bind n (Snd n$_a$) p')),
+          (Bind n (Snd n$_a$) t')),
 
-    (\forall exit n entr p$_l$ n$_l$ p$_r$ n$_r$ static_env n$_c$ n$_s$ p' .
+    (\forall exit n entr p$_l$ n$_l$ p$_r$ n$_r$ static_env n$_c$ n$_s$ t' .
       if 
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
-        (entr (term_id p$_l$) - {x_l}) \subseteq entr (NBnd x),
-        (entr (term_id p$_r$) - {x_r}) \subseteq entr (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+        (entr (term_id p$_l$) - {x_l}) \subseteq entr (NBnd n),
+        (entr (term_id p$_r$) - {x_r}) \subseteq entr (NBnd n),
         (if static_built_on_chan static_env entr n$_c$ n$_s$ then
-          {x_s} \subseteq entr (NBnd x)),
+          {x_s} \subseteq entr (NBnd n)),
         static_live_chan static_env entr exit n$_c$ p$_l$,
         static_live_chan static_env entr exit n$_c$ p$_r$,
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p'
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t'
       then 
-        static_live_chan static_env entr exit n$_c$ (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
+        static_live_chan static_env entr exit n$_c$ (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) t')),
 
-    (\forall exit n entr static_env n$_c$ n$_a$ n$_f$ p' .
+    (\forall exit n entr static_env n$_c$ n$_a$ n$_f$ t' .
       if
-        (exit (NBnd x) - {x}) \subseteq entr (NBnd x),
+        (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
         (if static_built_on_chan static_env entr n$_c$ n$_a$ then
-          {x_a} \subseteq entr (NBnd x)),
+          {x_a} \subseteq entr (NBnd n)),
         (if static_built_on_chan static_env entr n$_c$ n$_f$ then
-          {f} \subseteq entr (NBnd x)),
-        entr (term_id p') \subseteq exit (NBnd x),
-        static_live_chan static_env entr exit n$_c$ p'
+          {f} \subseteq entr (NBnd n)),
+        entr (term_id t') \subseteq exit (NBnd n),
+        static_live_chan static_env entr exit n$_c$ t'
       then
-        static_live_chan static_env entr exit n$_c$ (Bind n (App n$_f$ n$_a$) p'))
+        static_live_chan static_env entr exit n$_c$ (Bind n (App n$_f$ n$_a$) t'))
   \end{lstlisting}
 
 The static liveness of a flow is described by checking if a flow exists in a whole
@@ -3802,7 +3802,7 @@ correlating dynamic paths with static paths.
       then
         paths_correspond
           (path @ [DRtn n])
-          (static_path @ [(NResult x, MRtn)]))
+          (static_path @ [(NRslt x, MRtn)]))
 
   predicate paths_correspond_mod_chan of 
     pool -> communication -> chan ->
