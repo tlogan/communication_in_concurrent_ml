@@ -1985,7 +1985,7 @@ The evaluation of a term results in the flow to new terms,
 via sequencing, calling, returning, or spawning.  These flows are represented concretely
 by the term IDs of the starting and ending terms and a mode
 to represent the nature of the flow.
-The static acceptance for flows describes a set of flows consisting of all the flows
+The static acceptance by flows describes a set of flows consisting of all the flows
 that could be traversed during a program's evaluation.
 It depends on the static environment for name bindings.
 For a result term, there are no demands on the flow graph.  For all bind terms, except those binding
@@ -2137,7 +2137,7 @@ accepting flows for the sequenced embedded term.
   )
 \end{lstlisting}
 
-The server implementation represented as a graph illustrates how static acceptance for flows can interpret
+The server implementation represented as a graph illustrates how static acceptance by flows can interpret
 a graph from a dynamic program.
 
 \includegraphics[width=1.3\textwidth, left]{cml_graph.pdf}
@@ -2423,67 +2423,69 @@ static environment consistent with the
 program, then any corresponding dynamic channel is classified
 as one-shot over any pool that results
 from running the program. The theorem for soundness of
-static fan-out classification states that if
-a static channel is statically classified as fan-out for a given program and static environment
-consistent with that program, then any corresponding dynamic channel is classified as fan-out
+static one-to-many classification states that if
+a static channel is statically classified as one-to-many for a given program and static environment
+consistent with that program, then any corresponding dynamic channel is classified as one-to-many
 over any pool that results from running the program.  The theorems for soundness of many-to-one
 classification and one-to-one classification follow the same pattern. 
 
 \begin{lstlisting}[language=logic, mathescape]
   theorem static_one_shot_sound: 
-    \forall static_env static_comm e0 n$_c$ pool comm path_c .
-      if
-        static_eval static_env static_comm e0, 
-        static_one_shot static_env e0 n$_c$, 
-        star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm
-      then
-        one_shot pool (Chan path_c n$_c$)
+  \forall static_env static_comm t0 n$_c$ pool comm path$_c$ .
+    if
+      static_eval static_env static_comm t0, 
+      static_one_shot static_env t0 n$_c$, 
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm
+    then
+      one_shot pool (Chan path$_c$ n$_c$)
 
   theorem static_one_to_many_sound:
-    \forall static_env static_comm e0 n$_c$ pool comm path_c. 
-      if 
-        static_eval static_env static_comm e0, 
-        static_one_to_many static_env e0 n$_c$, 
-        star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm
-      then
-        one_to_many pool (Chan path_c n$_c$)
+  \forall static_env static_comm t0 n$_c$ pool comm path$_c$. 
+    if 
+      static_eval static_env static_comm t0, 
+      static_one_to_many static_env t0 n$_c$, 
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm
+    then
+      one_to_many pool (Chan path$_c$ n$_c$)
 
   theorem static_many_to_one_sound:
-    \forall static_env static_comm e0 n$_c$ pool comm path_c. 
-      if
-        static_eval static_env static_comm e0, 
-        static_many_to_one static_env e0 n$_c$, 
-        star dynamic_eval [[] -> (Stt p [->] [])] {} pool comm
-      then
-        many_to_one pool (Chan path_c n$_c$)
+  \forall static_env static_comm t0 n$_c$ pool comm path$_c$. 
+    if
+      static_eval static_env static_comm t0, 
+      static_many_to_one static_env t0 n$_c$, 
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm
+    then
+      many_to_one pool (Chan path$_c$ n$_c$)
 
   theorem static_one_to_one_sound:
-    \forall static_env static_comm e0 n$_c$ pool comm path_c. 
-      if
-        static_eval static_env, static_comm e0, 
-        static_one_to_one static_env e0 n$_c$,
-        star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm
-      then
-        one_to_one pool (Chan path_c n$_c$)
+  \forall static_env static_comm t0 n$_c$ pool comm path$_c$. 
+    if
+      static_eval static_env, static_comm t0, 
+      static_one_to_one static_env t0 n$_c$,
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm
+    then
+      one_to_one pool (Chan path$_c$ n$_c$)
 \end{lstlisting}
 
-The soundness theorem for static fan-out classification is proved
-by a few simpler lemmas and the
-definitions of static and dynamic fan-out classification.  The three main lemmas state the
-soundness of the lack of static traceability, the soundness of the lack of inclusiveness, and
+The formal proofs of soundness of each static classification follow a similar structure.
+Let's examine in some detail the formal proof of soudness of static one-to-many classification,
+by unwinding the theorem into the lemmas that it follows from.
+The soundness static one-to-many classification is proved by a few simpler lemmas and the
+definitions of static and dynamic one-to-many classification.  The three main lemmas state the
+soundness of the static traceability, the soundness of the static inclusiveness, and
 the soundness of a program step not being a static send ID. These lemmas depend on a
 correspondence between static paths and dynamic paths, which is bijective for the lower
-precision analysis. The lemma for soundness of lack of static inclusiveness states that any two
+precision analysis. The lemma for soundness of static inclusiveness states that any two
 dynamic paths traced by running a program correspond to statically inclusive static paths. It
 follows from a straightforward case analysis of static inclusivity. The lemma for soundness of
-lack of static traceability states that for any dynamic path traced by running a program, there
+static traceability states that for any dynamic path traced by running a program, there
 is a corresponding static path that is statically traceable. The lemma for soundness of a
 program step not being a static send ID states that running a program reaches a
 synchronization on a sending event, then that synchronization is statically identified as a
 send ID by its term ID.
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma not_static_traceable_sound:
+  lemma static_traceable_sound:
     \forall e0 pool comm path n b p' env stack evn_a static_comm graph is_end .
       if
         star dynamic_eval ([[] -> (Stt e0 [->] [])], {}) (pool, comm), 
@@ -2496,7 +2498,7 @@ send ID by its term ID.
           paths_correspond path static_path, 
           static_traceable graph (term_id e0) is_end static_path
 
-  lemma not_static_inclusive_sound:
+  lemma static_inclusive_sound:
     \forall e0 pool comm path1 stt1 path2 stt2 static_path1 static_path2 . 
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm
@@ -2507,7 +2509,7 @@ send ID by its term ID.
       then
         static_inclusive static_path1 static_path2
 
-  lemma not_static_send_id_sound:
+  lemma static_send_id_sound:
     \forall e0 pool comm path n n$_e$ p' env stack n$_sc$ n$_m$ env' path_c n$_c$ .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm, 
@@ -2519,105 +2521,108 @@ send ID by its term ID.
         static_send_id static_env e0 n$_c$ (NBnd x)
 \end{lstlisting}
 
-The soundness of lack of static traceability is proved by generalizing
-static acceptance for flows and static evaluation over pools, such that information about a step in
+The soundness of static traceability is proved by generalizing
+static acceptance by flows and static evaluation over pools, such that information about a step in
 the program can be deduced by a fixed number of logical steps regardless of the location of the
 program step or the size of the program. Without such generalization, it would be possible to
 prove soundness for a fixed program, but not any arbitrary program.
 
-The generalization of static acceptance for flows is composed of in static accepting over values,
-static acceptance for flows over environments, static acceptance for flows over stacks, and static
-traversability over pools.
+The generalization of static acceptance by flows is comprised of static acceptance by flows over values,
+static acceptance by flows over environments, static acceptance by flows over stacks, and static
+acceptance by flows over pools.
 In most cases, it simply states that a embedded term of some semantic element is also statically
 accepting. The exception is in the case of
-static acceptance for flows over a non-empty stack, where
+static acceptance by flows over a non-empty stack, where
 there is an additional condition that the flow
 from a result id to the term ID
 of the continuation program exists in the graph.
 This information is consistent with static
-traversability over programs, but provides direct information about a flow in the
+acceptance by flows over programs, but provides direct information about a flow in the
 graph, which would otherwise only be deducible by a varying number of logical steps
 depending on the program.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_flows_accept_val of
-    static_value_map -> graph -> dynamic_value -> bool:
-    only
+  predicate static_flows_accept_val
+  of static_value_map -> graph -> dynamic_value -> bool:
+  only
+  (\forall static_env graph .
+    static_flows_accept_val static_env graph VUnt
+  ), 
+  (\forall static_env graph n$_c$ .
+    static_flows_accept_val static_env graph (VChn n$_c$)
+  ),
+  (\forall static_env graph env n$_c$ n$_m$.
+    if
+      static_flows_accept_env static_env graph env 
+    then 
+      static_flows_accept_val
+        static_env graph (VAtm (SendEvt n$_c$ n$_m$) env)
+  ),
+  (\forall static_env graph env n$_c$.
+    if
+      static_flows_accept_env static_env graph env 
+    then
+      static_flows_accept_val
+        static_env graph (VAtm (RecvEvt n$_c$) env)
+   ),
+  (\forall static_env graph env n$_p$ .
+    if
+      static_flows_accept_env static_env graph env 
+    then
+      static_flows_accept_val
+        static_env graph (VAtm (Lft n$_p$) env)
+  ),
+  (\forall static_env graph env n$_p$ .
+    if
+      static_flows_accept_env static_env graph env
+    then
+      static_flows_accept_val
+        static_env graph (VAtm (Rht n$_p$) env)
+  ),
+  (\forall static_env graph p$_b$ env n$_f$ n$_p$ .
+    if
+      static_flows_accept static_env graph p$_b$, 
+      static_flows_accept_env static_env graph env
+    then
+      static_flows_accept_val
+        static_env graph (VAtm (Fun n$_f$ n$_p$ p$_b$) env)
+  ),
+  (\forall static_env graph env . 
+    if
+      static_flows_accept_env static_env graph env
+    then
+      static_flows_accept_val
+      static_env graph (VAtm (Pair n1 n2) env)
+  )
 
-    (\forall static_env graph .
-      static_flows_accept_val static_env graph VUnt), 
+  predicate static_flows_accept_env
+  of static_value_map -> graph -> env -> bool: 
+  only 
+  (\forall static_env graph env .
+    if
+      (\forall n v . if env n = Some v then
+        static_flows_accept_val static_env graph v
+      )
+    then
+      static_flows_accept_env static_env graph env
+  ) 
 
-    (\forall static_env graph c .
-      static_flows_accept_val static_env graph (VChn c)),
+  predicate static_flows_accept_stack
+  of static_value_map -> graph -> name -> continuation list -> bool:
+  only
+  (\forall static_env graph y .
+    static_flows_accept_stack static_env graph y []
+  ),
 
-    (\forall static_env graph env n$_c$ n$_m$.
-      if
-        static_flows_accept_env static_env graph env 
-      then 
-        static_flows_accept_val
-          static_env graph (VAtm (SendEvt n$_c$ n$_m$) env)),
-
-    (\forall static_env graph env n$_c$.
-      if
-        static_flows_accept_env static_env graph env 
-      then
-        static_flows_accept_val
-          static_env graph (VAtm (RecvEvt n$_c$) env)),
-
-    (\forall static_env graph env n$_p$ .
-      if
-        static_flows_accept_env static_env graph env 
-      then
-        static_flows_accept_val
-          static_env graph (VAtm (Lft n$_p$) env)),
-
-    (\forall static_env graph env n$_p$ .
-      if
-        static_flows_accept_env static_env graph env
-      then
-        static_flows_accept_val
-          static_env graph (VAtm (Rht n$_p$) env)),
-
-    (\forall static_env graph p$_b$ env n$_f$ n$_p$ .
-      if
-        static_flows_accept static_env graph p$_b$, 
-        static_flows_accept_env static_env graph env
-      then
-        static_flows_accept_val
-          static_env n$_f$ (VAtm (Fun n$_f$ n$_p$ p$_b$) env)),
-
-    (\forall static_env graph env . 
-      if
-        static_flows_accept_env static_env graph env
-      then
-        static_flows_accept_val
-          static_env graph (VAtm (Pair n1 n2) env))
-
-  predicate static_flows_accept_env of
-    static_value_map -> graph -> env -> bool: 
-    only 
-    (\forall static_env graph env .
-      if
-        (\forall n v . if env n = Some v then
-          static_flows_accept_val static_env graph v)
-      then
-        static_flows_accept_env static_env graph env) 
-
-  predicate static_flows_accept_stack of
-    static_value_map -> graph ->
-    name -> continuation list -> bool:
-    only
-    (\forall static_env graph y .
-      static_flows_accept_stack static_env graph y []),
-
-    (\forall y p graph static_env graph env stack n env .
-      if 
-        {(NResult y, MRtn, term_id e)} \subseteq graph,
-        static_flows_accept static_env graph e,
-        static_flows_accept_env static_env graph env,
-        static_flows_accept_stack static_env graph (result_name e) stack 
-      then 
-        static_flows_accept_stack static_env graph y ((Ctn n p env) # stack))
+  (\forall y p graph static_env graph env stack n env .
+    if 
+      {(NResult y, MRtn, term_id e)} \subseteq graph,
+      static_flows_accept static_env graph e,
+      static_flows_accept_env static_env graph env,
+      static_flows_accept_stack static_env graph (result_name e) stack 
+    then 
+      static_flows_accept_stack static_env graph y ((Ctn n p env) # stack)
+  )
 
   predicate static_flows_accept_pool of
     static_value_map -> graph -> pool -> bool:
@@ -2630,18 +2635,20 @@ depending on the program.
           then 
             static_flows_accept static_env graph e, 
             static_flows_accept_env static_env graph env, 
-            static_flows_accept_stack static_env graph (result_name e) stack) 
+            static_flows_accept_stack static_env graph (result_name e) stack
+        ) 
       then
-          static_flows_accept_pool static_env graph pool)
-  \end{lstlisting}
+        static_flows_accept_pool static_env graph pool
+  )
+\end{lstlisting}
 
-The flows described by the various versions of static acceptance for flows depend on static
+The flows described by the various versions of static acceptance by flows depend on static
 environments in order to look up the control flow in the application case.
 The static environment
 results from the static evaluation of the program that is dynamically evaluated. Thus,
 generalized
 versions of static evaluation enable further deduction about flows.
-As with the generalized versions of static acceptance for flows,
+As with the generalized versions of static acceptance by flows,
 the generalized versions of static evaluation are designed to
 preserve static environments across
 dynamic evaluations of pools. They also provide direct access to binding information from names
@@ -2763,106 +2770,106 @@ traceability.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate star_left of ('a -> 'a -> bool) -> 'a -> 'a -> bool:
-    only
-
-    (\forall r z z .
-      star_left r z z),
-
-    (\forall r n y z .
-      if
-        star_left r n y, r y z
-      then
-        star_left r n z)
+  only
+  (\forall r z z .
+    star_left r z z
+  ),
+  (\forall r x y z .
+    if
+      star_left r x y, r y z
+    then
+      star_left r x z
+  )
 
   lemma star_implies_star_left:
-    \forall r n y .
-      if
-        star r n z
-      then
-        star_left r n z
+  \forall r x y .
+    if
+      star r x z
+    then
+      star_left r x z
 
   lemma star_left_trans:
-    \forall r n y z .
-      if 
-        star_left r n y,
-        star_left r y z 
-      then
-        star_left r n z
+  \forall r x y z .
+    if 
+      star_left r x y,
+      star_left r y z 
+    then
+      star_left r x z
 \end{lstlisting}
 
-The soundness of lack of static traceability follows from the generalized lemma
-of soundness of lack of static traceability over pools, which contains
+The soundness of static traceability follows from the generalized lemma
+of soundness of static traceability over pools, which contains
 the generalized premise of
 static traceability, and also it follows from the lemma of preservation of static
-traversability over pools from an initial pool to any pool resulting from multiple steps of
+acceptance by flows over pools from an initial pool to any pool resulting from multiple steps of
 dynamic evaluation.
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma not_static_traceable_pool_sound:
-    \forall e0 pool comm path n b p' env stack evn_a static_comm graph is_end .
-      if
-        star dynamic_eval ([[] -> (Stt e0 [->] [])], {}) (pool, comm), 
-        pool path = Some (Stt (Bind n b p') env stack), 
-        static_eval static_env static_comm e0, 
-        static_flows_accept static_env graph pool, 
-        is_end (NBnd x)
-      then
-        exists static_path . 
-          paths_correspond path static_path, 
-          static_traceable graph (term_id e0) is_end static_path
+  lemma static_traceable_pool_sound:
+  \forall t0 pool comm path n c t' env stack evn_a static_comm graph is_end .
+    if
+      star dynamic_eval ([[] -> (Stt t0 [->] [])], {}) (pool, comm), 
+      pool path = Some (Stt (Bind n c t') env stack), 
+      static_eval static_env static_comm t0, 
+      static_flows_accept static_env graph pool, 
+      is_end (NBnd x)
+    then
+      \exists static_path . 
+        paths_correspond path static_path, 
+        static_traceable graph (term_id t0) is_end static_path
 
   lemma static_flows_accept_pool_preserved_star:
-    \forall e0 pool comm static_env static_comm graph .
-      if
-        star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm, 
-        static_eval static_env static_comm e0,
-        static_flows_accept_pool static_env graph [[] -> (Stt e0 [->] [])]
-      then
-        static_flows_accept_pool static_env graph pool 
+  \forall t0 pool comm static_env static_comm graph .
+    if
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm, 
+      static_eval static_env static_comm t0,
+      static_flows_accept_pool static_env graph [[] -> (Stt t0 [->] [])]
+    then
+      static_flows_accept_pool static_env graph pool 
 \end{lstlisting}
 
 
 The lemma for the soundness of the generalized form follows from the generalized definitions
-of static traceability. The preservation of static acceptance for flows over pools is proved by the
+of static traceability. The preservation of static acceptance by flows over pools is proved by the
 equivalence between star and its leftward variant, and induction on the leftward variant.
 
 The lemma for soundness of a static step not being a send ID is proved using the lemma for
 soundness of a name in a sending event of a synchronization not statically binding to a static
 channel value, and the lemma for soundness of a name in any state's environment
 not statically binding to a static value.  Since only send IDs are relevant
-the soundness of lack of static reachability is
+the soundness of static reachability is
 used to ensure that the static step discussed is indeed a send ID. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma send_chan_not_static_bound_sound:
-    \forall e0 pool comm static_env static_comm path
-      n n$_e$ p' env stack n$_sc$ n$_m$ env$_e$ path_c n$_c$ .
-      if
-        star dynamic_eval [[] -> (Stt e0 [->] [])], {} pool comm,
-        static_eval static_env static_comm e0,
-        pool path = Some (Stt (Bind n (Sync n$_e$) p') env stack),
-        env_y n$_e$ = Some (VAtm (SendEvt n$_sc$ n$_m$) env$_e$),
-        env$_e$ n$_sc$ = Some (VChn (Chan path_c n$_c$))
-      then
-        SChn n$_c$ \in static_env n$_sc$
+  lemma send_chan_static_eval_sound:
+  \forall t0 pool comm static_env static_comm path
+    n n$_e$ t' env stack n$_sc$ n$_m$ env$_e$ path_c n$_c$ .
+    if
+      star dynamic_eval [[] -> (Stt t0 [->] [])], {} pool comm,
+      static_eval static_env static_comm t0,
+      pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
+      env_y n$_e$ = Some (VAtm (SendEvt n$_sc$ n$_m$) env$_e$),
+      env$_e$ n$_sc$ = Some (VChn (Chan path_c n$_c$))
+    then
+      SChn n$_c$ \in static_env n$_sc$
 
-  lemma not_static_bound_sound:
-    \forall e0 pool comm static_env static_comm path p env stack n v .
-      if
-        star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm,
-        static_eval static_env static_comm e0, 
-        pool path = Some (Stt p env stack), 
-        env n = Some v
-      then
-        abstract v \in static_env x
+  lemma static_eval_sound:
+  \forall t0 pool comm static_env static_comm path t env stack n v .
+    if
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm,
+      static_eval static_env static_comm t0, 
+      pool path = Some (Stt t env stack), 
+      env n = Some v
+    then
+      abstract v \in static_env x
 
-  lemma not_static_reachable_sound:
-    \forall e0 pool comm static_env static_comm path p env stack .
-      if
-        star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm,
-        pool path = Some (Stt p env stack)
-      then
-        static_reachable e0 e
+  lemma static_reachable_sound:
+  \forall t0 pool comm static_env static_comm path t env stack .
+    if
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm,
+      pool path = Some (Stt t env stack)
+    then
+      static_reachable t0 t 
 \end{lstlisting}
 
 Both the soundness of a name in a sending event of a synchronization not statically binding
@@ -2881,7 +2888,7 @@ evaluation.
         static_eval_pool static_env static_comm pool'
 \end{lstlisting}
 
-The lemma for soundness of lack of static reachability relies on the a reformulation of
+The lemma for soundness of static reachability relies on the a reformulation of
 static reachability that inducts on the left program.
 The definition of static reachability is syntax-directed in
 order to portray a clear connection to
@@ -3006,11 +3013,11 @@ maintaining the initial program state in context for each subgoal .
 
   \end{lstlisting}
 
-The soundness of lack of reachability follows the the definitions
+The soundness of static reachability follows the the definitions
 a generalized form of soundness over pools.
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma not_static_reachable_pool_sound:
+  lemma static_reachable_pool_sound:
     \forall e0 pool .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])], {} pool comm 
@@ -3089,7 +3096,7 @@ sequencing, calling, returning, and spawning are also included flows.
   type static_path = static_step list
 \end{lstlisting}
 
-The static acceptance for flows is similar to that of the previous analysis.
+The static acceptance by flows is similar to that of the previous analysis.
 However, it must additionally consider flows with the sending mode. 
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -3827,8 +3834,8 @@ correlating dynamic paths with static paths.
           (static_path_pre @ (NBnd n$_s$, ESend n$_s$e) # (NBnd n$_r$, MNxt) # static_path_sfx))
 \end{lstlisting}
 
-Additionally the soundness theorem follows from the soundness of lack of static traceability,
-the soundness of lack of static inclusiveness,
+Additionally the soundness theorem follows from the soundness of static traceability,
+the soundness of static inclusiveness,
 and the soundness of a term ID not being a sending ID. 
 The reasoning about the sending ID is identical to that of the lower precision analysis, but
 the the reasoning for the former two is significantly more complicated and not yet completed.
@@ -3907,7 +3914,7 @@ that correlates with the dynamic path is much more challenging.
           (static_path_pre @ (NBnd n$_s$, ESend n$_s$e) # (NBnd n$_r$, MNxt) # static_path_sfx)
       )
 
-  lemma not_static_traceable_sound: 
+  lemma static_traceable_sound: 
     \forall e0 pool comm path n b p' env stack static_env static_comm
       entr exit n$_c$ graph is_end path_c  . 
       if
@@ -3922,7 +3929,7 @@ that correlates with the dynamic path is much more challenging.
           paths_correspond_mod_chan pool comm (Chan path_c n$_c$) path static_path, 
           static_traceable graph entr exit (NBnd n$_c$) is_end static_path)
 
-  lemma not_static_inclusive_sound:
+  lemma static_inclusive_sound:
     \forall e0 pool comm static_env entr exit n$_c$ graph static_comm
       path1 stt1 path_c static_path1 path2 stt2 static_path2 .
       if
