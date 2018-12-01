@@ -1080,7 +1080,7 @@ more user-friendly syntax into ANF as demonstrated by Flanagan et al \cite{}.
 The dynamic semantics describes how programs evaluate to values.
 A history of execution is represented as a list of steps, where a step is a
 binding name or resulting name of a term, paired with a mode of control indicating
-transitions by sequencing, spawning, calling, or returning.
+flows by sequencing, spawning, calling, or returning.
 Channels have no literal representation, but each
 time a channel is created, it is uniquely identified by the history of the execution up until
 the step of creation. Atomic terms are not simplified. Instead, atoms are evaluated to
@@ -1094,8 +1094,8 @@ their associated terms.
 The semantics are defined as a CEK machine \cite{}, rather than a
 substitution based operational semantics. By avoiding simplification of terms in the
 operational semantics, it is possible to relate
-the abstract values of the static semantics to the
-values produced by the dynamic semantics,
+the abstract evaluations of the static semantics to the
+evaluations produced by the dynamic semantics,
 which in turn is relied on to prove soundness of the static semantics.
 
 
@@ -1153,7 +1153,7 @@ Additionally, all these terms evaluate to values in a single step.
   \end{lstlisting}
 
 The evaluation of a complex term for application or conditional testing
-results in transitioning by calling. A calling transitions is characterized
+results in flowing by calling. A calling flows is characterized
 by the need to save a subterm in the continuation stack for later evaluation.
 The evaluation depends on the syntax
 and an environment for looking up the values of names within the syntax.
@@ -1202,7 +1202,7 @@ term's names, an unresolved name, to be resolved when the corrsponding branch re
 The initial state of execution consists of a program, an empty environment, and an empty stack
 of continuations. With each sequential step, the program is reduced to a subterm,
 and the environment is updated with the name bound to the value of the term. Each time a
-subprogram is sidestepped to evaluate a dependent term, a continuation is formed around
+embedded term is sidestepped to evaluate a dependent term, a continuation is formed around
 it and pushed onto a stack of continuations. A continuation is popped off the stack when a
 state's program is reduces to a result program.  A pool of states keeps track of all the states
 that have been reached through the evaluation of an initial program.  Each state is indexed by
@@ -1247,14 +1247,14 @@ evaluates to a new pool based on one or more states in that pool. The initial po
 program contains just one state indexed by an empty path. The state contains the program, an
 empty environment, and an empty stack. The pool will grow strictly larger with each evaluation
 step, maintaining a full history. Each step adds new states and paths extended from previous
-ones, and each step in the path indicates the mode of transition to take to reach the state.
+ones, and each step in the path indicates the mode of flow to take to reach the state.
 Only states indexed by leaf paths are used to evaluate to the next pool.
 
 A sequencing evaluation step of a program picks a leaf state and relies on
 sequential evaluation of its top term. It updates the state's environment with the
 value of the term, leaves the stack unchanged, and reduces the program to the next
-subprogram. A calling evaluation step relies on the calling evaluation of a state's top
-term. The binding name, subprogram, environment are pushed onto the stack, and the new
+embedded term. A calling evaluation step relies on the calling evaluation of a state's top
+term. The binding name, embedded term, environment are pushed onto the stack, and the new
 state gets its program and environment from the evaluation of the term. 
 
 For the evaluation a leaf path steping to a result program, a continuation is popped of the
@@ -1263,25 +1263,25 @@ is taken from the continuation and modified with the result value.
 
 In the case of channel creation, the evaluation updates the state's environment with the
 value of a channel consisting of the path leading to its creation; it leaves the stack
-unchanged and reduces the program to the next subprogram.
+unchanged and reduces the program to the next embedded term.
 
 In the case of spawning, the evaluation is updated with two
 new paths extending the leaf path.  For one, the leaf path is extended with a sequential
 program step whose state has the next term and the environment updated
 with the unit value bound to
 the bind name, and the original continuation stack. For the other, the leaf path
-extended with an program step indicating a spawning transition.  Its state has the spawned
+extended with an program step indicating a spawning flow.  Its state has the spawned
 term, the original environment, and an empty continuation stack. 
 The evaluation updates the state's environment with the
-unit value, leaves the stack unchanged, and reduces the program to the next subprogram.
+unit value, leaves the stack unchanged, and reduces the program to the next embedded term.
 Additionally, it generates another state consisting of the spawning term's child
 program, the same environment unchanged, and an empty stack.
 
 In the case where two leaf paths in the pool correspond to synchronization on the same channel,
 and one synchronizes on a send event and the other synchronizes on a receive event, then
 evaluation updates the pool with two new paths and corresponding states.
-It updates the send event's state with its subprogram, the environment updates with the unit
-value, and the stack unchanged.  It updates the receive event's state with its subprogram, the
+It updates the send event's state with its embedded term, the environment updates with the unit
+value, and the stack unchanged.  It updates the receive event's state with its embedded term, the
 environment updates with the sent value, and the stack unchanged.
 
 Additionally, the communication is updated with the sending and receiving paths, and the channel
@@ -1490,7 +1490,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 
 \subsection{Static Semantics}
 
-The static semantics describes an estimation of intermediate static values and subprograms
+The static semantics describes an estimation of intermediate static values and embedded terms
 that might result from running a program.  Although the estimations are imprecise with
 respect to the dynamic semantics, they are certainly accurate,
 which is confirmed by the formal proofs of soundness.
@@ -1902,41 +1902,43 @@ The term ID of a result term is the embedded name, and indication of its use in 
   type term_id_map = term_id -> name set
 \end{lstlisting}
 
-The static communication is described by an estimation of the static paths that communicate on
-static channels.
-The static send ID classification means that an program ID might represent a
-sycnronization to send on a given abstract channel.
-The static receive ID classification means that an program ID might represent a
+The static communication describes a sound approximation of
+the static paths that communicate on static channels.
+The static send ID classification means that a term ID might represent a
+sycnronization to send on a given static channel.
+The static receive ID classification means that a term ID might represent a
 synchronization to receive on a given abstract channel. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_send_id of
-    static_value_map -> term -> name -> term_id -> bool:
-    only
-    (\forall e0 n n$_e$ p' n$_sc$ n$_m$ static_env n$_c$ .
-      if
-        static_reachable e0 (Bind n (Sync n$_e$) p'),
-        (SAtm (SendEvt n$_sc$ n$_m$)) \subseteq static_env n$_e$, 
-        (SChn n$_c$) \in static_env n$_sc$
-      then
-        static_send_id static_env e0 n$_c$ (NBnd x))
+  predicate static_send_id
+  of static_value_map -> term -> name -> term_id -> bool:
+  only
+  (\forall t0 n n$_e$ t' n$_sc$ n$_m$ static_env n$_c$ .
+    if
+      static_reachable t0 (Bind n (Sync n$_e$) t'),
+      (SAtm (SendEvt n$_sc$ n$_m$)) \subseteq static_env n$_e$, 
+      (SChn n$_c$) \in static_env n$_sc$
+    then
+      static_send_id static_env t0 n$_c$ (NBnd x)
+  )
 
-  predicate static_recv_id of
-    static_value_map -> term -> name -> term_id -> bool:
-    only
-    (\forall e0 n n$_e$ p' n$_r$c static_env n$_c$ .
-      if
-        static_reachable e0 (Bind n (Sync n$_e$) p'),
-        (SAtm (RecvEvt n$_r$c)) \in static_env n$_e$, 
-        (SChn n$_c$) \in static_env n$_r$c 
-      then
-        static_recv_id static_env e0 n$_c$ (NBnd x))
-  \end{lstlisting}
+  predicate static_recv_id
+  of static_value_map -> term -> name -> term_id -> bool:
+  only
+  (\forall t0 n n$_e$ t' n$_rc$ static_env n$_c$ .
+    if
+      static_reachable t0 (Bind n (Sync n$_e$) t'),
+      (SAtm (RecvEvt n$_rc$)) \in static_env n$_e$, 
+      (SChn n$_c$) \in static_env n$_rc$ 
+    then
+      static_recv_id static_env t0 n$_c$ (NBnd x)
+  )
+\end{lstlisting}
 
 
-In the server implementation, the static channel identified by the name \lstinline{k1} is waited on
-by the server.  It has
-one receiving ID in the server function
+In the server implementation,
+the static channel identified by the name \lstinline{k1} is waited on
+by the server.  It has one receiving ID in the server function
 at ID \lstinline[language=sugar_lang]{bind p1} and a sending ID
 in the request function at ID \lstinline[language=sugar_lang]{bind z9}.
 The channel idetifiend by the name \lstinline{k4} is sent with a client's request for
@@ -1953,187 +1955,203 @@ The definitions are purposely structured to allow adding live channel analysis t
 definition fairly straightforward with just a few alterations.  Section ? expands on
 these alterations and outlines a strategy that is likely to result in formal proofs of
 soundness, although the actual formal proof of the version with live channel analysis is
-not yet been complete.  
+not yet complete.  
 
-For lower precision version without the liveness of channels, there are four modes,
-indicating how the program ID transitions to the program ID of one of
-its subprograms.
-The modes of transition are sequencing, calling, spawning, and returning. A transition is a
-triplet of a program ID, a mode of transition, and an program ID of a
-subprogram. A static step is just a program ID along with the mode it uses to
-transition to its subprogram. A static path is a list of static steps.  
+For the lower precision version without the liveness of channels, there are four modes,
+indicating how the term ID flows to the term ID of one of
+its embedded terms.
+The modes of flow are sequencing, calling, spawning, and returning. A flow is a
+triplet of a term ID, a mode of flow, and a term ID of a
+embedded term. A static step is just a term ID along with the mode it uses to
+flow to its embedded term. A static path is a list of static steps.  
 
 \begin{lstlisting}[language=logic, mathescape]
-  datatype mode = MNxt | MSpwn | MCll | MRtn
+  datatype mode =
+    MNxt
+  | MSpwn
+  | MCll
+  | MRtn
 
-  type transition = term_id * mode * term_id
+  type flow = term_id * mode * term_id
 
-  type graph = transition set
+  type graph = flow set
 
   type static_step = term_id * mode
 
   type static_path = static_step list
-  \end{lstlisting}
+\end{lstlisting}
 
-The static traversability means that a set of transitions describes all the transitions
-that might be traversed for a program, given bindings of abstract values.  For a result
-term, any transition might be traversed.  For all bind terms, except those binding
-to case matching and function application, the sequential transition from the top term to
-the sequenced term might be traversable, and the traversable transitions are also the
-traversable transitions for the sequenced term.  For binding to function function, the
-traversable transitions are also traversable transitions for the inner term of the
-function function.  For binding to spawning, the spawning transition from the top term
-to the spawned term might be traversed, and the traversable transitions are also
-traversable transitions for the spawned term.
+The evaluation of a term results in the flow to new terms,
+via sequencing, calling, returning, or spawning.  These flows are represented concretely
+by the term IDs of the starting and ending terms and a mode
+to represent the nature of the flow.
+The static acceptance for flows describes a set of flows consisting of all the flows
+that could be traversed during a program's evaluation.
+It depends on the static environment for name bindings.
+For a result term, there are no demands on the flow graph.  For all bind terms, except those binding
+to case matching and function application, the sequential flow from the top term to
+the sequenced term might accept the term, and the accepting flows are also the
+accepting flows for the sequenced term.  For binding to function function, the
+accepting flows are also accepting flows for the inner term of the
+function function.  For binding to spawning, the spawning flow from the top term
+to the spawned term might be traversed, and the accepting flows are also
+accepting flows for the spawned term.
 
-In the case of matching, the the calling transition from the top program to
-the left subprogram might be traversable, and
-the calling transition from the top program to the
-right subprogram might be traversable.  The returning transition from the result of the
-left subprogram to the sequenced subprogram might be traversable, and the returning
-transition from the result of the right subprogram to the sequenced subprogram might be
-traversable.  Additionally, the traversable transitions for the top program are also
-traversable transitions the left subprogram, right subprogram, and the sequenced subprogram.   
+In the case of conditional testing, the calling flow from the conditional testing term to
+its left case's embedded term might accept the conditional testing term, and
+the calling flow from the a term to
+the right case's embedded term might accept the conditional testing term.
+The returning flow from the result of the
+left case's embedded term to the sequenced embedded term might accept the result term,
+and the returning flow from the result of the right embedded term to the sequenced embedded term
+might also accept the result term.  Additionally, the accepting flows for a term are also
+accepting flows for its left case's embedded term, right case's embedded term,
+and the sequenced embedded term.   
 
 In the case of application, if the applied name is actually bound to a function
-function, then a calling transition from the top program to the function's subprogram
-might be traversable, and the returning transition from the result of the function
-function to the sequenced subprogram might be traversable.
-Additionally, the traversable transitions for the top program are also
-traversable transitions for the sequenced subprogram. 
+function, then a calling flow from the application term to the function's embedded term
+might accept the term, and the returning flow from the result of the function
+function to the sequenced embedded term might accept the term.
+Additionally, the accepting flows for the application term are also
+accepting flows for the sequenced embedded term. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_traversable of
-    static_value_map -> graph -> term -> bool:
-    only
+  predicate static_flows_accept
+  of static_value_map -> graph -> term -> bool:
+  only
+  (\forall static_env graph n .
+    static_flows_accept static_env graph (Rslt n)
+  ),
+  (\forall n t' graph static_env  .
+    if
+      (NBnd n , MNxt, top_term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n Unt t')
+  ),
+  (\forall n t' graph static_env  .
+    if
+      (NBnd n , MNxt, top_term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n MkChn t')
+  ),
+  (\forall n t' graph static_env  n$_c$ n$_m$ .
+    if
+      (NBnd n , MNxt, top_term_id t') \in graph, 
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
+  ),
+  (\forall n t' graph static_env n$_c$ .
+    if
+      (NBnd n , MNxt, top_term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Atom (RecvEvt n$_c$)) t')
+  ),
+  (\forall n t' graph static_env n1 n2 .
+    if
+      (NBnd n , MNxt, top_term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Atom (Pair n1 n2)) t')
+  ),
+  (\forall n t' graph static_env n$_s$ .
+    if
+      (NBnd n , MNxt, top_term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Atom (Lft n$_s$)) t')
+  ),
+  (\forall n t' graph static_env n$_s$ .
+    if
+      (NBnd n , MNxt, top_term_id t') \in graph,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Atom (Rht n$_s$)) t')
+  ),
+  (\forall n t' graph static_env t$_b$ n$_f$ n$_t$ .
+    if
+      (NBnd n , MNxt, top_term_id t') \in graph,
+      static_flows_accept static_env graph t', 
+      static_flows_accept static_env graph t$_b$
+    then
+      static_flows_accept static_env graph (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t')
+  ),
+  (\forall n t' p_c graph static_env.
+    if
+      {(NBnd x, MNxt, top_term_id t'),
+        (NBnd x, MSpwn, top_term_id p_c)} \subseteq graph, 
+      static_flows_accept static_env graph p_c, 
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Spwn p_c) t')
+  ),
+  (\forall n t' graph static_env n$_s$e .
+    if
+      (NBnd n , MNxt, top_term_id t') \in graph, 
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Sync n$_s$e) t')
+  ),
+  (\forall n t' graph static_env n$_t$ .
+    if
+      (NBnd n , MNxt, top_term_id t') \in graph, 
+      static_flows_accept static_env graph t', 
+    then
+      static_flows_accept static_env graph (Bind n (Fst n$_t$) t')
+  ),
+  (\forall n t' graph static_env n$_t$ .
+    if
+      (NBnd n , MNxt, top_term_id t') \in graph, 
+      static_flows_accept static_env graph t', 
+    then
+      static_flows_accept static_env graph (Bind n (Snd n$_t$) t')
+  ),
+  (\forall n t$_l$ t$_r$ t' graph static_env n$_s$ .
+    if
+      {
+        (NBnd x, MCll, top_term_id t$_l$),
+        (NBnd x, MCll, top_term_id t$_r$),
+        (NResult (result_name t$_l$), MRtn, top_term_id t'),
+        (NResult (result_name t$_r$), MRtn, top_term_id t')
+      } \subseteq graph, 
+      static_flows_accept static_env graph t$_l$, 
+      static_flows_accept static_env graph t$_r$,
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+  ),
+  (\forall  static_env n$_f$ n t' n n$_a$ .
+    if
+      (\forall n$_f$' n$_t$ t$_b$ . if (SAtm (Fun n$_f$' n$_t$ t$_b$)) \in static_env n$_f$ then 
+        {
+          (NBnd x, MCll, top_term_id t$_b$),
+          (NResult (result_name t$_b$), MRtn, top_term_id t')
+        } \subseteq graph
+      ),
+      static_flows_accept static_env graph t'
+    then
+      static_flows_accept static_env graph (Bind n (App n$_f$ n$_a$) t')
+  )
+\end{lstlisting}
 
-    (\forall static_env graph n .
-      static_traversable static_env graph (Rslt n)),
-
-    (\forall n p' graph static_env  .
-      if
-        (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
-      then
-        static_traversable static_env graph (Bind n Unt p')),
-
-    (\forall n p' graph static_env  .
-      if
-        (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
-      then
-        static_traversable static_env graph (Bind n MkChn p')),
-
-    (\forall n p' graph static_env  n$_c$ n$_m$ .
-      if
-        (NBnd n , MNxt, top_term_id p') \in graph, 
-        static_traversable static_env graph p'
-      then
-        static_traversable static_env graph (Bind n (Atom (SendEvt n$_c$ n$_m$)) p')),
-
-    (\forall n p' graph static_env n$_c$ .
-      if
-        (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
-      then
-        static_traversable static_env graph (Bind n (Atom (RecvEvt n$_c$)) p')),
-
-    (\forall n p' graph static_env n1 n2 .
-      if
-        (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
-      then
-        static_traversable static_env graph (Bind n (Atom (Pair n1 n2)) p')),
-
-    (\forall n p' graph static_env n$_s$ .
-      if
-        (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
-      then
-        static_traversable static_env graph (Bind n (Atom (Lft n$_s$)) p')),
-
-    (\forall n p' graph static_env n$_s$ .
-      if
-        (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
-      then
-        static_traversable static_env graph (Bind n (Atom (Rht n$_s$)) p')),
-
-    (\forall n p' graph static_env p$_b$ n$_f$ n$_p$ .
-      if
-        (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p', 
-        static_traversable static_env graph p$_b$
-      then
-        static_traversable static_env graph (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')),
-
-    (\forall n p' p_c graph static_env.
-      if
-        {(NBnd x, MNxt, top_term_id p'),
-          (NBnd x, MSpwn, top_term_id p_c)} \subseteq graph, 
-        static_traversable static_env graph p_c, 
-        static_traversable static_env graph p'
-      then
-        static_traversable static_env graph (Bind n (Spwn p_c) p')),
-
-    (\forall n p' graph static_env n$_s$e .
-      if
-        (NBnd n , MNxt, top_term_id p') \in graph, 
-        static_traversable static_env graph p'
-      then
-        static_traversable static_env graph (Bind n (Sync n$_s$e) p')),
-
-    (\forall n p' graph static_env n$_p$ .
-      if
-        (NBnd n , MNxt, top_term_id p') \in graph, 
-        static_traversable static_env graph p', 
-      then
-        static_traversable static_env graph (Bind n (Fst n$_p$) p')),
-
-    (\forall n p' graph static_env n$_p$ .
-      if
-        (NBnd n , MNxt, top_term_id p') \in graph, 
-        static_traversable static_env graph p', 
-      then
-        static_traversable static_env graph (Bind n (Snd n$_p$) p')),
-
-    (\forall n p$_l$ p$_r$ p' graph static_env n$_s$ .
-      if
-        {(NBnd x, MCll, top_term_id p$_l$),
-          (NBnd x, MCll, top_term_id p$_r$),
-          (NResult (result_name p$_l$), MRtn, top_term_id p'),
-          (NResult (result_name p$_r$), MRtn, top_term_id p')} \subseteq graph, 
-        static_traversable static_env graph p$_l$, 
-        static_traversable static_env graph p$_r$,
-        static_traversable static_env graph p'
-      then
-        static_traversable static_env graph (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
-
-    (\forall  static_env n$_f$ n p' n n$_a$ .
-      if
-        (\forall n$_f$' n$_p$ p$_b$ . if (SAtm (Fun n$_f$' n$_p$ p$_b$)) \in static_env n$_f$ then 
-          {(NBnd x, MCll, top_term_id p$_b$),
-            (NResult (result_name p$_b$), MRtn, top_term_id p')} \subseteq graph),
-        static_traversable static_env graph p'
-      then
-        static_traversable static_env graph (Bind n (App n$_f$ n$_a$) p'))
-  \end{lstlisting}
-
-The server implementation represented as a graph illustrates how static traversability can interpret
+The server implementation represented as a graph illustrates how static acceptance for flows can interpret
 a graph from a dynamic program.
 
 \includegraphics[width=1.3\textwidth, left]{cml_graph.pdf}
 
 The static traceability means that a static path with a given starting step, and ending
-condition, can be traced by traversing the transitions in a graph.
+condition, can be traced by traversing the flows in a graph.
 The empty path is statically traceable if the starting step meets the ending condition.
-Otherwise, a path is statically traceable if the last static step corresponds to a transition
+Otherwise, a path is statically traceable if the last static step corresponds to a flow
 that meets the ending condition, and the longest strict prefix of the path is statically
 traceable.  
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_traceable of
-    transition set -> term_id -> (term_id -> bool) -> static_path -> bool:
+    flow set -> term_id -> (term_id -> bool) -> static_path -> bool:
     only
 
     (\forall start graph is_end .
@@ -2168,7 +2186,7 @@ precision analysis discussed in section ? addresses this issue.
 
 The static inclusion means that two static paths might be traced in
 the same run of a program. Ordered paths might be inclusive, and also a path that diverges
-from another at a spawn transition might be inclusive. This concept is useful for achieving
+from another at a spawn flow might be inclusive. This concept is useful for achieving
 greater precision, since if two paths cannot occur in the same run of a program, only one needs
 to be counted towards the communication topology. 
 
@@ -2256,7 +2274,7 @@ program.
         every_two
           (static_traceable graph (top_term_id e) (static_send_id static_env p n$_c$))
           singular,
-        static_traversable static_env graph e
+        static_flows_accept static_env graph e
       then
         static_one_shot graph p n$_c$)
 
@@ -2270,7 +2288,7 @@ program.
         (every_two
           (static_traceable graph (top_term_id e) (static_recv_term_id static_env p n$_c$))
           noncompetitive), 
-        static_traversable static_env graph e
+        static_flows_accept static_env graph e
       then
         static_one_to_one static_env p n$_c$)
 
@@ -2281,7 +2299,7 @@ program.
         (every_two
           (static_traceable graph (top_term_id e) (static_send_id static_env p n$_c$))
           noncompetitive),
-        static_traversable static_env graph e
+        static_flows_accept static_env graph e
       then
         static_one_to_many static_env p n$_c$) 
 
@@ -2292,7 +2310,7 @@ program.
         (every_two
           (static_traceable graph (top_term_id e) (static_recv_term_id static_env p n$_c$))
           noncompetitive),
-        static_traversable static_env graph e
+        static_flows_accept static_env graph e
       then
         static_many_to_one static_env p n$_c$) 
 \end{lstlisting}
@@ -2450,7 +2468,7 @@ lack of static traceability states that for any dynamic path traced by running a
 is a corresponding static path that is statically traceable. The lemma for soundness of a
 program step not being a static send ID states that running a program reaches a
 synchronization on a sending event, then that synchronization is statically identified as a
-send ID by its program ID.
+send ID by its term ID.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma not_static_traceable_sound:
@@ -2459,7 +2477,7 @@ send ID by its program ID.
         star dynamic_eval ([[] -> (Stt e0 [->] [])], {}) (pool, comm), 
         pool path = Some (Stt (Bind n b p') env stack),
         static_eval static_env static_comm e0,
-        static_traversable static_env graph e0,
+        static_flows_accept static_env graph e0,
         is_end (NBnd x)
       then
         exists static_path . 
@@ -2490,106 +2508,106 @@ send ID by its program ID.
 \end{lstlisting}
 
 The soundness of lack of static traceability is proved by generalizing
-static traversability and static evaluation over pools, such that information about a step in
+static acceptance for flows and static evaluation over pools, such that information about a step in
 the program can be deduced by a fixed number of logical steps regardless of the location of the
 program step or the size of the program. Without such generalization, it would be possible to
 prove soundness for a fixed program, but not any arbitrary program.
 
-The generalization of static traversability is composed of in static traversable over values,
-static traversability over environments, static traversability over stacks, and static
+The generalization of static acceptance for flows is composed of in static accepting over values,
+static acceptance for flows over environments, static acceptance for flows over stacks, and static
 traversability over pools.
-In most cases, it simply states that a subprogram of some semantic element is also statically
-traversable. The exception is in the case of
-static traversability over a non-empty stack, where
-there is an additional condition that the transition
-from a result id to the program ID
+In most cases, it simply states that a embedded term of some semantic element is also statically
+accepting. The exception is in the case of
+static acceptance for flows over a non-empty stack, where
+there is an additional condition that the flow
+from a result id to the term ID
 of the continuation program exists in the graph.
 This information is consistent with static
-traversability over programs, but provides direct information about a transition in the
+traversability over programs, but provides direct information about a flow in the
 graph, which would otherwise only be deducible by a varying number of logical steps
 depending on the program.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_traversable_val of
+  predicate static_flows_accept_val of
     static_value_map -> graph -> dynamic_value -> bool:
     only
 
     (\forall static_env graph .
-      static_traversable_val static_env graph VUnt), 
+      static_flows_accept_val static_env graph VUnt), 
 
     (\forall static_env graph c .
-      static_traversable_val static_env graph (VChn c)),
+      static_flows_accept_val static_env graph (VChn c)),
 
     (\forall static_env graph env n$_c$ n$_m$.
       if
-        static_traversable_env static_env graph env 
+        static_flows_accept_env static_env graph env 
       then 
-        static_traversable_val
+        static_flows_accept_val
           static_env graph (VAtm (SendEvt n$_c$ n$_m$) env)),
 
     (\forall static_env graph env n$_c$.
       if
-        static_traversable_env static_env graph env 
+        static_flows_accept_env static_env graph env 
       then
-        static_traversable_val
+        static_flows_accept_val
           static_env graph (VAtm (RecvEvt n$_c$) env)),
 
     (\forall static_env graph env n$_p$ .
       if
-        static_traversable_env static_env graph env 
+        static_flows_accept_env static_env graph env 
       then
-        static_traversable_val
+        static_flows_accept_val
           static_env graph (VAtm (Lft n$_p$) env)),
 
     (\forall static_env graph env n$_p$ .
       if
-        static_traversable_env static_env graph env
+        static_flows_accept_env static_env graph env
       then
-        static_traversable_val
+        static_flows_accept_val
           static_env graph (VAtm (Rht n$_p$) env)),
 
     (\forall static_env graph p$_b$ env n$_f$ n$_p$ .
       if
-        static_traversable static_env graph p$_b$, 
-        static_traversable_env static_env graph env
+        static_flows_accept static_env graph p$_b$, 
+        static_flows_accept_env static_env graph env
       then
-        static_traversable_val
+        static_flows_accept_val
           static_env n$_f$ (VAtm (Fun n$_f$ n$_p$ p$_b$) env)),
 
     (\forall static_env graph env . 
       if
-        static_traversable_env static_env graph env
+        static_flows_accept_env static_env graph env
       then
-        static_traversable_val
+        static_flows_accept_val
           static_env graph (VAtm (Pair n1 n2) env))
 
-  predicate static_traversable_env of
+  predicate static_flows_accept_env of
     static_value_map -> graph -> env -> bool: 
     only 
     (\forall static_env graph env .
       if
         (\forall n v . if env n = Some v then
-          static_traversable_val static_env graph v)
+          static_flows_accept_val static_env graph v)
       then
-        static_traversable_env static_env graph env) 
+        static_flows_accept_env static_env graph env) 
 
-  predicate static_traversable_stack of
+  predicate static_flows_accept_stack of
     static_value_map -> graph ->
     name -> continuation list -> bool:
     only
     (\forall static_env graph y .
-      static_traversable_stack static_env graph y []),
+      static_flows_accept_stack static_env graph y []),
 
     (\forall y p graph static_env graph env stack n env .
       if 
         {(NResult y, MRtn, top_term_id e)} \subseteq graph,
-        static_traversable static_env graph e,
-        static_traversable_env static_env graph env,
-        static_traversable_stack static_env graph (result_name e) stack 
+        static_flows_accept static_env graph e,
+        static_flows_accept_env static_env graph env,
+        static_flows_accept_stack static_env graph (result_name e) stack 
       then 
-        static_traversable_stack static_env graph y ((Ctn n p env) # stack))
+        static_flows_accept_stack static_env graph y ((Ctn n p env) # stack))
 
-  predicate static_traversable_pool of
+  predicate static_flows_accept_pool of
     static_value_map -> graph -> pool -> bool:
     only
     (\forall static_env graph pool .
@@ -2598,20 +2616,20 @@ depending on the program.
           if
             env path = Some (Stt p env stack)
           then 
-            static_traversable static_env graph e, 
-            static_traversable_env static_env graph env, 
-            static_traversable_stack static_env graph (result_name e) stack) 
+            static_flows_accept static_env graph e, 
+            static_flows_accept_env static_env graph env, 
+            static_flows_accept_stack static_env graph (result_name e) stack) 
       then
-          static_traversable_pool static_env graph pool)
+          static_flows_accept_pool static_env graph pool)
   \end{lstlisting}
 
-The transitions described by the various versions of static traversability depend on static
+The flows described by the various versions of static acceptance for flows depend on static
 environments in order to look up the control flow in the application case.
 The static environment
 results from the static evaluation of the program that is dynamically evaluated. Thus,
 generalized
-versions of static evaluation enable further deduction about transitions.
-As with the generalized versions of static traversability,
+versions of static evaluation enable further deduction about flows.
+As with the generalized versions of static acceptance for flows,
 the generalized versions of static evaluation are designed to
 preserve static environments across
 dynamic evaluations of pools. They also provide direct access to binding information from names
@@ -2774,26 +2792,26 @@ dynamic evaluation.
         star dynamic_eval ([[] -> (Stt e0 [->] [])], {}) (pool, comm), 
         pool path = Some (Stt (Bind n b p') env stack), 
         static_eval static_env static_comm e0, 
-        static_traversable static_env graph pool, 
+        static_flows_accept static_env graph pool, 
         is_end (NBnd x)
       then
         exists static_path . 
           paths_correspond path static_path, 
           static_traceable graph (top_term_id e0) is_end static_path
 
-  lemma static_traversable_pool_preserved_star:
+  lemma static_flows_accept_pool_preserved_star:
     \forall e0 pool comm static_env static_comm graph .
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm, 
         static_eval static_env static_comm e0,
-        static_traversable_pool static_env graph [[] -> (Stt e0 [->] [])]
+        static_flows_accept_pool static_env graph [[] -> (Stt e0 [->] [])]
       then
-        static_traversable_pool static_env graph pool 
+        static_flows_accept_pool static_env graph pool 
 \end{lstlisting}
 
 
 The lemma for the soundness of the generalized form follows from the generalized definitions
-of static traceability. The preservation of static traversability over pools is proved by the
+of static traceability. The preservation of static acceptance for flows over pools is proved by the
 equivalence between star and its leftward variant, and induction on the leftward variant.
 
 The lemma for soundness of a static step not being a send ID is proved using the lemma for
@@ -3036,104 +3054,104 @@ analysis.
 A trimmed graph structure of graph is used static analysis for this higher precision
 analysis, which can better differentiate between distinct channels. 
 A trimmed graph is specialized for a particular dynamic channel.  From the creation
-step, it must contain transitive transitions to all the program steps where the
+step, it must contain transitive flows to all the program steps where the
 channel is live. It should also be as small as possible, for higher precision.
 
-In the whole graph used in the previous analysis, a spawning transition
+In the whole graph used in the previous analysis, a spawning flow
 connects a child thread to the rest of the program.  For a trimmed graph,
 it may be clear the channel of interest is not created until after the spawn step,
-so there is not need to include the spawning transition.  However, later on in the
+so there is not need to include the spawning flow.  However, later on in the
 program it may become apparent that the channel of interest is sent via another channel to
-that spawned thread.  Since there is no spawning transition already connecting that
-thread to the trimmed graph, a transition with a sending mode is used between the
+that spawned thread.  Since there is no spawning flow already connecting that
+thread to the trimmed graph, a flow with a sending mode is used between the
 send ID and the receive ID of synchronization. Modes for typical control flow of
-sequencing, calling, returning, and spawning are also included transitions.
+sequencing, calling, returning, and spawning are also included flows.
 
 \begin{lstlisting}[language=logic, mathescape]
   datatype mode = MNxt | MSpwn | ESend name | MCll | MRtn
 
-  type transition = term_id * mode * term_id
+  type flow = term_id * mode * term_id
 
   type static_step = term_id * mode
 
   type static_path = static_step list
 \end{lstlisting}
 
-Static traversability is similar to that of the previous analysis.
-However, it must additionally consider transitions with the sending mode. 
+The static acceptance for flows is similar to that of the previous analysis.
+However, it must additionally consider flows with the sending mode. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_traversable of static_value_map -> graph -> term -> bool:
+  predicate static_flows_accept of static_value_map -> graph -> term -> bool:
     only
     
     (\forall static_env graph n .
-        static_traversable static_env graph (Rslt n)),
+        static_flows_accept static_env graph (Rslt n)),
 
     (\forall n p' graph static_env  .
       if
         (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
+        static_flows_accept static_env graph p'
       then
-        static_traversable static_env graph (Bind n Unt p')),
+        static_flows_accept static_env graph (Bind n Unt p')),
 
     (\forall n p' graph static_env  .
       if
         (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
+        static_flows_accept static_env graph p'
       then
-        static_traversable static_env graph (Bind n MkChn p')),
+        static_flows_accept static_env graph (Bind n MkChn p')),
 
     (\forall n p' graph static_env  n$_c$ n$_m$ .
       if
         (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
+        static_flows_accept static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Atom (SendEvt n$_c$ n$_m$)) p')),
+        static_flows_accept static_env graph (Bind n (Atom (SendEvt n$_c$ n$_m$)) p')),
 
     (\forall n p' graph static_env n$_c$ .
       if
         (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
+        static_flows_accept static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Atom (RecvEvt n$_c$)) p')),
+        static_flows_accept static_env graph (Bind n (Atom (RecvEvt n$_c$)) p')),
 
     (\forall n p' graph static_env n1 n2 .
       if
         (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
+        static_flows_accept static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Atom (Pair n1 n2)) p')),
+        static_flows_accept static_env graph (Bind n (Atom (Pair n1 n2)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
         (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
+        static_flows_accept static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Atom (Lft n$_s$)) p')),
+        static_flows_accept static_env graph (Bind n (Atom (Lft n$_s$)) p')),
 
     (\forall n p' graph static_env n$_s$ .
       if
         (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p'
+        static_flows_accept static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Atom (Rht n$_s$)) p')),
+        static_flows_accept static_env graph (Bind n (Atom (Rht n$_s$)) p')),
 
     (\forall n p' graph static_env p$_b$ n$_f$ n$_p$ .
       if
         (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p',
-        static_traversable static_env graph p$_b$
+        static_flows_accept static_env graph p',
+        static_flows_accept static_env graph p$_b$
       then
-        static_traversable static_env graph (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')),
+        static_flows_accept static_env graph (Bind n (Atom (Fun n$_f$ n$_p$ p$_b$)) p')),
 
     (\forall n p' p_c graph static_env.
       if
         {(NBnd x, MNxt, top_term_id p'),
           (NBnd x, MSpwn, top_term_id p_c)} \subseteq graph,
-        static_traversable static_env graph p_c,
-        static_traversable static_env graph p'
+        static_flows_accept static_env graph p_c,
+        static_flows_accept static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Spwn p_c) p')),
+        static_flows_accept static_env graph (Bind n (Spwn p_c) p')),
 
     (\forall n p' graph static_env n$_s$e .
       if
@@ -3145,23 +3163,23 @@ However, it must additionally consider transitions with the sending mode.
             static_recv_term_id static_env p' n$_c$ (NBnd y)
           then
             (NBnd x, ESend n$_s$e, NBnd y) \in F),
-        static_traversable static_env graph p'
+        static_flows_accept static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Sync n$_s$e) p')),
+        static_flows_accept static_env graph (Bind n (Sync n$_s$e) p')),
 
     (\forall n p' graph static_env n$_p$ .
       if
         (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p',
+        static_flows_accept static_env graph p',
       then
-        static_traversable static_env graph (Bind n (Fst n$_p$) p')),
+        static_flows_accept static_env graph (Bind n (Fst n$_p$) p')),
 
     (\forall n p' graph static_env n$_p$ .
       if
         (NBnd n , MNxt, top_term_id p') \in graph,
-        static_traversable static_env graph p',
+        static_flows_accept static_env graph p',
       then
-        static_traversable static_env graph (Bind n (Snd n$_p$) p')),
+        static_flows_accept static_env graph (Bind n (Snd n$_p$) p')),
 
     (\forall n p$_l$ p$_r$ p' graph static_env n$_s$ .
       if
@@ -3169,11 +3187,11 @@ However, it must additionally consider transitions with the sending mode.
           (NBnd x, MCll, top_term_id p$_r$),
           (NResult (result_name p$_l$), MRtn, top_term_id p'),
           (NResult (result_name p$_r$), MRtn, top_term_id p')} \subseteq graph,
-        static_traversable static_env graph p$_l$,
-        static_traversable static_env graph p$_r$,
-        static_traversable static_env graph p'
+        static_flows_accept static_env graph p$_l$,
+        static_flows_accept static_env graph p$_r$,
+        static_flows_accept static_env graph p'
       then
-        static_traversable static_env graph (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
+        static_flows_accept static_env graph (Bind n (Case n$_s$ n$_l$ p$_l$ n$_r$ p$_r$) p')),
         
     (\forall  static_env n$_f$ n p' n n$_a$ .
       if
@@ -3181,9 +3199,9 @@ However, it must additionally consider transitions with the sending mode.
           {(NBnd x, MCll, top_term_id p$_b$),
             (NResult (result_name p$_b$), MRtn, top_term_id p')} \subseteq graph),
 
-        static_traversable static_env graph p'
+        static_flows_accept static_env graph p'
       then
-        static_traversable static_env graph (Bind n (App n$_f$ n$_a$) p'))
+        static_flows_accept static_env graph (Bind n (App n$_f$ n$_a$) p'))
   \end{lstlisting}
 
 
@@ -3192,7 +3210,7 @@ containing a a channel of interest, since any use of that name could indicate a 
 channel. in the case where the tracked name might be a function function, the channel simply
 needs to be live in the body of the function, for the name to be considered built on it.
 An entry function contains the names built on the channel that might be live at the entrance
-of each program ID.
+of each term ID.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_built_on_chan of
@@ -3253,10 +3271,10 @@ of each program ID.
 
 The static liveness of a channel is described in terms of entry functions and
 exit functions. The entry function maps a program step to a set of names built on
-the given channel, if those names are live at the entry of that program ID.
+the given channel, if those names are live at the entry of that term ID.
 The exit function maps a program step to a
 set of names built on the given channel, if those names are live at the exit of that
-program ID.
+term ID.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_live_chan of
@@ -3419,13 +3437,13 @@ program ID.
         static_live_chan static_env entr exit n$_c$ (Bind n (App n$_f$ n$_a$) p'))
   \end{lstlisting}
 
-The static liveness of a transition is described by checking if a transition exists in a whole
+The static liveness of a flow is described by checking if a flow exists in a whole
 graph, and if it meets certain criteria with respect to the entry and exit liveness
 functions. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_live_transition of
-    graph -> term_id_map -> term_id_map -> transition -> bool:
+  predicate static_live_flow of
+    graph -> term_id_map -> term_id_map -> flow -> bool:
     only
 
     (\forall l l' graph exit entr . 
@@ -3434,7 +3452,7 @@ functions.
         not (exit l = {}),
         not (entr l' = {})
       then
-        static_live_transition graph entr exit (l, MNxt, l')),
+        static_live_flow graph entr exit (l, MNxt, l')),
 
     (\forall l l' graph exit entr .
       if
@@ -3442,28 +3460,28 @@ functions.
         not (exit l = {}),
         not (entr l' = {})
       then
-        static_live_transition graph entr exit (l, MSpwn, l')),
+        static_live_flow graph entr exit (l, MSpwn, l')),
 
     (\forall l l' graph exit entr .
       if
         (l, MCll, l') \in graph,
         (not (exit l = {})) or (not (entr l' = {}))
       then
-        static_live_transition graph entr exit (l, MCll, l')),
+        static_live_flow graph entr exit (l, MCll, l')),
 
     (\forall l l' graph entr exit .
       if
         (l, MRtn, l') \in graph,
         not (entr l' = {})
       then
-        static_live_transition graph entr exit (l, MRtn, l')),
+        static_live_flow graph entr exit (l, MRtn, l')),
 
     (\forall n$_s$end n$_e$vt n$_r$ecv graph entr exit .
       if
         ((NBnd n$_s$end), ESend n$_e$vt, (NBnd n$_r$ecv)) \in graph, 
         {x_evt} \subseteq (entr (NBnd n$_s$end))
       then
-        static_live_transition graph entr exit
+        static_live_flow graph entr exit
           ((NBnd n$_s$end), ESend n$_e$vt, (NBnd n$_r$ecv)))
   \end{lstlisting}
 
@@ -3487,7 +3505,7 @@ is live with respect to some entry and and exit functions.
       if
         static_traceable graph entr exit start (\lambda l . l = middle) path, 
         (is_end end),
-        static_live_transition graph entr exit (middle, mode, end) 
+        static_live_flow graph entr exit (middle, mode, end) 
       then
         static_traceable graph entr exit start is_end (path @ [(middle, mode)])
   \end{lstlisting}
@@ -3575,7 +3593,7 @@ are otherwise similar to the lower precision classifications.
             (NBnd n$_c$) (static_send_id static_env p n$_c$))
           singular, 
         static_live_chan static_env entr exit n$_c$ e, 
-        static_traversable static_env graph e
+        static_flows_accept static_env graph e
       then
         static_one_shot V p n$_c$)
 
@@ -3590,7 +3608,7 @@ are otherwise similar to the lower precision classifications.
           (static_traceable graph entr exit (NBnd n$_c$) (static_recv_term_id static_env p n$_c$))
           noncompetitive,
           static_live_chan static_env entr exit n$_c$ e,
-          static_traversable static_env graph e
+          static_flows_accept static_env graph e
       then
         static_one_to_one static_env p n$_c$)
 
@@ -3602,7 +3620,7 @@ are otherwise similar to the lower precision classifications.
           (static_traceable graph entr exit (NBnd n$_c$) (static_send_id static_env p n$_c$))
           noncompetitive,
         static_live_chan static_env entr exit n$_c$ e,
-        static_traversable static_env graph e
+        static_flows_accept static_env graph e
       then
         static_one_to_many static_env p n$_c$)
 
@@ -3614,7 +3632,7 @@ are otherwise similar to the lower precision classifications.
           (static_traceable graph entr exit (NBnd n$_c$) (static_recv_term_id static_env p n$_c$))
           noncompetitive, 
         static_live_chan static_env entr exit n$_c$ e,
-        static_traversable static_env graph e
+        static_flows_accept static_env graph e
       then
         static_many_to_one static_env p n$_c$)
   \end{lstlisting}
@@ -3627,7 +3645,7 @@ liveness analysis treats function functions that not contain
 any channel of interest.  No channel is
 considered to be live in the body of the loop.  However, a channel may be live before the loop is
 called and after the loop returns.  in such a case, the live traceable path from the creation of a
-channel to a step after the loop retains the transitions within the loop, even though the steps in
+channel to a step after the loop retains the flows within the loop, even though the steps in
 the loop may not be live according to the entry map.
 
 \begin{lstlisting}[language=normal_lang, mathescape]
@@ -3702,8 +3720,8 @@ previous techniques of generalizing propositions over pools and other semantic c
 along with finding equivalent representations of propositions that vary in the inductive
 subcomponent. One thing that will make carrying out the formal proof particularly tricky is
 that dynamic paths in the dynamic semantics need to corresponding to static paths from
-the trimmed graphs, which might also contain sending transitions,
-instead of the dynamic paths spawning transitions.
+the trimmed graphs, which might also contain sending flows,
+instead of the dynamic paths spawning flows.
 The correspondence between these dynamic paths and static paths
 is not bijective, as it is for the lower precision analysis. However, finding a satisfactory
 correspondence for each dynamic and static path is critical for proving soundness.
@@ -3799,7 +3817,7 @@ correlating dynamic paths with static paths.
 
 Additionally the soundness theorem follows from the soundness of lack of static traceability,
 the soundness of lack of static inclusiveness,
-and the soundness of a program ID not being a sending ID. 
+and the soundness of a term ID not being a sending ID. 
 The reasoning about the sending ID is identical to that of the lower precision analysis, but
 the the reasoning for the former two is significantly more complicated and not yet completed.
 The complication arises from the
@@ -3885,7 +3903,7 @@ that correlates with the dynamic path is much more challenging.
         pool path = Some (Stt (Bind n b p') env stack),
         static_eval static_env static_comm e0,
         static_live_chan static_env entr exit n$_c$ e0,
-        static_traversable static_env graph e0, 
+        static_flows_accept static_env graph e0, 
         is_end (NBnd x)
       then
         (exists static_path . 
@@ -3898,7 +3916,7 @@ that correlates with the dynamic path is much more challenging.
       if
         star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm, 
         static_live_chan static_env entr exit n$_c$ e0, 
-        static_traversable static_env graph e0, 
+        static_flows_accept static_env graph e0, 
         static_eval static_env static_comm e0, 
         pool path1 = Some stt1, 
         paths_correspond_mod_chan pool comm (Chan path_c n$_c$) path1 static_path1, 
