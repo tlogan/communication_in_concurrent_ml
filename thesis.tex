@@ -1889,8 +1889,8 @@ and an initial term can statically reach any term that its embedded terms can st
 
 \subsection{Static Communication}
 To describe communication statically, it is helpful to identify each term with a short description.
-The term ID of a binding term is the binding name, and indication of its use in a binding.
-The term ID of a result term is the embedded name, and indication of its use in a result.
+The term identifier of a binding term is the binding name, and indication of its use in a binding.
+The term identifier of a result term is the embedded name, and indication of its use in a result.
 
 \begin{lstlisting}[language=logic, mathescape]
   datatype termId =
@@ -1904,14 +1904,14 @@ The term ID of a result term is the embedded name, and indication of its use in 
   (\forall n . 
     termId (Rslt n) = NRslt x
   )
-  type termId_map = termId -> name set
+  type term_id_map = termId -> name set
 \end{lstlisting}
 
 The static communication describes a sound approximation of
 the static paths that communicate on static channels.
-The static send ID classification means that a term ID might represent a
+The static send ID classification means that a term identifier might represent a
 sycnronization to send on a given static channel.
-The static receive ID classification means that a term ID might represent a
+The static receive ID classification means that a term identifier might represent a
 synchronization to receive on a given abstract channel. 
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -1963,11 +1963,11 @@ soundness, although the actual formal proof of the version with live channel ana
 not yet complete.  
 
 For the lower precision version without the liveness of channels, there are four modes,
-indicating how the term ID flows to the term ID of one of
+indicating how the term identifier flows to the term identifier of one of
 its embedded terms.
 The modes of flow are sequencing, calling, spawning, and returning. A flow is a
-triplet of a term ID, a mode of flow, and a term ID of a
-embedded term. A static step is just a term ID along with the mode it uses to
+triplet of a term identifier, a mode of flow, and a term identifier of a
+embedded term. A static step is just a term identifier along with the mode it uses to
 flow to its embedded term. A static path is a list of static steps.  
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -1988,7 +1988,7 @@ flow to its embedded term. A static path is a list of static steps.
 
 The evaluation of a term results in the flow to new terms,
 via sequencing, calling, returning, or spawning.  These flows are represented concretely
-by the term IDs of the starting and ending terms and a mode
+by the term identifiers of the starting and ending terms and a mode
 to represent the nature of the flow.
 The static acceptance by flows describes a set of flows consisting of all the flows
 that could be traversed during a program's evaluation.
@@ -2492,7 +2492,7 @@ static traceability states that for any dynamic path traced by running a program
 is a corresponding static path that is statically traceable. The lemma for soundness of a
 program step not being a static send ID states that running a program reaches a
 synchronization on a sending event, then that synchronization is statically identified as a
-send ID by its term ID.
+send ID by its term identifier.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma staticTraceable_complete:
@@ -2544,7 +2544,7 @@ In most cases, it simply states that a embedded term of some semantic element is
 accepting. The exception is in the case of
 static acceptance by flows over a non-empty stack, where
 there is an additional condition that the flow
-from a result id to the term ID
+from a result id to the term identifier
 of the continuation program exists in the graph.
 This information is consistent with static
 acceptance by flows over programs, but provides direct information about a flow in the
@@ -3389,19 +3389,34 @@ name, such that it is a free variable in the function, and it's built on the cha
 
 
 The static liveness of a channel describes entry functions and exit functions.
-The entry function maps a program step to a set of names built on
-the given channel, if those names are live at the entry of that term ID.
-The exit function maps a program step to a
+The entry function maps a term identifier to a set of names built on
+the given channel, if those names are live at the entry of that term identifier.
+The exit function maps a term identifier to a
 set of names built on the given channel, if those names are live at the exit of that
-term ID.
+term identifier.
+
 (**TODO:
 example of liveness on server example;
 move up graphs of server example 
 **)
 
+The following diagram illustrates the entry and exit sets of each term id
+for channel \lstinline{k1} in
+the server example.  Each entry set appears right above its related term id,
+and each exit setappears right below its related term id. 
+
+\includegraphics[width=1.3\textwidth, left]{cml-liveness-analysis-k1.pdf}
+
+The following diagram illustrates the entry and exit sets of each term id
+for channel \lstinline{k4} in
+the server example.  Each entry set appears right above its related term id,
+and each exit setappears right below its related term id. 
+
+\includegraphics[width=1.3\textwidth, left]{cml-liveness-analysis-k4.pdf}
+
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticLiveChan
-  of static_value_map -> termId_map -> termId_map -> name -> term -> bool:
+  of static_value_map -> term_id_map -> term_id_map -> name -> term -> bool:
   only
   (\forall staticEnv entr n$_c$ n$_y$ exit .
     if
@@ -3416,7 +3431,8 @@ move up graphs of server example
       entr (termId t') \subseteq exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     then 
-      staticLiveChan staticEnv entr exit n$_c$ (Bind n Unt t')),
+      staticLiveChan staticEnv entr exit n$_c$ (Bind n Unt t')
+  ),
   (\forall exit n entr t' staticEnv n$_c$ .
     if
       (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
@@ -3574,7 +3590,7 @@ the loop may not be live according to the entry function in the static channel l
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticLiveFlow of
-  graph -> termId_map -> termId_map -> flow -> bool:
+  graph -> term_id_map -> term_id_map -> flow -> bool:
   only
   (\forall l l' graph exit entr . 
     if
@@ -3630,7 +3646,7 @@ containing only live flows for channel \lstinline{k4}.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticTraceable
-  of static_value_map -> graph -> termId_map -> termId_map ->
+  of static_value_map -> graph -> term_id_map -> term_id_map ->
     termId -> (termId -> bool) -> static_path -> bool:
   only
   (\forall isEnd start staticEnv graph entr exit .
@@ -4002,19 +4018,19 @@ extensions or optimizations. Extending the semantics to handle event combinators
 between events, sequencencing events, guardining events, among others, would be an important
 next step.
 
-Concurreny is a double edged sword.  Without specification of ordering, programs may 
-use clearer functions or allow parallelism for faster execution. On the other hand,
+Concurreny is a double edged sword.  Without specification of ordering, programs may
+desribe their behavior more clearly or allow parallelism for faster execution. On the other hand,
 unspecified orderings may also lead to nondetermistic behavior, which may be not be wanted. 
-
 To gain the benefits of concurrency without its hinderance, the language could be extended
 with syntax to idenfigy blocks of code that are required to be deterministic,
 along with a corresponding static analysis that checks if such code is actually
 deterministic \cite[]. The determinism analysis could rely on the static communication analysis
-to ensure that all syncronized receiving events receive from at most one channel, that channel is sent on by at most one thread,
+to ensure that all syncronized receiving events receive from at most one channel,
+that channel is sent on by at most one thread,
 and that thread is also deterministic.
 
 Other analyses could aid optimizations for incremental computation
-\cite[], which transforms a program into one that checks for altered dependencies and
+\cite[].  One optimzation could transform a program into one that checks for altered dependencies and
 only recomputes the data that depends on altered dependencies.
 
 
