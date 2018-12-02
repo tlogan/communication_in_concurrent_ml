@@ -2142,10 +2142,12 @@ accepting flows for the sequenced embedded term.
   )
 \end{lstlisting}
 
+\newpage
+
 The server implementation represented as a graph illustrates how static acceptance by flows can interpret
 a graph from a dynamic program.
 
-\includegraphics[width=1.3\textwidth, left]{cml-graph.pdf}
+\includegraphics[width=1\textwidth]{cml-graph.pdf}
 
 The static traceability means that a static path with a given starting step, and ending
 condition, can be traced by traversing the flows in a graph.
@@ -2391,7 +2393,7 @@ to less flexible relations.
   predicate sortedLeft of nat list -> bool:
   only
   (sortedLeft []),
-  (\forall  x .
+  (\forall x .
     sortedLeft [x]
   ),
   (\forall x y zs .
@@ -2405,10 +2407,10 @@ to less flexible relations.
   predicate sortedRight of nat list -> bool:
   only
   (sortedRight []),
-  (\forall  n .
-    sortedRight [x]
+  (\forall z .
+    sortedRight [z]
   ),
-  (\forall  xs y z .
+  (\forall xs y z .
     if 
       sortedRight (xs @ [y]),
       y \leq z 
@@ -3313,10 +3315,12 @@ However, it must additionally consider flows with the sending mode.
   )
 \end{lstlisting}
 
-The server implementation represented as a graph illustrates how static acceptance by flows can interpret
-a graph from a dynamic program.
+\newpage
 
-\includegraphics[width=1.3\textwidth, left]{cml-graph-lp.pdf}
+The server implementation represented as a graph illustrates how static acceptance by flows can interpret
+program a program as a flow graph.
+
+\includegraphics[width=1\textwidth]{cml-graph-lp.pdf}
 
 
 For the liveness of channel analysis, it is necessary to track any name built on a channel.
@@ -3395,24 +3399,23 @@ The exit function maps a term identifier to a
 set of names built on the given channel, if those names are live at the exit of that
 term identifier.
 
-(**TODO:
-example of liveness on server example;
-move up graphs of server example 
-**)
+\newpage
 
 The following diagram illustrates the entry and exit sets of each term id
 for channel \lstinline{k1} in
 the server example.  Each entry set appears right above its related term id,
 and each exit setappears right below its related term id. 
 
-\includegraphics[width=1.3\textwidth, left]{cml-liveness-analysis-k1.pdf}
+\includegraphics[width=1\textwidth]{cml-liveness-analysis-k1.pdf}
+
+\newpage
 
 The following diagram illustrates the entry and exit sets of each term id
 for channel \lstinline{k4} in
 the server example.  Each entry set appears right above its related term id,
 and each exit setappears right below its related term id. 
 
-\includegraphics[width=1.3\textwidth, left]{cml-liveness-analysis-k4.pdf}
+\includegraphics[width=1\textwidth]{cml-liveness-analysis-k4.pdf}
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticLiveChan
@@ -3636,13 +3639,19 @@ The static traceability for the higher precision analysis states
 that an entire static path can be trace through some graph and
 is live with respect to some entry and and exit functions.
 
-The following diagram illustrates the graph of the server example,
-containing only live flows for channel \lstinline{k1}.
-\includegraphics[width=1.3\textwidth, left]{cml-graph-k1.pdf}
+\newpage
 
 The following diagram illustrates the graph of the server example,
-containing only live flows for channel \lstinline{k4}.
-\includegraphics[width=1.3\textwidth, left]{cml-graph-k4.pdf}
+containing only live flows for channel \lstinline{k1}. \
+
+\includegraphics[width=0.9\textwidth]{cml-graph-k1.pdf}
+
+\newpage
+
+The following diagram illustrates the graph of the server example,
+containing only live flows for channel \lstinline{k4}. \
+
+\includegraphics[width=0.7\textwidth]{cml-graph-k4.pdf}
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticTraceable
