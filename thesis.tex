@@ -3023,11 +3023,11 @@ a generalized form of completeness over pools.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma static_reachable_pool_complete:
-  \forall e0 pool .
+  \forall t0 pool .
     if
-      star dynamic_eval [[] -> (Stt e0 [->] [])], {} pool comm 
+      star dynamic_eval [[] -> (Stt t0 [->] [])], {} pool comm 
     then
-      static_reachable_over_pool e0 pool
+      static_reachable_over_pool t0 pool
 \end{lstlisting}
 
 The completeness over pools follows from the lemma that the forward
@@ -3240,6 +3240,9 @@ This condition is represented formally as the requirement that there is a
 name, such that it is a free variable in the function, and it's built on the channel.
 
 \begin{lstlisting}[language=logic, mathescape]
+
+(**TODO: add def of free_vars **)
+
   predicate static_built_on_chan of static_value_map -> name -> name -> bool:
   only
   (\forall n$_c$ static_env n .
@@ -3304,7 +3307,7 @@ set of names built on the given channel, if those names are live at the exit of 
 term ID.
 
 
-(**
+(**TODO:
 example of liveness on server example;
 move up graphs of server example 
 **)
@@ -3750,12 +3753,12 @@ the loop may not be live according to the entry map.
 \includegraphics[width=1.3\textwidth, left]{cml_graph_k1.pdf}
 \includegraphics[width=1.3\textwidth, left]{cml_graph_k4.pdf}
 
-\section{Higher Precision Reasoning Strategy}
+\subsection{Higher Precision Soundness Proof Strategy}
 To prove soundness of the communication classification, it should be possible to use
 previous techniques of generalizing propositions over pools and other semantic components,
 along with finding equivalent representations of propositions that vary in the inductive
 subcomponent. One thing that will make carrying out the formal proof particularly tricky is
-that dynamic paths in the dynamic semantics need to corresponding to static paths from
+that dynamic paths in the dynamic semantics need to correspond to static paths from
 the trimmed graphs, which might also contain sending flows,
 instead of the dynamic paths spawning flows.
 The correspondence between these dynamic paths and static paths
@@ -3771,84 +3774,81 @@ one-shot classification.
 
 \begin{lstlisting}[language=logic, mathescape]
   theorem static_one_shot_sound:
-    \forall e0 pool comm static_env static_comm n$_c$ path_x . 
-      if
-        star dynamic_eval [[] -> (Stt e0 [->] []] {} pool comm,
-        static_eval static_env static_comm e0,
-        static_one_shot static_env e0 n$_c$
-      then 
-        one_shot pool (Chan path_c n$_c$)
-  \end{lstlisting}
+  \forall t0 pool comm static_env static_comm n$_c$ path$_c$ . 
+    if
+      star dynamic_eval [[] -> (Stt t0 [->] []] {} pool comm,
+      static_eval static_env static_comm t0,
+      static_one_shot static_env t0 n$_c$
+    then 
+      one_shot pool (Chan path$_c$ n$_c$)
+\end{lstlisting}
 
 The theorem for soundness of one-shot classification depends on
 correlating dynamic paths with static paths.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate paths_correspond of dynamic_path -> static_path -> bool:
-    only
+  only
+  paths_correspond [] [],
+  (\forall path static_path n .
+    if
+      paths_correspond path static_path
+    then
+      paths_correspond
+        (path @ [DNxt n])
+        (static_path @ [(NBnd n, MNxt)])
+  ),
+  (\forall path static_path n .
+    if
+      paths_correspond path static_path
+    then
+      paths_correspond
+        (path @ [DSpwn n])
+        (static_path @ [(NBnd n, MSpwn)])
+  ),
+  (\forall path static_path n .
+    if
+      paths_correspond path static_path
+    then
+      paths_correspond
+        (path @ [DCll n])
+        (static_path @ [(NBnd n, MCll)])
+  ),
+  (\forall path static_path n .
+    if
+      paths_correspond path static_path
+    then
+      paths_correspond
+        (path @ [DRtn n])
+      (static_path @ [(NRslt n, MRtn)])
+  )
 
-    paths_correspond [] [],
-
-    (\forall path static_path n .
-      if
-        paths_correspond path static_path
-      then
-        paths_correspond
-          (path @ [DNxt n])
-          (static_path @ [(NBnd x, MNxt)])),
-
-    (\forall path static_path n .
-      if
-        paths_correspond path static_path
-      then
-        paths_correspond
-          (path @ [DSpwn n])
-          (static_path @ [(NBnd x, MSpwn)])),
-
-    (\forall path static_path n .
-      if
-        paths_correspond path static_path
-      then
-        paths_correspond
-          (path @ [DCll n])
-          (static_path @ [(NBnd x, MCll)])),
-
-    (\forall path static_path n .
-      if
-        paths_correspond path static_path
-      then
-        paths_correspond
-          (path @ [DRtn n])
-          (static_path @ [(NRslt x, MRtn)]))
-
-  predicate paths_correspond_mod_chan of 
-    pool -> communication -> chan ->
-    dynamic_path -> static_path -> bool:
-    only
-
-    (\forall pool path_c n$_c$ path_sfx stt static_path comm .
-      if
-        pool (path_c @ (DNxt n$_c$) # path_sfx) = Some stt,
-        paths_correspond ((DNxt n$_c$) # path_sfx) static_path
-      then
-        paths_correspond_mod_chan
-          (pool, comm) (Chan path_c n$_c$)
-          (path_c @ (DNxt n$_c$) # path_sfx) static_path),
-
-    (\forall pool path_r n$_r$ path_sfx stt  path_s n$_s$ n$_s$e p_sy env_sy stack_sy
-      n$_r$e p$_r$y env_ry stack_ry c_c comm c static_path_re static_path_sfx . 
-      if
-        pool (path_r @ (DNxt n$_r$) # path_sfx) = Some stt, 
-        pool path_s = Some (Stt (Bind n$_s$ (Sync n$_s$e) p_sy) env_sy stack_sy),
-        pool path_r = Some (Stt (Bind n$_r$ (Sync n$_r$e) p$_r$y) env_ry stack_ry),
-        {(path_s, c_c, path_r)} \subseteq comm, 
-        dynamic_built_on_chan_var env_ry c n$_r$, 
-        paths_correspond_mod_chan pool comm c path_s static_path_pre,
-        paths_correspond path_sfx static_path_sfx
-      then
-        paths_correspond_mod_chan pool comm c
-          (path_r @ (DNxt n$_r$) # path_sfx)
-          (static_path_pre @ (NBnd n$_s$, ESend n$_s$e) # (NBnd n$_r$, MNxt) # static_path_sfx))
+  predicate paths_correspond_mod_chan
+  of pool -> communication -> chan -> dynamic_path -> static_path -> bool:
+  only
+  (\forall pool path$_c$ n$_c$ path$_sfx$ stt static_path comm .
+    if
+      pool (path_c @ (DNxt n$_c$) # path$_sfx$) = Some stt,
+      paths_correspond ((DNxt n$_c$) # path$_sfx$) static_path
+    then
+      paths_correspond_mod_chan
+        (pool, comm) (Chan path$_c$ n$_c$)
+        (path$_c$ @ (DNxt n$_c$) # path$_sfx$) static_path
+  ),
+  (\forall pool path$_r$ n$_r$ path_sfx stt  path$_s$ n$_s$ n$_se$ t$_sy$ env$_sy$ stack$_sy$
+    n$_r$e t$_ry$ env$_ry$ stack$_ry$ c$_c$ comm c static_path$_re$ static_path$_sfx$ . 
+    if
+      pool (path$_r$ @ (DNxt n$_r$) # path$_sfx$) = Some stt, 
+      pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_se$) t$_sy$) env$_sy$ stack$_sy$),
+      pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_r$e) t$_ry$) env$_ry$ stack$_ry$),
+      {(path$_s$, c$_c$, path$_r$)} \subseteq comm, 
+      dynamic_built_on_chan_var env$_ry$ c n$_r$, 
+      paths_correspond_mod_chan pool comm c path$_s$ static_path$_pre$,
+      paths_correspond path_$sfx$ static_path$_sfx$
+    then
+      paths_correspond_mod_chan pool comm c
+        (path$_r$ @ (DNxt n$_r$) # path$_sfx$)
+        (static_path$_pre$ @ (NBnd n$_s$, ESend n$_se$) # (NBnd n$_r$, MNxt) # static_path$_sfx$))
 \end{lstlisting}
 
 Additionally the soundness theorem follows from the completeness of static traceability,
@@ -3865,105 +3865,101 @@ that correlates with the dynamic path is much more challenging.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate paths_correspond of dynamic_path -> static_path -> bool:
-    only
-
-    paths_correspond [] [],
-
-    (\forall path static_path n .
-      if
-        paths_correspond path static_path
-      then
-        paths_correspond
-          (path @ [DNxt n])
-          (static_path @ [(NBnd x, MNxt)])),
-
-    (\forall path static_path n .
-      if
-        paths_correspond path static_path
-      then
-        paths_correspond
-          (path @ [DSpwn n])
-          (static_path @ [(NBnd x, MSpwn)])),
-
-    (\forall path static_path n .
-      if
-        paths_correspond path static_path
-      then
-        paths_correspond
-          (path @ [DCll n])
-          (static_path @ [(NBnd x, MCll)])),
-
-    (\forall path static_path n .
-      if
-        paths_correspond path static_path
-      then
-        paths_correspond
-          (path @ [DRtn n])
-          (static_path @ [(NResult x, MRtn)]))
-
-  predicate paths_correspond_mod_chan of 
-    pool -> communication -> chan ->
-    dynamic_path -> static_path -> bool:
-    only
-    (\forall pool path_c n$_c$ path_sfx stt static_path comm .
-      if
-        pool (path_c @ (DNxt n$_c$) # path_sfx) = Some stt,
-        paths_correspond ((DNxt n$_c$) # path_sfx) static_path
-      then
-        paths_correspond_mod_chan
-          (pool, comm) (Chan path_c n$_c$)
-          (path_c @ (DNxt n$_c$) # path_sfx) static_path
-      ),
-    (\forall pool path_r n$_r$ path_sfx stt  path_s n$_s$ n$_s$e p_sy env_sy stack_sy
-      n$_r$e p$_r$y env_ry stack_ry c_c comm c static_path_re static_path_sfx . 
-      if
-        pool (path_r @ (DNxt n$_r$) # path_sfx) = Some stt, 
-        pool path_s = Some (Stt (Bind n$_s$ (Sync n$_s$e) p_sy) env_sy stack_sy),
-        pool path_r = Some (Stt (Bind n$_r$ (Sync n$_r$e) p$_r$y) env_ry stack_ry),
-        {(path_s, c_c, path_r)} \subseteq comm, 
-        dynamic_built_on_chan_var env_ry c n$_r$, 
-        paths_correspond_mod_chan pool comm c path_s static_path_pre,
-        paths_correspond path_sfx static_path_sfx
-      then
-        paths_correspond_mod_chan pool comm c
-          (path_r @ (DNxt n$_r$) # path_sfx)
-          (static_path_pre @ (NBnd n$_s$, ESend n$_s$e) # (NBnd n$_r$, MNxt) # static_path_sfx)
-      )
-
+  only
+  paths_correspond [] [],
+  (\forall path static_path n .
+    if
+      paths_correspond path static_path
+    then
+      paths_correspond
+        (path @ [DNxt n])
+        (static_path @ [(NBnd x, MNxt)])
+  ),
+  (\forall path static_path n .
+    if
+      paths_correspond path static_path
+    then
+      paths_correspond
+        (path @ [DSpwn n])
+        (static_path @ [(NBnd x, MSpwn)])
+  ),
+  (\forall path static_path n .
+    if
+      paths_correspond path static_path
+    then
+      paths_correspond
+        (path @ [DCll n])
+      (static_path @ [(NBnd x, MCll)])
+  ),
+  (\forall path static_path n .
+    if
+      paths_correspond path static_path
+    then
+      paths_correspond
+        (path @ [DRtn n])
+      (static_path @ [(NResult x, MRtn)])
+  )
+  predicate paths_correspond_mod_chan
+  of pool -> communication -> chan -> dynamic_path -> static_path -> bool:
+  only
+  (\forall pool path_c n$_c$ path_sfx stt static_path comm .
+    if
+      pool (path_c @ (DNxt n$_c$) # path_sfx) = Some stt,
+      paths_correspond ((DNxt n$_c$) # path_sfx) static_path
+    then
+      paths_correspond_mod_chan
+        (pool, comm) (Chan path_c n$_c$)
+        (path_c @ (DNxt n$_c$) # path_sfx) static_path
+  ),
+  (\forall pool path_r n$_r$ path_sfx stt  path_s n$_s$ n$_s$e p_sy env_sy stack_sy
+    n$_r$e p$_r$y env_ry stack_ry c_c comm c static_path_re static_path_sfx . 
+    if
+      pool (path_r @ (DNxt n$_r$) # path_sfx) = Some stt, 
+      pool path_s = Some (Stt (Bind n$_s$ (Sync n$_s$e) p_sy) env_sy stack_sy),
+      pool path_r = Some (Stt (Bind n$_r$ (Sync n$_r$e) p$_r$y) env_ry stack_ry),
+      {(path_s, c_c, path_r)} \subseteq comm, 
+      dynamic_built_on_chan_var env_ry c n$_r$, 
+      paths_correspond_mod_chan pool comm c path_s static_path_pre,
+      paths_correspond path_sfx static_path_sfx
+    then
+      paths_correspond_mod_chan pool comm c
+        (path_r @ (DNxt n$_r$) # path_sfx)
+        (static_path_pre @ (NBnd n$_s$, ESend n$_s$e) # (NBnd n$_r$, MNxt) # static_path_sfx)
+  )
   lemma static_traceable_complete: 
-    \forall e0 pool comm path n b p' env stack static_env static_comm
-      entr exit n$_c$ graph is_end path_c  . 
-      if
-        star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm,
-        pool path = Some (Stt (Bind n b p') env stack),
-        static_eval static_env static_comm e0,
-        static_live_chan static_env entr exit n$_c$ e0,
-        static_flows_accept static_env graph e0, 
-        is_end (NBnd x)
-      then
-        (exists static_path . 
-          paths_correspond_mod_chan pool comm (Chan path_c n$_c$) path static_path, 
-          static_traceable graph entr exit (NBnd n$_c$) is_end static_path)
+  \forall t0 pool comm path n b p' env stack static_env static_comm
+    entr exit n$_c$ graph is_end path_c  . 
+    if
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm,
+      pool path = Some (Stt (Bind n b p') env stack),
+      static_eval static_env static_comm e0,
+      static_live_chan static_env entr exit n$_c$ e0,
+      static_flows_accept static_env graph e0, 
+      is_end (NBnd x)
+    then
+      (exists static_path . 
+        paths_correspond_mod_chan pool comm (Chan path_c n$_c$) path static_path, 
+        static_traceable graph entr exit (NBnd n$_c$) is_end static_path)
 
   lemma static_inclusive_complete:
-    \forall e0 pool comm static_env entr exit n$_c$ graph static_comm
-      path1 stt1 path_c static_path1 path2 stt2 static_path2 .
-      if
-        star dynamic_eval [[] -> (Stt e0 [->] [])] {} pool comm, 
-        static_live_chan static_env entr exit n$_c$ e0, 
-        static_flows_accept static_env graph e0, 
-        static_eval static_env static_comm e0, 
-        pool path1 = Some stt1, 
-        paths_correspond_mod_chan pool comm (Chan path_c n$_c$) path1 static_path1, 
-        static_traceable graph entr exit
-          (NBnd n$_c$) (static_send_id static_env e0 n$_c$) static_path1, 
-        pool path2 = Some stt2, 
-        paths_correspond_mod_chan pool comm (Chan path_c n$_c$) path2 static_path2, 
-        static_traceable graph entr exit
-          (NBnd n$_c$) (static_send_id static_env e0 n$_c$) static_path2
-      then
-        static_inclusive static_path1 static_path2
-  \end{lstlisting}
+  \forall t0 pool comm static_env entr exit n$_c$ graph static_comm
+    path1 stt1 path_c static_path1 path2 stt2 static_path2 .
+    if
+      star dynamic_eval [[] -> (Stt t0 [->] [])] {} pool comm, 
+      static_live_chan static_env entr exit n$_c$ e0, 
+      static_flows_accept static_env graph e0, 
+      static_eval static_env static_comm e0, 
+      pool path1 = Some stt1, 
+      paths_correspond_mod_chan pool comm (Chan path_c n$_c$) path1 static_path1, 
+      static_traceable graph entr exit
+        (NBnd n$_c$) (static_send_id static_env t0 n$_c$) static_path1, 
+      pool path2 = Some stt2, 
+      paths_correspond_mod_chan pool comm (Chan path_c n$_c$) path2 static_path2, 
+      static_traceable graph entr exit
+        (NBnd n$_c$) (static_send_id static_env t0 n$_c$) static_path2
+    then
+      static_inclusive static_path1 static_path2
+\end{lstlisting}
 
   
 
