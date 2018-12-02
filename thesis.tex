@@ -3058,12 +3058,12 @@ reachability follows from induction on the forward static reachability and the
 transitivity of static reachability, which follows from induction on static reachability.
 
 \section{Higher Precision Communication}
-In many programs, channels are created within function functions.  The function functions
-may be applied multiple times, creating multiple distinct channels with each application.
-It may be that each channel is used just once and then discarded.  However, the static
-analysis just described would identify all the distinct channels by the same name, since each
-distinct channel is created by the same piece of syntax. Thus, it would classify those channels
-as being used more than once.
+In many programs, like in the server example, channels are created within function functions.
+The function functions may be applied multiple times, creating multiple distinct channels
+with each application. It may be that each channel is used just once and then discarded.
+However, the static analysis just described would identify all the distinct channels by the
+same name, since each distinct channel is created by the same piece of syntax.
+Thus, it would classify those channels as being used more than once.
 
 It is possible to be more precise by trimming the program under analysis down to just the part
 where the static channel is live. The static channel cannot be live between the last use of a
@@ -3102,7 +3102,7 @@ sequencing, calling, returning, and spawning are also included flows.
   type static_path = static_step list
 \end{lstlisting}
 
-The static acceptance by flows is similar to that of the previous analysis.
+The static acceptance by flows for higher precision is similar to that of the lower precision analysis.
 However, it must additionally consider flows with the sending mode. 
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -3230,68 +3230,70 @@ However, it must additionally consider flows with the sending mode.
   \end{lstlisting}
 
 
-For the liveness of channel analysis, it is necessary to track any name that binds to structure
-containing a a channel of interest, since any use of that name could indicate a use of the
-channel. in the case where the tracked name might be a function function, the channel simply
-needs to be live in the body of the function, for the name to be considered built on it.
-An entry function contains the names built on the channel that might be live at the entrance
-of each term ID.
+For the liveness of channel analysis, it is necessary to track any name built on a channel.
+A name is build on a channel if the name binds to a static value 
+containing a channel of interest, or a static value that contains names built on the channel.
+In the case where the tracked name possibly binds to a function,
+for the name to be considered built on a channel,
+the channel simply needs to be live in the body of the function.
+This condition is represented formally as the requirement that there is a 
+name, such that it is a free variable in the function, and it's built on the channel.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_built_on_chan of
-    static_value_map -> term_id_map -> name -> name -> bool:
-    only
-
-    (\forall n$_c$ static_env n entr .
-      if 
-        SChn n$_c$ \in static_env n 
-      then 
-        static_built_on_chan static_env entr n$_c$ x),
-
-    (\forall n$_sc$ n$_m$ static_env n entr n$_c$ . 
-      if
-        (SAtm (SendEvt n$_sc$ n$_m$)) \in static_env x,
-        (static_built_on_chan static_env entr n$_c$ n$_sc$ or
-          static_built_on_chan static_env entr n$_c$ n$_m$)
-      then 
-        static_built_on_chan static_env entr n$_c$ x),
-
-    (\forall n$_r$c static_env n entr n$_c$ . 
-      if  
-        (SAtm (RecvEvt n$_r$c)) \in static_env x,
-        static_built_on_chan static_env entr n$_c$ n$_r$c
-      then 
-        static_built_on_chan static_env entr n$_c$ x),
-
-    (\forall n1 n2 static_env n entr n$_c$ . 
-      if  
-        (SAtm (Pair n1 n2)) \in static_env x,
-        (static_built_on_chan static_env entr n$_c$ n1 or
-          static_built_on_chan static_env entr n$_c$ n2)
-      then 
-        static_built_on_chan static_env entr n$_c$ x),
-
-    (\forall n$_a$ static_env n entr n$_c$ .
-      if
-        (SAtm (Lft n$_a$)) \in static_env x,
-        static_built_on_chan static_env entr n$_c$ n$_a$
-      then 
-        static_built_on_chan static_env entr n$_c$ x),
-
-    (\forall n$_a$ static_env n entr n$_c$ .
-      if
-        (SAtm (Rht n$_a$)) \in static_env x,
-        static_built_on_chan static_env entr n$_c$ n$_a$
-      then 
-        static_built_on_chan static_env entr n$_c$ x),
-
-    (\forall n$_f$ n$_p$ p$_b$ .
-      if
-        (SAtm (Fun n$_f$ n$_p$ p$_b$)) \in static_env x,
-        not ((entr (term_id p$_b$) - {x_p}) = {})
-      then
-        static_built_on_chan static_env entr n$_c$ x)
-  \end{lstlisting}
+  predicate static_built_on_chan of static_value_map -> name -> name -> bool:
+  only
+  (\forall n$_c$ static_env n .
+    if 
+      SChn n$_c$ \in static_env n 
+    then 
+      static_built_on_chan static_env n$_c$ n
+  ),
+  (\forall n$_sc$ n$_m$ static_env n n$_c$ . 
+    if
+      (SAtm (SendEvt n$_sc$ n$_m$)) \in static_env n,
+      (static_built_on_chan static_env n$_c$ n$_sc$ or
+        static_built_on_chan static_env n$_c$ n$_m$)
+    then 
+      static_built_on_chan static_env n$_c$ n
+  ),
+  (\forall n$_r$c static_env n n$_c$ . 
+    if  
+      (SAtm (RecvEvt n$_r$c)) \in static_env n,
+      static_built_on_chan static_env n$_c$ n$_r$c
+    then 
+      static_built_on_chan static_env n$_c$ n
+  ),
+  (\forall n1 n2 static_env n n$_c$ . 
+    if  
+      (SAtm (Pair n1 n2)) \in static_env n,
+      (static_built_on_chan static_env n$_c$ n1 or
+        static_built_on_chan static_env n$_c$ n2)
+    then 
+      static_built_on_chan static_env n$_c$ n
+  ),
+  (\forall n$_a$ static_env n n$_c$ .
+    if
+      (SAtm (Lft n$_a$)) \in static_env n,
+      static_built_on_chan static_env n$_c$ n$_a$
+    then 
+      static_built_on_chan static_env n$_c$ n
+  ),
+  (\forall n$_a$ static_env n n$_c$ .
+    if
+      (SAtm (Rht n$_a$)) \in static_env n,
+      static_built_on_chan static_env n$_c$ n$_a$
+    then 
+      static_built_on_chan static_env n$_c$ n
+  ),
+  (\forall n$_f$ n$_p$ p$_b$ n$_fv$ .
+    if
+      (SAtm (Fun n$_f$ n$_p$ p$_b$)) \in static_env n,
+      n$_fv$ \in free_vars (SAtm (Fun n$_f$ n$_p$ p$_b$)),
+      static_built_on_chan static_env n$_fv$ n
+    then
+      static_built_on_chan static_env n$_c$ n
+  )
+\end{lstlisting}
 
 
 The static liveness of a channel is described in terms of entry functions and
