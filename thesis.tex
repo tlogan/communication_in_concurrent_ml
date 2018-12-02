@@ -2145,7 +2145,7 @@ accepting flows for the sequenced embedded term.
 The server implementation represented as a graph illustrates how static acceptance by flows can interpret
 a graph from a dynamic program.
 
-\includegraphics[width=1.3\textwidth, left]{cml_graph.pdf}
+\includegraphics[width=1.3\textwidth, left]{cml-graph.pdf}
 
 The static traceability means that a static path with a given starting step, and ending
 condition, can be traced by traversing the flows in a graph.
@@ -3112,6 +3112,80 @@ sequencing, calling, returning, and spawning are also included flows.
   type staticPath = static_step list
 \end{lstlisting}
 
+We use a slightly modified version of the server implementation
+to demonstrate some key concepts of the higher precision analysis.
+An additional loop function \lstinline{lp} has been added to the
+server implementation. The loop basically just wastes steps, but it is used to demontrate how
+liveness analysis treats functions that don't contain any channel of interest.
+
+
+\begin{lstlisting}[language=normal_lang, mathescape]
+  bind u1 = unt
+  bind r1 = rht u1
+  bind l1 = lft r1
+  bind l2 = lft l1
+
+  bind lp = fun lp' x1 => 
+  (
+    bind z1 = case x1 of 
+      lft y1 => bind z2 = lp' y1 z2
+    | rht y2 => bind u2 = unt rslt u2
+    bind u3 = unt
+    rslt u3
+  )
+
+  bind mksr = fun _ x2 => 
+  (
+    bind k1 = mkChn
+    bind z4 = lp l2
+    bind srv = fun srv' x3 =>
+    (
+      bind e1 = recvEvt k1
+      bind p1 = sync e1
+      bind v1 = fst p1
+      bind k2 = snd p1 
+      bind e2 = sendEvt k2 x3
+      bind z5 = sync e2
+      bind z6 = srv' v1
+      bind u4 = unt
+      rslt u4
+    )
+    bind z7 = spawn
+    (
+      bind z8 = srv r1
+      bind u5 = unt
+      rslt u5
+    )
+    rslt k1
+  )
+
+  bind rqst = fun _ x4 =>
+  (
+    bind k3 = fst x4
+    bind v2 = snd x4
+    bind k4 = mkChn
+    bind p2 = pair v2 k4
+    bind e3 = sendEvt k3 p2
+    bind z9 = sync e3
+    bind e4 = recvEvt k4
+    bind v3 = sync e4
+    rslt v3
+  )
+
+  bind srvr = mksr u1
+  bind z10 = spawn
+  ( 
+    bind p3 = pair srvr l1
+    bind z11 = rqst p3
+    rslt z11
+  )
+  bind p4 = pair srvr l2
+  bind z12 = rqst p4
+  rslt z12
+\end{lstlisting}
+
+
+
 The static acceptance by flows for higher precision is similar to that of the lower precision analysis.
 However, it must additionally consider flows with the sending mode. 
 
@@ -3237,7 +3311,12 @@ However, it must additionally consider flows with the sending mode.
     then
       staticFlowsAccept staticEnv graph (Bind n (App n$_f$ n$_a$) t')
   )
-  \end{lstlisting}
+\end{lstlisting}
+
+The server implementation represented as a graph illustrates how static acceptance by flows can interpret
+a graph from a dynamic program.
+
+\includegraphics[width=1.3\textwidth, left]{cml-graph-lp.pdf}
 
 
 For the liveness of channel analysis, it is necessary to track any name built on a channel.
@@ -3315,8 +3394,6 @@ the given channel, if those names are live at the entry of that term ID.
 The exit function maps a program step to a
 set of names built on the given channel, if those names are live at the exit of that
 term ID.
-
-
 (**TODO:
 example of liveness on server example;
 move up graphs of server example 
@@ -3489,6 +3566,11 @@ move up graphs of server example
 The static liveness of a flow checks if a flow exists in a whole graph,
 and if it meets certain criteria with respect to the entry and exit liveness
 functions. 
+No channel is considered to be live in the body of the loop at \lstinline[language=normal_lang]{bind lp}.
+However, a channel may be live before the loop is
+called and after the loop returns. In such a case, the live flow is retained
+from the caller to within the loop function's body, even though the steps in
+the loop may not be live according to the entry function in the static channel liveness.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticLiveFlow of
@@ -3537,6 +3619,14 @@ functions.
 The static traceability for the higher precision analysis states
 that an entire static path can be trace through some graph and
 is live with respect to some entry and and exit functions.
+
+The following diagram illustrates the graph of the server example,
+containing only live flows for channel \lstinline{k1}.
+\includegraphics[width=1.3\textwidth, left]{cml-graph-k1.pdf}
+
+The following diagram illustrates the graph of the server example,
+containing only live flows for channel \lstinline{k4}.
+\includegraphics[width=1.3\textwidth, left]{cml-graph-k4.pdf}
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticTraceable
@@ -3687,82 +3777,6 @@ are otherwise similar to the lower precision classifications.
   \end{lstlisting}
 
 
-A slightly modified version of the server implementation demonstrates the usage of channel liveness
-analysis, and liveness traversabilitiy of programs.  An additional loop has been added to the
-server implementation.  The loop basically just wastes time, but it is used to demontrate how
-liveness analysis treats function functions that not contain
-any channel of interest.  No channel is
-considered to be live in the body of the loop.  However, a channel may be live before the loop is
-called and after the loop returns.  in such a case, the live traceable path from the creation of a
-channel to a step after the loop retains the flows within the loop, even though the steps in
-the loop may not be live according to the entry map.
-
-\begin{lstlisting}[language=normal_lang, mathescape]
-  bind u1 = unt
-  bind r1 = rht u1
-  bind l1 = lft r1
-  bind l2 = lft l1
-
-  bind lp = fun lp' x1 => 
-  (
-    bind z1 = case x1 of 
-      lft y1 => bind z2 = lp' y1 z2
-    | rht y2 => bind u2 = unt rslt u2
-    bind u3 = unt
-    rslt u3
-  )
-
-  bind mksr = fun _ x2 => 
-  (
-    bind k1 = mkChn
-    bind z4 = lp l2
-    bind srv = fun srv' x3 =>
-    (
-      bind e1 = recvEvt k1
-      bind p1 = sync e1
-      bind v1 = fst p1
-      bind k2 = snd p1 
-      bind e2 = sendEvt k2 x3
-      bind z5 = sync e2
-      bind z6 = srv' v1
-      bind u4 = unt
-      rslt u4
-    )
-    bind z7 = spawn
-    (
-      bind z8 = srv r1
-      bind u5 = unt
-      rslt u5
-    )
-    rslt k1
-  )
-
-  bind rqst = (fun _ x4 =>
-    bind k3 = fst x4
-    bind v2 = snd x4
-    bind k4 = mkChn
-    bind p2 = pair v2 k4
-    bind e3 = sendEvt k3 p2
-    bind z9 = sync e3
-    bind e4 = recvEvt k4
-    bind v3 = sync e4
-    rslt v3)
-
-  bind srvr = mksr u1
-  bind z10 = spawn ( 
-    bind p3 = pair srvr l1
-    bind z11 = rqst p3
-    rslt z11)
-  bind p4 = pair srvr l2
-  bind z12 = rqst p4
-  rslt z12
-  \end{lstlisting}
-
-
-\includegraphics[width=1.3\textwidth, left]{cml_graph_lp.pdf}
-\includegraphics[width=1.3\textwidth, left]{cml_graph_k1.pdf}
-\includegraphics[width=1.3\textwidth, left]{cml_graph_k4.pdf}
-
 \subsection{Higher Precision Soundness Proof Strategy}
 To prove soundness of the communication classification, it should be possible to use
 previous techniques of generalizing propositions over pools and other semantic components,
@@ -3909,6 +3923,7 @@ that correlates with the dynamic path is much more challenging.
         (path @ [DRtn n])
       (staticPath @ [(NResult x, MRtn)])
   )
+
   predicate pathsCorrespondModChan
   of pool -> communication -> chan -> dynamic_path -> static_path -> bool:
   only
