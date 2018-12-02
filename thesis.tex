@@ -3303,6 +3303,12 @@ The exit function maps a program step to a
 set of names built on the given channel, if those names are live at the exit of that
 term ID.
 
+
+(**
+example of liveness on server example;
+move up graphs of server example 
+**)
+
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_live_chan
   of static_value_map -> term_id_map -> term_id_map -> name -> term -> bool:
@@ -3467,78 +3473,78 @@ term ID.
   )
 \end{lstlisting}
 
-The static liveness of a flow is described by checking if a flow exists in a whole
-graph, and if it meets certain criteria with respect to the entry and exit liveness
+The static liveness of a flow checks if a flow exists in a whole graph,
+and if it meets certain criteria with respect to the entry and exit liveness
 functions. 
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate static_live_flow of
-    graph -> term_id_map -> term_id_map -> flow -> bool:
-    only
-
-    (\forall l l' graph exit entr . 
-      if
-        (l, MNxt, l') \in graph,
-        not (exit l = {}),
-        not (entr l' = {})
-      then
-        static_live_flow graph entr exit (l, MNxt, l')),
-
-    (\forall l l' graph exit entr .
-      if
-        (l, MSpwn, l') \in graph, 
-        not (exit l = {}),
-        not (entr l' = {})
-      then
-        static_live_flow graph entr exit (l, MSpwn, l')),
-
-    (\forall l l' graph exit entr .
-      if
-        (l, MCll, l') \in graph,
-        (not (exit l = {})) or (not (entr l' = {}))
-      then
-        static_live_flow graph entr exit (l, MCll, l')),
-
-    (\forall l l' graph entr exit .
-      if
-        (l, MRtn, l') \in graph,
-        not (entr l' = {})
-      then
-        static_live_flow graph entr exit (l, MRtn, l')),
-
-    (\forall n$_s$end n$_e$vt n$_r$ecv graph entr exit .
-      if
-        ((NBnd n$_s$end), ESend n$_e$vt, (NBnd n$_r$ecv)) \in graph, 
-        {x_evt} \subseteq (entr (NBnd n$_s$end))
-      then
-        static_live_flow graph entr exit
-          ((NBnd n$_s$end), ESend n$_e$vt, (NBnd n$_r$ecv)))
-  \end{lstlisting}
+  graph -> term_id_map -> term_id_map -> flow -> bool:
+  only
+  (\forall l l' graph exit entr . 
+    if
+      (l, MNxt, l') \in graph,
+      not (exit l = {}),
+      not (entr l' = {})
+    then
+      static_live_flow graph entr exit (l, MNxt, l')
+  ),
+  (\forall l l' graph exit entr .
+    if
+      (l, MSpwn, l') \in graph, 
+      not (exit l = {}),
+      not (entr l' = {})
+    then
+      static_live_flow graph entr exit (l, MSpwn, l')
+  ),
+  (\forall l l' graph exit entr .
+    if
+      (l, MCll, l') \in graph,
+      (not (exit l = {})) or (not (entr l' = {}))
+    then
+      static_live_flow graph entr exit (l, MCll, l')
+  ),
+  (\forall l l' graph entr exit .
+    if
+      (l, MRtn, l') \in graph,
+      not (entr l' = {})
+    then
+      static_live_flow graph entr exit (l, MRtn, l')
+  ),
+  (\forall n$_send$ n$_evt$ n$_recv$ graph entr exit .
+    if
+      ((NBnd n$_s$end), ESend n$_evt$, (NBnd n$_recv$)) \in graph, 
+      {n$_evt$} \subseteq (entr (NBnd n$_send$))
+    then
+      static_live_flow graph entr exit
+      ((NBnd n$_s$end), ESend n$_evt$, (NBnd n$_recv$))
+  )
+\end{lstlisting}
 
 The static traceability for the higher precision analysis states
 that an entire static path can be trace through some graph and
 is live with respect to some entry and and exit functions.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate static_traceable of
-    static_value_map -> graph -> term_id_map -> term_id_map ->
+  predicate static_traceable
+  of static_value_map -> graph -> term_id_map -> term_id_map ->
     term_id -> (term_id -> bool) -> static_path -> bool:
-    only
-
-    (\forall is_end start static_env graph entr exit .
-      if
-        is_end start
-      then
-        static_traceable graph entr exit start is_end []),
-
-    (\forall graph entr exit start middle path is_end mode. 
-      if
-        static_traceable graph entr exit start (\lambda l . l = middle) path, 
-        (is_end end),
-        static_live_flow graph entr exit (middle, mode, end) 
-      then
-        static_traceable graph entr exit start is_end (path @ [(middle, mode)])
-  \end{lstlisting}
+  only
+  (\forall is_end start static_env graph entr exit .
+    if
+      is_end start
+    then
+      static_traceable graph entr exit start is_end []
+  ),
+  (\forall graph entr exit start middle path is_end mode. 
+    if
+      static_traceable graph entr exit start (\lambda l . l = middle) path, 
+      (is_end end),
+      static_live_flow graph entr exit (middle, mode, end) 
+    then
+      static_traceable graph entr exit start is_end (path @ [(middle, mode)]
+  )
+\end{lstlisting}
 
 As with the lower precision analysis, the higher precision analysis relies on recognizing
 whether or not two paths can actually occur within in a single run of a program. The static
