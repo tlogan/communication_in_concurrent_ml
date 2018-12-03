@@ -1362,22 +1362,22 @@ that the synchronization used for communication.
       ))
       comm
   ),
-  (\forall pool path$_s$ path n$_s$ n$_se$ p$_s$ env$_s$ stack$_s$ n$_sc$ n$_m$
-    env$_se$ path$_r$ n$_r$ n$_re$ p$_r$ env$_r$ stack$_r$ n$_rc$ env$_re$ c comm .
+  (\forall pool path$_s$ path n$_s$ n$_{se}$ p$_s$ env$_s$ stack$_s$ n$_{sc}$ n$_m$
+    env$_{se}$ path$_r$ n$_r$ n$_{re}$ p$_r$ env$_r$ stack$_r$ n$_{rc}$ env$_{re}$ c comm .
     if 
       leaf pool path$_s$,
       pool path$_s$ = Some
-        (Stt (Bind n$_s$ (Sync n$_se$) p$_s$) env$_s$ stack$_s$),
-      env$_s$ n$_se$ = Some
-        (VAtm (SendEvt n$_sc$ n$_m$) env$_se$),
+        (Stt (Bind n$_s$ (Sync n$_{se}$) p$_s$) env$_s$ stack$_s$),
+      env$_s$ n$_{se}$ = Some
+        (VAtm (SendEvt n$_{sc}$ n$_m$) env$_{se}$),
       leaf pool path$_r$,
       pool path$_r$ = Some
-        (Stt (Bind n$_r$ (Sync n$_re$) p$_r$) env$_r$ stack$_r$),
+        (Stt (Bind n$_r$ (Sync n$_{re}$) p$_r$) env$_r$ stack$_r$),
       env$_r$ n$_r$e = Some
-        (VAtm (RecvEvt n$_rc$) env$_re$),
-      env$_se$ n$_sc$ = Some (VChn c),
-      env$_re$ n$_rc$ = Some (VChn c), 
-      env$_se$ n$_m$ = Some v$_m$
+        (VAtm (RecvEvt n$_{rc}$) env$_{re}$),
+      env$_{se}$ n$_{sc}$ = Some (VChn c),
+      env$_{re}$ n$_{rc}$ = Some (VChn c), 
+      env$_{se}$ n$_m$ = Some v$_m$
     then
       dynamicEval
         pool
@@ -1410,22 +1410,22 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 \begin{lstlisting}[language=logic, mathescape]
   predicate isSendPath of pool -> chan -> dynamic_path -> bool:
   only
-  (\forall pool path n n$_e$ p' env stack n$_sc$ n$_m$ env$_e$ c.
+  (\forall pool path n n$_e$ p' env stack n$_{sc}$ n$_m$ env$_e$ c.
     if
       pool path = Some (Stt (Bind n (Sync n$_e$) p') env stack),
-      env n$_e$ = Some (VAtm (SendEvt n$_sc$ n$_m$) env$_e$), 
-      env$_e$ n$_sc$ = Some (VChn c)
+      env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env$_e$), 
+      env$_e$ n$_{sc}$ = Some (VChn c)
     then
       isSendPath pool c path
   )
 
   predicate isRecvPath of pool -> chan -> dynamic_path -> bool:
   only
-  (\forall pool path n n$_e$ p' env stack n$_rc$ env$_e$ c .
+  (\forall pool path n n$_e$ p' env stack n$_{rc}$ env$_e$ c .
     then
       pool path = Some (Stt (Bind n (Sync n$_e$) p') env stack),
-      env n$_e$ = Some (VAtm (RecvEvt n$_rc$) env$_e$),
-      env$_e$ n$_rc$ = Some (VChn c)
+      env n$_e$ = Some (VAtm (RecvEvt n$_{rc}$) env$_e$),
+      env$_e$ n$_{rc}$ = Some (VChn c)
     then
       isRecvPath pool c path
   )
@@ -1637,16 +1637,16 @@ Function terms are evaluated similarly to other atomic terms.
   ),
   (\forall staticEnv n$_e$ n staticComm  t'.
     if
-      (\forall n$_sc$ n$_m$ n$_c$ . 
+      (\forall n$_{sc}$ n$_m$ n$_c$ . 
         if
-          (SAtm (SendEvt n$_sc$ n$_m$)) \in staticEnv n$_e$, 
-          SChn n$_c$ \in staticEnv n$_sc$ 
+          (SAtm (SendEvt n$_{sc}$ n$_m$)) \in staticEnv n$_e$, 
+          SChn n$_c$ \in staticEnv n$_{sc}$ 
         then
           SUnt \in staticEnv x, staticEnv n$_m$ \subseteq staticComm n$_c$),
-      (\forall n$_rc$ n$_c$ . 
+      (\forall n$_{rc}$ n$_c$ . 
         if
-          (SAtm (RecvEvt n$_rc$)) \in staticEnv n$_e$,
-          SChn n$_c$ \in staticEnv n$_rc$, 
+          (SAtm (RecvEvt n$_{rc}$)) \in staticEnv n$_e$,
+          SChn n$_c$ \in staticEnv n$_{rc}$, 
         then
           staticComm n$_c$ \subseteq staticEnv x),
       staticEval staticEnv staticComm t'
@@ -1918,11 +1918,11 @@ synchronization to receive on a given abstract channel.
   predicate staticSendId
   of static_value_map -> term -> name -> termId -> bool:
   only
-  (\forall t0 n n$_e$ t' n$_sc$ n$_m$ staticEnv n$_c$ .
+  (\forall t0 n n$_e$ t' n$_{sc}$ n$_m$ staticEnv n$_c$ .
     if
       staticReachable t0 (Bind n (Sync n$_e$) t'),
-      (SAtm (SendEvt n$_sc$ n$_m$)) \subseteq staticEnv n$_e$, 
-      (SChn n$_c$) \in staticEnv n$_sc$
+      (SAtm (SendEvt n$_{sc}$ n$_m$)) \subseteq staticEnv n$_e$, 
+      (SChn n$_c$) \in staticEnv n$_{sc}$
     then
       staticSendId staticEnv t0 n$_c$ (NBnd x)
   )
@@ -1930,11 +1930,11 @@ synchronization to receive on a given abstract channel.
   predicate staticRecvId
   of static_value_map -> term -> name -> termId -> bool:
   only
-  (\forall t0 n n$_e$ t' n$_rc$ staticEnv n$_c$ .
+  (\forall t0 n n$_e$ t' n$_{rc}$ staticEnv n$_c$ .
     if
       staticReachable t0 (Bind n (Sync n$_e$) t'),
-      (SAtm (RecvEvt n$_rc$)) \in staticEnv n$_e$, 
-      (SChn n$_c$) \in staticEnv n$_rc$ 
+      (SAtm (RecvEvt n$_{rc}$)) \in staticEnv n$_e$, 
+      (SChn n$_c$) \in staticEnv n$_{rc}$ 
     then
       staticRecvId staticEnv t0 n$_c$ (NBnd x)
   )
@@ -2522,12 +2522,12 @@ send ID by its term identifier.
       staticInclusive staticPath1 staticPath2
 
   lemma staticSendId_complete:
-  \forall t0 pool comm path n n$_e$ t' env stack n$_sc$ n$_m$ env' path$_c$ n$_c$ .
+  \forall t0 pool comm path n n$_e$ t' env stack n$_{sc}$ n$_m$ env' path$_c$ n$_c$ .
     if
       star dynamicEval [[] -> (Stt t0 [->] [])] {} pool comm, 
       pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack), 
-      env n$_e$ = Some (VAtm (SendEvt n$_sc$ n$_m$) env'), 
-      env' n$_sc$ = Some (VChn (Chan path$_c$ n$_c$)), 
+      env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env'), 
+      env' n$_{sc}$ = Some (VChn (Chan path$_c$ n$_c$)), 
       staticEval staticEnv staticComm t0
     then 
       staticSendId staticEnv t0 n$_c$ (NBnd n)
@@ -2855,15 +2855,15 @@ used to ensure that the static step is indeed a send ID.
 \begin{lstlisting}[language=logic, mathescape]
   lemma send_chan_staticEval_sound:
   \forall t0 pool comm staticEnv staticComm path
-    n n$_e$ t' env stack n$_sc$ n$_m$ env$_e$ path$_c$ n$_c$ .
+    n n$_e$ t' env stack n$_{sc}$ n$_m$ env$_e$ path$_c$ n$_c$ .
     if
       star dynamicEval [[] -> (Stt t0 [->] [])], {} pool comm,
       staticEval staticEnv staticComm t0,
       pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
-      env_y n$_e$ = Some (VAtm (SendEvt n$_sc$ n$_m$) env$_e$),
-      env$_e$ n$_sc$ = Some (VChn (Chan path$_c$ n$_c$))
+      env_y n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env$_e$),
+      env$_e$ n$_{sc}$ = Some (VChn (Chan path$_c$ n$_c$))
     then
-      SChn n$_c$ \in staticEnv n$_sc$
+      SChn n$_c$ \in staticEnv n$_{sc}$
 
   lemma staticEval_sound:
   \forall t0 pool comm staticEnv staticComm path t env stack n v .
@@ -3266,10 +3266,10 @@ However, it must additionally consider flows with the sending mode.
   (\forall n t' graph staticEnv n$_s$e .
     if
       (NBnd n , MNxt, termId t') \in graph,
-      (\forall n$_sc$ n$_m$ n$_c$ y.
+      (\forall n$_{sc}$ n$_m$ n$_c$ y.
         if
-          (SAtm (SendEvt n$_sc$ n$_m$)) \in staticEnv xSE, 
-          (SChn n$_c$) \in staticEnv n$_sc$,
+          (SAtm (SendEvt n$_{sc}$ n$_m$)) \in staticEnv xSE, 
+          (SChn n$_c$) \in staticEnv n$_{sc}$,
           staticRecvId staticEnv t' n$_c$ (NBnd y)
         then
           (NBnd n, ESend n$_s$e, NBnd y) \in F),
@@ -3334,7 +3334,59 @@ name, such that it is a free variable in the function, and it's built on the cha
 
 \begin{lstlisting}[language=logic, mathescape]
 
-(**TODO: add def of free_vars **)
+  fun freeVarsAtom of atom -> name set:
+  (\forall n$_c$ n$_m$ .
+    freeVarsAtom (SendEvt n$_c$ n$_m$) = {n$_c$, n$_m$}
+  ),
+  (\forall n$_c$ .
+    freeVarsAtom (RecvEvt n$_c$) = {n$_c$}
+  ),
+  (\forall n1 n2 .
+    freeVarsAtom (Pair n1 n2) = {n1, n2}
+  ),
+  (\forall n .
+    freeVarsAtom (Lft n) = {n}
+  ),
+  (\forall n .
+    freeVarsAtom (Rht n) = {n}
+  ),
+  (\forall n$_f$ n$_p$ t$_b$ .
+    freeVarsAtom (Fun n$_f$ n$_p$ t$_b$) = freeVarsTerm t$_b$ \ {n$_f$, n$_p$}
+  )
+  
+  and freeVarsComplex of complex -> name set:
+  (freeVarsComplex Unt = {}),
+  (freeVarsComplex MkChn = {}),
+  (\forall atom .
+    freeVarsComplex (Atom atom) = freeVarsAtom atom
+  ),
+  (\forall t .
+    freeVarsComplex (Spwn t) = freeVarsTerm t
+  ),
+  (\forall n .
+    freeVarsComplex (Sync n) = {n}
+  ),
+  (\forall n .
+    freeVarsComplex (Fst n) = {n}
+  ),
+  (\forall n .
+    freeVarsComplex (Snd n) = {n}
+  ),
+  (\forall n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ .
+    freeVarsComplex (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) = 
+      {n$_s$} \cup freeVarsTerm t$_l$ \cup freeVarsTerm t$_r$ \ {n$_l$, n$_r$}
+  ),
+  (\forall n$_f$ n$_a$ .
+    freeVarsComplex (App n$_f$ n$_a$) = {n$_f$, n$_a$}
+  ),
+  
+  and freeVarsTerm of term -> name set:
+  (\forall n c t .
+    freeVarsTerm (Bind n c t) = freeVarsComplex c \cup freeVarsTerm t \ {n} 
+  ),
+  (\forall n .
+    freeVarsTerm (Rslt n) = {n}
+  )
 
   predicate staticBuiltOnChan of static_value_map -> name -> name -> bool:
   only
@@ -3344,18 +3396,18 @@ name, such that it is a free variable in the function, and it's built on the cha
     then 
       staticBuiltOnChan staticEnv n$_c$ n
   ),
-  (\forall n$_sc$ n$_m$ staticEnv n n$_c$ . 
+  (\forall n$_{sc}$ n$_m$ staticEnv n n$_c$ . 
     if
-      (SAtm (SendEvt n$_sc$ n$_m$)) \in staticEnv n,
-      (staticBuiltOnChan staticEnv n$_c$ n$_sc$ or
+      (SAtm (SendEvt n$_{sc}$ n$_m$)) \in staticEnv n,
+      (staticBuiltOnChan staticEnv n$_c$ n$_{sc}$ or
         staticBuiltOnChan staticEnv n$_c$ n$_m$)
     then 
       staticBuiltOnChan staticEnv n$_c$ n
   ),
-  (\forall n$_rc$ staticEnv n n$_c$ . 
+  (\forall n$_{rc}$ staticEnv n n$_c$ . 
     if  
-      (SAtm (RecvEvt n$_rc$)) \in staticEnv n,
-      staticBuiltOnChan staticEnv n$_c$ n$_rc$
+      (SAtm (RecvEvt n$_{rc}$)) \in staticEnv n,
+      staticBuiltOnChan staticEnv n$_c$ n$_{rc}$
     then 
       staticBuiltOnChan staticEnv n$_c$ n
   ),
@@ -3381,11 +3433,11 @@ name, such that it is a free variable in the function, and it's built on the cha
     then 
       staticBuiltOnChan staticEnv n$_c$ n
   ),
-  (\forall n$_f$ n$_p$ p$_b$ n$_fv$ .
+  (\forall n$_f$ n$_p$ p$_b$ n$_{fv}$ .
     if
       (SAtm (Fun n$_f$ n$_p$ p$_b$)) \in staticEnv n,
-      n$_fv$ \in free_vars (SAtm (Fun n$_f$ n$_p$ p$_b$)),
-      staticBuiltOnChan staticEnv n$_fv$ n
+      n$_{fv}$ \in freeVarsAtom (Fun n$_f$ n$_p$ p$_b$),
+      staticBuiltOnChan staticEnv n$_{fv}$ n
     then
       staticBuiltOnChan staticEnv n$_c$ n
   )
@@ -3430,7 +3482,7 @@ and each exit setappears right below its related term id.
   ),
   (\forall exit n entr t' staticEnv n$_c$ .
     if 
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
       entr (termId t') \subseteq exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     then 
@@ -3438,39 +3490,39 @@ and each exit setappears right below its related term id.
   ),
   (\forall exit n entr t' staticEnv n$_c$ .
     if
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
       entr (termId t') \subseteq exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     then 
       staticLiveChan staticEnv entr exit n$_c$ (Bind n MkChn t')
   ),
-  (\forall exit n entr staticEnv n$_c$ n$_sc$ n$_m$ t' n$_c$ .
+  (\forall exit n entr staticEnv n$_c$ n$_{sc}$ n$_m$ t' n$_c$ .
     if
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
-      (if staticBuiltOnChan staticEnv n$_c$ n$_sc$ then
-        {n$_sc$} \subseteq entr (NBnd n)),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
+      (if staticBuiltOnChan staticEnv n$_c$ n$_{sc}$ then
+        {n$_{sc}$} \subseteq entr (NBnd n)),
       (if staticBuiltOnChan staticEnv n$_c$ n$_m$ then 
         {n$_m$} \subseteq entr (NBnd n)),
       entr (termId t') \subseteq exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     then
       staticLiveChan staticEnv entr exit n$_c$
-        (Bind n (Atom (SendEvt n$_sc$ n$_m$)) t')
+        (Bind n (Atom (SendEvt n$_{sc}$ n$_m$)) t')
   ),
-  (\forall exit n entr staticEnv n$_c$ n$_r$ n$_rc$.    
+  (\forall exit n entr staticEnv n$_c$ n$_r$ n$_{rc}$.    
     if
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
       (if staticBuiltOnChan staticEnv n$_c$ n$_r$ then
         {x$_r$} \subseteq entr (NBnd n)),
       entr (termId t') \subseteq exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     then
       staticLiveChan staticEnv entr exit n$_c$
-        (Bind n (Atom (RecvEvt n$_rc$)) t')
+        (Bind n (Atom (RecvEvt n$_{rc}$)) t')
   ),
   (\forall exit n entr staticEnv t$_c$ n1 n2 t' .
     if
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
       (if staticBuiltOnChan staticEnv n$_c$ n1 then
         {n1} \subseteq entr (NBnd n)),
       (if staticBuiltOnChan staticEnv n$_c$ n2 then
@@ -3482,7 +3534,7 @@ and each exit setappears right below its related term id.
 
   (\forall exit n entr staticEnv n$_c$ n$_a$ t' . 
     if
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
       (if staticBuiltOnChan staticEnv n$_c$ n$_a$ then
         {n$_a$} \subseteq entr (NBnd n)),
       entr (termId t') \subseteq exit (NBnd n),
@@ -3492,7 +3544,7 @@ and each exit setappears right below its related term id.
 
   (\forall exit n entr staticEnv n$_c$ n$_a$ t' . 
     if
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
       (if staticBuiltOnChan staticEnv n$_c$ n$_a$ then
         {n$_a$} \subseteq entr (NBnd n))
       entr (termId e) \subseteq exit (NBnd n),
@@ -3502,8 +3554,8 @@ and each exit setappears right below its related term id.
   ),
   (\forall  exit n entr t$_b$ n$_p$ n staticEnv n$_c$ t' n$_f$ . 
     if
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
-      (entr (termId t$_b$) - {n$_p$}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
+      (entr (termId t$_b$) \ {n$_p$}) \subseteq entr (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t$_b$,
       entr (termId t') \subseteq exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
@@ -3513,7 +3565,7 @@ and each exit setappears right below its related term id.
   ),
   (\forall exit n entr t' t$_c$ n$_c$ staticEnv .
     if
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
       entr (termId t') \subseteq exit (NBnd n),
       entr (termId t$_c$) \subseteq exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t$_c$,
@@ -3524,7 +3576,7 @@ and each exit setappears right below its related term id.
   ),
   (\forall exit n entr staticEnv n$_c$ n$_e$ t' .
     if
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
       (if staticBuiltOnChan staticEnv n$_c$ n$_e$ then
         {n$_e$} \subseteq entr (NBnd n)),
       entr (termId t') \subseteq exit (NBnd n),
@@ -3535,7 +3587,7 @@ and each exit setappears right below its related term id.
   ),
   (\forall exit n entr staticEnv n$_c$ n$_a$ t' .
     if
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
       (if staticBuiltOnChan staticEnv n$_c$ n$_a$ then
         {n$_a$} \subseteq entr (NBnd n)),
       entr (termId t') \subseteq exit (NBnd n),
@@ -3545,7 +3597,7 @@ and each exit setappears right below its related term id.
   ),
   (\forall exit n entr staticEnv n$_c$ n$_a$ t' .
     if 
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
       (if staticBuiltOnChan staticEnv n$_c$ n$_a$ then
         {n$_a$} \subseteq entr (NBnd n)),
       entr (termId t') \subseteq exit (NBnd n),
@@ -3556,9 +3608,9 @@ and each exit setappears right below its related term id.
   ),
   (\forall exit n entr t$_l$ n$_l$ t$_r$ n$_r$ staticEnv n$_c$ n$_s$ t' .
     if 
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
-      (entr (termId t$_l$) - {x$_l$}) \subseteq entr (NBnd n),
-      (entr (termId t$_r$) - {x$_r$}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
+      (entr (termId t$_l$) \ {x$_l$}) \subseteq entr (NBnd n),
+      (entr (termId t$_r$) \ {x$_r$}) \subseteq entr (NBnd n),
       (if staticBuiltOnChan staticEnv n$_c$ n$_s$ then
         {n$_s$} \subseteq entr (NBnd n)),
       staticLiveChan staticEnv entr exit n$_c$ t$_l$,
@@ -3570,7 +3622,7 @@ and each exit setappears right below its related term id.
   ),
   (\forall exit n entr staticEnv n$_c$ n$_a$ n$_f$ t' .
     if
-      (exit (NBnd n) - {n}) \subseteq entr (NBnd n),
+      (exit (NBnd n) \ {n}) \subseteq entr (NBnd n),
       (if staticBuiltOnChan staticEnv n$_c$ n$_a$ then
         {n$_a$} \subseteq entr (NBnd n)),
       (if staticBuiltOnChan staticEnv n$_c$ n$_f$ then
@@ -3625,13 +3677,13 @@ the loop may not be live according to the entry function in the static channel l
     then
       staticLiveFlow graph entr exit (l, MRtn, l')
   ),
-  (\forall n$_send$ n$_evt$ n$_recv$ graph entr exit .
+  (\forall n$_s$ n$_e$ n$_r$ graph entr exit .
     if
-      ((NBnd n$_s$end), ESend n$_evt$, (NBnd n$_recv$)) \in graph, 
-      {n$_evt$} \subseteq (entr (NBnd n$_send$))
+      ((NBnd n$_s$), ESend n$_e$, (NBnd n$_r$)) \in graph, 
+      {n$_e$} \subseteq (entr (NBnd n$_s$))
     then
       staticLiveFlow graph entr exit
-      ((NBnd n$_s$end), ESend n$_evt$, (NBnd n$_recv$))
+      ((NBnd n$_s$), ESend n$_e$, (NBnd n$_r$))
   )
 \end{lstlisting}
 
@@ -3875,29 +3927,29 @@ correlating dynamic paths with static paths.
   predicate pathsCorrespondModChan
   of pool -> communication -> chan -> dynamic_path -> static_path -> bool:
   only
-  (\forall pool path$_c$ n$_c$ path$_sfx$ stt staticPath comm .
+  (\forall pool path$_c$ n$_c$ path$_{sfx}$ stt staticPath comm .
     if
-      pool (path$_c$ @ (DNxt n$_c$) # path$_sfx$) = Some stt,
-      pathsCorrespond ((DNxt n$_c$) # path$_sfx$) staticPath
+      pool (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) = Some stt,
+      pathsCorrespond ((DNxt n$_c$) # path$_{sfx}$) staticPath
     then
       pathsCorrespondModChan
         (pool, comm) (Chan path$_c$ n$_c$)
-        (path$_c$ @ (DNxt n$_c$) # path$_sfx$) staticPath
+        (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) staticPath
   ),
-  (\forall pool path$_r$ n$_r$ path$_sfx$ stt  path$_s$ n$_s$ n$_se$ t$_sy$ env$_sy$ stack$_sy$
-    n$_r$e t$_ry$ env$_ry$ stack$_ry$ c$_c$ comm c staticPath$_re$ staticPath$_sfx$ . 
+  (\forall pool path$_r$ n$_r$ path$_{sfx}$ stt  path$_s$ n$_s$ n$_{se}$ t$_{sy}$ env$_{sy}$ stack$_{sy}$
+    n$_r$e t$_{ry}$ env$_{ry}$ stack$_{ry}$ c$_c$ comm c staticPath$_{re}$ staticPath$_{sfx}$ . 
     if
-      pool (path$_r$ @ (DNxt n$_r$) # path$_sfx$) = Some stt, 
-      pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_se$) t$_sy$) env$_sy$ stack$_sy$),
-      pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_r$e) t$_ry$) env$_ry$ stack$_ry$),
+      pool (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$) = Some stt, 
+      pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_{se}$) t$_{sy}$) env$_{sy}$ stack$_{sy}$),
+      pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_{re}$) t$_{ry}$) env$_{ry}$ stack$_{ry}$),
       {(path$_s$, c$_c$, path$_r$)} \subseteq comm, 
-      dynamicBuiltOnChanVar env$_ry$ c n$_r$, 
-      pathsCorrespondModChan pool comm c path$_s$ staticPath$_pre$,
-      pathsCorrespond path_$sfx$ staticPath$_sfx$
+      dynamicBuiltOnChanVar env$_{ry}$ c n$_r$, 
+      pathsCorrespondModChan pool comm c path$_s$ staticPath$_{pfx}$,
+      pathsCorrespond path_$sfx$ staticPath$_{sfx}$
     then
       pathsCorrespondModChan pool comm c
-        (path$_r$ @ (DNxt n$_r$) # path$_sfx$)
-        (staticPath$_pre$ @ (NBnd n$_s$, ESend n$_se$) # (NBnd n$_r$, MNxt) # staticPath$_sfx$))
+        (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$)
+        (staticPath$_{pfx}$ @ (NBnd n$_s$, ESend n$_{se}$) # (NBnd n$_r$, MNxt) # staticPath$_{sfx}$))
 \end{lstlisting}
 
 Additionally the soundness theorem follows from the completeness of static traceability,
@@ -3952,29 +4004,29 @@ that correlates with the dynamic path is much more challenging.
   predicate pathsCorrespondModChan
   of pool -> communication -> chan -> dynamic_path -> static_path -> bool:
   only
-  (\forall pool path$_c$ n$_c$ path$_sfx$ stt staticPath comm .
+  (\forall pool path$_c$ n$_c$ path$_{sfx}$ stt staticPath comm .
     if
-      pool (path$_c$ @ (DNxt n$_c$) # path$_sfx$) = Some stt,
-      pathsCorrespond ((DNxt n$_c$) # path$_sfx$) staticPath
+      pool (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) = Some stt,
+      pathsCorrespond ((DNxt n$_c$) # path$_{sfx}$) staticPath
     then
       pathsCorrespondModChan
         (pool, comm) (Chan path$_c$ n$_c$)
-        (path$_c$ @ (DNxt n$_c$) # path$_sfx$) staticPath
+        (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) staticPath
   ),
-  (\forall pool path$_r$ n$_r$ path$_sfx$ stt  path$_s$ n$_s$ n$_s$e t$_sy$ env$_sy$ stack$_sy$
-    n$_r$e p$_r$y env$_ry$ stack$_ry$ c$_c$ comm c staticPath$_re$ staticPath$_sfx$ . 
+  (\forall pool path$_r$ n$_r$ path$_{sfx}$ stt  path$_s$ n$_s$ n$_{se}$ t$_{sy}$ env$_{sy}$ stack$_{sy}$
+    n$_r$e p$_r$y env$_{ry}$ stack$_{ry}$ c$_c$ comm c staticPath$_{re}$ staticPath$_{sfx}$ . 
     if
-      pool (path$_r$ @ (DNxt n$_r$) # path$_sfx$) = Some stt, 
-      pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_s$e) t$_sy$) env$_sy$ stack$_sy$),
-      pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_r$e) t$_ry$) env$_ry$ stack$_ry$),
+      pool (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$) = Some stt, 
+      pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_{se}$) t$_{sy}$) env$_{sy}$ stack$_{sy}$),
+      pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_{re}$) t$_{ry}$) env$_{ry}$ stack$_{ry}$),
       {(path$_s$, c$_c$, path$_r$)} \subseteq comm, 
-      dynamicBuiltOnChanVar env$_ry$ c n$_r$, 
-      pathsCorrespondModChan pool comm c path$_s$ staticPath$_pre$,
-      pathsCorrespond path$_sfx$ staticPath$_sfx$
+      dynamicBuiltOnChanVar env$_{ry}$ c n$_r$, 
+      pathsCorrespondModChan pool comm c path$_s$ staticPath$_{pfx}$,
+      pathsCorrespond path$_{sfx}$ staticPath$_{sfx}$
     then
       pathsCorrespondModChan pool comm c
-        (path$_r$ @ (DNxt n$_r$) # path$_sfx$)
-        (staticPath$_pre$ @ (NBnd n$_s$, ESend n$_s$e) # (NBnd n$_r$, MNxt) # staticPath$_sfx$)
+        (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$)
+        (staticPath$_{pfx}$ @ (NBnd n$_s$, ESend n$_{se}$) # (NBnd n$_r$, MNxt) # staticPath$_{sfx}$)
   )
   lemma staticTraceable_complete: 
   \forall t0 pool comm path n b p' env stack staticEnv staticComm

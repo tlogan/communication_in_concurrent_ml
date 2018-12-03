@@ -141,54 +141,56 @@ inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rig
     static_traversable V F (Let x (App f x\<^sub>a) e)
   "
 
+
 inductive 
-  static_built_on_chan :: "abstract_env \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"
+  static_built_on_chan :: "abstract_env \<Rightarrow> var \<Rightarrow> var \<Rightarrow> bool"
 where
   Chan: "
     \<lbrakk>
       ^Chan x\<^sub>c \<in> V x 
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V x\<^sub>c x
   " |
   Send_Evt: "
     \<lbrakk>
       ^SendEvt x\<^sub>s\<^sub>c x\<^sub>m \<in> V x;
-      static_built_on_chan V Ln x\<^sub>c x\<^sub>s\<^sub>c \<or> static_built_on_chan V Ln x\<^sub>c x\<^sub>m 
+      static_built_on_chan V x\<^sub>c x\<^sub>s\<^sub>c \<or> static_built_on_chan V x\<^sub>c x\<^sub>m 
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V x\<^sub>c x
   " |
   Recv_Evt: "
     \<lbrakk>
       ^RecvEvt x\<^sub>r\<^sub>c \<in> V x;
-      static_built_on_chan V Ln x\<^sub>c x\<^sub>r\<^sub>c
+      static_built_on_chan V x\<^sub>c x\<^sub>r\<^sub>c
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V x\<^sub>c x
   " |
   Pair: "
     \<lbrakk>
       ^(Pair x\<^sub>1 x\<^sub>2) \<in> V x;
-      static_built_on_chan V Ln x\<^sub>c x\<^sub>1 \<or> static_built_on_chan V Ln x\<^sub>c x\<^sub>2
+      static_built_on_chan V x\<^sub>c x\<^sub>1 \<or> static_built_on_chan V x\<^sub>c x\<^sub>2
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V x\<^sub>c x
   " |
   Left: "
     \<lbrakk>
       ^(Lft x\<^sub>a) \<in> V x;
-      static_built_on_chan V Ln x\<^sub>c x\<^sub>a
+      static_built_on_chan V x\<^sub>c x\<^sub>a
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V x\<^sub>c x
   " |
   Right: "
     \<lbrakk>
       ^(Rght x\<^sub>a) \<in> V x;
-      static_built_on_chan V Ln x\<^sub>c x\<^sub>a
+      static_built_on_chan V x\<^sub>c x\<^sub>a
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V Ln x\<^sub>c x
+    static_built_on_chan V x\<^sub>c x
   " |
   Abs: "
     ^Abs f x\<^sub>p e\<^sub>b \<in> V x \<Longrightarrow> 
-    \<not> Set.is_empty (Ln (top_label e\<^sub>b) - {x\<^sub>p}) \<Longrightarrow>
-    static_built_on_chan V Ln x\<^sub>c x
+    n\<^sub>f\<^sub>v \<in> free_vars_atom (Abs f x\<^sub>p e\<^sub>b) \<Longrightarrow>
+    static_built_on_chan V x\<^sub>c n\<^sub>f\<^sub>v \<Longrightarrow>
+    static_built_on_chan V x\<^sub>c x
   " 
 (*
   |

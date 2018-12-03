@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  2 DEC 2018 17:20
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  3 DEC 2018 10:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -926,60 +926,60 @@ Overfull \hbox (15.0pt too wide) in paragraph at lines 3323--3324
 [][] 
  []
 
-[63 <./cml-graph-lp.pdf>] [64] [65]
-<cml-liveness-analysis-k1.pdf, id=260, 1731.46875pt x 1908.12875pt>
+[63 <./cml-graph-lp.pdf>] [64] [65] [66]
+<cml-liveness-analysis-k1.pdf, id=264, 1731.46875pt x 1908.12875pt>
 File: cml-liveness-analysis-k1.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k1.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3409.
+Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3461.
 (pdftex.def)             Requested size: 345.0pt x 380.19232pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 3409--3410
+Overfull \hbox (15.0pt too wide) in paragraph at lines 3461--3462
 [][] 
  []
 
-[66 <./cml-liveness-analysis-k1.pdf>]
-<cml-liveness-analysis-k4.pdf, id=276, 1776.6375pt x 1939.245pt>
+[67 <./cml-liveness-analysis-k1.pdf>]
+<cml-liveness-analysis-k4.pdf, id=279, 1776.6375pt x 1939.245pt>
 File: cml-liveness-analysis-k4.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k4.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3418.
+Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3470.
 (pdftex.def)             Requested size: 345.0pt x 376.56816pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 3418--3419
+Overfull \hbox (15.0pt too wide) in paragraph at lines 3470--3471
 [][] 
  []
 
-[67 <./cml-liveness-analysis-k4.pdf>] [68] [69] [70] [71] [72]
-<cml-graph-k1.pdf, id=307, 1559.8275pt x 1677.26625pt>
+[68 <./cml-liveness-analysis-k4.pdf>] [69] [70] [71] [72] [73]
+<cml-graph-k1.pdf, id=310, 1559.8275pt x 1677.26625pt>
 File: cml-graph-k1.pdf Graphic file (type pdf)
  <use cml-graph-k1.pdf>
-Package pdftex.def Info: cml-graph-k1.pdf used on input line 3647.
+Package pdftex.def Info: cml-graph-k1.pdf used on input line 3699.
 (pdftex.def)             Requested size: 310.4979pt x 333.86053pt.
 
-[73 <./cml-graph-k1.pdf>]
-<cml-graph-k4.pdf, id=337, 1090.0725pt x 954.56625pt>
+[74 <./cml-graph-k1.pdf>]
+<cml-graph-k4.pdf, id=340, 1090.0725pt x 954.56625pt>
 File: cml-graph-k4.pdf Graphic file (type pdf)
  <use cml-graph-k4.pdf>
-Package pdftex.def Info: cml-graph-k4.pdf used on input line 3654.
+Package pdftex.def Info: cml-graph-k4.pdf used on input line 3706.
 (pdftex.def)             Requested size: 241.49895pt x 211.47633pt.
 
-[74 <./cml-graph-k4.pdf>] [75] [76] [77] [78] [79] [80]
+[75 <./cml-graph-k4.pdf>] [76] [77] [78] [79] [80] [81]
 
-LaTeX Warning: Citation `.' on page 81 undefined on input line 4036.
+LaTeX Warning: Citation `.' on page 82 undefined on input line 4088.
 
-[81]
+[82]
 
-LaTeX Warning: Citation `.' on page 82 undefined on input line 4042.
+LaTeX Warning: Citation `.' on page 83 undefined on input line 4094.
 
-[82] (./thesis.aux)
+[83] (./thesis.aux)
 
 LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
  7293 strings out of 493014
- 105741 string characters out of 6133351
+ 105764 string characters out of 6133351
  397141 words of memory out of 5000000
  10664 multiletter control sequences out of 15000+600000
  60119 words of font info for 65 fonts, out of 8000000 for 9000
@@ -999,10 +999,10 @@ cal/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texl
 ive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016
 /texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-
 dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (83 pages, 667297 bytes).
+Output written on thesis.pdf (84 pages, 667354 bytes).
 PDF statistics:
- 432 PDF objects out of 1000 (max. 8388607)
- 303 compressed objects within 4 object streams
+ 435 PDF objects out of 1000 (max. 8388607)
+ 305 compressed objects within 4 object streams
  0 named destinations out of 1000 (max. 500000)
  31 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -18,6 +18,30 @@ datatype
     SendEvt var var | RecvEvt var | Pair var var |
     Lft var | Rght var | Abs var var exp
 
+fun free_vars_atom :: "prim \<Rightarrow> var set"
+and free_vars_complex :: "bound_exp \<Rightarrow> var set"
+and free_vars_term :: "exp \<Rightarrow> var set" where
+  "free_vars_atom (SendEvt x_ch x_m) = {x_ch, x_m}"
+| "free_vars_atom (RecvEvt x_ch) = {x_ch}"
+| "free_vars_atom (Pair x1 x2) = {x1, x2}"
+| "free_vars_atom (Lft x) = {x}"
+| "free_vars_atom (Rght x) = {x}"
+| "free_vars_atom (Abs x_f x_p e_b) = free_vars_term e_b - {x_f, x_p}"
+
+| "free_vars_complex Unt = {}"
+| "free_vars_complex MkChn = {}"
+| "free_vars_complex (Prim prim) = free_vars_atom prim"
+| "free_vars_complex (Spwn e) = free_vars_term e"
+| "free_vars_complex (Sync x) = {x}"
+| "free_vars_complex (Fst x) = {x}"
+| "free_vars_complex (Snd x) = {x}"
+| "free_vars_complex (Case x_sum x_l e_l x_r e_r) = 
+    {x_sum} \<union> free_vars_term e_l \<union> free_vars_term e_r - {x_l, x_r}"
+| "free_vars_complex (App x_f x_a) = {x_f, x_a}"
+
+| "free_vars_term (Let x b e) = free_vars_complex b \<union> free_vars_term e - {x}" 
+| "free_vars_term (Rslt x) = {x}"
+
 datatype 
   qexp =
     QLet var qexp qexp | QVar var | QUnt |
