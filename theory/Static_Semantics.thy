@@ -122,11 +122,13 @@ inductive static_eval :: "abstract_env \<times> abstract_env \<Rightarrow> exp \
   Let_Case: "
     \<lbrakk>
       \<forall> x\<^sub>l' . ^(Lft x\<^sub>l') \<in> \<V> x\<^sub>s \<longrightarrow>
-        \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> static_eval (\<V>, \<C>) e\<^sub>l
-      ;
+        \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x
+      ; 
+      static_eval (\<V>, \<C>) e\<^sub>l ;
       \<forall> x\<^sub>r' . ^(Rght x\<^sub>r') \<in> \<V> x\<^sub>s \<longrightarrow>
-        \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x \<and> static_eval (\<V>, \<C>) e\<^sub>r
+        \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x
       ;
+      static_eval (\<V>, \<C>) e\<^sub>r;
       static_eval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
     static_eval (\<V>, \<C>) (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)

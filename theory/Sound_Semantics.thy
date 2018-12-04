@@ -127,7 +127,7 @@ proof -
     case Let_Case 
 
     from H6 local.Let_Case(1) show 
-      "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l" by auto
+      "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l" using local.Let_Case(2) by blast 
   qed
 qed
 
@@ -151,7 +151,7 @@ proof -
   proof cases
     case Let_Case 
     with 
-      `\<forall>x\<^sub>r'. ^prim.Rght x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r`  
+      `\<forall>x\<^sub>r'. ^prim.Rght x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x`  
       `^prim.Rght x\<^sub>r' \<in> \<V> x\<^sub>s`
     show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r" by blast
   qed
@@ -400,7 +400,7 @@ proof
   have "\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l"
   proof cases
     case Let_Case
-    from `\<forall>x\<^sub>l'. ^prim.Lft x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l`
+    from `\<forall>x\<^sub>l'. ^prim.Lft x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x`
     and `^prim.Lft x\<^sub>l' \<in> \<V> x\<^sub>s`
     show "\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l" by simp
   qed
@@ -442,7 +442,7 @@ proof
   show "\<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x" 
   proof cases
     case Let_Case
-    assume "\<forall>x\<^sub>l'. ^prim.Lft x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l"
+    assume "\<forall>x\<^sub>l'. ^prim.Lft x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x"
     with `^prim.Lft x\<^sub>l' \<in> \<V> x\<^sub>s`
     show "\<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x" by blast
   qed
@@ -506,7 +506,7 @@ proof
   have "\<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r"
   proof cases
     case Let_Case
-    from `\<forall>x\<^sub>r'. ^prim.Rght x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r`
+    from `\<forall>x\<^sub>r'. ^prim.Rght x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x`
     and `^prim.Rght x\<^sub>r' \<in> \<V> x\<^sub>s`
     show "\<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r" by simp
   qed
@@ -547,7 +547,7 @@ proof
   show "\<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x" 
   proof cases
     case Let_Case
-    assume "\<forall>x\<^sub>r'. ^prim.Rght x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r"
+    assume "\<forall>x\<^sub>r'. ^prim.Rght x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x"
     with `^prim.Rght x\<^sub>r' \<in> \<V> x\<^sub>s`
     show "\<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x" by blast
   qed

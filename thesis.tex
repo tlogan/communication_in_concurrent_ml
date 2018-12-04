@@ -1674,13 +1674,13 @@ Function terms are evaluated similarly to other atomic terms.
       (\forall n$_c$ . if (SAtm (Lft n$_c$)) \in staticEnv n$_s$ then 
         staticEnv n$_c$ \subseteq staticEnv n$_l$,
         staticEnv (resultName t$_l$) \subseteq staticEnv x,
-        staticEval staticEnv staticComm t$_l$
       ),
+      staticEval staticEnv staticComm t$_l$,
       (\forall n$_c$ . if (SAtm (Rht n$_c$)) \in staticEnv n$_s$ then 
         staticEnv n$_c$ \subseteq staticEnv n$_r$, 
         staticEnv (resultName t$_r$) \subseteq staticEnv x, 
-        staticEval staticEnv staticComm t$_r$
       ),
+      staticEval staticEnv staticComm t$_r$,
       staticEval staticEnv staticComm t'
     then
       staticEval staticEnv staticComm (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
@@ -2838,6 +2838,37 @@ The preservation of static evalatuation of pools over multioples steps is also r
       staticEvalPool staticEnv staticComm pool'
 \end{lstlisting}
 
+The completeness of static inclusiveness is derived from various lemmas that
+preserve relations from pairs of dynamic paths to pairs of corresponding static paths.  
+Some of these, among many others, are
+the preservation of the strict prefix relation from static to dynamic paths,
+and the preservation of static inclusiveness over extension of static paths.
+
+\begin{lstlisting}[language=logic, mathescape]
+  lemma strictPrefixPreservedCorresp:
+  \forall path1 path2 l1 l2 .
+  if
+    strictPrefix staticPathath1 staticPath2, 
+    pathsCorrespond dynamicPath1 staticPath1,
+    pathsCorrespond dynamicPath2 staticPath2
+  then
+    strictPrefix dynamicPath1 dynamicPath2
+
+
+  lemma staticInclusivePreservedUnorderedExtension:
+  \forall path1 path2 l1 l2 .
+  if
+    staticInclusive path1 path2, 
+    not (prefix path1 path2),
+    not (prefix path2 path1), 
+  then
+    staticInclusive (path1 @ [l1]) (path2 @ [l2])
+\end{lstlisting}
+
+These various preservation lemmas are derived from the basic properites of lists 
+and straight forward properities of path correspondence, such as commutitivity, as
+well as foundational principles like induction of corresponding paths.
+
 The lemma for completeness of sending identifier classification \lstinline{staticSendIdComplete}
 is proved using the lemma for
 soundness of static evaluation for synchronization of a send event,
@@ -3852,9 +3883,9 @@ is not bijective, as it is for the lower precision analysis. However, finding a 
 correspondence for each dynamic and static path is critical for proving soundness.
 
 Essentially, it will be necessary to show that static
-properties that hold for some static path are related in some fashion to dyamic properties
-that hold for a dynamic path which corresponds to the static path modulo the channel under
-analysis. Let's outline the derivation of soundness of one-shot classification.
+properties that hold for some static path are preserved for corresponding dyamic paths. 
+However, in the higher precision analysis these paths correspond modulo the channel of interest.
+Let's outline the derivation of soundness of one-shot classification.
 
 \begin{lstlisting}[language=logic, mathescape]
   theorem staticOneShotSound:
@@ -3866,11 +3897,6 @@ analysis. Let's outline the derivation of soundness of one-shot classification.
     then 
       oneShot pool (Chan path$_c$ n$_c$)
 \end{lstlisting}
-
-The following diagram illustrates some of key dependencies of theorems and lemmas in
-used in the derivations.
-
-(** TODO diagram for cml-proof-high.pdf **)
 
 The theorem for soundness of one-shot classification depends on
 correlating dynamic paths with static paths.
