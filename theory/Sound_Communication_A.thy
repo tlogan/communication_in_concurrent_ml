@@ -1211,7 +1211,7 @@ proof -
         L1H6: "\<forall> \<E>m Hm . (\<E>m, Hm) = y \<longrightarrow> (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<longrightarrow> static_traversable_pool V F \<E>m"
         using L1H1 L1H2 L1H4 step.IH by blast
 
-      have L1H7: "\<exists> \<E>m Hm . (\<E>m, Hm) = y \<and> (V, C) \<Turnstile>\<^sub>\<E> \<E>m " 
+      have L1H7: "\<exists> \<E>m Hm . (\<E>m, Hm) = y \<and> (V, C) \<Turnstile>\<^sub>\<E> \<E>m "
         by (metis L1H1 L1H4 eq_fst_iff star_left_implies_star static_eval_preserved_under_concur_step_star step.hyps(1))
 
       have L1H8: "static_traversable_pool V F \<E>'"
