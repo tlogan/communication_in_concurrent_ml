@@ -96,8 +96,8 @@
 For this master's thesis, I have developed a formal semantics of
 a concurrent language, an initial formal analysis, along with related theorems and formal 
 proofs. The language under analysis is
-a very simplified version of \textit{Concurrent ML} \cite{concurrent_ml}. The formal analysis
-recasts an analysis with informal proofs developed by Reppy and Xiao \cite{specialization}. It
+a very simplified version of \textit{Concurrent ML} \cite{reppy2007concurrent}. The formal analysis
+recasts an analysis with informal proofs developed by Reppy and Xiao \cite{reppy2007specialization}. It
 categorizes communication described by programs into simple topologies. One description of
 topologies is static; that is, it describes topologies in terms of the finite structure of
 programs.  Another description is dynamic; that is, it describes topologies in terms of running
@@ -107,7 +107,7 @@ have been developed so far; one with lower precision, and one with higher precis
 precision analysis is closer to the work by Reppy and Xiao, but contains many more details making
 it more challenging to prove formally than the lower precision analysis.
 The proofs for the soundness theorems of the lower precision analysis
-have been mechanically verified using Isabelle \cite{isabelle}, while the higher precision
+have been mechanically verified using Isabelle \cite{nipkow2002isabelle}, while the higher precision
 analysis is currently under development. Indeed, one of the motivations for implementing the analysis 
 in a mechanical setting is to enable gradual extension of analysis and language without introducing
 uncaught bugs in the definitions or proofs. The definitions used in this formal theory differ
@@ -116,9 +116,9 @@ Reppy and Xiao's work was far more nuanced than a straightforward
 syntactic transliteration.
 Although the definitions are structurally quite different,
 their philosophical equivalence is hopefully apparent. 
-In this formal theory, the dynamic semantics of Concurrent ML is
-an instance of a CEK machine. The static semantics is an instance of 0CFA
-\cite{0cfa}, defined in terms of constraints \cite{program_analysis}.
+In this formal theory, the dynamic semantics of Concurrent ML consists of 
+a CEK machine \cite{felleisen1986control}. The static semantics is consists of a 0CFA control-flow analysis
+\cite{shivers1991control}, defined in terms of constraints \cite{nielson2015principles}.
 
 \section{Concurrent Language}
 In programing languages, concurrency is a program structuring technique that allows evaluation
@@ -139,8 +139,7 @@ evaluation orders relative to code encapsulated in other threads. Its synchroniz
 mechanism can mandate the execution order between parts of separate threads. It is often the
 case that synchronization is necessary when data is shared. Thus, in \textit{Concurrent ML},
 synchronization is inherent in communication. Additional threads can be spawned
-in order to share data asynchronously, which can provide better usability or performance under
-some circumstances \cite{}.
+in order to share data asynchronously.
 
 Threads communicate by having shared access to a common channel. A channel can be used to
 either send data or receive data.  When a thread sends on a channel, another thread must
@@ -160,7 +159,7 @@ can continue.
 
 A given channel can have any arbitrary number of threads sending or receiving data on it over
 the course of the program's execution. A simple example, derived from Reppy's book
-\textit{Concurrent Programing in ML} \cite{concurrent_ml}, illustrates these essential
+\textit{Concurrent Programing in ML}, illustrates these essential
 features.
 
 The implementation of \lstinline{Serv} defines a server that holds a number in its state.
@@ -245,7 +244,7 @@ constituent events, such that when sycnronized on, exactly one of the two events
 effect. There are many other useful combinators, such as the \lstinline{wrap} and
 \lstinline{guard} combinators designed by Reppy[8]. Additionally, Donnelly and Fluet extended
 \textit{Concurrent ML} with the \lstinline{thenEvt} combinator described in their work on
-transactional events \cite{transactional_events}. Transactional events enable more robust
+transactional events \cite{donnelly2008transactional}. Transactional events enable more robust
 structuring of programs by allowing non-isolated code to be turned into isolated code via
 the \lstinline{thenEvt} combinator, rather than duplicating code with the addition of stronger
 isolation. When the event constructed by the \lstinline{thenEvt} combinator is is synchronized
@@ -267,7 +266,7 @@ progress at a time, only one thread requests synchronization at a time, meaning 
 won't waste steps checking for threads competing for the same synchronization opportunity,
 before dispatching. A multiprocessor implementation, on the other hand, must consider that
 competing threads may exists, therefore perform additional checks. Additionally, there may be 
-overhead in sharing data between processors due to memory hierarchy designs \cite{}. 
+overhead in sharing data between processors due to memory hierarchy designs \cite{hennessy2011computer}. 
 
 One way to lower synchronization and communication costs is to use specialized implementations
 for channels that never have more than one thread ever sending or receiving on them. These
@@ -349,7 +348,7 @@ for optimization.
 
 In a language with low-level support for concurrency,
 Concurrent ML could be implemented as a library,
-which is the case for SML/NJ \cite{} and MLton \cite{}.
+which is the case for SML/NJ \cite{smlnj} and MLton \cite{mlton}.
 It could also be implemented by a compiler and runtime or interpreter.
 Thus, the implementations shown here can be viewed either as a library or as an intermediate
 representation within a compiler or interpreter presented with concrete syntax.
@@ -930,7 +929,7 @@ However, the formal logic used
 for presentation in this paper has been somewhat modified from Isabelle's syntax. 
 To aid the development of formal proofs,
 the analyses are stated using relational specifications.
-The definitions of static relations are syntax-directed \cite{}, which provides
+The definitions of static relations are syntax-directed, which provides
 strong evidence of computability.
 For a static relation, the proof that it holds for a program is defined
 to depend on the syntactic form of the program.
@@ -984,7 +983,7 @@ sequence forms a control path. Distinction between threads in a program can be i
 whether or not their control paths diverge.  
 
 The algorithm proceeds in multiple steps that produce intermediate data structures, used for
-efficient lookup in the subsequent steps.  It starts with a control-flow analysis \cite{} that
+efficient lookup in the subsequent steps.  It starts with a control-flow analysis that
 results in multiple mappings. One mapping is from names to abstract values that may be bound to
 the names. Another mapping is from channel-bound names to abstract values that are
 sent on the respective channels. Another is from function-bound names to abstract values
@@ -1028,7 +1027,7 @@ application, left and right construction with pattern matching, pair constructio
 and second selections, sending and receiving event construction with synchronization,
 channel creation, thread spawning, and the unit literal. The syntax is defined in a way to
 make it possible to relate the dynamic semantics of programs to the syntax programs.
-The syntax is defined in administrative normal form (ANF) \cite{}, in which every term
+The syntax is defined in administrative normal form (ANF) \cite{flanagan1993essence}, in which every term
 is bound to a name. Furthermore, terms only accept names in place of eagerly evaluated
 inputs. 
 
@@ -1046,8 +1045,7 @@ the analysis can simply use the required names of ANF syntax to identify locatio
 The ANF syntax is impractical for a programer to write,
 yet it is still practical for a language under automated analysis
 since there is a straightforward procedure to transform
-more user-friendly syntax into ANF as demonstrated by Flanagan et al \cite{}.
-
+more user-friendly syntax into ANF.
 
 \begin{lstlisting}[language=logic]
   datatype name = Nm string
@@ -1091,7 +1089,7 @@ In order to relate the static analyses to the operational semantics, I
 borrowed Reppy and Xiao's strategy of stepping between sets of execution paths and
 their associated terms.
 
-The semantics are defined as a CEK machine \cite{}, rather than a
+The semantics are defined as a CEK machine, rather than a
 substitution based operational semantics. By avoiding simplification of terms in the
 operational semantics, it is possible to relate
 the abstract evaluations of the static semantics to the
@@ -4079,6 +4077,27 @@ that correlates with the dynamic path is much more challenging.
 
   
 
+
+
+\section{Related Work}
+There has been much research on both dynamic and static analysis of concurrent languages.  
+The formal communication classification analysis and soundness proofs in this work are
+based on the analysis and proofs of \textit{Specialization of CML message-passing primitives}
+by Reppy and Xiao \cite{reppy2007specialization}.
+The mechanization of concurrency analyses is prevalent and typically the main
+goal when developing the analyses. Examples include type checkers in compilers and
+model checking tools for concurrent models, such as Lustre \cite{halbwachs1991synchronous} and Kind \cite{kind},
+and also verification libraries in proof assistants, such as Affeldt et al's Coq library \cite{affeldt2008coq}.
+These systems can verify certain properties of concurrent programs or models, but they don't
+make any guarantees about the analysis itself.
+Rather than focus on mechanizing the analysis, this work has focused on
+mechanizing the theory of analyses for concurrent languages, i.e. the meta-theory of concurrency.
+There have been a number of works on the meta-theory of Concurrent ML,
+such as the work of Reppy and Xiao's work, Nielson et al \cite{nielson1994higher}, and Kobayashi et al \cite{kobayashi1995static}.
+There has been less work to mechanize theories of Concurrent ML; however,
+there has been much work in the mechanization of the theories of $\pi$-calculus
+\cite{milner1999communicating}, such as the work by Gay \cite{gay2001framework} and Melham \cite{melham1994mechanized}. 
+
 \section{Future Work}
 The formal syntax, semantics, and communication analysis of this work form the basis of
 a framework for studying concurrency functions, synchronization mechanisms, and their
@@ -4093,27 +4112,24 @@ extensions or optimizations. Extending the semantics to handle event combinators
 between events, sequencencing events, guardining events, among others, would be an important
 next step.
 
-Concurreny is a double edged sword.  Without specification of ordering, programs may
+Concurreny is a double edged sword. Without specification of ordering, programs may
 desribe their behavior more clearly or allow parallelism for faster execution. On the other hand,
 unspecified orderings may also lead to nondetermistic behavior, which may be not be wanted. 
 To gain the benefits of concurrency without its hinderance, the language could be extended
-with syntax to idenfigy blocks of code that are required to be deterministic,
+with syntax to identify blocks of code that are required to be deterministic,
 along with a corresponding static analysis that checks if such code is actually
-deterministic \cite[]. The determinism analysis could rely on the static communication analysis
+deterministic. The determinism analysis could rely on the static communication analysis
 to ensure that all syncronized receiving events receive from at most one channel,
-that channel is sent on by at most one thread,
-and that thread is also deterministic.
+that channel is sent on by at most one thread, and that thread is also deterministic.
 
 Other analyses could aid optimizations for incremental computation
-\cite[].  One optimzation could transform a program into one that checks for altered dependencies and
-only recomputes the data that depends on altered dependencies.
+\cite{acar2009self}.  One possible optimzation could transform a program into one
+that checks for altered dependencies and only recomputes the data that depends on altered dependencies.
 
+\section{References}
 
-(** TODO: related work **)
+\bibliography{refs}
+\bibliographystyle{plain}
 
-\section{Related Work}
-
-
-(** TODO: bibliography **)
 
 \end{document}

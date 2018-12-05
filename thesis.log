@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  4 DEC 2018 08:55
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  4 DEC 2018 23:54
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -719,7 +719,7 @@ Package: varwidth 2009/03/30 ver 0.92;  Variable-width minipages
 \@vwid@loff=\dimen126
 \@vwid@roff=\dimen127
 ))
-(./thesis.aux)
+No file thesis.aux.
 \openout1 = `thesis.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 86.
@@ -736,7 +736,7 @@ LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 86.
 LaTeX Font Info:    ... okay on input line 86.
 LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 86.
 LaTeX Font Info:    Try loading font information for TS1+cmr on input line 86.
- (/usr/local/texlive/2016/texmf-dist/tex/latex/base/ts1cmr.fd
+(/usr/local/texlive/2016/texmf-dist/tex/latex/base/ts1cmr.fd
 File: ts1cmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    ... okay on input line 86.
@@ -835,21 +835,28 @@ LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
 (Font)              scaled to size 10.0pt on input line 99.
 
 
-LaTeX Warning: Citation `concurrent_ml' on page 1 undefined on input line 99.
+LaTeX Warning: Citation `reppy2007concurrent' on page 1 undefined on input line
+ 99.
 
 
-LaTeX Warning: Citation `specialization' on page 1 undefined on input line 100.
+LaTeX Warning: Citation `reppy2007specialization' on page 1 undefined on input 
+line 100.
 
 
-
-LaTeX Warning: Citation `isabelle' on page 1 undefined on input line 110.
-
-
-LaTeX Warning: Citation `0cfa' on page 1 undefined on input line 121.
+LaTeX Warning: Citation `nipkow2002isabelle' on page 1 undefined on input line 
+110.
 
 
-LaTeX Warning: Citation `program_analysis' on page 1 undefined on input line 12
-1.
+LaTeX Warning: Citation `felleisen1986control' on page 1 undefined on input lin
+e 120.
+
+
+LaTeX Warning: Citation `shivers1991control' on page 1 undefined on input line 
+121.
+
+
+LaTeX Warning: Citation `nielson2015principles' on page 1 undefined on input li
+ne 121.
 
 [1] (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2015/06/04 1.6 listings language file
@@ -857,48 +864,60 @@ File: lstlang1.sty 2015/06/04 1.6 listings language file
 (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/lstlang2.sty
 File: lstlang2.sty 2015/06/04 1.6 listings language file
 )
-LaTeX Font Info:    Try loading font information for T1+fvm on input line 151.
+LaTeX Font Info:    Try loading font information for T1+fvm on input line 150.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/bera/t1fvm.fd
 File: t1fvm.fd 2004/09/07 scalable font definitions for T1/fvm.
 )
 LaTeX Font Info:    Font shape `T1/fvm/m/n' will be
-(Font)              scaled to size 8.50006pt on input line 151.
+(Font)              scaled to size 8.50006pt on input line 150.
 LaTeX Font Info:    Font shape `T1/fvm/m/n' will be
-(Font)              scaled to size 7.65005pt on input line 151.
+(Font)              scaled to size 7.65005pt on input line 150.
 LaTeX Font Info:    Font shape `T1/fvm/bx/n' in size <9> not available
-(Font)              Font shape `T1/fvm/b/n' tried instead on input line 152.
+(Font)              Font shape `T1/fvm/b/n' tried instead on input line 151.
 LaTeX Font Info:    Font shape `T1/fvm/b/n' will be
-(Font)              scaled to size 7.65005pt on input line 152.
-
-
-LaTeX Warning: Citation `concurrent_ml' on page 2 undefined on input line 163.
-
+(Font)              scaled to size 7.65005pt on input line 151.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
 (Font)              scaled to size 9.0pt on input line 199.
-[2]
+ [2]
 
-LaTeX Warning: Citation `transactional_events' on page 3 undefined on input lin
-e 248.
+LaTeX Warning: Citation `donnelly2008transactional' on page 3 undefined on inpu
+t line 247.
 
-[3] [4] [5]
+[3]
+
+LaTeX Warning: Citation `hennessy2011computer' on page 4 undefined on input lin
+e 269.
+
+[4]
+
+LaTeX Warning: Citation `smlnj' on page 5 undefined on input line 351.
+
+
+LaTeX Warning: Citation `mlton' on page 5 undefined on input line 351.
+
+[5]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 12.0pt on input line 385.
+(Font)              scaled to size 12.0pt on input line 384.
  [6] [7] [8] [9]
 LaTeX Font Info:    Font shape `T1/fvm/m/it' in size <9> not available
-(Font)              Font shape `T1/fvm/m/sl' tried instead on input line 579.
+(Font)              Font shape `T1/fvm/m/sl' tried instead on input line 578.
 LaTeX Font Info:    Font shape `T1/fvm/m/sl' will be
-(Font)              scaled to size 7.65005pt on input line 579.
- [10] [11] [12] [13] [14] [15] [16] [17] [18]
-[19] [20] [21] [22] [23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33]
-[34] [35] [36] [37] [38] [39]
+(Font)              scaled to size 7.65005pt on input line 578.
+ [10] [11] [12] [13] [14] [15] [16] [17]
+
+LaTeX Warning: Citation `flanagan1993essence' on page 18 undefined on input lin
+e 1030.
+
+[18] [19] [20] [21] [22] [23] [24] [25] [26] [27] [28] [29] [30] [31] [32]
+[33] [34] [35] [36] [37] [38] [39]
 <cml-graph.pdf, id=139, 1494.58376pt x 1964.33875pt>
 File: cml-graph.pdf Graphic file (type pdf)
  <use cml-graph.pdf>
-Package pdftex.def Info: cml-graph.pdf used on input line 2150.
+Package pdftex.def Info: cml-graph.pdf used on input line 2148.
 (pdftex.def)             Requested size: 345.0pt x 453.43695pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 2150--2151
+Overfull \hbox (15.0pt too wide) in paragraph at lines 2148--2149
 [][] 
  []
 
@@ -906,21 +925,21 @@ Overfull \hbox (15.0pt too wide) in paragraph at lines 2150--2151
 <cml-proof-low.pdf, id=185, 791.95876pt x 576.1525pt>
 File: cml-proof-low.pdf Graphic file (type pdf)
  <use cml-proof-low.pdf>
-Package pdftex.def Info: cml-proof-low.pdf used on input line 2483.
+Package pdftex.def Info: cml-proof-low.pdf used on input line 2481.
 (pdftex.def)             Requested size: 345.0pt x 250.99355pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 2483--2484
+Overfull \hbox (15.0pt too wide) in paragraph at lines 2481--2482
 [][] 
  []
 
 [46] [47 <./cml-proof-low.pdf>] [48] [49] [50] [51] [52] [53]
-Overfull \hbox (15.66226pt too wide) in paragraph at lines 2872--2878
+Overfull \hbox (15.66226pt too wide) in paragraph at lines 2870--2876
 []\T1/LinuxLibertineT-TLF/m/n/10 The lemma for com-plete-ness of send-ing iden-
 ti-fier clas-si-fi-ca-tion []
  []
 
 [54] [55] [56] [57]
-Overfull \hbox (0.12337pt too wide) in paragraph at lines 3059--3064
+Overfull \hbox (0.12337pt too wide) in paragraph at lines 3057--3062
 []\T1/LinuxLibertineT-TLF/m/n/10 The com-plete-ness over pools fol-lows from th
 e lemma that the for-ward static reach-
  []
@@ -929,10 +948,10 @@ e lemma that the for-ward static reach-
 <cml-graph-lp.pdf, id=254, 1729.46124pt x 1925.1925pt>
 File: cml-graph-lp.pdf Graphic file (type pdf)
  <use cml-graph-lp.pdf>
-Package pdftex.def Info: cml-graph-lp.pdf used on input line 3337.
+Package pdftex.def Info: cml-graph-lp.pdf used on input line 3335.
 (pdftex.def)             Requested size: 345.0pt x 384.0329pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 3337--3338
+Overfull \hbox (15.0pt too wide) in paragraph at lines 3335--3336
 [][] 
  []
 
@@ -941,10 +960,10 @@ Overfull \hbox (15.0pt too wide) in paragraph at lines 3337--3338
 File: cml-liveness-analysis-k1.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k1.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3475.
+Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3473.
 (pdftex.def)             Requested size: 345.0pt x 380.19232pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 3475--3476
+Overfull \hbox (15.0pt too wide) in paragraph at lines 3473--3474
 [][] 
  []
 
@@ -953,10 +972,10 @@ Overfull \hbox (15.0pt too wide) in paragraph at lines 3475--3476
 File: cml-liveness-analysis-k4.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k4.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3484.
+Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3482.
 (pdftex.def)             Requested size: 345.0pt x 376.56816pt.
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 3484--3485
+Overfull \hbox (15.0pt too wide) in paragraph at lines 3482--3483
 [][] 
  []
 
@@ -964,23 +983,56 @@ Overfull \hbox (15.0pt too wide) in paragraph at lines 3484--3485
 <cml-graph-k1.pdf, id=326, 1559.8275pt x 1677.26625pt>
 File: cml-graph-k1.pdf Graphic file (type pdf)
  <use cml-graph-k1.pdf>
-Package pdftex.def Info: cml-graph-k1.pdf used on input line 3713.
+Package pdftex.def Info: cml-graph-k1.pdf used on input line 3711.
 (pdftex.def)             Requested size: 310.4979pt x 333.86053pt.
 
 [75 <./cml-graph-k1.pdf>]
 <cml-graph-k4.pdf, id=355, 1090.0725pt x 954.56625pt>
 File: cml-graph-k4.pdf Graphic file (type pdf)
  <use cml-graph-k4.pdf>
-Package pdftex.def Info: cml-graph-k4.pdf used on input line 3720.
+Package pdftex.def Info: cml-graph-k4.pdf used on input line 3718.
 (pdftex.def)             Requested size: 241.49895pt x 211.47633pt.
 
 [76 <./cml-graph-k4.pdf>] [77] [78] [79] [80] [81] [82]
 
-LaTeX Warning: Citation `.' on page 83 undefined on input line 4102.
+LaTeX Warning: Citation `reppy2007specialization' on page 83 undefined on input
+ line 4086.
+
+
+LaTeX Warning: Citation `halbwachs1991synchronous' on page 83 undefined on inpu
+t line 4089.
+
+
+LaTeX Warning: Citation `kind' on page 83 undefined on input line 4089.
+
+
+LaTeX Warning: Citation `affeldt2008coq' on page 83 undefined on input line 409
+0.
+
+
+LaTeX Warning: Citation `nielson1994higher' on page 83 undefined on input line 
+4096.
+
+
+LaTeX Warning: Citation `kobayashi1995static' on page 83 undefined on input lin
+e 4096.
+
+
+LaTeX Warning: Citation `milner1999communicating' on page 83 undefined on input
+ line 4099.
+
+
+LaTeX Warning: Citation `gay2001framework' on page 83 undefined on input line 4
+099.
+
+
+LaTeX Warning: Citation `melham1994mechanized' on page 83 undefined on input li
+ne 4099.
 
 [83]
 
-LaTeX Warning: Citation `.' on page 84 undefined on input line 4108.
+LaTeX Warning: Citation `acar2009self' on page 84 undefined on input line 4126.
+
 
 [84] (./thesis.aux)
 
@@ -988,11 +1040,11 @@ LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 7302 strings out of 493014
- 105903 string characters out of 6133351
- 397141 words of memory out of 5000000
- 10672 multiletter control sequences out of 15000+600000
- 60119 words of font info for 65 fonts, out of 8000000 for 9000
+ 7318 strings out of 493014
+ 106233 string characters out of 6133351
+ 397116 words of memory out of 5000000
+ 10690 multiletter control sequences out of 15000+600000
+ 61173 words of font info for 70 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  38i,6n,74p,232b,1712s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/base/8r.enc}{/usr/local/t
@@ -1002,17 +1054,18 @@ live/2016/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc}</usr/local/texl
 ive/2016/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/
 texlive/2016/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/l
 ocal/texlive/2016/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></
-usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></us
-r/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></usr/
-local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb></usr/lo
-cal/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texl
-ive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016
-/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-
-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (85 pages, 693788 bytes).
+usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></u
+sr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr
+/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></usr/l
+ocal/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb></usr/loc
+al/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texli
+ve/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016/
+texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-d
+ist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on thesis.pdf (85 pages, 704161 bytes).
 PDF statistics:
- 451 PDF objects out of 1000 (max. 8388607)
- 317 compressed objects within 4 object streams
+ 455 PDF objects out of 1000 (max. 8388607)
+ 320 compressed objects within 4 object streams
  0 named destinations out of 1000 (max. 500000)
  36 words of extra memory for PDF output out of 10000 (max. 10000000)
 
