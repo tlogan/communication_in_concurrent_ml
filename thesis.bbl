@@ -1,16 +1,20 @@
 \begin{thebibliography}{10}
 
-\bibitem{acar2009self}
-Umut~A Acar.
-\newblock Self-adjusting computation:(an overview).
-\newblock In {\em Proceedings of the 2009 ACM SIGPLAN workshop on Partial
-  evaluation and program manipulation}, pages 1--6. ACM, 2009.
+\bibitem{acar2002adaptive}
+Umut~A Acar, Guy~E Blelloch, and Robert Harper.
+\newblock {\em Adaptive functional programming}, volume~37.
+\newblock ACM, 2002.
 
 \bibitem{affeldt2008coq}
 Reynald Affeldt and Naoki Kobayashi.
 \newblock A coq library for verification of concurrent programs.
 \newblock {\em Electronic Notes in Theoretical Computer Science}, 199:17--32,
   2008.
+
+\bibitem{smlnj}
+Andrew Appel and John Reppy.
+\newblock Sml/nj.
+\newblock Accessed: 2018-12-04.
 
 \bibitem{donnelly2008transactional}
 Kevin Donnelly and Matthew Fluet.
@@ -27,10 +31,10 @@ Cormac Flanagan, Amr Sabry, Bruce~F Duba, and Matthias Felleisen.
 \newblock The essence of compiling with continuations.
 \newblock In {\em ACM Sigplan Notices}, volume~28, pages 237--247. ACM, 1993.
 
-\bibitem{mlton}
-Matthew Fluet.
-\newblock Mlton.
-\newblock Accessed: 2018-12-04.
+\bibitem{gasser1997systematic}
+Kirsten L~Solberg Gasser, Flemming Nielson, and Hanne~Riis Nielson.
+\newblock Systematic realisation of control flow analyses for cml.
+\newblock In {\em ACM SIGPLAN Notices}, volume~32, pages 38--51. ACM, 1997.
 
 \bibitem{gay2001framework}
 Simon~J Gay.
@@ -83,11 +87,6 @@ Tobias Nipkow, Lawrence~C Paulson, and Markus Wenzel.
   2283.
 \newblock Springer Science \& Business Media, 2002.
 
-\bibitem{smlnj}
-John Reppy and Andrew Appel.
-\newblock Sml/nj.
-\newblock Accessed: 2018-12-04.
-
 \bibitem{reppy2007specialization}
 John Reppy and Yingqi Xiao.
 \newblock Specialization of cml message-passing primitives.
@@ -106,6 +105,11 @@ Olin Shivers.
 \bibitem{kind}
 Cesare Tinelli.
 \newblock Kind.
+\newblock Accessed: 2018-12-04.
+
+\bibitem{mlton}
+Stephen Weeks, Matthew Fluet, Henry Cejtin, and Suresh Jagannathan.
+\newblock Mlton.
 \newblock Accessed: 2018-12-04.
 
 \end{thebibliography}

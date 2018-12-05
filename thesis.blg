@@ -3,44 +3,47 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: thesis.aux
 The style file: plain.bst
 Database file #1: refs.bib
-You've used 20 entries,
+Warning--can't use both volume and number fields in acar2002adaptive
+Warning--can't use both volume and number fields in gasser1997systematic
+You've used 21 entries,
             2118 wiz_defined-function locations,
-            608 strings with 6634 characters,
-and the built_in function-call counts, 6432 in all, are:
-= -- 647
-> -- 247
-< -- 9
-+ -- 103
-- -- 78
-* -- 367
-:= -- 1028
-add.period$ -- 66
-call.type$ -- 20
-change.case$ -- 92
+            613 strings with 6791 characters,
+and the built_in function-call counts, 6949 in all, are:
+= -- 690
+> -- 292
+< -- 11
++ -- 120
+- -- 94
+* -- 420
+:= -- 1113
+add.period$ -- 69
+call.type$ -- 21
+change.case$ -- 102
 chr.to.int$ -- 0
-cite$ -- 20
-duplicate$ -- 278
-empty$ -- 555
-format.name$ -- 78
-if$ -- 1405
+cite$ -- 23
+duplicate$ -- 292
+empty$ -- 580
+format.name$ -- 94
+if$ -- 1506
 int.to.chr$ -- 0
-int.to.str$ -- 20
-missing$ -- 22
-newline$ -- 103
-num.names$ -- 40
-pop$ -- 150
+int.to.str$ -- 21
+missing$ -- 24
+newline$ -- 108
+num.names$ -- 42
+pop$ -- 161
 preamble$ -- 1
-purify$ -- 79
+purify$ -- 89
 quote$ -- 0
-skip$ -- 196
+skip$ -- 207
 stack$ -- 0
-substring$ -- 367
-swap$ -- 77
-text.length$ -- 9
+substring$ -- 380
+swap$ -- 84
+text.length$ -- 11
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 68
-warning$ -- 0
-while$ -- 66
-width$ -- 22
-write$ -- 219
+type$ -- 70
+warning$ -- 2
+while$ -- 68
+width$ -- 23
+write$ -- 231
+(There were 2 warnings)
