@@ -2,158 +2,252 @@ theory Dynamic_Semantics
   imports Main Syntax "~~/src/HOL/Library/Sublist" Stars
 begin
 
+datatype control_tm_id =
+  LNxt name
+| LSpwn name
+| LCall name
+| LRtn name
 
-datatype control_label = 
-  LNext var | 
-  LSpawn var |
-  LCall var |
-  LReturn var
+type_synonym control_path = "control_tm_id list"
 
-type_synonym control_path = "control_label list"
+datatype chan = Ch control_path name
 
-datatype chan = Ch control_path var
+datatype val =
+  VUnt
+| VChn chan
+| VClsr atom "name \<Rightarrow> val option"
 
-datatype val = 
-  VUnit |
-  VChan chan |
-  VClosure prim "var \<rightharpoonup> val"
-
-type_synonym val_env = "var \<rightharpoonup> val"
-  
-datatype cont = Cont var exp val_env ("\<langle>_,_,_\<rangle>" [0, 0, 0] 70) 
-
-datatype state = State exp val_env "cont list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71) 
+type_synonym env = "name \<Rightarrow> val option"
 
 
-inductive seq_step :: "state \<Rightarrow> state \<Rightarrow> bool" (infix "\<hookrightarrow>" 55) where 
-  Result: "
-    \<rho> x = Some \<omega> \<Longrightarrow>
-    \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>]; \<kappa>\<rangle>
-  " |
-  Let_Unit: "
-    \<langle>LET x = \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e; \<rho> ++ [x \<mapsto> VUnit]; \<kappa>\<rangle>
-  " |
-  Let_Prim: "
-    \<langle>LET x = Prim p in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e; \<rho> ++ [x \<mapsto> (VClosure p \<rho>)]; \<kappa>\<rangle>
-  " |
-  Let_Fst: "
-    \<lbrakk> 
-      \<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p); 
-      \<rho>\<^sub>p x\<^sub>1 = Some \<omega> 
-    \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = FST x\<^sub>p in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e; \<rho> ++ [x \<mapsto> \<omega>]; \<kappa>\<rangle>
-  " |
-  Let_Snd: "
-    \<lbrakk> 
-      \<rho> x\<^sub>p = Some (VClosure (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p); 
-      \<rho>\<^sub>p x\<^sub>2 = Some \<omega> 
-    \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = SND x\<^sub>p in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e; \<rho> ++ [x \<mapsto> \<omega>]; \<kappa>\<rangle>
-  " |
-  Let_Case_Left: "
-    \<lbrakk> 
-      \<rho> x\<^sub>s = Some (VClosure (Left x\<^sub>l') \<rho>\<^sub>l); 
-      \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l
-    \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> 
-    \<langle>e\<^sub>l; \<rho> ++ [x\<^sub>l \<mapsto> \<omega>\<^sub>l]; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
-  " |
-  Let_Case_Right: "
+inductive seqEval :: "complex \<Rightarrow> env \<Rightarrow> val \<Rightarrow> bool" where
+  UNIT:
+  "
+    seqEval Unt env VUnt
+  "
+| PRIM:
+  "
+    seqEval (Atom p) env (VClsr p env)
+  "
+| FST:
+  "
+    env xp = Some (VClsr (Pair x1 x2) envp) \<Longrightarrow>
+    envp x1 = Some v \<Longrightarrow>
+    seqEval (Fst xp) env v
+  "
+| SND:
+  "
+    env xp = Some (VClsr (Pair x1 x2) envp) \<Longrightarrow>
+    envp x2 = Some v \<Longrightarrow>
+    seqEval (Snd xp) env v"
+
+
+inductive callEval :: "complex * env \<Rightarrow> tm * env \<Rightarrow> bool" where
+  CaseLft:
+  "
     \<lbrakk>
-      \<rho> x\<^sub>s = Some (VClosure (Right x\<^sub>r') \<rho>\<^sub>r); 
-      \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r
+      env xs = Some (VClsr (Lft xl') envl);
+      envl xl' = Some vl
     \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> 
-    \<langle>e\<^sub>r; \<rho> ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>r]; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
-  " |
-  Let_App: "
+    callEval (Case xs xl el xr er, env) (el, env(xl \<mapsto> vl))
+  "
+| CaseRht:
+  "
     \<lbrakk>
-      \<rho> f = Some (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l); 
-      \<rho> x\<^sub>a = Some \<omega>\<^sub>a 
+      env xs = Some (VClsr (Rht xr') envr);
+      envr xr' = Some vr
     \<rbrakk> \<Longrightarrow>
-    \<langle>LET x = APP f x\<^sub>a in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> 
-    \<langle>e\<^sub>l; \<rho>\<^sub>l ++ [f\<^sub>l \<mapsto> (VClosure (Abs f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l), x\<^sub>l \<mapsto> \<omega>\<^sub>a]; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
+    callEval (Case xs xl el xr er, env) (er, env(xr \<mapsto> vr))
+  "
+| App:
+  "
+    \<lbrakk>
+      env f = Some (VClsr (Fun fp xp el) envl);
+      env xa = Some va
+    \<rbrakk> \<Longrightarrow>
+    callEval (App f xa, env) (el, envl(fp \<mapsto> (VClsr (Fun fp xp el) envl), xp \<mapsto> va))
   "
 
 
+
+ 
+datatype contin = Ctn name tm env
+
+datatype state = State tm env "contin list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71)
 
 type_synonym trace_pool = "control_path \<rightharpoonup> state"
 
-definition leaf :: "trace_pool \<Rightarrow> control_path \<Rightarrow> bool" where
-  "leaf \<E> \<pi> \<equiv> \<not>(\<E> \<pi> = None) \<and> (\<nexists> \<pi>' . \<not>(\<E> \<pi>' = None) \<and> strict_prefix \<pi> \<pi>')"
+inductive leaf :: "trace_pool \<Rightarrow> control_path \<Rightarrow> bool" where
+  Intro:
+  "
+    \<not>(pool pi = None) \<Longrightarrow>
+    (\<nexists> pi' . \<not>(pool pi' = None) \<and> strict_prefix pi pi') \<Longrightarrow>
+    leaf pool pi"
 
+type_synonym cmmn_set = "(control_path * chan * control_path) set"
 
-abbreviation control_path_append :: "control_path => control_label => control_path" (infixl ";;" 61) where
-  "\<pi>;;lab \<equiv> \<pi> @ [lab]"
-
-
-inductive concur_step :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<rightarrow>" 55) where 
-  Seq_Step_Down: "
-    \<lbrakk> 
-      leaf \<E> \<pi>;
-      \<E> \<pi> = Some (\<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>) ;
-      \<langle>RESULT x; \<rho>; \<langle>x\<^sub>\<kappa>, e\<^sub>\<kappa>, \<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>'
-    \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LReturn x\<^sub>\<kappa>) \<mapsto> \<sigma>']
-  " |
-  Seq_Step: "
-    \<lbrakk> 
-      leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
-      \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<kappa>\<rangle>
-    \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LNext x) \<mapsto> \<langle>e'; \<rho>'; \<kappa>\<rangle>]
-  " |
-  Seq_Step_Up: "
-    \<lbrakk> 
-      leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = b in e; \<rho>; \<kappa>\<rangle>) ;
-      \<langle>LET x = b in e; \<rho>; \<kappa>\<rangle> \<hookrightarrow> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>
-    \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [\<pi>;;(LCall x) \<mapsto> \<langle>e'; \<rho>'; \<langle>x, e, \<rho>\<rangle> # \<kappa>\<rangle>]
-  " |
-  Let_Chan: "
-    \<lbrakk> 
-      leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e; \<rho>; \<kappa>\<rangle>)
-    \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [
-      \<pi>;;(LNext x) \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> (VChan (Ch \<pi> x))]; \<kappa>\<rangle>)
-    ]
-  " |
-  Let_Spawn: "
-    \<lbrakk> 
-      leaf \<E> \<pi> ;
-      \<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e; \<rho>; \<kappa>\<rangle>)
-    \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [
-      \<pi>;;(LNext x) \<mapsto> (\<langle>e; \<rho> ++ [x \<mapsto> VUnit]; \<kappa>\<rangle>), 
-      \<pi>;;(LSpawn x) \<mapsto> (\<langle>e\<^sub>c; \<rho>; []\<rangle>) 
-    ]
-  " |
-  Let_Sync: "
+inductive dynamicEval :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_set \<Rightarrow> bool" (infix "\<rightarrow>" 55) where
+  Seq_Step_Down:
+  "
     \<lbrakk>
-   
-      leaf \<E> \<pi>\<^sub>s ;
-      \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>);
-      \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClosure (Send_Evt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e);
+      leaf pool pi;
+      pool pi = Some (\<langle>Rslt x; env; (Ctn xk ek envk) # k\<rangle>) ;
+      env x = Some v
+    \<rbrakk> \<Longrightarrow>
+    (pool, ys) \<rightarrow> (pool(pi @ [LRtn x] \<mapsto> \<langle>ek; envk(xk \<mapsto> v); k\<rangle>), ys)
+  "
+| Seq_Step:
+  "
+    \<lbrakk>
+      leaf pool pi ;
+      pool pi = Some (\<langle>(Bind x b e); env; k\<rangle>) ;
+      seqEval b env v
+    \<rbrakk> \<Longrightarrow>
+    (pool, ys) \<rightarrow> (pool(pi @ [LNxt x] \<mapsto> \<langle>e; env(x \<mapsto> v); k\<rangle>), ys)
+  "
+| Seq_Step_Up:
+  "
+    \<lbrakk>
+      leaf pool pi ;
+      pool pi = Some (\<langle>(Bind x b e); env; k\<rangle>) ;
+      callEval (b, env) (e', env')
+    \<rbrakk> \<Longrightarrow>
+    (pool, ys) \<rightarrow> (pool(pi @ [LCall x] \<mapsto> \<langle>e'; env'; (Ctn x e env) # k\<rangle>), ys)
+  "
+| BindMkChn:
+  "
+    \<lbrakk>
+      leaf pool pi ;
+      pool pi = Some (\<langle>(Bind x MkChn e); env; k\<rangle>)
+    \<rbrakk> \<Longrightarrow>
+    (pool, ys) \<rightarrow> (pool(
+      pi @ [LNxt x] \<mapsto> (\<langle>e; env(x \<mapsto> (VChn (Ch pi x))); k\<rangle>)), ys)
+  "
+| BindSpawn:
+  "
+    \<lbrakk>
+      leaf pool pi ;
+      pool pi = Some (\<langle>Bind x (Spwn ec) e; env; k\<rangle>)
+    \<rbrakk> \<Longrightarrow>
+    (pool, ys) \<rightarrow> (pool(
+      pi @ [LNxt x] \<mapsto> (\<langle>e; env(x \<mapsto> VUnt); k\<rangle>),
+      pi @ [LSpwn x] \<mapsto> (\<langle>ec; env; []\<rangle>)), ys)
+  "
+| BindSync:
+  "
+    \<lbrakk>
+  
+      leaf pool pis ;
+      pool pis = Some (\<langle>Bind xs (Sync xse) es; envs; ks\<rangle>);
+      envs xse = Some (VClsr (SendEvt xsc xm) envse);
 
-      leaf \<E> \<pi>\<^sub>r ;
-      \<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>);
-      \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClosure (Recv_Evt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e);
+      leaf pool pir ;
+      pool pir = Some (\<langle>Bind xr (Sync xre) er; envr; kr\<rangle>);
+      envr xre = Some (VClsr (RecvEvt xrc) envre);
 
-      \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChan c); 
-      \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChan c);      
-      \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m 
+      envse xsc = Some (VChn c);
+      envre xrc = Some (VChn c);     
+      envse xm = Some vm
 
     \<rbrakk> \<Longrightarrow>
-    \<E> \<rightarrow> \<E> ++ [
-      \<pi>\<^sub>s;;(LNext x\<^sub>s) \<mapsto> (\<langle>e\<^sub>s; \<rho>\<^sub>s ++ [x\<^sub>s \<mapsto> VUnit]; \<kappa>\<^sub>s\<rangle>), 
-      \<pi>\<^sub>r;;(LNext x\<^sub>r) \<mapsto> (\<langle>e\<^sub>r; \<rho>\<^sub>r ++ [x\<^sub>r \<mapsto> \<omega>\<^sub>m]; \<kappa>\<^sub>r\<rangle>)
-    ]
+    (pool, ys) \<rightarrow> (
+      pool(
+        pis @ [LNxt xs] \<mapsto> (\<langle>es; envs(xs \<mapsto> VUnt); ks\<rangle>),
+        pir @ [LNxt xr] \<mapsto> (\<langle>er; envr(xr \<mapsto> vm); kr\<rangle>)),
+      ys \<union> {(pis, c, pir)})
   "
 
-abbreviation dynamic_eval :: "trace_pool \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<rightarrow>*" 55) where 
-  "\<E> \<rightarrow>* \<E>' \<equiv> star concur_step \<E> \<E>'"
+
+lemma mapping_preserved:
+  assumes
+      H1: "dynamicEval (env, H) (E', H')" 
+  and H2: "env \<pi> = Some \<sigma>"
+
+  shows
+  "
+     E' \<pi> = Some \<sigma>
+  "
+proof -
+
+  show "E' \<pi> = Some \<sigma>"
+  using H1
+  proof cases
+    case (Seq_Step_Down pi x env xk ek envk k v)
+    have "pi @ [LRtn x] \<noteq> \<pi>" using leaf.simps by (metis H2 local.Seq_Step_Down(3) option.simps(3) strict_prefixI')
+    then show ?thesis using H2 local.Seq_Step_Down(1) by auto
+  next
+    case (Seq_Step pi x b e env k v)
+    have "pi @ [LNxt x] \<noteq> \<pi>" using leaf.simps by (metis H2 local.Seq_Step(3) option.simps(3) strict_prefixI')
+    then show ?thesis using H2 local.Seq_Step(1) by auto
+  next
+    case (Seq_Step_Up pi x b e env k e' env')
+    have "pi @ [LCall x] \<noteq> \<pi>" using leaf.simps by (metis H2 local.Seq_Step_Up(3) option.simps(3) strict_prefixI')
+    then show ?thesis using H2 local.Seq_Step_Up(1) by auto
+  next
+    case (BindMkChn pi x e env k)
+    have "pi @ [LNxt x] \<noteq> \<pi>" using leaf.simps by (metis H2 local.BindMkChn(3) option.simps(3) strict_prefixI')
+    then show ?thesis  using H2 local.BindMkChn(1) by auto
+  next
+    case (BindSpawn pi x ec e env k)
+
+      have "pi @ [LNxt x] \<noteq> \<pi> \<and> pi @ [LSpwn x] \<noteq> \<pi>" using leaf.simps by (metis H2 local.BindSpawn(3) option.simps(3) strict_prefixI')
+      then show ?thesis  using H2 local.BindSpawn(1) by auto
+  next
+    case (BindSync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
+      have "pis @ [LNxt xs] \<noteq> \<pi> \<and> pir @ [LNxt xr] \<noteq> \<pi>" using leaf.simps
+      by (metis H2 local.BindSync(3) local.BindSync(6) option.simps(3) strict_prefixI')
+    then show ?thesis using H2 local.BindSync(1) by auto
+  qed
+qed
+
+lemma mapping_preserved_star:
+  assumes
+    H1: "star dynamicEval EH EH'" and
+    H2: "EH = (env, H)" and
+    H3: "EH' = (E', H')" and
+    H4: "env \<pi> = Some \<sigma>"
+
+  shows
+  "
+     E' \<pi> = Some \<sigma>
+  "
+proof -
+ 
+  have H5:
+  "
+    \<forall> env H.
+    EH = (env, H) \<longrightarrow>
+    EH' = (E', H') \<longrightarrow>
+    env \<pi> = Some \<sigma> \<longrightarrow>
+    E' \<pi> = Some \<sigma>
+  "
+  using H1
+  proof induct
+    case (refl x)
+    then show ?case by simp
+  next
+    case (step x y z)
+
+    {
+      fix env H
+      assume
+        L2H1: "x = (env, H)" and
+        L2H2: "z = (E', H')" and
+        L2H3: "env \<pi> = Some \<sigma>"
+
+      obtain Em Hm where L2H4: "y = (Em, Hm)" by (meson surj_pair)
+
+      have L2H5: "dynamicEval (env, H) (Em, Hm)"
+        using L2H1 L2H4 step.hyps(1) by auto
+
+      have "E' \<pi> = Some \<sigma>" using L2H2 L2H3 L2H4 L2H5 mapping_preserved step.hyps(3) by auto
+    }
+    then show ?case by simp
+  qed
+
+  show ?thesis by (simp add: H2 H3 H4 H5)
+   
+qed
+
 
 end

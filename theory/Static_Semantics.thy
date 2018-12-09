@@ -3,143 +3,187 @@ theory Static_Semantics
     "~~/src/HOL/Library/List"
 begin
 
-datatype abstract_value = A_Chan var ("^Chan _" [61] 61) | A_Unit ("^\<lparr>\<rparr>") | A_Prim prim ("^_" [61] 61 )
+datatype static_val = 
+  SChn name ("^Chan _" [61] 61) 
+| SUnt ("^Unt") 
+| SAtm atom ("^_" [61] 61 )
 
-type_synonym abstract_value_env = "var \<Rightarrow> abstract_value set"
+type_synonym static_env = "name \<Rightarrow> static_val set"
 
-fun result_var :: "exp \<Rightarrow> var" ("\<lfloor>_\<rfloor>" [0]61) where
-  "\<lfloor>RESULT x\<rfloor> = x" |
-  "\<lfloor>LET _ = _ in e\<rfloor> = \<lfloor>e\<rfloor>"
+fun resultName :: "tm \<Rightarrow> name" ("\<lfloor>_\<rfloor>" [0]61) where
+  "\<lfloor>Rslt x\<rfloor> = x"
+| "\<lfloor>Bind _ _ e\<rfloor> = \<lfloor>e\<rfloor>"
 
 
-inductive static_eval :: "abstract_value_env \<times> abstract_value_env \<Rightarrow> exp \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>e" 55) where
-  Result: "
-    (\<V>, \<C>) \<Turnstile>\<^sub>e (RESULT x)
-  " |
-  Let_Unit: "
+inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>e" 55) where
+  Result:
+  "
+    staticEval (\<V>, \<C>) (Rslt x)
+  "
+| BindUnit:
+  "
     \<lbrakk>
-      {^\<lparr>\<rparr>} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      {^Unt} \<subseteq> \<V> x;
+      staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>\<rparr> in e
-  " |
-
-  Let_Chan: "
+    staticEval (\<V>, \<C>) (Bind x Unt e)
+  " 
+| BindMkChn:
+  "
     \<lbrakk>
       {^Chan x} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CHAN \<lparr>\<rparr> in e
-  " |
-
-  Let_Send_Evt : "
+    staticEval (\<V>, \<C>) (Bind x MkChn e)
+  " 
+| BindSendEvt :
+  "
     \<lbrakk>
-      {^Send_Evt x\<^sub>c x\<^sub>m} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      {^(SendEvt x\<^sub>c x\<^sub>m)} \<subseteq> \<V> x;
+      staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SEND EVT x\<^sub>c x\<^sub>m in e
-  " |
-  Let_Recv_Evt : "
+    staticEval (\<V>, \<C>) (Bind x (Atom (SendEvt x\<^sub>c x\<^sub>m)) e)
+  "
+| BindRecvEvt :
+  "
     \<lbrakk>
-      {^Recv_Evt x\<^sub>c} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      {^(RecvEvt x\<^sub>c)} \<subseteq> \<V> x;
+      staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = RECV EVT x\<^sub>c in e
-  " |
-
-  Let_Pair : "
+    staticEval (\<V>, \<C>) (Bind x (Atom (RecvEvt x\<^sub>c)) e)
+  " 
+| BindPair :
+  "
     \<lbrakk>
       {^Pair x\<^sub>1 x\<^sub>2} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = \<lparr>x\<^sub>1, x\<^sub>2\<rparr> in e
-  " |
-  Let_Left : "
+    staticEval (\<V>, \<C>) (Bind x (Atom (Pair x\<^sub>1 x\<^sub>2)) e)
+  "
+| BindLft :
+  "
     \<lbrakk>
-      {^Left x\<^sub>p} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      {^(Lft x\<^sub>p)} \<subseteq> \<V> x;
+      staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = LEFT x\<^sub>p in e
-  " |
-  Let_Right : "
+    staticEval (\<V>, \<C>) (Bind x (Atom (Lft x\<^sub>p)) e)
+  "
+| BindRht :
+  "
     \<lbrakk>
-      {^Right x\<^sub>p} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      {^(Rht x\<^sub>p)} \<subseteq> \<V> x;
+      staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = RIGHT x\<^sub>p in e
-  " |
-
-  Let_Abs : "
+    staticEval (\<V>, \<C>) (Bind x (Atom (Rht x\<^sub>p)) e)
+  " 
+| BindFun :
+  "
     \<lbrakk>
-      {^Abs f' x' e'} \<subseteq> \<V> f';
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e';
-      {^Abs f' x' e'} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      {^Fun f' x' e'} \<subseteq> \<V> f';
+      staticEval (\<V>, \<C>) e';
+      {^Fun f' x' e'} \<subseteq> \<V> x;
+      staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FN f' x' . e' in e
-  " |
-
-  Let_Spawn: "
+    staticEval (\<V>, \<C>) (Bind x (Atom (Fun f' x' e')) e)
+  " 
+| BindSpawn:
+  "
     \<lbrakk>
-      {^\<lparr>\<rparr>} \<subseteq> \<V> x;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>c;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      {^Unt} \<subseteq> \<V> x;
+      staticEval (\<V>, \<C>) e\<^sub>c;
+      staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SPAWN e\<^sub>c in e
-  " |
-
-  Let_Sync  : "
+    staticEval (\<V>, \<C>) (Bind x (Spwn e\<^sub>c) e)
+  " 
+| BindSync  :
+  "
     \<lbrakk>
       \<forall> x\<^sub>s\<^sub>c x\<^sub>m x\<^sub>c . 
-        ^Send_Evt x\<^sub>s\<^sub>c x\<^sub>m \<in> \<V> x\<^sub>e \<longrightarrow> 
+        ^(SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<in> \<V> x\<^sub>e \<longrightarrow> 
         ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<longrightarrow>
-        {^\<lparr>\<rparr>} \<subseteq> \<V> x \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
+        {^Unt} \<subseteq> \<V> x \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
       ;
       \<forall> x\<^sub>r\<^sub>c x\<^sub>c . 
-        ^Recv_Evt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>e \<longrightarrow>
+        ^(RecvEvt x\<^sub>r\<^sub>c) \<in> \<V> x\<^sub>e \<longrightarrow>
         ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow>
         \<C> x\<^sub>c \<subseteq> \<V> x
       ;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow>  
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SYNC x\<^sub>e in e
-  " |
-
-  Let_Fst: "
+    staticEval (\<V>, \<C>) (Bind x (Sync x\<^sub>e) e)
+  " 
+| BindFst:
+  "
     \<lbrakk>
       \<forall> x\<^sub>1 x\<^sub>2. ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>1 \<subseteq> \<V> x; 
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e 
+      staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = FST x\<^sub>p in e
-  " |
-  Let_Snd: "
+    staticEval (\<V>, \<C>) (Bind x (Fst x\<^sub>p) e)
+  "
+| BindSnd:
+  "
     \<lbrakk>
       \<forall> x\<^sub>1 x\<^sub>2 . ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>2 \<subseteq> \<V> x; 
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = SND x\<^sub>p in e
-  " |
-  Let_Case: "
+    staticEval (\<V>, \<C>) (Bind x (Snd x\<^sub>p) e)
+  "
+| BindCase:
+  "
     \<lbrakk>
-      \<forall> x\<^sub>l' . ^Left x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow>
-        \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l
+      \<forall> x\<^sub>l' . ^(Lft x\<^sub>l') \<in> \<V> x\<^sub>s \<longrightarrow>
+        \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x
+      ; 
+      staticEval (\<V>, \<C>) e\<^sub>l ;
+      \<forall> x\<^sub>r' . ^(Rht x\<^sub>r') \<in> \<V> x\<^sub>s \<longrightarrow>
+        \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x
       ;
-      \<forall> x\<^sub>r' . ^Right x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow>
-        \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r
-      ;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      staticEval (\<V>, \<C>) e\<^sub>r;
+      staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = CASE x\<^sub>s LEFT x\<^sub>l |> e\<^sub>l RIGHT x\<^sub>r |> e\<^sub>r in e
-  " |
-  Let_App: "
+    staticEval (\<V>, \<C>) (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
+  "
+| App:
+  "
     \<lbrakk>
-      \<forall> f' x' e' . ^Abs f' x' e' \<in> \<V> f \<longrightarrow>
+      \<forall> f' x' e' . ^Fun f' x' e' \<in> \<V> f \<longrightarrow>
         \<V> x\<^sub>a \<subseteq> \<V> x' \<and>
         \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x
       ;
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e
+      staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
-    (\<V>, \<C>) \<Turnstile>\<^sub>e LET x = APP f x\<^sub>a in e
+    staticEval (\<V>, \<C>) (Bind x (App f x\<^sub>a) e)
+  "
+
+inductive staticReachable :: "tm \<Rightarrow> tm \<Rightarrow> bool"  where
+  Refl:
+  "
+    staticReachable e e
+  " | 
+  BindSpawn_Child:
+  "
+    staticReachable e\<^sub>c e \<Longrightarrow>
+    staticReachable (Bind x (Spwn e\<^sub>c) e\<^sub>n) e
+  "
+| CaseLft:
+  "
+    staticReachable e\<^sub>l e \<Longrightarrow>
+    staticReachable (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e\<^sub>n) e
+  "
+| CaseRht:
+  "
+    staticReachable e\<^sub>r e \<Longrightarrow>
+    staticReachable (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e\<^sub>n) e
+  "
+| BindFun:
+  "
+    staticReachable e\<^sub>b e \<Longrightarrow>
+    staticReachable (Bind x (Atom (Fun f x\<^sub>p e\<^sub>b)) e\<^sub>n) e
+  " 
+| Bind:
+  "
+    staticReachable e\<^sub>n e \<Longrightarrow>
+    staticReachable (Bind x b e\<^sub>n) e
   "
 
 end
