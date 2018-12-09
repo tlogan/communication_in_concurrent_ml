@@ -8,214 +8,214 @@ begin
 
 datatype mode = ENext | ESpawn | ECall | EReturn
 
-type_synonym transition = "(label \<times> mode \<times> label)"
+type_synonym flow = "(tm_id \<times> mode \<times> tm_id)"
 
-type_synonym transition_set = "transition set"
+type_synonym flow_set = "flow set"
 
-type_synonym step = "(label \<times> mode)"
+type_synonym step = "(tm_id \<times> mode)"
 
-type_synonym abstract_path = "step list"
+type_synonym static_path = "step list"
 
 
-inductive static_traversable :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> exp \<Rightarrow> bool"  where
+inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> tm \<Rightarrow> bool"  where
   Result: "
-    static_traversable V F (Rslt x)
+    staticFlowsAccept V F (Rslt x)
   " |
-  Let_Unit: "
+  BindUnit: "
     \<lbrakk>
-      {(NLet x , ENext, top_label e)} \<subseteq> F;
-      static_traversable V F e
+      {(IdBind x , ENext, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x Unt e)
+    staticFlowsAccept V F (Bind x Unt e)
   " |
-  Let_Chan: "
+  BindMkChn: "
     \<lbrakk>
-      {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F e
+      {(IdBind x, ENext, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x MkChn e)
+    staticFlowsAccept V F (Bind x MkChn e)
   " |
-  Let_SendEvt: "
+  BindSendEvt: "
     \<lbrakk>
-      {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F e
+      {(IdBind x, ENext, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (Prim (SendEvt x\<^sub>c x\<^sub>m)) e)
+    staticFlowsAccept V F (Bind x (Atom (SendEvt x\<^sub>c x\<^sub>m)) e)
   " |
-  Let_RecvEvt: "
+  BindRecvEvt: "
     \<lbrakk>
-      {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F e
+      {(IdBind x, ENext, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (Prim (RecvEvt x\<^sub>c)) e)
+    staticFlowsAccept V F (Bind x (Atom (RecvEvt x\<^sub>c)) e)
   " |
-  Let_Pair: "
+  BindPair: "
     \<lbrakk>
-      {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F e
+      {(IdBind x, ENext, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (Prim (Pair x\<^sub>1 x\<^sub>2)) e)
+    staticFlowsAccept V F (Bind x (Atom (Pair x\<^sub>1 x\<^sub>2)) e)
   " |
-  Let_Left: "
+  BindLeft: "
     \<lbrakk>
-      {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F e
+      {(IdBind x, ENext, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (Prim (Lft x\<^sub>p)) e)
+    staticFlowsAccept V F (Bind x (Atom (Lft x\<^sub>p)) e)
   " |
-  Let_Right: "
+  BindRight: "
     \<lbrakk>
-      {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F e
+      {(IdBind x, ENext, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (Prim (Rght x\<^sub>p)) e)
+    staticFlowsAccept V F (Bind x (Atom (Rht x\<^sub>p)) e)
   " |
-  Let_Abs: "
+  BindFun: "
     \<lbrakk>
-      {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F e\<^sub>b;
-      static_traversable V F e
+      {(IdBind x, ENext, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e\<^sub>b;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (Prim (Abs f x\<^sub>p e\<^sub>b)) e)
+    staticFlowsAccept V F (Bind x (Atom (Fun f x\<^sub>p e\<^sub>b)) e)
   " |
-  Let_Spawn: "
+  BindSpawn: "
     \<lbrakk>
       {
-        (NLet x, ENext, top_label e),
-        (NLet x, ESpawn, top_label e\<^sub>c)
+        (IdBind x, ENext, tmId e),
+        (IdBind x, ESpawn, tmId e\<^sub>c)
       } \<subseteq> F;
-      static_traversable V F e\<^sub>c;
-      static_traversable V F e
+      staticFlowsAccept V F e\<^sub>c;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (Spwn e\<^sub>c) e)
+    staticFlowsAccept V F (Bind x (Spwn e\<^sub>c) e)
   " |
-  Let_Sync: "
+  BindSync: "
     \<lbrakk>
-      {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F e
+      {(IdBind x, ENext, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (Sync xSE) e)
+    staticFlowsAccept V F (Bind x (Sync xSE) e)
   " |
-  Let_Fst: "
+  BindFst: "
     \<lbrakk>
-      {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F e
+      {(IdBind x, ENext, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (Fst x\<^sub>p) e)
+    staticFlowsAccept V F (Bind x (Fst x\<^sub>p) e)
   " |
-  Let_Snd: "
+  BindSnd: "
     \<lbrakk>
-      {(NLet x, ENext, top_label e)} \<subseteq> F;
-      static_traversable V F e
+      {(IdBind x, ENext, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (Snd x\<^sub>p) e)
+    staticFlowsAccept V F (Bind x (Snd x\<^sub>p) e)
   " |
-  Let_Case: "
+  BindCase: "
     \<lbrakk>
       {
-        (NLet x, ECall, top_label e\<^sub>l),
-        (NLet x, ECall, top_label e\<^sub>r),
-        (NResult (\<lfloor>e\<^sub>l\<rfloor>), EReturn, top_label e),
-        (NResult (\<lfloor>e\<^sub>r\<rfloor>), EReturn, top_label e)
+        (IdBind x, ECall, tmId e\<^sub>l),
+        (IdBind x, ECall, tmId e\<^sub>r),
+        (IdRslt (\<lfloor>e\<^sub>l\<rfloor>), EReturn, tmId e),
+        (IdRslt (\<lfloor>e\<^sub>r\<rfloor>), EReturn, tmId e)
       } \<subseteq> F;
-      static_traversable V F e\<^sub>l;
-      static_traversable V F e\<^sub>r;
-      static_traversable V F e
+      staticFlowsAccept V F e\<^sub>l;
+      staticFlowsAccept V F e\<^sub>r;
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
+    staticFlowsAccept V F (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
   " |
-  Let_App: "
+  BindApp: "
     \<lbrakk>
-      (\<forall> f' x\<^sub>p e\<^sub>b . ^Abs f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow>
+      (\<forall> f' x\<^sub>p e\<^sub>b . ^Fun f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow>
         {
-          (NLet x, ECall, top_label e\<^sub>b),
-          (NResult (\<lfloor>e\<^sub>b\<rfloor>), EReturn, top_label e)
+          (IdBind x, ECall, tmId e\<^sub>b),
+          (IdRslt (\<lfloor>e\<^sub>b\<rfloor>), EReturn, tmId e)
         } \<subseteq> F);
-      static_traversable V F e
+      staticFlowsAccept V F e
     \<rbrakk> \<Longrightarrow>
-    static_traversable V F (Let x (App f x\<^sub>a) e)
+    staticFlowsAccept V F (Bind x (App f x\<^sub>a) e)
   "
 
 
 
 
-inductive static_inclusive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive staticInclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Prefix1: "
     prefix \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow>
-    static_inclusive \<pi>\<^sub>1 \<pi>\<^sub>2
+    staticInclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   Prefix2: "
     prefix \<pi>\<^sub>2 \<pi>\<^sub>1 \<Longrightarrow>
-    static_inclusive \<pi>\<^sub>1 \<pi>\<^sub>2
+    staticInclusive \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   Spawn1: "
-    static_inclusive (\<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>1) (\<pi> @ (NLet x, ENext) # \<pi>\<^sub>2)
+    staticInclusive (\<pi> @ (IdBind x, ESpawn) # \<pi>\<^sub>1) (\<pi> @ (IdBind x, ENext) # \<pi>\<^sub>2)
   " |
   Spawn2: "
-    static_inclusive (\<pi> @ (NLet x, ENext) # \<pi>\<^sub>1) (\<pi> @ (NLet x, ESpawn) # \<pi>\<^sub>2)
+    staticInclusive (\<pi> @ (IdBind x, ENext) # \<pi>\<^sub>1) (\<pi> @ (IdBind x, ESpawn) # \<pi>\<^sub>2)
   "
 
 
-inductive singular :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive singular :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
   equal: "
     \<pi>\<^sub>1 = \<pi>\<^sub>2 \<Longrightarrow> 
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   exclusive: "
-    \<not> (static_inclusive \<pi>\<^sub>1 \<pi>\<^sub>2) \<Longrightarrow> 
+    \<not> (staticInclusive \<pi>\<^sub>1 \<pi>\<^sub>2) \<Longrightarrow> 
     singular \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
-inductive noncompetitive :: "abstract_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
   ordered: "
     ordered \<pi>\<^sub>1 \<pi>\<^sub>2 \<Longrightarrow> 
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   " |
   exclusive: "
-    \<not> (static_inclusive \<pi>\<^sub>1 \<pi>\<^sub>2) \<Longrightarrow>
+    \<not> (staticInclusive \<pi>\<^sub>1 \<pi>\<^sub>2) \<Longrightarrow>
     noncompetitive \<pi>\<^sub>1 \<pi>\<^sub>2
   "
 
 
-inductive static_traceable :: "(label * 'a * label) set \<Rightarrow> label \<Rightarrow> (label \<Rightarrow> bool) \<Rightarrow> (label * 'a) list \<Rightarrow> bool" where
+inductive staticTraceable :: "(tm_id * 'a * tm_id) set \<Rightarrow> tm_id \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> (tm_id * 'a) list \<Rightarrow> bool" where
   Empty: "
     isEnd start \<Longrightarrow>
-    static_traceable F start isEnd []
+    staticTraceable F start isEnd []
   " |
   Step: "
-    static_traceable F start (\<lambda> l . l = middle) path \<Longrightarrow>
+    staticTraceable F start (\<lambda> l . l = middle) path \<Longrightarrow>
     isEnd end \<Longrightarrow>
     {(middle, edge, end)} \<subseteq> F \<Longrightarrow>
-    static_traceable F start isEnd (path @ [(middle, edge)])
+    staticTraceable F start isEnd (path @ [(middle, edge)])
   "
 
 
-inductive static_one_shot :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_one_shot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
-    every_two (static_traceable F (top_label e) (static_send_label V e xC)) singular \<Longrightarrow>
-    static_traversable V F e \<Longrightarrow>
+    every_two (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
+    staticFlowsAccept V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
-inductive static_one_to_one :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_one_to_one :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
-    every_two (static_traceable F (top_label e) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
-    every_two (static_traceable F (top_label e) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
-    static_traversable V F e \<Longrightarrow>
+    every_two (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
+    every_two (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
+    staticFlowsAccept V F e \<Longrightarrow>
     static_one_to_one V e xC 
   "
 
-inductive static_fan_out :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_fan_out :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
-    every_two (static_traceable F (top_label e) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
-    static_traversable V F e \<Longrightarrow>
+    every_two (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
+    staticFlowsAccept V F e \<Longrightarrow>
     static_fan_out V e xC 
   "
 
-inductive static_fan_in :: "abstract_env \<Rightarrow> exp \<Rightarrow> var \<Rightarrow> bool" where
+inductive static_fan_in :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
-    every_two (static_traceable F (top_label e) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
-    static_traversable V F e \<Longrightarrow>
+    every_two (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
+    staticFlowsAccept V F e \<Longrightarrow>
     static_fan_in V e xC 
   "
 

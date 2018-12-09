@@ -7,78 +7,78 @@ begin
 
 
 inductive 
-  static_traversable_env :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> env \<Rightarrow> bool"  and
-  static_traversable_val :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> val \<Rightarrow> bool"
+  staticFlowsAcceptEnv :: "static_env \<Rightarrow> flow_set \<Rightarrow> env \<Rightarrow> bool"  and
+  staticFlowsAcceptVal :: "static_env \<Rightarrow> flow_set \<Rightarrow> val \<Rightarrow> bool"
 where
   Intro: "
-    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>  static_traversable_val V F \<omega> \<Longrightarrow>
-    static_traversable_env V F \<rho>
+    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>  staticFlowsAcceptVal V F \<omega> \<Longrightarrow>
+    staticFlowsAcceptEnv V F \<rho>
   " |
 
   Unit: "
-    static_traversable_val V F VUnt
+    staticFlowsAcceptVal V F VUnt
   " |
 
   Chan: "
-    static_traversable_val V F (VChn c)
+    staticFlowsAcceptVal V F (VChn c)
   " |
 
   SendEvt: "
-    static_traversable_env V F \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClsr (SendEvt _ _) \<rho>)
+    staticFlowsAcceptEnv V F \<rho> \<Longrightarrow>
+    staticFlowsAcceptVal V F (VClsr (SendEvt _ _) \<rho>)
   " |
 
   RecvEvt: "
-    static_traversable_env V F \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClsr (RecvEvt _) \<rho>)
+    staticFlowsAcceptEnv V F \<rho> \<Longrightarrow>
+    staticFlowsAcceptVal V F (VClsr (RecvEvt _) \<rho>)
   " |
 
   Left: "
-    static_traversable_env V F \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClsr (Lft _) \<rho>)
+    staticFlowsAcceptEnv V F \<rho> \<Longrightarrow>
+    staticFlowsAcceptVal V F (VClsr (Lft _) \<rho>)
   " |
 
   Right: "
-    static_traversable_env V F \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClsr (Rght _) \<rho>)
+    staticFlowsAcceptEnv V F \<rho> \<Longrightarrow>
+    staticFlowsAcceptVal V F (VClsr (Rht _) \<rho>)
   " |
 
-  Abs: "
-    static_traversable V F e \<Longrightarrow> 
-    static_traversable_env V F  \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClsr (Abs f x e) \<rho>)
+  Fun: "
+    staticFlowsAccept V F e \<Longrightarrow> 
+    staticFlowsAcceptEnv V F  \<rho> \<Longrightarrow>
+    staticFlowsAcceptVal V F (VClsr (Fun f x e) \<rho>)
   " |
 
   Pair: "
-    static_traversable_env V F \<rho> \<Longrightarrow>
-    static_traversable_val V F (VClsr (Pair _ _) \<rho>)
+    staticFlowsAcceptEnv V F \<rho> \<Longrightarrow>
+    staticFlowsAcceptVal V F (VClsr (Pair _ _) \<rho>)
   " 
 
 
-inductive static_traversable_stack :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> var \<Rightarrow> contin list \<Rightarrow> bool" where
-  Empty: "static_traversable_stack V F y []" |
+inductive staticFlowsAcceptStack :: "static_env \<Rightarrow> flow_set \<Rightarrow> name \<Rightarrow> contin list \<Rightarrow> bool" where
+  Empty: "staticFlowsAcceptStack V F y []" |
   Nonempty: "
     \<lbrakk> 
-      {(NResult y, EReturn, top_label e)} \<subseteq> F;
-      static_traversable V F e;
-      static_traversable_env V F \<rho>;
-      static_traversable_stack V F (\<lfloor>e\<rfloor>) \<kappa>
+      {(IdRslt y, EReturn, tmId e)} \<subseteq> F;
+      staticFlowsAccept V F e;
+      staticFlowsAcceptEnv V F \<rho>;
+      staticFlowsAcceptStack V F (\<lfloor>e\<rfloor>) \<kappa>
     \<rbrakk> \<Longrightarrow> 
-    static_traversable_stack V F y ((Ctn x e \<rho>) # \<kappa>)
+    staticFlowsAcceptStack V F y ((Ctn x e \<rho>) # \<kappa>)
   "
 
-inductive static_traversable_pool :: "abstract_env \<Rightarrow> transition_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
+inductive staticFlowsAcceptPool :: "static_env \<Rightarrow> flow_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
   Intro: "
     (\<forall> \<pi> e \<rho> \<kappa> . E \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
-      static_traversable V F e \<and>
-      static_traversable_env V F \<rho> \<and>
-      static_traversable_stack V F (\<lfloor>e\<rfloor>) \<kappa>) \<Longrightarrow> 
-    static_traversable_pool V F E
+      staticFlowsAccept V F e \<and>
+      staticFlowsAcceptEnv V F \<rho> \<and>
+      staticFlowsAcceptStack V F (\<lfloor>e\<rfloor>) \<kappa>) \<Longrightarrow> 
+    staticFlowsAcceptPool V F E
   "
 
 inductive 
-  static_live_chan_env :: "abstract_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> env \<Rightarrow> bool"  and
-  static_live_chan_val :: "abstract_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> val \<Rightarrow> bool"
+  static_live_chan_env :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> env \<Rightarrow> bool"  and
+  static_live_chan_val :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> val \<Rightarrow> bool"
 where
   Intro: "
     \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>  static_live_chan_val V Ln Lx x\<^sub>c \<omega> \<Longrightarrow>
@@ -110,13 +110,13 @@ where
 
   Right: "
     static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
-    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Rght _) \<rho>)
+    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Rht _) \<rho>)
   " |
 
-  Abs: "
+  Fun: "
     static_live_chan V Ln Lx x\<^sub>c e \<Longrightarrow> 
     static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
-    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Abs f x e) \<rho>)
+    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Fun f x e) \<rho>)
   " |
 
   Pair: "
@@ -125,11 +125,11 @@ where
   " 
 
 
-inductive static_live_chan_stack :: "abstract_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> contin list \<Rightarrow> bool" where
+inductive static_live_chan_stack :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> contin list \<Rightarrow> bool" where
   Empty: "static_live_chan_stack V Ln Lx x\<^sub>c []" |
   Nonempty: "
     \<lbrakk> 
-      \<not> Set.is_empty (Ln (top_label e));
+      \<not> Set.is_empty (Ln (tmId e));
       static_live_chan V Ln Lx x\<^sub>c e;
       static_live_chan_env V Ln Lx x\<^sub>c \<rho>; 
       static_live_chan_stack V Ln Lx x\<^sub>c \<kappa>
@@ -138,7 +138,7 @@ inductive static_live_chan_stack :: "abstract_env \<Rightarrow> label_map \<Righ
   "
 
 
-inductive static_live_chan_pool ::  "abstract_env \<Rightarrow> label_map \<Rightarrow> label_map \<Rightarrow> var \<Rightarrow> trace_pool \<Rightarrow> bool"  where
+inductive static_live_chan_pool ::  "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> trace_pool \<Rightarrow> bool"  where
   Intro: "
     (\<forall> \<pi> e \<rho> \<kappa> . pool \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
       static_live_chan V Ln Lx x\<^sub>c e \<and>
@@ -147,10 +147,10 @@ inductive static_live_chan_pool ::  "abstract_env \<Rightarrow> label_map \<Righ
     static_live_chan_pool V Ln Lx x\<^sub>c pool
   "
 
-lemma static_inclusive_commut: "
-  static_inclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> static_inclusive path\<^sub>2 path\<^sub>1
+lemma staticInclusive_commut: "
+  staticInclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> staticInclusive path\<^sub>2 path\<^sub>1
 "
- apply (erule static_inclusive.cases; auto)
+ apply (erule staticInclusive.cases; auto)
   apply (simp add: Prefix2)
   apply (simp add: Prefix1)
   apply (simp add: Spawn2)
@@ -160,48 +160,48 @@ lemma static_inclusive_commut: "
 done
 
 
-lemma static_inclusive_preserved_under_unordered_extension: "
+lemma staticInclusive_preserved_under_unordered_extension: "
   \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> 
-  static_inclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> static_inclusive (path\<^sub>1 @ [l]) path\<^sub>2
+  staticInclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> staticInclusive (path\<^sub>1 @ [l]) path\<^sub>2
 "
- apply (erule static_inclusive.cases; auto)
+ apply (erule staticInclusive.cases; auto)
   apply (simp add: Spawn1)
   apply (simp add: Spawn2)
   apply (simp add: Send1)
   apply (simp add: Send2)
 done
 
-lemma static_inclusive_preserved_under_unordered_double_extension: "
-  static_inclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> 
-  \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> static_inclusive (path\<^sub>1 @ [l1]) (path\<^sub>2 @ [l2])
+lemma staticInclusive_preserved_under_unordered_double_extension: "
+  staticInclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> 
+  \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> staticInclusive (path\<^sub>1 @ [l1]) (path\<^sub>2 @ [l2])
 "
-by (metis static_inclusive_commut static_inclusive_preserved_under_unordered_extension prefix_append prefix_def)
+by (metis staticInclusive_commut staticInclusive_preserved_under_unordered_extension prefix_append prefix_def)
 
 
-inductive paths_correspond :: "control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+inductive paths_correspond :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty: "
     paths_correspond [] []
   " |
   Next: "
     paths_correspond \<pi> path \<Longrightarrow>
-    paths_correspond (\<pi> @ [LNxt x]) (path @ [(NLet x, ENext)])
+    paths_correspond (\<pi> @ [LNxt x]) (path @ [(IdBind x, ENext)])
   " |
   Spawn: "
     paths_correspond \<pi> path \<Longrightarrow>
-    paths_correspond (\<pi> @ [LSpwn x]) (path @ [(NLet x, ESpawn)])
+    paths_correspond (\<pi> @ [LSpwn x]) (path @ [(IdBind x, ESpawn)])
   " |
   Call: "
     paths_correspond \<pi> path \<Longrightarrow>
-    paths_correspond (\<pi> @ [LCall x]) (path @ [(NLet x, ECall)])
+    paths_correspond (\<pi> @ [LCall x]) (path @ [(IdBind x, ECall)])
   "  |
   Return: "
     paths_correspond \<pi> path \<Longrightarrow>
-    paths_correspond (\<pi> @ [LRtn y]) (path @ [(NResult y, EReturn)])
+    paths_correspond (\<pi> @ [LRtn y]) (path @ [(IdRslt y, EReturn)])
   " 
 
 
 inductive paths_correspond_mod_chan :: 
-  "trace_pool * cmmn_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> abstract_path \<Rightarrow> bool" where
+  "trace_pool * cmmn_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
 (*
 is unordered necessary?
   Unordered: "
@@ -220,29 +220,29 @@ is unordered necessary?
     paths_correspond \<pi>Suffix pathSuffix \<Longrightarrow>
     \<E> (\<pi>R @ (LNxt xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
     dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
-    \<E> \<pi>S = Some (\<langle>(Let xS (Sync xSE) eSY);\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
-    \<E> \<pi>R = Some (\<langle>(Let xR (Sync xRE) eRY);\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
+    \<E> \<pi>S = Some (\<langle>(Bind xS (Sync xSE) eSY);\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
+    \<E> \<pi>R = Some (\<langle>(Bind xR (Sync xRE) eRY);\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
     {(\<pi>S, c_c, \<pi>R)} \<subseteq> H \<Longrightarrow>
     paths_correspond_mod_chan (\<E>, H) c \<pi>S pathPre \<Longrightarrow>
-    paths_correspond_mod_chan (\<E>, H) c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)
+    paths_correspond_mod_chan (\<E>, H) c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (IdBind xS, ESend xSE) # (IdBind xR, ENext) # pathSuffix)
   " 
 
 
-lemma not_static_inclusive_sound: "
-  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+lemma staticInclusiveComplete: "
+  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F e \<Longrightarrow>
+  staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  static_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path1 \<Longrightarrow>
+  staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) path1 \<Longrightarrow>
   
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-  static_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path2 \<Longrightarrow>
+  staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) path2 \<Longrightarrow>
 
-  static_inclusive path1 path2
+  staticInclusive path1 path2
 "
 sorry
 
@@ -255,7 +255,7 @@ proof -
   
   then have
     H2: "
-      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>(Let x\<^sub>y (Sync x\<^sub>e) e\<^sub>n);\<rho>;\<kappa>\<rangle>) 
+      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>(Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>n);\<rho>;\<kappa>\<rangle>) 
     " using is_send_path.simps by auto
 
   then show 
@@ -266,17 +266,17 @@ qed
 lemma static_equality_sound: "
   path1 = path2 \<Longrightarrow>
 
-  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F e \<Longrightarrow>
+  staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  static_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path1 \<Longrightarrow>
+  staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) path1 \<Longrightarrow>
   
   paths_correspond_mod_chan (\<E>', H') (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-  static_traceable F Ln Lx (NLet xC) (static_send_label V e xC) path2 \<Longrightarrow>
+  staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) path2 \<Longrightarrow>
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
 
   \<pi>1 = \<pi>2
@@ -285,77 +285,77 @@ lemma static_equality_sound: "
 
 (* PATH SOUND *)
 
-lemma not_static_traceable_sound': 
+lemma staticTraceableComplete': 
 
 assumes
-  H1: "star_left concur_step EH EH'" and
+  H1: "star_left dynamicEval EH EH'" and
   H2: "(V, C) \<Turnstile>\<^sub>e e"
 shows "
   \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
   EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
   static_live_chan_pool V Ln Lx xC E' \<longrightarrow>
-  static_traversable_pool V F E' \<longrightarrow>
-  E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow> isEnd (top_label e') \<longrightarrow>
+  staticFlowsAcceptPool V F E' \<longrightarrow>
+  E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow> isEnd (tmId e') \<longrightarrow>
   (\<exists> path . 
     paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
-    static_traceable F Ln Lx (NLet xC) isEnd path)"
+    staticTraceable F Ln Lx (IdBind xC) isEnd path)"
   sorry
 
-lemma not_static_traceable_sound: "
-  \<E>' \<pi> = Some (\<langle>(Let x b e\<^sub>n);\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+lemma staticTraceableComplete: "
+  \<E>' \<pi> = Some (\<langle>(Bind x b e\<^sub>n);\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F e \<Longrightarrow>
-  isEnd (NLet x) \<Longrightarrow>
+  staticFlowsAccept V F e \<Longrightarrow>
+  isEnd (IdBind x) \<Longrightarrow>
   \<exists> path . 
     paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
-    static_traceable F Ln Lx (NLet xC) isEnd path
+    staticTraceable F Ln Lx (IdBind xC) isEnd path
 "
   sorry
-(*  use induction on star_left concur_step along with deep definition of static_traversable *)
+(*  use induction on star_left dynamicEval along with deep definition of staticFlowsAccept *)
 
 
 
-lemma send_not_static_traceable_sound: "
+lemma staticTraceableSendComplete: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
-  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F e \<Longrightarrow>
+  staticFlowsAccept V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
-    static_traceable F Ln Lx (NLet xC) (static_send_label V e xC) pathSync"
+    staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) pathSync"
  apply (unfold is_send_path.simps; auto)
- apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in label_not_send_site_sound; auto?)
-  apply (frule not_static_traceable_sound; auto?)
+ apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticSendSiteComplete; auto?)
+  apply (frule staticTraceableComplete; auto?)
 done
 
 (* END PATH SOUND *)
 
 
 theorem static_one_shot_sound': "
-  every_two (static_traceable F Ln Lx (NLet xC) (static_send_label V e xC)) singular \<Longrightarrow>
+  every_two (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) singular \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F e \<Longrightarrow>
+  staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
  apply (simp add: every_two.simps singular.simps; auto)
- apply (frule_tac \<pi>Sync = \<pi>1 in send_not_static_traceable_sound; auto)
+ apply (frule_tac \<pi>Sync = \<pi>1 in staticTraceableSendComplete; auto)
  apply (drule_tac x = pathSync in spec)
- apply (frule_tac \<pi>Sync = \<pi>2 in send_not_static_traceable_sound; auto?)
+ apply (frule_tac \<pi>Sync = \<pi>2 in staticTraceableSendComplete; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (metis is_send_path_implies_nonempty_pool not_static_inclusive_sound static_equality_sound)
+ apply (metis is_send_path_implies_nonempty_pool staticInclusiveComplete static_equality_sound)
 done
 
 theorem static_one_shot_sound: "
   \<lbrakk>
     static_one_shot V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
+    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> xC)
 "
@@ -370,24 +370,24 @@ TO DO LATER:
 *)
 
 theorem noncompetitive_send_to_ordered_send: "
-  every_two (static_traceable F Ln Lx (NLet xC) (static_send_label V e xC)) noncompetitive \<Longrightarrow>
+  every_two (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
-  static_traversable V F e \<Longrightarrow>
+  staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
   every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
 (*
 apply (simp add: every_two.simps noncompetitive.simps; auto)
-using send_not_static_traceable_sound runtime_send_paths_are_inclusive by blast
+using staticTraceableSendComplete runtime_send_paths_are_inclusive by blast
 *)
 
 theorem static_fan_out_sound: "
   \<lbrakk>
     static_fan_out V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
+    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   fan_out \<E>' (Ch \<pi> xC)
 "
@@ -397,10 +397,10 @@ theorem static_fan_out_sound: "
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two (static_traceable F Ln Lx (NLet xC) (static_recv_label V e xC)) noncompetitive \<Longrightarrow>
-   static_traversable V F e \<Longrightarrow>
+   every_two (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
+   staticFlowsAccept V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-   star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
    every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
@@ -410,7 +410,7 @@ theorem static_fan_in_sound: "
   \<lbrakk>
     static_fan_in V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
+    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   fan_in \<E>' (Ch \<pi> xC)
 "
@@ -424,7 +424,7 @@ theorem static_one_to_one_sound: "
   \<lbrakk>
     static_one_to_one V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    star concur_step ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
+    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   one_to_one \<E>' (Ch \<pi> xC)
 "
@@ -442,19 +442,19 @@ using paths_correspond.cases by fastforce
 
 
 lemma paths_cong_mod_chan_preserved_under_reduction: "
-(suffix \<pi> (\<pi>C @ [LNxt xC)) \<and> suffix path [(NLet xC, ENext)] \<or>
+(suffix \<pi> (\<pi>C @ [LNxt xC)) \<and> suffix path [(IdBind xC, ENext)] \<or>
   True) \<Longrightarrow>
 paths_correspond_mod_chan EH' (Ch \<pi>C xC) (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
-E \<pi> \<noteq> None \<Longrightarrow>
-paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
+^env \<pi> \<noteq> None \<Longrightarrow>
+paths_correspond_mod_chan (env, H) (Ch \<pi>C xC) \<pi> path"
 proof -
   assume
-    H1: "E \<pi> \<noteq> None" and
+    H1: "env \<pi> \<noteq> None" and
     H2: "\<pi> \<noteq> []" "path \<noteq> []" and
     H3: "paths_correspond_mod_chan EH' c (\<pi> @ [l) (path @ [n])"
 
   from H3
-  show "paths_correspond_mod_chan (E, H) c \<pi> path"
+  show "paths_correspond_mod_chan (env, H) c \<pi> path"
   proof cases
 
     case (Chan xC \<pi>X E' \<pi>C H')
@@ -482,21 +482,21 @@ proof -
     have L2H10: "\<pi> = \<pi>C @ butlast (LNxt xC # \<pi>X)"
     using H4 by blast
 
-    have "paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) \<pi> path"
+    have "paths_correspond_mod_chan (env, H) (Ch \<pi>C xC) \<pi> path"
     using H1 H6 H8 L2H10 paths_correspond_mod_chan.Chan by auto
      
-    then show "paths_correspond_mod_chan (E, H) c \<pi> path"
+    then show "paths_correspond_mod_chan (env, H) c \<pi> path"
     by (simp add: local.Chan(2))
 
   next
     case (Sync \<pi>Suffix pathSuffix E' \<pi>R xR \<rho>RY \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY H' pathPre)
 
     
-    then show "paths_correspond_mod_chan (E, H) c \<pi> path"
+    then show "paths_correspond_mod_chan (env, H) c \<pi> path"
     proof cases
       assume L1H1: "pathSuffix = []"
 
-      have L1H2: "path = pathPre @ [(NLet xS, ESend xSE)]"
+      have L1H2: "path = pathPre @ [(IdBind xS, ESend xSE)]"
         using L1H1 local.Sync(3) by auto
 
       have L1H3: "\<pi>Suffix = []"
@@ -505,14 +505,14 @@ proof -
       have L1H3: "\<pi> = \<pi>R"
         using L1H3 local.Sync(2) by blast
 
-      have "paths_correspond_mod_chan (E, H) c \<pi>R (pathPre @ [(NLet xS, ESend xSE)])" sorry
+      have "paths_correspond_mod_chan (env, H) c \<pi>R (pathPre @ [(IdBind xS, ESend xSE)])" sorry
 
       then show ?thesis sorry
     next
       assume L1H1: "pathSuffix \<noteq> []"
 
       have 
-        L1H2: "path = pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # (butlast pathSuffix)"
+        L1H2: "path = pathPre @ (IdBind xS, ESend xSE) # (IdBind xR, ENext) # (butlast pathSuffix)"
         by (metis L1H1 butlast.simps(2) butlast_append butlast_snoc list.simps(3) local.Sync(3))
       
       have L1H3: "\<pi>Suffix \<noteq> []"
@@ -527,7 +527,7 @@ proof -
           L2H1: "(butlast pathSuffix) = []"
 
         have 
-          L2H2: "path = pathPre @ [(NLet xS, ESend xSE), (NLet xR, ENext)]"
+          L2H2: "path = pathPre @ [(IdBind xS, ESend xSE), (IdBind xR, ENext)]"
           by (simp add: L1H2 L2H1)
 
         have 
@@ -536,7 +536,7 @@ proof -
         have L2H4: "\<pi> = \<pi>R @ [LNxt xR]" by (simp add: L1H4 L2H3)
 
         have 
-          "paths_correspond_mod_chan (E, H) c (\<pi>R @ [LNxt xR]) (pathPre @ [(NLet xS, ESend xSE), (NLet xR, ENext)])" sorry
+          "paths_correspond_mod_chan (env, H) c (\<pi>R @ [LNxt xR]) (pathPre @ [(IdBind xS, ESend xSE), (IdBind xR, ENext)])" sorry
 
         then show ?thesis
           by (simp add: L2H2 L2H4)
@@ -556,19 +556,19 @@ qed
 (*
 lemma paths_cong_mod_chan_preserved_under_reduction_chan: "
   paths_correspond ((LNxt xC) # \<pi>Suff @ [l) (path @ [n]) \<Longrightarrow>
-  E (\<pi>C @ (LNxt xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
-  paths_correspond_mod_chan (E, H) (Ch \<pi>C xC) (\<pi>C @ (LNxt xC) # \<pi>Suff) path"
+  env (\<pi>C @ (LNxt xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
+  paths_correspond_mod_chan (env, H) (Ch \<pi>C xC) (\<pi>C @ (LNxt xC) # \<pi>Suff) path"
 using paths_cong_preserved_under_reduction paths_correspond_mod_chan.Chan by blast
 
 lemma  paths_cong_mod_chan_preserved_under_reduction_sync: "
   paths_correspond (\<pi>Suffix @ [l) (pathSuffix @ [n]) \<Longrightarrow>
   \<E> (\<pi>R @ (LNxt xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
   dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
-  \<E> \<pi>S = Some (\<langle>(Let xS (Sync xSE) eSY);\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
-  \<E> \<pi>R = Some (\<langle>(Let xR (Sync xRE) eRY);\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
+  \<E> \<pi>S = Some (\<langle>(Bind xS (Sync xSE) eSY);\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
+  \<E> \<pi>R = Some (\<langle>(Bind xR (Sync xRE) eRY);\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
   {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
   paths_correspond_mod_chan (\<E>, H) c \<pi>Severy_two pathPre \<Longrightarrow>
-  paths_correspond_mod_chan (\<E>, H) c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (NLet xS, ESend xSE) # (NLet xR, ENext) # pathSuffix)"
+  paths_correspond_mod_chan (\<E>, H) c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (IdBind xS, ESend xSE) # (IdBind xR, ENext) # pathSuffix)"
 by (meson paths_cong_preserved_under_reduction paths_correspond_mod_chan.Sync)
 *)
 

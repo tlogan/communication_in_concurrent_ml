@@ -4,18 +4,18 @@ begin
 
 inductive is_send_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where
   intro: "
-    trpl \<pi>y = Some (\<langle>Let xy (Sync xe) en; env; \<kappa>\<rangle>) \<Longrightarrow>
+    pool \<pi>y = Some (\<langle>Bind xy (Sync xe) en; env; \<kappa>\<rangle>) \<Longrightarrow>
     env xe = Some (VClsr (SendEvt xsc xm) enve) \<Longrightarrow>
     enve xsc = Some (VChn c) \<Longrightarrow>
-    is_send_path trpl c \<pi>y
+    is_send_path pool c \<pi>y
   "
 
 inductive is_recv_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where
   intro: "
-    trpl \<pi>y = Some (\<langle>Let xy (Sync xe) en; env; \<kappa>\<rangle>) \<Longrightarrow>
+    pool \<pi>y = Some (\<langle>Bind xy (Sync xe) en; env; \<kappa>\<rangle>) \<Longrightarrow>
     env xe = Some (VClsr (RecvEvt xrc) enve) \<Longrightarrow>
     enve xrc = Some (VChn c) \<Longrightarrow>
-    is_recv_path trpl c \<pi>y
+    is_recv_path pool c \<pi>y
   "
 
 inductive every_two  :: "('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool" where
@@ -34,42 +34,42 @@ inductive ordered :: "'a list \<Rightarrow> 'a list \<Rightarrow> bool" where
 
 inductive one_shot :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
-    every_two (is_send_path trpl c) op= \<Longrightarrow> 
-    one_shot trpl c
+    every_two (is_send_path pool c) op= \<Longrightarrow> 
+    one_shot pool c
   "
 
 inductive fan_out :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
-    every_two (is_send_path trpl c) ordered \<Longrightarrow>
-    fan_out trpl c
+    every_two (is_send_path pool c) ordered \<Longrightarrow>
+    fan_out pool c
   "
   
 inductive fan_in :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
-    every_two (is_recv_path trpl c) ordered \<Longrightarrow> 
-    fan_in trpl c
+    every_two (is_recv_path pool c) ordered \<Longrightarrow> 
+    fan_in pool c
   "
 
 inductive one_to_one :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
-    fan_out trpl c \<Longrightarrow>
-    fan_in trpl c \<Longrightarrow> 
-    one_to_one trpl c
+    fan_out pool c \<Longrightarrow>
+    fan_in pool c \<Longrightarrow> 
+    one_to_one pool c
   "
 
 
 inductive 
-  dynamic_built_on_chan_var :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> var \<Rightarrow> bool" and
-  dynamic_built_on_chan_prim :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> prim \<Rightarrow> bool" and
-  dynamic_built_on_chan_bound_exp :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> bound_exp \<Rightarrow> bool" and
-  dynamic_built_on_chan_exp :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> exp \<Rightarrow> bool" 
+  dynamic_built_on_chan_var :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> name \<Rightarrow> bool" and
+  dynamic_built_on_chan_atom :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> atom \<Rightarrow> bool" and
+  dynamic_built_on_chan_complex :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> complex \<Rightarrow> bool" and
+  dynamic_built_on_chan_tm :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> tm \<Rightarrow> bool" 
 where
   Chan: "
     \<rho> x = Some (VChn c) \<Longrightarrow>
     dynamic_built_on_chan_var \<rho> c x
   " |
   Closure: "
-    dynamic_built_on_chan_prim \<rho>' c p \<Longrightarrow>
+    dynamic_built_on_chan_atom \<rho>' c p \<Longrightarrow>
     \<rho> x = Some (VClsr p \<rho>') \<Longrightarrow>
     dynamic_built_on_chan_var \<rho> c x
   " |
@@ -77,67 +77,67 @@ where
 
   Send_Evt: "
     dynamic_built_on_chan_var \<rho> c xSC \<or> dynamic_built_on_chan_var \<rho> c xM \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (SendEvt xSC xM)
+    dynamic_built_on_chan_atom \<rho> c (SendEvt xSC xM)
   " |
   Recv_Evt: "
     dynamic_built_on_chan_var \<rho> c xRC \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (RecvEvt xRC)
+    dynamic_built_on_chan_atom \<rho> c (RecvEvt xRC)
   " |
   Pair: "
     dynamic_built_on_chan_var \<rho> c x1 \<or> dynamic_built_on_chan \<rho> c x2 \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (Pair x1 x2)
+    dynamic_built_on_chan_atom \<rho> c (Pair x1 x2)
   " |
   Left: "
     dynamic_built_on_chan_var \<rho> c xSum \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (Lft xSum)
+    dynamic_built_on_chan_atom \<rho> c (Lft xSum)
   " |
   Right: "
     dynamic_built_on_chan_var \<rho> c xSum \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (Rght xSum)
+    dynamic_built_on_chan_atom \<rho> c (Rht xSum)
   " |
-  Abs: "
-    dynamic_built_on_chan_exp \<rho>' c e \<Longrightarrow>
-    dynamic_built_on_chan_prim \<rho> c (Abs f x e)
+  Fun: "
+    dynamic_built_on_chan_tm \<rho>' c e \<Longrightarrow>
+    dynamic_built_on_chan_atom \<rho> c (Fun f x e)
   " |
 
-  Prim: "
-    dynamic_built_on_chan_prim \<rho> c p \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Prim p)
+  Atom: "
+    dynamic_built_on_chan_atom \<rho> c p \<Longrightarrow>
+    dynamic_built_on_chan_complex \<rho> c (Atom p)
   " |
   Spawn: "
-    dynamic_built_on_chan_exp \<rho> c eCh \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Spwn eCh)
+    dynamic_built_on_chan_tm \<rho> c eCh \<Longrightarrow>
+    dynamic_built_on_chan_complex \<rho> c (Spwn eCh)
   " |
   Sync: "
     dynamic_built_on_chan_var \<rho> c xY \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Sync xY)
+    dynamic_built_on_chan_complex \<rho> c (Sync xY)
   " |
   Fst: "
     dynamic_built_on_chan_var \<rho> c xP \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Fst xP)
+    dynamic_built_on_chan_complex \<rho> c (Fst xP)
   " |
   Snd: "
     dynamic_built_on_chan_var \<rho> c xP \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Snd xP)
+    dynamic_built_on_chan_complex \<rho> c (Snd xP)
   " |
   Case: "
     dynamic_built_on_chan_var \<rho> c xS \<or> 
-    dynamic_built_on_chan_exp \<rho> c eL \<or> dynamic_built_on_chan_exp \<rho> c eR \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (Case xS xL eL xR eR)
+    dynamic_built_on_chan_tm \<rho> c eL \<or> dynamic_built_on_chan_tm \<rho> c eR \<Longrightarrow>
+    dynamic_built_on_chan_complex \<rho> c (Case xS xL eL xR eR)
   " |
   App: "
     dynamic_built_on_chan_var \<rho> c f \<or>
     dynamic_built_on_chan_var \<rho> c xA \<Longrightarrow>
-    dynamic_built_on_chan_bound_exp \<rho> c (App f xA)
+    dynamic_built_on_chan_complex \<rho> c (App f xA)
   " |
 
   Result: "
     dynamic_built_on_chan_var \<rho> c x \<Longrightarrow>
-    dynamic_built_on_chan_exp \<rho> c (Rslt x)
+    dynamic_built_on_chan_tm \<rho> c (Rslt x)
   " |
-  Let: "
-    dynamic_built_on_chan_bound_exp \<rho> c b \<or> dynamic_built_on_chan_exp \<rho> c e \<Longrightarrow>
-    dynamic_built_on_chan_exp \<rho> c (Let x b e)
+  Bind: "
+    dynamic_built_on_chan_complex \<rho> c b \<or> dynamic_built_on_chan_tm \<rho> c e \<Longrightarrow>
+    dynamic_built_on_chan_tm \<rho> c (Bind x b e)
   "
 
 

@@ -233,7 +233,7 @@ definition C where "C =
 
 definition V where "V =
   (\<lambda> _ . {})(
-    g100 := {^Abs g101 g102 (
+    g100 := {^Fun g101 g102 (
       LET g103 = CASE g102 
         LEFT g104 |> 
           LET g105 = APP g101 g104 in 
@@ -243,7 +243,7 @@ definition V where "V =
           RESULT g107
       in 
       RESULT g103)},
-    g101 :=  {^Abs g101 g102 (
+    g101 :=  {^Fun g101 g102 (
       LET g103 = CASE g102 
         LEFT g104 |> 
           LET g105 = APP g101 g104 in 
@@ -260,7 +260,7 @@ definition V where "V =
     g105 := {^\<lparr>\<rparr>},
     g106 := {^\<lparr>\<rparr>},
     g107 := {^\<lparr>\<rparr>},
-    g108 := {^Abs g109 g110 (
+    g108 := {^Fun g109 g110 (
       LET g111 = CHAN \<lparr>\<rparr> in 
       LET g112 = \<lparr>\<rparr> in 
       LET g113 = RIGHT g112 in 
@@ -285,7 +285,7 @@ definition V where "V =
       in 
       RESULT g111 
     )},
-    g109 := {^Abs g109 g110 (
+    g109 := {^Fun g109 g110 (
       LET g111 = CHAN \<lparr>\<rparr> in 
       LET g112 = \<lparr>\<rparr> in 
       LET g113 = RIGHT g112 in 
@@ -317,7 +317,7 @@ definition V where "V =
     g114 := {^Left g113},
     g115 := {^Left g114},
     g116 := {^\<lparr>\<rparr>},
-    g117 :=  {^Abs g118 g119 (
+    g117 :=  {^Fun g118 g119 (
       LET g120 = RECV EVT g111 in 
       LET g121 = SYNC g120 in 
       LET g122 = FST g121 in 
@@ -327,7 +327,7 @@ definition V where "V =
       LET g126 = APP g118 g122 in 
       RESULT g126 
     )},
-    g118 :=  {^Abs g118 g119 (
+    g118 :=  {^Fun g118 g119 (
       LET g120 = RECV EVT g111 in 
       LET g121 = SYNC g120 in 
       LET g122 = FST g121 in 
@@ -355,7 +355,7 @@ definition V where "V =
     g128 := {^\<lparr>\<rparr>},
     g129 := {^Right g128},
     g130 := {},
-    g131 :=  {^Abs g132 g133 (
+    g131 :=  {^Fun g132 g133 (
       LET g134 = FST g133 in 
       LET g135 = SND g133 in 
       LET g136 = CHAN \<lparr>\<rparr> in LET g137 = \<lparr>g135, g136\<rparr> in 
@@ -365,7 +365,7 @@ definition V where "V =
       LET g141 = SYNC g140 in 
       RESULT g141 
     )},
-    g132 :=  {^Abs g132 g133 (
+    g132 :=  {^Fun g132 g133 (
       LET g134 = FST g133 in 
       LET g135 = SND g133 in 
       LET g136 = CHAN \<lparr>\<rparr> in LET g137 = \<lparr>g135, g136\<rparr> in 
@@ -430,241 +430,241 @@ definition V where "V =
 
 definition F :: flow_set where "F = {
 
-  (NLet g103, ECall g103, NLet g105),
-  (NLet g105, ECall g105, NLet g103),
-  (NResult g103, EReturn g105, NResult g105),
-  (NResult g105, EReturn g103, NResult g103),
-  (NLet g107, ENext, NResult g107),
-  (NResult g107, EReturn g103, NResult g103),
-  (NLet g103, ECall g103, NLet g107),
-  (NLet g100, ENext, NLet g108),
-  (NLet g111, ENext, NLet g112),
-  (NLet g112, ENext, NLet g113),
-  (NLet g113, ENext, NLet g114),
-  (NLet g114, ENext, NLet g115),
-  (NLet g115, ENext, NLet g116),
-  (NLet g116, ECall g116, NLet g103),
-  (NResult g103, EReturn g116, NLet g117),
-  (NLet g120, ENext, NLet g121),
-  (NLet g121, ENext, NLet g122),
-  (NLet g122, ENext, NLet g123),
-  (NLet g123, ENext, NLet g124),
-  (NLet g124, ENext, NLet g125),
-  (NLet g125, ESend g124, NLet g141),
-  (NLet g125, ENext, NLet g126),
-  (NLet g126, ECall g126, NLet g120),
-  (NResult g126, EReturn g126, NResult g126),
-  (NLet g117, ENext, NLet g127),
-  (NLet g127, ESpawn, NLet g128),
-  (NLet g128, ENext, NLet g129),
-  (NLet g129, ENext, NLet g130),
-  (NLet g130, ECall g130, NLet g120),
-  (NResult g126, EReturn g130, NResult g130),
-  (NLet g127, ENext, NResult g111),
-  (NLet g108, ENext, NLet g131),
-  (NLet g134, ENext, NLet g135),
-  (NLet g135, ENext, NLet g136),
-  (NLet g136, ENext, NLet g137),
-  (NLet g137, ENext, NLet g138),
-  (NLet g138, ENext, NLet g139),
-  (NLet g139, ESend g138, NLet g121),
-  (NLet g139, ENext, NLet g140),
-  (NLet g140, ENext, NLet g141),
-  (NLet g141, ENext, NResult g141),
-  (NLet g131, ENext, NLet g142),
-  (NLet g142, ENext, NLet g143),
-  (NLet g143, ECall g143, NLet g111),
-  (NResult g111, EReturn g143, NLet g144),
-  (NLet g144, ESpawn, NLet g145),
-  (NLet g145, ENext, NLet g146),
-  (NLet g146, ENext, NLet g147),
-  (NLet g147, ENext, NLet g148),
-  (NLet g148, ECall g148, NLet g134),
-  (NResult g141, EReturn g148, NResult g148),
-  (NLet g144, ENext, NLet g149),
-  (NLet g149, ESpawn, NLet g150),
-  (NLet g150, ENext, NLet g151),
-  (NLet g151, ENext, NLet g152),
-  (NLet g152, ENext, NLet g153),
-  (NLet g153, ENext, NLet g154),
-  (NLet g154, ECall g154, NLet g134),
-  (NResult g141, EReturn g154, NLet g155),
-  (NLet g155, ENext, NLet g156),
-  (NLet g156, ENext, NLet g157),
-  (NLet g157, ENext, NLet g158),
-  (NLet g158, ECall g158, NLet g134),
-  (NResult g141, EReturn g158, NResult g158),
-  (NLet g149, ENext, NLet g159),
-  (NLet g159, ENext, NLet g160),
-  (NLet g160, ENext, NLet g161),
-  (NLet g161, ENext, NLet g162),
-  (NLet g162, ENext, NLet g163),
-  (NLet g163, ECall g163, NLet g134),
-  (NResult g141, EReturn g163, NLet g164),
-  (NLet g164, ENext, NResult g164)
+  (IdBind g103, ECall g103, IdBind g105),
+  (IdBind g105, ECall g105, IdBind g103),
+  (IdRslt g103, EReturn g105, IdRslt g105),
+  (IdRslt g105, EReturn g103, IdRslt g103),
+  (IdBind g107, ENext, IdRslt g107),
+  (IdRslt g107, EReturn g103, IdRslt g103),
+  (IdBind g103, ECall g103, IdBind g107),
+  (IdBind g100, ENext, IdBind g108),
+  (IdBind g111, ENext, IdBind g112),
+  (IdBind g112, ENext, IdBind g113),
+  (IdBind g113, ENext, IdBind g114),
+  (IdBind g114, ENext, IdBind g115),
+  (IdBind g115, ENext, IdBind g116),
+  (IdBind g116, ECall g116, IdBind g103),
+  (IdRslt g103, EReturn g116, IdBind g117),
+  (IdBind g120, ENext, IdBind g121),
+  (IdBind g121, ENext, IdBind g122),
+  (IdBind g122, ENext, IdBind g123),
+  (IdBind g123, ENext, IdBind g124),
+  (IdBind g124, ENext, IdBind g125),
+  (IdBind g125, ESend g124, IdBind g141),
+  (IdBind g125, ENext, IdBind g126),
+  (IdBind g126, ECall g126, IdBind g120),
+  (IdRslt g126, EReturn g126, IdRslt g126),
+  (IdBind g117, ENext, IdBind g127),
+  (IdBind g127, ESpawn, IdBind g128),
+  (IdBind g128, ENext, IdBind g129),
+  (IdBind g129, ENext, IdBind g130),
+  (IdBind g130, ECall g130, IdBind g120),
+  (IdRslt g126, EReturn g130, IdRslt g130),
+  (IdBind g127, ENext, IdRslt g111),
+  (IdBind g108, ENext, IdBind g131),
+  (IdBind g134, ENext, IdBind g135),
+  (IdBind g135, ENext, IdBind g136),
+  (IdBind g136, ENext, IdBind g137),
+  (IdBind g137, ENext, IdBind g138),
+  (IdBind g138, ENext, IdBind g139),
+  (IdBind g139, ESend g138, IdBind g121),
+  (IdBind g139, ENext, IdBind g140),
+  (IdBind g140, ENext, IdBind g141),
+  (IdBind g141, ENext, IdRslt g141),
+  (IdBind g131, ENext, IdBind g142),
+  (IdBind g142, ENext, IdBind g143),
+  (IdBind g143, ECall g143, IdBind g111),
+  (IdRslt g111, EReturn g143, IdBind g144),
+  (IdBind g144, ESpawn, IdBind g145),
+  (IdBind g145, ENext, IdBind g146),
+  (IdBind g146, ENext, IdBind g147),
+  (IdBind g147, ENext, IdBind g148),
+  (IdBind g148, ECall g148, IdBind g134),
+  (IdRslt g141, EReturn g148, IdRslt g148),
+  (IdBind g144, ENext, IdBind g149),
+  (IdBind g149, ESpawn, IdBind g150),
+  (IdBind g150, ENext, IdBind g151),
+  (IdBind g151, ENext, IdBind g152),
+  (IdBind g152, ENext, IdBind g153),
+  (IdBind g153, ENext, IdBind g154),
+  (IdBind g154, ECall g154, IdBind g134),
+  (IdRslt g141, EReturn g154, IdBind g155),
+  (IdBind g155, ENext, IdBind g156),
+  (IdBind g156, ENext, IdBind g157),
+  (IdBind g157, ENext, IdBind g158),
+  (IdBind g158, ECall g158, IdBind g134),
+  (IdRslt g141, EReturn g158, IdRslt g158),
+  (IdBind g149, ENext, IdBind g159),
+  (IdBind g159, ENext, IdBind g160),
+  (IdBind g160, ENext, IdBind g161),
+  (IdBind g161, ENext, IdBind g162),
+  (IdBind g162, ENext, IdBind g163),
+  (IdBind g163, ECall g163, IdBind g134),
+  (IdRslt g141, EReturn g163, IdBind g164),
+  (IdBind g164, ENext, IdRslt g164)
 }"
 
 definition Ln_g111 :: node_map where "Ln_g111 = 
   (\<lambda> _ . {})(
-    NLet g108 := {},
-    NLet g111 := {},
-    NLet g112 := {g111},
-    NLet g113 := {g111},
-    NLet g114 := {g111},
-    NLet g115 := {g111},
-    NLet g116 := {g111},
-    NLet g117 := {g111},
-    NLet g120 := {g111, g118},
-    NLet g121 := {g120, g118},
-    NLet g122 := {g118},
-    NLet g123 := {g118},
-    NLet g124 := {g118},
-    NLet g125 := {g118},
-    NLet g126 := {g118},
-    NResult g126 := {},
-    NLet g127 := {g111, g117},
-    NLet g128 := {g117},
-    NLet g129 := {g117},
-    NLet g130 := {g117},
-    NResult g130 := {},
-    NResult g111 := {g111},
-    NLet g131 := {},
-    NLet g134 := {g133},
-    NLet g135 := {g134},
-    NLet g136 := {g134},
-    NLet g137 := {g134},
-    NLet g138 := {g134},
-    NLet g139 := {g138},
-    NLet g140 := {},
-    NLet g141 := {},
-    NResult g141 := {},
-    NLet g142 := {},
-    NLet g143 := {},
-    NLet g144 := {g143},
-    NLet g145 := {g143},
-    NLet g146 := {g143},
-    NLet g147 := {g143},
-    NLet g148 := {g147},
-    NResult g148 := {},
-    NLet g149 := {g143},
-    NLet g150 := {g143},
-    NLet g151 := {g143},
-    NLet g152 := {g143},
-    NLet g153 := {g143},
-    NLet g154 := {g143, g153},
-    NLet g155 := {g143},
-    NLet g156 := {g143},
-    NLet g157 := {g143},
-    NLet g158 := {g157},
-    NResult g158 := {},
-    NLet g159 := {g143},
-    NLet g160 := {g143},
-    NLet g161 := {g143},
-    NLet g162 := {g143},
-    NLet g163 := {g162},
-    NLet g164 := {},
-    NResult g164 := {}
+    IdBind g108 := {},
+    IdBind g111 := {},
+    IdBind g112 := {g111},
+    IdBind g113 := {g111},
+    IdBind g114 := {g111},
+    IdBind g115 := {g111},
+    IdBind g116 := {g111},
+    IdBind g117 := {g111},
+    IdBind g120 := {g111, g118},
+    IdBind g121 := {g120, g118},
+    IdBind g122 := {g118},
+    IdBind g123 := {g118},
+    IdBind g124 := {g118},
+    IdBind g125 := {g118},
+    IdBind g126 := {g118},
+    IdRslt g126 := {},
+    IdBind g127 := {g111, g117},
+    IdBind g128 := {g117},
+    IdBind g129 := {g117},
+    IdBind g130 := {g117},
+    IdRslt g130 := {},
+    IdRslt g111 := {g111},
+    IdBind g131 := {},
+    IdBind g134 := {g133},
+    IdBind g135 := {g134},
+    IdBind g136 := {g134},
+    IdBind g137 := {g134},
+    IdBind g138 := {g134},
+    IdBind g139 := {g138},
+    IdBind g140 := {},
+    IdBind g141 := {},
+    IdRslt g141 := {},
+    IdBind g142 := {},
+    IdBind g143 := {},
+    IdBind g144 := {g143},
+    IdBind g145 := {g143},
+    IdBind g146 := {g143},
+    IdBind g147 := {g143},
+    IdBind g148 := {g147},
+    IdRslt g148 := {},
+    IdBind g149 := {g143},
+    IdBind g150 := {g143},
+    IdBind g151 := {g143},
+    IdBind g152 := {g143},
+    IdBind g153 := {g143},
+    IdBind g154 := {g143, g153},
+    IdBind g155 := {g143},
+    IdBind g156 := {g143},
+    IdBind g157 := {g143},
+    IdBind g158 := {g157},
+    IdRslt g158 := {},
+    IdBind g159 := {g143},
+    IdBind g160 := {g143},
+    IdBind g161 := {g143},
+    IdBind g162 := {g143},
+    IdBind g163 := {g162},
+    IdBind g164 := {},
+    IdRslt g164 := {}
   )
 "
 
 definition Lx_g111 :: node_map where "Lx_g111 = 
   (\<lambda> _ . {})(
-    NLet g108 := {},
-    NLet g111 := {g111},
-    NLet g112 := {g111},
-    NLet g113 := {g111},
-    NLet g114 := {g111},
-    NLet g115 := {g111},
-    NLet g116 := {g111},
-    NLet g117 := {g111, g117},
-    NLet g120 := {g120, g118},
-    NLet g121 := {g118},
-    NLet g122 := {g118},
-    NLet g123 := {g118},
-    NLet g124 := {g118},
-    NLet g125 := {g118},
-    NLet g126 := {},
-    NResult g126 := {},
-    NLet g127 := {g111, g117},
-    NLet g128 := {g117},
-    NLet g129 := {g117},
-    NLet g130 := {},
-    NResult g130 := {},
-    NResult g111 := {},
-    NLet g131 := {},
-    NLet g134 := {g134},
-    NLet g135 := {g134},
-    NLet g136 := {g134},
-    NLet g137 := {g134},
-    NLet g138 := {g138},
-    NLet g139 := {},
-    NLet g140 := {},
-    NLet g141 := {},
-    NResult g141 := {},
-    NLet g142 := {},
-    NLet g143 := {g143},
-    NLet g144 := {g143},
-    NLet g145 := {g143},
-    NLet g146 := {g143},
-    NLet g147 := {g147},
-    NLet g148 := {},
-    NResult g148 := {},
-    NLet g149 := {g143},
-    NLet g150 := {g143},
-    NLet g151 := {g143},
-    NLet g152 := {g143},
-    NLet g153 := {g143, g153},
-    NLet g154 := {g143},
-    NLet g155 := {g143},
-    NLet g156 := {g143},
-    NLet g157 := {g157},
-    NLet g158 := {},
-    NResult g158 := {},
-    NLet g159 := {g143},
-    NLet g160 := {g143},
-    NLet g161 := {g143},
-    NLet g162 := {g162},
-    NLet g163 := {},
-    NLet g164 := {},
-    NResult g164 := {}
+    IdBind g108 := {},
+    IdBind g111 := {g111},
+    IdBind g112 := {g111},
+    IdBind g113 := {g111},
+    IdBind g114 := {g111},
+    IdBind g115 := {g111},
+    IdBind g116 := {g111},
+    IdBind g117 := {g111, g117},
+    IdBind g120 := {g120, g118},
+    IdBind g121 := {g118},
+    IdBind g122 := {g118},
+    IdBind g123 := {g118},
+    IdBind g124 := {g118},
+    IdBind g125 := {g118},
+    IdBind g126 := {},
+    IdRslt g126 := {},
+    IdBind g127 := {g111, g117},
+    IdBind g128 := {g117},
+    IdBind g129 := {g117},
+    IdBind g130 := {},
+    IdRslt g130 := {},
+    IdRslt g111 := {},
+    IdBind g131 := {},
+    IdBind g134 := {g134},
+    IdBind g135 := {g134},
+    IdBind g136 := {g134},
+    IdBind g137 := {g134},
+    IdBind g138 := {g138},
+    IdBind g139 := {},
+    IdBind g140 := {},
+    IdBind g141 := {},
+    IdRslt g141 := {},
+    IdBind g142 := {},
+    IdBind g143 := {g143},
+    IdBind g144 := {g143},
+    IdBind g145 := {g143},
+    IdBind g146 := {g143},
+    IdBind g147 := {g147},
+    IdBind g148 := {},
+    IdRslt g148 := {},
+    IdBind g149 := {g143},
+    IdBind g150 := {g143},
+    IdBind g151 := {g143},
+    IdBind g152 := {g143},
+    IdBind g153 := {g143, g153},
+    IdBind g154 := {g143},
+    IdBind g155 := {g143},
+    IdBind g156 := {g143},
+    IdBind g157 := {g157},
+    IdBind g158 := {},
+    IdRslt g158 := {},
+    IdBind g159 := {g143},
+    IdBind g160 := {g143},
+    IdBind g161 := {g143},
+    IdBind g162 := {g162},
+    IdBind g163 := {},
+    IdBind g164 := {},
+    IdRslt g164 := {}
   )
 "
 
 definition Ln_g136 :: node_map where "Ln_g136 = 
   (\<lambda> _ . {})(
-    NLet g121 := {},
-    NLet g122 := {g121},
-    NLet g123 := {g121},
-    NLet g124 := {g123},
-    NLet g125 := {g124},
-    NLet g126 := {},
-    NResult g126 := {},
-    NLet g136 := {},
-    NLet g137 := {g136},
-    NLet g138 := {g136, g137},
-    NLet g139 := {g136, g138},
-    NLet g140 := {g136},
-    NLet g141 := {g140},
-    NResult g141 := {}
+    IdBind g121 := {},
+    IdBind g122 := {g121},
+    IdBind g123 := {g121},
+    IdBind g124 := {g123},
+    IdBind g125 := {g124},
+    IdBind g126 := {},
+    IdRslt g126 := {},
+    IdBind g136 := {},
+    IdBind g137 := {g136},
+    IdBind g138 := {g136, g137},
+    IdBind g139 := {g136, g138},
+    IdBind g140 := {g136},
+    IdBind g141 := {g140},
+    IdRslt g141 := {}
   )
 "
 
 definition Lx_g136 :: node_map where "Lx_g136 = 
   (\<lambda> _ . {})(
-    NLet g121 := {g121},
-    NLet g122 := {g121},
-    NLet g123 := {g123},
-    NLet g124 := {g124},
-    NLet g125 := {},
-    NLet g126 := {},
-    NResult g126 := {},
-    NLet g136 := {g136},
-    NLet g137 := {g136, g137},
-    NLet g138 := {g136, g137},
-    NLet g139 := {g136},
-    NLet g140 := {g140},
-    NLet g141 := {},
-    NResult g141 := {}
+    IdBind g121 := {g121},
+    IdBind g122 := {g121},
+    IdBind g123 := {g123},
+    IdBind g124 := {g124},
+    IdBind g125 := {},
+    IdBind g126 := {},
+    IdRslt g126 := {},
+    IdBind g136 := {g136},
+    IdBind g137 := {g136, g137},
+    IdBind g138 := {g136, g137},
+    IdBind g139 := {g136},
+    IdBind g140 := {g140},
+    IdBind g141 := {},
+    IdRslt g141 := {}
   )
 "
 
@@ -672,28 +672,28 @@ definition Lx_g136 :: node_map where "Lx_g136 =
 
 
 lemma path_with_tangent_call_is_live_for_g111: "
-  may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g111) (\<lambda> x . True) [
-    (NLet g111, ENext),
-    (NLet g112, ENext),
-    (NLet g113, ENext),
-    (NLet g114, ENext),
-    (NLet g115, ENext),
-    (NLet g116, ECall g116),
-    (NLet g103, ECall g103),
-    (NLet g105, ECall g105),
-    (NLet g103, ECall g103),
-    (NLet g105, ECall g105),
-    (NLet g103, ECall g103),
-    (NLet g107, ENext),
-    (NResult g107, EReturn g103),
-    (NResult g103, EReturn g105),
-    (NResult g105, EReturn g103),
-    (NResult g103, EReturn g105),
-    (NResult g105, EReturn g103),
-    (NResult g103, EReturn g116),
-    (NLet g117, ENext),
-    (NLet g127, ESpawn),
-    (NLet g128, ENext)
+  may_be_static_live_path V F Ln_g111 Lx_g111 (IdBind g111) (\<lambda> x . True) [
+    (IdBind g111, ENext),
+    (IdBind g112, ENext),
+    (IdBind g113, ENext),
+    (IdBind g114, ENext),
+    (IdBind g115, ENext),
+    (IdBind g116, ECall g116),
+    (IdBind g103, ECall g103),
+    (IdBind g105, ECall g105),
+    (IdBind g103, ECall g103),
+    (IdBind g105, ECall g105),
+    (IdBind g103, ECall g103),
+    (IdBind g107, ENext),
+    (IdRslt g107, EReturn g103),
+    (IdRslt g103, EReturn g105),
+    (IdRslt g105, EReturn g103),
+    (IdRslt g103, EReturn g105),
+    (IdRslt g105, EReturn g103),
+    (IdRslt g103, EReturn g116),
+    (IdBind g117, ENext),
+    (IdBind g127, ESpawn),
+    (IdBind g128, ENext)
   ]
 "
  apply (rule may_be_static_live_path.Step)
@@ -704,12 +704,12 @@ lemma path_with_tangent_call_is_live_for_g111: "
  apply (rule may_be_static_live_path.Step)
  apply (rule may_be_static_live_path.Pre_Return[of 
    V F Ln_g111 Lx_g111 g103 _ g116 _
-   "[(NLet g103, ECall g103), (NLet g105, ECall g105), 
-     (NLet g103, ECall g103), (NLet g105, ECall g105), 
-     (NLet g103, ECall g103), (NLet g107, ENext), 
-     (NResult g107, EReturn g103), (NResult g103, EReturn g105), 
-     (NResult g105, EReturn g103), (NResult g103, EReturn g105),
-     (NResult g105, EReturn g103)]"
+   "[(IdBind g103, ECall g103), (IdBind g105, ECall g105), 
+     (IdBind g103, ECall g103), (IdBind g105, ECall g105), 
+     (IdBind g103, ECall g103), (IdBind g107, ENext), 
+     (IdRslt g107, EReturn g103), (IdRslt g103, EReturn g105), 
+     (IdRslt g105, EReturn g103), (IdRslt g103, EReturn g105),
+     (IdRslt g105, EReturn g103)]"
  ]; auto?)
  apply (rule may_be_static_live_path.Step)+
  apply (rule may_be_static_live_path.Edge; auto?)
@@ -782,24 +782,24 @@ done
 
 
 lemma path_with_server_loop_is_live_for_g111: "
-  may_be_static_live_path V F Ln_g111 Lx_g111 (NLet g128) (\<lambda> x . True) [
-    (NLet g128, ENext),
-    (NLet g129, ENext),
-    (NLet g130, ECall g130),
-    (NLet g120, ENext),
-    (NLet g121, ENext),
-    (NLet g122, ENext),
-    (NLet g123, ENext),
-    (NLet g124, ENext),
-    (NLet g125, ENext),
-    (NLet g126, ECall g126),
-    (NLet g120, ENext),
-    (NLet g121, ENext),
-    (NLet g122, ENext),
-    (NLet g123, ENext),
-    (NLet g124, ENext),
-    (NLet g125, ENext),
-    (NLet g126, ECall g126)
+  may_be_static_live_path V F Ln_g111 Lx_g111 (IdBind g128) (\<lambda> x . True) [
+    (IdBind g128, ENext),
+    (IdBind g129, ENext),
+    (IdBind g130, ECall g130),
+    (IdBind g120, ENext),
+    (IdBind g121, ENext),
+    (IdBind g122, ENext),
+    (IdBind g123, ENext),
+    (IdBind g124, ENext),
+    (IdBind g125, ENext),
+    (IdBind g126, ECall g126),
+    (IdBind g120, ENext),
+    (IdBind g121, ENext),
+    (IdBind g122, ENext),
+    (IdBind g123, ENext),
+    (IdBind g124, ENext),
+    (IdBind g125, ENext),
+    (IdBind g126, ECall g126)
   ]
 "
  apply (rule may_be_static_live_path.Step)+
@@ -844,15 +844,15 @@ done
 
 
 lemma path_with_chan_message_is_live_for_g136: "
-  may_be_static_live_path V F Ln_g136 Lx_g136 (NLet g136) (\<lambda> x . x = (NLet g125)) [
-    (NLet g136, ENext),
-    (NLet g137, ENext),
-    (NLet g138, ENext),
-    (NLet g139, ESend g138),
-    (NLet g121, ENext),
-    (NLet g122, ENext),
-    (NLet g123, ENext),
-    (NLet g124, ENext)
+  may_be_static_live_path V F Ln_g136 Lx_g136 (IdBind g136) (\<lambda> x . x = (IdBind g125)) [
+    (IdBind g136, ENext),
+    (IdBind g137, ENext),
+    (IdBind g138, ENext),
+    (IdBind g139, ESend g138),
+    (IdBind g121, ENext),
+    (IdBind g122, ENext),
+    (IdBind g123, ENext),
+    (IdBind g124, ENext)
   ]
 "
  apply (rule may_be_static_live_path.Step)+
@@ -880,16 +880,16 @@ done
 
 
 lemma path_with_server_loop_is_not_live_for_g136: "
-  \<not> may_be_static_live_path V F Ln_g136 Lx_g136 (NLet g136) (\<lambda> x . x = (NLet g125)) [
-    (NLet g121, ENext),
-    (NLet g122, ENext),
-    (NLet g123, ENext),
-    (NLet g124, ENext),
-    (NLet g125, ENext),
-    (NLet g126, ECall g126),
-    (NLet g120, ENext),
-    (NLet g121, ENext),
-    (NLet g122, ENext)
+  \<not> may_be_static_live_path V F Ln_g136 Lx_g136 (IdBind g136) (\<lambda> x . x = (IdBind g125)) [
+    (IdBind g121, ENext),
+    (IdBind g122, ENext),
+    (IdBind g123, ENext),
+    (IdBind g124, ENext),
+    (IdBind g125, ENext),
+    (IdBind g126, ECall g126),
+    (IdBind g120, ENext),
+    (IdBind g121, ENext),
+    (IdBind g122, ENext)
   ]
 "
   apply (rule notI)
@@ -909,7 +909,7 @@ done
 
 (*
 definition may_be_recv_site where "may_be_recv_site = 
- (may_be_static_recv_node_label V anf_program)
+ (may_be_static_recv_node_tm_id V anf_program)
 "
 
 lemma "
@@ -917,15 +917,15 @@ lemma "
 "
  apply (unfold 
     V_def F_def 
-    may_be_recv_site_def may_be_static_send_node_label.simps
+    may_be_recv_site_def may_be_static_send_node_tm_id.simps
     anf_program_def
  )
  apply (rule; auto?)+
- apply (simp add: may_be_static_recv_node_label.simps; auto?)
- apply (erule is_super_exp.cases; auto?; simp?)+
+ apply (simp add: may_be_static_recv_node_tm_id.simps; auto?)
+ apply (erule is_super_tm.cases; auto?; simp?)+
  apply (rule; auto?)+
- apply (simp add: may_be_static_recv_node_label.simps; auto?)
- apply (erule is_super_exp.cases; auto?; simp?)+
+ apply (simp add: may_be_static_recv_node_tm_id.simps; auto?)
+ apply (erule is_super_tm.cases; auto?; simp?)+
  apply (rule; auto?)+
 done
 
