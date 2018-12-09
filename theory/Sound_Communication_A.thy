@@ -965,7 +965,7 @@ proof -
     using L1H6 proof cases
       case BindApp
       then show ?thesis
-        using H2 H4 local.App(3) trace_pool_snapshot_not_static_bound_sound by fastforce
+        using H2 H4 local.App(3) staticEvalPoolSoundSnapshot by fastforce
     qed
 
     have L1H8: "staticFlowsAcceptStack V F (\<lfloor>e'\<rfloor>) (Ctn x e env # k)"
@@ -1479,7 +1479,7 @@ proof -
           staticEvalPreservedStarDynamicEval staticEval_to_pool by fastforce
         have L3H3: "(SAtm (Fun fp xp eu) \<in> V f)"
           using L3H2 local.Seq_Step_Up(4) local.App(3) 
-          trace_pool_snapshot_not_static_bound_sound valToStaticVal.simps(3) by fastforce
+          staticEvalPoolSoundSnapshot valToStaticVal.simps(3) by fastforce
 
         have L3H2: "{(IdBind xm, ECall, (tmId eu))} \<subseteq> F"
         using L3H1 proof cases

@@ -1474,7 +1474,7 @@ proof -
 qed
 
 
-theorem trace_pool_snapshot_not_static_bound_sound :
+theorem staticEvalPoolSoundSnapshot :
   "
   \<rho> x = Some \<omega> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
@@ -1494,7 +1494,8 @@ proof -
   show "{|\<omega>|} \<subseteq> \<V> x" by (simp add: staticEvalEnv.simps)
 qed
 
-theorem trace_pool_always_not_static_bound_sound :
+
+theorem staticEvalPoolSound :
   "
   \<rho>' x = Some \<omega> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> 
@@ -1513,7 +1514,7 @@ proof -
   have H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: staticEvalPreservedStarDynamicEval)
 
   from H1 H4 H5
-  show "{|\<omega>|} \<subseteq> \<V> x" using trace_pool_snapshot_not_static_bound_sound by auto
+  show "{|\<omega>|} \<subseteq> \<V> x" using staticEvalPoolSoundSnapshot by auto
 qed
 
 
@@ -1556,7 +1557,7 @@ proof -
     H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: staticEval_to_pool)
 
   from H1 H3 H4 H5
-  show " {|\<omega>|} \<subseteq> \<V> x" using trace_pool_always_not_static_bound_sound by blast
+  show " {|\<omega>|} \<subseteq> \<V> x" using staticEvalPoolSound by blast
 qed
 
 
