@@ -190,11 +190,11 @@ inductive staticTraceable :: "(tm_id * 'a * tm_id) set \<Rightarrow> tm_id \<Rig
   "
 
 
-inductive static_one_shot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneShot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
     forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
-    static_one_shot V e xC 
+    staticOneShot V e xC 
   "
 
 inductive staticOneToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
