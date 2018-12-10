@@ -2466,7 +2466,7 @@ sending identifier by its term identifier.
           (path @ [DRtn n])
           (staticPath @ [(NRslt n, MRtn)])
 
-  lemma staticTraceableComplete:
+  lemma staticTraceableSound:
     \forall t0 pool comm path n c t' env stack staticEnv staticComm graph isEnd .
       if
         star dynamicEval ([[] -> (Stt t0 [->] [])], {}) (pool, comm), 
@@ -2479,7 +2479,7 @@ sending identifier by its term identifier.
           pathsCorrespond path staticPath, 
           staticTraceable graph (termId t0) isEnd staticPath
 
-  lemma staticInclusiveComplete:
+  lemma staticInclusiveSound:
     \forall t0 pool comm path1 stt1 path2 stt2 staticPath1 staticPath2 . 
       if
         star dynamicEval [[] -> (Stt t0 [->] [])] {} pool comm
@@ -2490,7 +2490,7 @@ sending identifier by its term identifier.
       then
         staticInclusive staticPath1 staticPath2
 
-  lemma staticSendIdComplete:
+  lemma staticSendIdSound:
     \forall t0 pool comm path n n$_e$ t' env stack n$_{sc}$ n$_m$ env' path$_c$ n$_c$ .
       if
         star dynamicEval [[] -> (Stt t0 [->] [])] {} pool comm, 
@@ -2815,7 +2815,7 @@ These various preservation lemmas are derived from the basic properites of lists
 and straight forward properities of path correspondence, such as commutitivity, as
 well as foundational principles like induction of corresponding paths.
 
-The lemma for completeness of sending identifier classification \lstinline{staticSendIdComplete}
+The lemma for completeness of sending identifier classification \lstinline{staticSendIdSound}
 is proved using the lemma for
 soundness of static evaluation for synchronization of a send event,
 and the lemma for soudness of static evaluation.
@@ -2845,7 +2845,7 @@ used to ensure that the static step is indeed a sending identifier.
       then
         abstract v \in staticEnv n 
 
-  lemma staticReachableComplete:
+  lemma staticReachableSound:
     \forall t0 pool comm staticEnv staticComm path t env stack .
       if
         star dynamicEval [[] -> (Stt t0 [->] [])] {} pool comm,
@@ -2970,7 +2970,7 @@ The completeness of static reachability follows the definitions
 a generalized form of completeness over pools.
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma staticReachablePoolComplete:
+  lemma staticReachablePoolSound:
     \forall t0 pool .
       if
         star dynamicEval [[] -> (Stt t0 [->] [])], {} pool comm 
@@ -3889,7 +3889,7 @@ that correlates with the dynamic path is much more challenging.
           (staticPath$_{pfx}$ @ (NBnd n$_s$, ESend n$_{se}$)
             # (NBnd n$_r$, MNxt) # staticPath$_{sfx}$)
 
-  lemma staticTraceableComplete:
+  lemma staticTraceableSound:
     \forall t0 pool comm path n c t' env stack staticEnv staticComm
       entr exit n$_c$ graph isEnd path$_c$  . 
       if
@@ -3904,7 +3904,7 @@ that correlates with the dynamic path is much more challenging.
           pathsCorrespondModChan pool comm (Chan path$_c$ n$_c$) path staticPath, 
           staticTraceable graph entr exit (NBnd n$_c$) isEnd staticPath)
 
-  lemma staticInclusiveComplete:
+  lemma staticInclusiveSound:
     \forall t0 pool comm staticEnv entr exit n$_c$ graph staticComm
       path1 stt1 path$_c$ staticPath1 path2 stt2 staticPath2 .
       if

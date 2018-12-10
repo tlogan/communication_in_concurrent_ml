@@ -160,7 +160,7 @@ lemma staticInclusive_commut: "
 done
 
 
-lemma staticInclusive_preserved_under_unordered_extension: "
+lemma staticInclusivePreservedDynamicEval_under_unordered_extension: "
   \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> 
   staticInclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> staticInclusive (path\<^sub>1 @ [l]) path\<^sub>2
 "
@@ -171,11 +171,11 @@ lemma staticInclusive_preserved_under_unordered_extension: "
   apply (simp add: Send2)
 done
 
-lemma staticInclusive_preserved_under_unordered_double_extension: "
+lemma staticInclusivePreservedDynamicEval_under_unordered_double_extension: "
   staticInclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> 
   \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> staticInclusive (path\<^sub>1 @ [l1]) (path\<^sub>2 @ [l2])
 "
-by (metis staticInclusive_commut staticInclusive_preserved_under_unordered_extension prefix_append prefix_def)
+by (metis staticInclusive_commut staticInclusivePreservedDynamicEval_under_unordered_extension prefix_append prefix_def)
 
 
 inductive paths_correspond :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
@@ -228,7 +228,7 @@ is unordered necessary?
   " 
 
 
-lemma staticInclusiveComplete: "
+lemma staticInclusiveSound: "
   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
@@ -285,7 +285,7 @@ lemma static_equality_sound: "
 
 (* PATH SOUND *)
 
-lemma staticTraceableComplete': 
+lemma staticTraceableSound': 
 
 assumes
   H1: "star_left dynamicEval EH EH'" and
@@ -301,7 +301,7 @@ shows "
     staticTraceable F Ln Lx (IdBind xC) isEnd path)"
   sorry
 
-lemma staticTraceableComplete: "
+lemma staticTraceableSound: "
   \<E>' \<pi> = Some (\<langle>(Bind x b e\<^sub>n);\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -317,7 +317,7 @@ lemma staticTraceableComplete: "
 
 
 
-lemma staticTraceableSendComplete: "
+lemma staticTraceableSendSound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -327,28 +327,28 @@ lemma staticTraceableSendComplete: "
     (paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
     staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) pathSync"
  apply (unfold is_send_path.simps; auto)
- apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticSendSiteComplete; auto?)
-  apply (frule staticTraceableComplete; auto?)
+ apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticSendSiteSound; auto?)
+  apply (frule staticTraceableSound; auto?)
 done
 
 (* END PATH SOUND *)
 
 
 theorem static_one_shot_sound': "
-  every_two (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) singular \<Longrightarrow>
+  forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) singular \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
-  every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
+  forEveryTwo (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
- apply (simp add: every_two.simps singular.simps; auto)
- apply (frule_tac \<pi>Sync = \<pi>1 in staticTraceableSendComplete; auto)
+ apply (simp add: forEveryTwo.simps singular.simps; auto)
+ apply (frule_tac \<pi>Sync = \<pi>1 in staticTraceableSendSound; auto)
  apply (drule_tac x = pathSync in spec)
- apply (frule_tac \<pi>Sync = \<pi>2 in staticTraceableSendComplete; auto?)
+ apply (frule_tac \<pi>Sync = \<pi>2 in staticTraceableSendSound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (metis is_send_path_implies_nonempty_pool staticInclusiveComplete static_equality_sound)
+ apply (metis is_send_path_implies_nonempty_pool staticInclusiveSound static_equality_sound)
 done
 
 theorem static_one_shot_sound: "
@@ -370,78 +370,78 @@ TO DO LATER:
 *)
 
 theorem noncompetitive_send_to_ordered_send: "
-  every_two (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
+  forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
-  every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
+  forEveryTwo (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
 (*
-apply (simp add: every_two.simps noncompetitive.simps; auto)
-using staticTraceableSendComplete runtime_send_paths_are_inclusive by blast
+apply (simp add: forEveryTwo.simps noncompetitive.simps; auto)
+using staticTraceableSendSound runtime_send_paths_are_inclusive by blast
 *)
 
-theorem static_fan_out_sound: "
+theorem staticOneToMany_sound: "
   \<lbrakk>
-    static_fan_out V e xC;
+    staticOneToMany V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
     star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   fan_out \<E>' (Ch \<pi> xC)
 "
- apply (erule static_fan_out.cases; auto)
+ apply (erule staticOneToMany.cases; auto)
  apply (unfold fan_out.simps)
  apply (metis noncompetitive_send_to_ordered_send)
 done
 
 lemma noncompetitive_recv_to_ordered_recv: "
-   every_two (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
+   forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
    staticFlowsAccept V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
-   every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
+   forEveryTwo (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
 
 
-theorem static_fan_in_sound: "
+theorem staticManyToOne_sound: "
   \<lbrakk>
-    static_fan_in V e xC;
+    staticManyToOne V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
     star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   fan_in \<E>' (Ch \<pi> xC)
 "
- apply (erule static_fan_in.cases; auto)
+ apply (erule staticManyToOne.cases; auto)
  apply (unfold fan_in.simps)
  apply (metis noncompetitive_recv_to_ordered_recv)
 done
 
 
-theorem static_one_to_one_sound: "
+theorem staticOneToOne_sound: "
   \<lbrakk>
-    static_one_to_one V e xC;
+    staticOneToOne V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
     star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   one_to_one \<E>' (Ch \<pi> xC)
 "
- apply (erule static_one_to_one.cases; auto)
+ apply (erule staticOneToOne.cases; auto)
   apply (unfold one_to_one.simps)
-  apply (metis static_fan_in.intros static_fan_in_sound static_fan_out.intros static_fan_out_sound)
+  apply (metis staticManyToOne.intros staticManyToOne_sound staticOneToMany.intros staticOneToMany_sound)
 done
 
 (*
 
-lemma paths_cong_preserved_under_reduction: "
+lemma paths_congPreservedDynamicEval_under_reduction: "
   paths_correspond (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
   paths_correspond \<pi> path"
 using paths_correspond.cases by fastforce
 
 
-lemma paths_cong_mod_chan_preserved_under_reduction: "
+lemma paths_cong_mod_chanPreservedDynamicEval_under_reduction: "
 (suffix \<pi> (\<pi>C @ [LNxt xC)) \<and> suffix path [(IdBind xC, ENext)] \<or>
   True) \<Longrightarrow>
 paths_correspond_mod_chan EH' (Ch \<pi>C xC) (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
@@ -473,7 +473,7 @@ proof -
 
     have 
       H7: "paths_correspond (butlast (LNxt xC # \<pi>X)) path"
-      using H2(2) H5 H6 paths_cong_preserved_under_reduction by blast
+      using H2(2) H5 H6 paths_congPreservedDynamicEval_under_reduction by blast
 
     have 
       H8: "paths_correspond (LNxt xC # (butlast \<pi>X)) path"
@@ -554,22 +554,22 @@ qed
 
 
 (*
-lemma paths_cong_mod_chan_preserved_under_reduction_chan: "
+lemma paths_cong_mod_chanPreservedDynamicEval_under_reduction_chan: "
   paths_correspond ((LNxt xC) # \<pi>Suff @ [l) (path @ [n]) \<Longrightarrow>
   env (\<pi>C @ (LNxt xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
   paths_correspond_mod_chan (env, H) (Ch \<pi>C xC) (\<pi>C @ (LNxt xC) # \<pi>Suff) path"
-using paths_cong_preserved_under_reduction paths_correspond_mod_chan.Chan by blast
+using paths_congPreservedDynamicEval_under_reduction paths_correspond_mod_chan.Chan by blast
 
-lemma  paths_cong_mod_chan_preserved_under_reduction_sync: "
+lemma  paths_cong_mod_chanPreservedDynamicEval_under_reduction_sync: "
   paths_correspond (\<pi>Suffix @ [l) (pathSuffix @ [n]) \<Longrightarrow>
   \<E> (\<pi>R @ (LNxt xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
   dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
   \<E> \<pi>S = Some (\<langle>(Bind xS (Sync xSE) eSY);\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
   \<E> \<pi>R = Some (\<langle>(Bind xR (Sync xRE) eRY);\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
   {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
-  paths_correspond_mod_chan (\<E>, H) c \<pi>Severy_two pathPre \<Longrightarrow>
+  paths_correspond_mod_chan (\<E>, H) c \<pi>SforEveryTwo pathPre \<Longrightarrow>
   paths_correspond_mod_chan (\<E>, H) c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (IdBind xS, ESend xSE) # (IdBind xR, ENext) # pathSuffix)"
-by (meson paths_cong_preserved_under_reduction paths_correspond_mod_chan.Sync)
+by (meson paths_congPreservedDynamicEval_under_reduction paths_correspond_mod_chan.Sync)
 *)
 
 

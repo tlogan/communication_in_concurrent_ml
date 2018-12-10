@@ -825,7 +825,7 @@ proof
 qed
 
 
-theorem staticEvalState_preserved_under_step :
+theorem staticEvalStatePreservedDynamicEval_under_step :
   "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e; \<rho>; \<kappa>\<rangle>; 
@@ -888,7 +888,7 @@ proof -
   qed
 qed
 
-theorem staticEvalState_preserved_under_step_up :
+theorem staticEvalStatePreservedDynamicEval_under_step_up :
   "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e; \<rho>; \<kappa>\<rangle>;
@@ -917,7 +917,7 @@ proof -
     qed
 qed
 
-theorem staticEvalState_preserved_under_step_down :
+theorem staticEvalStatePreservedDynamicEval_under_step_down :
   "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>; 
@@ -1180,7 +1180,7 @@ proof
 qed
 
 
-lemma staticEval_preserved_under_sync:
+lemma staticEvalPreservedDynamicEval_under_sync:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
@@ -1271,7 +1271,7 @@ proof
 qed
 
 
-lemma staticEval_preserved_under_chan:
+lemma staticEvalPreservedDynamicEval_under_chan:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>Bind x MkChn e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
@@ -1360,12 +1360,12 @@ proof
 
   {
     fix \<pi>' \<sigma>'
-    assume "(\<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> VUnt);\<kappa>\<rangle>, \<pi> @ [LSpawn x] \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)) \<pi>' = Some \<sigma>'"
-    and "\<pi>' \<noteq> \<pi> @ [LNxt x]" and " \<pi>' \<noteq> \<pi> @ [LSpawn x]" then
+    assume "(\<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> VUnt);\<kappa>\<rangle>, \<pi> @ [LSpwn x] \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)) \<pi>' = Some \<sigma>'"
+    and "\<pi>' \<noteq> \<pi> @ [LNxt x]" and " \<pi>' \<noteq> \<pi> @ [LSpwn x]" then
     have "\<E> \<pi>' = Some \<sigma>'" by simp with `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
     have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (blast intro: staticEvalPool.cases)
   } with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> VUnt);\<kappa>\<rangle>` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>c;\<rho>;[]\<rangle>`
-  show "\<forall>\<pi>' \<sigma>'. (\<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> VUnt);\<kappa>\<rangle>, \<pi> @ [LSpawn x] \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)) \<pi>' = Some \<sigma>' \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by simp
+  show "\<forall>\<pi>' \<sigma>'. (\<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> VUnt);\<kappa>\<rangle>, \<pi> @ [LSpwn x] \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)) \<pi>' = Some \<sigma>' \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by simp
 qed
 
 
@@ -1398,7 +1398,7 @@ proof -
       using H1 local.Seq_Step(4) staticEvalPool.simps by auto
 
     have L1H8: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>"
-      using L1H7 local.Seq_Step(5) staticEvalState_preserved_under_step by blast
+      using L1H7 local.Seq_Step(5) staticEvalStatePreservedDynamicEval_under_step by blast
 
     have L1H9: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>)"
       using H1 L1H8 staticEvalPool.simps by auto
@@ -1408,13 +1408,13 @@ proof -
   next
     case (Seq_Step_Up \<pi> x b e \<rho> \<kappa> e' \<rho>')
     have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LCall x] \<mapsto> \<langle>e';\<rho>';(Ctn x e \<rho>) # \<kappa>\<rangle>)"
-      using H1 local.Seq_Step_Up(4) local.Seq_Step_Up(5) staticEvalPool.simps staticEvalState_preserved_under_step_up by fastforce
+      using H1 local.Seq_Step_Up(4) local.Seq_Step_Up(5) staticEvalPool.simps staticEvalStatePreservedDynamicEval_under_step_up by fastforce
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
       by (simp add: L1H1 local.Seq_Step_Up(1))
   next
     case (BindMkChn \<pi> x e \<rho> \<kappa>)
     show ?thesis
-      by (simp add: H1 local.BindMkChn(1) local.BindMkChn(4) staticEval_preserved_under_chan)
+      by (simp add: H1 local.BindMkChn(1) local.BindMkChn(4) staticEvalPreservedDynamicEval_under_chan)
   next
     case (BindSpawn \<pi> x e\<^sub>c e \<rho> \<kappa>)
     show ?thesis
@@ -1422,14 +1422,14 @@ proof -
   next
     case (BindSync \<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e c \<omega>\<^sub>m)
     have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s @ [LNxt x\<^sub>s] \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r @ [LNxt x\<^sub>r] \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)" 
-      by (simp add: H1 local.BindSync(10) local.BindSync(11) local.BindSync(4) local.BindSync(5) local.BindSync(7) local.BindSync(8) local.BindSync(9) staticEval_preserved_under_sync)
+      by (simp add: H1 local.BindSync(10) local.BindSync(11) local.BindSync(4) local.BindSync(5) local.BindSync(7) local.BindSync(8) local.BindSync(9) staticEvalPreservedDynamicEval_under_sync)
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
       by (simp add: L1H1 local.BindSync(1))
   qed
 qed
 
 
-theorem staticEvalPreservedStarDynamicEval :
+theorem staticEvalPreserved :
 "
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>;  
@@ -1511,7 +1511,7 @@ proof -
     H4: "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
 
   from H2 H3
-  have H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: staticEvalPreservedStarDynamicEval)
+  have H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: staticEvalPreserved)
 
   from H1 H4 H5
   show "{|\<omega>|} \<subseteq> \<V> x" using staticEvalPoolSoundSnapshot by auto
@@ -1519,7 +1519,7 @@ qed
 
 
 lemma staticEval_to_pool:
-  "
+"
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
@@ -1539,13 +1539,14 @@ proof -
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: staticEvalPool.intros)
 qed
 
-theorem tm_always_not_static_bound_sound :
-  "
-      \<rho>' x = Some \<omega> \<Longrightarrow>
-      (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      star dynamicEval ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) (\<E>', H') \<Longrightarrow>
-      \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
-      {|\<omega>|} \<subseteq> \<V> x"
+theorem staticEvalSound :
+"
+  \<rho>' x = Some \<omega> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  star dynamicEval ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) (\<E>', H') \<Longrightarrow>
+  \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
+  {|\<omega>|} \<subseteq> \<V> x
+"
 proof -
   assume 
     H1: "\<rho>' x = Some \<omega>" and
@@ -1566,8 +1567,8 @@ inductive staticReachableForward :: "tm \<Rightarrow> tm \<Rightarrow> bool"  wh
   Refl :
   "
     staticReachableForward e0 e0
-  " | 
-  BindSpawn_Child:
+  " 
+|  BindSpawn_Child:
   "
     staticReachableForward e0 (Bind x (Spwn e\<^sub>c) e\<^sub>n) \<Longrightarrow>
     staticReachableForward e0 e\<^sub>c
@@ -1586,13 +1587,12 @@ inductive staticReachableForward :: "tm \<Rightarrow> tm \<Rightarrow> bool"  wh
   "
     staticReachableForward e0 (Bind x (Atom (Fun f x\<^sub>p e\<^sub>b)) e\<^sub>n) \<Longrightarrow>
     staticReachableForward e0 e\<^sub>b
-  " | 
-  Bind:
+  " 
+| Bind:
   "
     staticReachableForward e0 (Bind x b e\<^sub>n) \<Longrightarrow>
     staticReachableForward e0 e\<^sub>n
   "
-
 
 lemma staticReachable_trans:
   "
@@ -1761,7 +1761,7 @@ inductive staticReachablePool :: "tm \<Rightarrow> trace_pool \<Rightarrow> bool
     staticReachablePool e0 E
   "
 
-lemma staticReachablePool_preserved:
+lemma staticReachablePoolPreservedDynamicEval:
   "
   dynamicEval (env, H) (env', H') \<Longrightarrow>
   staticReachablePool e0 env \<Longrightarrow>
@@ -2025,7 +2025,7 @@ proof -
   qed
 qed
 
-lemma staticReachablePoolComplete:
+lemma staticReachablePoolSound:
   "
   star dynamicEval (\<E>0, H0) (\<E>', H') \<Longrightarrow>
   \<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<Longrightarrow>
@@ -2088,7 +2088,7 @@ proof -
 
       have 
         "staticReachablePool e\<^sub>0 \<E>'"
-        using L1H0(2) L2H3 L2H4 staticReachablePool_preserved step.hyps(2) by blast
+        using L1H0(2) L2H3 L2H4 staticReachablePoolPreservedDynamicEval step.hyps(2) by blast
 
     } 
 
@@ -2099,7 +2099,7 @@ proof -
 qed
 
 
-theorem staticReachableComplete:
+theorem staticReachableSound:
 "
       star dynamicEval ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
       \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
@@ -2112,7 +2112,7 @@ proof -
 
    show "staticReachable e\<^sub>0 e'" 
     using L1H1 L1H2
-    using staticReachablePoolComplete staticReachableForward_implies_staticReachable staticReachablePool.simps by auto
+    using staticReachablePoolSound staticReachableForward_implies_staticReachable staticReachablePool.simps by auto
 qed
 
 end

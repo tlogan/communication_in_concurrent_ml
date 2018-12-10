@@ -192,31 +192,31 @@ inductive staticTraceable :: "(tm_id * 'a * tm_id) set \<Rightarrow> tm_id \<Rig
 
 inductive static_one_shot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
-    every_two (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
+    forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
-inductive static_one_to_one :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
-    every_two (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
-    every_two (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
-    static_one_to_one V e xC 
+    staticOneToOne V e xC 
   "
 
-inductive static_fan_out :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneToMany :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
-    every_two (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
-    static_fan_out V e xC 
+    staticOneToMany V e xC 
   "
 
-inductive static_fan_in :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticManyToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
-    every_two (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
-    static_fan_in V e xC 
+    staticManyToOne V e xC 
   "
 
 end

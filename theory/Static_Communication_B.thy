@@ -535,38 +535,38 @@ inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow>
 inductive static_one_shot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    every_two (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) singular \<Longrightarrow>
+    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) singular \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
     static_one_shot V e xC 
   "
 
-inductive static_one_to_one :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    every_two (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
-    every_two (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
-    static_one_to_one V e xC 
+    staticOneToOne V e xC 
   "
 
-inductive static_fan_out :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneToMany :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    every_two (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
-    static_fan_out V e xC 
+    staticOneToMany V e xC 
   "
 
-inductive static_fan_in :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticManyToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    every_two (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
     static_live_chan V Ln Lx xC e \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
-    static_fan_in V e xC 
+    staticManyToOne V e xC 
   "
 
 

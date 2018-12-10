@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  9 DEC 2018 14:18
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  9 DEC 2018 21:08
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -950,13 +950,8 @@ Overfull \hbox (17.0pt too wide) in paragraph at lines 2416--2417
 [][] 
  []
 
-[47] [48 <./cml-proof-low.pdf>] [49] [50] [51] [52] [53] [54] [55]
-Overfull \hbox (8.84541pt too wide) in paragraph at lines 2818--2824
-[]\T1/LinuxLibertineT-TLF/m/n/10.95 The lemma for com-plete-ness of send-ing id
-en-ti-fier clas-si-fi-ca-tion [][][][] is proved
- []
-
-[56] [57] [58] [59] [60] [61] [62] [63] [64]
+[47] [48 <./cml-proof-low.pdf>] [49] [50] [51] [52] [53] [54] [55] [56]
+[57] [58] [59] [60] [61] [62] [63] [64]
 <cml-graph-lp.pdf, id=257, 1729.46124pt x 1925.1925pt>
 File: cml-graph-lp.pdf Graphic file (type pdf)
  <use cml-graph-lp.pdf>
@@ -1007,7 +1002,7 @@ Package pdftex.def Info: cml-graph-k4.pdf used on input line 3585.
 [82] [83] [84] (./thesis.bbl [85]) [86] (./thesis.aux) ) 
 Here is how much of TeX's memory you used:
  7802 strings out of 493014
- 115196 string characters out of 6133351
+ 115181 string characters out of 6133351
  434505 words of memory out of 5000000
  11163 multiletter control sequences out of 15000+600000
  55927 words of font info for 68 fonts, out of 8000000 for 9000
@@ -1028,7 +1023,7 @@ dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2016/texmf-dist/fon
 ts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1
 /public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public
 /amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (87 pages, 704390 bytes).
+Output written on thesis.pdf (87 pages, 703678 bytes).
 PDF statistics:
  457 PDF objects out of 1000 (max. 8388607)
  321 compressed objects within 4 object streams

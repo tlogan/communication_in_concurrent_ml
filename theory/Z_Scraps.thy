@@ -53,7 +53,7 @@ lemma singleton_eq_empty_surround: "
 "
 by simp
 
-lemma stack_staticTraceable_preserved_over_balanced_extension:
+lemma stack_staticTraceablePreservedDynamicEval_over_balanced_extension:
   "\<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa> \<Longrightarrow> 
   balanced \<pi>' \<Longrightarrow> 
   \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> @ \<pi>' \<mapsto> \<kappa>" 
@@ -91,12 +91,12 @@ proof -
 qed
 
 
-lemma stack_staticTraceable_preserved_over_seq_extension:"
+lemma stack_staticTraceablePreservedDynamicEval_over_seq_extension:"
   \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa> \<Longrightarrow> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> ;; (LNext x) \<mapsto> \<kappa>
 "
-by (simp add: balanced.Next stack_staticTraceable_preserved_over_balanced_extension)
+by (simp add: balanced.Next stack_staticTraceablePreservedDynamicEval_over_balanced_extension)
 
-lemma staticTraceable_tm_preserved_sync_recv_evt: "
+lemma staticTraceable_tmPreservedDynamicEval_sync_recv_evt: "
 \<lbrakk>
   \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e;
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s ;; (LNext x\<^sub>s) \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; (LNext x\<^sub>r) \<mapsto> \<langle>e';\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>'\<rangle>);
@@ -124,7 +124,7 @@ proof -
 qed
 
 
-lemma staticTraceable_tm_preserved_sync_send_evt: "
+lemma staticTraceable_tmPreservedDynamicEval_sync_send_evt: "
 \<lbrakk>
   \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e;
   \<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e';\<rho>\<^sub>s;\<kappa>'\<rangle>);
@@ -156,7 +156,7 @@ proof -
 
 qed
 
-lemma staticTraceable_tm_preserved_under_seqEval_down: "
+lemma staticTraceable_tmPreservedReturnEval: "
   (\<E>(\<pi> ;; (LReturn x\<^sub>\<kappa>) \<mapsto> \<sigma>')) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   (\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
     \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>
@@ -218,7 +218,7 @@ proof -
   qed
 qed
 
-lemma staticTraceable_tm_preserved_under_seqEval: "
+lemma staticTraceable_tmPreservedSeqEval: "
   \<E> \<rightarrow> \<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>) \<Longrightarrow>
   (\<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e'';\<rho>'';\<kappa>\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa> \<Longrightarrow>
@@ -320,7 +320,7 @@ proof -
 qed
 
 
-lemma staticTraceable_tm_preserved_under_callEval: "
+lemma staticTraceable_tmPreservedCallEval: "
   \<E> \<rightarrow> \<E>(\<pi> ;; (LCall x) \<mapsto> \<langle>e'a;\<rho>'';\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>) \<Longrightarrow>
   (\<E>(\<pi> ;; (LCall x) \<mapsto> \<langle>e'a;\<rho>'';\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa> \<Longrightarrow>
@@ -338,7 +338,7 @@ lemma staticTraceable_tm_preserved_under_callEval: "
     using staticTraceable.BindApp apply blast
 done
 
-lemma staticTraceable_tm_preserved_under_chan:"
+lemma staticTraceable_tmPreservedDynamicEval_under_chan:"
   (\<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e;\<rho>(x \<mapsto> (VChan (Ch \<pi> x)));\<kappa>\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow> 
@@ -347,7 +347,7 @@ lemma staticTraceable_tm_preserved_under_chan:"
   apply (smt map_upd_Some_unfold state.inject staticTraceable.BindMkChn)
 done
 
-lemma staticTraceable_tm_preserved_under_spawn: "
+lemma staticTraceable_tmPreservedDynamicEval_under_spawn: "
   (\<E>(\<pi> ;; (LNext x) \<mapsto> \<langle>e;\<rho>(x \<mapsto> VUnit);\<kappa>\<rangle>, \<pi> ;; (LSpawn x) \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa> \<Longrightarrow>
   \<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e;\<rho>;\<kappa>\<rangle>) \<Longrightarrow> 
@@ -356,7 +356,7 @@ lemma staticTraceable_tm_preserved_under_spawn: "
   apply (smt map_upd_Some_unfold state.inject staticTraceable.BindSpawn staticTraceable.BindSpawn_Child)
 done
  
-lemma staticTraceable_tm_preserved_under_sync: "
+lemma staticTraceable_tmPreservedDynamicEval_under_sync: "
   \<E> \<rightarrow> \<E>(\<pi>\<^sub>s ;; (LNext x\<^sub>s) \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; (LNext x\<^sub>r) \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
   (\<E>(\<pi>\<^sub>s ;; (LNext x\<^sub>s) \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnit);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r ;; (LNext x\<^sub>r) \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
   \<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa> \<Longrightarrow>
@@ -367,16 +367,16 @@ lemma staticTraceable_tm_preserved_under_sync: "
 "
   apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; (LNext x\<^sub>r)", auto)
   apply (drule staticEvalPreservedDynamicEval, auto)
-  apply (meson staticTraceable_tm_preserved_sync_recv_evt)
+  apply (meson staticTraceable_tmPreservedDynamicEval_sync_recv_evt)
   apply (case_tac "\<pi>' = \<pi>\<^sub>s ;; (LNext x\<^sub>s)")
   apply (drule staticEvalPreservedDynamicEval; auto)
-  apply (meson staticTraceable_tm_preserved_sync_send_evt)
-  apply (smt tm.inject(1) option.inject state.inject staticTraceable_tm_preserved_sync_send_evt)
+  apply (meson staticTraceable_tmPreservedDynamicEval_sync_send_evt)
+  apply (smt tm.inject(1) option.inject state.inject staticTraceable_tmPreservedDynamicEval_sync_send_evt)
   apply simp
 done
 
 
-lemma staticTraceable_tm_preserved: "
+lemma staticTraceable_tmPreservedDynamicEval: "
   \<lbrakk>
     \<E> \<rightarrow> \<E>';
     \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
@@ -409,7 +409,7 @@ proof -
     and \<open>\<E> \<pi> = Some (\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle>)\<close>
     and \<open>\<langle>RESULT x;\<rho>;\<langle>x\<^sub>\<kappa>,e\<^sub>\<kappa>,\<rho>\<^sub>\<kappa>\<rangle> # \<kappa>\<rangle> \<hookrightarrow> \<sigma>'\<close>
 
-    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (blast intro: staticTraceable_tm_preserved_under_seqEval_down)
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (blast intro: staticTraceable_tmPreservedReturnEval)
   next
     case (Seq_Step \<pi> x b e \<rho> \<kappa>'' e'' \<rho>'')
 
@@ -430,7 +430,7 @@ proof -
     and \<open>\<E> \<pi> = Some (\<langle>LET x = b in e;\<rho>;\<kappa>''\<rangle>)\<close>
     and \<open>\<langle>LET x = b in e;\<rho>;\<kappa>''\<rangle> \<hookrightarrow> \<langle>e'';\<rho>'';\<kappa>''\<rangle>\<close>
 
-    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (auto simp: staticTraceable_tm_preserved_under_seqEval)
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (auto simp: staticTraceable_tmPreservedSeqEval)
   next
     case (Seq_Step_Up \<pi> x b e \<rho> \<kappa> e'' \<rho>'')
 
@@ -452,7 +452,7 @@ proof -
     and \<open>\<E> \<pi> = Some (\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle>)\<close>
     and \<open>\<langle>LET x = b in e;\<rho>;\<kappa>\<rangle> \<hookrightarrow> \<langle>e'';\<rho>'';\<langle>x,e,\<rho>\<rangle> # \<kappa>\<rangle>\<close>
 
-    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (auto simp: staticTraceable_tm_preserved_under_callEval)
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (auto simp: staticTraceable_tmPreservedCallEval)
   next
     case (BindMkChn \<pi> x e \<rho> \<kappa>)
 
@@ -466,7 +466,7 @@ proof -
     with  \<open>\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>\<close> 
     and \<open>\<E> \<pi> = Some (\<langle>LET x = CHAN \<lparr>\<rparr> in e;\<rho>;\<kappa>\<rangle>)\<close>
 
-    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (auto simp: staticTraceable_tm_preserved_under_chan)
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (auto simp: staticTraceable_tmPreservedDynamicEval_under_chan)
   next
     case (BindSpawn \<pi> x e\<^sub>c e \<rho> \<kappa>)
     assume "\<E>' = \<E> ++ [\<pi> ;; (LNext x) \<mapsto> \<langle>e;\<rho> ++ [x \<mapsto> VUnit];\<kappa>\<rangle>, \<pi> ;; (LSpawn x) \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>]"
@@ -478,7 +478,7 @@ proof -
     with \<open>\<forall>\<pi> e \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> \<V> \<turnstile> e\<^sub>0 \<down> \<pi> \<mapsto> e \<and> \<V> \<tturnstile> e\<^sub>0 \<down> \<pi> \<mapsto> \<kappa>\<close> 
     and \<open>\<E> \<pi> = Some (\<langle>LET x = SPAWN e\<^sub>c in e;\<rho>;\<kappa>\<rangle>)\<close>
 
-    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (auto simp: staticTraceable_tm_preserved_under_spawn)
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (auto simp: staticTraceable_tmPreservedDynamicEval_under_spawn)
   next
     case (BindSync \<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e c \<omega>\<^sub>m)
 
@@ -496,12 +496,12 @@ proof -
     and \<open>\<E> \<pi>\<^sub>s = Some (\<langle>LET x\<^sub>s = SYNC x\<^sub>s\<^sub>e in e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)\<close>
     and \<open>\<E> \<pi>\<^sub>r = Some (\<langle>LET x\<^sub>r = SYNC x\<^sub>r\<^sub>e in e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)\<close>
 
-    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (auto simp: staticTraceable_tm_preserved_under_sync)
+    show "\<V> \<turnstile> e\<^sub>0 \<down> \<pi>' \<mapsto> e'" by (auto simp: staticTraceable_tmPreservedDynamicEval_under_sync)
   qed
 qed
 
 
-lemma staticTraceable_stack_preserved: "
+lemma staticTraceable_stackPreservedDynamicEval: "
 \<lbrakk>
   \<E> \<rightarrow> \<E>';
   \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>);
@@ -516,31 +516,31 @@ apply (case_tac "\<pi>' = \<pi> ;; (LReturn x\<^sub>\<kappa>)", auto)
 apply ((drule spec)+, erule impE, assumption, erule conjE)
 apply (erule seqEval.cases; auto)
 apply (erule stack_staticTraceable.cases; auto)
-  using balanced.CallReturn stack_staticTraceable_preserved_over_balanced_extension apply blast
+  using balanced.CallReturn stack_staticTraceablePreservedDynamicEval_over_balanced_extension apply blast
 
 apply (case_tac "\<pi>' = \<pi> ;; (LNext x)", auto)
-  using stack_staticTraceable_preserved_over_seq_extension apply blast
+  using stack_staticTraceablePreservedDynamicEval_over_seq_extension apply blast
 
 apply (case_tac "\<pi>' = \<pi> ;; (LCall x)", auto)
 apply ((drule spec)+, erule impE, assumption, erule conjE) 
 apply (simp add: balanced.Empty stack_staticTraceable.Nonempty)
 
 apply (case_tac "\<pi>' = \<pi> ;; (LNext x)", auto)
-  using stack_staticTraceable_preserved_over_seq_extension apply blast
+  using stack_staticTraceablePreservedDynamicEval_over_seq_extension apply blast
 
 apply (case_tac "\<pi>' = \<pi> ;; (LSpawn x)", auto)
 using Empty_Local balanced.Empty apply blast
 apply (case_tac "\<pi>' = \<pi> ;; (LNext x)", auto)
-  using stack_staticTraceable_preserved_over_seq_extension apply blast
+  using stack_staticTraceablePreservedDynamicEval_over_seq_extension apply blast
 
 
 apply (case_tac "\<pi>' = \<pi>\<^sub>r ;; (LNext x\<^sub>r)", auto)
-  apply (simp add: stack_staticTraceable_preserved_over_seq_extension)
+  apply (simp add: stack_staticTraceablePreservedDynamicEval_over_seq_extension)
 
 apply (case_tac "\<pi>' = \<pi>\<^sub>s ;; (LNext x\<^sub>s)", auto)
-  using stack_staticTraceable_preserved_over_seq_extension apply blast
+  using stack_staticTraceablePreservedDynamicEval_over_seq_extension apply blast
 
-  using stack_staticTraceable_preserved_over_seq_extension apply blast
+  using stack_staticTraceablePreservedDynamicEval_over_seq_extension apply blast
 
 done
 
@@ -560,12 +560,12 @@ lemma isnt_staticTraceable_sound': "
   using balanced.Empty stack_staticTraceable.Empty apply blast
   apply (rename_tac \<E> \<E>' \<pi> e \<rho> \<kappa>)
   apply (drule star_left_implies_star)
-  apply (drule staticEvalPreservedStarDynamicEval, blast)
-  apply (drule staticTraceable_tm_preserved, auto)
+  apply (drule staticEvalPreserved, blast)
+  apply (drule staticTraceable_tmPreservedDynamicEval, auto)
  apply (rename_tac \<E> \<E>' \<pi> e \<rho> \<kappa>)
  apply (drule star_left_implies_star)
- apply (drule staticEvalPreservedStarDynamicEval, blast)
- apply (drule staticTraceable_stack_preserved, auto)
+ apply (drule staticEvalPreserved, blast)
+ apply (drule staticTraceable_stackPreservedDynamicEval, auto)
 done
 
 
@@ -1342,7 +1342,7 @@ theorem infinite_prog_has_single_receiver_communication_analysis: "
 sorry
 
 theorem infinite_prog_has_one_to_one_communication_analysis: "
-  static_one_to_one (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100
+  staticOneToOne (infinite_prog_\<V>, infinite_prog_\<C>, infinite_prog) g100
 "
 sorry
 

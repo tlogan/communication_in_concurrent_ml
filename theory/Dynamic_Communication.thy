@@ -18,14 +18,14 @@ inductive is_recv_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_p
     is_recv_path pool c \<pi>y
   "
 
-inductive every_two  :: "('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool" where
+inductive forEveryTwo  :: "('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool" where
   intro: "
     (\<forall> \<pi>1 \<pi>2 .
       P \<pi>1 \<longrightarrow>
       P \<pi>2 \<longrightarrow>
       R \<pi>1 \<pi>2
     ) \<Longrightarrow>
-    every_two P R
+    forEveryTwo P R
   "
 
 inductive ordered :: "'a list \<Rightarrow> 'a list \<Rightarrow> bool" where
@@ -34,19 +34,19 @@ inductive ordered :: "'a list \<Rightarrow> 'a list \<Rightarrow> bool" where
 
 inductive one_shot :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
-    every_two (is_send_path pool c) op= \<Longrightarrow> 
+    forEveryTwo (is_send_path pool c) op= \<Longrightarrow> 
     one_shot pool c
   "
 
 inductive fan_out :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
-    every_two (is_send_path pool c) ordered \<Longrightarrow>
+    forEveryTwo (is_send_path pool c) ordered \<Longrightarrow>
     fan_out pool c
   "
   
 inductive fan_in :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
-    every_two (is_recv_path pool c) ordered \<Longrightarrow> 
+    forEveryTwo (is_recv_path pool c) ordered \<Longrightarrow> 
     fan_in pool c
   "
 

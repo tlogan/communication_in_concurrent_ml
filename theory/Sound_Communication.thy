@@ -6,7 +6,7 @@ theory Sound_Communication
     Static_Communication
 begin
 
-lemma path_state_preserved_for_non_leaf: "
+lemma path_statePreservedDynamicEval_for_non_leaf: "
 (env, H) \<rightarrow> (E', H') \<Longrightarrow>
 E' (\<pi> @ [l]) = Some \<sigma> \<Longrightarrow>
 \<not> leaf env \<pi> \<Longrightarrow>
@@ -49,7 +49,7 @@ lemma staticEvalSendEvtSound: "
   \<rbrakk> \<Longrightarrow>
   {^SendEvt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> V x\<^sub>e
 "
-  apply (drule tm_always_not_static_bound_sound; assumption?; auto)
+  apply (drule staticEvalSound; assumption?; auto)
 done
 
 lemma staticEvalRecvEvtSound: "
@@ -61,7 +61,7 @@ lemma staticEvalRecvEvtSound: "
   \<rbrakk> \<Longrightarrow>
   {^RecvEvt x\<^sub>r\<^sub>c} \<subseteq> V x\<^sub>e
 "
-  apply (drule tm_always_not_static_bound_sound; assumption?; auto)
+  apply (drule staticEvalSound; assumption?; auto)
 done
 
 lemma staticEvalSendChanSound: "
@@ -75,7 +75,7 @@ lemma staticEvalSendChanSound: "
   ^Chan xC \<in> V x\<^sub>s\<^sub>c
 "
  apply (frule staticEval_to_pool)
- apply (drule staticEvalPreservedStarDynamicEval[of _ _ _ ]; assumption?)
+ apply (drule staticEvalPreserved[of _ _ _ ]; assumption?)
  apply (erule staticEvalPool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
  apply (erule staticEvalState.cases; auto)
@@ -98,7 +98,7 @@ lemma staticEvalRecvChanSound: "
   ^Chan xC \<in> V x\<^sub>r\<^sub>c
 "
  apply (frule staticEval_to_pool)
- apply (drule staticEvalPreservedStarDynamicEval[of _ _ _ ]; assumption?)
+ apply (drule staticEvalPreserved[of _ _ _ ]; assumption?)
  apply (erule staticEvalPool.cases; auto)
  apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
  apply (erule staticEvalState.cases; auto)
@@ -110,7 +110,7 @@ lemma staticEvalRecvChanSound: "
  apply (drule spec[of _ x\<^sub>r\<^sub>c], drule spec[of _ "(VChn (Ch \<pi> xC))"]; simp)
 done
 
-lemma staticSendSiteComplete: "
+lemma staticSendSiteSound: "
   \<E> \<pi>Sync = Some (\<langle>Bind x (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   \<rho> x\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChn (Ch \<pi>C xC)) \<Longrightarrow>
@@ -124,10 +124,10 @@ lemma staticSendSiteComplete: "
  apply (rule exI[of _ x\<^sub>m]; auto?)
   apply (rule exI[of _ x\<^sub>e]; auto?)
    apply (blast dest: staticEvalSendEvtSound)
-  using staticReachableComplete apply blast
+  using staticReachableSound apply blast
 done
 
-lemma staticRecvSiteComplete: "
+lemma staticRecvSiteSound: "
   \<E>' \<pi>Sync = Some (\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   \<rho> x\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChn (Ch \<pi>C xC)) \<Longrightarrow>
@@ -140,7 +140,7 @@ lemma staticRecvSiteComplete: "
  apply (auto simp: staticEvalRecvChanSound)
  apply (rule exI[of _ x\<^sub>e]; auto?)
    apply (blast dest: staticEvalRecvEvtSound)
-  using staticReachableComplete apply blast
+  using staticReachableSound apply blast
 done
 
 end

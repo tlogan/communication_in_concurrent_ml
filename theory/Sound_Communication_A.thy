@@ -22,7 +22,7 @@ lemma staticInclusive_commut:
 done
 
 
-lemma staticInclusive_preserved_under_unordered_extension:
+lemma staticInclusivePreservedDynamicEval_under_unordered_extension:
   "
   \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> 
   staticInclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> staticInclusive (path\<^sub>1 @ [l]) path\<^sub>2
@@ -32,12 +32,12 @@ lemma staticInclusive_preserved_under_unordered_extension:
   apply (simp add: Spawn2)
 done
 
-lemma staticInclusive_preserved_under_unordered_double_extension:
+lemma staticInclusivePreservedDynamicEval_under_unordered_double_extension:
   "
   staticInclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> 
   \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> staticInclusive (path\<^sub>1 @ [l1]) (path\<^sub>2 @ [l2])
 "
-by (metis staticInclusive_commut staticInclusive_preserved_under_unordered_extension prefix_append prefix_def)
+by (metis staticInclusive_commut staticInclusivePreservedDynamicEval_under_unordered_extension prefix_append prefix_def)
 
 
 
@@ -67,7 +67,7 @@ inductive paths_correspond :: "control_path \<Rightarrow> static_path \<Rightarr
     paths_correspond (\<pi> @ [LRtn x]) (path @ [(IdRslt x, EReturn)])
   " 
 
-lemma staticInclusiveBaseComplete:
+lemma staticInclusiveBaseSound:
   "
   E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
@@ -112,7 +112,7 @@ proof -
 qed
 
 
-lemma paths_cong_preserved_under_reduction:
+lemma paths_congPreservedDynamicEval_under_reduction:
   "
   paths_correspond (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
   paths_correspond \<pi> path"
@@ -154,7 +154,7 @@ lemma equality_abstract_to_concrete:
 "
 by (simp add: equality_abstract_to_concrete')
 
-lemma paths_correspond_preserved_under_reduction:
+lemma paths_correspondPreservedDynamicEval_under_reduction:
   "
   paths_correspond \<pi>1 path1 \<Longrightarrow>
   paths_correspond (butlast \<pi>1) (butlast path1) 
@@ -163,7 +163,7 @@ apply (erule paths_correspond.cases; auto)
   apply (simp add: paths_correspond.Empty)
 done
 
-lemma strict_prefix_preserved:
+lemma strict_prefixPreservedDynamicEval:
   "
 paths_correspond \<pi>1 path1 \<Longrightarrow>
 paths_correspond \<pi> path \<Longrightarrow>
@@ -267,7 +267,7 @@ lemma equality_contcrete_to_abstract:
 by (simp add: equality_contcrete_to_abstract')
 
 
-lemma spawn_point_preserved_under_congruent_paths: " 
+lemma spawn_pointPreservedDynamicEval_under_congruent_paths: " 
 l1 = (LNxt x) \<Longrightarrow> l2 = (LSpwn x) \<Longrightarrow>
 paths_correspond (\<pi> @ [l1]) (path @ [n1]) \<Longrightarrow>
 paths_correspond (\<pi> @ [l2]) (path @ [n2]) \<Longrightarrow>
@@ -386,7 +386,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
           n1 = n2 \<or> 
           (\<exists> x . n1 = (IdBind x, ENext) \<and> n2 = (IdBind x, ESpawn )) \<or>
           (\<exists> x . n1 = (IdBind x, ESpawn ) \<and> n2 = (IdBind x, ENext))" 
-          by (metis H12 H13 H14 H15 H16 H17 H6 H7 L3H1 L3H3 append1_eq_conv equality_abstract_to_concrete equality_contcrete_to_abstract spawn_point_preserved_under_congruent_paths)
+          by (metis H12 H13 H14 H15 H16 H17 H6 H7 L3H1 L3H3 append1_eq_conv equality_abstract_to_concrete equality_contcrete_to_abstract spawn_pointPreservedDynamicEval_under_congruent_paths)
 
         have L3H5: "staticInclusive (path1x @ [n1]) (path1x @ [n2])"
           using L3H4 staticInclusive.intros(3) staticInclusive.intros(4) Prefix1 by blast
@@ -395,12 +395,12 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       next
         assume L3H1: "path1x \<noteq> path2x"
         show "staticInclusive path1 path2"
-          using H13 H16 L2H6 L2H7 L2H8 L3H1 staticInclusive_preserved_under_unordered_double_extension strict_prefixI by blast
+          using H13 H16 L2H6 L2H7 L2H8 L3H1 staticInclusivePreservedDynamicEval_under_unordered_double_extension strict_prefixI by blast
       qed
     next
       assume L2H1: "\<not> leaf env \<pi>2x"
       have L2H2: "env \<pi>2 = Some \<sigma>2"
-        using H11 H15 H3 L2H1 path_state_preserved_for_non_leaf by blast
+        using H11 H15 H3 L2H1 path_statePreservedDynamicEval_for_non_leaf by blast
       have L2H3: "staticInclusive path1x path2"
         using H1 H14 H7 L1H2 L2H2 by blast
 
@@ -409,13 +409,13 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       have L2H9: "\<not> strict_prefix path1x path2"
         using H14 H7 L2H8 strict_prefix_abstract_to_concrete by blast
       show "staticInclusive path1 path2"
-        by (metis H13 L2H3 L2H9 Prefix2 staticInclusive_preserved_under_unordered_extension prefix_prefix strict_prefix_def)
+        by (metis H13 L2H3 L2H9 Prefix2 staticInclusivePreservedDynamicEval_under_unordered_extension prefix_prefix strict_prefix_def)
     qed
 
   next
     assume L1H1: "\<not> leaf env \<pi>1x"
       have L1H2: "env \<pi>1 = Some \<sigma>1"
-        using H10 H12 H3 L1H1 path_state_preserved_for_non_leaf by blast
+        using H10 H12 H3 L1H1 path_statePreservedDynamicEval_for_non_leaf by blast
     show "staticInclusive path1 path2"
 
     proof cases
@@ -429,18 +429,18 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       have L2H9: "\<not> strict_prefix path2x path1"
         using H17 H6 L2H8 strict_prefix_abstract_to_concrete by auto
       show "staticInclusive path1 path2"
-        by (metis H16 L2H3 L2H9 Prefix1 staticInclusive_commut staticInclusive_preserved_under_unordered_extension prefix_order.dual_order.not_eq_order_implies_strict prefix_prefix)
+        by (metis H16 L2H3 L2H9 Prefix1 staticInclusive_commut staticInclusivePreservedDynamicEval_under_unordered_extension prefix_order.dual_order.not_eq_order_implies_strict prefix_prefix)
     next
       assume L2H1: "\<not> leaf env \<pi>2x"
       have L2H2: "env \<pi>2 = Some \<sigma>2"
-        using H11 H15 H3 L2H1 path_state_preserved_for_non_leaf by blast
+        using H11 H15 H3 L2H1 path_statePreservedDynamicEval_for_non_leaf by blast
       show "staticInclusive path1 path2"
         using H1 H6 H7 L1H2 L2H2 by blast
     qed
   qed
 qed
 
-lemma staticInclusiveComplete:
+lemma staticInclusiveSound:
   "
   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow>
@@ -479,7 +479,7 @@ proof -
   proof induction
     case (refl z)
     then show ?case
-      using staticInclusiveBaseComplete by blast
+      using staticInclusiveBaseSound by blast
   next
     case (step x y z)
 
@@ -628,7 +628,7 @@ inductive staticFlowsAcceptPool :: "static_env \<Rightarrow> flow_set \<Rightarr
     staticFlowsAcceptPool V F E
   "
 
-lemma staticFlowsAcceptPool_preserved_under_seqEval_down:
+lemma staticFlowsAcceptPoolPreservedReturnEval:
   "
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
@@ -673,7 +673,7 @@ assume
 qed
 
 
-lemma staticFlowsAcceptPool_preserved_under_seqEval:
+lemma staticFlowsAcceptPoolPreservedSeqEval:
   "
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
@@ -801,7 +801,7 @@ proof -
 qed
 
 
-lemma staticFlowsAcceptPool_preserved_under_callEval:
+lemma staticFlowsAcceptPoolPreservedCallEval:
   "
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
@@ -976,7 +976,7 @@ proof -
   qed
 qed
 
-lemma staticFlowsAcceptPool_preserved_under_let_chan:
+lemma staticFlowsAcceptPoolPreservedMkChnEval:
   "
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
@@ -1020,7 +1020,7 @@ proof -
 
 qed
 
-lemma staticFlowsAcceptPool_preserved_under_let_spawn:
+lemma staticFlowsAcceptPoolPreservedSpawnEval:
   "
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
@@ -1077,7 +1077,7 @@ proof -
 qed
 
 
-lemma staticFlowsAcceptPool_preserved_under_let_sync:
+lemma staticFlowsAcceptPoolPreservedSyncEval:
   "
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
@@ -1175,7 +1175,7 @@ show "staticFlowsAcceptPool V F
   using H12 H23 H24 H15 H16 H27 H28 staticFlowsAcceptPool.intros H18 by auto
 qed
 
-lemma staticFlowsAcceptPool_preserved:
+lemma staticFlowsAcceptPoolPreservedDynamicEval:
   "
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
@@ -1192,27 +1192,27 @@ proof -
   show "staticFlowsAcceptPool V F \<E>'"
   proof cases
     case (Seq_Step_Down pi x env xk ek envk k v)
-    then show ?thesis using H1 H2 staticFlowsAcceptPool_preserved_under_seqEval_down by blast
+    then show ?thesis using H1 H2 staticFlowsAcceptPoolPreservedReturnEval by blast
   next
     case (Seq_Step pi x b e env k v)
-    then show ?thesis using H1 H2 staticFlowsAcceptPool_preserved_under_seqEval by auto
+    then show ?thesis using H1 H2 staticFlowsAcceptPoolPreservedSeqEval by auto
   next
     case (Seq_Step_Up pi x b e env k e' env')
-    then show ?thesis using H1 H2 staticFlowsAcceptPool_preserved_under_callEval by blast
+    then show ?thesis using H1 H2 staticFlowsAcceptPoolPreservedCallEval by blast
   next
     case (BindMkChn pi x e env k)
-    then show ?thesis  using H1 H2 staticFlowsAcceptPool_preserved_under_let_chan by blast
+    then show ?thesis  using H1 H2 staticFlowsAcceptPoolPreservedMkChnEval by blast
   next
     case (BindSpawn pi x ec e env k)
-    then show ?thesis using H1 H2 staticFlowsAcceptPool_preserved_under_let_spawn by auto
+    then show ?thesis using H1 H2 staticFlowsAcceptPoolPreservedSpawnEval by auto
   next
     case (BindSync pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm)
-    then show ?thesis using H1 H2 staticFlowsAcceptPool_preserved_under_let_sync by auto
+    then show ?thesis using H1 H2 staticFlowsAcceptPoolPreservedSyncEval by auto
   qed
 qed
 
 
-lemma staticFlowsAcceptPool_preserved_star:
+lemma staticFlowsAcceptPoolPreserved:
   "
   staticFlowsAcceptPool V F [[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>] \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
@@ -1260,10 +1260,10 @@ proof -
         using L1H1 L1H2 L1H4 step.IH by blast
 
       have L1H7: "\<exists> \<E>m Hm . (\<E>m, Hm) = y \<and> (V, C) \<Turnstile>\<^sub>\<E> \<E>m "
-        by (metis L1H1 L1H4 eq_fst_iff star_left_implies_star staticEvalPreservedStarDynamicEval step.hyps(1))
+        by (metis L1H1 L1H4 eq_fst_iff star_left_implies_star staticEvalPreserved step.hyps(1))
 
       have L1H8: "staticFlowsAcceptPool V F \<E>'"
-        using L1H3 L1H6 L1H7 staticFlowsAcceptPool_preserved step.hyps(2) by auto
+        using L1H3 L1H6 L1H7 staticFlowsAcceptPoolPreservedDynamicEval step.hyps(2) by auto
     }
 
     then show ?case 
@@ -1275,10 +1275,9 @@ proof -
 
 qed
 
-lemma static_seqEval_trav_edge:
+lemma staticFlowsAcceptSoundSeqEval:
    assumes
      H1: "staticFlowsAccept V F (Bind x b e')" and
-     H2: "staticFlowsAccept V F e'" and
      H3: "seqEval b env v"
 
    shows "{(IdBind x, ENext, tmId e')} \<subseteq> F"
@@ -1329,7 +1328,7 @@ next
   then show ?thesis by (simp add: local.BindApp(1))
 qed
 
-lemma staticTraceablePoolStepComplete:
+lemma staticTraceablePoolStepSound:
   assumes
     H1: "star_left dynamicEval EH EHm" and
     H2: "dynamicEval EHm EH'" and
@@ -1355,7 +1354,7 @@ proof -
   proof cases
     case (Seq_Step_Down Em pi x env xk ek envk k v Hm)
 
-    have L1H2: "staticFlowsAcceptPool V F Em" by (smt H2 H4 H6 local.Seq_Step_Down(1) mapping_preserved_star star_step1 staticFlowsAcceptPool.simps)
+    have L1H2: "staticFlowsAcceptPool V F Em" by (smt H2 H4 H6 local.Seq_Step_Down(1) mappingPreserved star_step1 staticFlowsAcceptPool.simps)
 
     have L1H3: "\<exists>path. paths_correspond pi path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Rslt x)) path"
     by (simp add: H3 IH L1H2 local.Seq_Step_Down)
@@ -1396,7 +1395,7 @@ proof -
     case (Seq_Step Em pim xm bm em env k v Hm)
 
     have L1H2: "staticFlowsAcceptPool V F Em"
-     using H2 H4 H6 local.Seq_Step(1) mapping_preserved staticFlowsAcceptPool.simps by fastforce
+     using H2 H4 H6 local.Seq_Step(1) mappingPreservedDynamicEval staticFlowsAcceptPool.simps by fastforce
 
     have L1H3: "\<exists>path. paths_correspond pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm bm em)) path"
     by (simp add: H3 IH L1H2 local.Seq_Step(1) local.Seq_Step(4))
@@ -1415,7 +1414,7 @@ proof -
    
       have L2H4: "{(IdBind xm, ENext, (tmId em))} \<subseteq> F"
         using H4 H6 L2H2 local.Seq_Step(2) local.Seq_Step(5) map_upd_Some_unfold 
-          static_seqEval_trav_edge staticFlowsAcceptPool.simps by fastforce
+          staticFlowsAcceptSoundSeqEval staticFlowsAcceptPool.simps by fastforce
 
       have L2H5: "em = e'" using H4 H5 L2H1 local.Seq_Step(2) by auto
 
@@ -1433,7 +1432,7 @@ proof -
     case (Seq_Step_Up Em pim xm bm em env k eu env' Hm)
 
     have L1H2: "staticFlowsAcceptPool V F Em"
-      by (smt H2 H4 H6 local.Seq_Step_Up(1) mapping_preserved_star star_step1 staticFlowsAcceptPool.simps)
+      by (smt H2 H4 H6 local.Seq_Step_Up(1) mappingPreserved star_step1 staticFlowsAcceptPool.simps)
 
     have L1H3: "\<exists>path. paths_correspond pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm bm em)) path"
     by (simp add: H3 IH L1H2 local.Seq_Step_Up(1) local.Seq_Step_Up(4))
@@ -1476,7 +1475,7 @@ proof -
         have L3H1: "staticFlowsAccept V F (Bind xm (App f xa) em)"
           using L2H2 local.App(1) by auto
         have L3H2: "(V, C) \<Turnstile>\<^sub>\<E> Em" using H1 H3 H8 local.Seq_Step_Up(1) star_left_implies_star 
-          staticEvalPreservedStarDynamicEval staticEval_to_pool by fastforce
+          staticEvalPreserved staticEval_to_pool by fastforce
         have L3H3: "(SAtm (Fun fp xp eu) \<in> V f)"
           using L3H2 local.Seq_Step_Up(4) local.App(3) 
           staticEvalPoolSoundSnapshot valToStaticVal.simps(3) by fastforce
@@ -1501,7 +1500,7 @@ proof -
     case (BindMkChn Em pim xm em env k Hm)
 
     have L1H2: "staticFlowsAcceptPool V F Em"
-     using H2 H4 H6 local.BindMkChn(1) mapping_preserved staticFlowsAcceptPool.simps by fastforce
+     using H2 H4 H6 local.BindMkChn(1) mappingPreservedDynamicEval staticFlowsAcceptPool.simps by fastforce
 
     have L1H3: "\<exists>path. paths_correspond pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm MkChn em)) path"
     by (simp add: H3 IH L1H2 local.BindMkChn(1) local.BindMkChn(4))
@@ -1541,7 +1540,7 @@ proof -
     case (BindSpawn Em pim xm ec em env k Hm)
 
     have L1H2: "staticFlowsAcceptPool V F Em"
-     using H2 H4 H6 local.BindSpawn(1) mapping_preserved staticFlowsAcceptPool.simps by fastforce
+     using H2 H4 H6 local.BindSpawn(1) mappingPreservedDynamicEval staticFlowsAcceptPool.simps by fastforce
 
     have L1H3: "\<exists>path. paths_correspond pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm (Spwn ec) em)) path"
     by (simp add: H3 IH L1H2 local.BindSpawn(1) local.BindSpawn(4))
@@ -1608,7 +1607,7 @@ proof -
     case (BindSync Em pis xs xse es envs ks xsc xm envse pir xr xre er envr kr xrc envre c vm Hm)
 
     have L1H2: "staticFlowsAcceptPool V F Em"
-      by (smt H2 H4 H6 local.BindSync(1) mapping_preserved_star star_step1 staticFlowsAcceptPool.simps)
+      by (smt H2 H4 H6 local.BindSync(1) mappingPreserved star_step1 staticFlowsAcceptPool.simps)
 
     have L1H3: "\<exists>path. paths_correspond pir path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xr (Sync xre) er)) path"
     by (simp add: H3 IH L1H2 local.BindSync(1) local.BindSync(7))
@@ -1682,7 +1681,7 @@ proof -
   qed
 qed
 
-lemma staticTraceablePoolComplete':
+lemma staticTraceablePoolSound':
   assumes
     H1: "star_left dynamicEval EH EH'" and
     H2: "(V, C) \<Turnstile>\<^sub>e e"
@@ -1701,11 +1700,11 @@ proof induction
   then show ?case using paths_correspond.Empty staticTraceable.Empty by auto
 next
   case (step EH EHm EH')
-  then show ?case using staticTraceablePoolStepComplete[of EH EHm EH']
+  then show ?case using staticTraceablePoolStepSound[of EH EHm EH']
     using H2 by blast
 qed
 
-lemma staticTraceablePoolComplete:
+lemma staticTraceablePoolSound:
   assumes
     H1: "\<E>' \<pi>' = Some (\<langle>Bind x' b' e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and 
     H2: "star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" and
@@ -1717,7 +1716,7 @@ lemma staticTraceablePoolComplete:
     \<exists> path . 
       paths_correspond \<pi>' path \<and>
       staticTraceable F (tmId e) isEnd path"
-using staticTraceablePoolComplete'[of "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" "(\<E>', H')"]
+using staticTraceablePoolSound'[of "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" "(\<E>', H')"]
 H1 H2 H3 H4 H5 star_implies_star_left by fastforce
 
 lemma lift_traversable_to_pool:
@@ -1743,7 +1742,7 @@ apply (erule staticFlowsAccept.cases; auto)
   apply (simp add: staticFlowsAccept.BindApp staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
 done
 
-lemma staticTraceableComplete:
+lemma staticTraceableSound:
   "
   \<E> \<pi> = Some (\<langle>Bind x b e';\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) (\<E>, H) \<Longrightarrow> 
@@ -1754,9 +1753,9 @@ lemma staticTraceableComplete:
     paths_correspond \<pi> path \<and>
     staticTraceable F (tmId e0) isEnd path
 "
-by (metis lift_traversable_to_pool staticTraceablePoolComplete staticFlowsAcceptPool_preserved_star)
+by (metis lift_traversable_to_pool staticTraceablePoolSound staticFlowsAcceptPoolPreserved)
 
-lemma staticTraceableSendComplete:
+lemma staticTraceableSendSound:
   "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
@@ -1767,11 +1766,11 @@ lemma staticTraceableSendComplete:
     staticTraceable F (tmId e) (staticSendSite V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
- apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticSendSiteComplete; auto?)
- apply (frule staticTraceableComplete; auto?)
+ apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticSendSiteSound; auto?)
+ apply (frule staticTraceableSound; auto?)
 done
 
-lemma staticTraceableRecvComplete:
+lemma staticTraceableRecvSound:
   "
   is_recv_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
@@ -1782,8 +1781,8 @@ lemma staticTraceableRecvComplete:
     staticTraceable F (tmId e) (staticRecvSite V e xC) pathSync
 "
  apply (unfold is_recv_path.simps; auto)
- apply (frule_tac x\<^sub>r\<^sub>c = xrc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticRecvSiteComplete; auto?)
- apply (frule staticTraceableComplete; auto?)
+ apply (frule_tac x\<^sub>r\<^sub>c = xrc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticRecvSiteSound; auto?)
+ apply (frule staticTraceableSound; auto?)
 done
 
 (* END PATH SOUND *)
@@ -1792,47 +1791,47 @@ done
 
 theorem singular_to_equal:
   "
-  every_two (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
+  forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
-  every_two (is_send_path \<E>' (Ch \<pi> xC)) op =
+  forEveryTwo (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
- apply (simp add: every_two.simps singular.simps; auto)
- apply (frule_tac \<pi>Sync = \<pi>1 in staticTraceableSendComplete; auto)
+ apply (simp add: forEveryTwo.simps singular.simps; auto)
+ apply (frule_tac \<pi>Sync = \<pi>1 in staticTraceableSendSound; auto)
  apply (drule_tac x = pathSync in spec)
- apply (frule_tac \<pi>Sync = \<pi>2 in staticTraceableSendComplete; auto?)
+ apply (frule_tac \<pi>Sync = \<pi>2 in staticTraceableSendSound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (metis staticInclusiveComplete equality_abstract_to_concrete is_send_path_implies_nonempty_pool)
+ apply (metis staticInclusiveSound equality_abstract_to_concrete is_send_path_implies_nonempty_pool)
 done
 
 
 
 theorem noncompetitive_send_to_ordered_send:
   "
-  every_two (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
+  forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
-  every_two (is_send_path \<E>' (Ch \<pi> xC)) ordered
+  forEveryTwo (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
-apply (simp add: every_two.simps noncompetitive.simps; auto?)
-  using staticTraceableSendComplete staticInclusiveComplete
+apply (simp add: forEveryTwo.simps noncompetitive.simps; auto?)
+  using staticTraceableSendSound staticInclusiveSound
   apply (meson is_send_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
 
 lemma noncompetitive_recv_to_ordered_recv:
   "
-   every_two (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
+   forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
    staticFlowsAccept V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
-   every_two (is_recv_path \<E>' (Ch \<pi> xC)) ordered
+   forEveryTwo (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
-apply (simp add: every_two.simps noncompetitive.simps; auto?)
-  using staticTraceableRecvComplete staticInclusiveComplete
+apply (simp add: forEveryTwo.simps noncompetitive.simps; auto?)
+  using staticTraceableRecvSound staticInclusiveSound
  apply (meson is_recv_path_implies_nonempty_pool ordered.simps prefix_abstract_to_concrete)
 done
 
@@ -1849,35 +1848,35 @@ apply (unfold one_shot.simps)
 apply (simp add: singular_to_equal)
 done
 
-theorem static_fan_out_sound:
+theorem staticOneToMany_sound:
   "
-      static_fan_out V e xC \<Longrightarrow>
+      staticOneToMany V e xC \<Longrightarrow>
       (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
       star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
       fan_out \<E>' (Ch \<pi> xC)" 
-   apply (erule static_fan_out.cases; auto)
+   apply (erule staticOneToMany.cases; auto)
    apply (unfold fan_out.simps)
    apply (metis noncompetitive_send_to_ordered_send)
 done
 
-theorem static_fan_in_sound:
+theorem staticManyToOne_sound:
   "
-      static_fan_in V e xC \<Longrightarrow>
+      staticManyToOne V e xC \<Longrightarrow>
       (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
       star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
       fan_in \<E>' (Ch \<pi> xC)"
-   apply (erule static_fan_in.cases; auto)
+   apply (erule staticManyToOne.cases; auto)
    apply (unfold fan_in.simps)
    apply (metis noncompetitive_recv_to_ordered_recv)
 done
 
-theorem static_one_to_one_sound:
+theorem staticOneToOne_sound:
   "
-      static_one_to_one V e xC \<Longrightarrow>
+      staticOneToOne V e xC \<Longrightarrow>
       (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
       star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
       one_to_one \<E>' (Ch \<pi> xC)"
- apply (erule static_one_to_one.cases; auto)
+ apply (erule staticOneToOne.cases; auto)
  apply (unfold one_to_one.simps)
  apply (simp add: fan_in.simps fan_out.simps noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
 done

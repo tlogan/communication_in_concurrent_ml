@@ -158,7 +158,7 @@ inductive dynamicEval :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_
   "
 
 
-lemma mapping_preserved:
+lemma mappingPreservedDynamicEval:
   assumes
       H1: "dynamicEval (env, H) (E', H')" 
   and H2: "env \<pi> = Some \<sigma>"
@@ -200,7 +200,7 @@ proof -
   qed
 qed
 
-lemma mapping_preserved_star:
+lemma mappingPreserved:
   assumes
     H1: "star dynamicEval EH EH'" and
     H2: "EH = (env, H)" and
@@ -240,7 +240,7 @@ proof -
       have L2H5: "dynamicEval (env, H) (Em, Hm)"
         using L2H1 L2H4 step.hyps(1) by auto
 
-      have "E' \<pi> = Some \<sigma>" using L2H2 L2H3 L2H4 L2H5 mapping_preserved step.hyps(3) by auto
+      have "E' \<pi> = Some \<sigma>" using L2H2 L2H3 L2H4 L2H5 mappingPreservedDynamicEval step.hyps(3) by auto
     }
     then show ?case by simp
   qed
