@@ -43,8 +43,8 @@ done
 lemma staticEvalSendEvtSound: "
   \<lbrakk>
     \<rho>\<^sub>y x\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
-    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H');
-    \<E>' \<pi>\<^sub>y = Some (\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H');
+    \<E>' \<pi>\<^sub>y = Some (Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y) \<rho>\<^sub>y \<kappa>\<^sub>y);
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
   {^SendEvt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> V x\<^sub>e
@@ -55,8 +55,8 @@ done
 lemma staticEvalRecvEvtSound: "
   \<lbrakk>
     \<rho>\<^sub>y x\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
-    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H');
-    \<E>' \<pi>\<^sub>y = Some (\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H');
+    \<E>' \<pi>\<^sub>y = Some (Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y) \<rho>\<^sub>y \<kappa>\<^sub>y);
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
   {^RecvEvt x\<^sub>r\<^sub>c} \<subseteq> V x\<^sub>e
@@ -68,8 +68,8 @@ lemma staticEvalSendChanSound: "
   \<lbrakk>
     \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChn (Ch \<pi> xC));
     \<rho>\<^sub>y x\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e);
-    \<E>' \<pi>\<^sub>y = Some (\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H');
+    \<E>' \<pi>\<^sub>y = Some (Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y) \<rho>\<^sub>y \<kappa>\<^sub>y);
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H');
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   ^Chan xC \<in> V x\<^sub>s\<^sub>c
@@ -77,7 +77,7 @@ lemma staticEvalSendChanSound: "
  apply (frule staticEval_to_pool)
  apply (drule staticEvalPreserved[of _ _ _ ]; assumption?)
  apply (erule staticEvalPool.cases; auto)
- apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
+ apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "(Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y) \<rho>\<^sub>y \<kappa>\<^sub>y)"], simp)
  apply (erule staticEvalState.cases; auto)
  apply (erule staticEvalEnv.cases; auto)
  apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e)"]; simp)
@@ -91,8 +91,8 @@ lemma staticEvalRecvChanSound: "
   \<lbrakk>
     \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChn (Ch \<pi> xC));
     \<rho>\<^sub>y x\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>e);
-    \<E>' \<pi>\<^sub>y = Some (\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>);
-    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H');
+    \<E>' \<pi>\<^sub>y = Some (Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y) \<rho>\<^sub>y \<kappa>\<^sub>y);
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H');
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
   ^Chan xC \<in> V x\<^sub>r\<^sub>c
@@ -100,7 +100,7 @@ lemma staticEvalRecvChanSound: "
  apply (frule staticEval_to_pool)
  apply (drule staticEvalPreserved[of _ _ _ ]; assumption?)
  apply (erule staticEvalPool.cases; auto)
- apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y;\<rho>\<^sub>y;\<kappa>\<^sub>y\<rangle>"], simp)
+ apply (drule spec[of _ \<pi>\<^sub>y], drule spec[of _ "(Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y) \<rho>\<^sub>y \<kappa>\<^sub>y)"], simp)
  apply (erule staticEvalState.cases; auto)
  apply (erule staticEvalEnv.cases; auto)
  apply (drule spec[of _ x\<^sub>e], drule spec[of _ "(VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>e)"]; simp)
@@ -111,10 +111,10 @@ lemma staticEvalRecvChanSound: "
 done
 
 lemma staticSendSiteSound: "
-  \<E> \<pi>Sync = Some (\<langle>Bind x (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<E> \<pi>Sync = Some (Stt (Bind x (Sync x\<^sub>e) e\<^sub>n) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>e x\<^sub>s\<^sub>c = Some (VChn (Ch \<pi>C xC)) \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) (\<E>, H) \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> (Stt e0 empty [])], {}) (\<E>, H) \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
   staticSendSite V e0 xC (IdBind x)
 "
@@ -128,10 +128,10 @@ lemma staticSendSiteSound: "
 done
 
 lemma staticRecvSiteSound: "
-  \<E>' \<pi>Sync = Some (\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
+  \<E>' \<pi>Sync = Some (Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>n) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>e x\<^sub>r\<^sub>c = Some (VChn (Ch \<pi>C xC)) \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   staticRecvSite V e xC (IdBind x\<^sub>y)
 "

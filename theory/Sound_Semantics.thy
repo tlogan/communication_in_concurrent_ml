@@ -81,7 +81,7 @@ inductive staticEvalState :: "static_env \<times> static_env \<Rightarrow> state
       (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>;
       (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
     \<rbrakk> \<Longrightarrow>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e \<rho> \<kappa>)
   "
 
 inductive staticEvalPool :: "static_env \<times> static_env \<Rightarrow> trace_pool \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<E>" 55) where
@@ -93,11 +93,11 @@ inductive staticEvalPool :: "static_env \<times> static_env \<Rightarrow> trace_
 
 lemma staticEvalState_to_tm_result:
 "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x;\<rho>;(Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>)) \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>
 "
 proof -
   assume 
-    "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x;\<rho>;(Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>" 
+    "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>))" 
   then have 
     "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>" by (simp add: staticEvalState.simps) then
   show 
@@ -107,14 +107,14 @@ qed
 
 lemma staticEvalState_to_tm_CaseLft:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>) \<Longrightarrow> 
   \<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l) \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l
 "
 proof -
   assume 
     H1: "\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)" and
-    H2: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>"
+    H2: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)"
 
 
   from H2 have 
@@ -139,13 +139,13 @@ qed
 
 lemma staticEvalState_to_tm_CaseRht:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r) \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r
 "
 proof -
   assume "\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e"
   and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" 
     by (simp add: staticEvalState.simps)+ then
@@ -166,10 +166,10 @@ qed
 
 lemma staticEvalState_to_tm_let:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x b e) \<rho> \<kappa>) \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>e e
 "
 proof -
- assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e; \<rho>; \<kappa>\<rangle>" then
+ assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x b e) \<rho> \<kappa>)" then
  have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x b e" by (simp add: staticEvalState.simps) then
  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (rule staticEval.cases; auto)
 qed
@@ -177,14 +177,14 @@ qed
 
 lemma staticEvalState_to_tm_App:
   "
- (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (App f x\<^sub>a) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+ (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (App f x\<^sub>a) e) \<rho> \<kappa>) \<Longrightarrow>
  \<rho> f = Some (VClsr (Fun f' x\<^sub>p e\<^sub>b) \<rho>') \<Longrightarrow>
  (\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>b
 "
 
 proof -
   assume "\<rho> f = Some (VClsr (Fun f' x\<^sub>p e\<^sub>b) \<rho>')"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (App f x\<^sub>a) e; \<rho>; \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (App f x\<^sub>a) e) \<rho> \<kappa>)" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps) then
   have "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by (simp add: staticEvalEnv.simps)
   with `\<rho> f = Some (VClsr (Fun f' x\<^sub>p e\<^sub>b) \<rho>')`
@@ -194,14 +194,14 @@ qed
 
 lemma staticEvalState_to_env_result:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle> \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>)) \<Longrightarrow> 
   \<rho> x = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)
 "
 proof
  assume "\<rho> x = Some \<omega> "
 
- assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>" then
+ assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>))" then
  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (rule staticEvalState.cases; auto)+
 
  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> x = Some \<omega>`
@@ -243,13 +243,13 @@ qed
 
 lemma staticEvalState_to_stack_result:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle> \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>)) \<Longrightarrow> 
   \<rho> x = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>
 "
 proof -
   assume "\<rho> x = Some \<omega>"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>))" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> x \<Rrightarrow> (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>" by (simp add: staticEvalState.simps) then
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>" by (rule staticEval_stack.cases; auto)
 qed
@@ -257,28 +257,28 @@ qed
 
 lemma staticEvalState_to_state_result:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle> \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>)) \<Longrightarrow> 
   \<rho> x = Some \<omega> \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>\<kappa>; \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>); \<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e\<^sub>\<kappa> (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)) \<kappa>)
 "
 proof
-  assume "\<rho> x = Some \<omega>" "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>" then
+  assume "\<rho> x = Some \<omega>" "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>))" then
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)" by (blast intro: staticEvalState_to_env_result)
 
-  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>`
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>))`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>\<kappa>" by (blast intro: staticEvalState_to_tm_result)
 
-  with `\<rho> x = Some \<omega>` `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>`
+  with `\<rho> x = Some \<omega>` `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>))`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>\<kappa>\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: staticEvalState_to_stack_result)
 qed
 
 
 lemma staticEvalState_to_env_let_unit:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x Unt e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnt)
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x Unt e) \<rho> \<kappa>) \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnt)
 "
 proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x Unt e; \<rho>; \<kappa>\<rangle>" then 
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x Unt e) \<rho> \<kappa>)" then 
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x Unt e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps)+ 
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x Unt e`
@@ -313,22 +313,22 @@ qed
 
 lemma staticEvalState_to_stack_let:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x b e) \<rho> \<kappa>) \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
 "
 by (erule staticEvalState.cases; auto)
 
 lemma staticEvalState_to_state_let_unit:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x Unt e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> VUnt); \<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x Unt e) \<rho> \<kappa>) \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> VUnt)) \<kappa>)
 "
 proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x Unt e; \<rho>; \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x Unt e) \<rho> \<kappa>)" then
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (auto simp: staticEvalState_to_tm_let)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x Unt e; \<rho>; \<kappa>\<rangle>` 
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x Unt e) \<rho> \<kappa>)` 
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnt)" by (auto simp: staticEvalState_to_env_let_unit)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x Unt e; \<rho>; \<kappa>\<rangle>` 
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x Unt e) \<rho> \<kappa>)` 
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (auto simp: staticEvalState_to_stack_let)
 
 qed
@@ -341,10 +341,10 @@ by (erule staticEval.cases; auto; rule; auto)
 
 lemma staticEvalState_to_env_let_atom:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Atom p) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VClsr p \<rho>))
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Atom p) e) \<rho> \<kappa>) \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VClsr p \<rho>))
 "
 proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Atom p) e; \<rho>; \<kappa>\<rangle> " then 
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Atom p) e) \<rho> \<kappa>)" then 
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Atom p) e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps)+ then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr p \<rho>)" by (simp add: staticEval_to_value_let_atom)
 
@@ -376,16 +376,16 @@ qed
 
 lemma staticEvalState_to_state_let_atom:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Atom p) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> (VClsr p \<rho>)); \<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Atom p) e) \<rho> \<kappa>) \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> (VClsr p \<rho>))) \<kappa>)
 "
 proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Atom p) e; \<rho>; \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Atom p) e) \<rho> \<kappa>)" then
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (auto simp: staticEvalState_to_tm_let)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Atom p) e; \<rho>; \<kappa>\<rangle>` 
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Atom p) e) \<rho> \<kappa>)` 
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (auto simp: staticEvalState_to_stack_let)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Atom p) e; \<rho>; \<kappa>\<rangle>` 
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Atom p) e) \<rho> \<kappa>)` 
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VClsr p \<rho>))" by (auto simp: staticEvalState_to_env_let_atom)
 
 qed
@@ -393,14 +393,14 @@ qed
 
 lemma staticEvalState_to_env_CaseLft:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l) \<Longrightarrow> \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)
 "
 
 proof
   assume "\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)" "\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>" then 
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)" then 
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)`
@@ -441,16 +441,16 @@ qed
 
 lemma staticEvalState_to_stack_CaseLft:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l) \<Longrightarrow> \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> (Ctn x e \<rho>) # \<kappa>
 "
 proof
 
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>"
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)"
   assume "\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)" "\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l"
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e;\<rho>;\<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: staticEvalState.cases)+
   
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)`
@@ -466,13 +466,13 @@ proof
     show "\<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x" by blast
   qed
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e;\<rho>;\<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: staticEvalState_to_tm_let)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e;\<rho>;\<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: staticEvalState.cases)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e;\<rho>;\<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: staticEvalState_to_stack_let)
   
 qed
@@ -480,21 +480,21 @@ qed
 
 lemma staticEvalState_to_state_CaseLft:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l) \<Longrightarrow> 
   \<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>l; \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l); (Ctn x e \<rho>) # \<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e\<^sub>l (\<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)) ((Ctn x e \<rho>) # \<kappa>))
 "
 proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>" and "\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)" and "\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)" then
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l" by (simp add: staticEvalState_to_tm_CaseLft)
 
   assume "\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l"
-  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>` and `\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)` 
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)` and `\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)` 
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>l \<mapsto> \<omega>\<^sub>l)" by (simp add: staticEvalState_to_env_CaseLft)
 
   from `\<rho>\<^sub>l x\<^sub>l' = Some \<omega>\<^sub>l`  
-  and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>`
+  and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)`
   and `\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)` 
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<Rrightarrow> (Ctn x e \<rho>) # \<kappa>" by (simp add: staticEvalState_to_stack_CaseLft)
 qed
@@ -502,14 +502,14 @@ qed
 
 lemma staticEvalState_to_env_CaseRht:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r) \<Longrightarrow> \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r)
 "
 
 proof
   assume "\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)" "\<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)`
@@ -549,16 +549,16 @@ qed
 
 lemma staticEvalState_to_stack_CaseRht:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma>  \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r) \<Longrightarrow> \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa>  \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> (Ctn x e \<rho>) # \<kappa>
 "
 proof
 
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>"
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)"
   assume "\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)" "\<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r"
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e;\<rho>;\<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: staticEvalState.cases)+
   
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)`
@@ -574,33 +574,33 @@ proof
     show "\<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x" by blast
   qed
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e;\<rho>;\<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: staticEvalState_to_tm_let)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e;\<rho>;\<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: staticEvalState.cases)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e;\<rho>;\<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: staticEvalState_to_stack_let)
   
 qed
 
 lemma staticEvalState_to_state_CaseRht:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r) \<Longrightarrow> 
-  \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>r; \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r); (Ctn x e \<rho>) # \<kappa>\<rangle>
+  \<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e\<^sub>r (\<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r)) ((Ctn x e \<rho>) # \<kappa>))
 "
 proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>" and "\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)" and "\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)" then
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r" by (simp add: staticEvalState_to_tm_CaseRht)
 
   assume "\<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r"
-  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>` and `\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)`
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)` and `\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x\<^sub>r \<mapsto> \<omega>\<^sub>r)" by (simp add: staticEvalState_to_env_CaseRht)
 
   from `\<rho>\<^sub>r x\<^sub>r' = Some \<omega>\<^sub>r`  
-  and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e; \<rho>; \<kappa>\<rangle>`
+  and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e) \<rho> \<kappa>)`
   and `\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)` 
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> (Ctn x e \<rho>) # \<kappa>" by (simp add: staticEvalState_to_stack_CaseRht)
 qed
@@ -608,13 +608,13 @@ qed
 
 lemma staticEvalState_to_env_let_fst:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Fst x\<^sub>p) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Fst x\<^sub>p) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) \<Longrightarrow> \<rho>\<^sub>p x\<^sub>1 = Some \<omega> \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<omega>)
 "
 proof
   assume "\<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" and "\<rho>\<^sub>p x\<^sub>1 = Some \<omega>"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Fst x\<^sub>p) e; \<rho>; \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Fst x\<^sub>p) e) \<rho> \<kappa>)" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Fst x\<^sub>p) e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)`
@@ -655,34 +655,32 @@ qed
 
 lemma staticEvalState_to_state_let_fst:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Fst x\<^sub>p) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Fst x\<^sub>p) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) \<Longrightarrow> \<rho>\<^sub>p x\<^sub>1 = Some \<omega> \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> \<omega>)) \<kappa>)
 "
 proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Fst x\<^sub>p) e; \<rho>; \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Fst x\<^sub>p) e) \<rho> \<kappa>)" then
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (simp add: staticEvalState_to_tm_let)
 
   assume "\<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" and "\<rho>\<^sub>p x\<^sub>1 = Some \<omega>"
-  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Fst x\<^sub>p) e; \<rho>; \<kappa>\<rangle>`
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Fst x\<^sub>p) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<omega>)"  by (simp add: staticEvalState_to_env_let_fst)
 
   from `\<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)` and `\<rho>\<^sub>p x\<^sub>1 = Some \<omega>`
-  and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Fst x\<^sub>p) e; \<rho>; \<kappa>\<rangle>`
+  and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Fst x\<^sub>p) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (simp add: staticEvalState_to_stack_let)
 qed
 
-lemma "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Snd x\<^sub>p) e; \<rho>; \<kappa>\<rangle>"
-sorry
 
 lemma staticEvalState_to_env_let_snd:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Snd x\<^sub>p) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow> \<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Snd x\<^sub>p) e) \<rho> \<kappa>) \<Longrightarrow> \<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) \<Longrightarrow> 
   \<rho>\<^sub>p x\<^sub>2 = Some \<omega> \<Longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<omega>) 
 "
 proof
   assume "\<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" and "\<rho>\<^sub>p x\<^sub>2 = Some \<omega>"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Snd x\<^sub>p) e; \<rho>; \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Snd x\<^sub>p) e) \<rho> \<kappa>)" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Snd x\<^sub>p) e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)`
@@ -723,33 +721,33 @@ qed
 
 lemma staticEvalState_to_state_let_snd:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Snd x\<^sub>p) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Snd x\<^sub>p) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) \<Longrightarrow> \<rho>\<^sub>p x\<^sub>2 = Some \<omega> \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> \<omega>)) \<kappa>)
 "
 proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Snd x\<^sub>p) e; \<rho>; \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Snd x\<^sub>p) e) \<rho> \<kappa>)" then
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (simp add: staticEvalState_to_tm_let)
 
   assume "\<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" and "\<rho>\<^sub>p x\<^sub>2 = Some \<omega>"
-  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Snd x\<^sub>p) e; \<rho>; \<kappa>\<rangle>`
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Snd x\<^sub>p) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> \<omega>)" by (simp add: staticEvalState_to_env_let_snd)
 
   from `\<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)` and `\<rho>\<^sub>p x\<^sub>2 = Some \<omega>`
-  and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Snd x\<^sub>p) e; \<rho>; \<kappa>\<rangle>`
+  and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Snd x\<^sub>p) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (simp add: staticEvalState_to_stack_let)
 qed
 
 
 lemma staticEvalState_to_env_App:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (App f x\<^sub>a) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (App f x\<^sub>a) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> f = Some (VClsr (Fun f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l) \<Longrightarrow> \<rho> x\<^sub>a = Some \<omega>\<^sub>a \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l(f\<^sub>l \<mapsto> (VClsr (Fun f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l), x\<^sub>l \<mapsto> \<omega>\<^sub>a)
 "
 proof
   assume "\<rho> f = Some (VClsr (Fun f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)" "\<rho> x\<^sub>a = Some \<omega>\<^sub>a"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (App f x\<^sub>a) e; \<rho>; \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (App f x\<^sub>a) e) \<rho> \<kappa>)" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (App f x\<^sub>a) e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> x\<^sub>a = Some \<omega>\<^sub>a`
@@ -792,13 +790,13 @@ qed
 
 lemma staticEvalState_to_stack_App:
   "
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (App f x\<^sub>a) e; \<rho>; \<kappa>\<rangle> \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (App f x\<^sub>a) e) \<rho> \<kappa>) \<Longrightarrow>
   \<rho> f = Some (VClsr (Fun f' x\<^sub>p e\<^sub>b) \<rho>') \<Longrightarrow> \<rho> x\<^sub>a = Some \<omega>\<^sub>a \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>b\<rfloor>) \<Rrightarrow> (Ctn x e \<rho>) # \<kappa>
 "
 proof
   assume "\<rho> f = Some (VClsr (Fun f' x\<^sub>p e\<^sub>b) \<rho>')" and "\<rho> x\<^sub>a = Some \<omega>\<^sub>a"
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (App f x\<^sub>a) e; \<rho>; \<kappa>\<rangle>" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (App f x\<^sub>a) e) \<rho> \<kappa>)" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (App f x\<^sub>a) e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: staticEvalState.cases)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> f = Some (VClsr (Fun f' x\<^sub>p e\<^sub>b) \<rho>')`
@@ -814,13 +812,13 @@ proof
     show " \<V> (\<lfloor>e\<^sub>b\<rfloor>) \<subseteq> \<V> x" by simp
   qed
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (App f x\<^sub>a) e; \<rho>; \<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (App f x\<^sub>a) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: staticEvalState_to_tm_let)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (App f x\<^sub>a) e; \<rho>; \<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (App f x\<^sub>a) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (blast intro: staticEvalState.cases)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (App f x\<^sub>a) e; \<rho>; \<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (App f x\<^sub>a) e) \<rho> \<kappa>)`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: staticEvalState_to_stack_let)
 qed
 
@@ -828,17 +826,17 @@ qed
 theorem staticEvalStatePreservedDynamicEval_under_step :
   "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e; \<rho>; \<kappa>\<rangle>; 
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x b e) \<rho> \<kappa>); 
     seqEval b \<rho> \<omega>
   \<rbrakk> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> \<omega>)) \<kappa>)
 "
 proof -
   assume 
-    H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e; \<rho>; \<kappa>\<rangle>" and
+    H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x b e) \<rho> \<kappa>)" and
     H2: "seqEval b \<rho> \<omega>"
     
-  from H2 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>"
+  from H2 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> \<omega>)) \<kappa>)"
   proof cases
     case UNIT
     
@@ -846,11 +844,11 @@ proof -
       H3: "b = Unt" and
       H4: "\<omega> = VUnt"
 
-    from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x Unt e; \<rho>; \<kappa>\<rangle>" by simp
+    from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x Unt e) \<rho> \<kappa>)" by simp
 
-    then have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho> ++ [x \<mapsto> VUnt]; \<kappa>\<rangle>" by (simp add: staticEvalState_to_state_let_unit)
+    then have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> VUnt)) \<kappa>)" by (simp add: staticEvalState_to_state_let_unit)
     
-    with H4 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>" by simp
+    with H4 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> \<omega>)) \<kappa>)" by simp
   next
     case (PRIM p)
 
@@ -858,11 +856,11 @@ proof -
       H3: "b = Atom p" and
       H4: "\<omega> = VClsr p \<rho>"
 
-    from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Atom p) e; \<rho>; \<kappa>\<rangle>" by simp
+    from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Atom p) e) \<rho> \<kappa>)" by simp
 
-    then have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho> ++ [x \<mapsto> VClsr p \<rho>]; \<kappa>\<rangle>" by (simp add: staticEvalState_to_state_let_atom)
+    then have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> VClsr p \<rho>)) \<kappa>)" by (simp add: staticEvalState_to_state_let_atom)
     
-    with H4 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>" by simp
+    with H4 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> \<omega>)) \<kappa>)" by simp
   next
     case (FST x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
 
@@ -871,9 +869,9 @@ proof -
       H4: "\<rho> x\<^sub>p = Some (VClsr (atom.Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" and
       H5: "\<rho>\<^sub>p x\<^sub>1 = Some \<omega>"
 
-    from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Fst x\<^sub>p) e; \<rho>; \<kappa>\<rangle>" by simp
+    from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Fst x\<^sub>p) e) \<rho> \<kappa>)" by simp
 
-    with H4 H5 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>" by (simp add: staticEvalState_to_state_let_fst)
+    with H4 H5 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> \<omega>)) \<kappa>)" by (simp add: staticEvalState_to_state_let_fst)
   next
     case (SND x\<^sub>p x\<^sub>1 x\<^sub>2 \<rho>\<^sub>p)
 
@@ -882,26 +880,26 @@ proof -
       H4: "\<rho> x\<^sub>p = Some (VClsr (atom.Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)" and
       H5: "\<rho>\<^sub>p x\<^sub>2 = Some \<omega>"
 
-    from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Snd x\<^sub>p) e; \<rho>; \<kappa>\<rangle>" by simp
+    from H1 H3 have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Snd x\<^sub>p) e) \<rho> \<kappa>)" by simp
 
-    with H4 H5 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>(x \<mapsto> \<omega>); \<kappa>\<rangle>" by (simp add: staticEvalState_to_state_let_snd)
+    with H4 H5 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> \<omega>)) \<kappa>)" by (simp add: staticEvalState_to_state_let_snd)
   qed
 qed
 
 theorem staticEvalStatePreservedDynamicEval_under_step_up :
   "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e; \<rho>; \<kappa>\<rangle>;
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x b e) \<rho> \<kappa>);
     callEval (b, \<rho>) (e', \<rho>')
   \<rbrakk> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e'; \<rho>'; (Ctn x e \<rho>) # \<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e' \<rho>' ((Ctn x e \<rho>) # \<kappa>))
 "
 proof -
   assume 
-    H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e; \<rho>; \<kappa>\<rangle>" and
+    H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x b e) \<rho> \<kappa>)" and
     H2: "callEval (b, \<rho>) (e', \<rho>')"
 
-  from H2 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e'; \<rho>'; (Ctn x e \<rho>) # \<kappa>\<rangle>" 
+  from H2 show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e' \<rho>' ((Ctn x e \<rho>) # \<kappa>))" 
   proof cases
     case (CaseLft xs xl' envl vl xl xr er)
     then show ?thesis
@@ -920,29 +918,29 @@ qed
 theorem staticEvalStatePreservedDynamicEval_under_step_down :
   "
   \<lbrakk>
-    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>; 
+    (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>)); 
     \<rho> x = Some \<omega>
   \<rbrakk> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e\<^sub>\<kappa> (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)) \<kappa>)
 "
 proof -
   assume 
-    H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Rslt x; \<rho>; (Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>\<rangle>" and
+    H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Rslt x) \<rho> ((Ctn x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa>) # \<kappa>))" and
     H2: "\<rho> x = Some \<omega>"
 
   from H1 H2
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa> ++ [x\<^sub>\<kappa> \<mapsto> \<omega>];\<kappa>\<rangle>" by (auto simp: staticEvalState_to_state_result)
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e\<^sub>\<kappa> (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)) \<kappa>)" by (auto simp: staticEvalState_to_state_result)
 qed
 
 lemma staticEvalPool_to_tm_let:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi> = Some (\<langle>Bind x b e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
+  \<E> \<pi> = Some ((Stt (Bind x b e) \<rho> \<kappa>)) \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e
 "
 proof -
- assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>Bind x b e; \<rho>; \<kappa>\<rangle>)" then
- have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e; \<rho>; \<kappa>\<rangle>" by (simp add: staticEvalPool.simps) then
+ assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some ((Stt (Bind x b e) \<rho> \<kappa>))" then
+ have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x b e) \<rho> \<kappa>)" by (simp add: staticEvalPool.simps) then
  show "(\<V>, \<C>) \<Turnstile>\<^sub>e e " by (blast intro: staticEvalState_to_tm_let)
 qed
 
@@ -950,19 +948,19 @@ qed
 lemma staticEvalPool_let_sync_send_values_relate:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
+  \<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s)) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn (Ch \<pi>\<^sub>c x\<^sub>c)) \<Longrightarrow>
   {^Unt} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 "
 proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
-  and "\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)"
+  and "\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))"
   and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)"
   and "\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn (Ch \<pi>\<^sub>c x\<^sub>c))"
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: staticEvalPool.simps) then
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s)" by (simp add: staticEvalPool.simps) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: staticEvalState.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s` and `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)`
@@ -992,19 +990,19 @@ qed
 lemma staticEvalPool_let_sync_send_message_relate:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
+  \<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s)) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m \<Longrightarrow>
   {|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>m \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>m
 "
 proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
-  and "\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)"
+  and "\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))"
   and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)"
   and "\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m"
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: staticEvalPool.simps) then
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s)" by (simp add: staticEvalPool.simps) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: staticEvalState.simps)
   with `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)" by (blast intro: staticEvalEnv.cases) then
@@ -1016,7 +1014,7 @@ qed
 lemma staticEvalPool_to_env_let_sync_send:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
+  \<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s)) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn c) \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt)
@@ -1024,11 +1022,11 @@ lemma staticEvalPool_to_env_let_sync_send:
 proof
   assume "\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn c)"
   and  "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
-  and "\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)"
+  and "\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))"
   and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)"
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: staticEvalPool.simps) then
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s)" by (simp add: staticEvalPool.simps) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: staticEvalState.simps)+
 
   have "{^Unt} \<subseteq> \<V> x\<^sub>s"
@@ -1037,7 +1035,7 @@ proof
     assume "c = Ch \<pi> x\<^sub>c" 
     with `\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn c)`
     and  `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
-    and `\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
+    and `\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))`
     and `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)`
     show "{^Unt} \<subseteq> \<V> x\<^sub>s" using staticEvalPool_let_sync_send_values_relate by simp
   qed
@@ -1058,19 +1056,19 @@ qed
 lemma staticEvalPool_let_sync_recv_values_relate:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
+  \<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r)) \<Longrightarrow>
   \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChn (Ch \<pi>\<^sub>c x\<^sub>c)) \<Longrightarrow>
   \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r
 "
 proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
-  and "\<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)"
+  and "\<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r))"
   and "\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)"
   and "\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChn (Ch \<pi>\<^sub>c x\<^sub>c))"
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>" by (simp add: staticEvalPool.simps) then
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r))`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r)" by (simp add: staticEvalPool.simps) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r" by (simp add: staticEvalState.simps)+
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r` and `\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)`
@@ -1100,41 +1098,41 @@ qed
 lemma staticEvalPool_to_stack_let:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi> = Some (\<langle>Bind x b e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
+  \<E> \<pi> = Some ((Stt (Bind x b e) \<rho> \<kappa>)) \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>
 "
 proof -
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>Bind x b e; \<rho>; \<kappa>\<rangle>)" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e; \<rho>; \<kappa>\<rangle>" by (simp add: staticEvalPool.simps) then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some ((Stt (Bind x b e) \<rho> \<kappa>))" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x b e) \<rho> \<kappa>)" by (simp add: staticEvalPool.simps) then
   show "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (simp add: staticEvalState_to_stack_let)
 qed
 
 lemma staticEvalPool_to_env_let_sync_recv:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
+  \<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s)) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn c) \<Longrightarrow>
   \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m \<Longrightarrow>
-  \<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
+  \<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r)) \<Longrightarrow>
   \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e) \<Longrightarrow> 
   \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChn c) \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
-  and "\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)"
+  and "\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))"
   and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)"
   and "\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m" then
   have "{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>m" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>\<^sub>m" using staticEvalPool_let_sync_send_message_relate by auto
 
   assume "\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn c)"
-  and "\<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)"
+  and "\<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r))"
   and "\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)"
   and "\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChn c)"
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>" by (simp add: staticEvalPool.simps) then
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r))`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r)" by (simp add: staticEvalPool.simps) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r" by (simp add: staticEvalState.simps)+
 
 
@@ -1147,14 +1145,14 @@ proof
     and `\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn c)`
     and `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
     and `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)`
-    and `\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
+    and `\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))`
     and `\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m`
     have "\<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c" using \<open>\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn c)\<close> staticEvalPool_let_sync_send_values_relate by blast
 
     with `c = Ch \<pi>\<^sub>c x\<^sub>c`
     and `\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChn c)`
     and `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
-    and `\<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>)`
+    and `\<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r))`
     and `\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)`
     have "\<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r" using  staticEvalPool_let_sync_recv_values_relate by auto
 
@@ -1165,8 +1163,8 @@ proof
   from `{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>m` and `\<V> x\<^sub>m \<subseteq> \<V> x\<^sub>r`
   have "{|\<omega>\<^sub>m|} \<subseteq> \<V> x\<^sub>r" by blast
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>" by (simp add: staticEvalPool.simps) then
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s)" by (simp add: staticEvalPool.simps) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: staticEvalState.simps)+
   {
     fix x' \<omega>'
@@ -1183,65 +1181,65 @@ qed
 lemma staticEvalPreservedDynamicEval_under_sync:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s; \<rho>\<^sub>s; \<kappa>\<^sub>s\<rangle>) \<Longrightarrow>
+  \<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s)) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn c) \<Longrightarrow>
   \<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m \<Longrightarrow>
-  \<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r; \<rho>\<^sub>r; \<kappa>\<^sub>r\<rangle>) \<Longrightarrow>
+  \<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r)) \<Longrightarrow>
   \<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChn c) \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s @ [LNxt x\<^sub>s] \<mapsto> \<langle>e\<^sub>s; \<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt); \<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r @ [LNxt x\<^sub>r] \<mapsto> \<langle>e\<^sub>r; \<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m); \<kappa>\<^sub>r\<rangle>)
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s @ [LNxt x\<^sub>s] \<mapsto> (Stt e\<^sub>s (\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt)) \<kappa>\<^sub>s), \<pi>\<^sub>r @ [LNxt x\<^sub>r] \<mapsto> (Stt e\<^sub>r (\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) \<kappa>\<^sub>r))
 "
 proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
-  and "\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)"
+  and "\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))"
   and "\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)"
   and "\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn c)"
   and "\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m"
-  and "\<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)"
+  and "\<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r))"
   and "\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)"
   and "\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChn c)"
 
 
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)\<close> 
+  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))\<close> 
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>s" by (blast intro: staticEvalPool_to_tm_let)
 
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> \<open>\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)\<close>
+  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> \<open>\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))\<close>
   and \<open>\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)\<close> \<open>\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn c)\<close> 
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt)" by (blast intro: staticEvalPool_to_env_let_sync_send)
 
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)\<close>
+  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))\<close>
   have  "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>s\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>s" by (blast intro: staticEvalPool_to_stack_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>s` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt)` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>s\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>s`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt);\<kappa>\<^sub>s\<rangle>" by (blast intro: staticEvalState.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e\<^sub>s (\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt)) \<kappa>\<^sub>s)" by (blast intro: staticEvalState.intros)
 
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)\<close>
+  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r))\<close>
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r" by (blast intro: staticEvalPool_to_tm_let)
 
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> 
-  and \<open>\<E> \<pi>\<^sub>s = Some (\<langle>Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s;\<rho>\<^sub>s;\<kappa>\<^sub>s\<rangle>)\<close>
+  and \<open>\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))\<close>
   and \<open>\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)\<close> 
   and \<open>\<rho>\<^sub>s\<^sub>e x\<^sub>m = Some \<omega>\<^sub>m\<close> \<open>\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn c)\<close>
-  and \<open>\<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)\<close>
+  and \<open>\<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r))\<close>
   and \<open>\<rho>\<^sub>r x\<^sub>r\<^sub>e = Some (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)\<close> \<open>\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChn c)\<close> 
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)" by (blast intro: staticEvalPool_to_env_let_sync_recv)
 
-  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>r = Some (\<langle>Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r;\<rho>\<^sub>r;\<kappa>\<^sub>r\<rangle>)\<close>
+  from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close> and \<open>\<E> \<pi>\<^sub>r = Some ((Stt (Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r) \<rho>\<^sub>r \<kappa>\<^sub>r))\<close>
   have  "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>r" by (blast intro: staticEvalPool_to_stack_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<Rrightarrow> \<kappa>\<^sub>r`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>" by (blast intro: staticEvalState.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e\<^sub>r (\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) \<kappa>\<^sub>r)" by (blast intro: staticEvalState.intros)
 
   {
     fix \<pi> \<sigma>
     assume  "\<pi> \<noteq> \<pi>\<^sub>s @ [LNxt x\<^sub>s]" and "\<pi> \<noteq> \<pi>\<^sub>r @ [LNxt x\<^sub>r]"
-    and "(\<E>(\<pi>\<^sub>s @ [LNxt x\<^sub>s] \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r @ [LNxt x\<^sub>r] \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) \<pi> = Some \<sigma>" then
+    and "(\<E>(\<pi>\<^sub>s @ [LNxt x\<^sub>s] \<mapsto> (Stt e\<^sub>s (\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt)) \<kappa>\<^sub>s), \<pi>\<^sub>r @ [LNxt x\<^sub>r] \<mapsto> (Stt e\<^sub>r (\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) \<kappa>\<^sub>r))) \<pi> = Some \<sigma>" then
     have "\<E> \<pi> = Some \<sigma>" by simp
     with \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>\<close>
     have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>" by (blast intro: staticEvalPool.cases)
-  } with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>r;\<rho>\<^sub>r (x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>` `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>s;\<rho>\<^sub>s (x\<^sub>s \<mapsto> VUnt);\<kappa>\<^sub>s\<rangle>`
-  show "\<forall>\<pi> \<sigma>. (\<E>(\<pi>\<^sub>s @ [LNxt x\<^sub>s] \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r @ [LNxt x\<^sub>r] \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)) \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>" by simp
+  } with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e\<^sub>r (\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) \<kappa>\<^sub>r)` `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e\<^sub>s (\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt)) \<kappa>\<^sub>s)`
+  show "\<forall>\<pi> \<sigma>. (\<E>(\<pi>\<^sub>s @ [LNxt x\<^sub>s] \<mapsto> (Stt e\<^sub>s (\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt)) \<kappa>\<^sub>s), \<pi>\<^sub>r @ [LNxt x\<^sub>r] \<mapsto> (Stt e\<^sub>r (\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) \<kappa>\<^sub>r))) \<pi> = Some \<sigma> \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>" by simp
 
 qed
 
@@ -1249,17 +1247,17 @@ qed
 lemma staticEvalPool_to_env_let_chan:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi> = Some (\<langle>Bind x MkChn e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
+  \<E> \<pi> = Some ((Stt (Bind x MkChn e) \<rho> \<kappa>)) \<Longrightarrow> 
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VChn (Ch \<pi> x)))
 "
 proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>Bind x MkChn e; \<rho>; \<kappa>\<rangle>)" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x MkChn e; \<rho>; \<kappa>\<rangle>" by (blast intro: staticEvalPool.cases) then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some ((Stt (Bind x MkChn e) \<rho> \<kappa>))" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x MkChn e) \<rho> \<kappa>)" by (blast intro: staticEvalPool.cases) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x MkChn e" by (blast intro: staticEvalState.cases) then
   have "{^Chan x} \<subseteq> \<V> x"  by (blast intro: staticEval.cases)
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VChn (Ch \<pi> x))" by (simp add: Chan)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x MkChn e; \<rho>; \<kappa>\<rangle>` 
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x MkChn e) \<rho> \<kappa>)` 
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps)+
   {
     fix x' \<omega>'
@@ -1274,46 +1272,46 @@ qed
 lemma staticEvalPreservedDynamicEval_under_chan:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi> = Some (\<langle>Bind x MkChn e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow> 
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e; \<rho>(x \<mapsto> (VChn (Ch \<pi> x))); \<kappa>\<rangle>)
+  \<E> \<pi> = Some ((Stt (Bind x MkChn e) \<rho> \<kappa>)) \<Longrightarrow> 
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LNxt x] \<mapsto> (Stt e (\<rho>(x \<mapsto> (VChn (Ch \<pi> x)))) \<kappa>))
 "
 proof
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>Bind x MkChn e; \<rho>; \<kappa>\<rangle>)" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some ((Stt (Bind x MkChn e) \<rho> \<kappa>))" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: staticEvalPool_to_tm_let)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>Bind x MkChn e; \<rho>; \<kappa>\<rangle>)`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some ((Stt (Bind x MkChn e) \<rho> \<kappa>))`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VChn (Ch \<pi> x)))" by (blast intro: staticEvalPool_to_env_let_chan )
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>Bind x MkChn e; \<rho>; \<kappa>\<rangle>)`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some ((Stt (Bind x MkChn e) \<rho> \<kappa>))`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: staticEvalPool_to_stack_let)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e e` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> (VChn (Ch \<pi> x)))` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> (VChn (Ch \<pi> x)));\<kappa>\<rangle>" by (blast intro: staticEvalState.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> (VChn (Ch \<pi> x)))) \<kappa>)" by (blast intro: staticEvalState.intros)
   {
     fix \<pi>' \<sigma>'
-    assume "(\<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> (VChn (Ch \<pi> x)));\<kappa>\<rangle>)) \<pi>' = Some \<sigma>'" 
+    assume "(\<E>(\<pi> @ [LNxt x] \<mapsto> (Stt e (\<rho>(x \<mapsto> (VChn (Ch \<pi> x)))) \<kappa>))) \<pi>' = Some \<sigma>'" 
     and "\<pi>' \<noteq> \<pi> @ [LNxt x]" then
     have "\<E> \<pi>' = Some \<sigma>'" by simp with `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
     have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (simp add: staticEvalPool.simps)
-  } with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> (VChn (Ch \<pi> x)));\<kappa>\<rangle>`
-  show "\<forall>\<pi>' \<sigma>'. (\<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> (VChn (Ch \<pi> x)));\<kappa>\<rangle>)) \<pi>' = Some \<sigma>' \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by simp
+  } with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> (VChn (Ch \<pi> x)))) \<kappa>)`
+  show "\<forall>\<pi>' \<sigma>'. (\<E>(\<pi> @ [LNxt x] \<mapsto> (Stt e (\<rho>(x \<mapsto> (VChn (Ch \<pi> x)))) \<kappa>))) \<pi>' = Some \<sigma>' \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by simp
 qed
 
 
 lemma staticEvalPool_to_env_let_spawn:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi> = Some (\<langle>Bind x (Spwn e\<^sub>c) e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
+  \<E> \<pi> = Some ((Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>)) \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnt)"
 proof
 
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>Bind x (Spwn e\<^sub>c) e; \<rho>; \<kappa>\<rangle>)" then
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Spwn e\<^sub>c) e; \<rho>; \<kappa>\<rangle>" by (simp add: staticEvalPool.simps) then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some ((Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>))" then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>)" by (simp add: staticEvalPool.simps) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Spwn e\<^sub>c) e" by (blast intro: staticEvalState.cases) then
   have "{^Unt} \<subseteq> \<V> x"  by (blast intro: staticEval.cases) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt" by (simp add: Unit)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Spwn e\<^sub>c) e; \<rho>; \<kappa>\<rangle>`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>)`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps)
 
   {
@@ -1328,27 +1326,27 @@ qed
 lemma staticEvalPreservedSpawn:
   "
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
-  \<E> \<pi> = Some (\<langle>Bind x (Spwn e\<^sub>c) e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e; \<rho>(x \<mapsto> VUnt); \<kappa>\<rangle>, \<pi>@ [LSpwn x] \<mapsto> \<langle>e\<^sub>c; \<rho>; []\<rangle>)
+  \<E> \<pi> = Some ((Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>)) \<Longrightarrow>
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LNxt x] \<mapsto> (Stt e (\<rho>(x \<mapsto> VUnt)) \<kappa>), \<pi>@ [LSpwn x] \<mapsto> (Stt e\<^sub>c \<rho> []))
 "
 proof
 
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>Bind x (Spwn e\<^sub>c) e; \<rho>; \<kappa>\<rangle>)"
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some ((Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>))"
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>Bind x (Spwn e\<^sub>c) e; \<rho>; \<kappa>\<rangle>)`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some ((Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>))`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e e" by (blast intro: staticEvalPool_to_tm_let)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>Bind x (Spwn e\<^sub>c) e; \<rho>; \<kappa>\<rangle>)`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some ((Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>))`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnt)" by (blast intro: staticEvalPool_to_env_let_spawn)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>Bind x (Spwn e\<^sub>c) e; \<rho>; \<kappa>\<rangle>)`
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some ((Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>))`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>" by (blast intro: staticEvalPool_to_stack_let)
 
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> \<kappa>\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>(x \<mapsto> VUnt)\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>e e\<close>
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> VUnt);\<kappa>\<rangle>" by (simp add: staticEvalState.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> VUnt)) \<kappa>)" by (simp add: staticEvalState.intros)
 
-  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some (\<langle>Bind x (Spwn e\<^sub>c) e; \<rho>; \<kappa>\<rangle>)`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x (Spwn e\<^sub>c) e; \<rho>; \<kappa>\<rangle>" by (simp add: staticEvalPool.simps) then
+  from `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>` and `\<E> \<pi> = Some ((Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>))`
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>)" by (simp add: staticEvalPool.simps) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Spwn e\<^sub>c) e" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps)+
   
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Spwn e\<^sub>c) e`
@@ -1356,16 +1354,16 @@ proof
 
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>c\<rfloor>) \<Rrightarrow> []" by (simp add: staticEval_stack.Empty)
   from \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<^sub>c\<rfloor>) \<Rrightarrow> []\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>c\<close> 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>c;\<rho>;[]\<rangle>" by (simp add: staticEvalState.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e\<^sub>c \<rho> [])" by (simp add: staticEvalState.intros)
 
   {
     fix \<pi>' \<sigma>'
-    assume "(\<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> VUnt);\<kappa>\<rangle>, \<pi> @ [LSpwn x] \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)) \<pi>' = Some \<sigma>'"
+    assume "(\<E>(\<pi> @ [LNxt x] \<mapsto> (Stt e (\<rho>(x \<mapsto> VUnt)) \<kappa>), \<pi> @ [LSpwn x] \<mapsto> (Stt e\<^sub>c \<rho> []))) \<pi>' = Some \<sigma>'"
     and "\<pi>' \<noteq> \<pi> @ [LNxt x]" and " \<pi>' \<noteq> \<pi> @ [LSpwn x]" then
     have "\<E> \<pi>' = Some \<sigma>'" by simp with `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
     have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by (blast intro: staticEvalPool.cases)
-  } with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> VUnt);\<kappa>\<rangle>` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e\<^sub>c;\<rho>;[]\<rangle>`
-  show "\<forall>\<pi>' \<sigma>'. (\<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> VUnt);\<kappa>\<rangle>, \<pi> @ [LSpwn x] \<mapsto> \<langle>e\<^sub>c;\<rho>;[]\<rangle>)) \<pi>' = Some \<sigma>' \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by simp
+  } with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> VUnt)) \<kappa>)` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e\<^sub>c \<rho> [])`
+  show "\<forall>\<pi>' \<sigma>'. (\<E>(\<pi> @ [LNxt x] \<mapsto> (Stt e (\<rho>(x \<mapsto> VUnt)) \<kappa>), \<pi> @ [LSpwn x] \<mapsto> (Stt e\<^sub>c \<rho> []))) \<pi>' = Some \<sigma>' \<longrightarrow> (\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<sigma>'" by simp
 qed
 
 
@@ -1386,7 +1384,7 @@ proof -
   proof cases
     case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<omega>)
 
-    have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LRtn x] \<mapsto> \<langle>e\<^sub>\<kappa>;\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>);\<kappa>\<rangle>)"
+    have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LRtn x] \<mapsto> (Stt e\<^sub>\<kappa> (\<rho>\<^sub>\<kappa>(x\<^sub>\<kappa> \<mapsto> \<omega>)) \<kappa>))"
       using H1 local.Seq_Step_Down(4) local.Seq_Step_Down(5) staticEvalPool.simps staticEvalState_to_state_result by fastforce
 
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
@@ -1394,20 +1392,20 @@ proof -
   next
     case (Seq_Step \<pi> x b e \<rho> \<kappa> \<omega>)
 
-    have L1H7:"(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>Bind x b e;\<rho>;\<kappa>\<rangle>"
+    have L1H7:"(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x b e) \<rho> \<kappa>)"
       using H1 local.Seq_Step(4) staticEvalPool.simps by auto
 
-    have L1H8: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>"
+    have L1H8: "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e (\<rho>(x \<mapsto> \<omega>)) \<kappa>)"
       using L1H7 local.Seq_Step(5) staticEvalStatePreservedDynamicEval_under_step by blast
 
-    have L1H9: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LNxt x] \<mapsto> \<langle>e;\<rho>(x \<mapsto> \<omega>);\<kappa>\<rangle>)"
+    have L1H9: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LNxt x] \<mapsto> (Stt e (\<rho>(x \<mapsto> \<omega>)) \<kappa>))"
       using H1 L1H8 staticEvalPool.simps by auto
 
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
       by (simp add: L1H9 local.Seq_Step(1))
   next
     case (Seq_Step_Up \<pi> x b e \<rho> \<kappa> e' \<rho>')
-    have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LCall x] \<mapsto> \<langle>e';\<rho>';(Ctn x e \<rho>) # \<kappa>\<rangle>)"
+    have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi> @ [LCall x] \<mapsto> (Stt e' \<rho>' ((Ctn x e \<rho>) # \<kappa>)))"
       using H1 local.Seq_Step_Up(4) local.Seq_Step_Up(5) staticEvalPool.simps staticEvalStatePreservedDynamicEval_under_step_up by fastforce
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
       by (simp add: L1H1 local.Seq_Step_Up(1))
@@ -1421,7 +1419,7 @@ proof -
       by (simp add: H1 local.BindSpawn(1) local.BindSpawn(4) staticEvalPreservedSpawn)
   next
     case (BindSync \<pi>\<^sub>s x\<^sub>s x\<^sub>s\<^sub>e e\<^sub>s \<rho>\<^sub>s \<kappa>\<^sub>s x\<^sub>s\<^sub>c x\<^sub>m \<rho>\<^sub>s\<^sub>e \<pi>\<^sub>r x\<^sub>r x\<^sub>r\<^sub>e e\<^sub>r \<rho>\<^sub>r \<kappa>\<^sub>r x\<^sub>r\<^sub>c \<rho>\<^sub>r\<^sub>e c \<omega>\<^sub>m)
-    have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s @ [LNxt x\<^sub>s] \<mapsto> \<langle>e\<^sub>s;\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt);\<kappa>\<^sub>s\<rangle>, \<pi>\<^sub>r @ [LNxt x\<^sub>r] \<mapsto> \<langle>e\<^sub>r;\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m);\<kappa>\<^sub>r\<rangle>)" 
+    have L1H1: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>(\<pi>\<^sub>s @ [LNxt x\<^sub>s] \<mapsto> (Stt e\<^sub>s (\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt)) \<kappa>\<^sub>s), \<pi>\<^sub>r @ [LNxt x\<^sub>r] \<mapsto> (Stt e\<^sub>r (\<rho>\<^sub>r(x\<^sub>r \<mapsto> \<omega>\<^sub>m)) \<kappa>\<^sub>r))" 
       by (simp add: H1 local.BindSync(10) local.BindSync(11) local.BindSync(4) local.BindSync(5) local.BindSync(7) local.BindSync(8) local.BindSync(9) staticEvalPreservedDynamicEval_under_sync)
     show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'"
       by (simp add: L1H1 local.BindSync(1))
@@ -1477,16 +1475,16 @@ qed
 theorem staticEvalPoolSoundSnapshot :
   "
   \<rho> x = Some \<omega> \<Longrightarrow>
-  \<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>) \<Longrightarrow>
+  \<E> \<pi> = Some (Stt e \<rho> \<kappa>) \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow>
   {|\<omega>|} \<subseteq> \<V> x
 "
 proof -
   assume "\<rho> x = Some \<omega>"
 
-  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (\<langle>e; \<rho>; \<kappa>\<rangle>)" then
+  assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some (Stt e \<rho> \<kappa>)" then
 
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; \<rho>; \<kappa>\<rangle>" by (simp add: staticEvalPool.simps) then
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e \<rho> \<kappa>)" by (simp add: staticEvalPool.simps) then
 
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps) 
   with `\<rho> x = Some \<omega>`
@@ -1500,7 +1498,7 @@ theorem staticEvalPoolSound :
   \<rho>' x = Some \<omega> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E> \<Longrightarrow> 
   star dynamicEval (\<E>, H) (\<E>', H') \<Longrightarrow>
-  \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
+  \<E>' \<pi> = Some ((Stt e' \<rho>' \<kappa>')) \<Longrightarrow>
   {|\<omega>|} \<subseteq> \<V> x
 "
 proof -
@@ -1508,7 +1506,7 @@ proof -
     H1: "\<rho>' x = Some \<omega>" and
     H2: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and 
     H3: "star dynamicEval (\<E>, H) (\<E>', H')" and 
-    H4: "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
+    H4: "\<E>' \<pi> = Some ((Stt e' \<rho>' \<kappa>'))"
 
   from H2 H3
   have H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>'" by (blast intro: staticEvalPreserved)
@@ -1523,7 +1521,7 @@ lemma staticEval_to_pool:
   \<lbrakk>
     (\<V>, \<C>) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
-  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]
+  (\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> (Stt e empty [])]
 "
 proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>e e"
@@ -1532,30 +1530,30 @@ proof -
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []" by (simp add: staticEval_stack.Empty)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e e` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> empty` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<kappa> \<V> (\<lfloor>e\<rfloor>) \<Rrightarrow> []`
-  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; empty; []\<rangle>" by (simp add: staticEvalState.intros)
+  have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e empty [])" by (simp add: staticEvalState.intros)
 
-  have "[[] \<mapsto> \<langle>e; empty; []\<rangle>] [] = Some (\<langle>e; empty; []\<rangle>)" by simp
-  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> \<langle>e; empty; []\<rangle>`
-  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: staticEvalPool.intros)
+  have "[[] \<mapsto> (Stt e empty [])] [] = Some (Stt e empty [])" by simp
+  with `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt e empty [])`
+  show "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> (Stt e empty [])]" by (simp add: staticEvalPool.intros)
 qed
 
 theorem staticEvalSound :
 "
   \<rho>' x = Some \<omega> \<Longrightarrow>
   (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) (\<E>', H') \<Longrightarrow>
-  \<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>) \<Longrightarrow>
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], H) (\<E>', H') \<Longrightarrow>
+  \<E>' \<pi> = Some ((Stt e' \<rho>' \<kappa>')) \<Longrightarrow>
   {|\<omega>|} \<subseteq> \<V> x
 "
 proof -
   assume 
     H1: "\<rho>' x = Some \<omega>" and
     H2: "(\<V>, \<C>) \<Turnstile>\<^sub>e e" and 
-    H3: "star dynamicEval ([[] \<mapsto> \<langle>e; empty; []\<rangle>], H) (\<E>', H')" and 
-    H4: "\<E>' \<pi> = Some (\<langle>e'; \<rho>'; \<kappa>'\<rangle>)"
+    H3: "star dynamicEval ([[] \<mapsto> (Stt e empty [])], H) (\<E>', H')" and 
+    H4: "\<E>' \<pi> = Some ((Stt e' \<rho>' \<kappa>'))"
 
   from H2 have 
-    H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e; empty; []\<rangle>]" by (simp add: staticEval_to_pool)
+    H5: "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> [[] \<mapsto> (Stt e empty [])]" by (simp add: staticEval_to_pool)
 
   from H1 H3 H4 H5
   show " {|\<omega>|} \<subseteq> \<V> x" using staticEvalPoolSound by blast
@@ -1754,7 +1752,7 @@ inductive staticReachableStack :: "tm \<Rightarrow> contin list \<Rightarrow> bo
 inductive staticReachablePool :: "tm \<Rightarrow> trace_pool \<Rightarrow> bool" where
   Intro:
   "
-    (\<forall>\<pi> e \<rho> \<kappa> . E \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
+    (\<forall>\<pi> e \<rho> \<kappa> . E \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow> 
       staticReachableForward e0 e \<and>
       staticReachableEnv e0 \<rho> \<and>
       staticReachableStack e0 \<kappa>) \<Longrightarrow>
@@ -2028,12 +2026,12 @@ qed
 lemma staticReachablePoolSound:
   "
   star dynamicEval (\<E>0, H0) (\<E>', H') \<Longrightarrow>
-  \<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<Longrightarrow>
+  \<E>0 = [[] \<mapsto> (Stt e\<^sub>0 empty [])] \<Longrightarrow>
   staticReachablePool e\<^sub>0 \<E>'
 "
 proof -
   assume 
-    H1: "\<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]" and
+    H1: "\<E>0 = [[] \<mapsto> (Stt e\<^sub>0 empty [])]" and
     H3: "star dynamicEval (\<E>0, H0) (\<E>', H')"
 
   obtain X0 X' where
@@ -2048,7 +2046,7 @@ proof -
   "
       \<forall> \<E>0 H0 \<E>' H' \<pi>' \<sigma>' .
       X0 = (\<E>0, H0) \<longrightarrow> X' = (\<E>', H') \<longrightarrow>
-      \<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>] \<longrightarrow>
+      \<E>0 = [[] \<mapsto> (Stt e\<^sub>0 empty [])] \<longrightarrow>
       staticReachablePool e\<^sub>0 \<E>'
     " 
   proof (induction)
@@ -2058,7 +2056,7 @@ proof -
       fix \<E>0 H0 \<E>' H' \<pi>' \<sigma>'
       assume 
         L1H0: "z = (\<E>0, H0)" "z = (\<E>', H')" and
-        L1H1: "\<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]"
+        L1H1: "\<E>0 = [[] \<mapsto> (Stt e\<^sub>0 empty [])]"
   
       have 
         L1H3: "staticReachableForward e\<^sub>0 e\<^sub>0" by (simp add: staticReachableForward.Refl)
@@ -2079,7 +2077,7 @@ proof -
       fix \<E>0 H0 \<E>' H' \<pi>'
       assume 
         L1H0: "x = (\<E>0, H0)" "z = (\<E>', H')" and 
-        L2H1: "\<E>0 = [[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>]"
+        L2H1: "\<E>0 = [[] \<mapsto> (Stt e\<^sub>0 empty [])]"
 
 
       obtain \<E> H where L2H3: "y = (\<E>, H)" by (meson surj_pair)
@@ -2101,14 +2099,14 @@ qed
 
 theorem staticReachableSound:
 "
-      star dynamicEval ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
-      \<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<Longrightarrow>
+      star dynamicEval ([[] \<mapsto> (Stt e\<^sub>0 empty [])], {}) (\<E>', H') \<Longrightarrow>
+      \<E>' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<Longrightarrow>
       staticReachable e\<^sub>0 e'
 "
 proof -
   assume 
-    L1H1: "star dynamicEval ([[] \<mapsto> \<langle>e\<^sub>0;Map.empty;[]\<rangle>], {}) (\<E>', H')" and
-    L1H2: "\<E>' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)"
+    L1H1: "star dynamicEval ([[] \<mapsto> (Stt e\<^sub>0 empty [])], {}) (\<E>', H')" and
+    L1H2: "\<E>' \<pi>' = Some (Stt e' \<rho>' \<kappa>')"
 
    show "staticReachable e\<^sub>0 e'" 
     using L1H1 L1H2

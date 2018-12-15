@@ -201,7 +201,7 @@ inductive paths_correspond :: "control_path \<Rightarrow> static_path \<Rightarr
 
 
 inductive paths_correspond_mod_chan :: 
-  "trace_pool * cmmn_set \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+  "trace_pool * communication \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
 (*
 is unordered necessary?
   Unordered: "

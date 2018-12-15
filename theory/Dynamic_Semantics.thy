@@ -73,7 +73,7 @@ inductive callEval :: "complex * env \<Rightarrow> tm * env \<Rightarrow> bool" 
  
 datatype contin = Ctn name tm env
 
-datatype state = State tm env "contin list" ("\<langle>_;_;_\<rangle>" [0, 0, 0] 71)
+datatype state = Stt tm env "contin list"
 
 type_synonym trace_pool = "control_path \<rightharpoonup> state"
 
@@ -84,65 +84,67 @@ inductive leaf :: "trace_pool \<Rightarrow> control_path \<Rightarrow> bool" whe
     (\<nexists> pi' . \<not>(pool pi' = None) \<and> strict_prefix pi pi') \<Longrightarrow>
     leaf pool pi"
 
-type_synonym cmmn_set = "(control_path * chan * control_path) set"
+type_synonym corresp = "(control_path * chan * control_path)"
 
-inductive dynamicEval :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_set \<Rightarrow> bool" (infix "\<rightarrow>" 55) where
+type_synonym communication = "corresp set"
+
+inductive dynamicEval :: "trace_pool * communication \<Rightarrow> trace_pool * communication \<Rightarrow> bool" (infix "\<rightarrow>" 55) where
   Seq_Step_Down:
   "
     \<lbrakk>
       leaf pool pi;
-      pool pi = Some (\<langle>Rslt x; env; (Ctn xk ek envk) # k\<rangle>) ;
+      pool pi = Some (Stt (Rslt x) env ((Ctn xk ek envk) # k)) ;
       env x = Some v
     \<rbrakk> \<Longrightarrow>
-    (pool, ys) \<rightarrow> (pool(pi @ [LRtn x] \<mapsto> \<langle>ek; envk(xk \<mapsto> v); k\<rangle>), ys)
+    (pool, ys) \<rightarrow> (pool(pi @ [LRtn x] \<mapsto> (Stt ek (envk(xk \<mapsto> v)) k)), ys)
   "
 | Seq_Step:
   "
     \<lbrakk>
       leaf pool pi ;
-      pool pi = Some (\<langle>(Bind x b e); env; k\<rangle>) ;
+      pool pi = Some (Stt (Bind x b e) env k) ;
       seqEval b env v
     \<rbrakk> \<Longrightarrow>
-    (pool, ys) \<rightarrow> (pool(pi @ [LNxt x] \<mapsto> \<langle>e; env(x \<mapsto> v); k\<rangle>), ys)
+    (pool, ys) \<rightarrow> (pool(pi @ [LNxt x] \<mapsto> (Stt e (env(x \<mapsto> v)) k)), ys)
   "
 | Seq_Step_Up:
   "
     \<lbrakk>
       leaf pool pi ;
-      pool pi = Some (\<langle>(Bind x b e); env; k\<rangle>) ;
+      pool pi = Some (Stt (Bind x b e) env k) ;
       callEval (b, env) (e', env')
     \<rbrakk> \<Longrightarrow>
-    (pool, ys) \<rightarrow> (pool(pi @ [LCall x] \<mapsto> \<langle>e'; env'; (Ctn x e env) # k\<rangle>), ys)
+    (pool, ys) \<rightarrow> (pool(pi @ [LCall x] \<mapsto> (Stt e' env' ((Ctn x e env) # k))), ys)
   "
 | BindMkChn:
   "
     \<lbrakk>
       leaf pool pi ;
-      pool pi = Some (\<langle>(Bind x MkChn e); env; k\<rangle>)
+      pool pi = Some (Stt (Bind x MkChn e) env k)
     \<rbrakk> \<Longrightarrow>
     (pool, ys) \<rightarrow> (pool(
-      pi @ [LNxt x] \<mapsto> (\<langle>e; env(x \<mapsto> (VChn (Ch pi x))); k\<rangle>)), ys)
+      pi @ [LNxt x] \<mapsto> (Stt e (env(x \<mapsto> (VChn (Ch pi x)))) k)), ys)
   "
 | BindSpawn:
   "
     \<lbrakk>
       leaf pool pi ;
-      pool pi = Some (\<langle>Bind x (Spwn ec) e; env; k\<rangle>)
+      pool pi = Some (Stt (Bind x (Spwn ec) e) env k)
     \<rbrakk> \<Longrightarrow>
     (pool, ys) \<rightarrow> (pool(
-      pi @ [LNxt x] \<mapsto> (\<langle>e; env(x \<mapsto> VUnt); k\<rangle>),
-      pi @ [LSpwn x] \<mapsto> (\<langle>ec; env; []\<rangle>)), ys)
+      pi @ [LNxt x] \<mapsto> (Stt e (env(x \<mapsto> VUnt)) k),
+      pi @ [LSpwn x] \<mapsto> (Stt ec env [])), ys)
   "
 | BindSync:
   "
     \<lbrakk>
   
       leaf pool pis ;
-      pool pis = Some (\<langle>Bind xs (Sync xse) es; envs; ks\<rangle>);
+      pool pis = Some (Stt (Bind xs (Sync xse) es) envs ks);
       envs xse = Some (VClsr (SendEvt xsc xm) envse);
 
       leaf pool pir ;
-      pool pir = Some (\<langle>Bind xr (Sync xre) er; envr; kr\<rangle>);
+      pool pir = Some (Stt (Bind xr (Sync xre) er) envr kr);
       envr xre = Some (VClsr (RecvEvt xrc) envre);
 
       envse xsc = Some (VChn c);
@@ -152,8 +154,8 @@ inductive dynamicEval :: "trace_pool * cmmn_set \<Rightarrow> trace_pool * cmmn_
     \<rbrakk> \<Longrightarrow>
     (pool, ys) \<rightarrow> (
       pool(
-        pis @ [LNxt xs] \<mapsto> (\<langle>es; envs(xs \<mapsto> VUnt); ks\<rangle>),
-        pir @ [LNxt xr] \<mapsto> (\<langle>er; envr(xr \<mapsto> vm); kr\<rangle>)),
+        pis @ [LNxt xs] \<mapsto> (Stt es (envs(xs \<mapsto> VUnt)) ks),
+        pir @ [LNxt xr] \<mapsto> (Stt er (envr(xr \<mapsto> vm)) kr)),
       ys \<union> {(pis, c, pir)})
   "
 
