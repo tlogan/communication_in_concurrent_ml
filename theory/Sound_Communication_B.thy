@@ -69,7 +69,7 @@ inductive staticFlowsAcceptStack :: "static_env \<Rightarrow> flow_set \<Rightar
 
 inductive staticFlowsAcceptPool :: "static_env \<Rightarrow> flow_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
   Intro: "
-    (\<forall> \<pi> e \<rho> \<kappa> . E \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
+    (\<forall> \<pi> e \<rho> \<kappa> . E \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow> 
       staticFlowsAccept V F e \<and>
       staticFlowsAcceptEnv V F \<rho> \<and>
       staticFlowsAcceptStack V F (\<lfloor>e\<rfloor>) \<kappa>) \<Longrightarrow> 
@@ -140,7 +140,7 @@ inductive static_live_chan_stack :: "static_env \<Rightarrow> tm_id_map \<Righta
 
 inductive static_live_chan_pool ::  "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> trace_pool \<Rightarrow> bool"  where
   Intro: "
-    (\<forall> \<pi> e \<rho> \<kappa> . pool \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    (\<forall> \<pi> e \<rho> \<kappa> . pool \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
       static_live_chan V Ln Lx x\<^sub>c e \<and>
       static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<and>
       static_live_chan_stack V Ln Lx x\<^sub>c \<kappa>) \<Longrightarrow>
@@ -220,8 +220,8 @@ is unordered necessary?
     paths_correspond \<pi>Suffix pathSuffix \<Longrightarrow>
     \<E> (\<pi>R @ (LNxt xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
     dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
-    \<E> \<pi>S = Some (\<langle>(Bind xS (Sync xSE) eSY);\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
-    \<E> \<pi>R = Some (\<langle>(Bind xR (Sync xRE) eRY);\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
+    \<E> \<pi>S = Some (Stt (Bind xS (Sync xSE) eSY) \<rho>SY \<kappa>SY) \<Longrightarrow>
+    \<E> \<pi>R = Some (Stt (Bind xR (Sync xRE) eRY) \<rho>RY \<kappa>RY) \<Longrightarrow>
     {(\<pi>S, c_c, \<pi>R)} \<subseteq> H \<Longrightarrow>
     paths_correspond_mod_chan (\<E>, H) c \<pi>S pathPre \<Longrightarrow>
     paths_correspond_mod_chan (\<E>, H) c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (IdBind xS, ESend xSE) # (IdBind xR, ENext) # pathSuffix)
@@ -229,7 +229,7 @@ is unordered necessary?
 
 
 lemma staticInclusiveSound: "
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -255,7 +255,7 @@ proof -
   
   then have
     H2: "
-      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>(Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>n);\<rho>;\<kappa>\<rangle>) 
+      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>n) \<rho> \<kappa>) 
     " using is_send_path.simps by auto
 
   then show 
@@ -266,7 +266,7 @@ qed
 lemma static_equality_sound: "
   path1 = path2 \<Longrightarrow>
 
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -292,18 +292,18 @@ assumes
   H2: "(V, C) \<Turnstile>\<^sub>e e"
 shows "
   \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
-  EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
+  EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
   static_live_chan_pool V Ln Lx xC E' \<longrightarrow>
   staticFlowsAcceptPool V F E' \<longrightarrow>
-  E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow> isEnd (tmId e') \<longrightarrow>
+  E' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<longrightarrow> isEnd (tmId e') \<longrightarrow>
   (\<exists> path . 
     paths_correspond_mod_chan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
     staticTraceable F Ln Lx (IdBind xC) isEnd path)"
   sorry
 
 lemma staticTraceableSound: "
-  \<E>' \<pi> = Some (\<langle>(Bind x b e\<^sub>n);\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  \<E>' \<pi> = Some (Stt (Bind x b e\<^sub>n) \<rho> \<kappa>) \<Longrightarrow>
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
@@ -319,7 +319,7 @@ lemma staticTraceableSound: "
 
 lemma staticTraceableSendSound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
@@ -339,7 +339,7 @@ theorem static_one_shot_sound': "
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   forEveryTwo (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
  apply (simp add: forEveryTwo.simps singular.simps; auto)
@@ -355,7 +355,7 @@ theorem static_one_shot_sound: "
   \<lbrakk>
     static_one_shot V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> xC)
 "
@@ -374,7 +374,7 @@ theorem noncompetitive_send_to_ordered_send: "
   static_live_chan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
   forEveryTwo (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
@@ -387,7 +387,7 @@ theorem staticOneToMany_sound: "
   \<lbrakk>
     staticOneToMany V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   fan_out \<E>' (Ch \<pi> xC)
 "
@@ -400,7 +400,7 @@ lemma noncompetitive_recv_to_ordered_recv: "
    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
    staticFlowsAccept V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
    forEveryTwo (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
@@ -410,7 +410,7 @@ theorem staticManyToOne_sound: "
   \<lbrakk>
     staticManyToOne V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   fan_in \<E>' (Ch \<pi> xC)
 "
@@ -424,7 +424,7 @@ theorem staticOneToOne_sound: "
   \<lbrakk>
     staticOneToOne V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
-    star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   one_to_one \<E>' (Ch \<pi> xC)
 "
@@ -564,8 +564,8 @@ lemma  paths_cong_mod_chanPreservedDynamicEval_under_reduction_sync: "
   paths_correspond (\<pi>Suffix @ [l) (pathSuffix @ [n]) \<Longrightarrow>
   \<E> (\<pi>R @ (LNxt xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
   dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
-  \<E> \<pi>S = Some (\<langle>(Bind xS (Sync xSE) eSY);\<rho>SY;\<kappa>SY\<rangle>) \<Longrightarrow>
-  \<E> \<pi>R = Some (\<langle>(Bind xR (Sync xRE) eRY);\<rho>RY;\<kappa>RY\<rangle>) \<Longrightarrow>
+  \<E> \<pi>S = Some (Stt (Bind xS (Sync xSE) eSY) \<rho>SY \<kappa>SY)) \<Longrightarrow>
+  \<E> \<pi>R = Some (Stt (Bind xR (Sync xRE) eRY) \<rho>RY \<kappa>RY)) \<Longrightarrow>
   {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
   paths_correspond_mod_chan (\<E>, H) c \<pi>SforEveryTwo pathPre \<Longrightarrow>
   paths_correspond_mod_chan (\<E>, H) c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (IdBind xS, ESend xSE) # (IdBind xR, ENext) # pathSuffix)"

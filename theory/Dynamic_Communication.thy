@@ -4,7 +4,7 @@ begin
 
 inductive is_send_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where
   intro: "
-    pool \<pi>y = Some (\<langle>Bind xy (Sync xe) en; env; \<kappa>\<rangle>) \<Longrightarrow>
+    pool \<pi>y = Some ((Stt (Bind xy (Sync xe) en) env \<kappa>)) \<Longrightarrow>
     env xe = Some (VClsr (SendEvt xsc xm) enve) \<Longrightarrow>
     enve xsc = Some (VChn c) \<Longrightarrow>
     is_send_path pool c \<pi>y
@@ -12,7 +12,7 @@ inductive is_send_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_p
 
 inductive is_recv_path :: "trace_pool \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> bool" where
   intro: "
-    pool \<pi>y = Some (\<langle>Bind xy (Sync xe) en; env; \<kappa>\<rangle>) \<Longrightarrow>
+    pool \<pi>y = Some ((Stt (Bind xy (Sync xe) en) env \<kappa>)) \<Longrightarrow>
     env xe = Some (VClsr (RecvEvt xrc) enve) \<Longrightarrow>
     enve xrc = Some (VChn c) \<Longrightarrow>
     is_recv_path pool c \<pi>y
@@ -59,10 +59,10 @@ inductive one_to_one :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
 
 
 inductive 
-  dynamic_built_on_chan_var :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> name \<Rightarrow> bool" and
-  dynamic_built_on_chan_atom :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> atom \<Rightarrow> bool" and
-  dynamic_built_on_chan_complex :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> complex \<Rightarrow> bool" and
-  dynamic_built_on_chan_tm :: "(var \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> tm \<Rightarrow> bool" 
+  dynamic_built_on_chan_var :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> name \<Rightarrow> bool" and
+  dynamic_built_on_chan_atom :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> atom \<Rightarrow> bool" and
+  dynamic_built_on_chan_complex :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> complex \<Rightarrow> bool" and
+  dynamic_built_on_chan_tm :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> tm \<Rightarrow> bool" 
 where
   Chan: "
     \<rho> x = Some (VChn c) \<Longrightarrow>

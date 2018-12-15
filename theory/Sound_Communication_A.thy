@@ -69,7 +69,7 @@ inductive pathsCorrespond :: "control_path \<Rightarrow> static_path \<Rightarro
 
 lemma staticInclusiveBaseSound:
   "
-  E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>] \<Longrightarrow>
+  E0 = [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
   pathsCorrespond \<pi>1 path1 \<Longrightarrow>
@@ -78,7 +78,7 @@ lemma staticInclusiveBaseSound:
 "
 proof -
   assume 
-    H1: "E0 = [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]" and
+    H1: "E0 = [[] \<mapsto> (Stt e empty [])]" and
     H2: "E0 \<pi>1 \<noteq> None" and
     H3: "E0 \<pi>2 \<noteq> None" and
     H4: "pathsCorrespond \<pi>1 path1" and
@@ -285,7 +285,7 @@ lemma not_staticInclusive_step:
   pathsCorrespond \<pi>1 path1 \<longrightarrow> 
   pathsCorrespond \<pi>2 path2 \<longrightarrow> 
   staticInclusive path1 path2 \<Longrightarrow>
-star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (env, H) \<Longrightarrow>
+star_left op \<rightarrow> ([[] \<mapsto> (Stt e empty [])], {}) (env, H) \<Longrightarrow>
 (env, H) \<rightarrow> (E', H') \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
@@ -302,7 +302,7 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
       (\<forall>path1. pathsCorrespond \<pi>1 path1 \<longrightarrow>
       (\<forall>path2. pathsCorrespond \<pi>2 path2 \<longrightarrow> 
         staticInclusive path1 path2)))" and
-    H2: "star_left op \<rightarrow> ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (env, H)" and
+    H2: "star_left op \<rightarrow> ([[] \<mapsto> (Stt e empty [])], {}) (env, H)" and
     H3: "(env, H) \<rightarrow> (E', H')" and
     H4: "\<exists>y. E' \<pi>1 = Some y" and
     H5: "\<exists>y. E' \<pi>2 = Some y " and
@@ -442,7 +442,7 @@ qed
 
 lemma staticInclusiveSound:
   "
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow>
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow>
   pathsCorrespond \<pi>1 path1 \<Longrightarrow>
@@ -451,17 +451,17 @@ lemma staticInclusiveSound:
 "
 proof -
   assume
-    H1: "star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" and
+    H1: "star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')" and
     H2: "\<E>' \<pi>1 \<noteq> None" and
     H3: "\<E>' \<pi>2 \<noteq> None" and
     H4: "pathsCorrespond \<pi>1 path1" and
     H5: "pathsCorrespond \<pi>2 path2"
 
   from H1 have
-    "star_left (op \<rightarrow>) ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" by (simp add: star_implies_star_left)
+    "star_left (op \<rightarrow>) ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')" by (simp add: star_implies_star_left)
   
   then obtain X0 X' where 
-    H6: "X0 = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" 
+    H6: "X0 = ([[] \<mapsto> (Stt e empty [])], {})" 
         "X' = (\<E>', H')" and
     H7: "star_left (op \<rightarrow>) X0 X'" by auto
 
@@ -469,7 +469,7 @@ proof -
     H8:
   "
       \<forall> \<E>' H' \<pi>1 \<pi>2 path1 path2.
-      X0 = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> X' = (\<E>', H') \<longrightarrow>
+      X0 = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> X' = (\<E>', H') \<longrightarrow>
       \<E>' \<pi>1 \<noteq> None \<longrightarrow>
       \<E>' \<pi>2 \<noteq> None \<longrightarrow>
       pathsCorrespond \<pi>1 path1 \<longrightarrow>
@@ -486,7 +486,7 @@ proof -
     {
       fix \<E>' H' \<pi>1 \<pi>2 path1 path2
       assume 
-        L2H1: "x = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" and
+        L2H1: "x = ([[] \<mapsto> (Stt e empty [])], {})" and
         L2H2: "z = (\<E>', H')" and
         L2H3: "\<E>' \<pi>1 \<noteq> None" and
         L2H4: "\<E>' \<pi>2 \<noteq> None" and
@@ -530,7 +530,7 @@ proof -
   then have
     H2:
   "
-      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) 
+      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some ((Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>n) \<rho> \<kappa>)) 
     " using is_send_path.simps by auto
 
   then show 
@@ -548,7 +548,7 @@ proof -
   then have
     H2:
   "
-      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (\<langle>Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>n;\<rho>;\<kappa>\<rangle>) 
+      \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some ((Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>n) \<rho> \<kappa>)) 
     " using is_recv_path.simps by auto
 
   then show 
@@ -621,7 +621,7 @@ inductive staticFlowsAcceptStack :: "static_env \<Rightarrow> flow_set \<Rightar
 inductive staticFlowsAcceptPool :: "static_env \<Rightarrow> flow_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
   Intro:
   "
-    (\<forall> \<pi> e \<rho> \<kappa> . E \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow> 
+    (\<forall> \<pi> e \<rho> \<kappa> . E \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow> 
       staticFlowsAccept V F e \<and>
       staticFlowsAcceptEnv V F \<rho> \<and>
       staticFlowsAcceptStack V F (\<lfloor>e\<rfloor>) \<kappa>) \<Longrightarrow> 
@@ -633,23 +633,23 @@ lemma staticFlowsAcceptPoolPreservedReturnEval:
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
   leaf \<E>m pi \<Longrightarrow>
-  \<E>m pi = Some (\<langle>Rslt x;env;Ctn xk ek envk # k\<rangle>) \<Longrightarrow> 
+  \<E>m pi = Some (Stt (Rslt x) env (Ctn xk ek envk # k)) \<Longrightarrow> 
   env x = Some v \<Longrightarrow> 
-  staticFlowsAcceptPool V F (\<E>m(pi @ [LRtn x] \<mapsto> \<langle>ek;envk(xk \<mapsto> v);k\<rangle>))
+  staticFlowsAcceptPool V F (\<E>m(pi @ [LRtn x] \<mapsto> (Stt ek (envk(xk \<mapsto> v)) k)))
 "
 proof -
 assume 
  H1: "staticFlowsAcceptPool V F \<E>m" and
  H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
  H3: "leaf \<E>m pi" and
- H4: "\<E>m pi = Some (\<langle>Rslt x;env;Ctn xk ek envk # k\<rangle>)" and
+ H4: "\<E>m pi = Some (Stt (Rslt x) env (Ctn xk ek envk # k))" and
  H5: "env x = Some v"
 
 
  have 
   H6: " 
     \<forall>\<pi> e \<rho> \<kappa>.
-    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    \<E>m \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
     staticFlowsAccept V F e \<and> staticFlowsAcceptEnv V F \<rho> \<and> staticFlowsAcceptStack V F (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 staticFlowsAcceptPool.cases by blast 
 
@@ -668,7 +668,7 @@ assume
   qed
 
 
- show "staticFlowsAcceptPool V F (\<E>m(pi @ [LRtn x] \<mapsto> \<langle>ek;envk(xk \<mapsto> v);k\<rangle>))"
+ show "staticFlowsAcceptPool V F (\<E>m(pi @ [LRtn x] \<mapsto> (Stt ek (envk(xk \<mapsto> v)) k)))"
    using H1 H10 H5 H8 staticFlowsAcceptEnv.simps staticFlowsAcceptPool.simps by auto
 qed
 
@@ -678,22 +678,22 @@ lemma staticFlowsAcceptPoolPreservedSeqEval:
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
   leaf \<E>m pi \<Longrightarrow>
-  \<E>m pi = Some (\<langle>tm.Bind x b e;env;k\<rangle>) \<Longrightarrow> 
+  \<E>m pi = Some (Stt (Bind x b e) env k) \<Longrightarrow> 
   seqEval b env v \<Longrightarrow> 
-  staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> v);k\<rangle>))
+  staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> (Stt e (env(x \<mapsto> v)) k)))
 "
 proof -
   assume 
     H1: "staticFlowsAcceptPool V F \<E>m" and
     H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
     H3: "leaf \<E>m pi" and
-    H4: "\<E>m pi = Some (\<langle>tm.Bind x b e;env;k\<rangle>)" and 
+    H4: "\<E>m pi = Some (Stt (Bind x b e) env k)" and 
     H5: "seqEval b env v"
 
   have H6:
   "
     \<forall>\<pi> e \<rho> \<kappa>.
-    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    \<E>m \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
     staticFlowsAccept V F e \<and> staticFlowsAcceptEnv V F \<rho> \<and> staticFlowsAcceptStack V F (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 staticFlowsAcceptPool.cases by blast 
 
@@ -710,7 +710,7 @@ proof -
   have H10: 
     "staticFlowsAccept V F e" using H7 staticFlowsAccept.cases by blast
 
-  show "staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> v);k\<rangle>))"
+  show "staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> (Stt e (env(x \<mapsto> v)) k)))"
   using H5
   proof cases
     case UNIT
@@ -806,22 +806,22 @@ lemma staticFlowsAcceptPoolPreservedCallEval:
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
   leaf \<E>m pi \<Longrightarrow>
-  \<E>m pi = Some (\<langle>tm.Bind x b e;env;k\<rangle>) \<Longrightarrow>
+  \<E>m pi = Some (Stt (Bind x b e) env k) \<Longrightarrow>
   callEval (b, env) (e', env') \<Longrightarrow> 
-  staticFlowsAcceptPool V F (\<E>m(pi @ [LCall x] \<mapsto> \<langle>e';env';Ctn x e env # k\<rangle>))
+  staticFlowsAcceptPool V F (\<E>m(pi @ [LCall x] \<mapsto> (Stt e' env' ((Ctn x e env) # k))))
 "
 proof -
   assume 
     H1: "staticFlowsAcceptPool V F \<E>m" and
     H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
     H3: "leaf \<E>m pi" and
-    H4: "\<E>m pi = Some (\<langle>tm.Bind x b e;env;k\<rangle>)" and
+    H4: "\<E>m pi = Some (Stt (Bind x b e) env k)" and
     H5: "callEval (b, env) (e', env')"
 
   have H6:
   "
     \<forall>\<pi> e \<rho> \<kappa>.
-    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    \<E>m \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
     staticFlowsAccept V F e \<and> staticFlowsAcceptEnv V F \<rho> \<and> staticFlowsAcceptStack V F (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 staticFlowsAcceptPool.cases by blast 
 
@@ -839,7 +839,7 @@ proof -
   have H10: 
     "staticFlowsAccept V F e" using H7 staticFlowsAccept.cases by blast
 
-  show "staticFlowsAcceptPool V F (\<E>m(pi @ [LCall x] \<mapsto> \<langle>e';env';Ctn x e env # k\<rangle>))"
+  show "staticFlowsAcceptPool V F (\<E>m(pi @ [LCall x] \<mapsto> (Stt e' env' ((Ctn x e env) # k))))"
   using H5
   proof cases
     case (CaseLft xs xl' envl vl xl xr er)
@@ -981,20 +981,20 @@ lemma staticFlowsAcceptPoolPreservedMkChnEval:
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
   leaf \<E>m pi \<Longrightarrow> 
-  \<E>m pi = Some (\<langle>tm.Bind x MkChn e;env;k\<rangle>) \<Longrightarrow> 
-  staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> VChn (Ch pi x));k\<rangle>))
+  \<E>m pi = Some (Stt (Bind x MkChn e) env k) \<Longrightarrow> 
+  staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> (Stt e (env(x \<mapsto> VChn (Ch pi x))) k)))
 "
 proof -
   assume 
     H1: "staticFlowsAcceptPool V F \<E>m" and
     H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
     H3: "leaf \<E>m pi" and
-    H4: "\<E>m pi = Some (\<langle>tm.Bind x MkChn e;env;k\<rangle>)"
+    H4: "\<E>m pi = Some (Stt (Bind x MkChn e) env k)"
 
   have H6:
   "
     \<forall>\<pi> e \<rho> \<kappa>.
-    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    \<E>m \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
     staticFlowsAccept V F e \<and> staticFlowsAcceptEnv V F \<rho> \<and> staticFlowsAcceptStack V F (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 staticFlowsAcceptPool.cases by blast 
 
@@ -1013,7 +1013,7 @@ proof -
   have H10: 
     "staticFlowsAccept V F e" using H7 staticFlowsAccept.cases by blast
 
-  show "staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> VChn (Ch pi x));k\<rangle>))"
+  show "staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> (Stt e (env(x \<mapsto> VChn (Ch pi x))) k)))"
     using H10 H6 H8 H9 staticFlowsAcceptEnv.simps 
     staticFlowsAcceptEnv_staticFlowsAcceptVal.Chan 
     staticFlowsAcceptPool.simps by auto
@@ -1025,20 +1025,20 @@ lemma staticFlowsAcceptPoolPreservedSpawnEval:
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
   leaf \<E>m pi \<Longrightarrow> 
-  \<E>m pi = Some (\<langle>tm.Bind x (Spwn ec) e;env;k\<rangle>) \<Longrightarrow> 
-  staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> VUnt);k\<rangle>, pi @ [LSpwn x] \<mapsto> \<langle>ec;env;[]\<rangle>))
+  \<E>m pi = Some (Stt (Bind x (Spwn ec) e) env k) \<Longrightarrow> 
+  staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> (Stt e (env(x \<mapsto> VUnt)) k), pi @ [LSpwn x] \<mapsto> (Stt ec env [])))
 "
 proof -
   assume 
     H1: "staticFlowsAcceptPool V F \<E>m" and
     H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
     H3: "leaf \<E>m pi" and
-    H4: "\<E>m pi = Some (\<langle>tm.Bind x (Spwn ec) e;env;k\<rangle>)"
+    H4: "\<E>m pi = Some (Stt (Bind x (Spwn ec) e) env k)"
 
   have H6:
   "
     \<forall>\<pi> e \<rho> \<kappa>.
-    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    \<E>m \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
     staticFlowsAccept V F e \<and> staticFlowsAcceptEnv V F \<rho> \<and> staticFlowsAcceptStack V F (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 staticFlowsAcceptPool.cases by blast 
 
@@ -1071,7 +1071,7 @@ proof -
   have H14: "staticFlowsAcceptEnv V F (env(x \<mapsto> VUnt))"
     using H12 H8 staticFlowsAcceptEnv.simps by auto
 
-  show "staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> \<langle>e;env(x \<mapsto> VUnt);k\<rangle>, pi @ [LSpwn x] \<mapsto> \<langle>ec;env;[]\<rangle>))"
+  show ?thesis
     using H10 H11 H13 H14 H6 H8 H9 staticFlowsAcceptPool.simps by (simp add: staticFlowsAcceptStack.Empty)
 
 qed
@@ -1082,26 +1082,26 @@ lemma staticFlowsAcceptPoolPreservedSyncEval:
   staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
   leaf \<E>m pis \<Longrightarrow>
-  \<E>m pis = Some (\<langle>tm.Bind xs (Sync xse) es;envs;ks\<rangle>) \<Longrightarrow>
+  \<E>m pis = Some (Stt (Bind xs (Sync xse) es) envs ks) \<Longrightarrow>
   envs xse = Some (VClsr (SendEvt xsc xm) envse) \<Longrightarrow>
   leaf \<E>m pir \<Longrightarrow>
-  \<E>m pir = Some (\<langle>tm.Bind xr (Sync xre) er;envr;kr\<rangle>) \<Longrightarrow>
+  \<E>m pir = Some (Stt (Bind xr (Sync xre) er) envr kr) \<Longrightarrow>
   envr xre = Some (VClsr (RecvEvt xrc) envre) \<Longrightarrow>
   envse xsc = Some (VChn c) \<Longrightarrow>
   envre xrc = Some (VChn c) \<Longrightarrow> 
   envse xm = Some vm \<Longrightarrow> 
   staticFlowsAcceptPool V F 
-    (\<E>m(pis @ [LNxt xs] \<mapsto> \<langle>es;envs(xs \<mapsto> VUnt);ks\<rangle>, pir @ [LNxt xr] \<mapsto> \<langle>er;envr(xr \<mapsto> vm);kr\<rangle>))
+    (\<E>m(pis @ [LNxt xs] \<mapsto> (Stt es (envs(xs \<mapsto> VUnt)) ks), pir @ [LNxt xr] \<mapsto> (Stt er (envr(xr \<mapsto> vm)) kr)))
 "
 proof -
   assume 
     H1: "staticFlowsAcceptPool V F \<E>m" and
     H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
     H3: "leaf \<E>m pis" and
-    H4: "\<E>m pis = Some (\<langle>tm.Bind xs (Sync xse) es;envs;ks\<rangle>)" and
+    H4: "\<E>m pis = Some (Stt (Bind xs (Sync xse) es) envs ks)" and
     H5: "envs xse = Some (VClsr (SendEvt xsc xm) envse)" and
     H6: "leaf \<E>m pir" and
-    H7: "\<E>m pir = Some (\<langle>tm.Bind xr (Sync xre) er;envr;kr\<rangle>)" and
+    H7: "\<E>m pir = Some (Stt (Bind xr (Sync xre) er) envr kr)" and
     H8: "envr xre = Some (VClsr (RecvEvt xrc) envre)" and
     H9: "envse xsc = Some (VChn c)" and
     H10: "envre xrc = Some (VChn c)" and 
@@ -1110,7 +1110,7 @@ proof -
   have H12:
   "
     \<forall>\<pi> e \<rho> \<kappa>.
-    \<E>m \<pi> = Some (\<langle>e;\<rho>;\<kappa>\<rangle>) \<longrightarrow>
+    \<E>m \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
     staticFlowsAccept V F e \<and> staticFlowsAcceptEnv V F \<rho> \<and> staticFlowsAcceptStack V F  (\<lfloor>e\<rfloor>) \<kappa>"
   using H1 staticFlowsAcceptPool.cases by blast 
 
@@ -1171,7 +1171,7 @@ proof -
 
 
 show "staticFlowsAcceptPool V F 
-    (\<E>m(pis @ [LNxt xs] \<mapsto> \<langle>es;envs(xs \<mapsto> VUnt);ks\<rangle>, pir @ [LNxt xr] \<mapsto> \<langle>er;envr(xr \<mapsto> vm);kr\<rangle>))"
+    (\<E>m(pis @ [LNxt xs] \<mapsto> (Stt es (envs(xs \<mapsto> VUnt)) ks), pir @ [LNxt xr] \<mapsto> (Stt er (envr(xr \<mapsto> vm)) kr)))"
   using H12 H23 H24 H15 H16 H27 H28 staticFlowsAcceptPool.intros H18 by auto
 qed
 
@@ -1214,19 +1214,19 @@ qed
 
 lemma staticFlowsAcceptPoolPreserved:
   "
-  staticFlowsAcceptPool V F [[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>] \<Longrightarrow>
+  staticFlowsAcceptPool V F [[] \<mapsto> (Stt e0 empty [])] \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+  star dynamicEval ([[] \<mapsto> (Stt e0 empty [])], {}) (\<E>', H') \<Longrightarrow>
   staticFlowsAcceptPool V F \<E>'
 "
 proof -
   assume 
-    H1: "staticFlowsAcceptPool V F [[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>]" and
+    H1: "staticFlowsAcceptPool V F [[] \<mapsto> (Stt e0 empty [])]" and
     H2: "(V, C) \<Turnstile>\<^sub>e e0" and
-    H4: "star dynamicEval ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) (\<E>', H')"
+    H4: "star dynamicEval ([[] \<mapsto> (Stt e0 empty [])], {}) (\<E>', H')"
 
   obtain EH EH' where
-    H6: "EH = ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {})" and 
+    H6: "EH = ([[] \<mapsto> (Stt e0 empty [])], {})" and 
     H7: "EH' = (\<E>', H')" and 
     H8: "star dynamicEval EH EH'"
     by (simp add: H4)
@@ -1239,7 +1239,7 @@ proof -
     H10:
   "
     \<forall> \<E>' H' .
-    ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) = EH \<longrightarrow> staticFlowsAcceptPool V F [[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>] \<longrightarrow>
+    ([[] \<mapsto> (Stt e0 empty [])], {}) = EH \<longrightarrow> staticFlowsAcceptPool V F [[] \<mapsto> (Stt e0 empty [])] \<longrightarrow>
     (\<E>', H') = EH' \<longrightarrow> staticFlowsAcceptPool V F \<E>'" 
   proof induction
     case (refl x)
@@ -1249,11 +1249,11 @@ proof -
     {
       fix \<E>' H'
       assume 
-        L1H1: "([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) = x" and
-        L1H2: "staticFlowsAcceptPool V F [[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>]" and
+        L1H1: "([[] \<mapsto> (Stt e0 empty [])], {}) = x" and
+        L1H2: "staticFlowsAcceptPool V F [[] \<mapsto> (Stt e0 empty [])]" and
         L1H3: "(\<E>', H') = z"
 
-      have L1H4 : "(V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>]" by (simp add: H2 staticEval_to_pool)
+      have L1H4 : "(V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> (Stt e0 empty [])]" by (simp add: H2 staticEval_to_pool)
 
       have 
         L1H6: "\<forall> \<E>m Hm . (\<E>m, Hm) = y \<longrightarrow> (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<longrightarrow> staticFlowsAcceptPool V F \<E>m"
@@ -1332,18 +1332,18 @@ lemma staticTraceablePoolStepSound:
   assumes
     H1: "star_left dynamicEval EH EHm" and
     H2: "dynamicEval EHm EH'" and
-    H3: "EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" and
+    H3: "EH = ([[] \<mapsto> (Stt e empty [])], {})" and
     H4: "EH' = (E', H')" and
-    H5: "E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>)" and
+    H5: "E' \<pi>' = Some (Stt e' \<rho>' \<kappa>')" and
     H6: "staticFlowsAcceptPool V F E'" and
     H7: "isEnd (tmId e')" and
     H8: "(V, C) \<Turnstile>\<^sub>e e" and
     IH:
   "
     \<forall>E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
-       EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow>
+       EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow>
        EHm = (E', H') \<longrightarrow>
-       E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+       E' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<longrightarrow>
        staticFlowsAcceptPool V F E' \<longrightarrow> isEnd (tmId e') \<longrightarrow> 
       (\<exists>path. pathsCorrespond \<pi>' path \<and> staticTraceable F (tmId e) isEnd path)"
   shows
@@ -1551,7 +1551,7 @@ proof -
       L1H5: "staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm (Spwn ec) em)) p"
     using L1H3 by blast
 
-    have L1H6: "E' = Em(pim @ [LNxt xm] \<mapsto> \<langle>em;env(xm \<mapsto> VUnt);k\<rangle>, pim @ [LSpwn xm] \<mapsto> \<langle>ec;env;[]\<rangle>)"
+    have L1H6: "E' = Em(pim @ [LNxt xm] \<mapsto> (Stt em (env(xm \<mapsto> VUnt)) k), pim @ [LSpwn xm] \<mapsto> (Stt ec env []))"
       using H4 local.BindSpawn(2) by blast
     show ?thesis
     proof cases
@@ -1687,8 +1687,8 @@ lemma staticTraceablePoolSound':
     H2: "(V, C) \<Turnstile>\<^sub>e e"
   shows "
     \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
-    EH = ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
-    E' \<pi>' = Some (\<langle>e';\<rho>';\<kappa>'\<rangle>) \<longrightarrow>
+    EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
+    E' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<longrightarrow>
     staticFlowsAcceptPool V F E' \<longrightarrow>
     isEnd (tmId e') \<longrightarrow>
     (\<exists> path . 
@@ -1706,8 +1706,8 @@ qed
 
 lemma staticTraceablePoolSound:
   assumes
-    H1: "\<E>' \<pi>' = Some (\<langle>Bind x' b' e\<^sub>n;\<rho>';\<kappa>'\<rangle>)" and 
-    H2: "star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H')" and
+    H1: "\<E>' \<pi>' = Some (Stt (Bind x' b' e\<^sub>n) \<rho>' \<kappa>')" and 
+    H2: "star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')" and
     H3: "(V, C) \<Turnstile>\<^sub>e e" and
     H4: "staticFlowsAcceptPool V F \<E>'" and
     H5: "isEnd (IdBind x')"
@@ -1716,13 +1716,13 @@ lemma staticTraceablePoolSound:
     \<exists> path . 
       pathsCorrespond \<pi>' path \<and>
       staticTraceable F (tmId e) isEnd path"
-using staticTraceablePoolSound'[of "([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {})" "(\<E>', H')"]
+using staticTraceablePoolSound'[of "([[] \<mapsto> (Stt e empty [])], {})" "(\<E>', H')"]
 H1 H2 H3 H4 H5 star_implies_star_left by fastforce
 
 lemma lift_traversable_to_pool:
   "
   staticFlowsAccept V F e \<Longrightarrow>
-  staticFlowsAcceptPool V F [[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>]
+  staticFlowsAcceptPool V F [[] \<mapsto> (Stt e empty [])]
 "
 apply (erule staticFlowsAccept.cases; auto)
   apply (simp add: staticFlowsAccept.Result staticFlowsAcceptEnv.simps staticFlowsAcceptPool.Intro staticFlowsAcceptStack.Empty)
@@ -1744,8 +1744,8 @@ done
 
 lemma staticTraceableSound:
   "
-  \<E> \<pi> = Some (\<langle>Bind x b e';\<rho>;\<kappa>\<rangle>) \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e0;Map.empty;[]\<rangle>], {}) (\<E>, H) \<Longrightarrow> 
+  \<E> \<pi> = Some ((Stt (Bind x b e') \<rho> \<kappa>)) \<Longrightarrow>
+  star dynamicEval ([[] \<mapsto> (Stt e0 empty [])], {}) (\<E>, H) \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
   staticFlowsAccept V F e0 \<Longrightarrow>
   isEnd (IdBind x) \<Longrightarrow>
@@ -1758,7 +1758,7 @@ by (metis lift_traversable_to_pool staticTraceablePoolSound staticFlowsAcceptPoo
 lemma staticTraceableSendSound:
   "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   \<exists> pathSync .
@@ -1773,7 +1773,7 @@ done
 lemma staticTraceableRecvSound:
   "
   is_recv_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   \<exists> pathSync .
@@ -1794,7 +1794,7 @@ theorem singular_to_equal:
   forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
   forEveryTwo (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
  apply (simp add: forEveryTwo.simps singular.simps; auto)
@@ -1813,7 +1813,7 @@ theorem noncompetitive_send_to_ordered_send:
   forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
   forEveryTwo (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: forEveryTwo.simps noncompetitive.simps; auto?)
@@ -1827,7 +1827,7 @@ lemma noncompetitive_recv_to_ordered_recv:
    forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
    staticFlowsAccept V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-   star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
    forEveryTwo (is_recv_path \<E>' (Ch \<pi> xC)) ordered
 "
 apply (simp add: forEveryTwo.simps noncompetitive.simps; auto?)
@@ -1841,7 +1841,7 @@ theorem staticOneShotSound:
   "
       staticOneShot V e xC \<Longrightarrow>
       (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+      star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
       one_shot \<E>' (Ch \<pi> xC)"
 apply (erule staticOneShot.cases; auto)
 apply (unfold one_shot.simps)
@@ -1852,7 +1852,7 @@ theorem staticOneToManySound:
   "
       staticOneToMany V e xC \<Longrightarrow>
       (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+      star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
       fan_out \<E>' (Ch \<pi> xC)" 
    apply (erule staticOneToMany.cases; auto)
    apply (unfold fan_out.simps)
@@ -1863,7 +1863,7 @@ theorem staticManyToOneSound:
   "
       staticManyToOne V e xC \<Longrightarrow>
       (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+      star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
       fan_in \<E>' (Ch \<pi> xC)"
    apply (erule staticManyToOne.cases; auto)
    apply (unfold fan_in.simps)
@@ -1874,7 +1874,7 @@ theorem staticOneToOneSound:
   "
       staticOneToOne V e xC \<Longrightarrow>
       (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      star dynamicEval ([[] \<mapsto> \<langle>e;Map.empty;[]\<rangle>], {}) (\<E>', H') \<Longrightarrow>
+      star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
       one_to_one \<E>' (Ch \<pi> xC)"
  apply (erule staticOneToOne.cases; auto)
  apply (unfold one_to_one.simps)
