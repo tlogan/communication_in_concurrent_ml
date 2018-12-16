@@ -1799,7 +1799,7 @@ The representation of static values closely resembles the concrete syntax for co
     z12 -> {rht u1, lft l1}
   )
 
-  val serverStaticComm of name -> static_value set =
+  val serverStaticComm: name -> static_value set =
   (
     k1 -> {pair v2 k4},
     k4 -> {rht u1, lft l1, lft l2}
@@ -1855,7 +1855,7 @@ The term identifier of a result term is the embedded name, and indication of its
     NBnd name
   | NRslt var
 
-  fun termId of term -> termId:
+  fun termId: term -> termId
   where only
     \forall n c t' . 
       termId (Bind n c t') = NBnd n
@@ -1899,12 +1899,12 @@ synchronization to receive on a given abstract channel.
 
 In the server implementation,
 the static channel identified by the name \lstinline{k1} is waited on
-by the server.  It has one receiving ID in the server function
-at ID \lstinline[language=sugar_lang]{bind p1} and a sending ID
-in the request function at ID \lstinline[language=sugar_lang]{bind z9}.
+by the server.  It has one receiving identifier in the server function
+at identifier \lstinline[language=sugar_lang]{bind p1} and a sending identifier 
+in the request function at identifier \lstinline[language=sugar_lang]{bind z9}.
 The channel idetifiend by the name \lstinline{k4} is sent with a client's request for
-the server to reply on. It has a receiving ID in the request function at
-\lstinline[language=sugar_lang]{bind v3} and a sending ID in the server function at
+the server to reply on. It has a receiving identifier in the request function at
+\lstinline[language=sugar_lang]{bind v3} and a sending identifier in the server function at
 \lstinline[language=sugar_lang]{bind z5}.
 
 Reppy and Xiao's work relies on detecting the liveness of channels in order to gain higher
@@ -2515,7 +2515,7 @@ In most cases, it simply states that a embedded term of some semantic element is
 accepting. The exception is in the case of
 static acceptance by flows over a non-empty stack, where
 there is an additional condition that the flow
-from a result id to the term identifier
+from a result identifier to the term identifier
 of the continuation program exists in the graph.
 This information is consistent with static
 acceptance by flows over programs, but provides direct information about a flow in the
@@ -3359,15 +3359,15 @@ term identifier.
 
 The following diagram illustrates the entry and exit sets of each term id
 for channel \lstinline{k1} in
-the server example.  Each entry set appears right above its related term id,
-and each exit setappears right below its related term id. 
+the server example.  Each entry set appears right above its related term identifier,
+and each exit setappears right below its related term identifier. 
 
 \includegraphics[width=1\textwidth]{cml-liveness-analysis-k1.pdf}
 
 The following diagram illustrates the entry and exit sets of each term id
 for channel \lstinline{k4} in
-the server example.  Each entry set appears right above its related term id,
-and each exit setappears right below its related term id. 
+the server example.  Each entry set appears right above its related term identifier,
+and each exit setappears right below its related term identifier. 
 
 \includegraphics[width=1\textwidth]{cml-liveness-analysis-k4.pdf}
 
@@ -3610,7 +3610,7 @@ In contrast to the analogous definition for the lower precision
 alysis, the higher precision definition needs to consider paths containing the
 sending mode.  As mentioned earlier, the path from the synchronization on sending to the
 synchronization on receiving is necessary to ensure that all uses of a channel are reachable
-from the channel's creation ID.  The singularness means that only one of the two
+from the channel's creation identifier.  The singularness means that only one of the two
 given paths can occur in a run of program.  The noncompetitveness means that the two
 given paths do not compete in any run of a program. 
 
@@ -3818,8 +3818,8 @@ correlating dynamic paths with static paths.
 \end{lstlisting}
 
 Additionally the soundness theorem follows from the completeness of static traceability,
-the completeness of static inclusiveness, and the completeness of a sending ID classification. 
-The reasoning about the sending ID is identical to that of the lower precision analysis, but
+the completeness of static inclusiveness, and the completeness of a sending identifier classification. 
+The reasoning about the sending identifier is identical to that of the lower precision analysis, but
 the reasoning for the former two is significantly more complicated and not yet completed.
 The complication arises from the
 correlation between dynamic paths and static paths.  The proofs depend on finding a static 
