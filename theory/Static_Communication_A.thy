@@ -126,7 +126,7 @@ inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> 
   " |
   BindApp: "
     \<lbrakk>
-      (\<forall> f' x\<^sub>p e\<^sub>b . ^Fun f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow>
+      (\<forall> f' x\<^sub>p e\<^sub>b . SAtm (Fun f' x\<^sub>p e\<^sub>b) \<in> V f \<longrightarrow>
         {
           (IdBind x, ECall, tmId e\<^sub>b),
           (IdRslt (\<lfloor>e\<^sub>b\<rfloor>), EReturn, tmId e)

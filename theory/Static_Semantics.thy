@@ -4,9 +4,9 @@ theory Static_Semantics
 begin
 
 datatype static_val = 
-  SChn name ("^Chan _" [61] 61) 
-| SUnt ("^Unt") 
-| SAtm atom ("^_" [61] 61 )
+  SChn name
+| SUnt 
+| SAtm atom
 
 type_synonym static_env = "name \<Rightarrow> static_val set"
 
@@ -23,7 +23,7 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | BindUnit:
   "
     \<lbrakk>
-      {^Unt} \<subseteq> \<V> x;
+      {SUnt} \<subseteq> \<V> x;
       staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
     staticEval (\<V>, \<C>) (Bind x Unt e)
@@ -31,7 +31,7 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | BindMkChn:
   "
     \<lbrakk>
-      {^Chan x} \<subseteq> \<V> x;
+      {SChn x} \<subseteq> \<V> x;
       staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow>  
     staticEval (\<V>, \<C>) (Bind x MkChn e)
@@ -39,7 +39,7 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | BindSendEvt :
   "
     \<lbrakk>
-      {^(SendEvt x\<^sub>c x\<^sub>m)} \<subseteq> \<V> x;
+      {SAtm (SendEvt x\<^sub>c x\<^sub>m)} \<subseteq> \<V> x;
       staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
     staticEval (\<V>, \<C>) (Bind x (Atom (SendEvt x\<^sub>c x\<^sub>m)) e)
@@ -47,7 +47,7 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | BindRecvEvt :
   "
     \<lbrakk>
-      {^(RecvEvt x\<^sub>c)} \<subseteq> \<V> x;
+      {SAtm (RecvEvt x\<^sub>c)} \<subseteq> \<V> x;
       staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
     staticEval (\<V>, \<C>) (Bind x (Atom (RecvEvt x\<^sub>c)) e)
@@ -55,7 +55,7 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | BindPair :
   "
     \<lbrakk>
-      {^Pair x\<^sub>1 x\<^sub>2} \<subseteq> \<V> x;
+      {SAtm (Pair x\<^sub>1 x\<^sub>2)} \<subseteq> \<V> x;
       staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
     staticEval (\<V>, \<C>) (Bind x (Atom (Pair x\<^sub>1 x\<^sub>2)) e)
@@ -63,7 +63,7 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | BindLft :
   "
     \<lbrakk>
-      {^(Lft x\<^sub>p)} \<subseteq> \<V> x;
+      {SAtm (Lft x\<^sub>p)} \<subseteq> \<V> x;
       staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
     staticEval (\<V>, \<C>) (Bind x (Atom (Lft x\<^sub>p)) e)
@@ -71,17 +71,17 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | BindRht :
   "
     \<lbrakk>
-      {^(Rht x\<^sub>p)} \<subseteq> \<V> x;
+      {SAtm (Rht x\<^sub>p)} \<subseteq> \<V> x;
       staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
     staticEval (\<V>, \<C>) (Bind x (Atom (Rht x\<^sub>p)) e)
-  " 
+  "
 | BindFun :
   "
     \<lbrakk>
-      {^Fun f' x' e'} \<subseteq> \<V> f';
+      {SAtm (Fun f' x' e')} \<subseteq> \<V> f';
       staticEval (\<V>, \<C>) e';
-      {^Fun f' x' e'} \<subseteq> \<V> x;
+      {SAtm (Fun f' x' e')} \<subseteq> \<V> x;
       staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
     staticEval (\<V>, \<C>) (Bind x (Atom (Fun f' x' e')) e)
@@ -89,23 +89,24 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | BindSpawn:
   "
     \<lbrakk>
-      {^Unt} \<subseteq> \<V> x;
+      {SUnt} \<subseteq> \<V> x;
       staticEval (\<V>, \<C>) e\<^sub>c;
       staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow>  
     staticEval (\<V>, \<C>) (Bind x (Spwn e\<^sub>c) e)
   " 
+
 | BindSync  :
   "
     \<lbrakk>
       \<forall> x\<^sub>s\<^sub>c x\<^sub>m x\<^sub>c . 
-        ^(SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<in> \<V> x\<^sub>e \<longrightarrow> 
-        ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<longrightarrow>
-        {^Unt} \<subseteq> \<V> x \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
+        SAtm (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<in> \<V> x\<^sub>e \<longrightarrow> 
+        SChn x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<longrightarrow>
+        {SUnt} \<subseteq> \<V> x \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
       ;
       \<forall> x\<^sub>r\<^sub>c x\<^sub>c . 
-        ^(RecvEvt x\<^sub>r\<^sub>c) \<in> \<V> x\<^sub>e \<longrightarrow>
-        ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow>
+        SAtm (RecvEvt x\<^sub>r\<^sub>c) \<in> \<V> x\<^sub>e \<longrightarrow>
+        SChn x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow>
         \<C> x\<^sub>c \<subseteq> \<V> x
       ;
       staticEval (\<V>, \<C>) e
@@ -115,7 +116,7 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | BindFst:
   "
     \<lbrakk>
-      \<forall> x\<^sub>1 x\<^sub>2. ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>1 \<subseteq> \<V> x; 
+      \<forall> x\<^sub>1 x\<^sub>2. SAtm (Pair x\<^sub>1 x\<^sub>2) \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>1 \<subseteq> \<V> x; 
       staticEval (\<V>, \<C>) e 
     \<rbrakk> \<Longrightarrow> 
     staticEval (\<V>, \<C>) (Bind x (Fst x\<^sub>p) e)
@@ -123,7 +124,7 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | BindSnd:
   "
     \<lbrakk>
-      \<forall> x\<^sub>1 x\<^sub>2 . ^Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>2 \<subseteq> \<V> x; 
+      \<forall> x\<^sub>1 x\<^sub>2 . SAtm (Pair x\<^sub>1 x\<^sub>2) \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>2 \<subseteq> \<V> x; 
       staticEval (\<V>, \<C>) e
     \<rbrakk> \<Longrightarrow> 
     staticEval (\<V>, \<C>) (Bind x (Snd x\<^sub>p) e)
@@ -131,11 +132,11 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | BindCase:
   "
     \<lbrakk>
-      \<forall> x\<^sub>l' . ^(Lft x\<^sub>l') \<in> \<V> x\<^sub>s \<longrightarrow>
+      \<forall> x\<^sub>l' . SAtm (Lft x\<^sub>l') \<in> \<V> x\<^sub>s \<longrightarrow>
         \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x
       ; 
       staticEval (\<V>, \<C>) e\<^sub>l ;
-      \<forall> x\<^sub>r' . ^(Rht x\<^sub>r') \<in> \<V> x\<^sub>s \<longrightarrow>
+      \<forall> x\<^sub>r' . SAtm (Rht x\<^sub>r') \<in> \<V> x\<^sub>s \<longrightarrow>
         \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x
       ;
       staticEval (\<V>, \<C>) e\<^sub>r;
@@ -146,7 +147,7 @@ inductive staticEval :: "static_env \<times> static_env \<Rightarrow> tm \<Right
 | App:
   "
     \<lbrakk>
-      \<forall> f' x' e' . ^Fun f' x' e' \<in> \<V> f \<longrightarrow>
+      \<forall> f' x' e' . SAtm (Fun f' x' e') \<in> \<V> f \<longrightarrow>
         \<V> x\<^sub>a \<subseteq> \<V> x' \<and>
         \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x
       ;

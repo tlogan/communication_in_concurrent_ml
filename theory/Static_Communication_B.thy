@@ -7,83 +7,83 @@ begin
 
 datatype mode = ENext | ESpawn | ESend name | ECall | EReturn
 
-type_synonym flow = "(tm_id \<times> mode \<times> tm_id)"
+type_synonym flow = "(tm_id * mode * tm_id)"
 
 type_synonym flow_set = "flow set"
 
-type_synonym step = "(tm_id \<times> mode)"
+type_synonym step = "(tm_id * mode)"
 
 type_synonym static_path = "step list"
 
 inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> tm \<Rightarrow> bool"  where
   Result:
   "
-    staticFlowsAccept V F (Rslt x)
+    staticFlowsAccept staticEnv graph (Rslt x)
   "
 | BindUnit:
   "
     \<lbrakk>
       {(IdBind x , ENext, tmId e)} \<subseteq> F;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x Unt e)
+    staticFlowsAccept staticEnv graph (Bind x Unt e)
   "
 | BindMkChn:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x MkChn e)
+    staticFlowsAccept staticEnv graph (Bind x MkChn e)
   "
 | BindSend_Evt:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (Atom (SendEvt x\<^sub>c x\<^sub>m)) e)
+    staticFlowsAccept staticEnv graph (Bind x (Atom (SendEvt x\<^sub>c x\<^sub>m)) e)
   "
 | BindRecv_Evt:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (Atom (RecvEvt x\<^sub>c)) e)
+    staticFlowsAccept staticEnv graph (Bind x (Atom (RecvEvt x\<^sub>c)) e)
   "
 | BindPair:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (Atom (Pair x\<^sub>1 x\<^sub>2)) e)
+    staticFlowsAccept staticEnv graph (Bind x (Atom (Pair x\<^sub>1 x\<^sub>2)) e)
   "
 | BindLeft:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (Atom (Lft x\<^sub>p)) e)
+    staticFlowsAccept staticEnv graph (Bind x (Atom (Lft x\<^sub>p)) e)
   "
 | BindRight:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (Atom (Rht x\<^sub>p)) e)
+    staticFlowsAccept staticEnv graph (Bind x (Atom (Rht x\<^sub>p)) e)
   "
 | BindFun:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
-      staticFlowsAccept V F e\<^sub>b;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e\<^sub>b;
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (Atom (Fun f x\<^sub>p e\<^sub>b)) e)
+    staticFlowsAccept staticEnv graph (Bind x (Atom (Fun f x\<^sub>p e\<^sub>b)) e)
   "
 | BindSpawn:
   "
@@ -92,40 +92,40 @@ inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> 
         (IdBind x, ENext, tmId e),
         (IdBind x, ESpawn, tmId e\<^sub>c)
       } \<subseteq> F;
-      staticFlowsAccept V F e\<^sub>c;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e\<^sub>c;
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (Spwn e\<^sub>c) e)
+    staticFlowsAccept staticEnv graph (Bind x (Spwn e\<^sub>c) e)
   "
 | BindSync:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
       (\<forall> xSC xM xC y.
-        {^SendEvt xSC xM} \<subseteq> V xSE \<longrightarrow>
-        {^Chan xC} \<subseteq> V xSC \<longrightarrow>
-        staticRecvSite V e xC (IdBind y) \<longrightarrow>
+        {SAtm (SendEvt xSC xM)} \<subseteq> staticEnv xSE \<longrightarrow>
+        {SChn xC} \<subseteq> staticEnv xSC \<longrightarrow>
+        staticRecvSite staticEnv e xC (IdBind y) \<longrightarrow>
         {(IdBind x, ESend xSE, IdBind y)} \<subseteq> F
       );
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (Sync xSE) e)
+    staticFlowsAccept staticEnv graph (Bind x (Sync xSE) e)
   "
 | BindFst:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (Fst x\<^sub>p) e)
+    staticFlowsAccept staticEnv graph (Bind x (Fst x\<^sub>p) e)
   "
 | BindSnd:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (Snd x\<^sub>p) e)
+    staticFlowsAccept staticEnv graph (Bind x (Snd x\<^sub>p) e)
   "
 | BindCase:
   "
@@ -136,235 +136,235 @@ inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> 
         (IdRslt (\<lfloor>e\<^sub>l\<rfloor>), EReturn, tmId e),
         (IdRslt (\<lfloor>e\<^sub>r\<rfloor>), EReturn, tmId e)
       } \<subseteq> F;
-      staticFlowsAccept V F e\<^sub>l;
-      staticFlowsAccept V F e\<^sub>r;
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e\<^sub>l;
+      staticFlowsAccept staticEnv graph e\<^sub>r;
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
+    staticFlowsAccept staticEnv graph (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
   "
 | BindApp:
   "
     \<lbrakk>
-      (\<forall> f' x\<^sub>p e\<^sub>b . ^Fun f' x\<^sub>p e\<^sub>b \<in> V f \<longrightarrow>
+      (\<forall> f' x\<^sub>p e\<^sub>b . SAtm (Fun f' x\<^sub>p e\<^sub>b) \<in> staticEnv f \<longrightarrow>
         {
           (IdBind x, ECall, tmId e\<^sub>b),
           (IdRslt (\<lfloor>e\<^sub>b\<rfloor>), EReturn, tmId e)
         } \<subseteq> F);
-      staticFlowsAccept V F e
+      staticFlowsAccept staticEnv graph e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept V F (Bind x (App f x\<^sub>a) e)
+    staticFlowsAccept staticEnv graph (Bind x (App f x\<^sub>a) e)
   "
 
 
 inductive 
-  static_built_on_chan :: "static_env \<Rightarrow> name \<Rightarrow> name \<Rightarrow> bool"
+  staticBuiltOnChan :: "static_env \<Rightarrow> name \<Rightarrow> name \<Rightarrow> bool"
 where
   Chan:
   "
     \<lbrakk>
-      ^Chan x\<^sub>c \<in> V x 
+      SChn x\<^sub>c \<in> staticEnv x 
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V x\<^sub>c x
+    staticBuiltOnChan staticEnv x\<^sub>c x
   "
 | Send_Evt:
   "
     \<lbrakk>
-      ^SendEvt x\<^sub>s\<^sub>c x\<^sub>m \<in> V x;
-      static_built_on_chan V x\<^sub>c x\<^sub>s\<^sub>c \<or> static_built_on_chan V x\<^sub>c x\<^sub>m 
+      SAtm (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<in> staticEnv x;
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>s\<^sub>c \<or> staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>m 
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V x\<^sub>c x
+    staticBuiltOnChan staticEnv x\<^sub>c x
   "
 | Recv_Evt:
   "
     \<lbrakk>
-      ^RecvEvt x\<^sub>r\<^sub>c \<in> V x;
-      static_built_on_chan V x\<^sub>c x\<^sub>r\<^sub>c
+      SAtm (RecvEvt x\<^sub>r\<^sub>c) \<in> staticEnv x;
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>r\<^sub>c
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V x\<^sub>c x
+    staticBuiltOnChan staticEnv x\<^sub>c x
   "
 | Pair:
   "
     \<lbrakk>
-      ^(Pair x\<^sub>1 x\<^sub>2) \<in> V x;
-      static_built_on_chan V x\<^sub>c x\<^sub>1 \<or> static_built_on_chan V x\<^sub>c x\<^sub>2
+      SAtm (Pair x\<^sub>1 x\<^sub>2) \<in> staticEnv x;
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>1 \<or> staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>2
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V x\<^sub>c x
+    staticBuiltOnChan staticEnv x\<^sub>c x
   "
 | Left:
   "
     \<lbrakk>
-      ^(Lft x\<^sub>a) \<in> V x;
-      static_built_on_chan V x\<^sub>c x\<^sub>a
+      SAtm (Lft x\<^sub>a) \<in> staticEnv x;
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>a
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V x\<^sub>c x
+    staticBuiltOnChan staticEnv x\<^sub>c x
   "
 | Right:
   "
     \<lbrakk>
-      ^(Rht x\<^sub>a) \<in> V x;
-      static_built_on_chan V x\<^sub>c x\<^sub>a
+      SAtm (Rht x\<^sub>a) \<in> staticEnv x;
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>a
     \<rbrakk> \<Longrightarrow> 
-    static_built_on_chan V x\<^sub>c x
+    staticBuiltOnChan staticEnv x\<^sub>c x
   "
 | Fun:
   "
-    ^Fun f x\<^sub>p e\<^sub>b \<in> V x \<Longrightarrow> 
+    SAtm (Fun f x\<^sub>p e\<^sub>b) \<in> staticEnv x \<Longrightarrow> 
     n\<^sub>f\<^sub>v \<in> freeVarsAtom (Fun f x\<^sub>p e\<^sub>b) \<Longrightarrow>
-    static_built_on_chan V x\<^sub>c n\<^sub>f\<^sub>v \<Longrightarrow>
-    static_built_on_chan V x\<^sub>c x
+    staticBuiltOnChan staticEnv x\<^sub>c n\<^sub>f\<^sub>v \<Longrightarrow>
+    staticBuiltOnChan staticEnv x\<^sub>c x
   " 
 
 
-inductive static_live_chan :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> tm \<Rightarrow> bool" where
+inductive staticLiveChan :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> tm \<Rightarrow> bool" where
   Result:
   "
     \<lbrakk>
-      (static_built_on_chan V x\<^sub>c y) \<longrightarrow> {y} \<subseteq> Ln (IdRslt y)
+      (staticBuiltOnChan staticEnv x\<^sub>c y) \<longrightarrow> {y} \<subseteq> entr (IdRslt y)
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Rslt y)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Rslt y)
   "
 | BindUnit:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x Unt e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x Unt e)
   "
 | BindMkChn:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x MkChn e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x MkChn e)
   "
 | BindSend_Evt:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>s\<^sub>c \<longrightarrow> {x\<^sub>s\<^sub>c} \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>m \<longrightarrow> {x\<^sub>m} \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>s\<^sub>c \<longrightarrow> {x\<^sub>s\<^sub>c} \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>m \<longrightarrow> {x\<^sub>m} \<subseteq> entr (IdBind x);
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (Atom (SendEvt x\<^sub>s\<^sub>c x\<^sub>m)) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Atom (SendEvt x\<^sub>s\<^sub>c x\<^sub>m)) e)
   "
 | BindRecv_Evt:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>r \<longrightarrow> {x\<^sub>r} \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>r \<longrightarrow> {x\<^sub>r} \<subseteq> entr (IdBind x);
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (Atom (RecvEvt x\<^sub>r\<^sub>c)) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Atom (RecvEvt x\<^sub>r\<^sub>c)) e)
   "
 | BindPair:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>1 \<longrightarrow> {x\<^sub>1} \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>2 \<longrightarrow> {x\<^sub>2} \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>1 \<longrightarrow> {x\<^sub>1} \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>2 \<longrightarrow> {x\<^sub>2} \<subseteq> entr (IdBind x);
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (Atom (Pair x\<^sub>1 x\<^sub>2)) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Atom (Pair x\<^sub>1 x\<^sub>2)) e)
   "
 | BindLeft:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> entr (IdBind x);
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (Atom (Lft x\<^sub>a)) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Atom (Lft x\<^sub>a)) e)
   "
 | BindRight:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> entr (IdBind x);
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (Atom (Rht x\<^sub>a)) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Atom (Rht x\<^sub>a)) e)
   "
 | BindFun:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<union> (Ln (tmId e\<^sub>b) - {x\<^sub>p}) \<subseteq> Ln (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e\<^sub>b;
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<union> (entr (tmId e\<^sub>b) - {x\<^sub>p}) \<subseteq> entr (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e\<^sub>b;
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (Atom (Fun f x\<^sub>p e\<^sub>b)) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Atom (Fun f x\<^sub>p e\<^sub>b)) e)
   "
 | BindSpawn:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<union> Ln (tmId e\<^sub>c) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e\<^sub>c;
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      entr (tmId e) \<union> entr (tmId e\<^sub>c) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e\<^sub>c;
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (Spwn e\<^sub>c) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Spwn e\<^sub>c) e)
   "
 | BindSync:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>e \<longrightarrow> {x\<^sub>e} \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>e \<longrightarrow> {x\<^sub>e} \<subseteq> entr (IdBind x);
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (Sync x\<^sub>e) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Sync x\<^sub>e) e)
   "
 | BindFst:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> entr (IdBind x);
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (Fst x\<^sub>a) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Fst x\<^sub>a) e)
   "
 | BindSnd:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> entr (IdBind x);
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (Snd x\<^sub>a) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Snd x\<^sub>a) e)
   "
 | BindCase:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<union> (Ln (tmId e\<^sub>l) - {x\<^sub>l}) \<union> (Ln (tmId e\<^sub>r) - {x\<^sub>r}) \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>s \<longrightarrow> {x\<^sub>s} \<subseteq> Ln (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e\<^sub>l;
-      static_live_chan V Ln Lx x\<^sub>c e\<^sub>r;
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<union> (entr (tmId e\<^sub>l) - {x\<^sub>l}) \<union> (entr (tmId e\<^sub>r) - {x\<^sub>r}) \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>s \<longrightarrow> {x\<^sub>s} \<subseteq> entr (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e\<^sub>l;
+      staticLiveChan staticEnv entr exit x\<^sub>c e\<^sub>r;
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
   "
 | BindApp:
   "
     \<lbrakk>
-      (Lx (IdBind x) - {x}) \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> Ln (IdBind x);
-      static_built_on_chan V x\<^sub>c f \<longrightarrow> {f} \<subseteq> Ln (IdBind x);
-      Ln (tmId e) \<subseteq> Lx (IdBind x);
-      static_live_chan V Ln Lx x\<^sub>c e
+      (exit (IdBind x) - {x}) \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> entr (IdBind x);
+      staticBuiltOnChan staticEnv x\<^sub>c f \<longrightarrow> {f} \<subseteq> entr (IdBind x);
+      entr (tmId e) \<subseteq> exit (IdBind x);
+      staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
-    static_live_chan V Ln Lx x\<^sub>c (Bind x (App f x\<^sub>a) e)
+    staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (App f x\<^sub>a) e)
   "
 
 (*
@@ -407,41 +407,41 @@ inductive static_unbalanced :: "static_path \<Rightarrow> bool" where
 inductive static_live_flow :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> flow \<Rightarrow> bool"  where
   Next:
   "
-    (l, ENext, l') \<in> F \<Longrightarrow>
-    \<not> Set.is_empty (Lx l) \<Longrightarrow>
-    \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    static_live_flow F Ln Lx (l, ENext, l')
+    (l, ENext, l') \<in> graph \<Longrightarrow>
+    \<not> Set.is_empty (exit l) \<Longrightarrow>
+    \<not> Set.is_empty (entr l') \<Longrightarrow>
+    static_live_flow graph entr exit (l, ENext, l')
   "
 | Spawn:
   "
-    (l, ESpawn, l') \<in> F \<Longrightarrow>
-    \<not> Set.is_empty (Lx l) \<Longrightarrow>
-    \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    static_live_flow F Ln Lx (l, ESpawn, l')
+    (l, ESpawn, l') \<in> graph \<Longrightarrow>
+    \<not> Set.is_empty (exit l) \<Longrightarrow>
+    \<not> Set.is_empty (entr l') \<Longrightarrow>
+    static_live_flow graph entr exit (l, ESpawn, l')
   "
-| Call_Live_Outer:
+| CallOuter:
   "
-    (l, ECall, l') \<in> F \<Longrightarrow>
-    \<not> Set.is_empty (Lx l) \<Longrightarrow>
-    static_live_flow F Ln Lx (l, ECall, l')
+    (l, ECall, l') \<in> graph \<Longrightarrow>
+    \<not> Set.is_empty (exit l) \<Longrightarrow>
+    static_live_flow graph entr exit (l, ECall, l')
   "
-| Call_Live_Inner:
+| CallInner:
   "
-    (l, ECall, l') \<in> F \<Longrightarrow>
-    \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    static_live_flow F Ln Lx (l, ECall, l')
+    (l, ECall, l') \<in> graph \<Longrightarrow>
+    \<not> Set.is_empty (entr l') \<Longrightarrow>
+    static_live_flow graph entr exit (l, ECall, l')
   "
 | Return:
   "
-    (l, EReturn, l') \<in> F \<Longrightarrow>
-    \<not> Set.is_empty (Ln l') \<Longrightarrow>
-    static_live_flow F Ln Lx (l, EReturn, l')
+    (l, EReturn, l') \<in> graph \<Longrightarrow>
+    \<not> Set.is_empty (entr l') \<Longrightarrow>
+    static_live_flow graph entr exit (l, EReturn, l')
   "
 | Send:
   "
-    ((IdBind xSend), ESend xE, (IdBind xRecv)) \<in> F \<Longrightarrow>
-    {xE} \<subseteq> (Ln (IdBind xSend)) \<Longrightarrow>
-    static_live_flow F Ln Lx ((IdBind xSend), ESend xE, (IdBind xRecv))
+    ((IdBind xSend), ESend xE, (IdBind xRecv)) \<in> graph \<Longrightarrow>
+    {xE} \<subseteq> (entr (IdBind xSend)) \<Longrightarrow>
+    static_live_flow graph entr exit ((IdBind xSend), ESend xE, (IdBind xRecv))
   "
 
 
@@ -450,34 +450,17 @@ inductive staticTraceable :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_
   Empty:
   "
     isEnd start \<Longrightarrow>
-    staticTraceable F Ln Lx start isEnd []
+    staticTraceable graph entr exit start isEnd []
   "
 | Edge:
   "
-    staticTraceable F Ln Lx start (\<lambda> l . l = middle) path \<Longrightarrow>
+    staticTraceable graph entr exit start (\<lambda> l . l = middle) path \<Longrightarrow>
     isEnd end \<Longrightarrow>
 
-    static_live_flow F Ln Lx (middle, edge, end) \<Longrightarrow>
+    static_live_flow graph entr exit (middle, edge, end) \<Longrightarrow>
 
-    staticTraceable F Ln Lx start isEnd (path @ [(middle, edge)])
-  " 
-
-
-(*|
-
-  Pre_Return:
+    staticTraceable graph entr exit start isEnd (path @ [(middle, edge)])
   "
-    staticTraceable V F Ln Lx (IdRslt y) isEnd ((IdRslt y, EReturn) # post) \<Longrightarrow>
-
-(* staticTraceable F (IdRslt y) (\<lambda> l . l = tmId (Rslt x)) pre *)
- (*   staticTraceable F (IdRslt y) pre \<Longrightarrow> *)
-    \<not> static_balanced (pre @ [(IdRslt y, EReturn)]) \<Longrightarrow>
-    \<not> Set.is_empty (Lx (IdBind x)) \<Longrightarrow>
-    path = pre @ (IdRslt y, EReturn) # post \<Longrightarrow>
-    staticTraceable V F Ln Lx start isEnd (path @ [(IdRslt y, EReturn)])
-  " 
-*)
-
 
 inductive staticInclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Prefix1:
@@ -532,41 +515,41 @@ inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow>
   "
 
 
-inductive static_one_shot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneShot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) singular \<Longrightarrow>
-    static_live_chan V Ln Lx xC e \<Longrightarrow>
-    staticFlowsAccept V F e \<Longrightarrow>
-    static_one_shot V e xC 
+    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) singular \<Longrightarrow>
+    staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
+    staticFlowsAccept staticEnv graph e \<Longrightarrow>
+    staticOneShot staticEnv e xC 
   "
 
 inductive staticOneToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
-    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
-    static_live_chan V Ln Lx xC e \<Longrightarrow>
-    staticFlowsAccept V F e \<Longrightarrow>
-    staticOneToOne V e xC 
+    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
+    staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
+    staticFlowsAccept staticEnv graph e \<Longrightarrow>
+    staticOneToOne staticEnv e xC 
   "
 
 inductive staticOneToMany :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
-    static_live_chan V Ln Lx xC e \<Longrightarrow>
-    staticFlowsAccept V F e \<Longrightarrow>
-    staticOneToMany V e xC 
+    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) noncompetitive \<Longrightarrow>
+    staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
+    staticFlowsAccept staticEnv graph e \<Longrightarrow>
+    staticOneToMany staticEnv e xC 
   "
 
 inductive staticManyToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
-    static_live_chan V Ln Lx xC e \<Longrightarrow>
-    staticFlowsAccept V F e \<Longrightarrow>
-    staticManyToOne V e xC 
+    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
+    staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
+    staticFlowsAccept staticEnv graph e \<Longrightarrow>
+    staticManyToOne staticEnv e xC 
   "
 
 

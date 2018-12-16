@@ -47,7 +47,7 @@ lemma staticEvalSendEvtSound: "
     \<E>' \<pi>\<^sub>y = Some (Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y) \<rho>\<^sub>y \<kappa>\<^sub>y);
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
-  {^SendEvt x\<^sub>s\<^sub>c x\<^sub>m} \<subseteq> V x\<^sub>e
+  {SAtm (SendEvt x\<^sub>s\<^sub>c x\<^sub>m)} \<subseteq> V x\<^sub>e
 "
   apply (drule staticEvalSound; assumption?; auto)
 done
@@ -59,7 +59,7 @@ lemma staticEvalRecvEvtSound: "
     \<E>' \<pi>\<^sub>y = Some (Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>y) \<rho>\<^sub>y \<kappa>\<^sub>y);
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow>
-  {^RecvEvt x\<^sub>r\<^sub>c} \<subseteq> V x\<^sub>e
+  {SAtm (RecvEvt x\<^sub>r\<^sub>c)} \<subseteq> V x\<^sub>e
 "
   apply (drule staticEvalSound; assumption?; auto)
 done
@@ -72,7 +72,7 @@ lemma staticEvalSendChanSound: "
     star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H');
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
-  ^Chan xC \<in> V x\<^sub>s\<^sub>c
+  SChn xC \<in> V x\<^sub>s\<^sub>c
 "
  apply (frule staticEval_to_pool)
  apply (drule staticEvalPreserved[of _ _ _ ]; assumption?)
@@ -95,7 +95,7 @@ lemma staticEvalRecvChanSound: "
     star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H');
     (V, C) \<Turnstile>\<^sub>e e
   \<rbrakk> \<Longrightarrow> 
-  ^Chan xC \<in> V x\<^sub>r\<^sub>c
+  SChn xC \<in> V x\<^sub>r\<^sub>c
 "
  apply (frule staticEval_to_pool)
  apply (drule staticEvalPreserved[of _ _ _ ]; assumption?)

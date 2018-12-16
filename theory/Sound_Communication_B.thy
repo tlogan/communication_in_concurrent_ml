@@ -10,54 +10,56 @@ inductive
   staticFlowsAcceptEnv :: "static_env \<Rightarrow> flow_set \<Rightarrow> env \<Rightarrow> bool"  and
   staticFlowsAcceptVal :: "static_env \<Rightarrow> flow_set \<Rightarrow> val \<Rightarrow> bool"
 where
-  Intro: "
+  Intro:
+  "
     \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>  staticFlowsAcceptVal V F \<omega> \<Longrightarrow>
     staticFlowsAcceptEnv V F \<rho>
-  " |
-
-  Unit: "
+  "
+| Unit:
+  "
     staticFlowsAcceptVal V F VUnt
-  " |
-
-  Chan: "
+  "
+| Chan:
+  "
     staticFlowsAcceptVal V F (VChn c)
-  " |
-
-  SendEvt: "
+  "
+| SendEvt:
+  "
     staticFlowsAcceptEnv V F \<rho> \<Longrightarrow>
     staticFlowsAcceptVal V F (VClsr (SendEvt _ _) \<rho>)
-  " |
-
-  RecvEvt: "
+  "
+| RecvEvt:
+  "
     staticFlowsAcceptEnv V F \<rho> \<Longrightarrow>
     staticFlowsAcceptVal V F (VClsr (RecvEvt _) \<rho>)
-  " |
-
-  Left: "
+  "
+| Left:
+  "
     staticFlowsAcceptEnv V F \<rho> \<Longrightarrow>
     staticFlowsAcceptVal V F (VClsr (Lft _) \<rho>)
-  " |
-
-  Right: "
+  "
+| Right:
+  "
     staticFlowsAcceptEnv V F \<rho> \<Longrightarrow>
     staticFlowsAcceptVal V F (VClsr (Rht _) \<rho>)
-  " |
-
-  Fun: "
+  "
+| Fun:
+  "
     staticFlowsAccept V F e \<Longrightarrow> 
     staticFlowsAcceptEnv V F  \<rho> \<Longrightarrow>
     staticFlowsAcceptVal V F (VClsr (Fun f x e) \<rho>)
-  " |
-
-  Pair: "
+  "
+| Pair:
+  "
     staticFlowsAcceptEnv V F \<rho> \<Longrightarrow>
     staticFlowsAcceptVal V F (VClsr (Pair _ _) \<rho>)
   " 
 
 
 inductive staticFlowsAcceptStack :: "static_env \<Rightarrow> flow_set \<Rightarrow> name \<Rightarrow> contin list \<Rightarrow> bool" where
-  Empty: "staticFlowsAcceptStack V F y []" |
-  Nonempty: "
+  Empty: "staticFlowsAcceptStack V F y []"
+| Nonempty:
+  "
     \<lbrakk> 
       {(IdRslt y, EReturn, tmId e)} \<subseteq> F;
       staticFlowsAccept V F e;
@@ -68,7 +70,8 @@ inductive staticFlowsAcceptStack :: "static_env \<Rightarrow> flow_set \<Rightar
   "
 
 inductive staticFlowsAcceptPool :: "static_env \<Rightarrow> flow_set \<Rightarrow> trace_pool \<Rightarrow> bool"  where
-  Intro: "
+  Intro:
+  "
     (\<forall> \<pi> e \<rho> \<kappa> . E \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow> 
       staticFlowsAccept V F e \<and>
       staticFlowsAcceptEnv V F \<rho> \<and>
@@ -77,74 +80,77 @@ inductive staticFlowsAcceptPool :: "static_env \<Rightarrow> flow_set \<Rightarr
   "
 
 inductive 
-  static_live_chan_env :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> env \<Rightarrow> bool"  and
-  static_live_chan_val :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> val \<Rightarrow> bool"
+  staticLiveChanEnv :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> env \<Rightarrow> bool"  and
+  staticLiveChanVal :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> val \<Rightarrow> bool"
 where
-  Intro: "
-    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>  static_live_chan_val V Ln Lx x\<^sub>c \<omega> \<Longrightarrow>
-    static_live_chan_env V Ln Lx x\<^sub>c \<rho>
-  " |
-
-  Unit: "
-    static_live_chan_val V Ln Lx x\<^sub>c VUnt
-  " |
-
-  Chan: "
-    static_live_chan_val V Ln Lx x\<^sub>c (VChn c)
-  " |
-
-  SendEvt: "
-    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
-    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (SendEvt _ _) \<rho>)
-  " |
-
-  RecvEvt: "
-    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
-    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (RecvEvt _) \<rho>)
-  " |
-
-  Left: "
-    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
-    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Lft _) \<rho>)
-  " |
-
-  Right: "
-    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
-    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Rht _) \<rho>)
-  " |
-
-  Fun: "
-    static_live_chan V Ln Lx x\<^sub>c e \<Longrightarrow> 
-    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
-    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Fun f x e) \<rho>)
-  " |
-
-  Pair: "
-    static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
-    static_live_chan_val V Ln Lx x\<^sub>c (VClsr (Pair _ _) \<rho>)
+  Intro:
+  "
+    \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>  staticLiveChanVal V Ln Lx x\<^sub>c \<omega> \<Longrightarrow>
+    staticLiveChanEnv V Ln Lx x\<^sub>c \<rho>
+  "
+| Unit:
+  "
+    staticLiveChanVal V Ln Lx x\<^sub>c VUnt
+  "
+| Chan:
+  "
+    staticLiveChanVal V Ln Lx x\<^sub>c (VChn c)
+  "
+| SendEvt:
+  "
+    staticLiveChanEnv V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    staticLiveChanVal V Ln Lx x\<^sub>c (VClsr (SendEvt _ _) \<rho>)
+  "
+| RecvEvt:
+  "
+    staticLiveChanEnv V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    staticLiveChanVal V Ln Lx x\<^sub>c (VClsr (RecvEvt _) \<rho>)
+  "
+| Left:
+  "
+    staticLiveChanEnv V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    staticLiveChanVal V Ln Lx x\<^sub>c (VClsr (Lft _) \<rho>)
+  "
+| Right:
+  "
+    staticLiveChanEnv V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    staticLiveChanVal V Ln Lx x\<^sub>c (VClsr (Rht _) \<rho>)
+  "
+| Fun:
+  "
+    staticLiveChan V Ln Lx x\<^sub>c e \<Longrightarrow> 
+    staticLiveChanEnv V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    staticLiveChanVal V Ln Lx x\<^sub>c (VClsr (Fun f x e) \<rho>)
+  "
+| Pair:
+  "
+    staticLiveChanEnv V Ln Lx x\<^sub>c \<rho> \<Longrightarrow>
+    staticLiveChanVal V Ln Lx x\<^sub>c (VClsr (Pair _ _) \<rho>)
   " 
 
 
-inductive static_live_chan_stack :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> contin list \<Rightarrow> bool" where
-  Empty: "static_live_chan_stack V Ln Lx x\<^sub>c []" |
-  Nonempty: "
+inductive staticLiveChan_stack :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> contin list \<Rightarrow> bool" where
+  Empty: "staticLiveChan_stack V Ln Lx x\<^sub>c []"
+| Nonempty:
+  "
     \<lbrakk> 
       \<not> Set.is_empty (Ln (tmId e));
-      static_live_chan V Ln Lx x\<^sub>c e;
-      static_live_chan_env V Ln Lx x\<^sub>c \<rho>; 
-      static_live_chan_stack V Ln Lx x\<^sub>c \<kappa>
+      staticLiveChan V Ln Lx x\<^sub>c e;
+      staticLiveChanEnv V Ln Lx x\<^sub>c \<rho>; 
+      staticLiveChan_stack V Ln Lx x\<^sub>c \<kappa>
     \<rbrakk> \<Longrightarrow> 
-    static_live_chan_stack V Ln Lx x\<^sub>c ((Ctn x e \<rho>) # \<kappa>)
+    staticLiveChan_stack V Ln Lx x\<^sub>c ((Ctn x e \<rho>) # \<kappa>)
   "
 
 
-inductive static_live_chan_pool ::  "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> trace_pool \<Rightarrow> bool"  where
-  Intro: "
+inductive staticLiveChan_pool ::  "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> trace_pool \<Rightarrow> bool"  where
+  Intro:
+  "
     (\<forall> \<pi> e \<rho> \<kappa> . pool \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
-      static_live_chan V Ln Lx x\<^sub>c e \<and>
-      static_live_chan_env V Ln Lx x\<^sub>c \<rho> \<and>
-      static_live_chan_stack V Ln Lx x\<^sub>c \<kappa>) \<Longrightarrow>
-    static_live_chan_pool V Ln Lx x\<^sub>c pool
+      staticLiveChan V Ln Lx x\<^sub>c e \<and>
+      staticLiveChanEnv V Ln Lx x\<^sub>c \<rho> \<and>
+      staticLiveChan_stack V Ln Lx x\<^sub>c \<kappa>) \<Longrightarrow>
+    staticLiveChan_pool V Ln Lx x\<^sub>c pool
   "
 
 lemma staticInclusive_commut: "
@@ -179,22 +185,27 @@ by (metis staticInclusive_commut staticInclusivePreservedDynamicEval_under_unord
 
 
 inductive paths_correspond :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
-  Empty: "
+  Empty:
+  "
     paths_correspond [] []
-  " |
-  Next: "
+  "
+| Next:
+  "
     paths_correspond \<pi> path \<Longrightarrow>
     paths_correspond (\<pi> @ [LNxt x]) (path @ [(IdBind x, ENext)])
-  " |
-  Spawn: "
+  "
+| Spawn:
+  "
     paths_correspond \<pi> path \<Longrightarrow>
     paths_correspond (\<pi> @ [LSpwn x]) (path @ [(IdBind x, ESpawn)])
-  " |
-  Call: "
+  "
+| Call:
+  "
     paths_correspond \<pi> path \<Longrightarrow>
     paths_correspond (\<pi> @ [LCall x]) (path @ [(IdBind x, ECall)])
-  "  |
-  Return: "
+  "  
+| Return:
+  "
     paths_correspond \<pi> path \<Longrightarrow>
     paths_correspond (\<pi> @ [LRtn y]) (path @ [(IdRslt y, EReturn)])
   " 
@@ -204,19 +215,22 @@ inductive paths_correspond_mod_chan ::
   "trace_pool * communication \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" where
 (*
 is unordered necessary?
-  Unordered: "
+  Unordered:
+  "
     paths_correspond \<pi> pathx \<Longrightarrow>
     \<not> (prefix pathx path) \<Longrightarrow>
     \<not> (prefix path pathx) \<Longrightarrow>
     paths_correspond_mod_chan (\<E>, H) c \<pi> path
   " | *)
-  Chan: "
+  Chan:
+  "
     paths_correspond ((LNxt xC) # \<pi>Suff) path \<Longrightarrow>
     \<E> (\<pi>C @ (LNxt xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
     paths_correspond_mod_chan (\<E>, H) (Ch \<pi>C xC) (\<pi>C @ (LNxt xC) # \<pi>Suff) path
   " |
 (*  inducts on the strict prefix up to channel passing point*)
-  Sync: "
+  Sync:
+  "
     paths_correspond \<pi>Suffix pathSuffix \<Longrightarrow>
     \<E> (\<pi>R @ (LNxt xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
     dynamic_built_on_chan_var \<rho>RY c xR \<Longrightarrow>
@@ -230,7 +244,7 @@ is unordered necessary?
 
 lemma staticInclusiveSound: "
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
-  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
 
@@ -254,7 +268,8 @@ proof -
   assume H1: "is_send_path \<E> (Ch \<pi>C xC) \<pi>"
   
   then have
-    H2: "
+    H2:
+  "
       \<exists> x\<^sub>y x\<^sub>e e\<^sub>n \<rho> \<kappa>. \<E> \<pi> = Some (Stt (Bind x\<^sub>y (Sync x\<^sub>e) e\<^sub>n) \<rho> \<kappa>) 
     " using is_send_path.simps by auto
 
@@ -267,7 +282,7 @@ lemma static_equality_sound: "
   path1 = path2 \<Longrightarrow>
 
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
-  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   
@@ -293,7 +308,7 @@ assumes
 shows "
   \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
   EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
-  static_live_chan_pool V Ln Lx xC E' \<longrightarrow>
+  staticLiveChan_pool V Ln Lx xC E' \<longrightarrow>
   staticFlowsAcceptPool V F E' \<longrightarrow>
   E' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<longrightarrow> isEnd (tmId e') \<longrightarrow>
   (\<exists> path . 
@@ -305,7 +320,7 @@ lemma staticTraceableSound: "
   \<E>' \<pi> = Some (Stt (Bind x b e\<^sub>n) \<rho> \<kappa>) \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   isEnd (IdBind x) \<Longrightarrow>
   \<exists> path . 
@@ -321,7 +336,7 @@ lemma staticTraceableSendSound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   \<exists> pathSync .
     (paths_correspond_mod_chan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
@@ -334,9 +349,9 @@ done
 (* END PATH SOUND *)
 
 
-theorem static_one_shot_sound': "
+theorem staticOneShot_sound': "
   forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) singular \<Longrightarrow>
-  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
@@ -351,17 +366,17 @@ theorem static_one_shot_sound': "
  apply (metis is_send_path_implies_nonempty_pool staticInclusiveSound static_equality_sound)
 done
 
-theorem static_one_shot_sound: "
+theorem staticOneShot_sound: "
   \<lbrakk>
-    static_one_shot V e xC;
+    staticOneShot V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
     star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')
   \<rbrakk> \<Longrightarrow>
   one_shot \<E>' (Ch \<pi> xC)
 "
- apply (erule static_one_shot.cases; auto)
+ apply (erule staticOneShot.cases; auto)
  apply (unfold one_shot.simps)
- apply (simp add: static_one_shot_sound')
+ apply (simp add: staticOneShot_sound')
 done
 
 
@@ -371,7 +386,7 @@ TO DO LATER:
 
 theorem noncompetitive_send_to_ordered_send: "
   forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
-  static_live_chan V Ln Lx xC e \<Longrightarrow>
+  staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
@@ -396,7 +411,8 @@ theorem staticOneToMany_sound: "
  apply (metis noncompetitive_send_to_ordered_send)
 done
 
-lemma noncompetitive_recv_to_ordered_recv: "
+lemma noncompetitive_recv_to_ordered_recv:
+  "
    forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
    staticFlowsAccept V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>

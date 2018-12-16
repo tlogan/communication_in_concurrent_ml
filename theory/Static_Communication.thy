@@ -16,16 +16,16 @@ type_synonym tm_id_map = "tm_id \<Rightarrow> name set"
 
 inductive staticSendSite :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> tm_id \<Rightarrow> bool" where
   intro: "
-    {^Chan xC} \<subseteq> V xSC \<Longrightarrow>
-    {^SendEvt xSC xM} \<subseteq> V xE \<Longrightarrow>
+    {SChn xC} \<subseteq> V xSC \<Longrightarrow>
+    {SAtm (SendEvt xSC xM)} \<subseteq> V xE \<Longrightarrow>
     staticReachable e (Bind x (Sync xE) e') \<Longrightarrow>
     staticSendSite V e xC (IdBind x)
   "
 
 inductive staticRecvSite :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> tm_id \<Rightarrow> bool" where
   intro: "
-    {^Chan xC} \<subseteq> V xRC \<Longrightarrow>
-    {^RecvEvt xRC} \<subseteq> V xE \<Longrightarrow>
+    {SChn xC} \<subseteq> V xRC \<Longrightarrow>
+    {SAtm (RecvEvt xRC)} \<subseteq> V xE \<Longrightarrow>
     staticReachable e (Bind x (Sync xE) e') \<Longrightarrow>
     staticRecvSite V e xC (IdBind x)
   "

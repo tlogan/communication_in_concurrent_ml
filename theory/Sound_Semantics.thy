@@ -5,9 +5,9 @@ begin
 
 
 fun valToStaticVal :: "val \<Rightarrow> static_val" ("|_|" [0]61) where
-  "|VUnt| = ^Unt"
-| "|VChn (Ch \<pi> x)| = ^Chan x"
-| "|VClsr p \<rho>| = ^p"
+  "|VUnt| = SUnt"
+| "|VChn (Ch \<pi> x)| = SChn x"
+| "|VClsr p \<rho>| = SAtm p"
 
 inductive 
     staticEvalVal :: "static_env \<times> static_env \<Rightarrow> val \<Rightarrow> bool" (infix "\<Turnstile>\<^sub>\<omega>" 55) 
@@ -43,7 +43,7 @@ where
   "
 | Fun:
   "
-    {^Fun f x e} \<subseteq> \<V> f \<Longrightarrow> 
+    {SAtm (Fun f x e)} \<subseteq> \<V> f \<Longrightarrow> 
     (\<V>, \<C>) \<Turnstile>\<^sub>e e \<Longrightarrow> 
     (\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho> \<Longrightarrow>
     (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr (Fun f x e) \<rho>)
@@ -124,7 +124,7 @@ proof -
   from H4 have H5: "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x" using staticEvalEnv.simps by auto
 
   from H1 H5 have 
-    H6: "^atom.Lft x\<^sub>l' \<in> \<V> x\<^sub>s" by fastforce
+    H6: "SAtm (Lft x\<^sub>l') \<in> \<V> x\<^sub>s" by fastforce
 
   from H3 show 
     "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>l"
@@ -151,14 +151,14 @@ proof -
     by (simp add: staticEvalState.simps)+ then
   have "\<forall>x \<omega>. \<rho> x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x" by (simp add: staticEvalEnv.simps)
   with `\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)`
-  have "^atom.Rht x\<^sub>r' \<in> \<V> x\<^sub>s" by fastforce
+  have "SAtm (Rht x\<^sub>r') \<in> \<V> x\<^sub>s" by fastforce
   with `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e`
   show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r"
   proof cases
     case BindCase 
     with 
-      `\<forall>x\<^sub>r'. ^atom.Rht x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x`  
-      `^atom.Rht x\<^sub>r' \<in> \<V> x\<^sub>s`
+      `\<forall>x\<^sub>r'. SAtm (Rht x\<^sub>r') \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x`  
+      `SAtm (Rht x\<^sub>r') \<in> \<V> x\<^sub>s`
     show "(\<V>, \<C>) \<Turnstile>\<^sub>e e\<^sub>r" by blast
   qed
 qed
@@ -282,7 +282,7 @@ proof
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x Unt e" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>" by (simp add: staticEvalState.simps)+ 
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x Unt e`
-  have "{^Unt} \<subseteq> \<V> x" by (rule staticEval.cases; auto)+
+  have "{SUnt} \<subseteq> \<V> x" by (rule staticEval.cases; auto)+
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt" by (simp add: Unit)
 
   {
@@ -292,7 +292,7 @@ proof
     proof cases
       assume "x' = x" 
       with `(\<rho>(x \<mapsto> VUnt)) x' = Some \<omega>'` 
-      and `{^Unt} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt`
+      and `{SUnt} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt`
 
       show "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by simp
     next 
@@ -306,7 +306,7 @@ proof
     qed
 
   }
-  with `{^Unt} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt`
+  with `{SUnt} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt`
   show "\<forall>x' \<omega>'. (\<rho>(x \<mapsto> VUnt)) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by auto
 qed
 
@@ -349,7 +349,7 @@ proof
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr p \<rho>)" by (simp add: staticEval_to_value_let_atom)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Atom p) e`
-  have "{^p} \<subseteq> \<V> x" by (rule staticEval.cases; auto)+
+  have "{SAtm p} \<subseteq> \<V> x" by (rule staticEval.cases; auto)+
  
   {
     fix x' \<omega>'
@@ -357,7 +357,7 @@ proof
     have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'"
     proof cases
       assume "x' = x" with \<open>(\<rho>(x \<mapsto> (VClsr p \<rho>))) x' = Some \<omega>'\<close>
-      and `{^p} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr p \<rho>)`
+      and `{SAtm p} \<subseteq> \<V> x` `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr p \<rho>)`
 
       show "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by auto
     next
@@ -412,14 +412,14 @@ proof
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)`
   have " | (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l) | \<in> \<V> x\<^sub>s" by (blast intro: staticEvalEnv.cases) then
-  have "^atom.Lft x\<^sub>l' \<in> \<V> x\<^sub>s" by simp
+  have "SAtm (Lft x\<^sub>l') \<in> \<V> x\<^sub>s" by simp
 
   from  `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e`
   have "\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l"
   proof cases
     case BindCase
-    from `\<forall>x\<^sub>l'. ^atom.Lft x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x`
-    and `^atom.Lft x\<^sub>l' \<in> \<V> x\<^sub>s`
+    from `\<forall>x\<^sub>l'. SAtm (Lft x\<^sub>l') \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x`
+    and `SAtm (Lft x\<^sub>l') \<in> \<V> x\<^sub>s`
     show "\<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l" by simp
   qed
 
@@ -455,14 +455,14 @@ proof
   
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l)`
   have " | (VClsr (Lft x\<^sub>l') \<rho>\<^sub>l) | \<in> \<V> x\<^sub>s" by (blast intro: staticEvalEnv.cases) then
-  have "^atom.Lft x\<^sub>l' \<in> \<V> x\<^sub>s" by simp
+  have "SAtm (Lft x\<^sub>l') \<in> \<V> x\<^sub>s" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e`
   show "\<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x" 
   proof cases
     case BindCase
-    assume "\<forall>x\<^sub>l'. ^atom.Lft x\<^sub>l' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x"
-    with `^atom.Lft x\<^sub>l' \<in> \<V> x\<^sub>s`
+    assume "\<forall>x\<^sub>l'. SAtm (Lft x\<^sub>l') \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>l' \<subseteq> \<V> x\<^sub>l \<and> \<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x"
+    with `SAtm (Lft x\<^sub>l') \<in> \<V> x\<^sub>s`
     show "\<V> (\<lfloor>e\<^sub>l\<rfloor>) \<subseteq> \<V> x" by blast
   qed
 
@@ -521,14 +521,14 @@ proof
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)`
   have " | (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r) | \<in> \<V> x\<^sub>s" by (blast intro: staticEvalEnv.cases) then
-  have "^atom.Rht x\<^sub>r' \<in> \<V> x\<^sub>s" by simp
+  have "SAtm (Rht x\<^sub>r') \<in> \<V> x\<^sub>s" by simp
 
   from  `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e`
   have "\<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r"
   proof cases
     case BindCase
-    from `\<forall>x\<^sub>r'. ^atom.Rht x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x`
-    and `^atom.Rht x\<^sub>r' \<in> \<V> x\<^sub>s`
+    from `\<forall>x\<^sub>r'. SAtm (Rht x\<^sub>r') \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x`
+    and `SAtm (Rht x\<^sub>r') \<in> \<V> x\<^sub>s`
     show "\<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r" by simp
   qed
 
@@ -563,14 +563,14 @@ proof
   
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>s = Some (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r)`
   have " | (VClsr (Rht x\<^sub>r') \<rho>\<^sub>r) | \<in> \<V> x\<^sub>s" by (blast intro: staticEvalEnv.cases) then
-  have "^atom.Rht x\<^sub>r' \<in> \<V> x\<^sub>s" by simp
+  have "SAtm (Rht x\<^sub>r') \<in> \<V> x\<^sub>s" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e`
   show "\<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x" 
   proof cases
     case BindCase
-    assume "\<forall>x\<^sub>r'. ^atom.Rht x\<^sub>r' \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x"
-    with `^atom.Rht x\<^sub>r' \<in> \<V> x\<^sub>s`
+    assume "\<forall>x\<^sub>r'. SAtm (Rht x\<^sub>r') \<in> \<V> x\<^sub>s \<longrightarrow> \<V> x\<^sub>r' \<subseteq> \<V> x\<^sub>r \<and> \<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x"
+    with `SAtm (Rht x\<^sub>r') \<in> \<V> x\<^sub>s`
     show "\<V> (\<lfloor>e\<^sub>r\<rfloor>) \<subseteq> \<V> x" by blast
   qed
 
@@ -626,14 +626,14 @@ proof
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)`
   have " | (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) | \<in> \<V> x\<^sub>p" by (blast intro: staticEvalEnv.cases) then
-  have "^atom.Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p" by simp
+  have "SAtm (Pair x\<^sub>1 x\<^sub>2) \<in> \<V> x\<^sub>p" by simp
 
   from  `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Fst x\<^sub>p) e`
   have "\<V> x\<^sub>1 \<subseteq> \<V> x"
   proof cases
     case BindFst
-    from `\<forall>x\<^sub>1 x\<^sub>2. ^atom.Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>1 \<subseteq> \<V> x`
-    and `^atom.Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p`
+    from `\<forall>x\<^sub>1 x\<^sub>2. SAtm (Pair x\<^sub>1 x\<^sub>2) \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>1 \<subseteq> \<V> x`
+    and `SAtm (Pair x\<^sub>1 x\<^sub>2) \<in> \<V> x\<^sub>p`
     show "\<V> x\<^sub>1 \<subseteq> \<V> x" by blast
   qed
 
@@ -692,14 +692,14 @@ proof
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` `\<rho> x\<^sub>p = Some (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p)`
   have " | (VClsr (Pair x\<^sub>1 x\<^sub>2) \<rho>\<^sub>p) | \<in> \<V> x\<^sub>p" by (blast intro: staticEvalEnv.cases) then
-  have "^atom.Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p" by simp
+  have "SAtm (Pair x\<^sub>1 x\<^sub>2) \<in> \<V> x\<^sub>p" by simp
 
   from  `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Snd x\<^sub>p) e`
   have "\<V> x\<^sub>2 \<subseteq> \<V> x"
   proof cases
     case BindSnd
-    from `\<forall>x\<^sub>1 x\<^sub>2. ^atom.Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>2 \<subseteq> \<V> x`
-    and `^atom.Pair x\<^sub>1 x\<^sub>2 \<in> \<V> x\<^sub>p`
+    from `\<forall>x\<^sub>1 x\<^sub>2. SAtm (Pair x\<^sub>1 x\<^sub>2) \<in> \<V> x\<^sub>p \<longrightarrow> \<V> x\<^sub>2 \<subseteq> \<V> x`
+    and `SAtm (Pair x\<^sub>1 x\<^sub>2) \<in> \<V> x\<^sub>p`
     show "\<V> x\<^sub>2 \<subseteq> \<V> x" by blast
   qed
 
@@ -757,7 +757,7 @@ proof
   have "{|(VClsr (Fun f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)|} \<subseteq> \<V> f" "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr (Fun f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)" by (blast intro: staticEvalEnv.cases)+
 
   from `{|(VClsr (Fun f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)|} \<subseteq> \<V> f`
-  have "^Fun f\<^sub>l x\<^sub>l e\<^sub>l \<in> \<V> f" by simp
+  have "SAtm (Fun f\<^sub>l x\<^sub>l e\<^sub>l) \<in> \<V> f" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr (Fun f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)`
   have "{|(VClsr (Fun f\<^sub>l x\<^sub>l e\<^sub>l) \<rho>\<^sub>l)|} \<subseteq> \<V> f\<^sub>l" "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>l" by (rule staticEvalVal.cases; auto)+
@@ -767,8 +767,8 @@ proof
   have "\<V> x\<^sub>a \<subseteq> \<V> x\<^sub>l"
   proof cases
     case App
-    assume "\<forall>f' x' e'. ^Fun f' x' e' \<in> \<V> f \<longrightarrow> \<V> x\<^sub>a \<subseteq> \<V> x' \<and> \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x"
-    with `^Fun f\<^sub>l x\<^sub>l e\<^sub>l \<in> \<V> f`
+    assume "\<forall>f' x' e'. SAtm (Fun f' x' e') \<in> \<V> f \<longrightarrow> \<V> x\<^sub>a \<subseteq> \<V> x' \<and> \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x"
+    with `SAtm (Fun f\<^sub>l x\<^sub>l e\<^sub>l) \<in> \<V> f`
     show "\<V> x\<^sub>a \<subseteq> \<V> x\<^sub>l" by blast
   qed
 
@@ -801,14 +801,14 @@ proof
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>` and `\<rho> f = Some (VClsr (Fun f' x\<^sub>p e\<^sub>b) \<rho>')`
   have " {|(VClsr (Fun f' x\<^sub>p e\<^sub>b) \<rho>')|} \<subseteq> \<V> f" by (blast intro: staticEvalEnv.cases) then
-  have " ^Fun f' x\<^sub>p e\<^sub>b \<in> \<V> f" by simp
+  have " SAtm (Fun f' x\<^sub>p e\<^sub>b) \<in> \<V> f" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (App f x\<^sub>a) e`
   show " \<V> (\<lfloor>e\<^sub>b\<rfloor>) \<subseteq> \<V> x"
   proof cases
     case App
-    assume "\<forall>f' x' e'. ^Fun f' x' e' \<in> \<V> f \<longrightarrow> \<V> x\<^sub>a \<subseteq> \<V> x' \<and> \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x"
-    with `^Fun f' x\<^sub>p e\<^sub>b \<in> \<V> f`
+    assume "\<forall>f' x' e'. SAtm (Fun f' x' e') \<in> \<V> f \<longrightarrow> \<V> x\<^sub>a \<subseteq> \<V> x' \<and> \<V> (\<lfloor>e'\<rfloor>) \<subseteq> \<V> x"
+    with `SAtm (Fun f' x\<^sub>p e\<^sub>b) \<in> \<V> f`
     show " \<V> (\<lfloor>e\<^sub>b\<rfloor>) \<subseteq> \<V> x" by simp
   qed
 
@@ -951,7 +951,7 @@ lemma staticEvalPool_let_sync_send_values_relate:
   \<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s)) \<Longrightarrow>
   \<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e) \<Longrightarrow>
   \<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn (Ch \<pi>\<^sub>c x\<^sub>c)) \<Longrightarrow>
-  {^Unt} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
+  {SUnt} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c
 "
 proof -
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>"
@@ -967,22 +967,22 @@ proof -
   have "{|(VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)|} \<subseteq> \<V> x\<^sub>s\<^sub>e" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)" by (blast intro: staticEvalEnv.cases)+
 
   from `{|(VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)|} \<subseteq> \<V> x\<^sub>s\<^sub>e`
-  have "^SendEvt x\<^sub>s\<^sub>c x\<^sub>m \<in> \<V> x\<^sub>s\<^sub>e" by simp
+  have "SAtm (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<in> \<V> x\<^sub>s\<^sub>e" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s\<^sub>e" by (blast intro: staticEvalVal.cases)
   with `\<rho>\<^sub>s\<^sub>e x\<^sub>s\<^sub>c = Some (VChn (Ch \<pi>\<^sub>c x\<^sub>c))`
   have "{|(VChn (Ch \<pi>\<^sub>c x\<^sub>c))|} \<subseteq> \<V> x\<^sub>s\<^sub>c" by (blast intro: staticEvalEnv.cases) then
-  have "{^Chan x\<^sub>c} \<subseteq> \<V> x\<^sub>s\<^sub>c" by simp then
-  have "^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c" by auto
+  have "{SChn x\<^sub>c} \<subseteq> \<V> x\<^sub>s\<^sub>c" by simp then
+  have "SChn x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c" by auto
   
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s`
-  show "{^Unt} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c"
+  show "{SUnt} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c"
   proof cases
     case BindSync
-    assume "\<forall>x\<^sub>s\<^sub>c x\<^sub>m x\<^sub>c. ^SendEvt x\<^sub>s\<^sub>c x\<^sub>m \<in> \<V> x\<^sub>s\<^sub>e \<longrightarrow> ^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<longrightarrow> {^Unt} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c"
-    with `^SendEvt x\<^sub>s\<^sub>c x\<^sub>m \<in> \<V> x\<^sub>s\<^sub>e` and `^Chan x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c`
-    show "{^Unt} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c" by blast
+    assume "\<forall>x\<^sub>s\<^sub>c x\<^sub>m x\<^sub>c. SAtm (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<in> \<V> x\<^sub>s\<^sub>e \<longrightarrow> SChn x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c \<longrightarrow> {SUnt} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c"
+    with `SAtm (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<in> \<V> x\<^sub>s\<^sub>e` and `SChn x\<^sub>c \<in> \<V> x\<^sub>s\<^sub>c`
+    show "{SUnt} \<subseteq> \<V> x\<^sub>s \<and> \<V> x\<^sub>m \<subseteq> \<C> x\<^sub>c" by blast
   qed
 
 qed
@@ -1029,7 +1029,7 @@ proof
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s)" by (simp add: staticEvalPool.simps) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s" by (simp add: staticEvalState.simps)+
 
-  have "{^Unt} \<subseteq> \<V> x\<^sub>s"
+  have "{SUnt} \<subseteq> \<V> x\<^sub>s"
   proof (cases c)
     case (Ch \<pi> x\<^sub>c)
     assume "c = Ch \<pi> x\<^sub>c" 
@@ -1037,7 +1037,7 @@ proof
     and  `(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>`
     and `\<E> \<pi>\<^sub>s = Some ((Stt (Bind x\<^sub>s (Sync x\<^sub>s\<^sub>e) e\<^sub>s) \<rho>\<^sub>s \<kappa>\<^sub>s))`
     and `\<rho>\<^sub>s x\<^sub>s\<^sub>e = Some (VClsr (SendEvt x\<^sub>s\<^sub>c x\<^sub>m) \<rho>\<^sub>s\<^sub>e)`
-    show "{^Unt} \<subseteq> \<V> x\<^sub>s" using staticEvalPool_let_sync_send_values_relate by simp
+    show "{SUnt} \<subseteq> \<V> x\<^sub>s" using staticEvalPool_let_sync_send_values_relate by simp
   qed
   
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt" by (simp add: Unit)
@@ -1048,7 +1048,7 @@ proof
     with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>s` 
     have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: staticEvalEnv.simps)
   }
-  with \<open>{^Unt} \<subseteq> \<V> x\<^sub>s\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt\<close> 
+  with \<open>{SUnt} \<subseteq> \<V> x\<^sub>s\<close> \<open>(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt\<close> 
   show "\<forall>x \<omega>. (\<rho>\<^sub>s(x\<^sub>s \<mapsto> VUnt)) x = Some \<omega> \<longrightarrow> {|\<omega>|} \<subseteq> \<V> x \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>" by simp
 qed
 
@@ -1075,21 +1075,21 @@ proof -
   have "{|(VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)|} \<subseteq> \<V> x\<^sub>r\<^sub>e" and "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)" by (blast intro: staticEvalEnv.cases)+
 
   from `{|(VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)|} \<subseteq> \<V> x\<^sub>r\<^sub>e`
-  have "^RecvEvt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>r\<^sub>e" by simp
+  have "SAtm (RecvEvt x\<^sub>r\<^sub>c) \<in> \<V> x\<^sub>r\<^sub>e" by simp
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VClsr (RecvEvt x\<^sub>r\<^sub>c) \<rho>\<^sub>r\<^sub>e)`
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>\<^sub>r\<^sub>e" by (blast intro: staticEvalVal.cases)
   with `\<rho>\<^sub>r\<^sub>e x\<^sub>r\<^sub>c = Some (VChn (Ch \<pi>\<^sub>c x\<^sub>c))`
   have "{|(VChn (Ch \<pi>\<^sub>c x\<^sub>c))|} \<subseteq> \<V> x\<^sub>r\<^sub>c" by (blast intro: staticEvalEnv.cases) then
-  have "{^Chan x\<^sub>c} \<subseteq> \<V> x\<^sub>r\<^sub>c" by simp then
-  have "^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c" by auto
+  have "{SChn x\<^sub>c} \<subseteq> \<V> x\<^sub>r\<^sub>c" by simp then
+  have "SChn x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c" by auto
   
   from `(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x\<^sub>r (Sync x\<^sub>r\<^sub>e) e\<^sub>r`
   show "\<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r"
   proof cases
     case BindSync
-    assume "\<forall>x\<^sub>r\<^sub>c x\<^sub>c. ^RecvEvt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>r\<^sub>e \<longrightarrow> ^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow> \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r"
-    with `^RecvEvt x\<^sub>r\<^sub>c \<in> \<V> x\<^sub>r\<^sub>e` and `^Chan x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c`
+    assume "\<forall>x\<^sub>r\<^sub>c x\<^sub>c. SAtm (RecvEvt x\<^sub>r\<^sub>c) \<in> \<V> x\<^sub>r\<^sub>e \<longrightarrow> SChn x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c \<longrightarrow> \<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r"
+    with `SAtm (RecvEvt x\<^sub>r\<^sub>c) \<in> \<V> x\<^sub>r\<^sub>e` and `SChn x\<^sub>c \<in> \<V> x\<^sub>r\<^sub>c`
     show "\<C> x\<^sub>c \<subseteq> \<V> x\<^sub>r" by blast
   qed
 qed
@@ -1254,7 +1254,7 @@ proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some ((Stt (Bind x MkChn e) \<rho> \<kappa>))" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x MkChn e) \<rho> \<kappa>)" by (blast intro: staticEvalPool.cases) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x MkChn e" by (blast intro: staticEvalState.cases) then
-  have "{^Chan x} \<subseteq> \<V> x"  by (blast intro: staticEval.cases)
+  have "{SChn x} \<subseteq> \<V> x"  by (blast intro: staticEval.cases)
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VChn (Ch \<pi> x))" by (simp add: Chan)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x MkChn e) \<rho> \<kappa>)` 
@@ -1264,7 +1264,7 @@ proof
     assume "(\<rho>(x \<mapsto> (VChn (Ch \<pi> x)))) x' = Some \<omega>'" and "x \<noteq> x'"then
     have "\<rho> x' = Some \<omega>'" by simp with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>`
     have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (simp add: staticEvalEnv.simps)
-  } with `{^Chan x} \<subseteq> \<V> x` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VChn (Ch \<pi> x))`
+  } with `{SChn x} \<subseteq> \<V> x` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> (VChn (Ch \<pi> x))`
   show "\<forall>x' \<omega>'. (\<rho>(x \<mapsto> (VChn (Ch \<pi> x)))) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by simp
 qed
 
@@ -1308,7 +1308,7 @@ proof
   assume "(\<V>, \<C>) \<Turnstile>\<^sub>\<E> \<E>" and "\<E> \<pi> = Some ((Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>))" then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>)" by (simp add: staticEvalPool.simps) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>e Bind x (Spwn e\<^sub>c) e" by (blast intro: staticEvalState.cases) then
-  have "{^Unt} \<subseteq> \<V> x"  by (blast intro: staticEval.cases) then
+  have "{SUnt} \<subseteq> \<V> x"  by (blast intro: staticEval.cases) then
   have "(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt" by (simp add: Unit)
 
   from `(\<V>, \<C>) \<Turnstile>\<^sub>\<sigma> (Stt (Bind x (Spwn e\<^sub>c) e) \<rho> \<kappa>)`
@@ -1319,7 +1319,7 @@ proof
     assume "(\<rho>(x \<mapsto> VUnt)) x' = Some \<omega>'" and "x \<noteq> x'" then
     have "\<rho> x' = Some \<omega>'" by simp with `(\<V>, \<C>) \<Turnstile>\<^sub>\<rho> \<rho>`
     have "{|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by (blast intro: staticEvalEnv.cases)
-  } with `{^Unt} \<subseteq> \<V> x` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt`
+  } with `{SUnt} \<subseteq> \<V> x` and `(\<V>, \<C>) \<Turnstile>\<^sub>\<omega> VUnt`
   show "\<forall>x' \<omega>'. (\<rho>(x \<mapsto> VUnt)) x' = Some \<omega>' \<longrightarrow> {|\<omega>'|} \<subseteq> \<V> x' \<and> (\<V>, \<C>) \<Turnstile>\<^sub>\<omega> \<omega>'" by simp
 qed
 
