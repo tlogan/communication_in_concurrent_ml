@@ -367,81 +367,44 @@ inductive staticLiveChan :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm
     staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (App f x\<^sub>a) e)
   "
 
-(*
-inductive static_balanced :: "static_path \<Rightarrow> bool" where
-  Empty:
-  "
-    static_balanced []
-  "
-| Next:
-  "
-    static_balanced [(IdBind x, ENext)]
-  "
-| CallReturn:
-  "
-    static_balanced path \<Longrightarrow>
-    static_balanced ((IdBind x, ECall) # (path @ [(IdRslt y, EReturn)]))
-  "
-| Append:
-  "
-    path \<noteq> [] \<Longrightarrow>
-    static_balanced path \<Longrightarrow>
-    path' \<noteq> [] \<Longrightarrow>
-    static_balanced path' \<Longrightarrow>
-    static_balanced (path @ path')
-  "
-*)
-(*
-inductive static_unbalanced :: "static_path \<Rightarrow> bool" where
-  Result:
-  "
-    static_unbalanced ((IdRslt y, EReturn) # post)
-  "
-| Next:
-  "
-    static_unbalanced post \<Longrightarrow>
-    static_unbalanced ((IdBind x, ENext) # post)
-  "
-*)
-
-inductive static_live_flow :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> flow \<Rightarrow> bool"  where
+inductive staticLiveFlow :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> flow \<Rightarrow> bool"  where
   Next:
   "
     (l, ENext, l') \<in> graph \<Longrightarrow>
     \<not> Set.is_empty (exit l) \<Longrightarrow>
     \<not> Set.is_empty (entr l') \<Longrightarrow>
-    static_live_flow graph entr exit (l, ENext, l')
+    staticLiveFlow graph entr exit (l, ENext, l')
   "
 | Spawn:
   "
     (l, ESpawn, l') \<in> graph \<Longrightarrow>
     \<not> Set.is_empty (exit l) \<Longrightarrow>
     \<not> Set.is_empty (entr l') \<Longrightarrow>
-    static_live_flow graph entr exit (l, ESpawn, l')
+    staticLiveFlow graph entr exit (l, ESpawn, l')
   "
 | CallOuter:
   "
     (l, ECall, l') \<in> graph \<Longrightarrow>
     \<not> Set.is_empty (exit l) \<Longrightarrow>
-    static_live_flow graph entr exit (l, ECall, l')
+    staticLiveFlow graph entr exit (l, ECall, l')
   "
 | CallInner:
   "
     (l, ECall, l') \<in> graph \<Longrightarrow>
     \<not> Set.is_empty (entr l') \<Longrightarrow>
-    static_live_flow graph entr exit (l, ECall, l')
+    staticLiveFlow graph entr exit (l, ECall, l')
   "
 | Return:
   "
     (l, EReturn, l') \<in> graph \<Longrightarrow>
     \<not> Set.is_empty (entr l') \<Longrightarrow>
-    static_live_flow graph entr exit (l, EReturn, l')
+    staticLiveFlow graph entr exit (l, EReturn, l')
   "
 | Send:
   "
     ((IdBind xSend), ESend xE, (IdBind xRecv)) \<in> graph \<Longrightarrow>
     {xE} \<subseteq> (entr (IdBind xSend)) \<Longrightarrow>
-    static_live_flow graph entr exit ((IdBind xSend), ESend xE, (IdBind xRecv))
+    staticLiveFlow graph entr exit ((IdBind xSend), ESend xE, (IdBind xRecv))
   "
 
 
@@ -457,7 +420,7 @@ inductive staticTraceable :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_
     staticTraceable graph entr exit start (\<lambda> l . l = middle) path \<Longrightarrow>
     isEnd end \<Longrightarrow>
 
-    static_live_flow graph entr exit (middle, edge, end) \<Longrightarrow>
+    staticLiveFlow graph entr exit (middle, edge, end) \<Longrightarrow>
 
     staticTraceable graph entr exit start isEnd (path @ [(middle, edge)])
   "

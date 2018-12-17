@@ -41,30 +41,30 @@ by (metis staticInclusiveCommut staticInclusivePreservedDynamicEvalUnordExt pref
 
 
 
-inductive pathsCorrespond :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive pathsCongruent :: "control_path \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty:
   "
-    pathsCorrespond [] []
+    pathsCongruent [] []
   "
 | Next:
   "
-    pathsCorrespond \<pi> path \<Longrightarrow>
-    pathsCorrespond (\<pi> @ [LNxt x]) (path @ [(IdBind x, ENext)])
+    pathsCongruent \<pi> path \<Longrightarrow>
+    pathsCongruent (\<pi> @ [LNxt x]) (path @ [(IdBind x, ENext)])
   "
 | Spawn:
   "
-    pathsCorrespond \<pi> path \<Longrightarrow>
-    pathsCorrespond (\<pi> @ [LSpwn x]) (path @ [(IdBind x, ESpawn)])
+    pathsCongruent \<pi> path \<Longrightarrow>
+    pathsCongruent (\<pi> @ [LSpwn x]) (path @ [(IdBind x, ESpawn)])
   "
 | Call:
   "
-    pathsCorrespond \<pi> path \<Longrightarrow>
-    pathsCorrespond (\<pi> @ [LCall x]) (path @ [(IdBind x, ECall)])
+    pathsCongruent \<pi> path \<Longrightarrow>
+    pathsCongruent (\<pi> @ [LCall x]) (path @ [(IdBind x, ECall)])
   " 
 | Return:
   "
-    pathsCorrespond \<pi> path \<Longrightarrow>
-    pathsCorrespond (\<pi> @ [LRtn x]) (path @ [(IdRslt x, EReturn)])
+    pathsCongruent \<pi> path \<Longrightarrow>
+    pathsCongruent (\<pi> @ [LRtn x]) (path @ [(IdRslt x, EReturn)])
   " 
 
 lemma staticInclusiveBaseSound:
@@ -72,8 +72,8 @@ lemma staticInclusiveBaseSound:
   E0 = [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
   E0 \<pi>1 \<noteq> None \<Longrightarrow>
   E0 \<pi>2 \<noteq> None \<Longrightarrow>
-  pathsCorrespond \<pi>1 path1 \<Longrightarrow>
-  pathsCorrespond \<pi>2 path2 \<Longrightarrow>
+  pathsCongruent \<pi>1 path1 \<Longrightarrow>
+  pathsCongruent \<pi>2 path2 \<Longrightarrow>
   staticInclusive path1 path2
 "
 proof -
@@ -81,8 +81,8 @@ proof -
     H1: "E0 = [[] \<mapsto> (Stt e empty [])]" and
     H2: "E0 \<pi>1 \<noteq> None" and
     H3: "E0 \<pi>2 \<noteq> None" and
-    H4: "pathsCorrespond \<pi>1 path1" and
-    H5: "pathsCorrespond \<pi>2 path2"
+    H4: "pathsCongruent \<pi>1 path1" and
+    H5: "pathsCongruent \<pi>2 path2"
   
   from H4
   show "staticInclusive path1 path2"
@@ -114,64 +114,64 @@ qed
 
 lemma paths_congPreservedDynamicEval_under_reduction:
   "
-  pathsCorrespond (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
-  pathsCorrespond \<pi> path"
-using pathsCorrespond.cases by fastforce
+  pathsCongruent (\<pi> @ [l]) (path @ [n]) \<Longrightarrow>
+  pathsCongruent \<pi> path"
+using pathsCongruent.cases by fastforce
 
 
 lemma equality_abstract_to_concrete':
   "
-  pathsCorrespond \<pi>1 path \<Longrightarrow>
-  \<forall> \<pi>2 .  pathsCorrespond \<pi>2 path \<longrightarrow> \<pi>1 = \<pi>2
+  pathsCongruent \<pi>1 path \<Longrightarrow>
+  \<forall> \<pi>2 .  pathsCongruent \<pi>2 path \<longrightarrow> \<pi>1 = \<pi>2
 "
-apply (erule pathsCorrespond.induct)
-  using pathsCorrespond.cases apply blast
+apply (erule pathsCongruent.induct)
+  using pathsCongruent.cases apply blast
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast \<pi>2" in spec)
 apply (rotate_tac)
-apply (erule pathsCorrespond.cases; auto)
+apply (erule pathsCongruent.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast \<pi>2" in spec)
 apply (rotate_tac)
-apply (erule pathsCorrespond.cases; auto)
+apply (erule pathsCongruent.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast \<pi>2" in spec)
 apply (rotate_tac)
-apply (erule pathsCorrespond.cases; auto)
+apply (erule pathsCongruent.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast \<pi>2" in spec)
 apply (rotate_tac)
-apply (erule pathsCorrespond.cases; auto)
+apply (erule pathsCongruent.cases; auto)
 done
 
 
 lemma equality_abstract_to_concrete:
   "
   path1 = path2 \<Longrightarrow>
-  pathsCorrespond \<pi>1 path1 \<Longrightarrow>
-  pathsCorrespond \<pi>2 path2 \<Longrightarrow>
+  pathsCongruent \<pi>1 path1 \<Longrightarrow>
+  pathsCongruent \<pi>2 path2 \<Longrightarrow>
   \<pi>1 = \<pi>2
 "
 by (simp add: equality_abstract_to_concrete')
 
-lemma pathsCorrespondPreservedDynamicEval_under_reduction:
+lemma pathsCongruentPreservedDynamicEval_under_reduction:
   "
-  pathsCorrespond \<pi>1 path1 \<Longrightarrow>
-  pathsCorrespond (butlast \<pi>1) (butlast path1) 
+  pathsCongruent \<pi>1 path1 \<Longrightarrow>
+  pathsCongruent (butlast \<pi>1) (butlast path1) 
 "
-apply (erule pathsCorrespond.cases; auto)
-  apply (simp add: pathsCorrespond.Empty)
+apply (erule pathsCongruent.cases; auto)
+  apply (simp add: pathsCongruent.Empty)
 done
 
 lemma strict_prefixPreservedDynamicEval:
   "
-pathsCorrespond \<pi>1 path1 \<Longrightarrow>
-pathsCorrespond \<pi> path \<Longrightarrow>
+pathsCongruent \<pi>1 path1 \<Longrightarrow>
+pathsCongruent \<pi> path \<Longrightarrow>
 strict_prefix path1 (path @ [n]) \<Longrightarrow>
 \<not> strict_prefix \<pi>1 (\<pi> @ [l]) \<Longrightarrow>
 strict_prefix (butlast path1) path
 "
-apply (erule pathsCorrespond.cases; auto)
+apply (erule pathsCongruent.cases; auto)
   using prefix_bot.bot.not_eq_extremum apply blast
   using prefix_order.order.strict_implies_order prefix_snocD apply fastforce
   using prefix_order.dual_order.strict_implies_order prefix_snocD apply fastforce
@@ -183,24 +183,24 @@ done
 lemma prefix_abstract_to_concrete':
   "
 
-pathsCorrespond \<pi>2 path2 \<Longrightarrow>
+pathsCongruent \<pi>2 path2 \<Longrightarrow>
 \<forall> \<pi>1 path1 .
-pathsCorrespond \<pi>1 path1 \<longrightarrow>
+pathsCongruent \<pi>1 path1 \<longrightarrow>
 prefix path1 path2 \<longrightarrow>
 prefix \<pi>1 \<pi>2
 "
-apply (erule pathsCorrespond.induct; auto)
-  apply (simp add: equality_abstract_to_concrete pathsCorrespond.Empty)
-  apply (simp add: equality_abstract_to_concrete pathsCorrespond.Next)
-  apply (simp add: equality_abstract_to_concrete' pathsCorrespond.Spawn)
-  apply (simp add: equality_abstract_to_concrete' pathsCorrespond.Call)
-  apply (simp add: equality_abstract_to_concrete' pathsCorrespond.Return)
+apply (erule pathsCongruent.induct; auto)
+  apply (simp add: equality_abstract_to_concrete pathsCongruent.Empty)
+  apply (simp add: equality_abstract_to_concrete pathsCongruent.Next)
+  apply (simp add: equality_abstract_to_concrete' pathsCongruent.Spawn)
+  apply (simp add: equality_abstract_to_concrete' pathsCongruent.Call)
+  apply (simp add: equality_abstract_to_concrete' pathsCongruent.Return)
 done
 
 lemma prefix_abstract_to_concrete:
   "
-pathsCorrespond \<pi>2 path2 \<Longrightarrow>
-pathsCorrespond \<pi>1 path1 \<Longrightarrow>
+pathsCongruent \<pi>2 path2 \<Longrightarrow>
+pathsCongruent \<pi>1 path1 \<Longrightarrow>
 prefix path1 path2 \<Longrightarrow>
 prefix \<pi>1 \<pi>2
 "
@@ -209,13 +209,13 @@ by (simp add: prefix_abstract_to_concrete')
 
 lemma strict_prefix_abstract_to_concrete':
   "
-pathsCorrespond \<pi>2 path2 \<Longrightarrow>
+pathsCongruent \<pi>2 path2 \<Longrightarrow>
 \<forall> \<pi>1 path1 .
 strict_prefix path1 path2 \<longrightarrow>
-pathsCorrespond \<pi>1 path1 \<longrightarrow>
+pathsCongruent \<pi>1 path1 \<longrightarrow>
 strict_prefix \<pi>1 \<pi>2
 "
-apply (erule pathsCorrespond.cases; auto)
+apply (erule pathsCongruent.cases; auto)
   apply (metis not_Cons_self2 prefix_abstract_to_concrete prefix_snoc same_prefix_nil strict_prefix_def)+
 done
 
@@ -223,8 +223,8 @@ done
 lemma strict_prefix_abstract_to_concrete:
   "
 strict_prefix path1 path2 \<Longrightarrow>
-pathsCorrespond \<pi>1 path1 \<Longrightarrow>
-pathsCorrespond \<pi>2 path2 \<Longrightarrow>
+pathsCongruent \<pi>1 path1 \<Longrightarrow>
+pathsCongruent \<pi>2 path2 \<Longrightarrow>
 strict_prefix \<pi>1 \<pi>2
 "
 by (simp add: strict_prefix_abstract_to_concrete')
@@ -232,35 +232,35 @@ by (simp add: strict_prefix_abstract_to_concrete')
 
 lemma equality_contcrete_to_abstract':
   "
-  pathsCorrespond \<pi> path1 \<Longrightarrow>
-  \<forall> path2 .  pathsCorrespond \<pi> path2 \<longrightarrow> path1 = path2
+  pathsCongruent \<pi> path1 \<Longrightarrow>
+  \<forall> path2 .  pathsCongruent \<pi> path2 \<longrightarrow> path1 = path2
 "
-apply (erule pathsCorrespond.induct)
+apply (erule pathsCongruent.induct)
 apply auto[1]
-apply (erule pathsCorrespond.cases; auto)
+apply (erule pathsCongruent.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast path2" in spec)
 apply (rotate_tac)
-apply (erule pathsCorrespond.cases; auto)
+apply (erule pathsCongruent.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast path2" in spec)
 apply (rotate_tac)
-apply (erule pathsCorrespond.cases; auto)
+apply (erule pathsCongruent.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast path2" in spec)
 apply (rotate_tac)
-apply (erule pathsCorrespond.cases; auto)
+apply (erule pathsCongruent.cases; auto)
 apply (rule allI, rule impI)
 apply (drule_tac x = "butlast path2" in spec)
 apply (rotate_tac)
-apply (erule pathsCorrespond.cases; auto)
+apply (erule pathsCongruent.cases; auto)
 done
 
 lemma equality_contcrete_to_abstract:
   "
   \<pi>1 = \<pi>2 \<Longrightarrow>
-  pathsCorrespond \<pi>1 path1 \<Longrightarrow>
-  pathsCorrespond \<pi>2 path2 \<Longrightarrow>
+  pathsCongruent \<pi>1 path1 \<Longrightarrow>
+  pathsCongruent \<pi>2 path2 \<Longrightarrow>
   path1 = path2
 
 "
@@ -269,12 +269,12 @@ by (simp add: equality_contcrete_to_abstract')
 
 lemma spawn_pointPreservedDynamicEval_under_congruent_paths: " 
 l1 = (LNxt x) \<Longrightarrow> l2 = (LSpwn x) \<Longrightarrow>
-pathsCorrespond (\<pi> @ [l1]) (path @ [n1]) \<Longrightarrow>
-pathsCorrespond (\<pi> @ [l2]) (path @ [n2]) \<Longrightarrow>
+pathsCongruent (\<pi> @ [l1]) (path @ [n1]) \<Longrightarrow>
+pathsCongruent (\<pi> @ [l2]) (path @ [n2]) \<Longrightarrow>
 n1 = (IdBind x, ENext) \<and> n2 = (IdBind x, ESpawn)
 "
-apply (erule pathsCorrespond.cases; auto)
-using equality_contcrete_to_abstract pathsCorrespond.Spawn apply blast
+apply (erule pathsCongruent.cases; auto)
+using equality_contcrete_to_abstract pathsCongruent.Spawn apply blast
 done
 
 lemma not_staticInclusive_step:
@@ -282,15 +282,15 @@ lemma not_staticInclusive_step:
 \<forall>\<pi>1 \<pi>2 path1 path2.
   env \<pi>1 \<noteq> None \<longrightarrow>
   env \<pi>2 \<noteq> None \<longrightarrow>
-  pathsCorrespond \<pi>1 path1 \<longrightarrow> 
-  pathsCorrespond \<pi>2 path2 \<longrightarrow> 
+  pathsCongruent \<pi>1 path1 \<longrightarrow> 
+  pathsCongruent \<pi>2 path2 \<longrightarrow> 
   staticInclusive path1 path2 \<Longrightarrow>
 star_left op \<rightarrow> ([[] \<mapsto> (Stt e empty [])], {}) (env, H) \<Longrightarrow>
 (env, H) \<rightarrow> (E', H') \<Longrightarrow>
 E' \<pi>1 \<noteq> None \<Longrightarrow>
 E' \<pi>2 \<noteq> None \<Longrightarrow>
-pathsCorrespond \<pi>1 path1 \<Longrightarrow> 
-pathsCorrespond \<pi>2 path2 \<Longrightarrow>
+pathsCongruent \<pi>1 path1 \<Longrightarrow> 
+pathsCongruent \<pi>2 path2 \<Longrightarrow>
 staticInclusive path1 path2 
 "
 proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (simp add: Prefix2)))
@@ -299,15 +299,15 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
   "
       \<forall>\<pi>1. (\<exists>y. env \<pi>1 = Some y) \<longrightarrow>
       (\<forall>\<pi>2. (\<exists>y. env \<pi>2 = Some y) \<longrightarrow>
-      (\<forall>path1. pathsCorrespond \<pi>1 path1 \<longrightarrow>
-      (\<forall>path2. pathsCorrespond \<pi>2 path2 \<longrightarrow> 
+      (\<forall>path1. pathsCongruent \<pi>1 path1 \<longrightarrow>
+      (\<forall>path2. pathsCongruent \<pi>2 path2 \<longrightarrow> 
         staticInclusive path1 path2)))" and
     H2: "star_left op \<rightarrow> ([[] \<mapsto> (Stt e empty [])], {}) (env, H)" and
     H3: "(env, H) \<rightarrow> (E', H')" and
     H4: "\<exists>y. E' \<pi>1 = Some y" and
     H5: "\<exists>y. E' \<pi>2 = Some y " and
-    H6: "pathsCorrespond \<pi>1 path1" and
-    H7: "pathsCorrespond \<pi>2 path2" and
+    H6: "pathsCongruent \<pi>1 path1" and
+    H7: "pathsCongruent \<pi>2 path2" and
     H8: "path1 \<noteq> []" and 
     H9: "path2 \<noteq> []"
 
@@ -323,22 +323,22 @@ proof ((case_tac "path1 = []"; (simp add: Prefix1)), (case_tac "path2 = []", (si
   obtain \<pi>1x l1 path1x n1 where
     H12: "\<pi>1x @ [l1] = \<pi>1" and
     H13: "path1x @ [n1] = path1" and
-    H14: "pathsCorrespond \<pi>1x path1x"
-    apply (rule pathsCorrespond.cases)
+    H14: "pathsCongruent \<pi>1x path1x"
+    apply (rule pathsCongruent.cases)
     using H8 by blast+
 
   from H7
   obtain \<pi>2x l2 path2x n2 where
     H15: "\<pi>2x @ [l2] = \<pi>2" and
     H16: "path2x @ [n2] = path2" and
-    H17: "pathsCorrespond \<pi>2x path2x"
-    apply (rule pathsCorrespond.cases)
+    H17: "pathsCongruent \<pi>2x path2x"
+    apply (rule pathsCongruent.cases)
     using H9 by blast+
  
-  have H22: "pathsCorrespond (\<pi>1x @ [l1]) (path1x @ [n1])"
+  have H22: "pathsCongruent (\<pi>1x @ [l1]) (path1x @ [n1])"
     by (simp add: H12 H13 H6)
 
-  have H23: "pathsCorrespond (\<pi>2x @ [l2]) (path2x @ [n2])"
+  have H23: "pathsCongruent (\<pi>2x @ [l2]) (path2x @ [n2])"
     by (simp add: H15 H16 H7)
 
   show "staticInclusive path1 path2"
@@ -445,8 +445,8 @@ lemma staticInclusiveSound:
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow>
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow>
-  pathsCorrespond \<pi>1 path1 \<Longrightarrow>
-  pathsCorrespond \<pi>2 path2 \<Longrightarrow>
+  pathsCongruent \<pi>1 path1 \<Longrightarrow>
+  pathsCongruent \<pi>2 path2 \<Longrightarrow>
   staticInclusive path1 path2
 "
 proof -
@@ -454,8 +454,8 @@ proof -
     H1: "star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')" and
     H2: "\<E>' \<pi>1 \<noteq> None" and
     H3: "\<E>' \<pi>2 \<noteq> None" and
-    H4: "pathsCorrespond \<pi>1 path1" and
-    H5: "pathsCorrespond \<pi>2 path2"
+    H4: "pathsCongruent \<pi>1 path1" and
+    H5: "pathsCongruent \<pi>2 path2"
 
   from H1 have
     "star_left (op \<rightarrow>) ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')" by (simp add: star_implies_star_left)
@@ -472,8 +472,8 @@ proof -
       X0 = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> X' = (\<E>', H') \<longrightarrow>
       \<E>' \<pi>1 \<noteq> None \<longrightarrow>
       \<E>' \<pi>2 \<noteq> None \<longrightarrow>
-      pathsCorrespond \<pi>1 path1 \<longrightarrow>
-      pathsCorrespond \<pi>2 path2 \<longrightarrow>
+      pathsCongruent \<pi>1 path1 \<longrightarrow>
+      pathsCongruent \<pi>2 path2 \<longrightarrow>
       staticInclusive path1 path2
     "
   proof induction
@@ -490,8 +490,8 @@ proof -
         L2H2: "z = (\<E>', H')" and
         L2H3: "\<E>' \<pi>1 \<noteq> None" and
         L2H4: "\<E>' \<pi>2 \<noteq> None" and
-        L2H5: "pathsCorrespond \<pi>1 path1" and
-        L2H6: "pathsCorrespond \<pi>2 path2"
+        L2H5: "pathsCongruent \<pi>1 path1" and
+        L2H6: "pathsCongruent \<pi>2 path2"
 
       obtain \<E> H where 
         L2H7: "y = (\<E>, H)" by (meson surj_pair)
@@ -502,8 +502,8 @@ proof -
           \<forall> \<pi>1 \<pi>2 path1 path2 . 
           \<E> \<pi>1 \<noteq> None \<longrightarrow>
           \<E> \<pi>2 \<noteq> None \<longrightarrow>
-          pathsCorrespond \<pi>1 path1 \<longrightarrow> 
-          pathsCorrespond \<pi>2 path2 \<longrightarrow> 
+          pathsCongruent \<pi>1 path1 \<longrightarrow> 
+          pathsCongruent \<pi>2 path2 \<longrightarrow> 
           staticInclusive path1 path2 "
         by blast
 
@@ -1345,9 +1345,9 @@ lemma staticTraceablePoolStepSound:
        EHm = (E', H') \<longrightarrow>
        E' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<longrightarrow>
        staticFlowsAcceptPool V F E' \<longrightarrow> isEnd (tmId e') \<longrightarrow> 
-      (\<exists>path. pathsCorrespond \<pi>' path \<and> staticTraceable F (tmId e) isEnd path)"
+      (\<exists>path. pathsCongruent \<pi>' path \<and> staticTraceable F (tmId e) isEnd path)"
   shows
-    "(\<exists>path. pathsCorrespond \<pi>' path \<and> staticTraceable F (tmId e) isEnd path)"
+    "(\<exists>path. pathsCongruent \<pi>' path \<and> staticTraceable F (tmId e) isEnd path)"
 proof -
   show ?thesis
   using H2
@@ -1356,11 +1356,11 @@ proof -
 
     have L1H2: "staticFlowsAcceptPool V F Em" by (smt H2 H4 H6 local.Seq_Step_Down(1) mappingPreserved star_step1 staticFlowsAcceptPool.simps)
 
-    have L1H3: "\<exists>path. pathsCorrespond pi path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Rslt x)) path"
+    have L1H3: "\<exists>path. pathsCongruent pi path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Rslt x)) path"
     by (simp add: H3 IH L1H2 local.Seq_Step_Down)
 
     obtain p where 
-      L1H4: "pathsCorrespond pi p" and
+      L1H4: "pathsCongruent pi p" and
       L1H5: "staticTraceable F (tmId e) (\<lambda> l . l = tmId (Rslt x)) p"
     using L1H3 by blast
 
@@ -1381,7 +1381,7 @@ proof -
 
       have L2H5: "{(IdRslt x, EReturn, (tmId e'))} \<subseteq> F" using L2H4 L2H5 by auto
     
-      have L2H6: "pathsCorrespond (pi @ [LRtn x]) (p @ [(IdRslt x, EReturn)])" by (simp add: L1H4 Return)
+      have L2H6: "pathsCongruent (pi @ [LRtn x]) (p @ [(IdRslt x, EReturn)])" by (simp add: L1H4 Return)
       have L2H7: "staticTraceable F (tmId e) isEnd (p @ [(IdRslt x, EReturn)])" using H7 L1H5 L2H5 Step by auto
     
       show ?thesis using L2H1 L2H6 L2H7 by blast
@@ -1397,11 +1397,11 @@ proof -
     have L1H2: "staticFlowsAcceptPool V F Em"
      using H2 H4 H6 local.Seq_Step(1) mappingPreservedDynamicEval staticFlowsAcceptPool.simps by fastforce
 
-    have L1H3: "\<exists>path. pathsCorrespond pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm bm em)) path"
+    have L1H3: "\<exists>path. pathsCongruent pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm bm em)) path"
     by (simp add: H3 IH L1H2 local.Seq_Step(1) local.Seq_Step(4))
 
     obtain p where 
-      L1H4: "pathsCorrespond pim p" and
+      L1H4: "pathsCongruent pim p" and
       L1H5: "staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm bm em)) p"
     using L1H3 by blast
 
@@ -1420,7 +1420,7 @@ proof -
 
       have L2H5: "{(IdBind xm, ENext, (tmId e'))} \<subseteq> F" using L2H4 L2H5 by auto
     
-      have L2H6: "pathsCorrespond (pim @ [LNxt xm]) (p @ [(IdBind xm, ENext)])" by (simp add: L1H4 Next)
+      have L2H6: "pathsCongruent (pim @ [LNxt xm]) (p @ [(IdBind xm, ENext)])" by (simp add: L1H4 Next)
       have L2H7: "staticTraceable F (tmId e) isEnd (p @ [(IdBind xm, ENext)])" using H7 L1H5 L2H5 Step by auto
     
       show ?thesis using L2H1 L2H6 L2H7 by blast
@@ -1434,11 +1434,11 @@ proof -
     have L1H2: "staticFlowsAcceptPool V F Em"
       by (smt H2 H4 H6 local.Seq_Step_Up(1) mappingPreserved star_step1 staticFlowsAcceptPool.simps)
 
-    have L1H3: "\<exists>path. pathsCorrespond pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm bm em)) path"
+    have L1H3: "\<exists>path. pathsCongruent pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm bm em)) path"
     by (simp add: H3 IH L1H2 local.Seq_Step_Up(1) local.Seq_Step_Up(4))
 
     obtain p where 
-      L1H4: "pathsCorrespond pim p" and
+      L1H4: "pathsCongruent pim p" and
       L1H5: "staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm bm em)) p"
     using L1H3 by blast
 
@@ -1488,7 +1488,7 @@ proof -
         then show ?thesis using H4 H5 L2H1 local.Seq_Step_Up(2) by auto
       qed
     
-      have L2H6: "pathsCorrespond (pim @ [LNxt xm]) (p @ [(IdBind xm, ENext)])" by (simp add: L1H4 Next)
+      have L2H6: "pathsCongruent (pim @ [LNxt xm]) (p @ [(IdBind xm, ENext)])" by (simp add: L1H4 Next)
       have L2H7: "staticTraceable F (tmId e) isEnd (p @ [(IdBind xm, ECall)])" using H7 L1H5 L2H5 Step by auto
     
       show ?thesis using Call L1H4 L2H1 L2H7 by blast
@@ -1502,11 +1502,11 @@ proof -
     have L1H2: "staticFlowsAcceptPool V F Em"
      using H2 H4 H6 local.BindMkChn(1) mappingPreservedDynamicEval staticFlowsAcceptPool.simps by fastforce
 
-    have L1H3: "\<exists>path. pathsCorrespond pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm MkChn em)) path"
+    have L1H3: "\<exists>path. pathsCongruent pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm MkChn em)) path"
     by (simp add: H3 IH L1H2 local.BindMkChn(1) local.BindMkChn(4))
 
     obtain p where 
-      L1H4: "pathsCorrespond pim p" and
+      L1H4: "pathsCongruent pim p" and
       L1H5: "staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm MkChn em)) p"
     using L1H3 by blast
 
@@ -1528,7 +1528,7 @@ proof -
 
       have L2H5: "{(IdBind xm, ENext, (tmId e'))} \<subseteq> F" using L2H4 L2H5 by auto
     
-      have L2H6: "pathsCorrespond (pim @ [LNxt xm]) (p @ [(IdBind xm, ENext)])" by (simp add: L1H4 Next)
+      have L2H6: "pathsCongruent (pim @ [LNxt xm]) (p @ [(IdBind xm, ENext)])" by (simp add: L1H4 Next)
       have L2H7: "staticTraceable F (tmId e) isEnd (p @ [(IdBind xm, ENext)])" using H7 L1H5 L2H5 Step by auto
     
       show ?thesis using L2H1 L2H6 L2H7 by blast
@@ -1542,12 +1542,12 @@ proof -
     have L1H2: "staticFlowsAcceptPool V F Em"
      using H2 H4 H6 local.BindSpawn(1) mappingPreservedDynamicEval staticFlowsAcceptPool.simps by fastforce
 
-    have L1H3: "\<exists>path. pathsCorrespond pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm (Spwn ec) em)) path"
+    have L1H3: "\<exists>path. pathsCongruent pim path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm (Spwn ec) em)) path"
     by (simp add: H3 IH L1H2 local.BindSpawn(1) local.BindSpawn(4))
 
 
     obtain p where 
-      L1H4: "pathsCorrespond pim p" and
+      L1H4: "pathsCongruent pim p" and
       L1H5: "staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xm (Spwn ec) em)) p"
     using L1H3 by blast
 
@@ -1570,7 +1570,7 @@ proof -
 
       have L2H6: "{(IdBind xm, ESpawn, (tmId e'))} \<subseteq> F" using L2H4 L2H5 by blast
     
-      have L2H7: "pathsCorrespond (pim @ [LSpwn xm]) (p @ [(IdBind xm, ESpawn)])" by (simp add: L1H4 Spawn)
+      have L2H7: "pathsCongruent (pim @ [LSpwn xm]) (p @ [(IdBind xm, ESpawn)])" by (simp add: L1H4 Spawn)
       have L2H8: "staticTraceable F (tmId e) isEnd (p @ [(IdBind xm, ESpawn)])"
         using H7 L1H5 L2H6 Step by auto
     
@@ -1594,7 +1594,7 @@ proof -
   
         have L2H5: "{(IdBind xm, ENext, (tmId e'))} \<subseteq> F" using L2H4 L2H5 by auto
       
-        have L2H6: "pathsCorrespond (pim @ [LNxt xm]) (p @ [(IdBind xm, ENext)])" by (simp add: L1H4 Next)
+        have L2H6: "pathsCongruent (pim @ [LNxt xm]) (p @ [(IdBind xm, ENext)])" by (simp add: L1H4 Next)
         have L2H7: "staticTraceable F (tmId e) isEnd (p @ [(IdBind xm, ENext)])" using H7 L1H5 L2H5 Step by auto
       
         show ?thesis using L2H1 L2H6 L2H7 by blast
@@ -1609,19 +1609,19 @@ proof -
     have L1H2: "staticFlowsAcceptPool V F Em"
       by (smt H2 H4 H6 local.BindSync(1) mappingPreserved star_step1 staticFlowsAcceptPool.simps)
 
-    have L1H3: "\<exists>path. pathsCorrespond pir path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xr (Sync xre) er)) path"
+    have L1H3: "\<exists>path. pathsCongruent pir path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xr (Sync xre) er)) path"
     by (simp add: H3 IH L1H2 local.BindSync(1) local.BindSync(7))
 
     obtain pr where 
-      L1H4: "pathsCorrespond pir pr" and
+      L1H4: "pathsCongruent pir pr" and
       L1H5: "staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xr (Sync xre) er)) pr"
     using L1H3 by auto
 
-    have L1H6: "\<exists>path. pathsCorrespond pis path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xs (Sync xse) es)) path"
+    have L1H6: "\<exists>path. pathsCongruent pis path \<and> staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xs (Sync xse) es)) path"
     by (simp add: H3 IH L1H2 local.BindSync(1) local.BindSync(4))
 
     obtain ps where 
-      L1H7: "pathsCorrespond pis ps" and
+      L1H7: "pathsCongruent pis ps" and
       L1H8: "staticTraceable F (tmId e) (\<lambda> l . l = tmId (Bind xs (Sync xse) es)) ps"
     using L1H6 by blast
 
@@ -1644,7 +1644,7 @@ proof -
 
       have L2H6: "{(IdBind xr, ENext, (tmId e'))} \<subseteq> F" using L2H4 L2H5 by auto
     
-      have L2H7: "pathsCorrespond (pir @ [LNxt xr]) (pr @ [(IdBind xr, ENext)])" by (simp add: L1H4 Next)
+      have L2H7: "pathsCongruent (pir @ [LNxt xr]) (pr @ [(IdBind xr, ENext)])" by (simp add: L1H4 Next)
       have L2H8: "staticTraceable F (tmId e) isEnd (pr @ [(IdBind xr, ENext)])" using H7 L1H5 L2H6 Step by auto
     
       show ?thesis using L2H0 L2H7 L2H8 by auto
@@ -1669,7 +1669,7 @@ proof -
   
         have L2H6: "{(IdBind xs, ENext, (tmId e'))} \<subseteq> F" using L2H4 L2H5 by auto
       
-        have L2H7: "pathsCorrespond (pis @ [LNxt xs]) (ps @ [(IdBind xs, ENext)])" by (simp add: L1H7 Next)
+        have L2H7: "pathsCongruent (pis @ [LNxt xs]) (ps @ [(IdBind xs, ENext)])" by (simp add: L1H7 Next)
         have L2H8: "staticTraceable F (tmId e) isEnd (ps @ [(IdBind xs, ENext)])" using H7 L1H8 L2H6 Step by auto
       
         show ?thesis using L2H1 L2H7 L2H8 by blast
@@ -1692,12 +1692,12 @@ lemma staticTraceablePoolSound':
     staticFlowsAcceptPool V F E' \<longrightarrow>
     isEnd (tmId e') \<longrightarrow>
     (\<exists> path . 
-      pathsCorrespond \<pi>' path \<and>
+      pathsCongruent \<pi>' path \<and>
       staticTraceable F (tmId e) isEnd path)"
 using H1
 proof induction
   case (refl z)
-  then show ?case using pathsCorrespond.Empty staticTraceable.Empty by auto
+  then show ?case using pathsCongruent.Empty staticTraceable.Empty by auto
 next
   case (step EH EHm EH')
   then show ?case using staticTraceablePoolStepSound[of EH EHm EH']
@@ -1714,7 +1714,7 @@ lemma staticTraceablePoolSound:
 
   shows "
     \<exists> path . 
-      pathsCorrespond \<pi>' path \<and>
+      pathsCongruent \<pi>' path \<and>
       staticTraceable F (tmId e) isEnd path"
 using staticTraceablePoolSound'[of "([[] \<mapsto> (Stt e empty [])], {})" "(\<E>', H')"]
 H1 H2 H3 H4 H5 star_implies_star_left by fastforce
@@ -1750,7 +1750,7 @@ lemma staticTraceableSound:
   staticFlowsAccept V F e0 \<Longrightarrow>
   isEnd (IdBind x) \<Longrightarrow>
   \<exists> path . 
-    pathsCorrespond \<pi> path \<and>
+    pathsCongruent \<pi> path \<and>
     staticTraceable F (tmId e0) isEnd path
 "
 by (metis lift_traversable_to_pool staticTraceablePoolSound staticFlowsAcceptPoolPreserved)
@@ -1762,7 +1762,7 @@ lemma staticTraceableSendSound:
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   \<exists> pathSync .
-    (pathsCorrespond \<pi>Sync pathSync) \<and> 
+    (pathsCongruent \<pi>Sync pathSync) \<and> 
     staticTraceable F (tmId e) (staticSendSite V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto)
@@ -1777,7 +1777,7 @@ lemma staticTraceableRecvSound:
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   \<exists> pathSync .
-    (pathsCorrespond \<pi>Sync pathSync) \<and> 
+    (pathsCongruent \<pi>Sync pathSync) \<and> 
     staticTraceable F (tmId e) (staticRecvSite V e xC) pathSync
 "
  apply (unfold is_recv_path.simps; auto)

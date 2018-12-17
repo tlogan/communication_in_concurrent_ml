@@ -29,8 +29,8 @@ inductive forEveryTwo  :: "('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarro
   "
 
 inductive ordered :: "'a list \<Rightarrow> 'a list \<Rightarrow> bool" where
-  left: "prefix \<pi>1 \<pi>2 \<Longrightarrow> ordered \<pi>1 \<pi>2" |
-  right: "prefix \<pi>2 \<pi>1 \<Longrightarrow> ordered \<pi>1 \<pi>2"
+  left: "prefix \<pi>1 \<pi>2 \<Longrightarrow> ordered \<pi>1 \<pi>2"
+| right: "prefix \<pi>2 \<pi>1 \<Longrightarrow> ordered \<pi>1 \<pi>2"
 
 inductive one_shot :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
@@ -59,85 +59,83 @@ inductive one_to_one :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
 
 
 inductive 
-  dynamic_built_on_chan_var :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> name \<Rightarrow> bool" and
-  dynamic_built_on_chan_atom :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> atom \<Rightarrow> bool" and
-  dynamic_built_on_chan_complex :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> complex \<Rightarrow> bool" and
-  dynamic_built_on_chan_tm :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> tm \<Rightarrow> bool" 
+  dynamicBuiltOnChan :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> name \<Rightarrow> bool" and
+  dynamicBuiltOnChanAtom :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> atom \<Rightarrow> bool" and
+  dynamicBuiltOnChanComplex :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> complex \<Rightarrow> bool" and
+  dynamicBuiltOnChanTm :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> tm \<Rightarrow> bool" 
 where
   Chan: "
     \<rho> x = Some (VChn c) \<Longrightarrow>
-    dynamic_built_on_chan_var \<rho> c x
-  " |
-  Closure: "
-    dynamic_built_on_chan_atom \<rho>' c p \<Longrightarrow>
+    dynamicBuiltOnChan \<rho> c x
+  "
+| Closure: "
+    dynamicBuiltOnChanAtom \<rho>' c p \<Longrightarrow>
     \<rho> x = Some (VClsr p \<rho>') \<Longrightarrow>
-    dynamic_built_on_chan_var \<rho> c x
+    dynamicBuiltOnChan \<rho> c x
   " |
 
 
   Send_Evt: "
-    dynamic_built_on_chan_var \<rho> c xSC \<or> dynamic_built_on_chan_var \<rho> c xM \<Longrightarrow>
-    dynamic_built_on_chan_atom \<rho> c (SendEvt xSC xM)
-  " |
-  Recv_Evt: "
-    dynamic_built_on_chan_var \<rho> c xRC \<Longrightarrow>
-    dynamic_built_on_chan_atom \<rho> c (RecvEvt xRC)
-  " |
-  Pair: "
-    dynamic_built_on_chan_var \<rho> c x1 \<or> dynamic_built_on_chan \<rho> c x2 \<Longrightarrow>
-    dynamic_built_on_chan_atom \<rho> c (Pair x1 x2)
-  " |
-  Left: "
-    dynamic_built_on_chan_var \<rho> c xSum \<Longrightarrow>
-    dynamic_built_on_chan_atom \<rho> c (Lft xSum)
-  " |
-  Right: "
-    dynamic_built_on_chan_var \<rho> c xSum \<Longrightarrow>
-    dynamic_built_on_chan_atom \<rho> c (Rht xSum)
-  " |
-  Fun: "
-    dynamic_built_on_chan_tm \<rho>' c e \<Longrightarrow>
-    dynamic_built_on_chan_atom \<rho> c (Fun f x e)
-  " |
-
-  Atom: "
-    dynamic_built_on_chan_atom \<rho> c p \<Longrightarrow>
-    dynamic_built_on_chan_complex \<rho> c (Atom p)
-  " |
-  Spawn: "
-    dynamic_built_on_chan_tm \<rho> c eCh \<Longrightarrow>
-    dynamic_built_on_chan_complex \<rho> c (Spwn eCh)
-  " |
-  Sync: "
-    dynamic_built_on_chan_var \<rho> c xY \<Longrightarrow>
-    dynamic_built_on_chan_complex \<rho> c (Sync xY)
-  " |
-  Fst: "
-    dynamic_built_on_chan_var \<rho> c xP \<Longrightarrow>
-    dynamic_built_on_chan_complex \<rho> c (Fst xP)
-  " |
-  Snd: "
-    dynamic_built_on_chan_var \<rho> c xP \<Longrightarrow>
-    dynamic_built_on_chan_complex \<rho> c (Snd xP)
-  " |
-  Case: "
-    dynamic_built_on_chan_var \<rho> c xS \<or> 
-    dynamic_built_on_chan_tm \<rho> c eL \<or> dynamic_built_on_chan_tm \<rho> c eR \<Longrightarrow>
-    dynamic_built_on_chan_complex \<rho> c (Case xS xL eL xR eR)
-  " |
-  App: "
-    dynamic_built_on_chan_var \<rho> c f \<or>
-    dynamic_built_on_chan_var \<rho> c xA \<Longrightarrow>
-    dynamic_built_on_chan_complex \<rho> c (App f xA)
-  " |
-
-  Result: "
-    dynamic_built_on_chan_var \<rho> c x \<Longrightarrow>
-    dynamic_built_on_chan_tm \<rho> c (Rslt x)
-  " |
-  Bind: "
-    dynamic_built_on_chan_complex \<rho> c b \<or> dynamic_built_on_chan_tm \<rho> c e \<Longrightarrow>
-    dynamic_built_on_chan_tm \<rho> c (Bind x b e)
+    dynamicBuiltOnChan \<rho> c xSC \<or> dynamicBuiltOnChan \<rho> c xM \<Longrightarrow>
+    dynamicBuiltOnChanAtom \<rho> c (SendEvt xSC xM)
+  "
+| Recv_Evt: "
+    dynamicBuiltOnChan \<rho> c xRC \<Longrightarrow>
+    dynamicBuiltOnChanAtom \<rho> c (RecvEvt xRC)
+  "
+| Pair: "
+    dynamicBuiltOnChan \<rho> c x1 \<or> dynamicBuiltOnChan \<rho> c x2 \<Longrightarrow>
+    dynamicBuiltOnChanAtom \<rho> c (Pair x1 x2)
+  "
+| Left: "
+    dynamicBuiltOnChan \<rho> c xSum \<Longrightarrow>
+    dynamicBuiltOnChanAtom \<rho> c (Lft xSum)
+  "
+| Right: "
+    dynamicBuiltOnChan \<rho> c xSum \<Longrightarrow>
+    dynamicBuiltOnChanAtom \<rho> c (Rht xSum)
+  "
+| Fun: "
+    dynamicBuiltOnChanTm \<rho>' c e \<Longrightarrow>
+    dynamicBuiltOnChanAtom \<rho> c (Fun f x e)
+  "
+| Atom: "
+    dynamicBuiltOnChanAtom \<rho> c p \<Longrightarrow>
+    dynamicBuiltOnChanComplex \<rho> c (Atom p)
+  "
+| Spawn: "
+    dynamicBuiltOnChanTm \<rho> c eCh \<Longrightarrow>
+    dynamicBuiltOnChanComplex \<rho> c (Spwn eCh)
+  "
+| Sync: "
+    dynamicBuiltOnChan \<rho> c xY \<Longrightarrow>
+    dynamicBuiltOnChanComplex \<rho> c (Sync xY)
+  "
+| Fst: "
+    dynamicBuiltOnChan \<rho> c xP \<Longrightarrow>
+    dynamicBuiltOnChanComplex \<rho> c (Fst xP)
+  "
+| Snd: "
+    dynamicBuiltOnChan \<rho> c xP \<Longrightarrow>
+    dynamicBuiltOnChanComplex \<rho> c (Snd xP)
+  "
+| Case: "
+    dynamicBuiltOnChan \<rho> c xS \<or> 
+    dynamicBuiltOnChanTm \<rho> c eL \<or> dynamicBuiltOnChanTm \<rho> c eR \<Longrightarrow>
+    dynamicBuiltOnChanComplex \<rho> c (Case xS xL eL xR eR)
+  "
+| App: "
+    dynamicBuiltOnChan \<rho> c f \<or>
+    dynamicBuiltOnChan \<rho> c xA \<Longrightarrow>
+    dynamicBuiltOnChanComplex \<rho> c (App f xA)
+  "
+| Result: "
+    dynamicBuiltOnChan \<rho> c x \<Longrightarrow>
+    dynamicBuiltOnChanTm \<rho> c (Rslt x)
+  "
+| Bind: "
+    dynamicBuiltOnChanComplex \<rho> c b \<or> dynamicBuiltOnChanTm \<rho> c e \<Longrightarrow>
+    dynamicBuiltOnChanTm \<rho> c (Bind x b e)
   "
 
 
