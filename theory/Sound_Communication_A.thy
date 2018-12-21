@@ -277,7 +277,7 @@ apply (erule pathsCongruent.cases; auto)
 using equality_contcrete_to_abstract pathsCongruent.Spawn apply blast
 done
 
-lemma not_staticInclusive_step:
+lemma staticInclusiveStepSound:
   "
 \<forall>\<pi>1 \<pi>2 path1 path2.
   env \<pi>1 \<noteq> None \<longrightarrow>
@@ -509,7 +509,7 @@ proof -
 
       have 
         "staticInclusive path1 path2"
-        using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 not_staticInclusive_step step.hyps(1) step.hyps(2) by blast
+        using L2H1 L2H2 L2H3 L2H4 L2H5 L2H6 L2H7 L2H8 staticInclusiveStepSound step.hyps(1) step.hyps(2) by blast
     }
     then show ?case by blast
   qed

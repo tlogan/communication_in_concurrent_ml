@@ -129,28 +129,28 @@ where
   " 
 
 
-inductive staticLiveChan_stack :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> contin list \<Rightarrow> bool" where
-  Empty: "staticLiveChan_stack V Ln Lx x\<^sub>c []"
+inductive staticLiveChanStack :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> contin list \<Rightarrow> bool" where
+  Empty: "staticLiveChanStack V Ln Lx x\<^sub>c []"
 | Nonempty:
   "
     \<lbrakk> 
       \<not> Set.is_empty (Ln (tmId e));
       staticLiveChan V Ln Lx x\<^sub>c e;
       staticLiveChanEnv V Ln Lx x\<^sub>c \<rho>; 
-      staticLiveChan_stack V Ln Lx x\<^sub>c \<kappa>
+      staticLiveChanStack V Ln Lx x\<^sub>c \<kappa>
     \<rbrakk> \<Longrightarrow> 
-    staticLiveChan_stack V Ln Lx x\<^sub>c ((Ctn x e \<rho>) # \<kappa>)
+    staticLiveChanStack V Ln Lx x\<^sub>c ((Ctn x e \<rho>) # \<kappa>)
   "
 
 
-inductive staticLiveChan_pool ::  "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> trace_pool \<Rightarrow> bool"  where
+inductive staticLiveChanPool ::  "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> trace_pool \<Rightarrow> bool"  where
   Intro:
   "
     (\<forall> \<pi> e \<rho> \<kappa> . pool \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
       staticLiveChan V Ln Lx x\<^sub>c e \<and>
       staticLiveChanEnv V Ln Lx x\<^sub>c \<rho> \<and>
-      staticLiveChan_stack V Ln Lx x\<^sub>c \<kappa>) \<Longrightarrow>
-    staticLiveChan_pool V Ln Lx x\<^sub>c pool
+      staticLiveChanStack V Ln Lx x\<^sub>c \<kappa>) \<Longrightarrow>
+    staticLiveChanPool V Ln Lx x\<^sub>c pool
   "
 
 lemma staticInclusive_commut: "
@@ -167,8 +167,10 @@ done
 
 
 lemma staticInclusivePreservedDynamicEval_under_unordered_extension: "
-  \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> 
-  staticInclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> staticInclusive (path\<^sub>1 @ [l]) path\<^sub>2
+  \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> 
+  \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> 
+  staticInclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> 
+  staticInclusive (path\<^sub>1 @ [l]) path\<^sub>2
 "
  apply (erule staticInclusive.cases; auto)
   apply (simp add: Spawn1)
@@ -178,8 +180,10 @@ lemma staticInclusivePreservedDynamicEval_under_unordered_extension: "
 done
 
 lemma staticInclusivePreservedDynamicEval_under_unordered_double_extension: "
-  staticInclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> 
-  \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> staticInclusive (path\<^sub>1 @ [l1]) (path\<^sub>2 @ [l2])
+  staticInclusive path\<^sub>1 path\<^sub>2 \<Longrightarrow> 
+  \<not> prefix path\<^sub>1 path\<^sub>2 \<Longrightarrow> 
+  \<not> prefix path\<^sub>2 path\<^sub>1 \<Longrightarrow> 
+  staticInclusive (path\<^sub>1 @ [l1]) (path\<^sub>2 @ [l2])
 "
 by (metis staticInclusive_commut staticInclusivePreservedDynamicEval_under_unordered_extension prefix_append prefix_def)
 
@@ -214,7 +218,8 @@ inductive pathsCongruent :: "control_path \<Rightarrow> static_path \<Rightarrow
 inductive pathsCongruentModChan :: 
   "trace_pool * communication \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" 
 where
-  Chan:
+  Empty: "pathsCongruentModChan (\<E>, H) c [] []"
+| Chan:
   "
     pathsCongruent ((LNxt xC) # \<pi>Suff) path \<Longrightarrow>
     \<E> (\<pi>C @ (LNxt xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
@@ -270,7 +275,7 @@ proof -
 qed
 
 
-lemma static_equality_sound: "
+lemma static_equalitySound: "
   path1 = path2 \<Longrightarrow>
 
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
@@ -292,36 +297,83 @@ lemma static_equality_sound: "
 
 (* PATH SOUND *)
 
-lemma staticTraceableSound': 
-
-assumes
-  H1: "star_left dynamicEval EH EH'" and
-  H2: "(V, C) \<Turnstile>\<^sub>e e"
-shows "
-  \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
-  EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
-  staticLiveChan_pool V Ln Lx xC E' \<longrightarrow>
-  staticFlowsAcceptPool V F E' \<longrightarrow>
-  E' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<longrightarrow> isEnd (tmId e') \<longrightarrow>
-  (\<exists> path . 
-    pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
-    staticTraceable F Ln Lx (IdBind xC) isEnd path)"
+lemma staticTraceablePoolSound':
+  assumes
+    H1: "star_left dynamicEval EH EH'" and
+    H2: "(V, C) \<Turnstile>\<^sub>e e"
+  shows "
+    \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
+    EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
+    E' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<longrightarrow>
+    staticLiveChanPool V Ln Lx xC E' \<longrightarrow>
+    staticFlowsAcceptPool V F E' \<longrightarrow>
+    isEnd (tmId e') \<longrightarrow>
+    (\<exists> path .
+      pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
+      staticTraceable F Ln Lx (IdBind xC) isEnd path)"
+using H1
+proof induction
+  case (refl z)
+  have L1H1: "pathsCongruentModChan ([[] \<mapsto> Stt e Map.empty []], {}) (Ch \<pi>C xC) [] []"
+  using pathsCongruentModChan.Empty by simp
+  
+  have L1H2: "\<forall> isEnd . staticTraceable F Ln Lx (IdBind xC) isEnd []" 
   sorry
+  thm staticTraceable.Empty
+  (* should there be an assumption to remove cases where dynamic path has no relevant channel?*)
+ 
+  then show ?case using pathsCongruentModChan.Empty staticTraceable.Empty sorry
+next
+  case (step EH EHm EH')
+  then show ?case using staticTraceablePoolStepSound[of EH EHm EH']
+    using H2 by blast
+qed
+
+lemma staticTraceablePoolSound:
+  assumes
+      H1: "\<E>' \<pi>' = Some (Stt (Bind x' b' e\<^sub>n) \<rho>' \<kappa>')" 
+  and H2: "star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')" 
+  and H3: "(V, C) \<Turnstile>\<^sub>e e" 
+  and H3A: "staticLiveChan V Ln Lx xC e" 
+  and H4: "staticFlowsAcceptPool V F \<E>'" 
+  and H5: "isEnd (IdBind x')"
+
+  shows "
+    \<exists> path . 
+      pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
+      staticTraceable F Ln Lx (IdBind xC) isEnd path"
+sorry
+(*
+using staticTraceablePoolSound'[of "([[] \<mapsto> (Stt e empty [])], {})" "(\<E>', H')"]
+H1 H2 H3 H4 H5 star_implies_star_left by fastforce
+*)
 
 lemma staticTraceableSound: "
   \<E>' \<pi> = Some (Stt (Bind x b e\<^sub>n) \<rho> \<kappa>) \<Longrightarrow>
+  dynamicBuiltOnChanComplex \<rho> (Ch \<pi>C xC) b \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   isEnd (IdBind x) \<Longrightarrow>
-  \<exists> path . 
+  \<exists> path .
     pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
     staticTraceable F Ln Lx (IdBind xC) isEnd path
 "
-  sorry
+sorry
 (*  use induction on star_left dynamicEval along with deep definition of staticFlowsAccept *)
 
+lemma sendEvtBuiltOnChan:
+"
+env xe = Some (VClsr (SendEvt xsc xm) enve) \<Longrightarrow>
+enve xsc = Some (VChn (Ch \<pi>C xC)) \<Longrightarrow>
+dynamicBuiltOnChanComplex env (Ch \<pi>C xC) (Sync xe)
+"
+apply (rule DynBuiltChanSync)
+apply (rule DynBuiltChanClosure; auto?)
+apply (rule DynBuiltChanSendEvt; auto)
+apply (rule DynBuiltChan; auto)
+done
 
 
 lemma staticTraceableSendSound: "
@@ -333,15 +385,16 @@ lemma staticTraceableSendSound: "
   \<exists> pathSync .
     (pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
     staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) pathSync"
- apply (unfold is_send_path.simps; auto)
+ apply (unfold is_send_path.simps; auto) 
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticSendSiteSound; auto?)
   apply (frule staticTraceableSound; auto?)
+  apply (erule sendEvtBuiltOnChan; auto)
 done
 
 (* END PATH SOUND *)
 
 
-theorem staticOneShot_sound': "
+theorem staticOneShotSound': "
   forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) singular \<Longrightarrow>
   staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
@@ -355,10 +408,10 @@ theorem staticOneShot_sound': "
  apply (frule_tac \<pi>Sync = \<pi>2 in staticTraceableSendSound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
- apply (metis is_send_path_implies_nonempty_pool staticInclusiveSound static_equality_sound)
+ apply (metis is_send_path_implies_nonempty_pool staticInclusiveSound static_equalitySound)
 done
 
-theorem staticOneShot_sound: "
+theorem staticOneShotSound: "
   \<lbrakk>
     staticOneShot V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
@@ -368,7 +421,7 @@ theorem staticOneShot_sound: "
 "
  apply (erule staticOneShot.cases; auto)
  apply (unfold one_shot.simps)
- apply (simp add: staticOneShot_sound')
+ apply (simp add: staticOneShotSound')
 done
 
 
@@ -385,12 +438,9 @@ theorem noncompetitive_send_to_ordered_send: "
   forEveryTwo (is_send_path \<E>' (Ch \<pi> xC)) ordered
 "
 sorry
-(*
-apply (simp add: forEveryTwo.simps noncompetitive.simps; auto)
-using staticTraceableSendSound runtime_send_paths_are_inclusive by blast
-*)
 
-theorem staticOneToMany_sound: "
+
+theorem staticOneToManySound: "
   \<lbrakk>
     staticOneToMany V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
@@ -414,7 +464,7 @@ lemma noncompetitive_recv_to_ordered_recv:
 sorry
 
 
-theorem staticManyToOne_sound: "
+theorem staticManyToOneSound: "
   \<lbrakk>
     staticManyToOne V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
@@ -428,7 +478,7 @@ theorem staticManyToOne_sound: "
 done
 
 
-theorem staticOneToOne_sound: "
+theorem staticOneToOneSound: "
   \<lbrakk>
     staticOneToOne V e xC;
     (V, C) \<Turnstile>\<^sub>e e;
@@ -438,7 +488,7 @@ theorem staticOneToOne_sound: "
 "
  apply (erule staticOneToOne.cases; auto)
   apply (unfold one_to_one.simps)
-  apply (metis staticManyToOne.intros staticManyToOne_sound staticOneToMany.intros staticOneToMany_sound)
+  apply (metis staticManyToOne.intros staticManyToOneSound staticOneToMany.intros staticOneToManySound)
 done
 
 (*

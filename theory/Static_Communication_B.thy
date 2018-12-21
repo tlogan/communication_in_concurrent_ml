@@ -412,7 +412,7 @@ inductive staticLiveFlow :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_i
 inductive staticTraceable :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> tm_id \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty:
   "
-    isEnd start \<Longrightarrow>
+    \<forall> end edge . isEnd end \<longrightarrow> \<not> staticLiveFlow graph entr exit (start, edge, end) \<Longrightarrow>
     staticTraceable graph entr exit start isEnd []
   "
 | Edge:

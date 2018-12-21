@@ -64,18 +64,16 @@ inductive
   dynamicBuiltOnChanComplex :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> complex \<Rightarrow> bool" and
   dynamicBuiltOnChanTm :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> tm \<Rightarrow> bool" 
 where
-  Chan: "
+  DynBuiltChan: "
     \<rho> x = Some (VChn c) \<Longrightarrow>
     dynamicBuiltOnChan \<rho> c x
   "
-| Closure: "
+| DynBuiltChanClosure: "
     dynamicBuiltOnChanAtom \<rho>' c p \<Longrightarrow>
     \<rho> x = Some (VClsr p \<rho>') \<Longrightarrow>
     dynamicBuiltOnChan \<rho> c x
-  " |
-
-
-  Send_Evt: "
+  " 
+| DynBuiltChanSendEvt: "
     dynamicBuiltOnChan \<rho> c xSC \<or> dynamicBuiltOnChan \<rho> c xM \<Longrightarrow>
     dynamicBuiltOnChanAtom \<rho> c (SendEvt xSC xM)
   "
@@ -107,7 +105,7 @@ where
     dynamicBuiltOnChanTm \<rho> c eCh \<Longrightarrow>
     dynamicBuiltOnChanComplex \<rho> c (Spwn eCh)
   "
-| Sync: "
+| DynBuiltChanSync: "
     dynamicBuiltOnChan \<rho> c xY \<Longrightarrow>
     dynamicBuiltOnChanComplex \<rho> c (Sync xY)
   "
