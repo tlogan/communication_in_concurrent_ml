@@ -302,15 +302,18 @@ lemma staticTraceablePoolSound':
     H1: "star_left dynamicEval EH EH'" and
     H2: "(V, C) \<Turnstile>\<^sub>e e"
   shows "
-    \<forall> E' H' \<pi>' e' \<rho>' \<kappa>' isEnd.
+    \<forall> E' H' \<pi>' x' b' e'' \<rho>' \<kappa>' isEnd .
     EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
-    E' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<longrightarrow>
+    E' \<pi>' = Some (Stt (Bind x' b' e'') \<rho>' \<kappa>') \<longrightarrow>
+    dynamicBuiltOnChanComplex \<rho>' (Ch \<pi>C xC) b' \<longrightarrow>
     staticLiveChanPool V Ln Lx xC E' \<longrightarrow>
     staticFlowsAcceptPool V F E' \<longrightarrow>
-    isEnd (tmId e') \<longrightarrow>
+    isEnd (IdBind x') \<longrightarrow>
     (\<exists> path .
       pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
-      staticTraceable F Ln Lx (IdBind xC) isEnd path)"
+      staticTraceable F Ln Lx (IdBind xC) isEnd path)
+"
+(*
 using H1
 proof induction
   case (refl z)
@@ -328,25 +331,26 @@ next
   then show ?case using staticTraceablePoolStepSound[of EH EHm EH']
     using H2 by blast
 qed
+*)
+sorry
 
 lemma staticTraceablePoolSound:
-  assumes
-      H1: "\<E>' \<pi>' = Some (Stt (Bind x' b' e\<^sub>n) \<rho>' \<kappa>')" 
-  and H2: "star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')" 
-  and H3: "(V, C) \<Turnstile>\<^sub>e e" 
-  and H3A: "staticLiveChan V Ln Lx xC e" 
-  and H4: "staticFlowsAcceptPool V F \<E>'" 
-  and H5: "isEnd (IdBind x')"
-
-  shows "
-    \<exists> path . 
-      pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
-      staticTraceable F Ln Lx (IdBind xC) isEnd path"
-sorry
-(*
-using staticTraceablePoolSound'[of "([[] \<mapsto> (Stt e empty [])], {})" "(\<E>', H')"]
-H1 H2 H3 H4 H5 star_implies_star_left by fastforce
-*)
+"
+  \<E>' \<pi>' = Some (Stt (Bind x' b' e'') \<rho>' \<kappa>') \<Longrightarrow>
+  dynamicBuiltOnChanComplex \<rho>' (Ch \<pi>C xC) b' \<Longrightarrow>
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC \<E>' \<Longrightarrow>
+  staticFlowsAcceptPool V F \<E>' \<Longrightarrow>
+  isEnd (IdBind x') \<Longrightarrow>
+  (\<exists> path . 
+      pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi>' path \<and>
+      staticTraceable F Ln Lx (IdBind xC) isEnd path)
+"
+apply (drule star_implies_star_left)
+apply (insert staticTraceablePoolSound'[of "([[] \<mapsto> (Stt e empty [])], {})" "(\<E>', H')" V C e \<pi>C xC Ln Lx F])
+apply auto
+done
 
 lemma staticTraceableSound: "
   \<E>' \<pi> = Some (Stt (Bind x b e\<^sub>n) \<rho> \<kappa>) \<Longrightarrow>
