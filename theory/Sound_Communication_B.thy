@@ -945,12 +945,31 @@ proof -
 
 qed
 
-lemma staticLiveChanToPool:
+
+lemma staticFlowsAcceptToPool:
   "
-  staticLiveChan V Ln Lx xC e \<Longrightarrow>
-  staticLiveChanPool V Ln Lx xC [[] \<mapsto> (Stt e empty [])]
+  staticFlowsAccept V F e \<Longrightarrow>
+  staticFlowsAcceptPool V F [[] \<mapsto> (Stt e empty [])]
 "
-sorry
+apply (erule staticFlowsAccept.cases; auto)
+  apply (simp add: staticFlowsAccept.Result staticFlowsAcceptEnv.simps staticFlowsAcceptPool.Intro staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindUnit staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindMkChn staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindSendEvt staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindRecvEvt staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindPair staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindLeft staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindRight staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindFun staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindSpawn staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindSync staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindFst staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindSnd staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindCase staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+  apply (simp add: staticFlowsAccept.BindApp staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
+done
+
+
 
 lemma staticLiveChanPoolPreserved:
   "
@@ -961,6 +980,16 @@ lemma staticLiveChanPoolPreserved:
 "
 sorry
 
+
+lemma staticLiveChanToPool:
+  "
+  staticLiveChan V Ln Lx xC e \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC [[] \<mapsto> (Stt e empty [])]
+"
+apply (rule staticLiveChanPool.intros; auto)
+apply (simp add: staticLiveChanEnv.simps)
+apply (simp add: staticLiveChanStack.Empty)
+done
 
 
 lemma staticTraceablePoolSound':
@@ -1016,29 +1045,6 @@ lemma staticTraceablePoolSound:
 apply (drule star_implies_star_left)
 apply (insert staticTraceablePoolSound'[of "([[] \<mapsto> (Stt e empty [])], {})" "(\<E>', H')" V C e \<pi>C xC Ln Lx F])
 apply auto
-done
-
-lemma staticFlowsAcceptToPool:
-  "
-  staticFlowsAccept V F e \<Longrightarrow>
-  staticFlowsAcceptPool V F [[] \<mapsto> (Stt e empty [])]
-"
-apply (erule staticFlowsAccept.cases; auto)
-  apply (simp add: staticFlowsAccept.Result staticFlowsAcceptEnv.simps staticFlowsAcceptPool.Intro staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindUnit staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindMkChn staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindSendEvt staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindRecvEvt staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindPair staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindLeft staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindRight staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindFun staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindSpawn staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindSync staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindFst staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindSnd staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindCase staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindApp staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
 done
 
 
