@@ -36,7 +36,7 @@ inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> 
     \<rbrakk> \<Longrightarrow>
     staticFlowsAccept staticEnv graph (Bind x MkChn e)
   "
-| BindSend_Evt:
+| BindSendEvt:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
@@ -44,7 +44,7 @@ inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> 
     \<rbrakk> \<Longrightarrow>
     staticFlowsAccept staticEnv graph (Bind x (Atom (SendEvt x\<^sub>c x\<^sub>m)) e)
   "
-| BindRecv_Evt:
+| BindRecvEvt:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> F;
