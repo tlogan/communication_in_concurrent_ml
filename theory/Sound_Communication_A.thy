@@ -1275,6 +1275,17 @@ proof -
 
 qed
 
+
+lemma staticFlowsAcceptToPool:
+  "
+  staticFlowsAccept V F e \<Longrightarrow>
+  staticFlowsAcceptPool V F [[] \<mapsto> (Stt e empty [])]
+"
+apply (rule staticFlowsAcceptPool.intros; auto)
+apply (simp add: staticFlowsAcceptEnv_staticFlowsAcceptVal.Intro)
+apply (simp add: staticFlowsAcceptStack.Empty)
+done
+
 lemma staticFlowsAcceptSoundSeqEval:
    assumes
      H1: "staticFlowsAccept V F (Bind x b e')" and
@@ -1719,28 +1730,6 @@ lemma staticTraceablePoolSound:
 using staticTraceablePoolSound'[of "([[] \<mapsto> (Stt e empty [])], {})" "(\<E>', H')"]
 H1 H2 H3 H4 H5 star_implies_star_left by fastforce
 
-lemma lift_traversable_to_pool:
-  "
-  staticFlowsAccept V F e \<Longrightarrow>
-  staticFlowsAcceptPool V F [[] \<mapsto> (Stt e empty [])]
-"
-apply (erule staticFlowsAccept.cases; auto)
-  apply (simp add: staticFlowsAccept.Result staticFlowsAcceptEnv.simps staticFlowsAcceptPool.Intro staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindUnit staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindMkChn staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindSendEvt staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindRecvEvt staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindPair staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindLeft staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindRight staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindFun staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindSpawn staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindSync staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindFst staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindSnd staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindCase staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-  apply (simp add: staticFlowsAccept.BindApp staticFlowsAcceptEnv.simps staticFlowsAcceptPool.intros staticFlowsAcceptStack.Empty)
-done
 
 lemma staticTraceableSound:
   "
@@ -1753,7 +1742,7 @@ lemma staticTraceableSound:
     pathsCongruent \<pi> path \<and>
     staticTraceable F (tmId e0) isEnd path
 "
-by (metis lift_traversable_to_pool staticTraceablePoolSound staticFlowsAcceptPoolPreserved)
+by (metis staticFlowsAcceptToPool staticTraceablePoolSound staticFlowsAcceptPoolPreserved)
 
 lemma staticTraceableSendSound:
   "
