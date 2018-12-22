@@ -956,6 +956,33 @@ apply (simp add: staticFlowsAcceptEnv_staticFlowsAcceptVal.Intro)
 apply (simp add: staticFlowsAcceptStack.Empty)
 done
 
+lemma staticLiveChanPoolPreservedStep: 
+"
+staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
+(V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+star_left op \<rightarrow> ([[] \<mapsto> Stt e0 Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+staticLiveChanPool V Ln Lx xC Em \<Longrightarrow>
+dynamicEval (Em, Hm) (E, H)  \<Longrightarrow> 
+staticLiveChanPool V Ln Lx xC E
+"
+apply (erule dynamicEval.cases; auto)
+sorry
+
+
+lemma staticLiveChanPoolPreserved':
+"
+  star_left dynamicEval EH0 EH \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC [[] \<mapsto> (Stt e0 empty [])] \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  \<forall> E H .
+    EH0 = ([[] \<mapsto> (Stt e0 empty [])], {}) \<longrightarrow>
+    EH = (E, H) \<longrightarrow>
+    staticLiveChanPool V Ln Lx xC E
+"
+apply (erule star_left.induct; blast?)
+apply (metis surj_pair staticLiveChanPoolPreservedStep )
+done
+
 lemma staticLiveChanPoolPreserved:
   "
   staticLiveChanPool V Ln Lx xC [[] \<mapsto> (Stt e0 empty [])] \<Longrightarrow>
