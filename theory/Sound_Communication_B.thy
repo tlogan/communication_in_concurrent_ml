@@ -1000,7 +1000,70 @@ lemma staticLiveChanPoolPreservedReturn:
     apply (erule staticLiveChanPool.cases; auto)
 done
 
-lemma staticLiveChanPoolPreservedStep: 
+lemma staticLiveChanPoolPreservedSeqEval:
+"
+  staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  star_left op \<rightarrow> ([[] \<mapsto> Stt e0 Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC Em \<Longrightarrow>
+  leaf Em pi \<Longrightarrow>
+  Em pi = Some (Stt (Bind x b e) env k) \<Longrightarrow>
+  seqEval b env v \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC (Em(pi @ [LNxt x] \<mapsto> Stt e (env(x \<mapsto> v)) k))
+"
+apply (rule staticLiveChanPool.intros; clarify)
+apply (case_tac "\<pi> = pi @ [LNxt x]"; auto)
+  apply (rotate_tac 1; erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (erule staticLiveChan.cases; auto)
+
+  apply (rotate_tac 1; erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (erule seqEval.cases; auto)
+    apply (simp add: StaticLiveChanUnit staticLiveChanEnv.simps)
+    apply (erule staticLiveChan.cases; clarsimp)
+      apply (simp add: StaticLiveChanSendEvt staticLiveChanEnv.simps)
+      apply (simp add: StaticLiveChanRecvEvt staticLiveChanEnv.simps)
+      apply (simp add: StaticLiveChanPair staticLiveChanEnv.simps)
+      apply (simp add: StaticLiveChanLeft staticLiveChanEnv.simps)
+      apply (simp add: StaticLiveChanRight staticLiveChanEnv.simps)
+      apply (simp add: StaticLiveChanFun staticLiveChanEnv.simps)
+    
+    apply (frule staticLiveChanEnv.cases; auto)
+    apply (drule_tac x = "xp" in spec; auto)
+    apply (erule staticLiveChanVal.cases; auto)
+    apply (rename_tac xp envp x1 x2)
+    apply (rotate_tac -1)
+    apply (erule staticLiveChanEnv.cases; auto)
+    apply (simp add: staticLiveChanEnv.simps)
+
+    apply (frule staticLiveChanEnv.cases; auto)
+    apply (drule_tac x = "xp" in spec; auto)
+    apply (erule staticLiveChanVal.cases; auto)
+    apply (rename_tac xp envp x1 x2)
+    apply (rotate_tac -1)
+    apply (erule staticLiveChanEnv.cases; auto)
+    apply (simp add: staticLiveChanEnv.simps)
+  
+  apply (rotate_tac -4)
+  apply (erule staticLiveChanPool.cases; auto)
+  
+  apply (rotate_tac -4)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac -4)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+done
+
+
+lemma staticLiveChanPoolPreservedDynamicEval: 
 "
 staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
 (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
@@ -1011,6 +1074,7 @@ staticLiveChanPool V Ln Lx xC E
 "
 apply (erule dynamicEval.cases; auto)
   apply (simp add: staticLiveChanPoolPreservedReturn)
+  apply (simp add: staticLiveChanPoolPreservedSeqEval)
 sorry
 
 
@@ -1025,7 +1089,7 @@ lemma staticLiveChanPoolPreserved':
     staticLiveChanPool V Ln Lx xC E
 "
 apply (erule star_left.induct; blast?)
-apply (metis surj_pair staticLiveChanPoolPreservedStep )
+apply (metis surj_pair staticLiveChanPoolPreservedDynamicEval)
 done
 
 lemma staticLiveChanPoolPreserved:
