@@ -956,6 +956,50 @@ apply (simp add: staticFlowsAcceptEnv_staticFlowsAcceptVal.Intro)
 apply (simp add: staticFlowsAcceptStack.Empty)
 done
 
+lemma staticLiveChanPoolPreservedReturn: 
+"
+  staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  star_left op \<rightarrow> ([[] \<mapsto> Stt e0 Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC Em \<Longrightarrow>
+  leaf Em pi \<Longrightarrow>
+  Em pi = Some (Stt (Rslt x) env (Ctn xk ek envk # k)) \<Longrightarrow>
+  env x = Some v \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC (Em(pi @ [LRtn x] \<mapsto> Stt ek (envk(xk \<mapsto> v)) k))
+"
+  apply (rule staticLiveChanPool.intros; clarify)
+  apply (case_tac "\<pi> = pi @ [LRtn x]"; auto)
+
+    apply (rotate_tac 1)
+    apply (erule staticLiveChanPool.cases; auto)
+    apply (drule spec[of _ pi]; auto)
+    apply (erule staticLiveChanStack.cases; auto)
+
+    apply (rotate_tac 1)
+    apply (erule staticLiveChanPool.cases; auto)
+    apply (drule spec[of _ pi]; auto)
+    apply (erule staticLiveChanStack.cases; auto)
+    apply (erule staticLiveChanEnv.cases; auto)
+    apply (drule spec[of _ x])
+    apply (drule spec[of _ v]; clarsimp)
+    apply (erule staticLiveChanEnv.cases; auto)
+    apply (rule StaticLiveChanEnv; auto)  
+
+    apply (rotate_tac 1)
+    apply (erule staticLiveChanPool.cases; auto)
+    apply (drule spec[of _ pi]; auto)
+    apply (erule staticLiveChanStack.cases; auto)
+
+    apply (rotate_tac 1)
+    apply (erule staticLiveChanPool.cases; auto)
+
+    apply (rotate_tac 1)
+    apply (erule staticLiveChanPool.cases; auto)
+
+    apply (rotate_tac 1)
+    apply (erule staticLiveChanPool.cases; auto)
+done
+
 lemma staticLiveChanPoolPreservedStep: 
 "
 staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
@@ -966,6 +1010,7 @@ dynamicEval (Em, Hm) (E, H)  \<Longrightarrow>
 staticLiveChanPool V Ln Lx xC E
 "
 apply (erule dynamicEval.cases; auto)
+  apply (simp add: staticLiveChanPoolPreservedReturn)
 sorry
 
 
