@@ -1138,6 +1138,91 @@ apply (erule callEval.cases; auto; rule staticLiveChanPool.intros; clarify; (cas
     apply (erule staticLiveChanPool.cases; auto)+
 done
 
+lemma staticLiveChanPreservedMkChan:
+"
+staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
+(V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+star_left op \<rightarrow> ([[] \<mapsto> Stt e0 Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+staticLiveChanPool V Ln Lx xC Em \<Longrightarrow>
+leaf Em pi \<Longrightarrow>
+Em pi = Some (Stt (Bind x MkChn e) env k) \<Longrightarrow>
+staticLiveChanPool V Ln Lx xC (Em(pi @ [LNxt x] \<mapsto> Stt e (env(x \<mapsto> VChn (Ch pi x))) k))
+"
+apply (rule staticLiveChanPool.Intro; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (erule staticLiveChan.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (simp add: StaticLiveChan staticLiveChanEnv.simps)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+done
+
+lemma staticLiveChanPoolPreservedSpawn:
+"
+  staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  star_left op \<rightarrow> ([[] \<mapsto> Stt e0 Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC Em \<Longrightarrow>
+  leaf Em pi \<Longrightarrow>
+  Em pi = Some (Stt (Bind x (Spwn ec) e) env k) \<Longrightarrow> 
+  staticLiveChanPool V Ln Lx xC (Em(pi @ [LNxt x] \<mapsto> Stt e (env(x \<mapsto> VUnt)) k, pi @ [LSpwn x] \<mapsto> Stt ec env []))
+"
+apply (rule staticLiveChanPool.Intro; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (erule staticLiveChan.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (simp add: StaticLiveChanUnit staticLiveChanEnv.simps)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (erule staticLiveChan.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (simp add: staticLiveChanStack.Empty)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+done
+
+
+
+
+  
 
 lemma staticLiveChanPoolPreservedDynamicEval: 
 "
@@ -1152,6 +1237,9 @@ apply (erule dynamicEval.cases; auto)
   apply (simp add: staticLiveChanPoolPreservedReturn)
   apply (simp add: staticLiveChanPoolPreservedSeqEval)
   apply (simp add: staticLiveChanPoolPreservedCall)
+  apply (simp add: staticLiveChanPreservedMkChan)
+  apply (simp add: staticLiveChanPoolPreservedSpawn)
+
 sorry
 
 
