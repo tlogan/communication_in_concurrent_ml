@@ -134,7 +134,7 @@ inductive staticLiveChanStack :: "static_env \<Rightarrow> tm_id_map \<Rightarro
 | Nonempty:
   "
     \<lbrakk> 
-      \<not> Set.is_empty (Ln (tmId e));
+      (* \<not> Set.is_empty (Ln (tmId e)); *)
       staticLiveChan V Ln Lx x\<^sub>c e;
       staticLiveChanEnv V Ln Lx x\<^sub>c \<rho>; 
       staticLiveChanStack V Ln Lx x\<^sub>c \<kappa>
@@ -1063,6 +1063,82 @@ apply (case_tac "\<pi> = pi @ [LNxt x]"; auto)
 done
 
 
+lemma staticLiveChanPoolPreservedCall:
+"       
+  staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  star_left op \<rightarrow> ([[] \<mapsto> Stt e0 Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC Em \<Longrightarrow>
+  leaf Em pi \<Longrightarrow>
+  Em pi = Some (Stt (Bind x b e) env k) \<Longrightarrow>
+  callEval (b, env) (e', env') \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC (Em(pi @ [LCall x] \<mapsto> Stt e' env' (Ctn x e env # k)))
+"
+apply (rotate_tac 3)
+apply (frule staticLiveChanPool.cases; auto)
+apply (drule spec[of _ pi]; auto)
+apply (erule callEval.cases; auto; rule staticLiveChanPool.intros; clarify; (case_tac "\<pi> = pi @ [LCall x]"; auto))
+
+    apply (erule staticLiveChan.cases; auto)
+   
+    apply (frule staticLiveChanEnv.cases; auto)
+    apply (drule_tac x = "xs" in spec; auto)
+    apply (erule staticLiveChanVal.cases; auto)
+    apply (rename_tac xs vl xl xr er envl xl')
+    apply (rotate_tac -1)
+    apply (erule staticLiveChanEnv.cases; auto)
+    apply (drule_tac x = "xl'" in spec; auto)
+    apply (simp add: staticLiveChanEnv.simps)
+
+  
+  apply (erule staticLiveChan.cases; auto)
+    apply (simp add: staticLiveChanStack.Nonempty)
+    apply (simp add: staticLiveChanStack.Nonempty)
+
+  apply (frule staticLiveChanPool.cases; auto)
+  apply (frule staticLiveChanPool.cases; auto)
+  apply (frule staticLiveChanPool.cases; auto)
+
+   apply (erule staticLiveChan.cases; auto)
+ 
+    apply (frule staticLiveChanEnv.cases; auto)
+    apply (drule_tac x = "xs" in spec; auto)
+    apply (erule staticLiveChanVal.cases; auto)
+    apply (rename_tac xs vl xl xr er envr xr')
+    apply (rotate_tac -1)
+    apply (erule staticLiveChanEnv.cases; auto)
+    apply (drule_tac x = "xr'" in spec; auto)
+    apply (simp add: staticLiveChanEnv.simps)
+  
+    
+    apply (erule staticLiveChan.cases; auto)
+      apply (simp add: staticLiveChanStack.Nonempty)
+      apply (simp add: staticLiveChanStack.Nonempty)
+  
+    apply (frule staticLiveChanPool.cases; auto)
+    apply (frule staticLiveChanPool.cases; auto)
+    apply (frule staticLiveChanPool.cases; auto)
+
+    apply (erule staticLiveChanEnv.cases; auto)
+    apply (drule_tac x = "f" in spec; auto)
+    apply (erule staticLiveChanVal.cases; auto)
+
+    
+    apply (rule StaticLiveChanEnv; auto)
+      apply (erule staticLiveChanEnv.cases; auto)
+      apply (erule staticLiveChanEnv.cases; auto)
+      apply (erule staticLiveChanEnv.cases; auto)
+      apply (erule staticLiveChanEnv.cases; auto)
+      apply (drule_tac x = "f" in spec; auto)
+      apply (erule staticLiveChanVal.cases; auto)
+      apply (simp add: staticLiveChanEnv.simps)
+
+    
+    apply (erule staticLiveChan.cases; auto; simp add: staticLiveChanStack.Nonempty)
+    apply (erule staticLiveChanPool.cases; auto)+
+done
+
+
 lemma staticLiveChanPoolPreservedDynamicEval: 
 "
 staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
@@ -1075,6 +1151,7 @@ staticLiveChanPool V Ln Lx xC E
 apply (erule dynamicEval.cases; auto)
   apply (simp add: staticLiveChanPoolPreservedReturn)
   apply (simp add: staticLiveChanPoolPreservedSeqEval)
+  apply (simp add: staticLiveChanPoolPreservedCall)
 sorry
 
 
