@@ -1220,9 +1220,107 @@ apply (rule staticLiveChanPool.Intro; auto)
 done
 
 
+(* this might make a nice proof demonstration *)
+lemma staticLiveChanPoolPreservedSync:
+"
+  staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  star_left op \<rightarrow> ([[] \<mapsto> Stt e0 Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC Em \<Longrightarrow>
+  leaf Em pis \<Longrightarrow>
+  Em pis = Some (Stt (Bind xs (Sync xse) es) envs ks) \<Longrightarrow>
+  envs xse = Some (VClsr (SendEvt xsc xm) envse) \<Longrightarrow>
+  leaf Em pir \<Longrightarrow>
+  Em pir = Some (Stt (Bind xr (Sync xre) er) envr kr) \<Longrightarrow>
+  envr xre = Some (VClsr (RecvEvt xrc) envre) \<Longrightarrow>
+  envse xsc = Some (VChn c) \<Longrightarrow>
+  envre xrc = Some (VChn c) \<Longrightarrow>
+  envse xm = Some vm \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC (Em(pis @ [LNxt xs] \<mapsto> Stt es (envs(xs \<mapsto> VUnt)) ks, pir @ [LNxt xr] \<mapsto> Stt er (envr(xr \<mapsto> vm)) kr))
+"
+apply (rule staticLiveChanPool.Intro; auto)
 
-
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pis]; auto)
+  apply (erule staticLiveChan.cases; auto)
   
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (simp add: StaticLiveChanUnit staticLiveChanEnv.simps)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pis]; auto)
+  apply (erule staticLiveChan.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (simp add: StaticLiveChanUnit staticLiveChanEnv.simps)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pir]; auto)
+  apply (erule staticLiveChan.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pir]; auto)
+  apply (erule staticLiveChan.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (frule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pis]; auto)
+  apply (rotate_tac -2)
+  apply (erule staticLiveChanEnv.cases; auto)
+  apply (drule spec[of _ xse]; auto)
+  apply (rotate_tac -1)
+  apply (erule staticLiveChanVal.cases; auto)
+  apply (rotate_tac -1)
+  apply (erule staticLiveChanEnv.cases; auto)
+  apply (drule spec[of _ xm]; auto)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pir]; auto)
+  apply (simp add: staticLiveChanEnv.simps)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+
+  apply (rotate_tac 3)
+  apply (frule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pis]; auto)
+  apply (rotate_tac -2)
+  apply (erule staticLiveChanEnv.cases; auto)
+  apply (drule spec[of _ xse]; auto)
+  apply (rotate_tac -1)
+  apply (erule staticLiveChanVal.cases; auto)
+  apply (rotate_tac -1)
+  apply (erule staticLiveChanEnv.cases; auto)
+  apply (drule spec[of _ xm]; auto)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pir]; auto)
+  apply (simp add: staticLiveChanEnv.simps)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+  apply (rotate_tac 3)
+  apply (erule staticLiveChanPool.cases; auto)
+
+done
 
 lemma staticLiveChanPoolPreservedDynamicEval: 
 "
@@ -1239,8 +1337,8 @@ apply (erule dynamicEval.cases; auto)
   apply (simp add: staticLiveChanPoolPreservedCall)
   apply (simp add: staticLiveChanPreservedMkChan)
   apply (simp add: staticLiveChanPoolPreservedSpawn)
-
-sorry
+  apply (simp add: staticLiveChanPoolPreservedSync)
+done
 
 
 lemma staticLiveChanPoolPreserved':
@@ -1264,7 +1362,7 @@ lemma staticLiveChanPoolPreserved:
   star dynamicEval ([[] \<mapsto> (Stt e0 empty [])], {}) (\<E>', H') \<Longrightarrow>
   staticLiveChanPool V Ln Lx xC \<E>'
 "
-sorry
+using star_implies_star_left staticLiveChanPoolPreserved' by fastforce
 
 
 lemma staticLiveChanToPool:
