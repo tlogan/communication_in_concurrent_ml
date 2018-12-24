@@ -297,189 +297,72 @@ lemma static_equalitySound: "
 
 (* PATH SOUND *)
 
-lemma staticFlowsAcceptPoolPreservedReturnEval:
-  "
-  staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
-  (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
-  leaf \<E>m pi \<Longrightarrow>
-  \<E>m pi = Some (Stt (Rslt x) env (Ctn xk ek envk # k)) \<Longrightarrow> 
-  env x = Some v \<Longrightarrow> 
-  staticFlowsAcceptPool V F (\<E>m(pi @ [LRtn x] \<mapsto> (Stt ek (envk(xk \<mapsto> v)) k)))
+lemma staticFlowsAcceptPoolPreservedReturn: 
 "
-proof -
-assume 
- H1: "staticFlowsAcceptPool V F \<E>m" and
- H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
- H3: "leaf \<E>m pi" and
- H4: "\<E>m pi = Some (Stt (Rslt x) env (Ctn xk ek envk # k))" and
- H5: "env x = Some v"
-
-
- have 
-  H6: " 
-    \<forall>\<pi> e \<rho> \<kappa>.
-    \<E>m \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
-    staticFlowsAccept V F e \<and> staticFlowsAcceptEnv V F \<rho> \<and> staticFlowsAcceptStack V F (\<lfloor>e\<rfloor>) \<kappa>"
-  using H1 staticFlowsAcceptPool.cases by blast 
-
-  have 
-    H7: "staticFlowsAccept V F (Rslt x)" by (simp add: staticFlowsAccept.Result)
-  have
-     H8: "staticFlowsAcceptEnv V F env" using H4 H6 by blast
-  have
-     H9: "staticFlowsAcceptStack V F x ((Ctn xk ek envk) # k)" using H4 H6 by fastforce
-
-  have 
-    H10: "staticFlowsAccept V F ek \<and> staticFlowsAcceptEnv V F envk \<and> staticFlowsAcceptStack V F (\<lfloor>ek\<rfloor>) k" 
-    using H9 proof cases
-    case Nonempty
-    then show ?thesis by blast
-  qed
-
-
- show "staticFlowsAcceptPool V F (\<E>m(pi @ [LRtn x] \<mapsto> (Stt ek (envk(xk \<mapsto> v)) k)))"
-   using H1 H10 H5 H8 staticFlowsAcceptEnv.simps staticFlowsAcceptPool.simps by auto
-qed
-
-
-
-lemma staticFlowsAcceptPoolPreservedSeqEval:
-  "
-  staticFlowsAcceptPool V F \<E>m \<Longrightarrow>
-  (V, C) \<Turnstile>\<^sub>\<E> \<E>m \<Longrightarrow>
-  leaf \<E>m pi \<Longrightarrow>
-  \<E>m pi = Some (Stt (Bind x b e) env k) \<Longrightarrow> 
-  seqEval b env v \<Longrightarrow> 
-  staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> (Stt e (env(x \<mapsto> v)) k)))
+  staticFlowsAcceptPool V F Em \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  star_left dynamicEval ([[] \<mapsto> Stt e0 Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+  staticFlowsAcceptPool V F [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
+  leaf Em pi \<Longrightarrow>
+  Em pi = Some (Stt (Rslt x) env (Ctn xk ek envk # k)) \<Longrightarrow>
+  env x = Some v \<Longrightarrow>
+  staticFlowsAcceptPool V F (Em(pi @ [LRtn x] \<mapsto> Stt ek (envk(xk \<mapsto> v)) k))
 "
-proof -
-  assume 
-    H1: "staticFlowsAcceptPool V F \<E>m" and
-    H2: "(V, C) \<Turnstile>\<^sub>\<E> \<E>m" and
-    H3: "leaf \<E>m pi" and
-    H4: "\<E>m pi = Some (Stt (Bind x b e) env k)" and 
-    H5: "seqEval b env v"
+apply (rule staticFlowsAcceptPool.Intro; auto)
 
-  have H6:
-  "
-    \<forall>\<pi> e \<rho> \<kappa>.
-    \<E>m \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
-    staticFlowsAccept V F e \<and> staticFlowsAcceptEnv V F \<rho> \<and> staticFlowsAcceptStack V F (\<lfloor>e\<rfloor>) \<kappa>"
-  using H1 staticFlowsAcceptPool.cases by blast 
+  apply (erule staticFlowsAcceptPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (erule staticFlowsAcceptStack.cases; auto)
 
-  have 
-    H7: "staticFlowsAccept V F (Bind x b e)"
-    using H4 H6 by auto
-  have
-     H8: "staticFlowsAcceptEnv V F env"
-    using H4 H6 by blast
-  have
-     H9: "staticFlowsAcceptStack V F (\<lfloor>Bind x b e\<rfloor>) k"
-    using H4 H6 by fastforce
+  apply (erule staticFlowsAcceptPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (erule staticFlowsAcceptEnv.cases; auto)
+  apply (drule spec[of _ x]; auto)
+  apply (erule staticFlowsAcceptStack.cases; auto)
+  apply (simp add: staticFlowsAcceptEnv.simps)
 
-  have H10: 
-    "staticFlowsAccept V F e" using H7 staticFlowsAccept.cases by blast
+  apply (erule staticFlowsAcceptPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (erule staticFlowsAcceptStack.cases; auto)
 
-  show "staticFlowsAcceptPool V F (\<E>m(pi @ [LNxt x] \<mapsto> (Stt e (env(x \<mapsto> v)) k)))"
-  using H5
-  proof cases
-    case UNIT
-    then show ?thesis
-    using H1 H10 H8 H9 staticFlowsAcceptEnv.simps 
-      staticFlowsAcceptEnv_staticFlowsAcceptVal.Unit 
-      staticFlowsAcceptPool.simps by auto
-  next
-    case (PRIM p)
+  apply (erule staticFlowsAcceptPool.cases; auto)+
+done
 
-    have L1H1: "staticFlowsAcceptVal V F (VClsr p env)" 
-    proof (cases p)
-      case (SendEvt x11 x12)
-      then show ?thesis
-        by (simp add: H8 staticFlowsAcceptEnv_staticFlowsAcceptVal.SendEvt)
-    next
-      case (RecvEvt x2)
-      then show ?thesis
-        by (simp add: H8 staticFlowsAcceptEnv_staticFlowsAcceptVal.RecvEvt)
-    next
-      case (Pair x31 x32)
-      then show ?thesis
-        by (simp add: H8 staticFlowsAcceptEnv_staticFlowsAcceptVal.Pair)
-    next
-      case (Lft x4)
-      then show ?thesis
-        by (simp add: H8 Left)
-    next
-      case (Rht x5)
-      then show ?thesis
-        by (simp add: H8 Right)
-    next
-      case (Fun f' x' e')
-      have L2H1: "staticFlowsAccept V F (Bind x (Atom (Fun f' x' e')) e)"
-        using H7 local.Fun local.PRIM(1) by auto
-      show ?thesis using L2H1
-      proof cases
-        case BindFun
-        then show ?thesis
-        by (simp add: H8 local.Fun staticFlowsAcceptEnv_staticFlowsAcceptVal.Fun)
-      qed
-    qed
-
-    have L1H2: "staticFlowsAcceptEnv V F (env(x \<mapsto> v))"
-      using H8 L1H1 local.PRIM(2) staticFlowsAcceptEnv.simps by auto
-    show ?thesis
-      using H10 H6 H9 L1H2 staticFlowsAcceptPool.simps by auto
-  next
-    case (FST xp x1 x2 envp)
-
-    have L1H1: "staticFlowsAcceptVal V F (VClsr (atom.Pair x1 x2) envp)" 
-    using H8 staticFlowsAcceptEnv.cases
-          using FST(2) by blast
-
-    have L1H2: "staticFlowsAcceptEnv V F envp" using L1H1 
-    proof cases
-      case Pair
-      then show ?thesis by auto
-    qed
-
-    have L1H3: "staticFlowsAcceptVal V F v"
-      using L1H2 local.FST(3) staticFlowsAcceptEnv.cases by blast
-
-    have L1H4: "staticFlowsAcceptEnv V F (env(x \<mapsto> v))"
-      using H8 L1H3 staticFlowsAcceptEnv.simps by auto
-
-    show ?thesis using H10 H6 H9 L1H4 staticFlowsAcceptPool.intros by auto
-  next
-    case (SND xp x1 x2 envp)
-    have L1H1: "staticFlowsAcceptVal V F (VClsr (atom.Pair x1 x2) envp)" 
-    using H8 staticFlowsAcceptEnv.cases
-          using SND(2) by blast
-
-    have L1H2: "staticFlowsAcceptEnv V F envp" using L1H1 
-    proof cases
-      case Pair
-      then show ?thesis by auto
-    qed
-
-    have L1H3: "staticFlowsAcceptVal V F v"
-      using L1H2 SND(3) staticFlowsAcceptEnv.cases by blast
-
-    have L1H4: "staticFlowsAcceptEnv V F (env(x \<mapsto> v))"
-      using H8 L1H3 staticFlowsAcceptEnv.simps by auto
-
-    show ?thesis using H10 H6 H9 L1H4 staticFlowsAcceptPool.intros by auto
-  qed
-qed
+lemma staticFlowsAcceptPoolPreservedDynamicEval:
+"
+  staticFlowsAcceptPool V F Em \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  star_left dynamicEval ([[] \<mapsto> (Stt e0 empty [])], {}) (Em, Hm) \<Longrightarrow>
+  dynamicEval (Em, Hm) (E', H') \<Longrightarrow>
+  staticFlowsAcceptPool V F [[] \<mapsto> (Stt e0 empty [])] \<Longrightarrow> 
+  staticFlowsAcceptPool V F E'
+"
+apply (erule dynamicEval.cases; auto)
+sorry
 
 
+lemma staticFlowsAcceptPoolPreserved':
+"
+  star_left dynamicEval EH0 EH' \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+  \<forall> E' H' .
+  EH0 = ([[] \<mapsto> (Stt e0 empty [])], {}) \<longrightarrow> 
+  EH' = (E', H') \<longrightarrow>
+  staticFlowsAcceptPool V F [[] \<mapsto> (Stt e0 empty [])] \<longrightarrow>
+  staticFlowsAcceptPool V F E'
+"
+apply (erule star_left.induct; clarify)
+apply (simp add: staticFlowsAcceptPoolPreservedDynamicEval)
+done
 
 lemma staticFlowsAcceptPoolPreserved:
-  "
+"
   staticFlowsAcceptPool V F [[] \<mapsto> (Stt e0 empty [])] \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
-  star dynamicEval ([[] \<mapsto> (Stt e0 empty [])], {}) (\<E>', H') \<Longrightarrow>
-  staticFlowsAcceptPool V F \<E>'
+  star dynamicEval ([[] \<mapsto> (Stt e0 empty [])], {}) (E', H') \<Longrightarrow>
+  staticFlowsAcceptPool V F E'
 "
-sorry
+using star_implies_star_left staticFlowsAcceptPoolPreserved' by fastforce
 
 
 lemma staticFlowsAcceptToPool:
@@ -921,7 +804,7 @@ lemma dynamicBuiltOnChanComplexNonEmpty:
 apply (rule dynamicBuiltOnChan_dynamicBuiltOnChanAtom_dynamicBuiltOnChanComplex_dynamicBuiltOnChanTm.induct; auto)
 done
 
-lemma staticTraceablePoolStepSound:
+lemma staticTraceablePoolSoundDynamicEval:
 "
 (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
 star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Longrightarrow>
@@ -964,7 +847,7 @@ apply (erule star_left.induct; clarify)
   using dynamicBuiltOnChanComplexNonEmpty apply blast
   apply auto
   apply (rename_tac Em Hm E' H' \<pi>' x' b' e'' env' stack' isEnd)
-  apply (erule staticTraceablePoolStepSound; auto)
+  apply (erule staticTraceablePoolSoundDynamicEval; auto)
 done
 
 

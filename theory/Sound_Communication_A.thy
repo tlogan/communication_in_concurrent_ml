@@ -1339,7 +1339,7 @@ next
   then show ?thesis by (simp add: local.BindApp(1))
 qed
 
-lemma staticTraceablePoolStepSound:
+lemma staticTraceablePoolSoundDynamicEval:
   assumes
     H1: "star_left dynamicEval EH EHm" and
     H2: "dynamicEval EHm EH'" and
@@ -1711,7 +1711,7 @@ proof induction
   then show ?case using pathsCongruent.Empty staticTraceable.Empty by auto
 next
   case (step EH EHm EH')
-  then show ?case using staticTraceablePoolStepSound[of EH EHm EH']
+  then show ?case using staticTraceablePoolSoundDynamicEval[of EH EHm EH']
     using H2 by blast
 qed
 
