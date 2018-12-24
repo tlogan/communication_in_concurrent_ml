@@ -10,7 +10,7 @@ inductive
   staticFlowsAcceptEnv :: "static_env \<Rightarrow> flow_set \<Rightarrow> env \<Rightarrow> bool"  and
   staticFlowsAcceptVal :: "static_env \<Rightarrow> flow_set \<Rightarrow> val \<Rightarrow> bool"
 where
-  Intro:
+  StaticFlowsAcceptEnv:
   "
     \<forall> x \<omega> . \<rho> x = Some \<omega> \<longrightarrow>  staticFlowsAcceptVal V F \<omega> \<Longrightarrow>
     staticFlowsAcceptEnv V F \<rho>
@@ -357,37 +357,37 @@ apply (rule staticFlowsAcceptPool.Intro; auto)
       apply (drule spec[of _ pi]; auto)
       apply (rotate_tac -2)
       apply (erule staticFlowsAccept.cases; auto)
-      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases staticFlowsAcceptEnv_staticFlowsAcceptVal.Intro staticFlowsAcceptEnv_staticFlowsAcceptVal.SendEvt)
+      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases StaticFlowsAcceptEnv staticFlowsAcceptEnv_staticFlowsAcceptVal.SendEvt)
       
       apply (erule staticFlowsAcceptPool.cases; auto)
       apply (drule spec[of _ pi]; auto)
       apply (rotate_tac -2)
       apply (erule staticFlowsAccept.cases; auto)
-      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases staticFlowsAcceptEnv_staticFlowsAcceptVal.Intro staticFlowsAcceptEnv_staticFlowsAcceptVal.RecvEvt)
+      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases StaticFlowsAcceptEnv staticFlowsAcceptEnv_staticFlowsAcceptVal.RecvEvt)
 
       apply (erule staticFlowsAcceptPool.cases; auto)
       apply (drule spec[of _ pi]; auto)
       apply (rotate_tac -2)
       apply (erule staticFlowsAccept.cases; auto)
-      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases staticFlowsAcceptEnv_staticFlowsAcceptVal.Intro staticFlowsAcceptEnv_staticFlowsAcceptVal.Pair)
+      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases StaticFlowsAcceptEnv staticFlowsAcceptEnv_staticFlowsAcceptVal.Pair)
 
       apply (erule staticFlowsAcceptPool.cases; auto)
       apply (drule spec[of _ pi]; auto)
       apply (rotate_tac -2)
       apply (erule staticFlowsAccept.cases; auto)
-      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases staticFlowsAcceptEnv_staticFlowsAcceptVal.Intro staticFlowsAcceptEnv_staticFlowsAcceptVal.Left)
+      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases StaticFlowsAcceptEnv staticFlowsAcceptEnv_staticFlowsAcceptVal.Left)
 
       apply (erule staticFlowsAcceptPool.cases; auto)
       apply (drule spec[of _ pi]; auto)
       apply (rotate_tac -2)
       apply (erule staticFlowsAccept.cases; auto)
-      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases staticFlowsAcceptEnv_staticFlowsAcceptVal.Intro staticFlowsAcceptEnv_staticFlowsAcceptVal.Right)
+      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases StaticFlowsAcceptEnv staticFlowsAcceptEnv_staticFlowsAcceptVal.Right)
 
       apply (erule staticFlowsAcceptPool.cases; auto)
       apply (drule spec[of _ pi]; auto)
       apply (rotate_tac -2)
       apply (erule staticFlowsAccept.cases; auto)
-      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases staticFlowsAcceptEnv_staticFlowsAcceptVal.Fun staticFlowsAcceptEnv_staticFlowsAcceptVal.Intro)
+      apply (smt map_upd_Some_unfold staticFlowsAcceptEnv.cases staticFlowsAcceptEnv_staticFlowsAcceptVal.Fun StaticFlowsAcceptEnv)
 
 
    apply (frule staticFlowsAcceptPool.cases; auto)
@@ -421,6 +421,107 @@ apply (rule staticFlowsAcceptPool.Intro; auto)
 
 done
 
+lemma staticFlowsAcceptPoolPreservedCallEval:
+"
+staticFlowsAcceptPool V F Em \<Longrightarrow>
+(V, C) \<Turnstile>\<^sub>e e0 \<Longrightarrow>
+star_left op \<rightarrow> ([[] \<mapsto> Stt e0 Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+staticFlowsAcceptPool V F [[] \<mapsto> Stt e0 Map.empty []] \<Longrightarrow>
+leaf Em pi \<Longrightarrow>
+Em pi = Some (Stt (Bind x b e) env k) \<Longrightarrow>
+callEval (b, env) (e', env') \<Longrightarrow>
+staticFlowsAcceptPool V F (Em(pi @ [LCall x] \<mapsto> Stt e' env' (Ctn x e env # k)))
+"
+apply (rule staticFlowsAcceptPool.Intro; auto)
+
+  apply (erule staticFlowsAcceptPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (erule callEval.cases; auto)
+    apply (erule staticFlowsAccept.cases; auto)
+    apply (erule staticFlowsAccept.cases; auto)
+    apply (erule staticFlowsAcceptEnv.cases; auto)
+    apply (drule_tac x = "f" in spec; auto)
+    apply (erule staticFlowsAcceptVal.cases; auto)
+  apply (erule callEval.cases; auto)
+    apply (erule staticFlowsAcceptPool.cases; auto)
+    apply (drule spec[of _ pi]; auto)
+    apply (frule staticFlowsAcceptEnv.cases; auto)
+    apply (drule_tac x = "xs" in spec; auto)
+    apply (erule staticFlowsAcceptVal.cases; auto)
+    apply (rename_tac xs vl xl xr er envl xl')
+    apply (rotate_tac -1)
+    apply (erule staticFlowsAcceptEnv.cases; auto)
+    apply (rename_tac xs vl xl xr er xl' envl)
+    apply (drule_tac x = "xl'" in spec; auto)
+    apply (simp add: staticFlowsAcceptEnv.simps)
+
+    apply (erule staticFlowsAcceptPool.cases; auto)
+    apply (drule spec[of _ pi]; auto)
+    apply (frule staticFlowsAcceptEnv.cases; auto)
+    apply (drule_tac x = "xs" in spec; auto)
+    apply (erule staticFlowsAcceptVal.cases; auto)
+    apply (rename_tac xs vl xl xr er envr xr')
+    apply (rotate_tac -1)
+    apply (erule staticFlowsAcceptEnv.cases; auto)
+    apply (rename_tac xs vl xl xr er xr' envr)
+    apply (drule_tac x = "xr'" in spec; auto)
+    apply (simp add: staticFlowsAcceptEnv.simps)
+
+    apply (rule StaticFlowsAcceptEnv; auto)
+      
+      apply (erule staticFlowsAcceptPool.cases; auto)
+      apply (drule spec[of _ pi]; auto)
+      apply (erule staticFlowsAcceptEnv.cases; auto)
+
+      apply (erule staticFlowsAcceptPool.cases; auto)
+      apply (drule spec[of _ pi]; auto)
+      apply (erule staticFlowsAcceptEnv.cases; auto)
+
+      apply (erule staticFlowsAcceptPool.cases; auto)
+      apply (drule spec[of _ pi]; auto)
+      apply (erule staticFlowsAcceptEnv.cases; auto)
+
+      apply (erule staticFlowsAcceptPool.cases; auto)
+      apply (drule spec[of _ pi]; auto)
+      apply (erule staticFlowsAcceptEnv.cases; auto)
+      apply (drule_tac x = "f" in spec; auto)
+      apply (erule staticFlowsAcceptVal.cases; auto)
+      apply (erule staticFlowsAcceptEnv.cases; auto)
+
+    apply (erule callEval.cases; auto)
+      apply (erule staticFlowsAcceptPool.cases; auto)
+      apply (drule spec[of _ pi]; auto)
+      apply (erule staticFlowsAccept.cases; auto)
+      apply (simp add: staticFlowsAcceptStack.Nonempty)
+
+      apply (erule staticFlowsAcceptPool.cases; auto)
+      apply (drule spec[of _ pi]; auto)
+      apply (erule staticFlowsAccept.cases; auto)
+      apply (simp add: staticFlowsAcceptStack.Nonempty)
+
+      apply (erule staticFlowsAcceptPool.cases; auto)
+      apply (drule spec[of _ pi]; auto)
+      apply (erule staticFlowsAccept.cases; auto)
+      apply (drule_tac x = "fp" in spec)
+      apply (drule_tac x = "xp" in spec)
+      apply (drule spec[of _ e'])
+      apply (drule staticEval_to_pool)
+      apply (rotate_tac -1)
+      apply (drule staticEvalPreserved[of V C _ "{}" Em Hm]; auto)
+      apply (simp add: star_left_implies_star)+
+        apply (erule notE)
+        apply (rotate_tac -1)
+        apply (erule staticEvalPool.cases; auto)
+        apply (drule spec[of _ pi]; auto)
+        apply (erule staticEvalState.cases; auto)
+        apply (erule staticEvalEnv.cases; auto)
+        apply (drule_tac x = "fa" in spec; auto)
+      apply (simp add: staticFlowsAcceptStack.Nonempty)
+
+  apply (erule staticFlowsAcceptPool.cases; auto)+
+
+done
+
 lemma staticFlowsAcceptPoolPreservedDynamicEval:
 "
   staticFlowsAcceptPool V F Em \<Longrightarrow>
@@ -433,6 +534,7 @@ lemma staticFlowsAcceptPoolPreservedDynamicEval:
 apply (erule dynamicEval.cases; auto)
   apply (simp add: staticFlowsAcceptPoolPreservedReturn)
   apply (simp add: staticFlowsAcceptPoolPreservedSeqEval)
+  apply (simp add: staticFlowsAcceptPoolPreservedCallEval)
 sorry
 
 
@@ -447,7 +549,7 @@ lemma staticFlowsAcceptPoolPreserved':
   staticFlowsAcceptPool V F E'
 "
 apply (erule star_left.induct; clarify)
-apply (simp add: staticFlowsAcceptPoolPreservedDynamicEval)
+using staticFlowsAcceptPoolPreservedDynamicEval apply metis
 done
 
 lemma staticFlowsAcceptPoolPreserved:
