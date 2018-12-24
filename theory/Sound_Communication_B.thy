@@ -1375,23 +1375,36 @@ apply (simp add: staticLiveChanEnv.simps)
 apply (simp add: staticLiveChanStack.Empty)
 done
 
+lemma dynamicBuiltOnChanComplexNonEmpty:
+"
+(dynamicBuiltOnChan env chan n \<longrightarrow> env \<noteq> empty) \<and>
+(dynamicBuiltOnChanAtom env chan a \<longrightarrow> env \<noteq> empty) \<and>
+(dynamicBuiltOnChanComplex env chan c \<longrightarrow> env \<noteq> empty) \<and>
+(dynamicBuiltOnChanTm env chan tm \<longrightarrow> env \<noteq> empty)
+"
+apply (rule dynamicBuiltOnChan_dynamicBuiltOnChanAtom_dynamicBuiltOnChanComplex_dynamicBuiltOnChanTm.induct; auto)
+done
 
 lemma staticTraceablePoolSound':
-  assumes
-    H1: "star_left dynamicEval EH EH'" and
-    H2: "(V, C) \<Turnstile>\<^sub>e e"
-  shows "
-    \<forall> E' H' \<pi>' x' b' e'' \<rho>' \<kappa>' isEnd .
-    EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
-    E' \<pi>' = Some (Stt (Bind x' b' e'') \<rho>' \<kappa>') \<longrightarrow>
-    dynamicBuiltOnChanComplex \<rho>' (Ch \<pi>C xC) b' \<longrightarrow>
-    staticLiveChanPool V Ln Lx xC E' \<longrightarrow>
-    staticFlowsAcceptPool V F E' \<longrightarrow>
-    isEnd (IdBind x') \<longrightarrow>
-    (\<exists> path .
-      pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
-      staticTraceable F Ln Lx (IdBind xC) isEnd path)
 "
+star_left dynamicEval EH EH' \<Longrightarrow>
+(V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+\<forall> E' H' \<pi>' x' b' e'' env' stack' isEnd .
+  EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
+  E' \<pi>' = Some (Stt (Bind x' b' e'') env' stack') \<longrightarrow>
+  dynamicBuiltOnChanComplex env' (Ch \<pi>C xC) b' \<longrightarrow>
+  staticLiveChanPool V Ln Lx xC E' \<longrightarrow>
+  staticFlowsAcceptPool V F E' \<longrightarrow>
+  isEnd (IdBind x') \<longrightarrow>
+  (\<exists> path .
+    pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
+    staticTraceable F Ln Lx (IdBind xC) isEnd path)
+"
+apply (erule star_left.induct; clarify)
+
+  apply (case_tac "\<pi>' = []"; auto)
+  using dynamicBuiltOnChanComplexNonEmpty apply blast
+
 (*
 using H1
 proof induction

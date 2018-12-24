@@ -94,7 +94,7 @@ where
     dynamicBuiltOnChanAtom \<rho> c (Rht xSum)
   "
 | Fun: "
-    dynamicBuiltOnChanTm \<rho>' c e \<Longrightarrow>
+    dynamicBuiltOnChanTm \<rho> c e \<Longrightarrow>
     dynamicBuiltOnChanAtom \<rho> c (Fun f x e)
   "
 | Atom: "
