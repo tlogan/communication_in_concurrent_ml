@@ -1155,49 +1155,48 @@ lemma dynamicBuiltOnChanComplexNonEmpty:
 apply (rule dynamicBuiltOnChan_dynamicBuiltOnChanAtom_dynamicBuiltOnChanComplex_dynamicBuiltOnChanTm.induct; auto)
 done
 
+
 lemma staticTraceablePoolSoundDynamicEval:
 "
 (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
 star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Longrightarrow>
-\<forall>\<pi>' x' b' e'' env' stack' isEnd. 
-Em \<pi>' = Some (Stt (Bind x' b' e'') env' stack') \<longrightarrow>
-  dynamicBuiltOnChanComplex env' (Ch \<pi>C xC) b' \<longrightarrow>
+\<forall>\<pi>' e' env' stack' isEnd. 
+Em \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
+  dynamicBuiltOnChanTm env' (Ch \<pi>C xC) e' \<longrightarrow>
   staticLiveChanPool V Ln Lx xC Em \<longrightarrow>
   staticFlowsAcceptPool V F Em \<longrightarrow>
-  isEnd (IdBind x') \<longrightarrow>
+  isEnd (tmId e') \<longrightarrow>
   (\<exists>path. pathsCongruentModChan (Em, Hm) (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path) \<Longrightarrow>
 (Em, Hm) \<rightarrow> (E', H') \<Longrightarrow>
-E' \<pi>' = Some (Stt (Bind x' b' e'') env' stack') \<Longrightarrow>
-dynamicBuiltOnChanComplex env' (Ch \<pi>C xC) b' \<Longrightarrow>
+E' \<pi>' = Some (Stt e' env' stack') \<Longrightarrow>
+dynamicBuiltOnChanTm env' (Ch \<pi>C xC) e' \<Longrightarrow>
 staticLiveChanPool V Ln Lx xC E' \<Longrightarrow>
 staticFlowsAcceptPool V F E' \<Longrightarrow>
-isEnd (IdBind x') \<Longrightarrow> 
+isEnd (tmId e') \<Longrightarrow> 
 \<exists>path. pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path
 "
+apply (erule dynamicEval.cases; clarify)
 sorry
 
 lemma staticTraceablePoolSound':
 "
 star_left dynamicEval EH EH' \<Longrightarrow>
 (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-\<forall> E' H' \<pi>' x' b' e'' env' stack' isEnd .
+\<forall> E' H' \<pi>' e' env' stack' isEnd .
   EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
-  E' \<pi>' = Some (Stt (Bind x' b' e'') env' stack') \<longrightarrow>
-  dynamicBuiltOnChanComplex env' (Ch \<pi>C xC) b' \<longrightarrow>
+  E' \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
+  dynamicBuiltOnChanTm env' (Ch \<pi>C xC) e' \<longrightarrow>
   staticLiveChanPool V Ln Lx xC E' \<longrightarrow>
   staticFlowsAcceptPool V F E' \<longrightarrow>
-  isEnd (IdBind x') \<longrightarrow>
+  isEnd (tmId e') \<longrightarrow>
   (\<exists> path .
     pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
     staticTraceable F Ln Lx (IdBind xC) isEnd path)
-
-
 "
 apply (erule star_left.induct; clarify)
   apply (case_tac "\<pi>' = []"; auto)
   using dynamicBuiltOnChanComplexNonEmpty apply blast
   apply auto
-  apply (rename_tac Em Hm E' H' \<pi>' x' b' e'' env' stack' isEnd)
   apply (erule staticTraceablePoolSoundDynamicEval; auto)
 done
 
@@ -1205,33 +1204,33 @@ done
 
 lemma staticTraceablePoolSound:
 "
-  \<E>' \<pi>' = Some (Stt (Bind x' b' e'') \<rho>' \<kappa>') \<Longrightarrow>
-  dynamicBuiltOnChanComplex \<rho>' (Ch \<pi>C xC) b' \<Longrightarrow>
+  \<E>' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<Longrightarrow>
+  dynamicBuiltOnChanTm \<rho>' (Ch \<pi>C xC) e' \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   staticLiveChanPool V Ln Lx xC \<E>' \<Longrightarrow>
   staticFlowsAcceptPool V F \<E>' \<Longrightarrow>
-  isEnd (IdBind x') \<Longrightarrow>
+  isEnd (tmId e') \<Longrightarrow>
   (\<exists> path . 
       pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi>' path \<and>
       staticTraceable F Ln Lx (IdBind xC) isEnd path)
 "
 apply (drule star_implies_star_left)
-apply (insert staticTraceablePoolSound'[of "([[] \<mapsto> (Stt e empty [])], {})" "(\<E>', H')" V C e \<pi>C xC Ln Lx F])
+apply (insert staticTraceablePoolSound'[of "([[] \<mapsto> (Stt e empty [])], {})" "(\<E>', H')"])
 apply auto
 done
 
 
 lemma staticTraceableSound: "
-  \<E>' \<pi> = Some (Stt (Bind x b e\<^sub>n) \<rho> \<kappa>) \<Longrightarrow>
-  dynamicBuiltOnChanComplex \<rho> (Ch \<pi>C xC) b \<Longrightarrow>
+  \<E>' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<Longrightarrow>
+  dynamicBuiltOnChanTm \<rho>' (Ch \<pi>C xC) e' \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
-  isEnd (IdBind x) \<Longrightarrow>
+  isEnd (tmId e') \<Longrightarrow>
   \<exists> path .
-    pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi> path \<and>
+    pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi>' path \<and>
     staticTraceable F Ln Lx (IdBind xC) isEnd path
 "
 apply (drule staticFlowsAcceptToPool)
@@ -1266,7 +1265,8 @@ lemma staticTraceableSendSound: "
  apply (unfold is_send_path.simps; auto) 
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticSendSiteSound; auto?)
   apply (frule staticTraceableSound; auto?)
-  apply (erule sendEvtBuiltOnChan; auto)
+  using dynamicBuiltOnChan_dynamicBuiltOnChanAtom_dynamicBuiltOnChanComplex_dynamicBuiltOnChanTm.Bind sendEvtBuiltOnChan 
+  apply blast
 done
 
 (* END PATH SOUND *)
@@ -1368,148 +1368,5 @@ theorem staticOneToOneSound: "
   apply (unfold one_to_one.simps)
   apply (metis staticManyToOne.intros staticManyToOneSound staticOneToMany.intros staticOneToManySound)
 done
-
-(*
-
-lemma paths_congPreservedDynamicEval_under_reduction: "
-  pathsCongruent (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
-  pathsCongruent \<pi> path"
-using pathsCongruent.cases by fastforce
-
-
-lemma paths_cong_mod_chanPreservedDynamicEval_under_reduction: "
-(suffix \<pi> (\<pi>C @ [LNxt xC)) \<and> suffix path [(IdBind xC, ENext)] \<or>
-  True) \<Longrightarrow>
-pathsCongruentModChan EH' (Ch \<pi>C xC) (\<pi> @ [l) (path @ [n]) \<Longrightarrow>
-^env \<pi> \<noteq> None \<Longrightarrow>
-pathsCongruentModChan (env, H) (Ch \<pi>C xC) \<pi> path"
-proof -
-  assume
-    H1: "env \<pi> \<noteq> None" and
-    H2: "\<pi> \<noteq> []" "path \<noteq> []" and
-    H3: "pathsCongruentModChan EH' c (\<pi> @ [l) (path @ [n])"
-
-  from H3
-  show "pathsCongruentModChan (env, H) c \<pi> path"
-  proof cases
-
-    case (Chan xC \<pi>X E' \<pi>C H')
-
-    have 
-      H4: "\<pi> @ [l = \<pi>C @ (butlast (LNxt xC # \<pi>X)) @ [l"
-      by (metis butlast_append butlast_snoc list.simps(3) local.Chan(3))
-    
-    have 
-      H5: "pathsCongruent ((butlast (LNxt xC # \<pi>X)) @ [l) (path @ [n])"
-      by (metis append_butlast_last_id last_ConsL last_appendR list.simps(3) local.Chan(3) local.Chan(4))
-
-    have 
-      H6: "butlast (LNxt xC # \<pi>X) \<noteq> []"
-      by (metis H2(2) H5 pathsCongruent.cases snoc_eq_iff_butlast)
-
-    have 
-      H7: "pathsCongruent (butlast (LNxt xC # \<pi>X)) path"
-      using H2(2) H5 H6 paths_congPreservedDynamicEval_under_reduction by blast
-
-    have 
-      H8: "pathsCongruent (LNxt xC # (butlast \<pi>X)) path"
-      by (metis H6 H7 butlast.simps(2))
-
-    have L2H10: "\<pi> = \<pi>C @ butlast (LNxt xC # \<pi>X)"
-    using H4 by blast
-
-    have "pathsCongruentModChan (env, H) (Ch \<pi>C xC) \<pi> path"
-    using H1 H6 H8 L2H10 pathsCongruentModChan.Chan by auto
-     
-    then show "pathsCongruentModChan (env, H) c \<pi> path"
-    by (simp add: local.Chan(2))
-
-  next
-    case (Sync \<pi>Suffix pathSuffix E' \<pi>R xR \<rho>RY \<pi>S xS xSE eSY \<rho>SY \<kappa>SY xRE eRY \<kappa>RY H' pathPre)
-
-    
-    then show "pathsCongruentModChan (env, H) c \<pi> path"
-    proof cases
-      assume L1H1: "pathSuffix = []"
-
-      have L1H2: "path = pathPre @ [(IdBind xS, ESend xSE)]"
-        using L1H1 local.Sync(3) by auto
-
-      have L1H3: "\<pi>Suffix = []"
-        using L1H1 local.Sync(4) pathsCongruent.cases by blast
-
-      have L1H3: "\<pi> = \<pi>R"
-        using L1H3 local.Sync(2) by blast
-
-      have "pathsCongruentModChan (env, H) c \<pi>R (pathPre @ [(IdBind xS, ESend xSE)])" sorry
-
-      then show ?thesis sorry
-    next
-      assume L1H1: "pathSuffix \<noteq> []"
-
-      have 
-        L1H2: "path = pathPre @ (IdBind xS, ESend xSE) # (IdBind xR, ENext) # (butlast pathSuffix)"
-        by (metis L1H1 butlast.simps(2) butlast_append butlast_snoc list.simps(3) local.Sync(3))
-      
-      have L1H3: "\<pi>Suffix \<noteq> []"
-        using local.Sync(4) pathsCongruent.cases sorry
-
-      have L1H4: "\<pi> = \<pi>R @ LNxt xR # (butlast \<pi>Suffix)"
-        by (metis L1H3 butlast.simps(2) butlast_append butlast_snoc list.distinct(1) local.Sync(2))
-
-      show ?thesis
-      proof cases
-        assume 
-          L2H1: "(butlast pathSuffix) = []"
-
-        have 
-          L2H2: "path = pathPre @ [(IdBind xS, ESend xSE), (IdBind xR, ENext)]"
-          by (simp add: L1H2 L2H1)
-
-        have 
-          L2H3: "(butlast \<pi>Suffix) = []" sorry
-
-        have L2H4: "\<pi> = \<pi>R @ [LNxt xR]" by (simp add: L1H4 L2H3)
-
-        have 
-          "pathsCongruentModChan (env, H) c (\<pi>R @ [LNxt xR]) (pathPre @ [(IdBind xS, ESend xSE), (IdBind xR, ENext)])" sorry
-
-        then show ?thesis
-          by (simp add: L2H2 L2H4)
-      next
-        assume "(butlast pathSuffix) \<noteq> []"
-        then show ?thesis sorry
-      qed
-    qed
-  (*next
-    third case
-  *)
-  qed
-qed
-*)
-
-
-(*
-lemma paths_cong_mod_chanPreservedDynamicEval_under_reduction_chan: "
-  pathsCongruent ((LNxt xC) # \<pi>Suff @ [l) (path @ [n]) \<Longrightarrow>
-  env (\<pi>C @ (LNxt xC) # \<pi>Suff) \<noteq> None \<Longrightarrow>
-  pathsCongruentModChan (env, H) (Ch \<pi>C xC) (\<pi>C @ (LNxt xC) # \<pi>Suff) path"
-using paths_congPreservedDynamicEval_under_reduction pathsCongruentModChan.Chan by blast
-
-lemma  paths_cong_mod_chanPreservedDynamicEval_under_reduction_sync: "
-  pathsCongruent (\<pi>Suffix @ [l) (pathSuffix @ [n]) \<Longrightarrow>
-  \<E> (\<pi>R @ (LNxt xR) # \<pi>Suffix) \<noteq> None \<Longrightarrow>
-  dynamicBuiltOnChan \<rho>RY c xR \<Longrightarrow>
-  \<E> \<pi>S = Some (Stt (Bind xS (Sync xSE) eSY) \<rho>SY \<kappa>SY)) \<Longrightarrow>
-  \<E> \<pi>R = Some (Stt (Bind xR (Sync xRE) eRY) \<rho>RY \<kappa>RY)) \<Longrightarrow>
-  {(\<pi>S, c, \<pi>R)} \<subseteq> H \<Longrightarrow>
-  pathsCongruentModChan (\<E>, H) c \<pi>SforEveryTwo pathPre \<Longrightarrow>
-  pathsCongruentModChan (\<E>, H) c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (IdBind xS, ESend xSE) # (IdBind xR, ENext) # pathSuffix)"
-by (meson paths_congPreservedDynamicEval_under_reduction pathsCongruentModChan.Sync)
-*)
-
-
-
-
 
 end
