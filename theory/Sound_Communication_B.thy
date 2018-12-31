@@ -1158,20 +1158,18 @@ done
 
 lemma staticTraceablePoolSoundDynamicEval:
 "
-(V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+(V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
+staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
+staticFlowsAcceptPool V F [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
 star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Longrightarrow>
-\<forall>\<pi>' e' env' stack' isEnd. 
-Em \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
+\<forall>\<pi>' e' env' stack' isEnd . 
+  Em \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
   dynamicBuiltOnChanTm env' (Ch \<pi>C xC) e' \<longrightarrow>
-  staticLiveChanPool V Ln Lx xC Em \<longrightarrow>
-  staticFlowsAcceptPool V F Em \<longrightarrow>
   isEnd (tmId e') \<longrightarrow>
   (\<exists>path. pathsCongruentModChan (Em, Hm) (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path) \<Longrightarrow>
-(Em, Hm) \<rightarrow> (E', H') \<Longrightarrow>
+dynamicEval (Em, Hm) (E', H') \<Longrightarrow>
 E' \<pi>' = Some (Stt e' env' stack') \<Longrightarrow>
 dynamicBuiltOnChanTm env' (Ch \<pi>C xC) e' \<Longrightarrow>
-staticLiveChanPool V Ln Lx xC E' \<Longrightarrow>
-staticFlowsAcceptPool V F E' \<Longrightarrow>
 isEnd (tmId e') \<Longrightarrow> 
 \<exists>path. pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path
 "
@@ -1181,35 +1179,34 @@ sorry
 lemma staticTraceablePoolSound':
 "
 star_left dynamicEval EH EH' \<Longrightarrow>
-(V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+(V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
+staticLiveChanPool V Ln Lx xC [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
+staticFlowsAcceptPool V F [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
 \<forall> E' H' \<pi>' e' env' stack' isEnd .
   EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
   E' \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
   dynamicBuiltOnChanTm env' (Ch \<pi>C xC) e' \<longrightarrow>
-  staticLiveChanPool V Ln Lx xC E' \<longrightarrow>
-  staticFlowsAcceptPool V F E' \<longrightarrow>
   isEnd (tmId e') \<longrightarrow>
   (\<exists> path .
     pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
     staticTraceable F Ln Lx (IdBind xC) isEnd path)
 "
 apply (erule star_left.induct; clarify)
-  apply (case_tac "\<pi>' = []"; auto)
-  using dynamicBuiltOnChanComplexNonEmpty apply blast
+  using dynamicBuiltOnChanComplexNonEmpty
+  apply (metis map_upd_Some_unfold option.discI state.inject)
   apply auto
+  apply (rename_tac Em Hm E' H' \<pi>' e' env' stack' isEnd)
   apply (erule staticTraceablePoolSoundDynamicEval; auto)
 done
-
-
 
 lemma staticTraceablePoolSound:
 "
   \<E>' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<Longrightarrow>
   dynamicBuiltOnChanTm \<rho>' (Ch \<pi>C xC) e' \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
-  (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-  staticLiveChanPool V Ln Lx xC \<E>' \<Longrightarrow>
-  staticFlowsAcceptPool V F \<E>' \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
+  staticFlowsAcceptPool V F [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
   isEnd (tmId e') \<Longrightarrow>
   (\<exists> path . 
       pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi>' path \<and>
@@ -1233,11 +1230,10 @@ lemma staticTraceableSound: "
     pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi>' path \<and>
     staticTraceable F Ln Lx (IdBind xC) isEnd path
 "
+apply (drule staticEval_to_pool)
 apply (drule staticFlowsAcceptToPool)
 apply (drule staticLiveChanToPool)
-apply (drule staticTraceablePoolSound; auto?)
-apply (erule staticLiveChanPoolPreserved; auto?)
-apply (erule staticFlowsAcceptPoolPreserved; auto?)
+apply (simp add: staticTraceablePoolSound)
 done
 
 lemma sendEvtBuiltOnChan:
