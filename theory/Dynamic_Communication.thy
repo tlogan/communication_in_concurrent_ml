@@ -136,12 +136,28 @@ where
     dynamicBuiltOnChanTm \<rho> c (Bind x b e)
   "
 
-inductive dynamicBuiltOnChanPool :: "trace_pool \<Rightarrow> chan  \<Rightarrow> bool" where
-  Intro: 
+inductive dynamicBuiltOnChanStack :: "contin list \<Rightarrow> chan \<Rightarrow> bool" where
+  Tm:
   "
-     pool path = Some (Stt tm env stack) \<Longrightarrow>
+    dynamicBuiltOnChanTm envk c tk \<Longrightarrow>
+    dynamicBuiltOnChanStack (Ctn nk tk envk # stack') c
+  "
+| Stack:
+  "
+    dynamicBuiltOnChanStack stack' c \<Longrightarrow>
+    dynamicBuiltOnChanStack (Ctn nk tk envk # stack') c
+  "
+
+inductive dynamicBuiltOnChanState :: "state \<Rightarrow> chan \<Rightarrow> bool" where
+  Tm: 
+  "
      dynamicBuiltOnChanTm env c tm \<Longrightarrow>
-     dynamicBuiltOnChanPool pool c
+     dynamicBuiltOnChanState (Stt tm env stack) c
+  "
+| Stack:
+  "
+     dynamicBuiltOnChanStack stack c \<Longrightarrow>
+     dynamicBuiltOnChanState (Stt tm env stack) c
   "
 
 

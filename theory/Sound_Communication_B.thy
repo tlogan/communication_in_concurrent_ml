@@ -1155,6 +1155,36 @@ lemma dynamicBuiltOnChanComplexNonEmpty:
 apply (rule dynamicBuiltOnChan_dynamicBuiltOnChanAtom_dynamicBuiltOnChanComplex_dynamicBuiltOnChanTm.induct; auto)
 done
 
+lemma dynamicBuiltOnChanStackNonEmpty:
+"
+dynamicBuiltOnChanStack stack c \<Longrightarrow> stack \<noteq> []
+"
+apply (erule dynamicBuiltOnChanStack.induct; auto)
+done
+
+lemma staticTraceablePoolSoundReturn: 
+"
+(V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
+staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
+staticFlowsAcceptPool V F [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
+star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+(Em(pi @ [LRtn x] \<mapsto> Stt ek (envk(xk \<mapsto> v)) k)) \<pi>' = Some (Stt e' env' stack') \<Longrightarrow>
+dynamicBuiltOnChanState (Stt ek (envk(xk \<mapsto> v)) k) (Ch \<pi>C xC) \<Longrightarrow>
+isEnd (tmId e') \<Longrightarrow>
+leaf Em pi \<Longrightarrow>
+Em pi = Some (Stt (Rslt x) env (Ctn xk ek envk # k)) \<Longrightarrow>
+env x = Some v \<Longrightarrow>
+\<forall>\<pi>' e' env' stack' . Em \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
+    dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<longrightarrow>
+    (\<forall>isEnd. isEnd (tmId e') \<longrightarrow>
+             (\<exists>path. pathsCongruentModChan (Em, Hm) (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path)) \<Longrightarrow>
+\<exists>path. pathsCongruentModChan (Em(pi @ [LRtn x] \<mapsto> Stt ek (envk(xk \<mapsto> v)) k), Hm) (Ch \<pi>C xC) \<pi>' path \<and>
+  staticTraceable F Ln Lx (IdBind xC) isEnd path
+"
+apply (drule spec[of _ pi]; clarify?)
+apply (drule spec[of _ "Rslt x"]; clarify?)
+
+sorry
 
 lemma staticTraceablePoolSoundDynamicEval:
 "
@@ -1164,9 +1194,9 @@ staticFlowsAcceptPool V F [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
 star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Longrightarrow>
 (Em, Hm) \<rightarrow> (E', H') \<Longrightarrow>
 E' \<pi>' = Some (Stt e' env' stack') \<Longrightarrow>
-dynamicBuiltOnChanPool E' (Ch \<pi>C xC) \<Longrightarrow>
-\<forall>\<pi>' e'. (\<exists>env' stack'. Em \<pi>' = Some (Stt e' env' stack')) \<longrightarrow>
-        dynamicBuiltOnChanPool Em (Ch \<pi>C xC) \<longrightarrow>
+dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<Longrightarrow>
+\<forall>\<pi>' e' env' stack'. Em \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
+        dynamicBuiltOnChanState (Stt e' env' stack')  (Ch \<pi>C xC) \<longrightarrow>
         (\<forall>isEnd. isEnd (tmId e') \<longrightarrow>
                  (\<exists>path. pathsCongruentModChan (Em, Hm) (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path)) \<Longrightarrow>
 isEnd (tmId e') \<Longrightarrow> \<exists>path. pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path
@@ -1183,16 +1213,19 @@ staticFlowsAcceptPool V F [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
 \<forall> E' H' \<pi>' e' env' stack' isEnd .
   EH = ([[] \<mapsto> (Stt e empty [])], {}) \<longrightarrow> EH' = (E', H') \<longrightarrow>
   E' \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
-  dynamicBuiltOnChanPool E' (Ch \<pi>C xC) \<longrightarrow>
+  dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<longrightarrow>
   isEnd (tmId e') \<longrightarrow>
   (\<exists> path .
     pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
     staticTraceable F Ln Lx (IdBind xC) isEnd path)
 "
 apply (erule star_left.induct; clarify)
-  using dynamicBuiltOnChanComplexNonEmpty
-  apply (smt dynamicBuiltOnChanPool.simps map_upd_Some_unfold option.discI state.inject)
-  apply auto
+  apply (erule dynamicBuiltOnChanState.cases; auto)
+    using dynamicBuiltOnChanComplexNonEmpty
+    apply (metis option.inject option.simps(3) state.inject)
+
+    using dynamicBuiltOnChanStackNonEmpty
+    apply (metis option.inject option.simps(3) state.inject)
   apply (rename_tac Em Hm E' H' \<pi>' e' env' stack' isEnd)
   apply (erule staticTraceablePoolSoundDynamicEval; auto?)
 done
@@ -1201,7 +1234,7 @@ done
 lemma staticTraceablePoolSound:
 "
   \<E>' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<Longrightarrow>
-  dynamicBuiltOnChanPool \<E>' (Ch \<pi>C xC) \<Longrightarrow>
+  dynamicBuiltOnChanState (Stt e' \<rho>' \<kappa>') (Ch \<pi>C xC) \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
   staticLiveChanPool V Ln Lx xC [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
@@ -1219,7 +1252,7 @@ done
 
 lemma staticTraceableSound: "
   \<E>' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<Longrightarrow>
-  dynamicBuiltOnChanPool \<E>' (Ch \<pi>C xC) \<Longrightarrow>
+  dynamicBuiltOnChanState (Stt e' \<rho>' \<kappa>') (Ch \<pi>C xC) \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
   staticLiveChan V Ln Lx xC e \<Longrightarrow>
@@ -1261,7 +1294,7 @@ lemma staticTraceableSendSound: "
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticSendSiteSound; auto?)
   apply (frule staticTraceableSound; auto?)
   using dynamicBuiltOnChan_dynamicBuiltOnChanAtom_dynamicBuiltOnChanComplex_dynamicBuiltOnChanTm.Bind sendEvtBuiltOnChan 
-  apply (meson dynamicBuiltOnChanPool.simps)
+  apply (simp add: dynamicBuiltOnChanState.Tm)
 done
 
 (* END PATH SOUND *)
