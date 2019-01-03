@@ -127,7 +127,7 @@ where
     dynamicBuiltOnChan \<rho> c xA \<Longrightarrow>
     dynamicBuiltOnChanComplex \<rho> c (App f xA)
   "
-| Result: "
+| dynamicBuiltOnChanTm_Rslt: "
     dynamicBuiltOnChan \<rho> c x \<Longrightarrow>
     dynamicBuiltOnChanTm \<rho> c (Rslt x)
   "
@@ -136,6 +136,13 @@ where
     dynamicBuiltOnChanTm \<rho> c (Bind x b e)
   "
 
+inductive dynamicBuiltOnChanPool :: "trace_pool \<Rightarrow> chan  \<Rightarrow> bool" where
+  Intro: 
+  "
+     pool path = Some (Stt tm env stack) \<Longrightarrow>
+     dynamicBuiltOnChanTm env c tm \<Longrightarrow>
+     dynamicBuiltOnChanPool pool c
+  "
 
 
 
