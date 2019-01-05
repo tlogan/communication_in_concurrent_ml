@@ -122,7 +122,7 @@ In this formal theory, the dynamic semantics of Concurrent ML consists of
 a CEK machine \cite{felleisen1986control}. The static semantics consists of a 0CFA control-flow analysis
 \cite{shivers1991control}, defined in terms of constraints \cite{nielson2015principles}.
 
-\section{Concurrent Language}
+\subsection{Concurrent ML}
 In programing languages, concurrency is a program structuring technique that allows evaluation
 steps to hop back and forth between disjoint syntactic structures within a program.
 It is useful
@@ -259,6 +259,96 @@ evaluates.
   val choose : 'a event * 'a event -> 'a event
   val thenEvt : 'a event * ('a -> 'b event) -> 'b event
   \end{lstlisting}
+
+
+\subsection{Isabelle/HOL}
+An interactive theorem proving assistant, or proof assistant, is a machine that helps its user
+specify propositions and prove theorems. Like typical programming systems, it checks
+that propositions are lexically correct, syntatically correct, and
+even logically correct according to its type system. To determine if a proposition is valid, a proof assistant
+often requires the user to supply a proof. If the proof assistant verified that the user's proof is correct,
+then the proposition may be considered a theorem. In addition to checking the correctness of proofs and
+propositions, the proof assistant also assists the user in constructing proofs.
+
+Isabelle/HOL is a popular proof assistant that assists in specifying and proving properties
+formulated in Higher Order Logic (HOL).  Predicates and terms may be higher order. That is, they
+may take other predicates or functions as arguments and return predicates or functions as arguments. 
+In HOL, a predicate is actually just a function that returns a value of type boolean, and a proposition
+is simply a term of type boolean. Terms are deemed logical according to a system of simple types, similar to
+that of Standard ML.  Isabelle/HOL excels at assisting with proving propositions with numerous details details. 
+
+A proof is just a sequence of manipulations from existing theorems and axioms to the proposition to be proved.  
+Typically, unassisted informal proofs, are written in a declarative form. The goal is stated at the top,
+and then an axiom or theorem is stated. Subsequently derived theorems are stated beneath, with
+or without the manipulation explained. Some people like to restate the goal and the manipulation that leads
+to the goal at the end of the proof, while others finish their proofs the intermediate theorem that
+is easily manipulated to reach the goal. 
+
+For instance, say you want to prove \lstinline[language=logic]{P1 or P2 -> Q}.  You might begin by 
+stating the axiom \lstinline{P1 or P2 |- P1 or P2}, written as "assume P1 or P2 ...".
+Perhaps you know theorem A: \lstinelin{|- P1 -> Q}. Using modus ponens, you derive {P1 |- Q}. Let's say
+you also know theorem B: \lstinline{|- P2 -> Q}. Using modus ponens with theorem B, you derive {P2 |- Q}.
+Your realize that these two theorems may be combined into {P1 or P2 |- Q}, which reduces to {|- P1 or P2 -> Q}.
+
+
+\begin{lstlisting}[language=logic]
+
+theorem P1 or P2 -> Q
+proof
+
+assume P1 or P2
+  case P1:
+    have P1 -> Q by theorem A
+    have Q by modus ponens
+  have P1 |- Q 
+  case P2:
+    have P2 -> Q by theorem B    
+    have Q by modus ponens
+  have P2 |- Q
+  Q by disjunction elimination
+P1 or P2 |- Q
+have P1 or P2 -> Q by implication introduction  
+
+qed
+  
+\end{lstlisting}
+
+
+For proving simple propositions, it may be easy to conjure up the theorems or axioms needed to
+combine and manipulate into the goal. However, for proving complex or unfamiliar propositions,
+it may be less clear. In addition to the forward and declarative proof style of informal proofs, Isabelle/HOL
+also supports an alternative way to structure proofs, by starting with the goal and breaking it into simpler
+and simpler subgoals until axioms. The backwards style of reasoning, allows the proof
+writer to focus on the manipulation rule, rather than remembering and gathering up all the theorems that are
+necessary to combine to reach the goal. The interface of the interactive theorem prover displays the subgoals
+after applying each manipulation rule.
+
+
+\begin{lstlisting}[language=logic]
+theorem P1 or P2 -> Q
+*  P1 or P2 -> Q
+apply (rule impI)
+*  P1 or P2 |- Q
+apply (erule disjE)
+*  P1 |- Q
+*  P2 |- Q
+apply (insert A)
+*  P1, P1 -> Q |- Q
+*  P2 |- Q
+apply (erule impE)
+*  P1 |- P1
+*  P2 |- Q
+apply assumption 
+*  P2 |- Q
+apply (insert B)
+*  P2, P2 -> Q |- Q
+apply (erule impE)
+*  P2 |- P2
+apply assumption 
+done
+
+\end{lstlisting}
+
 
 \section{Synchronization}
 Synchronization of sending threads and receiving threads
