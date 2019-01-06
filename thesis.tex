@@ -42,7 +42,8 @@
     and, or, not,
     lemma,
     theorem,
-    of
+    of,
+    have, assume, case, apply, done, by, proof, qed
   },
   mathescape,
   literate={\\forall}{$\forall$}{1}
@@ -280,70 +281,69 @@ that of Standard ML.  Isabelle/HOL excels at assisting with proving propositions
 A proof is just a sequence of manipulations from existing theorems and axioms to the proposition to be proved.  
 Typically, unassisted informal proofs, are written in a declarative form. The goal is stated at the top,
 and then an axiom or theorem is stated. Subsequently derived theorems are stated beneath, with
-or without the manipulation explained. Some people like to restate the goal and the manipulation that leads
-to the goal at the end of the proof, while others finish their proofs the intermediate theorem that
-is easily manipulated to reach the goal. 
+or without the aspects of the manipulation explained.
+For instance, say you want to prove \lstinline[mathescape]{P1 $\vee$ P2 $\rightarrow$ Q}.  You might begin by 
+stating the axiom \lstinline[mathescape]{P1 $\vee$ P2 $\vdash$ P1 $\vee$ P2}, commonly written as \lstinline[language=logic]{assume P1 $\vee$ P2: }.
+You can also state \lstinline[mathescape]{P1 $\vdash$ P1} and \lstinline[mathescape]{P2 $\vdash$ P2}. Since
+these are inteded to form complementary cases of \lstinline[mathescape]{P1 $\vee$ P2}, they are written as \lstinline[language=logic]{case P1: ... case P2: }.
+Perhaps you know \lstinline[language=logic]{theorem A: $\vdash$ P1 $\rightarrow$ Q}. Using modus ponens, you derive \lstinline[mathescape]{P1 $\vdash$ Q}. Let's say
+you also know \lstinline[language=logic]{theorem B: $\vdash$ P2 $\rightarrow$ Q}. Using modus ponens with theorem B, you derive \lstinline[mathescape]{P2 $\vdash$ Q}.
+Your realize that these two theorems may be combined into \lstinline[mathescape]{P1 $\vee$ P2 $\vdash$ Q}, which reduces to \lstinline[mathescape]{$\vdash$ P1 $\vee$ P2 $\rightarrow$ Q}.
 
-For instance, say you want to prove \lstinline[language=logic]{P1 or P2 -> Q}.  You might begin by 
-stating the axiom \lstinline{P1 or P2 |- P1 or P2}, written as "assume P1 or P2 ...".
-Perhaps you know theorem A: \lstinelin{|- P1 -> Q}. Using modus ponens, you derive {P1 |- Q}. Let's say
-you also know theorem B: \lstinline{|- P2 -> Q}. Using modus ponens with theorem B, you derive {P2 |- Q}.
-Your realize that these two theorems may be combined into {P1 or P2 |- Q}, which reduces to {|- P1 or P2 -> Q}.
 
+\begin{lstlisting}[language=logic, mathescape]
 
-\begin{lstlisting}[language=logic]
-
-theorem P1 or P2 -> Q
+theorem P1 $\vee$ P2 $\rightarrow$ Q
 proof
 
-assume P1 or P2
+assume P1 $\vee$ P2:
   case P1:
-    have P1 -> Q by theorem A
-    have Q by modus ponens
-  have P1 |- Q 
+    have $\vdash$ P1 $\rightarrow$ Q by A
+    have $\vdash$ Q by modus ponens
   case P2:
-    have P2 -> Q by theorem B    
-    have Q by modus ponens
-  have P2 |- Q
-  Q by disjunction elimination
-P1 or P2 |- Q
-have P1 or P2 -> Q by implication introduction  
+    have $\vdash$ P2 $\rightarrow$ Q by B    
+    have $\vdash$ Q by modus ponens
+  have P1 $\vdash$ Q, P2 $\vdash$ Q
+  have $\vdash$ Q by disjunction elimination
+have P1 $\vee$ P2 $\vdash$ Q
+have $\vdash$ P1 $\vee$ P2 $\rightarrow$ Q by implication introduction  
 
 qed
   
 \end{lstlisting}
 
 
-For proving simple propositions, it may be easy to conjure up the theorems or axioms needed to
+For proving simple propositions, it may be easy to conjure up the theorems and axioms needed to
 combine and manipulate into the goal. However, for proving complex or unfamiliar propositions,
-it may be less clear. In addition to the forward and declarative proof style of informal proofs, Isabelle/HOL
-also supports an alternative way to structure proofs, by starting with the goal and breaking it into simpler
-and simpler subgoals until axioms. The backwards style of reasoning, allows the proof
+it may be less clear. In addition to the declarative forward proof style, Isabelle/HOL also
+supports an imperative backwards proof style, by starting with the goal and breaking it into simpler
+and simpler subgoals until all subgoals are manipulated into axioms. The backwards style of reasoning,
+allows the proof
 writer to focus on the manipulation rule, rather than remembering and gathering up all the theorems that are
 necessary to combine to reach the goal. The interface of the interactive theorem prover displays the subgoals
 after applying each manipulation rule.
 
 
-\begin{lstlisting}[language=logic]
-theorem P1 or P2 -> Q
-*  P1 or P2 -> Q
+\begin{lstlisting}[language=logic, mathescape]
+theorem P1 $\vee$ P2 $\rightarrow$ Q
+*  $\vdash$ P1 $\vee$ P2 $\rightarrow$ Q
 apply (rule impI)
-*  P1 or P2 |- Q
+*  P1 $\vee$ P2 $\vdash$ Q
 apply (erule disjE)
-*  P1 |- Q
-*  P2 |- Q
+*  P1 $\vdash$ Q
+*  P2 $\vdash$ Q
 apply (insert A)
-*  P1, P1 -> Q |- Q
-*  P2 |- Q
-apply (erule impE)
-*  P1 |- P1
-*  P2 |- Q
+*  P1, P1 $\rightarrow$ Q $\vdash$ Q
+*  P2 $\vdash$ Q
+apply (erule mp)
+*  P1 $\vdash$ P1
+*  P2 $\vdash$ Q
 apply assumption 
-*  P2 |- Q
+*  P2 $\vdash$ Q
 apply (insert B)
-*  P2, P2 -> Q |- Q
-apply (erule impE)
-*  P2 |- P2
+*  P2, P2 $\rightarrow$ Q $\vdash$ Q
+apply (erule mp)
+*  P2 $\vdash$ P2
 apply assumption 
 done
 
@@ -3642,7 +3642,7 @@ the loop may not be live according to the entry function in the static channel l
   * \forall l l' graph exit entr .
       if
         (l, MCll, l') \in graph,
-        (not (exit l = {})) or (not (entr l' = {}))
+        (not (exit l = {})) $\vee$ (not (entr l' = {}))
       then
         staticLiveFlow graph entr exit (l, MCll, l')
   * \forall l l' graph entr exit .
@@ -3709,7 +3709,7 @@ given paths do not compete in any run of a program.
   where only
     \forall path1 path2 .
       if
-        prefix path1 path2 or path2 path1
+        prefix path1 path2 $\vee$ path2 path1
       then
         staticInclusive path1 path2
   * \forall path n path1 path2 .
