@@ -110,7 +110,7 @@ have been developed so far; one with lower precision, and one with higher precis
 precision analysis is closer to the work by Reppy and Xiao, but contains many more details making
 it more challenging to prove formally than the lower precision analysis.
 The proofs for the soundness theorems of the lower precision analysis
-have been mechanically verified using Isabelle \cite{nipkow2002isabelle}, while the higher precision
+have been mechanically verified using Isabelle/HOL \cite{nipkow2002isabelle}, while the higher precision
 analysis is currently under development. Indeed, one of the motivations for implementing the analysis 
 in a mechanical setting is to enable gradual extension of analysis and language without introducing
 uncaught bugs in the definitions or proofs. The definitions used in this formal theory differ
@@ -346,6 +346,20 @@ apply (erule mp)
 *  P2 $\vdash$ P2
 apply assumption 
 done
+
+Note that the syntax used in Isabelle/HOL for writing proofs and propositions differs from
+that of the examples shown here. To make these examples easier to understand, I have chosen
+to use a syntax that is more typical of mathematical logic and language theory literature.  
+
+The learning curve for using proof assistants in general and Isabelle/HOL in particular is very steep.
+Nevertheless, once the user has gained some fluency, there are great benefits for certain kinds of projects.  
+In a theory of Concurrent ML, with various propositions about evaluation and communication, there are many
+tedious details that must be specified. Furthermore, due to there being greater complexity with greater
+number of language features, or greater precision of propositions, it is very useful to start simple features
+and propositions to create a minimal viable theory, and then incrementally increase complexity and modify proofs.
+The automatic checking of propositions and proofs finding errors buried in numerous tedious details.
+Additionally, it eases the process incremental extension by pinpointing where the proofs and propositions break
+as features and complexity is added.
 
 \end{lstlisting}
 
