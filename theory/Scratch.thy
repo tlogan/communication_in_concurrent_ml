@@ -17,3 +17,21 @@ apply (insert B[of P2 Q])[1]
 apply (erule mp)
 apply assumption
 done
+
+
+datatype nat = Z | S nat
+inductive lte :: "nat \<Rightarrow> nat \<Rightarrow> bool"
+where
+  eq: "lte n n"
+| lt: "lte n1 n2 \<Longrightarrow> lte n1 (S n2)"
+
+
+datatype 'a list = Nil | Cons 'a "'a list"
+
+inductive sorted :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a list \<Rightarrow> bool"
+where
+  nil: "sorted r Nil"
+| uni: "sorted r (Cons x Nil)"
+| cons: "r x y \<Longrightarrow> sorted r (Cons y ys) \<Longrightarrow> sorted r (Cons x (Cons y ys))"
+
+theorem "sorted lte (Cons Z (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil))))"

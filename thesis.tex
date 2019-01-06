@@ -43,7 +43,9 @@
     lemma,
     theorem,
     of,
-    have, assume, case, apply, done, by, proof, qed
+    have,
+    assume, case, apply, done, by, proof, qed,
+    goal
   },
   mathescape,
   literate={\\forall}{$\forall$}{1}
@@ -283,9 +285,9 @@ Typically, unassisted informal proofs, are written in a declarative form. The go
 and then an axiom or theorem is stated. Subsequently derived theorems are stated beneath, with
 or without the aspects of the manipulation explained.
 For instance, say you want to prove \lstinline[mathescape]{P1 $\vee$ P2 $\rightarrow$ Q}.  You might begin by 
-stating the axiom \lstinline[mathescape]{P1 $\vee$ P2 $\vdash$ P1 $\vee$ P2}, commonly written as \lstinline[language=logic]{assume P1 $\vee$ P2: }.
+stating the axiom \lstinline[mathescape]{P1 $\vee$ P2 $\vdash$ P1 $\vee$ P2}, commonly written as \lstinline[language=logic]{assume P1 $\vee$ P2}.
 You can also state \lstinline[mathescape]{P1 $\vdash$ P1} and \lstinline[mathescape]{P2 $\vdash$ P2}. Since
-these are inteded to form complementary cases of \lstinline[mathescape]{P1 $\vee$ P2}, they are written as \lstinline[language=logic]{case P1: ... case P2: }.
+these are inteded to form complementary cases of \lstinline[mathescape]{P1 $\vee$ P2}, they are written as \lstinline[language=logic]{case P1: ... case P2}.
 Perhaps you know \lstinline[language=logic]{theorem A: $\vdash$ P1 $\rightarrow$ Q}. Using modus ponens, you derive \lstinline[mathescape]{P1 $\vdash$ Q}. Let's say
 you also know \lstinline[language=logic]{theorem B: $\vdash$ P2 $\rightarrow$ Q}. Using modus ponens with theorem B, you derive \lstinline[mathescape]{P2 $\vdash$ Q}.
 Your realize that these two theorems may be combined into \lstinline[mathescape]{P1 $\vee$ P2 $\vdash$ Q}, which reduces to \lstinline[mathescape]{$\vdash$ P1 $\vee$ P2 $\rightarrow$ Q}.
@@ -326,30 +328,108 @@ after applying each manipulation rule.
 
 \begin{lstlisting}[language=logic, mathescape]
 theorem P1 $\vee$ P2 $\rightarrow$ Q
-*  $\vdash$ P1 $\vee$ P2 $\rightarrow$ Q
+goal: $\vdash$ P1 $\vee$ P2 $\rightarrow$ Q
 apply (rule impI)
-*  P1 $\vee$ P2 $\vdash$ Q
+goal: P1 $\vee$ P2 $\vdash$ Q
 apply (erule disjE)
-*  P1 $\vdash$ Q
-*  P2 $\vdash$ Q
+goal: P1 $\vdash$ Q
+goal: P2 $\vdash$ Q
 apply (insert A)
-*  P1, P1 $\rightarrow$ Q $\vdash$ Q
-*  P2 $\vdash$ Q
+goal: P1, P1 $\rightarrow$ Q $\vdash$ Q
+goal: P2 $\vdash$ Q
 apply (erule mp)
-*  P1 $\vdash$ P1
-*  P2 $\vdash$ Q
+goal: P1 $\vdash$ P1
+goal: P2 $\vdash$ Q
 apply assumption 
-*  P2 $\vdash$ Q
+goal: P2 $\vdash$ Q
 apply (insert B)
-*  P2, P2 $\rightarrow$ Q $\vdash$ Q
+goal: P2, P2 $\rightarrow$ Q $\vdash$ Q
 apply (erule mp)
-*  P2 $\vdash$ P2
+goal: P2 $\vdash$ P2
 apply assumption 
 done
+\end{lstlisting}
 
 Note that the syntax used in Isabelle/HOL for writing proofs and propositions differs from
 that of the examples shown here. To make these examples easier to understand, I have chosen
 to use a syntax that is more typical of mathematical logic and language theory literature.  
+
+In addition to creating theorems by proving propositions, Isabelle/HOL also allows creating theorems
+by defining predicates. This feature is critical for constructing inductive propositions that may hold
+over an infinite range of values.  Infinite ranges may be defined as inductive datatypes,
+similar to Standard ML.
+
+For instance, you can define the infinite set of natural numbers (with zero) as an inductive datatype,
+and the binary relation that a natural number is less than or equal to another as an inductive predicate.
+
+\begin{lstlisting}[language=logic]
+datatype nat = Z | S nat
+
+predicate lte: nat -> nat -> bool
+where only
+  eq: $\vdash$ lte n n
+* lt: lte n1 n2 $\vdash$ lte n1 (S n2)
+\end{lstlisting}
+
+Additionally, you can define the infinite set of lists inductively, and the higher order predicte that checks
+sortedness using a supplied binary relation.
+
+\begin{lstlisting}[language=logic]
+datatype 'a list = Nil | Cons 'a ('a list)
+
+predicate sorted: ('a -> 'a -> bool) -> 'a list -> bool
+where only
+  nil: $\vdash$ sorted r Nil
+* uni: $\vdash$ sorted r (Cons x Nil)
+* cons: r x y, sorted p (Cons y ys) $\vdash$ sorted r (Cons x (Cons y ys))
+\end{lstlisting}
+
+Each case of the the predicate definition is considered a theorem, and you have the option to give it a name. 
+Additionaly, these are only cases that can hold for the predicate.  Therefore, the predicate applied to some free
+variables is equivalent to the disjunction of all the cases, with the variables equal to their respective patterns
+in each case. This kind of theorem, and other similar theorems for inversion and induction
+are created with the each predicate definition.
+
+\begin{lstlisting}[language=logic]
+$\vdash$ sorted r xs $\equiv$
+  (xs = Nil)
+$\vee$ (xs = (Cons x Nil))
+$\vee$ (xs = (Cons x (Cons y ys)) $\wedge$ r x y $\wedge$ sorted r (Cons y ys))
+\end{lstlisting}
+
+By composing these definitions, you can state and prove a list of natural numbers is sorted in non-decreasing order.
+
+\begin{lstlisting}[language=logic]
+
+theorem sorted lte (Cons (Z) (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil))))
+apply (rule cons)
+goal: $\vdash$ lte Z (S Z)
+goal: $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
+apply (rule lt)
+goal: $\vdash$ lte Z Z
+goal: $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
+apply (rule eq)
+goal: $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
+apply (rule cons)
+goal: $\vdash$ lte (S Z) (S Z)
+goal: $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
+apply (rule eq)
+goal: $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
+apply (rule cons)
+goal: $\vdash$ lte (S Z) (S (S (S Z)))
+goal: $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+apply (rule lt)
+goal: $\vdash$ lte (S Z) (S (S Z))
+goal: $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+apply (rule lt)
+goal: $\vdash$ lte (S Z) (S Z)
+goal: $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+apply (rule eq)
+goal: $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+apply (rule uni)
+done
+\end{lstlisting}
+
 
 The learning curve for using proof assistants in general and Isabelle/HOL in particular is very steep.
 Nevertheless, once the user has gained some fluency, there are great benefits for certain kinds of projects.  
@@ -360,8 +440,6 @@ and propositions to create a minimal viable theory, and then incrementally incre
 The automatic checking of propositions and proofs finding errors buried in numerous tedious details.
 Additionally, it eases the process incremental extension by pinpointing where the proofs and propositions break
 as features and complexity is added.
-
-\end{lstlisting}
 
 
 \section{Synchronization}
