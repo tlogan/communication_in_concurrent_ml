@@ -35,3 +35,13 @@ where
 | cons: "r x y \<Longrightarrow> sorted r (Cons y ys) \<Longrightarrow> sorted r (Cons x (Cons y ys))"
 
 theorem "sorted lte (Cons Z (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil))))"
+apply (rule cons)
+apply (rule lt)
+apply (rule eq)
+apply (rule cons)
+apply (rule eq)
+apply (rule cons)
+apply (rule lt)
+apply (rule lt)
+apply (rule eq)
+apply (rule uni)
