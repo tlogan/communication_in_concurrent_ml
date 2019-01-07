@@ -1202,7 +1202,7 @@ human. By using an optimization without a soundness proof, you are trusting that
 been proved, you are trusting that the proof has no errors. If the proof has been verified by Isabelle/HOL, you are
 trusting that the Isabelle/HOL kernel is sound. The less you need to trust the better.
 
-In this work, I extend Reppy and Xiao's work by develpoing a mechanically checked specification and proofs
+I extend Reppy and Xiao's work by develpoing a mechanically checked specification and proofs
 for communication topologies in Concurrent ML. A proof checker requires that manipulations are
 constructed from a small kernel of primitive operations. It's possible that an intuitive step of reasoning in an
 informal proof could require multiple tedious steps of precise manipulation in a mechanically checked proof.
@@ -1214,7 +1214,16 @@ In Isabelle/HOL it is easy to prove termination for functions that branch on an 
 it is far from straight foward to prove termination for those that branch on
 whether or not a fixed point has been reached.
 
-
+Concurrent ML separates itself from other languages for concurrency with its generalized concept of events,
+event sycnrhonization, and event combinators.  Reppy and Xiao's work produces a static analysis for a subset,
+which only contained synchronization on sending and receiving events.  I originally, wanted to extend the analysis
+to encompass a more generalized notion of events, along with the evenet combinator for choice.  However, I quickly
+realized that the combination of creating a new specification, in an unfamiliar proof assistant, with a more complex
+semantics in the language, would be too much to detail with at once.  Instead, I adhered to Reppy and Xiao's decision
+to construct the specification and proofs for a simplied subset of Concurrent ML, containing synchronization on just
+sending and receiving events. Since I constructed these specifications and proofs in Isabelle/HOL, it will be possible
+to easily extend the semantics later, by using Isabelle/HOL to pinpoint where the proofs and specifications break upon
+changes.
 
 
 (*
