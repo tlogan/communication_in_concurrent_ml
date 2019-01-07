@@ -1186,8 +1186,36 @@ particular communication topologies.
 The definitions and theorems of this work were constructed in the formal
 language of Isabelle/HOL,
 to enable mechanical verification of the correctness of the proofs.
-However, the formal logic used
-for presentation in this paper has been somewhat modified from Isabelle's syntax. 
+However, in this presentation, the syntax of the stated definitions and propositions will differ from
+the actual Isabelle/HOL syntax, in order to be more intuitive for those unfamiliar
+with Isabelle/HOL.
+
+A static analysis for detecting communication patterns in Concurrent ML would be necessary for useful
+optimizations or checks. The optimization to replace general synchronization with specialized synchronization
+based on the results of static analysis is one that could have significant performance benefit, as shown
+empirically by Reppy and Xiao \cite{}. Hower, if the static analysis of communication patterns is wrong, then
+the optimizmization could produce an incorrect program. What you need is proof that the static analysis is sound
+with to the actualy communication patterns that occur when running a program.  However, the proof could also be
+erroneous, and with so many details could be extremely difficult for a human to manually check for errors.
+Isabelle/HOL can automatically check for errors in proofs and specifications and is much more reliable than a
+human. By using an optimization without a soundness proof, you are trusting that it is sound.  If soundness has
+been proved, you are trusting that the proof has no errors. If the proof has been verified by Isabelle/HOL, you are
+trusting that the Isabelle/HOL kernel is sound. The less you need to trust the better.
+
+In this work, I extend Reppy and Xiao's work by develpoing a mechanically checked specification and proofs
+for communication topologies in Concurrent ML. A proof checker requires that manipulations are
+constructed from a small kernel of primitive operations. It's possible that an intuitive step of reasoning in an
+informal proof could require multiple tedious steps of precise manipulation in a mechanically checked proof.
+To avoid the chance of running into these tricky scenarios, I took Mathew Fluet's advice to specify the static analysis
+as inference rules, rather than as an algorithm. In Isabelle/HOL, algorithms are specified as computable functions
+that must be proved to terminate and be total, either automatically or with additional details supplied by the user.
+Reppy and Xiao's algorithm, as with many static analysis algorithms, relies on reaching a fixed point to terminate.
+In Isabelle/HOL it is easy to prove termination for functions that branch on an inductive datatype, however
+it is far from straight foward to prove termination for those that branch on
+whether or not a fixed point has been reached.
+
+
+
 
 (*
 - replace the following with more informative description
