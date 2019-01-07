@@ -437,6 +437,78 @@ and proofs, for the syntax, dynamic semantics, static semantics, soundness of se
 static communication, soundness of communication, helper definitions and theorems, and the
 higher precision analysis.  There are roughly 1421 lines of definitions, and 3052 lines of completed proofs. 
 
+\subsection{Static Analysis for Concurrent ML}
+A static analysis that describes communication
+topologies of channels has practical benefits in at least two ways.  It can highlight which
+channels are candidates for optimized implementations of communication; or in a language
+extension allowing the specification of specialized channels, it can conservatively verify
+their correct usage. Without a static analysis to check the usage of the special channels, one
+could inadvertently use a one-shot channel for a channel that has multiple senders, thus
+violating the intended semantics. 
+
+The utility of the static analysis additionally depends on it being precise, sound, and
+computable. The analysis is precise iff there exist programs about which the analysis
+describes information that is not directly observable. The analysis is sound iff the
+information it describes about a program is the same or less precise than the dynamic
+semantics of the program. The analysis is computable iff there exists an algorithm that
+determines all the values described by the analysis on any input program.
+
+Analyses can be described in a variety of ways. A computable algorithm that take programs
+as input and produces information about the behavior as output is ideal for automation. A
+non-algorithmic relation (i.e. a relation expressed in a language without an inherent evaluator
+from some parameters to the others),
+stated in terms of programs and execution information, may be
+more suitable for clarity of meaning and correctness with respect to the operational
+semantics. However, a non-algorithmic relation can be translated into an algorithm.
+One rather mechanical method essentially involves
+specifying a reasoner associated with the relation. 
+First, the reasoner generates a comprehensive set of data structures representing
+constraints from the relation's description, then the reasoner the constraints.
+
+For a subset of Concurrent ML without event combinators, Reppy and Xiao developed an
+efficient algorithm that determines for each channel, all possible threads that send
+and receive on it. The algorithm depends on each atom operation in the program being
+labeled with a program step. A sequence of program steps ordered in a valid execution
+sequence forms a control path. Distinction between threads in a program can be inferred from
+whether or not their control paths diverge.  
+
+Their algorithm proceeds in multiple steps that produce intermediate data structures used for
+efficient lookup in the subsequent steps. It starts with a control-flow analysis that
+results in multiple mappings. One mapping is from names to abstract values that may be bound to
+the names. Another mapping is from channel-bound names to abstract values that are
+sent on the respective channels. Another is from function-bound names to abstract values
+that are the result of respective function applications.  It constructs a control-flow graph 
+with possible paths for conditional tests and thread spawning determined directly from the
+atoms used in the program. Relying on information from the mappings to abstract values,
+it constructs the possible paths of execution via function application and channel
+communication.  It uses the graph for live variable analysis of channels, which limits the
+scope for the remaining analysis.  Using the spawn and application edges of the control-flow
+graph, the algorithm then performs a data-flow analysis to determine a mapping from program
+steps to all possible control paths leading into the respective program steps.  Using the
+CFA's mappings to abstract values, the algorithm determines the program steps for sends and
+receives per channel name.  Then it uses the mapping to control paths to determine all
+control paths that send or receive on each channel, from which it classifies channels as
+one-shot, one-to-one, many-to-one, one-to-many, or many-to-many.
+
+The information at each program step is derived from control structures in the program, which
+dictate how information flows between program steps. Some uses of control structures are
+literally represented in the syntax, such as the sequencing of namings and assignments in the
+previous examples. Other uses of control structures may be indirectly represented through
+names. Function application is a control structure that allows a calling piece of code to
+flow into a function function's code.  Function functions can be named, which allows
+multiple pieces of code to all flow into into the same section of code. The name adds an
+additional step in to uncover control structures, and determine data flow.
+Additionally, in languages with higher order functions and recursion, such as those in the Lisp
+and ML families, it may be impossible to exactly determine all the function functions that
+terms resolve to. However, a control flow analysis can reveal a good
+approximation of the control structures and values that have been obfuscated by higher order
+function functions. Uncovering the control structures depends on resolving terms
+to values, and resolving terms to values depends on on uncovering the control
+structures. The mutual dependency means that control flow analysis is a form of
+static semantics that describes abstract evaluations of programs. in this work, control flow
+analysis is used for tracking certain kinds of values, like channels and events, in addition to
+constructing precise data flow analysis. 
+
 
 \section{Synchronization}
 Synchronization of sending threads and receiving threads
@@ -1109,15 +1181,18 @@ Additionally, it would be important to have proofs that the above specialized
 implementations are equivalent to the many-to-many implementation under the assumption of
 particular communication topologies.
 
-\section{Formal Theory}
+\section{Mechanized Theory}
 
 The definitions and theorems of this work were constructed in the formal
 language of Isabelle/HOL,
 to enable mechanical verification of the correctness of the proofs.
 However, the formal logic used
 for presentation in this paper has been somewhat modified from Isabelle's syntax. 
-To aid the development of formal proofs,
-the analyses are stated using relational specifications.
+
+(*
+- replace the following with more informative description
+----
+To aid the development of formal proofs, the analyses are stated using relational specifications.
 The definitions of static relations are syntax-directed, which provides
 strong evidence of computability.
 For a static relation, the proof that it holds for a program is defined
@@ -1132,82 +1207,16 @@ Additionally, for any given program, there should be instances of the other
 parameters that satisfy the static relation, in which case there is an
 algorithm to compute sufficient parameters from a program,
 by following the basic structure of the proof of the static relation.
+----
+- give infromal overview of the syntax,
+- give informal overview of semantics, control-flow-analysis, semantic soundness.
+- give informal overview of the communication, static analysis (graph, paths), and communication soundness. 
+- discuss precision and higher precision analysis
+*)
 
 This work does not contain formal proofs that the specialized implementations are
 behaviorally equivalent to a generic implementation, but the example implementations
 should provide good evidence for that.
-
-A static analysis that describes communication
-topologies of channels has practical benefits in at least two ways.  It can highlight which
-channels are candidates for optimized implementations of communication; or in a language
-extension allowing the specification of specialized channels, it can conservatively verify
-their correct usage. Without a static analysis to check the usage of the special channels, one
-could inadvertently use a one-shot channel for a channel that has multiple senders, thus
-violating the intended semantics. 
-
-The utility of the static analysis additionally depends on it being precise, sound, and
-computable. The analysis is precise iff there exist programs about which the analysis
-describes information that is not directly observable. The analysis is sound iff the
-information it describes about a program is the same or less precise than the dynamic
-semantics of the program. The analysis is computable iff there exists an algorithm that
-determines all the values described by the analysis on any input program.
-
-Analyses can be described in a variety of ways. A computable algorithm that take programs
-as input and produces information about the behavior as output is ideal for automation. A
-non-algorithmic relation (i.e. a relation expressed in a language without an inherent evaluator
-from some parameters to the others),
-stated in terms of programs and execution information, may be
-more suitable for clarity of meaning and correctness with respect to the operational
-semantics. However, a non-algorithmic relation can be translated into an algorithm.
-One rather mechanical method essentially involves
-specifying a reasoner associated with the relation. 
-First, the reasoner generates a comprehensive set of data structures representing
-constraints from the relation's description, then the reasoner the constraints.
-
-For a subset of Concurrent ML without event combinators, Reppy and Xiao developed an
-efficient algorithm that determines for each channel, all possible threads that send
-and receive on it. The algorithm depends on each atom operation in the program being
-labeled with a program step. A sequence of program steps ordered in a valid execution
-sequence forms a control path. Distinction between threads in a program can be inferred from
-whether or not their control paths diverge.  
-
-The algorithm proceeds in multiple steps that produce intermediate data structures, used for
-efficient lookup in the subsequent steps.  It starts with a control-flow analysis that
-results in multiple mappings. One mapping is from names to abstract values that may be bound to
-the names. Another mapping is from channel-bound names to abstract values that are
-sent on the respective channels. Another is from function-bound names to abstract values
-that are the result of respective function applications.  It constructs a control-flow graph 
-with possible paths for conditional tests and thread spawning determined directly from the
-atoms used in the program.  Relying on information from the mappings to abstract values,
-it constructs the possible paths of execution via function application and channel
-communication.  It uses the graph for live variable analysis of channels, which limits the
-scope for the remaining analysis.  Using the spawn and application edges of the control-flow
-graph, the algorithm then performs a data-flow analysis to determine a mapping from program
-steps to all possible control paths leading into the respective program steps.  Using the
-CFA's mappings to abstract values, the algorithm determines the program steps for sends and
-receives per channel name.  Then it uses the mapping to control paths to determine all
-control paths that send or receive on each channel, from which it classifies channels as
-one-shot, one-to-one, many-to-one, one-to-many, or many-to-many.
-
-The information at each program step is derived from control structures in the program, which
-dictate how information flows between program steps. Some uses of control structures are
-literally represented in the syntax, such as the sequencing of namings and assignments in the
-previous examples. Other uses of control structures may be indirectly represented through
-names. Function application is a control structure that allows a calling piece of code to
-flow into a function function's code.  Function functions can be named, which allows
-multiple pieces of code to all flow into into the same section of code. The name adds an
-additional step in to uncover control structures, and determine data flow.
-Additionally, in languages with higher order functions and recursion, such as those in the Lisp
-and ML families, it may be impossible to exactly determine all the function functions that
-terms resolve to. However, a control flow analysis can reveal a good
-approximation of the control structures and values that have been obfuscated by higher order
-function functions.  Uncovering the control structures depends on resolving terms
-to values, and resolving terms to values depends on on uncovering the control
-structures. The mutual dependency means that control flow analysis is a form of
-static semantics that describes abstract evaluations of programs. in this work, control flow
-analysis is used for tracking certain kinds of values, like channels and events, in addition to
-constructing precise data flow analysis. 
-
 
 \subsection{Syntax}
 The syntax used in this formal theory contains a very small subset of
