@@ -1216,14 +1216,39 @@ whether or not a fixed point has been reached.
 
 Concurrent ML separates itself from other languages for concurrency with its generalized concept of events,
 event sycnrhonization, and event combinators.  Reppy and Xiao's work produces a static analysis for a subset,
-which only contained synchronization on sending and receiving events.  I originally, wanted to extend the analysis
-to encompass a more generalized notion of events, along with the evenet combinator for choice.  However, I quickly
+which only contained synchronization on sending and receiving events.  I originally, wanted to extend Reppy and Xiao's
+analysis to encompass a more generalized notion of events, along with the evenet combinator for choice.
+However, I quickly
 realized that the combination of creating a new specification, in an unfamiliar proof assistant, with a more complex
 semantics in the language, would be too much to detail with at once.  Instead, I adhered to Reppy and Xiao's decision
 to construct the specification and proofs for a simplied subset of Concurrent ML, containing synchronization on just
 sending and receiving events. Since I constructed these specifications and proofs in Isabelle/HOL, it will be possible
-to easily extend the semantics later, by using Isabelle/HOL to pinpoint where the proofs and specifications break upon
-changes.
+to easily extend the semantics later, by using the proof assistant to pinpoint where the proofs and
+specifications break upon changes.
+
+The language for the mechanized specification contains features found in untyped lambda calculus with
+some extensions, such as functions, function application, products, product elimination, sums, sum elimination, and unit. 
+Additionally, for concurrency it contains channel creation, sending events, receiving events, synchronization,
+and thread spawning. Features may be used together by binding the use of one feature to a name, and then
+sequencig to another term using that name. Additionally, spawning, function application, and sum elimination require
+use of other features.
+
+The dynamic semantics are represented by a small step relation for a variant of a CEK machine, in which one pool evalutes
+to the next pool. A pool consists of many states associated with paths taken to reach each state.  A state cosists
+of a term to be evaluated, an environment for looking up values from names, and a stack of continuations.
+A valid small step relation always steps from one pool to the pool extended with at least one new state.
+Terms containing names are not simplified.  Instead, an environment can be used to look the values of names.
+Names are locally scoped so that they can be reused with a precise meaning, such as function paramenter being bound to
+different argument each time its called. As such, for any term containing names, its corresponding value is simply
+the term paired with its own environment.
+
+The static semantics is represented by a control flow analysis relation. Control flow analysis is a "may" analysis,
+meaning that the analysis is sound if it holds for all possible evaluations of the dynamic evaluation.
+It may also hold for evaluations that are impossible to occur in the dynamic evaluation.
+Instead of associated each term with its own environment, the control flow analysis simply has one static environemnt
+for the entire program. If a name takes on different values in different scopes during dynamic evaluation, then
+the static environment simply considers both to be options.   
+
 
 
 (*
