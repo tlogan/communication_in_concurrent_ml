@@ -447,10 +447,10 @@ could inadvertently use a one-shot channel for a channel that has multiple sende
 violating the intended semantics. 
 
 The utility of the static analysis additionally depends on it being precise, sound, and
-computable. The analysis is precise iff there exist programs about which the analysis
-describes information that is not directly observable. The analysis is sound iff the
+computable. The analysis is precise if and only if there exist programs about which the analysis
+describes information that is not directly observable. The analysis is sound if and only if the
 information it describes about a program is the same or less precise than the dynamic
-semantics of the program. The analysis is computable iff there exists an algorithm that
+semantics of the program. The analysis is computable if and only if there exists an algorithm that
 determines all the values described by the analysis on any input program.
 
 Analyses can be described in a variety of ways. A computable algorithm that take programs
@@ -1233,7 +1233,7 @@ and thread spawning. Features may be used together by binding the use of one fea
 sequencig to another term using that name. Additionally, spawning, function application, and sum elimination require
 use of other features.
 
-The dynamic semantics are represented by a small step relation for a variant of a CEK machine, in which one pool evalutes
+The dynamic evaluation is represented by a small step relation for a variant of a CEK machine, in which one pool evalutes
 to the next pool. A pool consists of many states associated with paths taken to reach each state.  A state cosists
 of a term to be evaluated, an environment for looking up values from names, and a stack of continuations.
 A valid small step relation always steps from one pool to the pool extended with at least one new state.
@@ -1242,13 +1242,33 @@ Names are locally scoped so that they can be reused with a precise meaning, such
 different argument each time its called. As such, for any term containing names, its corresponding value is simply
 the term paired with its own environment.
 
-The static semantics is represented by a control flow analysis relation. Control flow analysis is a "may" analysis,
+The initial pool of a running program is a pool with an empty path associated with a state containing the program,
+an empty environment and an empty continuation stack.
+Full evaluation is represented by the star predicate composed with the small step relation, applied to the initial pool.
+It states that an initial pool takes zero or more transitive steps to reach another pool.
+
+The static evaluation is represented by a control flow analysis relation. Control flow analysis is a "may" analysis,
 meaning that the analysis is sound if it holds for all possible evaluations of the dynamic evaluation.
 It may also hold for evaluations that are impossible to occur in the dynamic evaluation.
-Instead of associated each term with its own environment, the control flow analysis simply has one static environemnt
+Instead of associating each term with its own environment, the control flow analysis simply has one static environemnt
 for the entire program. If a name takes on different values in different scopes during dynamic evaluation, then
-the static environment simply considers both to be options.   
+the static environment simply considers both to be options. 
 
+The soundness theorem of the static evaluation with respect to dynamic evaluation states that if full dynamic evaluation
+of a program reaches a pool with containing some environent, and the static evaluation holds for the program and some
+static environemnt, then the static environemnt is an abstraction of the dynamic environment.  That is, if a name maps
+to some value in the dynamic environment, then, in the static environment, the name maps to a set containing the same value
+or an abstraction of the value.
+
+The static evaluation relates static environments to initial programs, but soundness relates static environments
+to dynamic environments. Furthermore, the dynamic environment of a state in a pool depends on, the terms, environemnts,
+and continuation stacks of states in previous pools.  Thus, if the static evaluation holds for a static environment and a program,
+then there must be a relation that holds for the same static environment and any pool that the program may dynamically evaluate to. 
+Generalizing static evaluation to work for pools, environemnts, and stacks, gives a version that does not lose precision.
+The generalized static evaluation on the intial pool is defined to follow from the static evaluation on the program.
+The preservation of the static evaluation of a pool across multiple steps of dynamic evaluation is proved by induction on
+the star relation. The static evaluation on a pool is taken taken apart into a static evaluation on a dynamic environment,
+thus relating the dynamic environment with the static environment, which is essentially sound by definition. 
 
 
 (*
