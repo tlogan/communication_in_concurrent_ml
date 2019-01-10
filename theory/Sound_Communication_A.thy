@@ -1829,45 +1829,38 @@ done
 theorem staticOneShotSound:
   "
       staticOneShot V e xC \<Longrightarrow>
-      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
-      one_shot \<E>' (Ch \<pi> xC)"
+      one_shot e (Ch \<pi> xC)"
 apply (erule staticOneShot.cases; auto)
-apply (unfold one_shot.simps)
-apply (simp add: singular_to_equal)
+apply (unfold one_shot.simps; auto)
+using singular_to_equal apply blast
 done
 
 theorem staticOneToManySound:
   "
       staticOneToMany V e xC \<Longrightarrow>
-      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
-      fan_out \<E>' (Ch \<pi> xC)" 
+      fan_out e (Ch \<pi> xC)" 
    apply (erule staticOneToMany.cases; auto)
-   apply (unfold fan_out.simps)
-   apply (metis noncompetitive_send_to_ordered_send)
+   apply (unfold fan_out.simps; auto)
+  using noncompetitive_send_to_ordered_send apply blast
 done
 
 theorem staticManyToOneSound:
   "
       staticManyToOne V e xC \<Longrightarrow>
-      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
-      fan_in \<E>' (Ch \<pi> xC)"
+      fan_in e (Ch \<pi> xC)"
    apply (erule staticManyToOne.cases; auto)
    apply (unfold fan_in.simps)
-   apply (metis noncompetitive_recv_to_ordered_recv)
+  using noncompetitive_recv_to_ordered_recv apply fastforce
 done
 
 theorem staticOneToOneSound:
   "
       staticOneToOne V e xC \<Longrightarrow>
-      (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-      star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
-      one_to_one \<E>' (Ch \<pi> xC)"
+      one_to_one e (Ch \<pi> xC)"
  apply (erule staticOneToOne.cases; auto)
- apply (unfold one_to_one.simps)
- apply (simp add: fan_in.simps fan_out.simps noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send)
+ apply (unfold one_to_one.simps; auto)
+using fan_in.simps fan_out.simps noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send
+apply(meson star.refl)
 done
 
 

@@ -1273,7 +1273,7 @@ the star relation. The static evaluation on a pool is taken taken apart into a s
 thus relating the dynamic environment with the static environment, which is essentially sound by definition. 
 
 
-The dynamic commucation classification consists of four relations to categorize channels in a pool, as one-to-many,
+The dynamic communication classification consists of four relations to categorize channels in a pool, as one-to-many,
 many-to-one, one-to-one, or one-shot. All four classification relations are defined in terms of how any two paths   
 in the pool relate to each other. The one-to-many classification holds if any two paths that send on the channel are ordered. 
 If the sending paths are all ordered or there are no sending paths, then there is simply only at most one thread that
@@ -1282,6 +1282,28 @@ The one-to-one classification holds if both all the receiving paths on the chann
 channel are ordered.  The one-shot classification holds if there is at most one sending path on a channel, regardless
 of which paths receive on the channel.
 
+The static communication classification relations, as with dynamic communication, are defined in terms of paths
+that send and receive a channel of interest. However, these sites of sending and receiving the channel, are approximations
+taken from the static environment, whose content is influenced by the rules of static evaluation.
+The static flows acceptance relation states that a set of flows, i.e. a graph, accepts a program or term, where each flow is
+an abstract representation of a small step in the dynamic evaluation.  The relation is defined such that
+it is decidable if a given finite set of flows holds. The static paths are from the chaining of flows.
+The set of static paths to a sending or receiving syncrhonization site is bounded by the static flows acceptance
+relation. Due to cycles in the graph, the set of paths may be inifite. 
+The static one-to-many classification holds if any two static sending paths are noncompetitive, meaning
+that either they are ordered, like the dynamic classification, or there's no way for the paths to occur in the same run
+of the program. The many-to-one and one-to-one classification also rely on the notion of noncompeititive paths, rather than
+simply unordered paths. Likewise, the static one-shot classification holds if any two static sending paths are singular,
+meaning that either they're equal, like the dynamic classification, or they cannot occur in the same run of the program.
+
+
+The soundness theorem of the static communication classification relations to their dynamic counterparts states that if
+a channel is statically classified in some way, then it is dynamically classified the same way.  For instance, if the
+static one-to-many classification holds for a static channel, then the dynamic one-to-many classifaction holds for
+all dynamic counterparts of that channel.  The static communication classification is a "must" analysis, meaning that
+if the classification holds statically, then it must hold dynamically.
+
+(* proof ... *)
 
 
 

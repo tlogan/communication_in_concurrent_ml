@@ -484,6 +484,7 @@ inductive staticOneShot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rig
     forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) singular \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
+    (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
     staticOneShot staticEnv e xC 
   "
 
@@ -494,6 +495,7 @@ inductive staticOneToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Ri
     forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
+    (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
     staticOneToOne staticEnv e xC 
   "
 
@@ -503,6 +505,7 @@ inductive staticOneToMany :: "static_env \<Rightarrow> tm \<Rightarrow> name \<R
     forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) noncompetitive \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
+    (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
     staticOneToMany staticEnv e xC 
   "
 
@@ -512,6 +515,7 @@ inductive staticManyToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<R
     forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
+    (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
     staticManyToOne staticEnv e xC 
   "
 

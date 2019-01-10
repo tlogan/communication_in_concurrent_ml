@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  10 JAN 2019 05:47
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  10 JAN 2019 06:54
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -932,74 +932,74 @@ k were con-structed in the for-mal lan-guage of Is-abelle/HOL,
  []
 
 [22] [23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34] [35] [36]
-[37] [38] [39] [40] [41] [42] [43] [44] [45]
-<cml-graph.pdf, id=158, 1494.58376pt x 1964.33875pt>
+[37] [38] [39] [40] [41] [42] [43] [44] [45] [46]
+<cml-graph.pdf, id=161, 1494.58376pt x 1964.33875pt>
 File: cml-graph.pdf Graphic file (type pdf)
  <use cml-graph.pdf>
-Package pdftex.def Info: cml-graph.pdf used on input line 2379.
+Package pdftex.def Info: cml-graph.pdf used on input line 2401.
 (pdftex.def)             Requested size: 387.00153pt x 508.6179pt.
 
-[46] [47 <./cml-graph.pdf>] [48] [49] [50] [51] [52]
-<cml-proof-low.pdf, id=207, 791.95876pt x 576.1525pt>
+[47] [48 <./cml-graph.pdf>] [49] [50] [51] [52] [53]
+<cml-proof-low.pdf, id=210, 791.95876pt x 576.1525pt>
 File: cml-proof-low.pdf Graphic file (type pdf)
  <use cml-proof-low.pdf>
-Package pdftex.def Info: cml-proof-low.pdf used on input line 2699.
+Package pdftex.def Info: cml-proof-low.pdf used on input line 2721.
 (pdftex.def)             Requested size: 430.00462pt x 312.83202pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 2699--2700
+Overfull \hbox (17.0pt too wide) in paragraph at lines 2721--2722
 [][] 
  []
 
-[53] [54 <./cml-proof-low.pdf>] [55] [56] [57] [58] [59] [60] [61] [62]
-[63] [64] [65] [66] [67] [68] [69] [70]
-<cml-graph-lp.pdf, id=276, 1729.46124pt x 1925.1925pt>
+[54] [55 <./cml-proof-low.pdf>] [56] [57] [58] [59] [60] [61] [62] [63]
+[64] [65] [66] [67] [68] [69] [70] [71]
+<cml-graph-lp.pdf, id=279, 1729.46124pt x 1925.1925pt>
 File: cml-graph-lp.pdf Graphic file (type pdf)
  <use cml-graph-lp.pdf>
-Package pdftex.def Info: cml-graph-lp.pdf used on input line 3531.
+Package pdftex.def Info: cml-graph-lp.pdf used on input line 3553.
 (pdftex.def)             Requested size: 430.00462pt x 478.6531pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 3531--3532
+Overfull \hbox (17.0pt too wide) in paragraph at lines 3553--3554
 [][] 
  []
 
-[71] [72 <./cml-graph-lp.pdf>] [73] [74]
-<cml-liveness-analysis-k1.pdf, id=301, 1731.46875pt x 1908.12875pt>
+[72] [73 <./cml-graph-lp.pdf>] [74] [75]
+<cml-liveness-analysis-k1.pdf, id=304, 1731.46875pt x 1908.12875pt>
 File: cml-liveness-analysis-k1.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k1.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3648.
+Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3670.
 (pdftex.def)             Requested size: 430.00462pt x 473.8574pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 3648--3649
+Overfull \hbox (17.0pt too wide) in paragraph at lines 3670--3671
 [][] 
  []
 
-[75 <./cml-liveness-analysis-k1.pdf>]
-<cml-liveness-analysis-k4.pdf, id=316, 1776.6375pt x 1939.245pt>
+[76 <./cml-liveness-analysis-k1.pdf>]
+<cml-liveness-analysis-k4.pdf, id=319, 1776.6375pt x 1939.245pt>
 File: cml-liveness-analysis-k4.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k4.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3655.
+Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3677.
 (pdftex.def)             Requested size: 430.00462pt x 469.33426pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 3655--3656
+Overfull \hbox (17.0pt too wide) in paragraph at lines 3677--3678
 [][] 
  []
 
-[76 <./cml-liveness-analysis-k4.pdf>] [77] [78] [79] [80]
-<cml-graph-k1.pdf, id=345, 1559.8275pt x 1677.26625pt>
+[77 <./cml-liveness-analysis-k4.pdf>] [78] [79] [80] [81]
+<cml-graph-k1.pdf, id=348, 1559.8275pt x 1677.26625pt>
 File: cml-graph-k1.pdf Graphic file (type pdf)
  <use cml-graph-k1.pdf>
-Package pdftex.def Info: cml-graph-k1.pdf used on input line 3863.
+Package pdftex.def Info: cml-graph-k1.pdf used on input line 3885.
 (pdftex.def)             Requested size: 387.00153pt x 416.11641pt.
 
-<cml-graph-k4.pdf, id=346, 1090.0725pt x 954.56625pt> [81 <./cml-graph-k1.pdf>]
+<cml-graph-k4.pdf, id=349, 1090.0725pt x 954.56625pt> [82 <./cml-graph-k1.pdf>]
 File: cml-graph-k4.pdf Graphic file (type pdf)
 <use cml-graph-k4.pdf>
-Package pdftex.def Info: cml-graph-k4.pdf used on input line 3868.
+Package pdftex.def Info: cml-graph-k4.pdf used on input line 3890.
 (pdftex.def)             Requested size: 301.00192pt x 263.57709pt.
- [82 <./cml-graph-k4.pdf>] [83] [84] [85] [86] [87]
-[88] [89] [90] (./thesis.bbl [91]) [92] (./thesis.aux) ) 
+ [83 <./cml-graph-k4.pdf>] [84] [85] [86] [87] [88]
+[89] [90] [91] (./thesis.bbl [92]) [93] (./thesis.aux) ) 
 Here is how much of TeX's memory you used:
  7831 strings out of 493014
  115474 string characters out of 6133351
@@ -1023,10 +1023,10 @@ dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2016/texmf-dist/fon
 ts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1
 /public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public
 /amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (93 pages, 720425 bytes).
+Output written on thesis.pdf (94 pages, 721664 bytes).
 PDF statistics:
- 476 PDF objects out of 1000 (max. 8388607)
- 334 compressed objects within 4 object streams
+ 479 PDF objects out of 1000 (max. 8388607)
+ 336 compressed objects within 4 object streams
  0 named destinations out of 1000 (max. 500000)
  36 words of extra memory for PDF output out of 10000 (max. 10000000)
 

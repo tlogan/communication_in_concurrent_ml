@@ -194,6 +194,7 @@ inductive staticOneShot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rig
   Sync: "
     forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
+    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
     staticOneShot V e xC 
   "
 
@@ -202,6 +203,7 @@ inductive staticOneToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Ri
     forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
     forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
+    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
     staticOneToOne V e xC 
   "
 
@@ -209,6 +211,7 @@ inductive staticOneToMany :: "static_env \<Rightarrow> tm \<Rightarrow> name \<R
   Sync: "
     forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
+    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
     staticOneToMany V e xC 
   "
 
@@ -216,6 +219,7 @@ inductive staticManyToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<R
   Sync: "
     forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
+    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
     staticManyToOne V e xC 
   "
 

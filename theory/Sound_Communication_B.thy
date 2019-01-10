@@ -1319,15 +1319,13 @@ done
 
 theorem staticOneShotSound: "
   \<lbrakk>
-    staticOneShot V e xC;
-    (V, C) \<Turnstile>\<^sub>e e;
-    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')
+    staticOneShot V e xC
   \<rbrakk> \<Longrightarrow>
-  one_shot \<E>' (Ch \<pi> xC)
+  one_shot e (Ch \<pi> xC)
 "
  apply (erule staticOneShot.cases; auto)
  apply (unfold one_shot.simps)
- apply (simp add: staticOneShotSound')
+  using staticOneShotSound' apply fastforce
 done
 
 
@@ -1348,15 +1346,13 @@ sorry
 
 theorem staticOneToManySound: "
   \<lbrakk>
-    staticOneToMany V e xC;
-    (V, C) \<Turnstile>\<^sub>e e;
-    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')
+    staticOneToMany V e xC
   \<rbrakk> \<Longrightarrow>
-  fan_out \<E>' (Ch \<pi> xC)
+  fan_out e (Ch \<pi> xC)
 "
  apply (erule staticOneToMany.cases; auto)
  apply (unfold fan_out.simps)
- apply (metis noncompetitive_send_to_ordered_send)
+  using noncompetitive_send_to_ordered_send apply fastforce
 done
 
 lemma noncompetitive_recv_to_ordered_recv:
@@ -1372,29 +1368,25 @@ sorry
 
 theorem staticManyToOneSound: "
   \<lbrakk>
-    staticManyToOne V e xC;
-    (V, C) \<Turnstile>\<^sub>e e;
-    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')
+    staticManyToOne V e xC
   \<rbrakk> \<Longrightarrow>
-  fan_in \<E>' (Ch \<pi> xC)
+  fan_in e (Ch \<pi> xC)
 "
  apply (erule staticManyToOne.cases; auto)
  apply (unfold fan_in.simps)
- apply (metis noncompetitive_recv_to_ordered_recv)
+  using noncompetitive_recv_to_ordered_recv apply fastforce
 done
 
 
 theorem staticOneToOneSound: "
   \<lbrakk>
-    staticOneToOne V e xC;
-    (V, C) \<Turnstile>\<^sub>e e;
-    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H')
+    staticOneToOne V e xC
   \<rbrakk> \<Longrightarrow>
-  one_to_one \<E>' (Ch \<pi> xC)
+  one_to_one e (Ch \<pi> xC)
 "
  apply (erule staticOneToOne.cases; auto)
   apply (unfold one_to_one.simps)
-  apply (metis staticManyToOne.intros staticManyToOneSound staticOneToMany.intros staticOneToManySound)
+ apply (metis fan_out.cases noncompetitive_recv_to_ordered_recv staticOneToMany.intros staticOneToManySound)
 done
 
 end

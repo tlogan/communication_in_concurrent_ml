@@ -32,29 +32,33 @@ inductive ordered :: "'a list \<Rightarrow> 'a list \<Rightarrow> bool" where
   left: "prefix \<pi>1 \<pi>2 \<Longrightarrow> ordered \<pi>1 \<pi>2"
 | right: "prefix \<pi>2 \<pi>1 \<Longrightarrow> ordered \<pi>1 \<pi>2"
 
-inductive one_shot :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
+inductive one_shot :: "tm \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (pool, H') \<Longrightarrow>
     forEveryTwo (is_send_path pool c) op= \<Longrightarrow> 
-    one_shot pool c
+    one_shot e c
   "
 
-inductive fan_out :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
+inductive fan_out :: "tm \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (pool, H') \<Longrightarrow>
     forEveryTwo (is_send_path pool c) ordered \<Longrightarrow>
-    fan_out pool c
+    fan_out e c
   "
   
-inductive fan_in :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
+inductive fan_in :: "tm \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (pool, H') \<Longrightarrow>
     forEveryTwo (is_recv_path pool c) ordered \<Longrightarrow> 
-    fan_in pool c
+    fan_in e c
   "
 
-inductive one_to_one :: "trace_pool \<Rightarrow> chan \<Rightarrow> bool" where
+inductive one_to_one :: "tm \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
-    fan_out pool c \<Longrightarrow>
-    fan_in pool c \<Longrightarrow> 
-    one_to_one pool c
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (pool, H') \<Longrightarrow>
+    forEveryTwo (is_send_path pool c) ordered \<Longrightarrow>
+    forEveryTwo (is_recv_path pool c) ordered \<Longrightarrow> 
+    one_to_one e c
   "
 
 
