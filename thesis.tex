@@ -1258,9 +1258,8 @@ The soundness theorem of the static evaluation with respect to dynamic evaluatio
 of a program reaches a pool with containing some environent, and the static evaluation holds for the program and some
 static environemnt, then the static environemnt is an abstraction of the dynamic environment.  That is, if a name maps
 to some value in the dynamic environment, then, in the static environment, the name maps to a set containing the same value
-or an abstraction of the value.
-
-The static evaluation relates static environments to initial programs, but soundness relates static environments
+or an abstraction of the value. The static evaluation relates static environments to initial programs,
+but soundness relates static environments
 to dynamic environments. Furthermore, the dynamic environment of a state in a pool depends on, the terms, environemnts,
 and continuation stacks of states in previous pools.
 Thus, if the static evaluation holds for a static environment and a program,
@@ -1287,7 +1286,8 @@ that send and receive a channel of interest. However, these sites of sending and
 taken from the static environment, whose content is influenced by the rules of static evaluation.
 The static flows acceptance relation states that a set of flows, i.e. a graph, accepts a program or term, where each flow is
 an abstract representation of a small step in the dynamic evaluation.  The relation is defined such that
-it is decidable if a given finite set of flows holds. The static paths are from the chaining of flows.
+it is decidable if a given finite set of flows holds. The static paths are formed from the chaining of flows, accordind
+to the rules ot the static traceable relation.
 The set of static paths to a sending or receiving syncrhonization site is bounded by the static flows acceptance
 relation. Due to cycles in the graph, the set of paths may be inifite. 
 The static one-to-many classification holds if any two static sending paths are noncompetitive, meaning
@@ -1296,41 +1296,18 @@ of the program. The many-to-one and one-to-one classification also rely on the n
 simply unordered paths. Likewise, the static one-shot classification holds if any two static sending paths are singular,
 meaning that either they're equal, like the dynamic classification, or they cannot occur in the same run of the program.
 
-
 The soundness theorem of the static communication classification relations to their dynamic counterparts states that if
 a channel is statically classified in some way, then it is dynamically classified the same way.  For instance, if the
 static one-to-many classification holds for a static channel, then the dynamic one-to-many classifaction holds for
 all dynamic counterparts of that channel.  The static communication classification is a "must" analysis, meaning that
-if the classification holds statically, then it must hold dynamically.
-
-(* proof ... *)
-
-
-
-(*
-- replace the following with more informative description
-----
-To aid the development of formal proofs, the analyses are stated using relational specifications.
-The definitions of static relations are syntax-directed, which provides
-strong evidence of computability.
-For a static relation, the proof that it holds for a program is defined
-to depend on the syntactic form of the program.
-The syntax is defined inductively, with syntactic forms constructed of 
-substructures of the self-similar and different forms.   
-Likewise, for the definitions of static relations to conform to the
-syntactic structure, the static relations are defined to hold
-by structural induction on the program.
-Therefore, for any program, the static relation is decidable.
-Additionally, for any given program, there should be instances of the other
-parameters that satisfy the static relation, in which case there is an
-algorithm to compute sufficient parameters from a program,
-by following the basic structure of the proof of the static relation.
-----
-- give infromal overview of the syntax,
-- give informal overview of semantics, control-flow-analysis, semantic soundness.
-- give informal overview of the communication, static analysis (graph, paths), and communication soundness. 
-- discuss precision and higher precision analysis
-*)
+if the classification holds statically, then it must hold dynamically. Soundness depends on the soundness and preservation
+of its constiuent parts,
+including the soundness of static evaluation, the soundness of the noncompetitive relation with respect to
+the unordered relation, the soundnes of the singular relation with respect to equality of paths,
+and the soundness and preservation of the static tracecable relation. As with the static evaluation, many proofs of
+soudnness for the static communication classification, rely on bridging the gap between the terms used in dynamic
+versions and the terms used in the static versions. Generalizations of the static communication classification relations to
+apply to dynamic terms, such as pools, environments, stacks, and values are derived to complete these proofs.
 
 This work does not contain formal proofs that the specialized implementations are
 behaviorally equivalent to a generic implementation, but the example implementations
