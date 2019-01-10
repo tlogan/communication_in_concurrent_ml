@@ -1262,13 +1262,27 @@ or an abstraction of the value.
 
 The static evaluation relates static environments to initial programs, but soundness relates static environments
 to dynamic environments. Furthermore, the dynamic environment of a state in a pool depends on, the terms, environemnts,
-and continuation stacks of states in previous pools.  Thus, if the static evaluation holds for a static environment and a program,
-then there must be a relation that holds for the same static environment and any pool that the program may dynamically evaluate to. 
+and continuation stacks of states in previous pools.
+Thus, if the static evaluation holds for a static environment and a program,
+then there must be a relation that holds for the same static environment and
+any pool that the program may dynamically evaluate to. 
 Generalizing static evaluation to work for pools, environemnts, and stacks, gives a version that does not lose precision.
 The generalized static evaluation on the intial pool is defined to follow from the static evaluation on the program.
 The preservation of the static evaluation of a pool across multiple steps of dynamic evaluation is proved by induction on
 the star relation. The static evaluation on a pool is taken taken apart into a static evaluation on a dynamic environment,
 thus relating the dynamic environment with the static environment, which is essentially sound by definition. 
+
+
+The dynamic commucation classification consists of four relations to categorize channels in a pool, as one-to-many,
+many-to-one, one-to-one, or one-shot. All four classification relations are defined in terms of how any two paths   
+in the pool relate to each other. The one-to-many classification holds if any two paths that send on the channel are ordered. 
+If the sending paths are all ordered or there are no sending paths, then there is simply only at most one thread that
+sends on the channel. Likewise, The many-to-one classification holds if any two paths that receive on the channel are ordered.
+The one-to-one classification holds if both all the receiving paths on the channel are ordered and all the sending paths on the
+channel are ordered.  The one-shot classification holds if there is at most one sending path on a channel, regardless
+of which paths receive on the channel.
+
+
 
 
 (*
