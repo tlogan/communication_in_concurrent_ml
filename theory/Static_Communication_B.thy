@@ -15,75 +15,75 @@ type_synonym step = "(tm_id * mode)"
 
 type_synonym static_path = "step list"
 
-inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> tm \<Rightarrow> bool"  where
+inductive staticFlowsAcceptTm :: "static_env \<Rightarrow> flow_set \<Rightarrow> tm \<Rightarrow> tm \<Rightarrow> bool"  where
   Result:
   "
-    staticFlowsAccept staticEnv graph (Rslt x)
+    staticFlowsAcceptTm staticEnv graph t0 (Rslt x)
   "
 | BindUnit:
   "
     \<lbrakk>
       {(IdBind x , ENext, tmId e)} \<subseteq> graph;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x Unt e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x Unt e)
   "
 | BindMkChn:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> graph;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x MkChn e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x MkChn e)
   "
 | BindSendEvt:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> graph;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (Atom (SendEvt x\<^sub>c x\<^sub>m)) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (Atom (SendEvt x\<^sub>c x\<^sub>m)) e)
   "
 | BindRecvEvt:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> graph;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (Atom (RecvEvt x\<^sub>c)) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (Atom (RecvEvt x\<^sub>c)) e)
   "
 | BindPair:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> graph;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (Atom (Pair x\<^sub>1 x\<^sub>2)) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (Atom (Pair x\<^sub>1 x\<^sub>2)) e)
   "
 | BindLeft:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> graph;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (Atom (Lft x\<^sub>p)) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (Atom (Lft x\<^sub>p)) e)
   "
 | BindRight:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> graph;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (Atom (Rht x\<^sub>p)) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (Atom (Rht x\<^sub>p)) e)
   "
 | BindFun:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> graph;
-      staticFlowsAccept staticEnv graph e\<^sub>b;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e\<^sub>b;
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (Atom (Fun f x\<^sub>p e\<^sub>b)) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (Atom (Fun f x\<^sub>p e\<^sub>b)) e)
   "
 | BindSpawn:
   "
@@ -92,10 +92,10 @@ inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> 
         (IdBind x, ENext, tmId e),
         (IdBind x, ESpawn, tmId e\<^sub>c)
       } \<subseteq> F;
-      staticFlowsAccept staticEnv graph e\<^sub>c;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e\<^sub>c;
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (Spwn e\<^sub>c) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (Spwn e\<^sub>c) e)
   "
 | BindSync:
   "
@@ -104,28 +104,28 @@ inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> 
       (\<forall> xSC xM xC y.
         {SAtm (SendEvt xSC xM)} \<subseteq> staticEnv xSE \<longrightarrow>
         {SChn xC} \<subseteq> staticEnv xSC \<longrightarrow>
-        staticRecvSite staticEnv e xC (IdBind y) \<longrightarrow>
+        staticRecvSite staticEnv t0 xC (IdBind y) \<longrightarrow>
         {(IdBind x, ESend xSE, IdBind y)} \<subseteq> graph
       );
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (Sync xSE) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (Sync xSE) e)
   "
 | BindFst:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> graph;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (Fst x\<^sub>p) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (Fst x\<^sub>p) e)
   "
 | BindSnd:
   "
     \<lbrakk>
       {(IdBind x, ENext, tmId e)} \<subseteq> graph;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (Snd x\<^sub>p) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (Snd x\<^sub>p) e)
   "
 | BindCase:
   "
@@ -136,11 +136,11 @@ inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> 
         (IdRslt (\<lfloor>e\<^sub>l\<rfloor>), EReturn, tmId e),
         (IdRslt (\<lfloor>e\<^sub>r\<rfloor>), EReturn, tmId e)
       } \<subseteq> graph;
-      staticFlowsAccept staticEnv graph e\<^sub>l;
-      staticFlowsAccept staticEnv graph e\<^sub>r;
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e\<^sub>l;
+      staticFlowsAcceptTm staticEnv graph t0 e\<^sub>r;
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
   "
 | BindApp:
   "
@@ -150,9 +150,16 @@ inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> 
           (IdBind x, ECall, tmId e\<^sub>b),
           (IdRslt (\<lfloor>e\<^sub>b\<rfloor>), EReturn, tmId e)
         } \<subseteq> graph);
-      staticFlowsAccept staticEnv graph e
+      staticFlowsAcceptTm staticEnv graph t0 e
     \<rbrakk> \<Longrightarrow>
-    staticFlowsAccept staticEnv graph (Bind x (App f x\<^sub>a) e)
+    staticFlowsAcceptTm staticEnv graph t0 (Bind x (App f x\<^sub>a) e)
+  "
+
+inductive staticFlowsAccept :: "static_env \<Rightarrow> flow_set \<Rightarrow> tm \<Rightarrow> bool"  where
+  Intro:
+  "
+    staticFlowsAcceptTm staticEnv graph t0 t0 \<Longrightarrow>
+    staticFlowsAccept staticEnv graph t0
   "
 
 
