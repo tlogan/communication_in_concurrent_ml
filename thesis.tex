@@ -347,7 +347,7 @@ to use a syntax that is more typical of mathematical logic and language theory l
 
 In addition to creating theorems by proving propositions, Isabelle/HOL also allows creating theorems
 by defining predicates. This feature is critical for constructing inductive propositions that may hold
-over an infinite range of values.  Infinite ranges may be defined as inductive datatypes,
+over an infinite range of values. Infinite ranges may be defined as inductive datatypes,
 similar to Standard ML.
 
 For instance, you can define the infinite set of natural numbers (with zero) as an inductive datatype,
@@ -2274,9 +2274,9 @@ accepting flows for its left case's embedded term, right case's embedded term,
 and the sequenced embedded term.   
 
 In the case of application, if the applied name is actually bound to a function
-function, then a calling flow from the application term to the function's embedded term
+, then a calling flow from the application term to the function's embedded term
 might accept the term, and the returning flow from the result of the function
-function to the sequenced embedded term might accept the term.
+ to the sequenced embedded term might accept the term.
 Additionally, the accepting flows for the application term are also
 accepting flows for the sequenced embedded term. 
 
@@ -2434,13 +2434,14 @@ that lead to receiving on static channel
 \lstinline[language=sugar_lang]{chn k4}. This is certainly imprecise,
 as the static \lstinline[language=sugar_lang]{chn k4} corresponds to
 multiple distinct dynamic channels, each with just one sender and one receiver.  The higher
-precision analysis discussed in section ? addresses this issue.
+precision analysis discussed in section \ref{high-precision} addresses this issue.
 
 The static inclusion means that two static paths might be traced in
 the same run of a program. Ordered paths might be inclusive, and also a path that diverges
 from another at a spawn flow might be inclusive. This concept is useful for achieving
 greater precision, since if two paths cannot occur in the same run of a program, only one needs
-to be counted towards the communication classification. 
+to be counted towards the communication classification. The predicates are intended to be applied
+to paths starting from the beginning of a program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticInclusive: static_path -> static_path -> bool
@@ -2457,12 +2458,12 @@ to be counted towards the communication classification.
         staticInclusive path1 path2
   * $\forall$ path n path1 path2 .
       staticInclusive
-        (path @ (NBnd n, MSpwn) # path1)
-        (path @ (NBnd n, MNxt) # path2)
+        (path @ [(NBnd n, MSpwn)] @ path1)
+        (path @ [(NBnd n, MNxt)] @ path2)
   * $\forall$ path n path1 path2 .
       staticInclusive
-        (path @ (NBnd n, MNxt) # path1)
-        (path @ (NBnd n, MSpwn) # path2)
+        (path @ [(NBnd n, MNxt)] @ path1])
+        (path @ [(NBnd n, MSpwn)] @ path2)
 \end{lstlisting}
 
 The singularness means that two paths are the same or only of them can occur in a given run of
@@ -2577,9 +2578,9 @@ Reppy and Xiao informally prove soundness of their analysis by showing that thei
 determines that more than one thread sends (or receives) on a channel if the execution allows more
 than one to send (or receive) on that channel. The proof of soundness depends on the
 ability to relate the execution of a program to the static analysis of a program. The static
-analysis describes threads in terms of control paths, since it can only describe threads in
+analysis describes threads in terms of static paths, since it can only describe threads in
 terms of statically available information. Thus, in order to describe the relationship between
-the threads of the static analysis and the operational semantics, the operational semantics is
+the threads of the static analysis and the dynamic semantics, the dynamic semantics is
 defined as stepping between sets of control paths paired with terms. Divergent control paths
 are added whenever a new thread is spawned.
 
@@ -2721,6 +2722,11 @@ The soundness of static one-to-many classification is proved by a few simpler le
 definitions of static and dynamic one-to-many classification.
 There is an isomorphic correspondence between the paths of
 dynamic evaluation and the paths of static evaluation, by definition.
+The static paths are derived from the static flow graph. Although it is possible to directly derive
+the dynamic paths from the static flow graph, deriving an isomorphoic path structure keeps the the
+paths relation to the static flow graph clear.  Additionally, for the higher precision analysis, static
+paths are not isomorphic to dynamic paths. 
+
 The three main lemmas state the
 soundness of the static traceability, the soundness of the static inclusiveness, and
 the soundness of a program step not being a static sending identifier. These lemmas depend on a
@@ -2813,7 +2819,7 @@ prove soundness for a fixed program, but not any arbitrary program.
 The generalization of static acceptance by flows is comprised of static acceptance by flows over values,
 static acceptance by flows over environments, static acceptance by flows over stacks, and static
 acceptance by flows over pools.
-In most cases, it simply states that a embedded term of some semantic element is also statically
+In most cases, it simply states that an embedded term of some semantic element is also statically
 accepting. The exception is in the case of
 static acceptance by flows over a non-empty stack, where
 there is an additional condition that the flow
@@ -2883,16 +2889,16 @@ depending on the program.
   predicate staticFlowsAcceptStack:
     static_value_map -> graph -> name -> stack -> bool
   where only
-    $\forall$ staticEnv graph y .
-      staticFlowsAcceptStack staticEnv graph y []
-  * $\forall$ y t graph staticEnv graph env stack n env .
+    $\forall$ staticEnv graph n$_r$ .
+      staticFlowsAcceptStack staticEnv graph n$_r$ []
+  * $\forall$ n$_r$ t graph staticEnv graph env stack n env .
       if 
-        {(NRslt y, MRtn, termId e)} $\subseteq$ graph,
+        {(NRslt y, MRtn, termId t)} $\subseteq$ graph,
         staticFlowsAccept staticEnv graph t,
         staticFlowsAcceptEnv staticEnv graph env,
         staticFlowsAcceptStack staticEnv graph (resultName t) stack 
       then 
-        staticFlowsAcceptStack staticEnv graph y ((Ctn n t env) # stack)
+        staticFlowsAcceptStack staticEnv graph n$_r$ ((Ctn n t env) # stack)
 
   predicate staticFlowsAcceptPool of
     static_value_map -> graph -> pool -> bool
@@ -2924,7 +2930,7 @@ dynamic evaluations of pools. They also provide direct access to binding informa
 to static values in a fixed number of logical steps. Static evaluation of programs correlates
 program syntax to static values, but the generalized static evaluations correlate dynamic
 semantic structures, like, value, environments, and stacks, to static values. The function
-function relates dynamic values to static values and helps the larger goal of relating dynamic
+relates dynamic values to static values and helps the larger goal of relating dynamic
 semantic elements to static values and static environments.    
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -2937,7 +2943,7 @@ semantic elements to static values and static environments.
       abstract (VAtm atom env) = SAtm atom)
 
   predicate staticEvalValue:
-    static_value_map -> abstract_comm -> dynamic_value -> bool
+    static_value_map -> static_value_map -> dynamic_value -> bool
   where only
     $\forall$ staticEnv staticComm .
       staticEvalValue staticEnv staticComm VUnit)
@@ -3004,7 +3010,7 @@ semantic elements to static values and static environments.
         staticVals $\subseteq$ staticEnv n,
         staticEval staticEnv staticComm t,
         staticEvalEnv staticEnv staticComm env,
-        staticEvalStack staticEnv staticComm staticEnv (resultName t) stack 
+        staticEvalStack staticEnv staticComm (staticEnv (resultName t)) stack 
       then
         staticEvalStack staticEnv staticComm staticVals ((Ctn n t env) # stack))
 
@@ -3019,7 +3025,7 @@ semantic elements to static values and static environments.
           then 
             staticEval staticEnv staticComm t,
             staticEvalEnv staticEnv staticComm env,
-            staticEvalStack staticEnv staticComm staticEnv (resultName t) stack)
+            staticEvalStack staticEnv staticComm (staticEnv (resultName t)) stack)
       then 
         staticEvalPool staticEnv staticComm pool)
   \end{lstlisting}
@@ -3074,7 +3080,7 @@ of static acceptance by flows across multiples steps of evaluation.
 
 The preservation of static acceptance by flows over pools is proved by the
 equivalence between star and its leftward variant, and induction on the leftward variant.
-The preservation of static evalatuation of pools over multioples steps is also relied upon.
+The preservation of static evalatuation of pools over multiple steps is also relied upon.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma staticEvalPoolPreserved:
@@ -3120,7 +3126,7 @@ well as foundational principles like induction of corresponding paths.
 The lemma for completeness of sending identifier classification \lstinline{staticSendIdSound}
 is proved using the lemma for
 soundness of static evaluation for synchronization of a send event,
-and the lemma for soudness of static evaluation.
+and the lemma for soundness of static evaluation.
 Since only sending identifiers are relevant the completeness of static reachability is
 used to ensure that the static step is indeed a sending identifier. 
 
@@ -3129,7 +3135,7 @@ used to ensure that the static step is indeed a sending identifier.
     $\forall$ t0 pool comm staticEnv staticComm path
       n n$_e$ t' env stack n$_{sc}$ n$_m$ env$_e$ path$_c$ n$_c$ .
       if
-        star dynamicEval [[] -> (Stt t0 [->] [])], {} pool comm,
+        star dynamicEval [[] -> (Stt t0 [->] [])] {} pool comm,
         staticEval staticEnv staticComm t0,
         pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
         env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env$_e$),
@@ -3160,17 +3166,20 @@ Both the soundness of static evaluation on the syncrhonization of a send event,
 and the soundness of static evaluation follow from
 the preservation of static evaluation over multiple steps of dynamic evaluation.
 
-The lemma for completeness of static reachability relies on the a reformulation of
-static reachability that defined by proofs that induct on a larger term
+The lemma for completeness of static reachability relies on a reformulation of
+static reachability defined by proofs that induct on a larger term
 containing the reachable term.  This definition is useful for forward derivations
 of reachability relations, however it doesn't offer much guidance for deciding reachability. 
 In constrast, the definition of the original static reachability relation is
 syntax-directed in order to portray a clear connection to
 a computable algorithm that can determine the reachable term from an initial program.
-However, to show that an term is reachable from the initial program, it is necessary to
+To show that an term is reachable from the initial program, it is necessary to
 show that each intermediate term is reachable from the initial term.  Thus, the
-induction needs to enable unraveling the goals from the end to the beginning of the program,
-maintaining the initial program state in context for each subgoal.
+induction needs to enable unraveling the goals from the end of the program to the beginning,
+maintaining the initial program state in context for each subgoal. Because the static
+reachable relation is a "may", the generalized relations should hold unless there is
+a clear reason that it could never hold. For instance, in the relation over atoms, it holds
+for all atoms other than functions, it holds without any additional demands. 
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticReachableForward: term -> term -> bool
@@ -3221,7 +3230,7 @@ maintaining the initial program state in context for each subgoal.
       then
         staticReachableAtom t0 (Fun n$_f$ n$_p$ t$_b$)
 
-  predicate staticReachable_val: term -> dynamic_value -> bool
+  predicate staticReachableVal: term -> dynamic_value -> bool
   where only
     $\forall$ t0 .
       staticReachableValue t0 VUnt
@@ -3234,7 +3243,7 @@ maintaining the initial program state in context for each subgoal.
       then
         staticReachableValue t0 (VAtm t env)
 
-  predicate staticReachable_env: term -> env -> bool
+  predicate staticReachableEnv: term -> env -> bool
   where only
     $\forall$ t0 env
       if
@@ -3287,7 +3296,7 @@ forward star and constructs the static reachability
 proposition using the forward definition.  
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma staticReachableForwardImpliesstaticReachable:
+  lemma staticReachableForwardImpliesStaticReachable:
     $\forall$ t0 t. 
       if
         staticReachableForward t0 t
@@ -3321,8 +3330,7 @@ dynamic channel and the creation of a new dynamic channel with the same name.  T
 truncated program would have just one dynamic channel corresponding to the static channel under
 analysis. 
 
-A trimmed graph structure of graph is used static analysis for this higher precision
-analysis, which can better differentiate between distinct channels. 
+The higher precision analysis uses a trimmed down graph to better differentiate between distinct channels. 
 A trimmed graph is specialized for a particular dynamic channel.  From the creation
 step, it must contain transitive flows to all the program steps where the
 channel is live. It should also be as small as possible, for higher precision.
@@ -3359,7 +3367,6 @@ An additional loop function \lstinline{lp} has been added to the
 server implementation. The loop basically just wastes steps, but it is used to demontrate how
 liveness analysis treats functions that don't contain any channel of interest.
 
-
 \begin{lstlisting}[language=normal_lang, mathescape]
   bind u1 = unt
   bind r1 = rht u1
@@ -3369,8 +3376,16 @@ liveness analysis treats functions that don't contain any channel of interest.
   bind lp = fun lp' x1 => 
   (
     bind z1 = case x1 of 
-      lft y1 => bind z2 = lp' y1 z2
-    | rht y2 => bind u2 = unt rslt u2
+      lft y1 =>
+      (
+        bind z2 = app lp' y1
+        rslt z2
+      )
+    | rht y2 =>
+      (
+        bind u2 = unt
+        rslt u2
+      )
     bind u3 = unt
     rslt u3
   )
@@ -3387,17 +3402,15 @@ liveness analysis treats functions that don't contain any channel of interest.
       bind k2 = snd p1 
       bind e2 = sendEvt k2 x3
       bind z5 = sync e2
-      bind z6 = srv' v1
-      bind u4 = unt
-      rslt u4
-      bind z7 = spawn
-      (
-        bind z8 = srv r1
-        bind u5 = unt
-        rslt u5
-        rslt k1
-      )
+      bind z6 = app srv' v1
+      rslt z6 
     )
+    bind z7 = spawn
+    (
+      bind z8 = srv r1
+      rslt z8
+    )
+    rslt k1
   )
 
   bind rqst = fun _ x4 =>
@@ -3417,11 +3430,11 @@ liveness analysis treats functions that don't contain any channel of interest.
   bind z10 = spawn
   ( 
     bind p3 = pair srvr l1
-    bind z11 = rqst p3
+    bind z11 = app rqst p3
     rslt z11
   )
   bind p4 = pair srvr l2
-  bind z12 = rqst p4
+  bind z12 = app rqst p4
   rslt z12
 \end{lstlisting}
 
@@ -3430,27 +3443,27 @@ The static acceptance by flows for higher precision is similar to that of the lo
 However, it must additionally consider flows with the sending mode. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticFlowsAccept:
-    static_value_map -> graph -> term -> bool
+  predicate staticFlowsAcceptTm:
+    static_value_map -> graph -> term -> term -> bool
   where only
     $\forall$ staticEnv graph n .
-      staticFlowsAccept staticEnv graph (Rslt n)
+      staticFlowsAcceptTm staticEnv graph t0 (Rslt n)
   * $\forall$ n t' graph staticEnv .
       if
         (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
+        staticFlowsAcceptTm staticEnv graph t0 t'
       then
-        staticFlowsAccept staticEnv graph (Bind n Unt t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n Unt t')
   * $\forall$ n t' graph staticEnv  .
       if
         (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
+        staticFlowsAcceptTm staticEnv graph t0 t'
       then
-        staticFlowsAccept staticEnv graph (Bind n MkChn t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n MkChn t')
   * $\forall$ n t' graph staticEnv  n$_c$ n$_m$ .
       if
         (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
+        staticFlowsAcceptTm staticEnv graph t0 t'
       then
         staticFlowsAccept
           staticEnv graph
@@ -3458,42 +3471,42 @@ However, it must additionally consider flows with the sending mode.
   * $\forall$ n t' graph staticEnv n$_c$ .
       if
         (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
+        staticFlowsAcceptTm staticEnv graph t0 t'
       then
-        staticFlowsAccept staticEnv graph (Bind n (Atom (RecvEvt n$_c$)) t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n (Atom (RecvEvt n$_c$)) t')
   * $\forall$ n t' graph staticEnv n1 n2 .
       if
         (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
+        staticFlowsAcceptTm staticEnv graph t0 t'
       then
-        staticFlowsAccept staticEnv graph (Bind n (Atom (Pair n1 n2)) t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n (Atom (Pair n1 n2)) t')
   * $\forall$ n t' graph staticEnv n$_s$ .
       if
         (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
+        staticFlowsAcceptTm staticEnv graph t0 t'
       then
-       staticFlowsAccept staticEnv graph (Bind n (Atom (Lft n$_s$)) t')
+       staticFlowsAcceptTm staticEnv graph t0 (Bind n (Atom (Lft n$_s$)) t')
   * $\forall$ n t' graph staticEnv n$_s$ .
       if
         (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
+        staticFlowsAcceptTm staticEnv graph t0 t'
       then
-        staticFlowsAccept staticEnv graph (Bind n (Atom (Rht n$_s$)) t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n (Atom (Rht n$_s$)) t')
   * $\forall$ n t' graph staticEnv t$_b$ n$_f$ n$_p$ .
       if
         (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t',
-        staticFlowsAccept staticEnv graph t$_b$
+        staticFlowsAcceptTm staticEnv graph t0 t',
+        staticFlowsAcceptTm staticEnv graph t0 t$_b$
       then
-        staticFlowsAccept staticEnv graph (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
   * $\forall$ n t' t$_c$ graph staticEnv.
       if
         {(NBnd n, MNxt, termId t'),
           (NBnd n, MSpwn, termId t$_c$)} $\subseteq$ graph,
-        staticFlowsAccept staticEnv graph t$_c$,
-        staticFlowsAccept staticEnv graph t'
+        staticFlowsAcceptTm staticEnv graph t0 t$_c$,
+        staticFlowsAcceptTm staticEnv graph t0 t'
       then
-        staticFlowsAccept staticEnv graph (Bind n (Spwn t$_c$) t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n (Spwn t$_c$) t')
   * $\forall$ n t' graph staticEnv n$_{se}$ .
       if
         (NBnd n , MNxt, termId t') $\in$ graph,
@@ -3501,24 +3514,24 @@ However, it must additionally consider flows with the sending mode.
           if
             (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv nSE, 
             (SChn n$_c$) $\in$ staticEnv n$_{sc}$,
-            staticRecvId staticEnv t' n$_c$ (NBnd n$_y$)
+            staticRecvId staticEnv t0 n$_c$ (NBnd n$_y$)
           then
             (NBnd n, ESend n$_{se}$, NBnd n$_y$) $\in$ graph),
-        staticFlowsAccept staticEnv graph t'
+        staticFlowsAcceptTm staticEnv graph t0 t'
       then
-        staticFlowsAccept staticEnv graph (Bind n (Sync n$_{se}$) t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n (Sync n$_{se}$) t')
   * $\forall$ n t' graph staticEnv n$_p$ .
       if
         (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t',
+        staticFlowsAcceptTm staticEnv graph t0 t',
       then
-        staticFlowsAccept staticEnv graph (Bind n (Fst n$_p$) t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n (Fst n$_p$) t')
   * $\forall$ n t' graph staticEnv n$_p$ .
       if
         (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t',
+        staticFlowsAcceptTm staticEnv graph t0 t',
       then
-        staticFlowsAccept staticEnv graph (Bind n (Snd n$_p$) t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n (Snd n$_p$) t')
   * $\forall$ n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
       if
         {
@@ -3527,11 +3540,11 @@ However, it must additionally consider flows with the sending mode.
           (NRslt (resultName t$_l$), MRtn, termId t'),
           (NRslt (resultName t$_r$), MRtn, termId t')
         } $\subseteq$ graph,
-        staticFlowsAccept staticEnv graph t$_l$,
-        staticFlowsAccept staticEnv graph t$_r$,
-        staticFlowsAccept staticEnv graph t'
+        staticFlowsAcceptTm staticEnv graph t0 t$_l$,
+        staticFlowsAcceptTm staticEnv graph t0 t$_r$,
+        staticFlowsAcceptTm staticEnv graph t0 t'
       then
-        staticFlowsAccept staticEnv graph (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
   * $\forall$  staticEnv n$_f$ n t' n n$_a$ .
       if
         $\forall$ n$_f$' n$_p$ t$_b$ . if (SAtm (Fun n$_f$' n$_p$ t$_b$)) $\in$ staticEnv n$_f$ then 
@@ -3539,9 +3552,22 @@ However, it must additionally consider flows with the sending mode.
             (NBnd n, MCll, termId t$_b$),
             (NRslt (resultName t$_b$), MRtn, termId t')
           } $\subseteq$ graph),
-        staticFlowsAccept staticEnv graph t'
+        staticFlowsAcceptTm staticEnv graph t0 t'
       then
-        staticFlowsAccept staticEnv graph (Bind n (App n$_f$ n$_a$) t')
+        staticFlowsAcceptTm staticEnv graph t0 (Bind n (App n$_f$ n$_a$) t')
+
+
+
+
+  predicate staticFlowsAccept:
+    static_value_map -> graph -> term -> bool
+  where only
+    $\forall$ staticEnv graph n .
+      if
+        staticFlowsAcceptTm staticEnv graph t0 t0
+      then
+        staticFlowsAccept staticEnv graph t0 
+
 \end{lstlisting}
 
 The server implementation represented as a graph illustrates how static acceptance by
@@ -3752,7 +3778,7 @@ and each exit setappears right below its related term identifier.
   * $\forall$  exit n entr t$_b$ n$_p$ n staticEnv n$_c$ t' n$_f$ . 
       if
         (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (entr (termId t$_b$) \ {n$_p$}) $\subseteq$ entr (NBnd n),
+        (entr (termId t$_b$) \ {n$_f$, n$_p$}) $\subseteq$ entr (NBnd n),
         staticLiveChan staticEnv entr exit n$_c$ t$_b$,
         entr (termId t') $\subseteq$ exit (NBnd n),
         staticLiveChan staticEnv entr exit n$_c$ t'
@@ -3826,7 +3852,10 @@ and each exit setappears right below its related term identifier.
 
 The static liveness of a flow checks if a flow exists in a whole graph,
 and if it meets certain criteria with respect to the entry and exit liveness
-functions. 
+functions.  The channel liveness relation says if a channel is live within a function, but
+does not say anything whether or not a channel remains live across calling or returning flows.
+The liveness of flows can check if the liveness is mainted across function bounardies, in addition
+to simply lifting the static liveness the analysis for the intraprocedural flows.
 No channel is considered to be live in the body of the loop at \lstinline[language=normal_lang]{bind lp}.
 However, a channel may be live before the loop is
 called and after the loop returns. In such a case, the live flow is retained
@@ -4125,9 +4154,9 @@ The reasoning about the sending identifier is identical to that of the lower pre
 the reasoning for the former two is significantly more complicated and not yet completed.
 The complication arises from the
 correlation between dynamic paths and static paths.  The proofs depend on finding a static 
-path that depends on a given dynamic path. in the lower precision analysis the
+path that depends on a given dynamic path. In the lower precision analysis the
 correlation was straightforward. There was only one possible static path to choose for it
-to correlate with the given dynamic path. in the higher precision analysis, the relationship
+to correlate with the given dynamic path. In the higher precision analysis, the relationship
 between the two kinds of paths is not so simple, and finding a description of the static path
 that correlates with the dynamic path is much more challenging.
 
@@ -4257,7 +4286,7 @@ have separation of parts that are conceptually distinct, yet still depend on eac
 other.
 
 This work has kicked off the framework with a formal communication analysis that has practical
-applications in aiding optimizations for parallel computation.  In the future, additional
+applications in aiding optimizations for parallel computation. In the future, additional
 analyses could be built on the existing semantics, in order to verify the correctness of language 
 extensions or optimizations. Extending the semantics to handle event combinators for choosing
 events, sequencencing events, guardining events, among others, would be an important next step.

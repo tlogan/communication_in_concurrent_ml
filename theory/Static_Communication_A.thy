@@ -198,14 +198,6 @@ inductive staticOneShot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rig
     staticOneShot V e xC 
   "
 
-inductive staticOneToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
-  Sync: "
-    forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
-    forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
-    staticFlowsAccept V F e \<Longrightarrow>
-    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-    staticOneToOne V e xC 
-  "
 
 inductive staticOneToMany :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
@@ -221,6 +213,16 @@ inductive staticManyToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<R
     staticFlowsAccept V F e \<Longrightarrow>
     (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
     staticManyToOne V e xC 
+  "
+
+
+inductive staticOneToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+  Sync: "
+    forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
+    staticFlowsAccept V F e \<Longrightarrow>
+    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+    staticOneToOne V e xC 
   "
 
 end
