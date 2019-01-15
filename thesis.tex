@@ -2048,33 +2048,23 @@ and an initial term can statically reach any term that its embedded terms can st
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticReachable: term -> term -> bool where
-    $\forall$ t .
-      staticReachable t t 
-  * $\forall$ t$_c$ t$_z$ n t' . 
-      if
-        staticReachable t$_c$ t$_z$
-      then
-        staticReachable (Bind n (Spwn t$_c$) t') t$_z$
-  * $\forall$ t$_l$ t$_z$ n n$_s$ n$_l$ n$_r$ t$_r$ t' . 
-      if
-        staticReachable t$_l$ t$_z$
-      then
-        staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
-  * $\forall$ t$_r$ t$_z$ n n$_s$ n$_l$ t$_l$ n$_r$ t' . 
-      if
-        staticReachable t$_r$ t$_z$
-      then
-        staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
-  * $\forall$ t$_b$ t$_z$ n n$_f$ n$_t$ t$_b$ t' . 
-      if
-        staticReachable t$_b$ t$_z$
-      then
-        staticReachable (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t') t$_z$
-  * $\forall$ t' t$_z$ n c . 
-      if
-        staticReachable t' t$_z$
-      then
-        staticReachable (Bind n c t') t$_z$
+    refl: t .
+    $\vdash$ staticReachable t t 
+  * spawn: t$_c$ t$_z$ n t' . 
+      staticReachable t$_c$ t$_z$
+    $\vdash$ staticReachable (Bind n (Spwn t$_c$) t') t$_z$
+  * caseLeft: t$_l$ t$_z$ n n$_s$ n$_l$ n$_r$ t$_r$ t' . 
+      staticReachable t$_l$ t$_z$
+    $\vdash$ staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
+  * caseRight: t$_r$ t$_z$ n n$_s$ n$_l$ t$_l$ n$_r$ t' . 
+      staticReachable t$_r$ t$_z$
+    $\vdash$ staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
+  * function: t$_b$ t$_z$ n n$_f$ n$_t$ t$_b$ t' . 
+      staticReachable t$_b$ t$_z$
+    $\vdash$ staticReachable (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t') t$_z$
+  * seq: t' t$_z$ n c . 
+      staticReachable t' t$_z$
+    $\vdash$ staticReachable (Bind n c t') t$_z$
 \end{lstlisting}
 
 \subsection{Static Communication}
@@ -2088,10 +2078,10 @@ The term identifier of a result term is the embedded name, and indication of its
   | NRslt name 
 
   fun termId: term -> termId where
-    $\forall$ n c t' . 
-      termId (Bind n c t') = NBnd n
-  * $\forall$ n . 
-      termId (Rslt n) = NRslt n
+    n c t' . 
+    $\vdash$ termId (Bind n c t') = NBnd n
+  * n . 
+    $\vdash$ termId (Rslt n) = NRslt n
 
   type term_id_map = termId -> name set
 \end{lstlisting}
@@ -2105,24 +2095,22 @@ synchronization to receive on a given abstract channel.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticSendId:
-    static_value_map -> term -> name -> termId -> bool where
-    $\forall$ t$_0$ n n$_e$ t' n$_{sc}$ n$_m$ staticEnv n$_c$ .
-      if
-        staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
-        (SAtm (SendEvt n$_{sc}$ n$_m$)) $\subseteq$ staticEnv n$_e$, 
-        (SChn n$_c$) $\in$ staticEnv n$_{sc}$
-      then
-        staticSendId staticEnv t$_0$ n$_c$ (NBnd n)
+    static_value_map -> term -> name -> termId -> bool 
+  where
+    intro: t$_0$ n n$_e$ t' n$_{sc}$ n$_m$ staticEnv n$_c$ .
+      staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
+      (SAtm (SendEvt n$_{sc}$ n$_m$)) $\subseteq$ staticEnv n$_e$, 
+      (SChn n$_c$) $\in$ staticEnv n$_{sc}$
+    $\vdash$ staticSendId staticEnv t$_0$ n$_c$ (NBnd n)
 
   predicate staticRecvId:
-    static_value_map -> term -> name -> termId -> bool where
-    $\forall$ t$_0$ n n$_e$ t' n$_{rc}$ staticEnv n$_c$ .
-      if
-        staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
-        (SAtm (RecvEvt n$_{rc}$)) $\in$ staticEnv n$_e$, 
-        (SChn n$_c$) $\in$ staticEnv n$_{rc}$ 
-      then
-        staticRecvId staticEnv t$_0$ n$_c$ (NBnd n)
+    static_value_map -> term -> name -> termId -> bool
+  where
+    intro: t$_0$ n n$_e$ t' n$_{rc}$ staticEnv n$_c$ .
+      staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
+      (SAtm (RecvEvt n$_{rc}$)) $\in$ staticEnv n$_e$, 
+      (SChn n$_c$) $\in$ staticEnv n$_{rc}$ 
+    $\vdash$ staticRecvId staticEnv t$_0$ n$_c$ (NBnd n)
 \end{lstlisting}
 
 
@@ -2206,109 +2194,86 @@ accepting flows for the sequenced embedded term.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticFlowsAccept:
-    static_value_map -> graph -> term -> bool where
-    $\forall$ staticEnv graph n .
-      staticFlowsAccept staticEnv graph (Rslt n)
-  * $\forall$ n t' graph staticEnv  .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
-      then
-        staticFlowsAccept staticEnv graph (Bind n Unt t')
-  * $\forall$ n t' graph staticEnv  .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
-      then
-        staticFlowsAccept staticEnv graph (Bind n MkChn t')
-  * $\forall$ n t' graph staticEnv  n$_c$ n$_m$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph, 
-        staticFlowsAccept staticEnv graph t'
-      then
-        staticFlowsAccept
-          staticEnv graph
-          (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
-  * $\forall$ n t' graph staticEnv n$_c$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
-      then
-        staticFlowsAccept staticEnv graph (Bind n (Atom (RecvEvt n$_c$)) t')
-  * $\forall$ n t' graph staticEnv n$_1$ n$_2$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
-      then
-        staticFlowsAccept staticEnv graph (Bind n (Atom (Pair n$_1$ n$_2$)) t')
-  * $\forall$ n t' graph staticEnv n$_s$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
-      then
-        staticFlowsAccept staticEnv graph (Bind n (Atom (Lft n$_s$)) t')
-  * $\forall$ n t' graph staticEnv n$_s$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t'
-      then
-        staticFlowsAccept staticEnv graph (Bind n (Atom (Rht n$_s$)) t')
-  * $\forall$ n t' graph staticEnv t$_b$ n$_f$ n$_t$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAccept staticEnv graph t', 
-        staticFlowsAccept staticEnv graph t$_b$
-      then
-        staticFlowsAccept staticEnv graph (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t')
-  * $\forall$ n t' t$_c$ graph staticEnv.
-      if
-        {(NBnd n, MNxt, termId t'),
-          (NBnd n, MSpwn, termId t$_c$)} $\subseteq$ graph, 
-        staticFlowsAccept staticEnv graph t$_c$, 
-        staticFlowsAccept staticEnv graph t'
-      then
-        staticFlowsAccept staticEnv graph (Bind n (Spwn t$_c$) t')
-  * $\forall$ n t' graph staticEnv n$_{se}$ .
-      if
-        (NBnd n, MNxt, termId t') $\in$ graph, 
-        staticFlowsAccept staticEnv graph t'
-      then
-        staticFlowsAccept staticEnv graph (Bind n (Sync n$_{se}$) t')
-  * $\forall$ n t' graph staticEnv n$_t$ .
-      if
-        (NBnd n, MNxt, termId t') $\in$ graph, 
-        staticFlowsAccept staticEnv graph t', 
-      then
-        staticFlowsAccept staticEnv graph (Bind n (Fst n$_t$) t')
-  * $\forall$ n t' graph staticEnv n$_t$ .
-      if
-        (NBnd n, MNxt, termId t') $\in$ graph, 
-        staticFlowsAccept staticEnv graph t', 
-      then
-        staticFlowsAccept staticEnv graph (Bind n (Snd n$_t$) t')
-  * $\forall$ n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
-      if
+    static_value_map -> graph -> term -> bool
+  where
+    result: staticEnv graph n .
+    $\vdash$ staticFlowsAccept staticEnv graph (Rslt n)
+  * unit: n t' graph staticEnv  .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAccept staticEnv graph t'
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n Unt t')
+  * makeChan: n t' graph staticEnv  .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAccept staticEnv graph t'
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n MkChn t')
+  * sendEvt: n t' graph staticEnv  n$_c$ n$_m$ .
+      (NBnd n , MNxt, termId t') $\in$ graph, 
+      staticFlowsAccept staticEnv graph t'
+    $\vdash$ staticFlowsAccept
+      staticEnv graph
+      (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
+  * recvEvt: n t' graph staticEnv n$_c$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAccept staticEnv graph t'
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (RecvEvt n$_c$)) t')
+  * pair: n t' graph staticEnv n$_1$ n$_2$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAccept staticEnv graph t'
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Pair n$_1$ n$_2$)) t')
+  * left: n t' graph staticEnv n$_s$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAccept staticEnv graph t'
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Lft n$_s$)) t')
+  * right: n t' graph staticEnv n$_s$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAccept staticEnv graph t'
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Rht n$_s$)) t')
+  * function: n t' graph staticEnv t$_b$ n$_f$ n$_t$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAccept staticEnv graph t', 
+      staticFlowsAccept staticEnv graph t$_b$
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t')
+  * spawn: n t' t$_c$ graph staticEnv .
+      {
+        (NBnd n, MNxt, termId t'),
+        (NBnd n, MSpwn, termId t$_c$)
+      } $\subseteq$ graph, 
+      staticFlowsAccept staticEnv graph t$_c$, 
+      staticFlowsAccept staticEnv graph t'
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Spwn t$_c$) t')
+  * sync: n t' graph staticEnv n$_{se}$ .
+      (NBnd n, MNxt, termId t') $\in$ graph, 
+      staticFlowsAccept staticEnv graph t'
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Sync n$_{se}$) t')
+  * first: n t' graph staticEnv n$_t$ .
+      (NBnd n, MNxt, termId t') $\in$ graph, 
+      staticFlowsAccept staticEnv graph t', 
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Fst n$_t$) t')
+  * second: n t' graph staticEnv n$_t$ .
+      (NBnd n, MNxt, termId t') $\in$ graph, 
+      staticFlowsAccept staticEnv graph t', 
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Snd n$_t$) t')
+  * sumElim: n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
+      {
+        (NBnd n, MCll, termId t$_l$),
+        (NBnd n, MCll, termId t$_r$),
+        (NRslt (resultName t$_l$), MRtn, termId t'),
+        (NRslt (resultName t$_r$), MRtn, termId t')
+      } $\subseteq$ graph, 
+      staticFlowsAccept staticEnv graph t$_l$, 
+      staticFlowsAccept staticEnv graph t$_r$,
+      staticFlowsAccept staticEnv graph t'
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+  * app: staticEnv n$_f$ n t' n n$_a$ .
+      $\forall$ n$_f$' n$_t$ t$_b$ . 
+        (SAtm (Fun n$_f$' n$_t$ t$_b$)) $\in$ staticEnv n$_f$ 
+      $\rightarrow$
         {
-          (NBnd n, MCll, termId t$_l$),
-          (NBnd n, MCll, termId t$_r$),
-          (NRslt (resultName t$_l$), MRtn, termId t'),
-          (NRslt (resultName t$_r$), MRtn, termId t')
-        } $\subseteq$ graph, 
-        staticFlowsAccept staticEnv graph t$_l$, 
-        staticFlowsAccept staticEnv graph t$_r$,
-        staticFlowsAccept staticEnv graph t'
-      then
-        staticFlowsAccept staticEnv graph (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-  * $\forall$  staticEnv n$_f$ n t' n n$_a$ .
-      if
-        $\forall$ n$_f$' n$_t$ t$_b$ . if (SAtm (Fun n$_f$' n$_t$ t$_b$)) $\in$ staticEnv n$_f$ then 
-          {
-            (NBnd n, MCll, termId t$_b$),
-            (NRslt (resultName t$_b$), MRtn, termId t')
-          } $\subseteq$ graph,
-        staticFlowsAccept staticEnv graph t'
-      then
-        staticFlowsAccept staticEnv graph (Bind n (App n$_f$ n$_a$) t')
+          (NBnd n, MCll, termId t$_b$),
+          (NRslt (resultName t$_b$), MRtn, termId t')
+        } $\subseteq$ graph,
+      staticFlowsAccept staticEnv graph t'
+    $\vdash$ staticFlowsAccept staticEnv graph (Bind n (App n$_f$ n$_a$) t')
 \end{lstlisting}
 
 The smallest graph of flows that accepts a progam is finite.  Additionally, the static
@@ -2329,19 +2294,16 @@ traceable.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticTraceable:
-    flow set -> termId -> (termId -> bool) -> static_path -> bool where
-    $\forall$ start graph isEnd .
-      if
-        isEnd start
-      then
-        staticTraceable graph start isEnd []
-  * $\forall$  graph star middle path isEnd end mode .
-      if 
-        staticTraceable graph start ($\lambda$ l . l = middle) path, 
-        isEnd end, 
-        (middle, mode, end) $\in$ graph 
-      then
-        staticTraceable graph start isEnd (path @ [(middle, mode)])
+    flow set -> termId -> (termId -> bool) -> static_path -> bool
+  where
+    empty: start graph isEnd .
+      isEnd start
+    $\vdash$ staticTraceable graph start isEnd []
+  * snoc: graph star middle path isEnd end mode .
+      staticTraceable graph start ($\lambda$ l . l = middle) path, 
+      isEnd end, 
+      (middle, mode, end) $\in$ graph 
+    $\vdash$ staticTraceable graph start isEnd (path @ [(middle, mode)])
 \end{lstlisting}
 
 In the graph of the server implementation, there are two paths each corresponding to its
@@ -2367,24 +2329,20 @@ to paths starting from the beginning of a program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticInclusive: static_path -> static_path -> bool where
-    $\forall$ path1 path2 .
-      if
-        prefix path1 path2
-      then
-        staticInclusive path1 path2
-  * $\forall$ path2 path1 .
-      if
-        prefix path2 path1
-      then
-        staticInclusive path1 path2
-  * $\forall$ path n path1 path2 .
-      staticInclusive
-        (path @ [(NBnd n, MSpwn)] @ path1)
-        (path @ [(NBnd n, MNxt)] @ path2)
-  * $\forall$ path n path1 path2 .
-      staticInclusive
-        (path @ [(NBnd n, MNxt)] @ path1])
-        (path @ [(NBnd n, MSpwn)] @ path2)
+    first: path1 path2 .
+      prefix path1 path2
+    $\vdash$ staticInclusive path1 path2
+  * second path2 path1 .
+      prefix path2 path1
+    $\vdash$ staticInclusive path1 path2
+  * spawnFirst: path n path1 path2 .
+    \$vdash$ staticInclusive
+      (path @ [(NBnd n, MSpwn)] @ path1)
+      (path @ [(NBnd n, MNxt)] @ path2)
+  * spawnSecond: path n path1 path2 .
+    $\vdash$ staticInclusive
+      (path @ [(NBnd n, MNxt)] @ path1])
+      (path @ [(NBnd n, MSpwn)] @ path2)
 \end{lstlisting}
 
 The singularness means that two paths are the same or only of them can occur in a given run of
@@ -2393,25 +2351,19 @@ program, since they are ordered or cannot occur in the same run of a program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate singular: static_path -> static_path -> bool where
-    $\forall$ path .
-      singular path path
-  * $\forall$ path1 path2 .
-      if
-        not (staticInclusive path1 path2)
-      then
-        singular path1 path2
+    refl: path .
+    $\vdash$ singular path path
+  * notInclus: path1 path2 .
+      $\neg$ (staticInclusive path1 path2)
+    $\vdash$ singular path1 path2
 
   predicate noncompetitive: static_path -> static_path -> bool where
-    $\forall$ path1 path2 .
-      if
-        ordered path1 path2
-      then
-        noncompetitive path1 path2
-  * $\forall$ path1 path2 .
-      if
-        not (staticInclusive path1 path2)
-      then
-        noncompetitive path1 path2
+    ordered: path1 path2 .
+      ordered path1 path2
+    $\vdash$ noncompetitive path1 path2
+  * notInclus: path1 path2 .
+      $\neg$ (staticInclusive path1 path2)
+    $\vdash$ noncompetitive path1 path2
 \end{lstlisting}
 
 
