@@ -1685,65 +1685,55 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate isSendPath: pool -> chan -> dynamic_path -> bool where
-    $\forall$ pool path n n$_e$ t' env stack n$_{sc}$ n$_m$ env$_e$ c.
-      if
-        pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
-        env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env$_e$), 
-        env$_e$ n$_{sc}$ = Some (VChn c)
-      then
-        isSendPath pool c path
+    intro: pool path n n$_e$ t' env stack n$_{sc}$ n$_m$ env$_e$ c.
+      pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
+      env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env$_e$), 
+      env$_e$ n$_{sc}$ = Some (VChn c)
+    $\vdash$ isSendPath pool c path
 
   predicate isRecvPath: pool -> chan -> dynamic_path -> bool where
-    $\forall$ pool path n n$_e$ t' env stack n$_{rc}$ env$_e$ c .
-      then
-        pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
-        env n$_e$ = Some (VAtm (RecvEvt n$_{rc}$) env$_e$),
-        env$_e$ n$_{rc}$ = Some (VChn c)
-      then
-        isRecvPath pool c path
+    intro: pool path n n$_e$ t' env stack n$_{rc}$ env$_e$ c .
+      pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
+      env n$_e$ = Some (VAtm (RecvEvt n$_{rc}$) env$_e$),
+      env$_e$ n$_{rc}$ = Some (VChn c)
+    $\vdash$
+      isRecvPath pool c path
 
   predicate forEveryTwo: ('a -> bool) -> ('a -> 'a -> bool) -> bool where
-    $\forall$ t r .
-      if
-        $\forall$ path1 path2 .
-          if t path1, t path2 then r path1 path2
-      then
-        forEveryTwo t r
+    intro: p r .
+      $\forall$ path1 path2 .
+        p path1 $\wedge$ p path2 $\rightarrow$ r path1 path2
+    $\vdash$ 
+      forEveryTwo p r
 
   predicate ordered: 'a list -> 'a list -> bool where
-    $\forall$ path1 path2 .
-      if prefix path1 path2 then ordered path1 path2
-  * $\forall$ path2 path1 .
-      if prefix path2 path1 then ordered path1 path2
+    first: path1 path2 .
+      prefix path1 path2
+    $\vdash$ ordered path1 path2
+  * second: path2 path1 .
+      prefix path2 path1
+    $\vdash$ ordered path1 path2
 
   predicate oneShot: pool -> chan -> bool where
-    $\forall$ pool c .
-      if
-        forEveryTwo (isSendPath pool c) (op =)
-      then
-        oneShot pool c
+    intro: pool c .
+      forEveryTwo (isSendPath pool c) (op =)
+    $\vdash$ oneShot pool c
 
   predicate oneToMany: pool -> chan -> bool where
-    $\forall$ pool c .
-      if
-        forEveryTwo (isSendPath pool c) ordered
-      then
-        oneToMany pool c
+    intro: pool c .
+      forEveryTwo (isSendPath pool c) ordered
+    $\vdash$ oneToMany pool c
 
   predicate manyToOne: pool -> chan -> bool where
-    $\forall$ pool c .
-      if
-        forEveryTwo (isRecvPath pool c) ordered
-      then
-        manyToOne pool c
+    intro: pool c .
+      forEveryTwo (isRecvPath pool c) ordered
+    $\vdash$ manyToOne pool c
 
   predicate oneToOne: pool -> chan -> bool where
-    $\forall$ pool c.
-      if
-        oneToMany pool c,
-        manyToOne pool c
-      then
-        oneToOne pool c
+    intro: pool c.
+      oneToMany pool c,
+      manyToOne pool c
+    $\vdash$ oneToOne pool c
 \end{lstlisting}
 
 
@@ -1780,10 +1770,10 @@ embedded within its eventual result term, which is formally defined by \lstinlin
     name -> static_value set
 
   fun resultName of term -> name: where
-    $\forall$ n .
-      resultName (Rslt n) = x
-  * $\forall$ n c t' . 
-      resultName (Bind n c t') = (resultName t)
+    n .
+    $\vdash$ resultName (Rslt n) = n
+  * n c t' . 
+    $\vdash$ resultName (Bind n c t') = (resultName t)
 \end{lstlisting}
 
 The static evaluation is a control flow analysis (0CFA)
@@ -1824,118 +1814,92 @@ static evaluation is less precise.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticEval:
-    static_value_map -> static_value_map -> term -> bool where
-    $\forall$ staticEnv staticComm n .
-      staticEval staticEnv staticComm (Rslt n)
-  * $\forall$ staticEnv n staticComm t' .
-      if 
-        SUnt $\in$ staticEnv n,
-        staticEval staticEnv staticComm t'
-      then
-        staticEval staticEnv staticComm (Bind n Unt t')
-  * $\forall$ n staticEnv staticComm t' .
-      if 
-        (SChn n) $\in$ staticEnv n,
-        staticEval staticEnv staticComm t'
-      then  
-        staticEval staticEnv staticComm (Bind n MkChn t')
-  * $\forall$ n$_c$ n$_m$ staticEnv n staticComm t' .
-      if
-        (SAtm (SendEvt n$_c$ n$_m$)) $\in$ staticEnv n,
-        staticEval staticEnv staticComm t' 
-      then
-        staticEval staticEnv staticComm (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
-  * $\forall$ n$_c$ staticEnv n staticComm t' . 
-      if 
-        (SAtm (RecvEvt n$_c$)) $\in$ staticEnv n,
-        staticEval staticEnv staticComm t'
-      then
-        staticEval staticEnv staticComm (Bind n (Atom (RecvEvt n$_c$)) t')
-  * $\forall$ n$_1$ n$_2$ staticEnv n staticComm t' .
-      if
-        (SAtm (Pair n$_1$ n$_2$)) $\in$ staticEnv n,
-        staticEval staticEnv staticComm t'
-      then
-        staticEval staticEnv staticComm (Bind n (Atom (Pair n$_1$ n$_2$)) t')
-  * $\forall$ n$_s$ staticEnv n staticComm t' .
-      if
-        (SAtm(Lft n$_s$)) $\in$ staticEnv n,
-        staticEval staticEnv staticComm t' 
-      then
-        staticEval staticEnv staticComm (Bind n (Atom (Lft n$_s$)) t')
-  * $\forall$ n$_s$ staticEnv n staticComm t' .
-      if
-        (SAtm(Rht n$_s$)) $\in$ staticEnv n, 
-        staticEval staticEnv staticComm t
-      then
-        staticEval staticEnv staticComm (Bind n (Atom (Rht n$_s$)) t')
-  * $\forall$ n$_f$ n$_t$ t$_b$ staticEnv staticComm n t' .
-      if
-        (SAtm (Fun n$_f$ n$_t$ t$_b$)) $\in$ staticEnv n$_f$, 
-        staticEval staticEnv staticComm t$_b$, 
-        (SAtm (Fun n$_f$ n$_t$ t$_b$)) $\in$ staticEnv n, 
-        staticEval staticEnv staticComm t'
-      then
-        staticEval staticEnv staticComm (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t')
-  * $\forall$ n$_f$ n$_t$ t$_b$ staticEnv staticComm n t' .
-      if
-        SUnt $\in$ staticEnv n, 
-        staticEval staticEnv staticComm t$_c$, 
-        staticEval staticEnv staticComm t'
-      then
-        staticEval staticEnv staticComm (Bind n (Spwn t$_c$) t')
-  * $\forall$ staticEnv n$_e$ n staticComm  t'.
-      if
-        $\forall$ n$_{sc}$ n$_m$ n$_c$ . 
-          if
-            (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv n$_e$, 
-            SChn n$_c$ $\in$ staticEnv n$_{sc}$ 
-          then
-            SUnt $\in$ staticEnv n, staticEnv n$_m$ $\subseteq$ staticComm n$_c$),
-        $\forall$ n$_{rc}$ n$_c$ . 
-          if
-            (SAtm (RecvEvt n$_{rc}$)) $\in$ staticEnv n$_e$,
-            SChn n$_c$ $\in$ staticEnv n$_{rc}$, 
-          then
-            staticComm n$_c$ $\subseteq$ staticEnv n),
-        staticEval staticEnv staticComm t'
-      then
-        staticEval staticEnv staticComm (Bind n (Sync n$_e$) t')
-  * $\forall$ staticEnv n$_t$ n staticComm t' . 
-      if
-        $\forall$ n$_1$ n$_2$ . if (SAtm (Pair n$_1$ n$_2$)) $\in$ staticEnv n$_t$ then
-          staticEnv n$_1$ $\subseteq$ staticEnv n),
-        staticEval staticEnv staticComm t'
-      then
-        staticEval staticEnv staticComm (Bind n (Fst n$_t$) t')
-  * $\forall$ staticEnv n$_t$ n staticComm t' . 
-      if
-        $\forall$ n$_1$ n$_2$ . if (SAtm (Pair n$_1$ n$_2$)) $\in$ staticEnv n$_t$ then
-          staticEnv n$_2$ $\subseteq$ staticEnv n),
-        staticEval staticEnv staticComm t'
-      then
-        staticEval staticEnv staticComm (Bind n (Snd n$_t$) t')
-  * $\forall$ staticEnv n$_s$ n$_l$ t$_l$ n staticComm n$_r$ t$_r$ t' . 
-      if
-        $\forall$ n$_c$ . if (SAtm (Lft n$_c$)) $\in$ staticEnv n$_s$ then 
-          staticEnv n$_c$ $\subseteq$ staticEnv n$_l$,
-          staticEnv (resultName t$_l$) $\subseteq$ staticEnv n,
-        staticEval staticEnv staticComm t$_l$,
-        $\forall$ n$_c$ . if (SAtm (Rht n$_c$)) $\in$ staticEnv n$_s$ then 
-          staticEnv n$_c$ $\subseteq$ staticEnv n$_r$, 
-          staticEnv (resultName t$_r$) $\subseteq$ staticEnv n, 
-        staticEval staticEnv staticComm t$_r$,
-        staticEval staticEnv staticComm t'
-      then
-        staticEval staticEnv staticComm (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-  * $\forall$ staticEnv n$_f$ n$_a$ n staticComm t' . 
-      if
-        $\forall$ n$_f$' n$_t$ t$_b$ . if (SAtm (Fun n$_f$' n$_t$ t$_b$)) $\in$ staticEnv n$_f$ then 
-          staticEnv n$_a$ $\subseteq$ staticEnv n$_t$, 
-          staticEnv (resultName t$_b$) $\subseteq$ staticEnv n),
-        staticEval staticEnv staticComm t'
-      then
-        staticEval staticEnv staticComm (Bind n (App n$_f$ n$_a$) t')
+    static_value_map -> static_value_map -> term -> bool
+  where
+    result: staticEnv staticComm n .
+    $\vdash$ staticEval staticEnv staticComm (Rslt n)
+  * unit: staticEnv n staticComm t' .
+      SUnt $\in$ staticEnv n,
+      staticEval staticEnv staticComm t'
+    $\vdash$ staticEval staticEnv staticComm (Bind n Unt t')
+  * makeChan: n staticEnv staticComm t' .
+      (SChn n) $\in$ staticEnv n,
+      staticEval staticEnv staticComm t'
+    $\vdash$ staticEval staticEnv staticComm (Bind n MkChn t')
+  * sendEvt: n$_c$ n$_m$ staticEnv n staticComm t' .
+      (SAtm (SendEvt n$_c$ n$_m$)) $\in$ staticEnv n,
+      staticEval staticEnv staticComm t' 
+    $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
+  * recvEvt: n$_c$ staticEnv n staticComm t' . 
+      (SAtm (RecvEvt n$_c$)) $\in$ staticEnv n,
+      staticEval staticEnv staticComm t'
+    $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (RecvEvt n$_c$)) t')
+  * pair: n$_1$ n$_2$ staticEnv n staticComm t' .
+      (SAtm (Pair n$_1$ n$_2$)) $\in$ staticEnv n,
+      staticEval staticEnv staticComm t'
+    $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (Pair n$_1$ n$_2$)) t')
+  * left: n$_s$ staticEnv n staticComm t' .
+      (SAtm(Lft n$_s$)) $\in$ staticEnv n,
+      staticEval staticEnv staticComm t' 
+    $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (Lft n$_s$)) t')
+  * right: n$_s$ staticEnv n staticComm t' .
+      (SAtm(Rht n$_s$)) $\in$ staticEnv n, 
+      staticEval staticEnv staticComm t
+    $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (Rht n$_s$)) t')
+  * function: n$_f$ n$_t$ t$_b$ staticEnv staticComm n t' .
+      (SAtm (Fun n$_f$ n$_t$ t$_b$)) $\in$ staticEnv n$_f$, 
+      staticEval staticEnv staticComm t$_b$, 
+      (SAtm (Fun n$_f$ n$_t$ t$_b$)) $\in$ staticEnv n, 
+      staticEval staticEnv staticComm t'
+    $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t')
+  * spawn: n$_f$ n$_t$ t$_b$ staticEnv staticComm n t' .
+      SUnt $\in$ staticEnv n, 
+      staticEval staticEnv staticComm t$_c$, 
+      staticEval staticEnv staticComm t'
+    $\vdash$ staticEval staticEnv staticComm (Bind n (Spwn t$_c$) t')
+  * sync: staticEnv n$_e$ n staticComm  t'.
+      $\forall$ n$_{sc}$ n$_m$ n$_c$ . 
+        (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv n$_e$
+      $\rightarrow$ SChn n$_c$ $\in$ staticEnv n$_{sc}$ 
+      $\rightarrow$ SUnt $\in$ staticEnv n, staticEnv n$_m$ $\subseteq$ staticComm n$_c$),
+      $\forall$ n$_{rc}$ n$_c$ . 
+        (SAtm (RecvEvt n$_{rc}$)) $\in$ staticEnv n$_e$
+      $\rightarrow$ SChn n$_c$ $\in$ staticEnv n$_{rc}$ 
+      $\rightarrow$ staticComm n$_c$ $\subseteq$ staticEnv n),
+      staticEval staticEnv staticComm t'
+    $\vdash$ staticEval staticEnv staticComm (Bind n (Sync n$_e$) t')
+  * first: staticEnv n$_t$ n staticComm t' . 
+      $\forall$ n$_1$ n$_2$ .
+        (SAtm (Pair n$_1$ n$_2$)) $\in$ staticEnv n$_t$
+      $\rightarrow$ staticEnv n$_1$ $\subseteq$ staticEnv n),
+      staticEval staticEnv staticComm t'
+    $\vdash$ staticEval staticEnv staticComm (Bind n (Fst n$_t$) t')
+  * second: staticEnv n$_t$ n staticComm t' . 
+      $\forall$ n$_1$ n$_2$ . 
+        (SAtm (Pair n$_1$ n$_2$)) $\in$ staticEnv n$_t$
+      $\rightarrow$ staticEnv n$_2$ $\subseteq$ staticEnv n),
+      staticEval staticEnv staticComm t'
+    $\vdash$ staticEval staticEnv staticComm (Bind n (Snd n$_t$) t')
+  * sumElim: staticEnv n$_s$ n$_l$ t$_l$ n staticComm n$_r$ t$_r$ t' . 
+      $\forall$ n$_c$ .  
+        (SAtm (Lft n$_c$)) $\in$ staticEnv n$_s$
+      $\rightarrow$ staticEnv n$_c$ $\subseteq$ staticEnv n$_l$,
+      staticEnv (resultName t$_l$) $\subseteq$ staticEnv n,
+      staticEval staticEnv staticComm t$_l$,
+      $\forall$ n$_c$ . 
+        (SAtm (Rht n$_c$)) $\in$ staticEnv n$_s$
+      $\rightarrow$ staticEnv n$_c$ $\subseteq$ staticEnv n$_r$, 
+      staticEnv (resultName t$_r$) $\subseteq$ staticEnv n, 
+      staticEval staticEnv staticComm t$_r$,
+      staticEval staticEnv staticComm t'
+    $\vdash$ staticEval staticEnv staticComm (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+  * app: staticEnv n$_f$ n$_a$ n staticComm t' . 
+      $\forall$ n$_f$' n$_t$ t$_b$ . 
+        (SAtm (Fun n$_f$' n$_t$ t$_b$)) $\in$ staticEnv n$_f$
+      $\rightarrow$ staticEnv n$_a$ $\subseteq$ staticEnv n$_t$, 
+      staticEnv (resultName t$_b$) $\subseteq$ staticEnv n),
+      staticEval staticEnv staticComm t'
+    $\vdash$ staticEval staticEnv staticComm (Bind n (App n$_f$ n$_a$) t')
 \end{lstlisting}
 
 It is straightforward to follow the rules of static evaluation in order to build up

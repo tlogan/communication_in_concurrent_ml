@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  14 JAN 2019 22:31
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  15 JAN 2019 08:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -947,87 +947,87 @@ LaTeX Warning: Citation `flanagan$_1$993essence' on page 26 undefined on input
 line 1356.
 
 [26] [27] [28] [29] [30] [31] [32] [33] [34] [35] [36] [37] [38] [39] [40]
-[41] [42] [43] [44] [45] <cml-graph.pdf, id=159, 1494.58376pt x 1964.33875pt>
+[41] [42] [43] [44] <cml-graph.pdf, id=156, 1494.58376pt x 1964.33875pt>
 File: cml-graph.pdf Graphic file (type pdf)
 
 <use cml-graph.pdf>
-Package pdftex.def Info: cml-graph.pdf used on input line 2357.
+Package pdftex.def Info: cml-graph.pdf used on input line 2321.
 (pdftex.def)             Requested size: 387.00153pt x 508.6179pt.
- [46] [47 <./cml-graph.pdf>] [48] [49] [50] [51] [52]
-<cml-proof-low.pdf, id=208, 791.95876pt x 576.1525pt>
+ [45] [46 <./cml-graph.pdf>] [47] [48] [49] [50] [51]
+<cml-proof-low.pdf, id=205, 791.95876pt x 576.1525pt>
 File: cml-proof-low.pdf Graphic file (type pdf)
  <use cml-proof-low.pdf>
-Package pdftex.def Info: cml-proof-low.pdf used on input line 2668.
+Package pdftex.def Info: cml-proof-low.pdf used on input line 2632.
 (pdftex.def)             Requested size: 430.00462pt x 312.83202pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 2668--2669
+Overfull \hbox (17.0pt too wide) in paragraph at lines 2632--2633
 [][] 
  []
 
-[53] [54 <./cml-proof-low.pdf>] [55] [56] [57] [58] [59] [60] [61] [62]
-[63] [64] [65] [66] [67] [68] [69] [70]
-<cml-graph-lp.pdf, id=277, 1729.46124pt x 1925.1925pt>
+[52] [53 <./cml-proof-low.pdf>] [54] [55] [56] [57] [58] [59] [60] [61]
+[62] [63] [64] [65] [66] [67] [68] [69]
+<cml-graph-lp.pdf, id=274, 1729.46124pt x 1925.1925pt>
 File: cml-graph-lp.pdf Graphic file (type pdf)
  <use cml-graph-lp.pdf>
-Package pdftex.def Info: cml-graph-lp.pdf used on input line 3509.
+Package pdftex.def Info: cml-graph-lp.pdf used on input line 3473.
 (pdftex.def)             Requested size: 430.00462pt x 478.6531pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 3509--3510
+Overfull \hbox (17.0pt too wide) in paragraph at lines 3473--3474
 [][] 
  []
 
-[71] [72 <./cml-graph-lp.pdf>] [73] [74]
-<cml-liveness-analysis-k1.pdf, id=302, 1731.46875pt x 1908.12875pt>
+[70] [71 <./cml-graph-lp.pdf>] [72] [73]
+<cml-liveness-analysis-k1.pdf, id=299, 1731.46875pt x 1908.12875pt>
 File: cml-liveness-analysis-k1.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k1.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3623.
+Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3587.
 (pdftex.def)             Requested size: 430.00462pt x 473.8574pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 3623--3624
+Overfull \hbox (17.0pt too wide) in paragraph at lines 3587--3588
 [][] 
  []
 
-<cml-liveness-analysis-k4.pdf, id=303, 1776.6375pt x 1939.245pt>
+<cml-liveness-analysis-k4.pdf, id=300, 1776.6375pt x 1939.245pt>
 File: cml-liveness-analysis-k4.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k4.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3630.
+Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3594.
 (pdftex.def)             Requested size: 430.00462pt x 469.33426pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 3630--3631
+Overfull \hbox (17.0pt too wide) in paragraph at lines 3594--3595
 [][] 
  []
 
-[75 <./cml-liveness-analysis-k1.pdf>] [76 <./cml-liveness-analysis-k4.pdf>]
-[77] [78] [79] [80] <cml-graph-k1.pdf, id=346, 1559.8275pt x 1677.26625pt>
+[74 <./cml-liveness-analysis-k1.pdf>] [75 <./cml-liveness-analysis-k4.pdf>]
+[76] [77] [78] [79] <cml-graph-k1.pdf, id=343, 1559.8275pt x 1677.26625pt>
 File: cml-graph-k1.pdf Graphic file (type pdf)
 
 <use cml-graph-k1.pdf>
-Package pdftex.def Info: cml-graph-k1.pdf used on input line 3839.
+Package pdftex.def Info: cml-graph-k1.pdf used on input line 3803.
 (pdftex.def)             Requested size: 387.00153pt x 416.11641pt.
- <cml-graph-k4.pdf, id=347, 1090.0725pt x 954.56625pt>
+ <cml-graph-k4.pdf, id=344, 1090.0725pt x 954.56625pt>
 File: cml-graph-k4.pdf Graphic file (type pdf)
 
 <use cml-graph-k4.pdf>
-Package pdftex.def Info: cml-graph-k4.pdf used on input line 3844.
+Package pdftex.def Info: cml-graph-k4.pdf used on input line 3808.
 (pdftex.def)             Requested size: 301.00192pt x 263.57709pt.
- [81 <./cml-graph-k1.pdf>] [82 <./cml-graph-k4.pdf>]
-[83] [84] [85] [86] [87] [88]
+ [80 <./cml-graph-k1.pdf>] [81 <./cml-graph-k4.pdf>]
+[82] [83] [84] [85] [86] [87]
 
-LaTeX Warning: Citation `nielson$_1$994higher' on page 89 undefined on input li
-ne 4192.
+LaTeX Warning: Citation `nielson$_1$994higher' on page 88 undefined on input li
+ne 4156.
 
-[89] [90] (./thesis.bbl [91]) [92] (./thesis.aux)
+[88] [89] (./thesis.bbl [90]) [91] (./thesis.aux)
 
 LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 7835 strings out of 493014
- 115573 string characters out of 6133351
+ 7841 strings out of 493014
+ 115634 string characters out of 6133351
  435343 words of memory out of 5000000
- 11195 multiletter control sequences out of 15000+600000
+ 11201 multiletter control sequences out of 15000+600000
  61182 words of font info for 70 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  38i,6n,74p,228b,1728s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1046,10 +1046,10 @@ al/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texli
 ve/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016/
 texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-d
 ist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (93 pages, 725145 bytes).
+Output written on thesis.pdf (92 pages, 725303 bytes).
 PDF statistics:
- 480 PDF objects out of 1000 (max. 8388607)
- 337 compressed objects within 4 object streams
+ 477 PDF objects out of 1000 (max. 8388607)
+ 335 compressed objects within 4 object streams
  0 named destinations out of 1000 (max. 500000)
  36 words of extra memory for PDF output out of 10000 (max. 10000000)
 

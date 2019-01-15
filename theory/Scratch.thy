@@ -45,3 +45,5 @@ apply (rule lt)
 apply (rule lt)
 apply (rule eq)
 apply (rule uni)
+
+thm sorted.simps
