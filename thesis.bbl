@@ -21,16 +21,6 @@ Kevin Donnelly and Matthew Fluet.
 \newblock Transactional events.
 \newblock {\em Journal of Functional Programming}, 18(5-6):649--706, 2008.
 
-\bibitem{felleisen1986control}
-Matthias Felleisen and Daniel~P Friedman.
-\newblock {\em Control Operators, the SECD-machine, and the [1]-calculus}.
-\newblock Indiana University, Computer Science Department, 1986.
-
-\bibitem{flanagan1993essence}
-Cormac Flanagan, Amr Sabry, Bruce~F Duba, and Matthias Felleisen.
-\newblock The essence of compiling with continuations.
-\newblock In {\em ACM Sigplan Notices}, volume~28, pages 237--247. ACM, 1993.
-
 \bibitem{gasser1997systematic}
 Kirsten L~Solberg Gasser, Flemming Nielson, and Hanne~Riis Nielson.
 \newblock Systematic realisation of control flow analyses for cml.
@@ -69,17 +59,6 @@ Thomas~F. Melham.
 Robin Milner.
 \newblock {\em Communicating and mobile systems: the pi calculus}.
 \newblock Cambridge university press, 1999.
-
-\bibitem{nielson2015principles}
-Flemming Nielson, Hanne~R Nielson, and Chris Hankin.
-\newblock {\em Principles of program analysis}.
-\newblock Springer, 2015.
-
-\bibitem{nielson1994higher}
-Hanne~Riis Nielson and Flemming Nielson.
-\newblock Higher-order concurrent programs with finite communication topology.
-\newblock In {\em Proceedings of the 21st ACM SIGPLAN-SIGACT symposium on
-  Principles of programming languages}, pages 84--97. ACM, 1994.
 
 \bibitem{nipkow2002isabelle}
 Tobias Nipkow, Lawrence~C Paulson, and Markus Wenzel.
