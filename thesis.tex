@@ -2372,15 +2372,12 @@ to synchronize to send on a static channel in any run of a given program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticOneShot: static_value_map -> term -> name -> bool where
-    $\forall$ graph t staticEnv n$_c$ .
-      if
-        forEveryTwo
-          (staticTraceable graph
-            (termId t) (staticSendId staticEnv t n$_c$))
-          singular,
-        staticFlowsAccept staticEnv graph t
-      then
-        staticOneShot graph t n$_c$
+    intro: graph t staticEnv staticComm n$_c$ .
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticSendId staticEnv t n$_c$)) singular,
+      staticFlowsAccept staticEnv graph t,
+      staticEval staticEnv staticComm t
+    $\vdash$ staticOneShot graph t n$_c$
 \end{lstlisting}
 
 The static one-to-one classification means that there is at most one thread that attempts to
@@ -2389,19 +2386,14 @@ during a run of a given program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticOneToOne: static_value_map -> term -> name -> bool where
-    $\forall$ graph t staticEnv n$_c$ .
-      if
-        forEveryTwo
-          (staticTraceable graph
-            (termId t) (staticSendId staticEnv t n$_c$))
-          noncompetitive, 
-        forEveryTwo
-          (staticTraceable graph
-            (termId t) (staticRecvId staticEnv t n$_c$))
-          noncompetitive, 
-        staticFlowsAccept staticEnv graph t 
-      then
-        staticOneToOne staticEnv t n$_c$
+    intro: graph t staticEnv staticComm n$_c$ .
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticSendId staticEnv t n$_c$)) noncompetitive, 
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticRecvId staticEnv t n$_c$)) noncompetitive, 
+      staticFlowsAccept staticEnv graph t,
+      staticEval staticEnv staticComm t
+    $\vdash$ staticOneToOne staticEnv t n$_c$
 \end{lstlisting}
 
 The static one-to-many classification means that there is at most one thread that attempts to
@@ -2410,15 +2402,12 @@ many threads that attempt to receive on the channel.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticOneToMany: static_value_map -> term -> name -> bool where
-    $\forall$ graph t staticEnv n$_c$ .
-      if
-        forEveryTwo
-          (staticTraceable graph
-            (termId t) (staticSendId staticEnv t n$_c$))
-          noncompetitive,
-        staticFlowsAccept staticEnv graph t 
-      then
-        staticOneToMany staticEnv t n$_c$
+    intro: graph t staticEnv n$_c$ .
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticSendId staticEnv t n$_c$)) noncompetitive,
+      staticFlowsAccept staticEnv graph t,
+      staticEval staticEnv staticComm t
+    $\vdash$ staticOneToMany staticEnv t n$_c$
 \end{lstlisting}
 
 The static many-to-one predicate means
@@ -2428,15 +2417,12 @@ program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticManyToOne: static_value_map -> term -> name -> bool where
-    $\forall$ graph t staticEnv n$_c$ .
-      if
-        forEveryTwo
-          (staticTraceable graph
-            (termId t) (staticRecvId staticEnv t n$_c$))
-          noncompetitive,
-        staticFlowsAccept staticEnv graph t 
-      then
-        staticManyToOne staticEnv t n$_c$
+    intro: graph t staticEnv statcComm n$_c$ .
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticRecvId staticEnv t n$_c$)) noncompetitive,
+      staticFlowsAccept staticEnv graph t,
+      staticEval staticEnv staticComm t
+    $\vdash$ staticManyToOne staticEnv t n$_c$
 \end{lstlisting}
 
 \subsection{Formal Reasoning}
