@@ -3269,91 +3269,81 @@ name, such that it is a free variable in the function, and it's built on the cha
 
 \begin{lstlisting}[language=logic, mathescape]
 
-  fun freeVarsAtom of atom -> name set: where
-    $\forall$ n$_c$ n$_m$ .
-      freeVarsAtom (SendEvt n$_c$ n$_m$) = {n$_c$, n$_m$}
-  * $\forall$ n$_c$ .
+  fun freeVarsAtom: atom -> name set where
+    n$_c$ n$_m$ .
+    $\vdash$ freeVarsAtom (SendEvt n$_c$ n$_m$) = {n$_c$, n$_m$}
+  * n$_c$ .
       freeVarsAtom (RecvEvt n$_c$) = {n$_c$}
-  * $\forall$ n$_1$ n$_2$ .
-      freeVarsAtom (Pair n$_1$ n$_2$) = {n$_1$, n$_2$}
-  * $\forall$ n .
-      freeVarsAtom (Lft n) = {n}
-  * $\forall$ n .
-      freeVarsAtom (Rht n) = {n}
-  * $\forall$ n$_f$ n$_p$ t$_b$ .
-      freeVarsAtom (Fun n$_f$ n$_p$ t$_b$) = freeVarsTerm t$_b$ \ {n$_f$, n$_p$}
+  * n$_1$ n$_2$ .
+    $\vdash$ freeVarsAtom (Pair n$_1$ n$_2$) = {n$_1$, n$_2$}
+  * n .
+    $\vdash$ freeVarsAtom (Lft n) = {n}
+  * n .
+    $\vdash$ freeVarsAtom (Rht n) = {n}
+  * n$_f$ n$_p$ t$_b$ .
+    $\vdash$ freeVarsAtom (Fun n$_f$ n$_p$ t$_b$) = freeVarsTerm t$_b$ \ {n$_f$, n$_p$}
   
-  and freeVarsComplex of complex -> name set:
-    freeVarsComplex Unt = {}
-  * freeVarsComplex MkChn = {}
-  * $\forall$ atom .
-      freeVarsComplex (Atom atom) = freeVarsAtom atom
-  * $\forall$ t .
-      freeVarsComplex (Spwn t) = freeVarsTerm t
-  * $\forall$ n .
-      freeVarsComplex (Sync n) = {n}
-  * $\forall$ n .
-      freeVarsComplex (Fst n) = {n}
-  * $\forall$ n .
-      freeVarsComplex (Snd n) = {n},
+  and freeVarsComplex: complex -> name set where
+    $\vdash$ freeVarsComplex Unt = {}
+  * $\vdash$ freeVarsComplex MkChn = {}
+  * atom .
+    $\vdash$ freeVarsComplex (Atom atom) = freeVarsAtom atom
+  * t .
+    $\vdash$ freeVarsComplex (Spwn t) = freeVarsTerm t
+  * n .
+    $\vdash$ freeVarsComplex (Sync n) = {n}
+  * n .
+    $\vdash$ freeVarsComplex (Fst n) = {n}
+  * n .
+    $\vdash$ freeVarsComplex (Snd n) = {n},
 
-  * $\forall$ n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ .
-      freeVarsComplex (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) = 
-        {n$_s$} $\cup$ freeVarsTerm t$_l$ $\cup$ freeVarsTerm t$_r$ \ {n$_l$, n$_r$}
-  * $\forall$ n$_f$ n$_a$ .
-      freeVarsComplex (App n$_f$ n$_a$) = {n$_f$, n$_a$},
+  * n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ .
+    $\vdash$ freeVarsComplex (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) = 
+      {n$_s$} $\cup$ freeVarsTerm t$_l$ $\cup$ freeVarsTerm t$_r$ \ {n$_l$, n$_r$}
+  * n$_f$ n$_a$ .
+    $\vdash$ freeVarsComplex (App n$_f$ n$_a$) = {n$_f$, n$_a$},
   
-  and freeVarsTerm of term -> name set: where
-    $\forall$ n c t .
-      freeVarsTerm (Bind n c t) = freeVarsComplex c $\cup$ freeVarsTerm t \ {n}
-  * $\forall$ n .
-      freeVarsTerm (Rslt n) = {n}
+  and freeVarsTerm: term -> name set where
+    n c t .
+    $\vdash$ freeVarsTerm (Bind n c t) = freeVarsComplex c $\cup$ freeVarsTerm t \ {n}
+  * n .
+    $\vdash$ freeVarsTerm (Rslt n) = {n}
 
   predicate staticBuiltOnChan: static_value_map -> name -> name -> bool where
-    $\forall$ n$_c$ staticEnv n .
-      if 
-        SChn n$_c$ $\in$ staticEnv n 
-      then 
-        staticBuiltOnChan staticEnv n$_c$ n
-  * $\forall$ n$_{sc}$ n$_m$ staticEnv n n$_c$ . 
-      if
-        (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv n,
-        (staticBuiltOnChan staticEnv n$_c$ n$_{sc}$ or
-          staticBuiltOnChan staticEnv n$_c$ n$_m$)
-      then 
-        staticBuiltOnChan staticEnv n$_c$ n
-  * $\forall$ n$_{rc}$ staticEnv n n$_c$ . 
-      if  
-        (SAtm (RecvEvt n$_{rc}$)) $\in$ staticEnv n,
-        staticBuiltOnChan staticEnv n$_c$ n$_{rc}$
-      then 
-        staticBuiltOnChan staticEnv n$_c$ n
-  * $\forall$ n$_1$ n$_2$ staticEnv n n$_c$ . 
-      if  
-        (SAtm (Pair n$_1$ n$_2$)) $\in$ staticEnv n,
-        (staticBuiltOnChan staticEnv n$_c$ n$_1$ or
-          staticBuiltOnChan staticEnv n$_c$ n$_2$)
-      then 
-        staticBuiltOnChan staticEnv n$_c$ n
-  * $\forall$ n$_a$ staticEnv n n$_c$ .
-      if
-        (SAtm (Lft n$_a$)) $\in$ staticEnv n,
-        staticBuiltOnChan staticEnv n$_c$ n$_a$
-      then 
-        staticBuiltOnChan staticEnv n$_c$ n
-  * $\forall$ n$_a$ staticEnv n n$_c$ .
-      if
-        (SAtm (Rht n$_a$)) $\in$ staticEnv n,
-        staticBuiltOnChan staticEnv n$_c$ n$_a$
-      then 
-        staticBuiltOnChan staticEnv n$_c$ n
-  * $\forall$ n$_f$ n$_p$ t$_b$ n$_{fv}$ .
-      if
-        (SAtm (Fun n$_f$ n$_p$ t$_b$)) $\in$ staticEnv n,
-        n$_{fv}$ $\in$ freeVarsAtom (Fun n$_f$ n$_p$ t$_b$),
-        staticBuiltOnChan staticEnv n$_{fv}$ n
-      then
-        staticBuiltOnChan staticEnv n$_c$ n
+    chan: n$_c$ staticEnv n .
+      SChn n$_c$ $\in$ staticEnv n 
+    $\vdash$ staticBuiltOnChan staticEnv n$_c$ n
+  * sendEvt: n$_{sc}$ n$_m$ staticEnv n n$_c$ . 
+      (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv n,
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_{sc}$ 
+      $\vee$ staticBuiltOnChan staticEnv n$_c$ n$_m$
+      )
+    $\vdash$ staticBuiltOnChan staticEnv n$_c$ n
+  * recvEvt: n$_{rc}$ staticEnv n n$_c$ . 
+      (SAtm (RecvEvt n$_{rc}$)) $\in$ staticEnv n,
+      staticBuiltOnChan staticEnv n$_c$ n$_{rc}$
+    $\vdash$ staticBuiltOnChan staticEnv n$_c$ n
+  * pair: n$_1$ n$_2$ staticEnv n n$_c$ . 
+      (SAtm (Pair n$_1$ n$_2$)) $\in$ staticEnv n,
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_1$ 
+      $\vee$ staticBuiltOnChan staticEnv n$_c$ n$_2$
+      )
+    $\vdash$ staticBuiltOnChan staticEnv n$_c$ n
+  * left: n$_a$ staticEnv n n$_c$ .
+      (SAtm (Lft n$_a$)) $\in$ staticEnv n,
+      staticBuiltOnChan staticEnv n$_c$ n$_a$
+    $\vdash$ staticBuiltOnChan staticEnv n$_c$ n
+  * right: n$_a$ staticEnv n n$_c$ .
+      (SAtm (Rht n$_a$)) $\in$ staticEnv n,
+      staticBuiltOnChan staticEnv n$_c$ n$_a$
+    $\vdash$ staticBuiltOnChan staticEnv n$_c$ n
+  * function: n$_f$ n$_p$ t$_b$ n$_{fv}$ .
+      (SAtm (Fun n$_f$ n$_p$ t$_b$)) $\in$ staticEnv n,
+      n$_{fv}$ $\in$ freeVarsAtom (Fun n$_f$ n$_p$ t$_b$),
+      staticBuiltOnChan staticEnv n$_{fv}$ n
+    $\vdash$ staticBuiltOnChan staticEnv n$_c$ n
 \end{lstlisting}
 
 
