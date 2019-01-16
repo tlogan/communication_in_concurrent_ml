@@ -1874,6 +1874,6 @@ apply (erule staticOneSync.cases; auto)
 apply (unfold one_sync.simps; auto)
 using singular_to_equal
 apply (metis (mono_tags, lifting) forEveryTwo.intros fun_upd_other is_recv_path_implies_nonempty_pool star.refl)
-sorry
+done
 
 end
