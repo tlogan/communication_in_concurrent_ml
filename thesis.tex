@@ -3017,20 +3017,14 @@ forward star and constructs the static reachability
 proposition using the forward definition.  
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma staticReachableForwardImpliesStaticReachable:
-    $\forall$ t$_0$ t. 
-      if
-        staticReachableForward t$_0$ t
-      then
-        staticReachable t$_0$ t
+  lemma staticReachableForwardImpliesStaticReachable: t$_0$ t. 
+    staticReachableForward t$_0$ t
+  $\vdash$ staticReachable t$_0$ t
 
-  lemma staticReachableTrans:
-    $\forall$ t1 t2 t3 .
-      if 
-        staticReachable t1 t2,
-        staticReachable t2 t3
-      then
-        staticReachable t1 t3
+  lemma staticReachableTrans: t1 t2 t3 .
+    staticReachable t1 t2,
+    staticReachable t2 t3
+  $\vdash$ staticReachable t1 t3
 \end{lstlisting}
 
 The lemma that the forward variant of static reachability implies the syntax-directed static
@@ -3165,127 +3159,96 @@ However, it must additionally consider flows with the sending mode.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticFlowsAcceptTm:
-    static_value_map -> graph -> term -> term -> bool where
-    $\forall$ staticEnv graph n .
-      staticFlowsAcceptTm staticEnv graph t$_0$ (Rslt n)
-  * $\forall$ n t' graph staticEnv .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t'
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n Unt t')
-  * $\forall$ n t' graph staticEnv  .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t'
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n MkChn t')
-  * $\forall$ n t' graph staticEnv  n$_c$ n$_m$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t'
-      then
-        staticFlowsAccept
-          staticEnv graph
-          (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
-  * $\forall$ n t' graph staticEnv n$_c$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t'
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (RecvEvt n$_c$)) t')
-  * $\forall$ n t' graph staticEnv n$_1$ n$_2$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t'
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Pair n$_1$ n$_2$)) t')
-  * $\forall$ n t' graph staticEnv n$_s$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t'
-      then
-       staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Lft n$_s$)) t')
-  * $\forall$ n t' graph staticEnv n$_s$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t'
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Rht n$_s$)) t')
-  * $\forall$ n t' graph staticEnv t$_b$ n$_f$ n$_p$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t',
-        staticFlowsAcceptTm staticEnv graph t$_0$ t$_b$
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
-  * $\forall$ n t' t$_c$ graph staticEnv.
-      if
-        {(NBnd n, MNxt, termId t'),
-          (NBnd n, MSpwn, termId t$_c$)} $\subseteq$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t$_c$,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t'
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Spwn t$_c$) t')
-  * $\forall$ n t' graph staticEnv n$_{se}$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-      * $\forall$ n$_{sc}$ n$_m$ n$_c$ n$_y$.
-          if
-            (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv nSE, 
-            (SChn n$_c$) $\in$ staticEnv n$_{sc}$,
-            staticRecvId staticEnv t$_0$ n$_c$ (NBnd n$_y$)
-          then
-            (NBnd n, ESend n$_{se}$, NBnd n$_y$) $\in$ graph),
-        staticFlowsAcceptTm staticEnv graph t$_0$ t'
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Sync n$_{se}$) t')
-  * $\forall$ n t' graph staticEnv n$_p$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t',
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Fst n$_p$) t')
-  * $\forall$ n t' graph staticEnv n$_p$ .
-      if
-        (NBnd n , MNxt, termId t') $\in$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t',
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Snd n$_p$) t')
-  * $\forall$ n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
-      if
+    static_value_map -> graph -> term -> term -> bool
+  where
+    result: staticEnv graph n .
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Rslt n)
+  * unit: n t' graph staticEnv .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t'
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n Unt t')
+  * makeChan: n t' graph staticEnv  .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t'
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n MkChn t')
+  * sendEvt: n t' graph staticEnv  n$_c$ n$_m$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t'
+    $\vdash$ staticFlowsAccept
+      staticEnv graph
+      (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
+  * recvEvt: n t' graph staticEnv n$_c$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t'
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (RecvEvt n$_c$)) t')
+  * pair: n t' graph staticEnv n$_1$ n$_2$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t'
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Pair n$_1$ n$_2$)) t')
+  * left: n t' graph staticEnv n$_s$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t'
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Lft n$_s$)) t')
+  * right: n t' graph staticEnv n$_s$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t'
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Rht n$_s$)) t')
+  * function: n t' graph staticEnv t$_b$ n$_f$ n$_p$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t',
+      staticFlowsAcceptTm staticEnv graph t$_0$ t$_b$
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
+  * spawn: n t' t$_c$ graph staticEnv.
+      {(NBnd n, MNxt, termId t'),
+        (NBnd n, MSpwn, termId t$_c$)} $\subseteq$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t$_c$,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t'
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Spwn t$_c$) t')
+  * sync: n t' graph staticEnv n$_{se}$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      $\forall$ n$_{sc}$ n$_m$ n$_c$ n$_y$.
+        (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv nSE,
+      $\rightarrow$ (SChn n$_c$) $\in$ staticEnv n$_{sc}$
+      $\rightarrow$ staticRecvId staticEnv t$_0$ n$_c$ (NBnd n$_y$)
+      $\rightarrow$ (NBnd n, ESend n$_{se}$, NBnd n$_y$) $\in$ graph),
+      staticFlowsAcceptTm staticEnv graph t$_0$ t'
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Sync n$_{se}$) t')
+  * first: n t' graph staticEnv n$_p$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t',
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Fst n$_p$) t')
+  * second: n t' graph staticEnv n$_p$ .
+      (NBnd n , MNxt, termId t') $\in$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t',
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Snd n$_p$) t')
+  * caseEither: n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
+      {
+        (NBnd n, MCll, termId t$_l$),
+        (NBnd n, MCll, termId t$_r$),
+        (NRslt (resultName t$_l$), MRtn, termId t'),
+        (NRslt (resultName t$_r$), MRtn, termId t')
+      } $\subseteq$ graph,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t$_l$,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t$_r$,
+      staticFlowsAcceptTm staticEnv graph t$_0$ t'
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+  * app: staticEnv n$_f$ n t' n n$_a$ .
+      $\forall$ n$_f$' n$_p$ t$_b$ . 
+        (SAtm (Fun n$_f$' n$_p$ t$_b$)) $\in$ staticEnv n$_f$
+      $\rightarrow$
         {
-          (NBnd n, MCll, termId t$_l$),
-          (NBnd n, MCll, termId t$_r$),
-          (NRslt (resultName t$_l$), MRtn, termId t'),
-          (NRslt (resultName t$_r$), MRtn, termId t')
-        } $\subseteq$ graph,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t$_l$,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t$_r$,
-        staticFlowsAcceptTm staticEnv graph t$_0$ t'
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-  * $\forall$  staticEnv n$_f$ n t' n n$_a$ .
-      if
-        $\forall$ n$_f$' n$_p$ t$_b$ . if (SAtm (Fun n$_f$' n$_p$ t$_b$)) $\in$ staticEnv n$_f$ then 
-          {
-            (NBnd n, MCll, termId t$_b$),
-            (NRslt (resultName t$_b$), MRtn, termId t')
-          } $\subseteq$ graph),
-        staticFlowsAcceptTm staticEnv graph t$_0$ t'
-      then
-        staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (App n$_f$ n$_a$) t')
-
-
-
+          (NBnd n, MCll, termId t$_b$),
+          (NRslt (resultName t$_b$), MRtn, termId t')
+        } $\subseteq$ graph),
+      staticFlowsAcceptTm staticEnv graph t$_0$ t'
+    $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (App n$_f$ n$_a$) t')
 
   predicate staticFlowsAccept:
-    static_value_map -> graph -> term -> bool where
-    $\forall$ staticEnv graph n .
-      if
-        staticFlowsAcceptTm staticEnv graph t$_0$ t$_0$
-      then
-        staticFlowsAccept staticEnv graph t$_0$ 
+    static_value_map -> graph -> term -> bool
+  where
+    intro: staticEnv graph n .
+      staticFlowsAcceptTm staticEnv graph t$_0$ t$_0$
+    $\vdash$ staticFlowsAccept staticEnv graph t$_0$ 
 
 \end{lstlisting}
 
