@@ -113,8 +113,8 @@ syntactic transliteration.
 Although the definitions are structurally quite different,
 their philosophical equivalence is hopefully apparent. 
 In this formal theory, the dynamic semantics of Concurrent ML consists of 
-a CEK machine \cite{felleisen$_1$986control}. The static semantics consists of a 0CFA control-flow analysis
-\cite{shivers1991control}, defined in terms of constraints \cite{nielson$_2$015principles}.
+a CEK machine \cite{felleisen1986control}. The static semantics consists of a 0CFA control-flow analysis
+\cite{shivers1991control}, defined in terms of constraints \cite{nielson2015principles}.
 
 \subsection{Concurrent ML}
 In programing languages, concurrency is a program structuring technique that allows evaluation
@@ -1353,7 +1353,7 @@ application, left and right construction with pattern matching, pair constructio
 and second selections, sending and receiving event construction with synchronization,
 channel creation, thread spawning, and the unit literal. The syntax is defined in a way to
 make it possible to relate the dynamic semantics of programs to the syntax programs.
-The syntax is defined in administrative normal form (ANF) \cite{flanagan$_1$993essence}, in which every term
+The syntax is defined in administrative normal form (ANF) \cite{flanagan1993essence}, in which every term
 is bound to a name. Furthermore, terms only accept names in place of eagerly evaluated
 inputs. 
 
@@ -3505,40 +3505,31 @@ the loop may not be live according to the entry function in the static channel l
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticLiveFlow:
-    graph -> term_id_map -> term_id_map -> flow -> bool where
-    $\forall$ l l' graph exit entr . 
-      if
-        (l, MNxt, l') $\in$ graph,
-        not (exit l = {}),
-        not (entr l' = {})
-      then
-        staticLiveFlow graph entr exit (l, MNxt, l')
-  * $\forall$ l l' graph exit entr .
-      if
-        (l, MSpwn, l') $\in$ graph, 
-        not (exit l = {}),
-        not (entr l' = {})
-      then
-        staticLiveFlow graph entr exit (l, MSpwn, l')
-  * $\forall$ l l' graph exit entr .
-      if
-        (l, MCll, l') $\in$ graph,
-        (not (exit l = {})) $\vee$ (not (entr l' = {}))
-      then
-        staticLiveFlow graph entr exit (l, MCll, l')
-  * $\forall$ l l' graph entr exit .
-      if
-        (l, MRtn, l') $\in$ graph,
-        not (entr l' = {})
-      then
-        staticLiveFlow graph entr exit (l, MRtn, l')
-  * $\forall$ n$_s$ n$_e$ n$_r$ graph entr exit .
-      if
-        ((NBnd n$_s$), ESend n$_e$, (NBnd n$_r$)) $\in$ graph, 
-        {n$_e$} $\subseteq$ (entr (NBnd n$_s$))
-      then
-        staticLiveFlow graph entr exit
-        ((NBnd n$_s$), ESend n$_e$, (NBnd n$_r$))
+    graph -> term_id_map -> term_id_map -> flow -> bool
+  where
+    seq: l l' graph exit entr . 
+      (l, MNxt, l') $\in$ graph,
+      $\neg$ (exit l = {}),
+      $\neg$ (entr l' = {})
+    $\vdash$ staticLiveFlow graph entr exit (l, MNxt, l')
+  * spawn: l l' graph exit entr .
+      (l, MSpwn, l') $\in$ graph, 
+      $\neg$ (exit l = {}),
+      $\neg$ (entr l' = {})
+    $\vdash$ staticLiveFlow graph entr exit (l, MSpwn, l')
+  * call: l l' graph exit entr .
+      (l, MCll, l') $\in$ graph,
+      ($\neg$ (exit l = {})) $\vee$ ($\neg$ (entr l' = {}))
+    $\vdash$ staticLiveFlow graph entr exit (l, MCll, l')
+  * return: l l' graph entr exit .
+      (l, MRtn, l') $\in$ graph,
+      $\neg$ (entr l' = {})
+    $\vdash$ staticLiveFlow graph entr exit (l, MRtn, l')
+  * send: n$_s$ n$_e$ n$_r$ graph entr exit .
+      ((NBnd n$_s$), ESend n$_e$, (NBnd n$_r$)) $\in$ graph, 
+      {n$_e$} $\subseteq$ (entr (NBnd n$_s$))
+    $\vdash$ staticLiveFlow graph entr exit
+      ((NBnd n$_s$), ESend n$_e$, (NBnd n$_r$))
 \end{lstlisting}
 
 The static traceability for the higher precision analysis states
@@ -3557,20 +3548,17 @@ containing only live flows for channel \lstinline{k4}. \
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticTraceable:
-    static_value_map -> graph -> term_id_map -> term_id_map ->
-    termId -> (termId -> bool) -> static_path -> bool where
-    $\forall$ isEnd start staticEnv graph entr exit .
-      if
-        isEnd start
-      then
-        staticTraceable graph entr exit start isEnd []
-   * $\forall$ graph entr exit start middle path isEnd mode. 
-      if
-        staticTraceable graph entr exit start ($\lambda$ l . l = middle) path, 
-        (isEnd end),
-        staticLiveFlow graph entr exit (middle, mode, end) 
-      then
-        staticTraceable graph entr exit start isEnd (path @ [(middle, mode)]
+    static_value_map -> graph -> term_id_map -> term_id_map
+  -> termId -> (termId -> bool) -> static_path -> bool
+  where
+     empty: isEnd start staticEnv graph entr exit .
+       isEnd start
+     $\vdash$ staticTraceable graph entr exit start isEnd []
+   * snoc: graph entr exit start middle path isEnd mode. 
+       staticTraceable graph entr exit start ($\lambda$ l . l = middle) path, 
+       (isEnd end),
+       staticLiveFlow graph entr exit (middle, mode, end) 
+     $\vdash$ staticTraceable graph entr exit start isEnd (path @ [(middle, mode)]
 \end{lstlisting}
 
 As with the lower precision analysis, the higher precision analysis relies on recognizing
@@ -3586,48 +3574,40 @@ given paths do not compete in any run of a program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticInclusive: static_path -> static_path -> bool where
-    $\forall$ path1 path2 .
-      if
-        prefix path1 path2 $\vee$ path2 path1
-      then
-        staticInclusive path1 path2
-  * $\forall$ path n path1 path2 .
-      staticInclusive
-        (path @ (NBnd n, MSpwn) # path1)
-        (path @ (NBnd n, MNxt) # path2)
-  * $\forall$ path n path1 path2 .
-      staticInclusive
-        (path @ (NBnd n, MNxt) # path1)
-        (path @ (NBnd n, MSpwn) # path2)
-  * $\forall$ path n path1 path2 .
-      staticInclusive
-        (path @ (NBnd n, ESend xE) # path1)
-        (path @ (NBnd n, MNxt) # path2)
-  * $\forall$ path n path1 path2 .
-      staticInclusive
-        (path @ (NBnd n, MNxt) # path1)
-        (path @ (NBnd n, ESend xE) # path2)
+    ordered: path1 path2 .
+      prefix path1 path2 $\vee$ path2 path1
+    $\vdash$ staticInclusive path1 path2
+  * spawnLeft: path n path1 path2 .
+    $\vdash$ staticInclusive
+      (path @ (NBnd n, MSpwn) # path1)
+      (path @ (NBnd n, MNxt) # path2)
+  * spawnRight: path n path1 path2 .
+    $\vdash$ staticInclusive
+      (path @ (NBnd n, MNxt) # path1)
+      (path @ (NBnd n, MSpwn) # path2)
+  * sendLeft: path n path1 path2 .
+    $\vdash$ staticInclusive
+      (path @ (NBnd n, ESend xE) # path1)
+      (path @ (NBnd n, MNxt) # path2)
+  * sendRight: path n path1 path2 .
+    $\vdash$ staticInclusive
+      (path @ (NBnd n, MNxt) # path1)
+      (path @ (NBnd n, ESend xE) # path2)
 
   predicate singular: static_path -> static_path -> bool where
-    $\forall$ path .
+    refl: path .
       singular path path
-  * $\forall$ path1 path2 .
-      if
-        not (staticInclusive path1 path2)
-      then
-        singular path1 path2
+  * notInclus: path1 path2 .
+      $\neg$ (staticInclusive path1 path2)
+    $\vdash$ singular path1 path2
 
   predicate noncompetitive: static_path -> static_path -> bool where
-    $\forall$ path1 path2 . 
-      if
-        ordered path1 path2
-      then
-        noncompetitive path1 path2
-  * $\forall$ path1 path2 .
-      if
-        not (staticInclusive path1 path2)
-      then
-        noncompetitive path1 path2
+    ordered: path1 path2 . 
+      ordered path1 path2
+    $\vdash$ noncompetitive path1 path2
+  * notInclus: path1 path2 .
+      $\neg$ (staticInclusive path1 path2)
+    $\vdash$ noncompetitive path1 path2
   \end{lstlisting}
 
 The communication classifications are described using the liveness properties, but
@@ -3635,56 +3615,42 @@ are otherwise similar to the lower precision classifications.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticOneShot: static_value_map -> term -> name -> bool where
-    $\forall$ graph entr exit n$_c$ staticEnv t . 
-      if
-        forEveryTwo
-          (staticTraceable graph entr exit
-            (NBnd n$_c$) (staticSendId staticEnv t n$_c$))
-          singular, 
-        staticLiveChan staticEnv entr exit n$_c$ t, 
-        staticFlowsAccept staticEnv graph t
-      then
-        staticOneShot V t n$_c$)
-
-  predicate staticOneToOne: static_value_map -> term -> name -> bool where
-    $\forall$ graph entr exit n$_c$ staticEnv t .
-      if
-        forEveryTwo
-          (staticTraceable graph
-            entr exit (NBnd n$_c$) (staticSendId staticEnv t n$_c$))
-          noncompetitive, 
-        forEveryTwo
-          (staticTraceable graph
-            entr exit (NBnd n$_c$) (staticRecvId staticEnv t n$_c$))
-          noncompetitive,
-          staticLiveChan staticEnv entr exit n$_c$ t,
-          staticFlowsAccept staticEnv graph t
-      then
-        staticOneToOne staticEnv t n$_c$)
+    intro: staticEnv staticComm t graph entr exit n$_c$ . 
+      staticEval staticEnv staticComm t,
+      staticFlowsAccept staticEnv graph t,
+      staticLiveChan staticEnv entr exit n$_c$ t, 
+      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+        (staticSendId staticEnv t n$_c$)) singular
+    $\vdash$ staticOneShot V t n$_c$
 
   predicate staticOneToMany: static_value_map -> term -> name -> bool where
-    $\forall$ graph entr exit n$_c$ staticEnv t .
-      if
-        forEveryTwo
-          (staticTraceable graph
-            entr exit (NBnd n$_c$) (staticSendId staticEnv t n$_c$))
-          noncompetitive,
-        staticLiveChan staticEnv entr exit n$_c$ t,
-        staticFlowsAccept staticEnv graph t
-      then
-        staticOneToMany staticEnv t n$_c$)
+    intro: staticEnv staticComm t graph entr exit n$_c$ 
+      staticEval staticEnv staticComm t,
+      staticFlowsAccept staticEnv graph t,
+      staticLiveChan staticEnv entr exit n$_c$ t, 
+      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+        (staticSendId staticEnv t n$_c$)) noncompetitive
+    $\vdash$ staticOneToMany staticEnv t n$_c$
 
   predicate staticManyToOne: static_value_map -> term -> name -> bool where
-    $\forall$ graph entr exit n$_c$ staticEnv t .
-      if
-        forEveryTwo
-          (staticTraceable graph
-            entr exit (NBnd n$_c$) (staticRecvId staticEnv t n$_c$))
-          noncompetitive, 
-        staticLiveChan staticEnv entr exit n$_c$ t,
-        staticFlowsAccept staticEnv graph t
-      then
-        staticManyToOne staticEnv t n$_c$)
+    intro: staticEnv staticComm t graph entr exit n$_c$ 
+      staticEval staticEnv staticComm t,
+      staticFlowsAccept staticEnv graph t,
+      staticLiveChan staticEnv entr exit n$_c$ t, 
+      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+        (staticRecvId staticEnv t n$_c$)) noncompetitive
+    $\vdash$ staticManyToOne staticEnv t n$_c$
+
+  predicate staticOneToOne: static_value_map -> term -> name -> bool where
+    intro: staticEnv staticComm t graph entr exit n$_c$ 
+      staticEval staticEnv staticComm t,
+      staticFlowsAccept staticEnv graph t,
+      staticLiveChan staticEnv entr exit n$_c$ t, 
+      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$) 
+        (staticSendId staticEnv t n$_c$)) noncompetitive, 
+      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+        (staticRecvId staticEnv t n$_c$)) noncompetitive
+    $\vdash$ staticOneToOne staticEnv t n$_c$
   \end{lstlisting}
 
 
@@ -3706,14 +3672,9 @@ However, in the higher precision analysis these paths correspond modulo the chan
 Let's outline the derivation of soundness of one-shot classification.
 
 \begin{lstlisting}[language=logic, mathescape]
-  theorem staticOneShotSound:
-  $\forall$ t$_0$ pool comm staticEnv staticComm n$_c$ path$_c$ . 
-    if
-      star dynamicEval [[] -> (Stt t$_0$ [->] []] {} pool comm,
-      staticEval staticEnv staticComm t$_0$,
-      staticOneShot staticEnv t$_0$ n$_c$
-    then 
-      oneShot pool (Chan path$_c$ n$_c$)
+  theorem staticOneShotSound:t$_0$ n$_c$ path$_c$ . 
+    staticOneShot t$_0$ n$_c$
+  $\vdash$ oneShot t$_0$  (Chan path$_c$ n$_c$)
 \end{lstlisting}
 
 The theorem for soundness of one-shot classification depends on
@@ -3721,61 +3682,49 @@ correlating dynamic paths with static paths.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate pathsCorrespond: dynamic_path -> static_path -> bool where
-    pathsCorrespond [] []
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DNxt n])
-          (staticPath @ [(NBnd n, MNxt)])
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DSpwn n])
-          (staticPath @ [(NBnd n, MSpwn)])
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DCll n])
-          (staticPath @ [(NBnd n, MCll)])
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DRtn n])
-        (staticPath @ [(NRslt n, MRtn)])
+    empty: pathsCorrespond [] []
+  * seq: path staticPath n .
+      pathsCorrespond path staticPath
+    $\vdash$ pathsCorrespond
+      (path @ [DNxt n])
+      (staticPath @ [(NBnd n, MNxt)])
+  * spawn: path staticPath n .
+      pathsCorrespond path staticPath
+    $\vdash$ pathsCorrespond
+      (path @ [DSpwn n])
+      (staticPath @ [(NBnd n, MSpwn)])
+  * call: path staticPath n .
+      pathsCorrespond path staticPath
+    $\vdash$ pathsCorrespond
+      (path @ [DCll n])
+      (staticPath @ [(NBnd n, MCll)])
+  * return: path staticPath n .
+      pathsCorrespond path staticPath
+    $\vdash$ pathsCorrespond
+      (path @ [DRtn n])
+      (staticPath @ [(NRslt n, MRtn)])
 
   predicate pathsCorrespondModChan:
-    pool -> communication -> chan -> dynamic_path -> static_path -> bool where
-    $\forall$ pool path$_c$ n$_c$ path$_{sfx}$ stt staticPath comm .
-      if
-        pool (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) = Some stt,
-        pathsCorrespond ((DNxt n$_c$) # path$_{sfx}$) staticPath
-      then
-        pathsCorrespondModChan
-          (pool, comm) (Chan path$_c$ n$_c$)
-          (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) staticPath
-  * $\forall$ pool path$_r$ n$_r$ path$_{sfx}$ stt  path$_s$ n$_s$ n$_{se}$ t$_{sy}$ env$_{sy}$ stack$_{sy}$
-      n$_{re}$ t$_{ry}$ env$_{ry}$ stack$_{ry}$ c$_c$ comm c staticPath$_{re}$ staticPath$_{sfx}$ . 
-      if
-        pool (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$) = Some stt, 
-        pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_{se}$) t$_{sy}$) env$_{sy}$ stack$_{sy}$),
-        pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_{re}$) t$_{ry}$) env$_{ry}$ stack$_{ry}$),
-        {(path$_s$, c$_c$, path$_r$)} $\subseteq$ comm, 
-        dynamicBuiltOnChanVar env$_{ry}$ c n$_r$, 
-        pathsCorrespondModChan pool comm c path$_s$ staticPath$_{pfx}$,
-        pathsCorrespond path$_{sfx}$ staticPath$_{sfx}$
-      then
-        pathsCorrespondModChan pool comm c
-          (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$)
-          (staticPath$_{pfx}$ @ (NBnd n$_s$, ESend n$_{se}$)
-            # (NBnd n$_r$, MNxt) # staticPath$_{sfx}$)
+    pool -> communication -> chan -> dynamic_path -> static_path -> bool
+  where
+    seq: pool path$_c$ n$_c$ path$_{sfx}$ stt staticPath comm .
+      pool (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) = Some stt,
+      pathsCorrespond ((DNxt n$_c$) # path$_{sfx}$) staticPath
+    $\vdash$ pathsCorrespondModChan
+      (pool, comm) (Chan path$_c$ n$_c$)
+      (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) staticPath
+  * send: pool path$_r$ n$_r$ path$_{sfx}$ stt  path$_s$ n$_s$ n$_{se}$ t$_{sy}$ env$_{sy}$ stack$_{sy}$
+    n$_{re}$ t$_{ry}$ env$_{ry}$ stack$_{ry}$ c$_c$ comm c staticPath$_{re}$ staticPath$_{sfx}$ . 
+      pool (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$) = Some stt, 
+      pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_{se}$) t$_{sy}$) env$_{sy}$ stack$_{sy}$),
+      pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_{re}$) t$_{ry}$) env$_{ry}$ stack$_{ry}$),
+      {(path$_s$, c$_c$, path$_r$)} $\subseteq$ comm, 
+      dynamicBuiltOnChanVar env$_{ry}$ c n$_r$, 
+      pathsCorrespondModChan pool comm c path$_s$ staticPath$_{pfx}$,
+      pathsCorrespond path$_{sfx}$ staticPath$_{sfx}$
+    $\vdash$ pathsCorrespondModChan pool comm c
+      (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$)
+      (staticPath$_{pfx}$ @ [(NBnd n$_s$, ESend n$_{se}$), (NBnd n$_r$, MNxt)] @ staticPath$_{sfx}$)
 \end{lstlisting}
 
 Additionally the soundness theorem follows from the completeness of static traceability,
@@ -3791,96 +3740,34 @@ between the two kinds of paths is not so simple, and finding a description of th
 that correlates with the dynamic path is much more challenging.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate pathsCorrespond: dynamic_path -> static_path -> bool where
-    pathsCorrespond [] []
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DNxt n])
-          (staticPath @ [(NBnd n, MNxt)])
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DSpwn n])
-          (staticPath @ [(NBnd n, MSpwn)])
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DCll n])
-        (staticPath @ [(NBnd n, MCll)])
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DRtn n])
-        (staticPath @ [(NRslt n, MRtn)])
 
-  predicate pathsCorrespondModChan:
-    pool -> communication -> chan -> dynamic_path -> static_path -> bool where
-    $\forall$ pool path$_c$ n$_c$ path$_{sfx}$ stt staticPath comm .
-      if
-        pool (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) = Some stt,
-        pathsCorrespond ((DNxt n$_c$) # path$_{sfx}$) staticPath
-      then
-        pathsCorrespondModChan
-          (pool, comm) (Chan path$_c$ n$_c$)
-          (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) staticPath
-  * $\forall$ pool path$_r$ n$_r$ path$_{sfx}$ stt path$_s$ n$_s$ n$_{se}$ t$_{sy}$ env$_{sy}$ stack$_{sy}$
-      n$_{re}$ t$_{ry}$ env$_{ry}$ stack$_{ry}$ c$_c$ comm c staticPath$_{re}$ staticPath$_{sfx}$ . 
-      if
-        pool (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$) = Some stt, 
-        pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_{se}$) t$_{sy}$) env$_{sy}$ stack$_{sy}$),
-        pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_{re}$) t$_{ry}$) env$_{ry}$ stack$_{ry}$),
-        {(path$_s$, c$_c$, path$_r$)} $\subseteq$ comm, 
-        dynamicBuiltOnChanVar env$_{ry}$ c n$_r$, 
-        pathsCorrespondModChan pool comm c path$_s$ staticPath$_{pfx}$,
-        pathsCorrespond path$_{sfx}$ staticPath$_{sfx}$
-      then
-        pathsCorrespondModChan pool comm c
-          (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$)
-          (staticPath$_{pfx}$ @ (NBnd n$_s$, ESend n$_{se}$)
-            # (NBnd n$_r$, MNxt) # staticPath$_{sfx}$)
+  lemma staticTraceableSound: t$_0$ pool comm path n c t' env stack staticEnv staticComm
+  entr exit n$_c$ graph isEnd path$_c$  . 
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
+    pool path = Some (Stt (Bind n c t') env stack),
+    staticEval staticEnv staticComm t$_0$,
+    staticLiveChan staticEnv entr exit n$_c$ t$_0$,
+    staticFlowsAccept staticEnv graph t$_0$, 
+    isEnd (NBnd n)
+  $\vdash$ exists staticPath . 
+    pathsCorrespondModChan pool comm (Chan path$_c$ n$_c$) path staticPath
+  $\wedge$ staticTraceable graph entr exit (NBnd n$_c$) isEnd staticPath
 
-  lemma staticTraceableSound:
-    $\forall$ t$_0$ pool comm path n c t' env stack staticEnv staticComm
-      entr exit n$_c$ graph isEnd path$_c$  . 
-      if
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
-        pool path = Some (Stt (Bind n c t') env stack),
-        staticEval staticEnv staticComm t$_0$,
-        staticLiveChan staticEnv entr exit n$_c$ t$_0$,
-        staticFlowsAccept staticEnv graph t$_0$, 
-        isEnd (NBnd n)
-      then
-        (exists staticPath . 
-          pathsCorrespondModChan pool comm (Chan path$_c$ n$_c$) path staticPath, 
-          staticTraceable graph entr exit (NBnd n$_c$) isEnd staticPath)
-
-  lemma staticInclusiveSound:
-    $\forall$ t$_0$ pool comm staticEnv entr exit n$_c$ graph staticComm
-      path1 stt1 path$_c$ staticPath1 path2 stt2 staticPath2 .
-      if
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm, 
-        staticLiveChan staticEnv entr exit n$_c$ t$_0$, 
-        staticFlowsAccept staticEnv graph t$_0$, 
-        staticEval staticEnv staticComm t$_0$, 
-        pool path1 = Some stt1, 
-        pathsCorrespondModChan pool comm (Chan path$_c$ n$_c$) path1 staticPath1, 
-        staticTraceable graph entr exit
-          (NBnd n$_c$) (staticSendId staticEnv t$_0$ n$_c$) staticPath1, 
-        pool path2 = Some stt2, 
-        pathsCorrespondModChan pool comm (Chan path$_c$ n$_c$) path2 staticPath2, 
-        staticTraceable graph entr exit
-          (NBnd n$_c$) (staticSendId staticEnv t$_0$ n$_c$) staticPath2
-      then
-        staticInclusive staticPath1 staticPath2
+  lemma staticInclusiveSound: t$_0$ pool comm staticEnv entr exit n$_c$ graph staticComm
+  path1 stt1 path$_c$ staticPath1 path2 stt2 staticPath2 .
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm, 
+    staticLiveChan staticEnv entr exit n$_c$ t$_0$, 
+    staticFlowsAccept staticEnv graph t$_0$, 
+    staticEval staticEnv staticComm t$_0$, 
+    pool path1 = Some stt1, 
+    pathsCorrespondModChan pool comm (Chan path$_c$ n$_c$) path1 staticPath1, 
+    staticTraceable graph entr exit
+      (NBnd n$_c$) (staticSendId staticEnv t$_0$ n$_c$) staticPath1, 
+    pool path2 = Some stt2, 
+    pathsCorrespondModChan pool comm (Chan path$_c$ n$_c$) path2 staticPath2, 
+    staticTraceable graph entr exit
+      (NBnd n$_c$) (staticSendId staticEnv t$_0$ n$_c$) staticPath2
+  $\vdash$ staticInclusive staticPath1 staticPath2
 \end{lstlisting}
 
   
@@ -3901,7 +3788,7 @@ make any guarantees about the analysis itself.
 Rather than focus on mechanizing the analysis, this work has focused on
 mechanizing the theory of analyses for concurrent languages, i.e. the meta-theory of concurrency.
 There have been a number of works on the meta-theory of Concurrent ML,
-such as the work of Reppy and Xiao, Nielson et al \cite{nielson$_1$994higher}, Kobayashi et al \cite{kobayashi1995static}, and Gasser et al \cite{gasser1997systematic}.
+such as the work of Reppy and Xiao, Nielson et al \cite{nielson1994higher}, Kobayashi et al \cite{kobayashi1995static}, and Gasser et al \cite{gasser1997systematic}.
 There has been relatively little work to mechanize theories of Concurrent ML; however,
 there has been much work in the mechanization of the theories of $\pi$-calculus
 \cite{milner1999communicating}, such as the work by Gay \cite{gay2001framework} and Melham \cite{melham1994mechanized}. 

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  15 JAN 2019 19:03
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  15 JAN 2019 19:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -895,19 +895,9 @@ LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
 (Font)              scaled to size 10.95pt on input line 95.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 10.95pt on input line 116.
-
-
-LaTeX Warning: Citation `felleisen$_1$986control' on page 1 undefined on input 
-line 116.
-
-
-LaTeX Warning: Citation `nielson$_2$015principles' on page 1 undefined on input
- line 117.
-
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
 (Font)              scaled to size 12.0pt on input line 119.
-[1] (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/lstlang1.sty
+ [1]
+(/usr/local/texlive/2016/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2015/06/04 1.6 listings language file
 )
 (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/lstlang2.sty
@@ -941,19 +931,15 @@ Overfull \hbox (4.79483pt too wide) in paragraph at lines 1218--1224
 k were con-structed in the for-mal lan-guage of Is-abelle/HOL,
  []
 
-[23] [24] [25]
-
-LaTeX Warning: Citation `flanagan$_1$993essence' on page 26 undefined on input 
-line 1356.
-
-[26] [27] [28] [29] [30] [31] [32] [33] [34] [35] [36] [37] [38] [39] [40]
-[41] [42] [43] <cml-graph.pdf, id=153, 1494.58376pt x 1964.33875pt>
+[23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34] [35] [36] [37]
+[38] [39] [40] [41] [42] [43]
+<cml-graph.pdf, id=153, 1494.58376pt x 1964.33875pt>
 File: cml-graph.pdf Graphic file (type pdf)
-
-<use cml-graph.pdf>
+ <use cml-graph.pdf>
 Package pdftex.def Info: cml-graph.pdf used on input line 2290.
 (pdftex.def)             Requested size: 387.00153pt x 508.6179pt.
- [44] [45 <./cml-graph.pdf>] [46] [47] [48] [49]
+
+[44] [45 <./cml-graph.pdf>] [46] [47] [48] [49]
 <cml-proof-low.pdf, id=199, 791.95876pt x 576.1525pt>
 File: cml-proof-low.pdf Graphic file (type pdf)
  <use cml-proof-low.pdf>
@@ -1004,53 +990,45 @@ Overfull \hbox (17.0pt too wide) in paragraph at lines 3369--3370
 File: cml-graph-k1.pdf Graphic file (type pdf)
 
 <use cml-graph-k1.pdf>
-Package pdftex.def Info: cml-graph-k1.pdf used on input line 3551.
+Package pdftex.def Info: cml-graph-k1.pdf used on input line 3542.
 (pdftex.def)             Requested size: 387.00153pt x 416.11641pt.
  [74]
 <cml-graph-k4.pdf, id=328, 1090.0725pt x 954.56625pt>
 File: cml-graph-k4.pdf Graphic file (type pdf)
  <use cml-graph-k4.pdf>
-Package pdftex.def Info: cml-graph-k4.pdf used on input line 3556.
+Package pdftex.def Info: cml-graph-k4.pdf used on input line 3547.
 (pdftex.def)             Requested size: 301.00192pt x 263.57709pt.
 
 [75 <./cml-graph-k1.pdf>] [76 <./cml-graph-k4.pdf>] [77] [78] [79] [80]
-[81] [82]
-
-LaTeX Warning: Citation `nielson$_1$994higher' on page 83 undefined on input li
-ne 3904.
-
-[83] [84] (./thesis.bbl [85]) [86] (./thesis.aux)
-
-LaTeX Warning: There were undefined references.
-
- ) 
+[81] [82] (./thesis.bbl [83]) [84] (./thesis.aux) ) 
 Here is how much of TeX's memory you used:
- 7850 strings out of 493014
- 115745 string characters out of 6133351
- 446343 words of memory out of 5000000
- 11210 multiletter control sequences out of 15000+600000
- 61182 words of font info for 70 fonts, out of 8000000 for 9000
+ 7852 strings out of 493014
+ 115730 string characters out of 6133351
+ 445323 words of memory out of 5000000
+ 11213 multiletter control sequences out of 15000+600000
+ 55927 words of font info for 68 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  38i,6n,74p,228b,1728s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/base/8r.enc}{/usr/local/t
-exlive/2016/texmf-dist/fonts/enc/dvips/libertine/lbtn_7grukw.enc}{/usr/local/te
-xlive/2016/texmf-dist/fonts/enc/dvips/libertine/lbtn_nh77jq.enc}{/usr/local/tex
-live/2016/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc}</usr/local/texl
-ive/2016/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/
-texlive/2016/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/l
-ocal/texlive/2016/texmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></
-usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></u
-sr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr
-/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/lo
-cal/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/loc
-al/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texli
-ve/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016/
-texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-d
-ist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (87 pages, 724551 bytes).
+{/usr/local/texlive/2016/tex
+mf-dist/fonts/enc/dvips/base/8r.enc}{/usr/local/texlive/2016/texmf-dist/fonts/e
+nc/dvips/libertine/lbtn_7grukw.enc}{/usr/local/texlive/2016/texmf-dist/fonts/en
+c/dvips/libertine/lbtn_nh77jq.enc}{/usr/local/texlive/2016/texmf-dist/fonts/enc
+/dvips/libertine/lbtn_76gpa5.enc}</usr/local/texlive/2016/texmf-dist/fonts/type
+1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2016/texmf-dist/fonts/
+type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2016/texmf-dist/f
+onts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/2016/texmf-d
+ist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2016/texmf-di
+st/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2016/texmf-dist
+/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2016/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2016/texmf-dist/fon
+ts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1
+/public/bera/fvmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/
+bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfont
+s/symbols/msbm10.pfb>
+Output written on thesis.pdf (85 pages, 718903 bytes).
 PDF statistics:
- 461 PDF objects out of 1000 (max. 8388607)
- 324 compressed objects within 4 object streams
+ 455 PDF objects out of 1000 (max. 8388607)
+ 320 compressed objects within 4 object streams
  0 named destinations out of 1000 (max. 500000)
  36 words of extra memory for PDF output out of 10000 (max. 10000000)
 
