@@ -1828,7 +1828,7 @@ done
 
 theorem staticOneShotSound:
   "
-      staticOneShot V e xC \<Longrightarrow>
+      staticOneShot e xC \<Longrightarrow>
       one_shot e (Ch \<pi> xC)"
 apply (erule staticOneShot.cases; auto)
 apply (unfold one_shot.simps; auto)
@@ -1837,7 +1837,7 @@ done
 
 theorem staticOneToManySound:
   "
-      staticOneToMany V e xC \<Longrightarrow>
+      staticOneToMany e xC \<Longrightarrow>
       fan_out e (Ch \<pi> xC)" 
    apply (erule staticOneToMany.cases; auto)
    apply (unfold fan_out.simps; auto)
@@ -1846,7 +1846,7 @@ done
 
 theorem staticManyToOneSound:
   "
-      staticManyToOne V e xC \<Longrightarrow>
+      staticManyToOne e xC \<Longrightarrow>
       fan_in e (Ch \<pi> xC)"
    apply (erule staticManyToOne.cases; auto)
    apply (unfold fan_in.simps)
@@ -1855,7 +1855,7 @@ done
 
 theorem staticOneToOneSound:
   "
-      staticOneToOne V e xC \<Longrightarrow>
+      staticOneToOne e xC \<Longrightarrow>
       one_to_one e (Ch \<pi> xC)"
  apply (erule staticOneToOne.cases; auto)
  apply (unfold one_to_one.simps; auto)

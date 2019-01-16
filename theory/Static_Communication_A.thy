@@ -190,39 +190,39 @@ inductive staticTraceable :: "(tm_id * 'a * tm_id) set \<Rightarrow> tm_id \<Rig
   "
 
 
-inductive staticOneShot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneShot :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
     forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
     (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-    staticOneShot V e xC 
+    staticOneShot e xC 
   "
 
 
-inductive staticOneToMany :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneToMany :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
     forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
     (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-    staticOneToMany V e xC 
+    staticOneToMany e xC 
   "
 
-inductive staticManyToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticManyToOne :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
     forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
     (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-    staticManyToOne V e xC 
+    staticManyToOne e xC 
   "
 
 
-inductive staticOneToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneToOne :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
     forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
     forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
     (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-    staticOneToOne V e xC 
+    staticOneToOne e xC 
   "
 
 end

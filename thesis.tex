@@ -1714,26 +1714,30 @@ synchronize on a channel are necessarily ordered for either end of the channel.
       prefix path2 path1
     $\vdash$ ordered path1 path2
 
-  predicate oneShot: pool -> chan -> bool where
-    intro: pool c .
+  predicate oneShot: tm -> chan -> bool where
+    intro: t$_0$ c .
+      star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       forEveryTwo (isSendPath pool c) (op =)
-    $\vdash$ oneShot pool c
+    $\vdash$ oneShot t$_0$  c
 
-  predicate oneToMany: pool -> chan -> bool where
-    intro: pool c .
+  predicate oneToMany: tm -> chan -> bool where
+    intro: t$_0$ c .
+      star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       forEveryTwo (isSendPath pool c) ordered
     $\vdash$ oneToMany pool c
 
-  predicate manyToOne: pool -> chan -> bool where
-    intro: pool c .
+  predicate manyToOne: tm -> chan -> bool where
+    intro: t$_0$ c .
+      star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       forEveryTwo (isRecvPath pool c) ordered
-    $\vdash$ manyToOne pool c
+    $\vdash$ manyToOne t$_0$ c
 
-  predicate oneToOne: pool -> chan -> bool where
-    intro: pool c.
-      oneToMany pool c,
-      manyToOne pool c
-    $\vdash$ oneToOne pool c
+  predicate oneToOne: tm -> chan -> bool where
+    intro: t$_0$ c .
+      star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
+      forEveryTwo (isSendPath pool c) ordered,
+      forEveryTwo (isRecvPath pool c) ordered
+    $\vdash$ oneToOne t$_0$ c
 \end{lstlisting}
 
 
@@ -1880,7 +1884,7 @@ static evaluation is less precise.
       $\rightarrow$ staticEnv n$_2$ $\subseteq$ staticEnv n),
       staticEval staticEnv staticComm t'
     $\vdash$ staticEval staticEnv staticComm (Bind n (Snd n$_t$) t')
-  * sumElim: staticEnv n$_s$ n$_l$ t$_l$ n staticComm n$_r$ t$_r$ t' . 
+  * caseEither: staticEnv n$_s$ n$_l$ t$_l$ n staticComm n$_r$ t$_r$ t' . 
       $\forall$ n$_c$ .  
         (SAtm (Lft n$_c$)) $\in$ staticEnv n$_s$
       $\rightarrow$ staticEnv n$_c$ $\subseteq$ staticEnv n$_l$,
@@ -2253,7 +2257,7 @@ accepting flows for the sequenced embedded term.
       (NBnd n, MNxt, termId t') $\in$ graph, 
       staticFlowsAccept staticEnv graph t', 
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Snd n$_t$) t')
-  * sumElim: n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
+  * caseEither: n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
       {
         (NBnd n, MCll, termId t$_l$),
         (NBnd n, MCll, termId t$_r$),
@@ -2372,11 +2376,11 @@ to synchronize to send on a static channel in any run of a given program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticOneShot: static_value_map -> term -> name -> bool where
-    intro: graph t staticEnv staticComm n$_c$ .
-      forEveryTwo (staticTraceable graph (termId t)
-        (staticSendId staticEnv t n$_c$)) singular,
+    intro: staticEnv staticComm t graph n$_c$ .
+      staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
-      staticEval staticEnv staticComm t
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticSendId staticEnv t n$_c$)) singular
     $\vdash$ staticOneShot graph t n$_c$
 \end{lstlisting}
 
@@ -2386,13 +2390,13 @@ during a run of a given program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticOneToOne: static_value_map -> term -> name -> bool where
-    intro: graph t staticEnv staticComm n$_c$ .
+    intro: staticEnv staticComm t graph n$_c$ .
+      staticEval staticEnv staticComm t,
+      staticFlowsAccept staticEnv graph t,
       forEveryTwo (staticTraceable graph (termId t)
         (staticSendId staticEnv t n$_c$)) noncompetitive, 
       forEveryTwo (staticTraceable graph (termId t)
-        (staticRecvId staticEnv t n$_c$)) noncompetitive, 
-      staticFlowsAccept staticEnv graph t,
-      staticEval staticEnv staticComm t
+        (staticRecvId staticEnv t n$_c$)) noncompetitive
     $\vdash$ staticOneToOne staticEnv t n$_c$
 \end{lstlisting}
 
@@ -2402,11 +2406,11 @@ many threads that attempt to receive on the channel.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticOneToMany: static_value_map -> term -> name -> bool where
-    intro: graph t staticEnv n$_c$ .
-      forEveryTwo (staticTraceable graph (termId t)
-        (staticSendId staticEnv t n$_c$)) noncompetitive,
+    intro: staticEnv staticComm t graph n$_c$ .
+      staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
-      staticEval staticEnv staticComm t
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticSendId staticEnv t n$_c$)) noncompetitive
     $\vdash$ staticOneToMany staticEnv t n$_c$
 \end{lstlisting}
 
@@ -2417,11 +2421,11 @@ program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticManyToOne: static_value_map -> term -> name -> bool where
-    intro: graph t staticEnv statcComm n$_c$ .
-      forEveryTwo (staticTraceable graph (termId t)
-        (staticRecvId staticEnv t n$_c$)) noncompetitive,
+    intro: staticEnv statcComm t graph n$_c$ .
+      staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
-      staticEval staticEnv staticComm t
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticRecvId staticEnv t n$_c$)) noncompetitive
     $\vdash$ staticManyToOne staticEnv t n$_c$
 \end{lstlisting}
 
@@ -2483,29 +2487,27 @@ to less flexible relations.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate sortedLeft: nat list -> bool where
-    sortedLeft []
-  * $\forall$ x .
-      sortedLeft [x]
-  * $\forall$ x y zs .
-      if 
-        n $\leq$ y,
-        sortedLeft (y # zs)
-      then
-        sortedLeft (x # y # zs)
+    empty:
+    $\vdash$ sortedRight []
+  * single: x .
+    $\vdash$ sortedLeft [x]
+  * cons: x y zs .
+      n $\leq$ y,
+      sortedLeft (y # zs)
+    $\vdash$ sortedLeft (x # y # zs)
 
   predicate sortedRight: nat list -> bool where
-    sortedRight []
-  * $\forall$ z .
-      sortedRight [z]
-  * $\forall$ xs y z .
-      if 
-        sortedRight (xs @ [y]),
-        y $\leq$ z 
-      then
-        sortedRight (xs @ [y] @ [z])
+    empty:
+    $\vdash$ sortedRight []
+  * single: z .
+    $\vdash$ sortedRight [z]
+  * snoc: xs y z .
+      sortedRight (xs @ [y]),
+      y $\leq$ z 
+    $\vdash$ sortedRight (xs @ [y] @ [z])
 
-  lemma sortedEquiv:
-    $\forall$ xs . sortedLeft xs $\equiv$ sortedRight xs  
+  lemma sortedEquiv: xs .
+  $\vdash$ sortedLeft xs $\equiv$ sortedRight xs  
 \end{lstlisting}
 
 \subsection{Soundness}
@@ -2523,41 +2525,21 @@ over any pool that results from running the program.  The theorems for soundness
 classification and one-to-one classification follow the same pattern. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  theorem staticOneShotSound: 
-    $\forall$ staticEnv staticComm t$_0$ n$_c$ pool comm path$_c$ .
-      if
-        staticEval staticEnv staticComm t$_0$, 
-        staticOneShot staticEnv t$_0$ n$_c$, 
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm
-      then
-        oneShot pool (Chan path$_c$ n$_c$)
+  theorem staticOneShotSound: t$_0$ n$_c$ path$_c$ .
+    staticOneShot t$_0$ n$_c$
+  $\vdash$ oneShot t$_0$ (Chan path$_c$ n$_c$)
 
-  theorem staticOneToManySound:
-    $\forall$ staticEnv staticComm t$_0$ n$_c$ pool comm path$_c$. 
-      if 
-        staticEval staticEnv staticComm t$_0$, 
-        staticOneToMany staticEnv t$_0$ n$_c$, 
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm
-      then
-        oneToMany pool (Chan path$_c$ n$_c$)
+  theorem staticOneToManySound: t$_0$ n$_c$ path$_c$ . 
+    staticOneToMany t$_0$ n$_c$
+  $\vdash$ oneToMany t$_0$ (Chan path$_c$ n$_c$)
 
-  theorem staticManyToOneSound:
-    $\forall$ staticEnv staticComm t$_0$ n$_c$ pool comm path$_c$. 
-      if
-        staticEval staticEnv staticComm t$_0$, 
-        staticManyToOne staticEnv t$_0$ n$_c$, 
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm
-      then
-        manyToOne pool (Chan path$_c$ n$_c$)
+  theorem staticManyToOneSound: t$_0$ n$_c$ path$_c$ . 
+    staticManyToOne t$_0$ n$_c$
+  $\vdash$ manyToOne t$_0$ (Chan path$_c$ n$_c$)
 
-  theorem staticOneToOneSound:
-    $\forall$ staticEnv staticComm t$_0$ n$_c$ pool comm path$_c$. 
-      if
-        staticEval staticEnv, staticComm t$_0$, 
-        staticOneToOne staticEnv t$_0$ n$_c$,
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm
-      then
-        oneToOne pool (Chan path$_c$ n$_c$)
+  theorem staticOneToOneSound: t$_0$ n$_c$ path$_c$ . 
+    staticOneToOne staticEnv t$_0$ n$_c$
+  $\vdash$ oneToOne t$_0$ (Chan path$_c$ n$_c$)
 \end{lstlisting}
 
 The formal proofs of soundness of each static classification follow a similar structure.
@@ -2594,70 +2576,54 @@ sending identifier by its term identifier.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate pathsCorrespond: dynamic_path -> static_path -> bool where
-    pathsCorrespond [] []
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DNxt n])
-          (staticPath @ [(NBnd n, MNxt)])
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DSpwn n])
-          (staticPath @ [(NBnd n, MSpwn)])
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DCll n])
-          (staticPath @ [(NBnd n, MCll)])
-  * $\forall$ path staticPath n .
-      if
-        pathsCorrespond path staticPath
-      then
-        pathsCorrespond
-          (path @ [DRtn n])
-          (staticPath @ [(NRslt n, MRtn)])
+    empty:
+    $\vdash$ pathsCorrespond [] []
+  * seq: path staticPath n .
+      pathsCorrespond path staticPath
+    $\vdash$ pathsCorrespond
+      (path @ [DNxt n])
+      (staticPath @ [(NBnd n, MNxt)])
+  * spawn: path staticPath n .
+      pathsCorrespond path staticPath
+    $\vdash$ pathsCorrespond
+      (path @ [DSpwn n])
+      (staticPath @ [(NBnd n, MSpwn)])
+  * call: path staticPath n .
+      pathsCorrespond path staticPath
+    $\vdash$ pathsCorrespond
+      (path @ [DCll n])
+      (staticPath @ [(NBnd n, MCll)])
+  * return: path staticPath n .
+      pathsCorrespond path staticPath
+    $\vdash$ pathsCorrespond
+      (path @ [DRtn n])
+      (staticPath @ [(NRslt n, MRtn)])
 
-  lemma staticTraceableSound:
-    $\forall$ t$_0$ pool comm path n c t' env stack staticEnv staticComm graph isEnd .
-      if
-        star dynamicEval ([[] -> (Stt t$_0$ [->] [])], {}) (pool, comm), 
-        pool path = Some (Stt (Bind n c t') env stack),
-        staticEval staticEnv staticComm t$_0$,
-        staticFlowsAccept staticEnv graph t$_0$,
-        isEnd (NBnd n)
-      then
-        exists staticPath . 
-          pathsCorrespond path staticPath, 
-          staticTraceable graph (termId t$_0$) isEnd staticPath
+  lemma staticTraceableSound: t$_0$ pool comm path n c t' env stack staticEnv staticComm graph isEnd .
+    star dynamicEval ([[] -> (Stt t$_0$ [->] [])], {}) (pool, comm), 
+    pool path = Some (Stt (Bind n c t') env stack),
+    staticEval staticEnv staticComm t$_0$,
+    staticFlowsAccept staticEnv graph t$_0$,
+    isEnd (NBnd n)
+  $\vdash$ exists staticPath . 
+    pathsCorrespond path staticPath
+  $\wedge$ staticTraceable graph (termId t$_0$) isEnd staticPath
 
-  lemma staticInclusiveSound:
-    $\forall$ t$_0$ pool comm path1 stt1 path2 stt2 staticPath1 staticPath2 . 
-      if
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm
-        pool path1 = Some stt1, 
-        pool path2 = Some stt2, 
-        pathsCorrespond path1 staticPath1, 
-        pathsCorrespond path2 staticPath2
-      then
-        staticInclusive staticPath1 staticPath2
+  lemma staticInclusiveSound: t$_0$ pool comm path1 stt1 path2 stt2 staticPath1 staticPath2 . 
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm
+    pool path1 = Some stt1, 
+    pool path2 = Some stt2, 
+    pathsCorrespond path1 staticPath1, 
+    pathsCorrespond path2 staticPath2
+  $\vdash$ staticInclusive staticPath1 staticPath2
 
-  lemma staticSendIdSound:
-    $\forall$ t$_0$ pool comm path n n$_e$ t' env stack n$_{sc}$ n$_m$ env' path$_c$ n$_c$ .
-      if
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm, 
-        pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack), 
-        env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env'), 
-        env' n$_{sc}$ = Some (VChn (Chan path$_c$ n$_c$)), 
-        staticEval staticEnv staticComm t$_0$
-      then 
-        staticSendId staticEnv t$_0$ n$_c$ (NBnd n)
+  lemma staticSendIdSound: t$_0$ pool comm path n n$_e$ t' env stack n$_{sc}$ n$_m$ env' path$_c$ n$_c$ .
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm, 
+    pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack), 
+    env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env'), 
+    env' n$_{sc}$ = Some (VChn (Chan path$_c$ n$_c$)), 
+    staticEval staticEnv staticComm t$_0$
+  $\vdash$ staticSendId staticEnv t$_0$ n$_c$ (NBnd n)
 \end{lstlisting}
 
 The completeness of static traceability is proved by generalizing
@@ -2682,88 +2648,70 @@ depending on the program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticFlowsAcceptValue:
-    static_value_map -> graph -> dynamic_value -> bool where
-    $\forall$ staticEnv graph .
-      staticFlowsAcceptValue staticEnv graph VUnt
-  * $\forall$ staticEnv graph n$_c$ .
-      staticFlowsAcceptValue staticEnv graph (VChn n$_c$)
-  * $\forall$ staticEnv graph env n$_c$ n$_m$.
-      if
-        staticFlowsAcceptEnv staticEnv graph env 
-      then 
-        staticFlowsAcceptVal
-          staticEnv graph (VAtm (SendEvt n$_c$ n$_m$) env)
-  * $\forall$ staticEnv graph env n$_c$.
-      if
-        staticFlowsAcceptEnv staticEnv graph env 
-      then
-        staticFlowsAcceptVal
-          staticEnv graph (VAtm (RecvEvt n$_c$) env)
-  * $\forall$ staticEnv graph env n$_p$ .
-      if
-        staticFlowsAcceptEnv staticEnv graph env 
-      then
-        staticFlowsAcceptVal
-          staticEnv graph (VAtm (Lft n$_p$) env)
-  * $\forall$ staticEnv graph env n$_p$ .
-      if
-        staticFlowsAcceptEnv staticEnv graph env
-      then
-        staticFlowsAcceptVal
-          staticEnv graph (VAtm (Rht n$_p$) env)
-  * $\forall$ staticEnv graph t$_b$ env n$_f$ n$_p$ .
-      if
-        staticFlowsAccept staticEnv graph t$_b$, 
-        staticFlowsAcceptEnv staticEnv graph env
-      then
-        staticFlowsAcceptVal
-          staticEnv graph (VAtm (Fun n$_f$ n$_p$ t$_b$) env)
-  * $\forall$ staticEnv graph env . 
-      if
-        staticFlowsAcceptEnv staticEnv graph env
-      then
-        staticFlowsAcceptVal
-        staticEnv graph (VAtm (Pair n$_1$ n$_2$) env)
+    static_value_map -> graph -> dynamic_value -> bool
+  where
+    unit: staticEnv graph .
+    $\vdash$ staticFlowsAcceptValue staticEnv graph VUnt
+  * chan: staticEnv graph n$_c$ .
+    $\vdash$ staticFlowsAcceptValue staticEnv graph (VChn n$_c$)
+  * sendEvt: staticEnv graph env n$_c$ n$_m$.
+      staticFlowsAcceptEnv staticEnv graph env 
+    $\vdash$ staticFlowsAcceptVal
+      staticEnv graph (VAtm (SendEvt n$_c$ n$_m$) env)
+  * recvEvt: staticEnv graph env n$_c$.
+      staticFlowsAcceptEnv staticEnv graph env 
+    $\vdash$ staticFlowsAcceptVal
+      staticEnv graph (VAtm (RecvEvt n$_c$) env)
+  * left: staticEnv graph env n$_p$ .
+      staticFlowsAcceptEnv staticEnv graph env 
+    $\vdash$ staticFlowsAcceptVal
+      staticEnv graph (VAtm (Lft n$_p$) env)
+  * right: staticEnv graph env n$_p$ .
+      staticFlowsAcceptEnv staticEnv graph env
+    $\vdash$ staticFlowsAcceptVal
+        staticEnv graph (VAtm (Rht n$_p$) env)
+  * function: staticEnv graph t$_b$ env n$_f$ n$_p$ .
+      staticFlowsAccept staticEnv graph t$_b$, 
+      staticFlowsAcceptEnv staticEnv graph env
+    $\vdash$ staticFlowsAcceptVal
+        staticEnv graph (VAtm (Fun n$_f$ n$_p$ t$_b$) env)
+  * pair: staticEnv graph env . 
+      staticFlowsAcceptEnv staticEnv graph env
+    $\vdash$ staticFlowsAcceptVal
+      staticEnv graph (VAtm (Pair n$_1$ n$_2$) env)
 
   predicate staticFlowsAcceptEnv:
     static_value_map -> graph -> env -> bool
   where 
-    $\forall$ staticEnv graph env .
-      if
-        $\forall$ n v . if env n = Some v then
-          staticFlowsAcceptValue staticEnv graph v
-      then
-        staticFlowsAcceptEnv staticEnv graph env
+    intro: staticEnv graph env .
+      $\forall$ n v . 
+        env n = Some v
+      $\rightarrow$ staticFlowsAcceptValue staticEnv graph v
+    $\vdash$ staticFlowsAcceptEnv staticEnv graph env
 
   predicate staticFlowsAcceptStack:
     static_value_map -> graph -> name -> stack -> bool
   where
-    $\forall$ staticEnv graph n$_r$ .
-      staticFlowsAcceptStack staticEnv graph n$_r$ []
-  * $\forall$ n$_r$ t graph staticEnv graph env stack n env .
-      if 
-        {(NRslt y, MRtn, termId t)} $\subseteq$ graph,
-        staticFlowsAccept staticEnv graph t,
-        staticFlowsAcceptEnv staticEnv graph env,
-        staticFlowsAcceptStack staticEnv graph (resultName t) stack 
-      then 
-        staticFlowsAcceptStack staticEnv graph n$_r$ ((Ctn n t env) # stack)
+    empty: staticEnv graph n$_r$ .
+    $\vdash$ staticFlowsAcceptStack staticEnv graph n$_r$ []
+  * cons: n$_r$ t graph staticEnv graph env stack n env .
+      {(NRslt y, MRtn, termId t)} $\subseteq$ graph,
+      staticFlowsAccept staticEnv graph t,
+      staticFlowsAcceptEnv staticEnv graph env,
+      staticFlowsAcceptStack staticEnv graph (resultName t) stack 
+    $\vdash$ staticFlowsAcceptStack staticEnv graph n$_r$ ((Ctn n t env) # stack)
 
   predicate staticFlowsAcceptPool of
     static_value_map -> graph -> pool -> bool
   where
-    $\forall$ staticEnv graph pool .
-      if
-        $\forall$ path t env stack .
-          if
-            env path = Some (Stt t env stack)
-          then 
-            staticFlowsAccept staticEnv graph t, 
-            staticFlowsAcceptEnv staticEnv graph env, 
-            staticFlowsAcceptStack staticEnv graph (resultName t) stack
-        ) 
-      then
-        staticFlowsAcceptPool staticEnv graph pool
+    intro: staticEnv graph pool .
+      $\forall$ path t env stack .
+        env path = Some (Stt t env stack)
+      $\rightarrow$
+        staticFlowsAccept staticEnv graph t
+      $\wedge$ staticFlowsAcceptEnv staticEnv graph env
+      $\wedge$ staticFlowsAcceptStack staticEnv graph (resultName t) stack
+    $\vdash$ staticFlowsAcceptPool staticEnv graph pool
 \end{lstlisting}
 
 The flows described by the various versions of static acceptance by flows depend on static
@@ -2784,94 +2732,80 @@ semantic elements to static values and static environments.
 
 \begin{lstlisting}[language=logic, mathescape]
   fun abstract: dynamic_value -> static_value where
-    abstract VUnt = SUnt
-  * $\forall$ path n . 
-      abstract (VChn (Chan path x)) = SChn x)
-  * $\forall$ atom env .
-      abstract (VAtm atom env) = SAtm atom)
+    $\vdash$ abstract VUnt = SUnt
+  * path n . 
+    $\vdash$ abstract (VChn (Chan path x)) = SChn x
+  * atom env .
+    $\vdash$ abstract (VAtm atom env) = SAtm atom
 
   predicate staticEvalValue:
-    static_value_map -> static_value_map -> dynamic_value -> bool where
-    $\forall$ staticEnv staticComm .
-      staticEvalValue staticEnv staticComm VUnit)
-  * $\forall$ staticEnv staticComm c .
-      staticEvalValue staticEnv staticComm (VChn c))
-  * $\forall$ staticEnv staticComm env n$_c$ n$_m$ .
-      if
-        staticEvalEnv staticEnv staticComm env
-      then
-        staticEvalValue staticEnv staticComm
-          (VAtm (SendEvt n$_c$ n$_m$) env))
-  * $\forall$ staticEnv staticComm env n$_c$  .
-      if
-        staticEvalEnv staticEnv staticComm env
-      then
-        staticEvalValue staticEnv staticComm
-          (VAtm (RecvEvt n$_c$) env))
-  * $\forall$ staticEnv staticComm env n$_p$  .
-      if
-        staticEvalEnv staticEnv staticComm env
-      then
-        staticEvalValue staticEnv staticComm
-          (VAtm (Lft n$_p$) env))
-  * $\forall$ staticEnv staticComm env n$_p$  .
-      if
-        staticEvalEnv staticEnv staticComm env
-      then
-        staticEvalValue staticEnv staticComm
-          (VAtm (Rht n$_p$) env))
-  * $\forall$ n$_f$ n$_p$ t$_b$ staticEnv staticComm env .
-      if
-        {SAtm (Fun n$_f$ n$_p$ t$_b$)} $\subseteq$ staticEnv f, 
-        staticEval staticEnv staticComm t$_b$, 
-        staticEvalEnv staticEnv staticComm env
-      then
-        staticEvalValue staticEnv staticComm
-          (VAtm (Fun n$_f$ n$_p$ t$_b$) env))
-  * $\forall$ staticEnv staticComm env n$_1$ n$_2$ .
-      if
-        staticEvalEnv staticEnv staticComm env
-      then
-        staticEvalValue staticEnv staticComm
-          (VAtm (Pair n$_1$ n$_2$) env))
+    static_value_map -> static_value_map -> dynamic_value -> bool
+  where
+    unit: staticEnv staticComm .
+    $\vdash$  staticEvalValue staticEnv staticComm VUnit)
+  * chan: staticEnv staticComm c .
+    $\vdash$ staticEvalValue staticEnv staticComm (VChn c))
+  * sendEvt: staticEnv staticComm env n$_c$ n$_m$ .
+      staticEvalEnv staticEnv staticComm env
+    $\vdash$ staticEvalValue staticEnv staticComm
+      (VAtm (SendEvt n$_c$ n$_m$) env))
+  * recvEvt: staticEnv staticComm env n$_c$  .
+      staticEvalEnv staticEnv staticComm env
+    $\vdash$ staticEvalValue staticEnv staticComm
+      (VAtm (RecvEvt n$_c$) env))
+  * left: staticEnv staticComm env n$_p$  .
+      staticEvalEnv staticEnv staticComm env
+    $\vdash$ staticEvalValue staticEnv staticComm
+      (VAtm (Lft n$_p$) env))
+  * right: staticEnv staticComm env n$_p$  .
+      staticEvalEnv staticEnv staticComm env
+    $\vdash$ staticEvalValue staticEnv staticComm
+      (VAtm (Rht n$_p$) env))
+  * function: n$_f$ n$_p$ t$_b$ staticEnv staticComm env .
+      {SAtm (Fun n$_f$ n$_p$ t$_b$)} $\subseteq$ staticEnv f, 
+      staticEval staticEnv staticComm t$_b$, 
+      staticEvalEnv staticEnv staticComm env
+    $\vdash$ staticEvalValue staticEnv staticComm
+      (VAtm (Fun n$_f$ n$_p$ t$_b$) env))
+  * pair: staticEnv staticComm env n$_1$ n$_2$ .
+      staticEvalEnv staticEnv staticComm env
+    $\vdash$ staticEvalValue staticEnv staticComm
+      (VAtm (Pair n$_1$ n$_2$) env))
 
   predicate staticEvalEnv:
-    static_value_map -> static_value_map -> env -> bool where 
-    $\forall$ staticEnv staticComm env .
-      if
-        $\forall$ n v . if env n = Some v then
-          {abstract v} $\subseteq$ staticEnv n,
-          staticEvalValue staticEnv staticComm v)
-      then 
-        staticEvalEnv staticEnv staticComm env)
+    static_value_map -> static_value_map -> env -> bool
+  where 
+    intro: staticEnv staticComm env .
+      $\forall$ n v .
+        env n = Some v 
+      $\rightarrow$ {abstract v} $\subseteq$ staticEnv n
+      $\wedge$ staticEvalValue staticEnv staticComm v
+    $\vdash$ staticEvalEnv staticEnv staticComm env
 
-  predicate staticEvalStack of
-    static_value_map -> static_value_map ->
-    static_value set -> stack -> bool where 
-    $\forall$ staticEnv staticComm staticVals .
-      staticEvalStack staticEnv staticComm staticVals [])
-  * $\forall$ staticVals staticEnv staticComm . 
-      if 
-        staticVals $\subseteq$ staticEnv n,
-        staticEval staticEnv staticComm t,
-        staticEvalEnv staticEnv staticComm env,
-        staticEvalStack staticEnv staticComm (staticEnv (resultName t)) stack 
-      then
-        staticEvalStack staticEnv staticComm staticVals ((Ctn n t env) # stack))
+  predicate staticEvalStack:
+    static_value_map -> static_value_map 
+  -> static_value set -> stack -> bool 
+  where
+    empty: staticEnv staticComm staticVals .
+    $\vdash$ staticEvalStack staticEnv staticComm staticVals [])
+  * cons: staticVals staticEnv staticComm . 
+      staticVals $\subseteq$ staticEnv n,
+      staticEval staticEnv staticComm t,
+      staticEvalEnv staticEnv staticComm env,
+      staticEvalStack staticEnv staticComm (staticEnv (resultName t)) stack 
+    $\vdash$ staticEvalStack staticEnv staticComm staticVals ((Ctn n t env) # stack))
 
-  predicate staticEvalPool of
-    static_value_map -> static_value_map -> pool -> bool where
-    $\forall$ staticEnv staticComm pool .
-      if
-        $\forall$ path t env stack .
-          if
-            pool path = Some (Stt t env stack)
-          then 
-            staticEval staticEnv staticComm t,
-            staticEvalEnv staticEnv staticComm env,
-            staticEvalStack staticEnv staticComm (staticEnv (resultName t)) stack)
-      then 
-        staticEvalPool staticEnv staticComm pool)
+  predicate staticEvalPool:
+    static_value_map -> static_value_map -> pool -> bool
+  where
+    intro: staticEnv staticComm pool .
+      $\forall$ path t env stack .
+        pool path = Some (Stt t env stack)
+      $\rightarrow$ 
+        staticEval staticEnv staticComm t
+      $\wedge$ staticEvalEnv staticEnv staticComm env
+      $\wedge$ staticEvalStack staticEnv staticComm (staticEnv (resultName t)) stack)
+    $\vdash$ staticEvalPool staticEnv staticComm pool)
   \end{lstlisting}
 
 
@@ -2882,28 +2816,21 @@ traceability.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate starLeft: ('a -> 'a -> bool) -> 'a -> 'a -> bool where
-    $\forall$ r z z .
-      starLeft r z z
-  * $\forall$ r x y z .
-      if
-        starLeft r x y, r y z
-      then
-        starLeft r x z
+    refl: r z z .
+    $\vdash$ starLeft r z z
+  * trans: r x y z .
+      starLeft r x y,
+      r y z
+    $\vdash$ starLeft r x z
 
-  lemma starImpliesStarLeft:
-    $\forall$ r x y .
-      if
-        star r x z
-      then
-        starLeft r x z
+  lemma starImpliesStarLeft: r x z .
+    star r x z
+  $\vdash$ starLeft r x z
 
-  lemma starLeftTrans:
-    $\forall$ r x y z .
-      if 
-        starLeft r x y,
-        starLeft r y z 
-      then
-        starLeft r x z
+  lemma starLeftTrans: r x y z .
+    starLeft r x y,
+    starLeft r y z 
+  $\vdash$ starLeft r x z
 \end{lstlisting}
 
 The lemma for the completeness of static traceability follows from the generalized definitions
@@ -2911,14 +2838,11 @@ of static acceptance by flows, the definition of static traceability, and the pr
 of static acceptance by flows across multiples steps of evaluation.
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma staticFlowsAcceptPoolPreserved:
-    $\forall$ t$_0$ pool comm staticEnv staticComm graph .
-      if
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm, 
-        staticEval staticEnv staticComm t$_0$,
-        staticFlowsAcceptPool staticEnv graph [[] -> (Stt t$_0$ [->] [])]
-      then
-        staticFlowsAcceptPool staticEnv graph pool 
+  lemma staticFlowsAcceptPoolPreserved: t$_0$ pool comm staticEnv staticComm graph .
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm, 
+    staticEval staticEnv staticComm t$_0$,
+    staticFlowsAcceptPool staticEnv graph [[] -> (Stt t$_0$ [->] [])]
+  $\vdash$ staticFlowsAcceptPool staticEnv graph pool 
 \end{lstlisting}
 
 The preservation of static acceptance by flows over pools is proved by the
@@ -2926,13 +2850,10 @@ equivalence between star and its leftward variant, and induction on the leftward
 The preservation of static evalatuation of pools over multiple steps is also relied upon.
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma staticEvalPoolPreserved:
-    $\forall$ pool comm pool' comm' staticEnv staticComm .
-      if
-        star dynamicEval pool comm pool' comm' 
-        staticEvalPool staticEnv staticComm pool
-      then
-        staticEvalPool staticEnv staticComm pool'
+  lemma staticEvalPoolPreserved: pool comm pool' comm' staticEnv staticComm .
+    star dynamicEval pool comm pool' comm' 
+    staticEvalPool staticEnv staticComm pool
+  $\vdash$ staticEvalPool staticEnv staticComm pool'
 \end{lstlisting}
 
 The completeness of static inclusiveness is derived from various lemmas that
@@ -2942,24 +2863,17 @@ the preservation of the strict prefix relation from static to dynamic paths,
 and the preservation of static inclusiveness over extension of static paths.
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma strictPrefixPreservedCorresp:
-    $\forall$ staticPathath1 staticPath2 dynamicPath1 dynamicPath2 .
-      if
-        strictPrefix staticPathath1 staticPath2, 
-        pathsCorrespond dynamicPath1 staticPath1,
-        pathsCorrespond dynamicPath2 staticPath2
-      then
-        strictPrefix dynamicPath1 dynamicPath2
+  lemma strictPrefixPreservedCorresp: staticPathath1 staticPath2 dynamicPath1 dynamicPath2 .
+    strictPrefix staticPathath1 staticPath2, 
+    pathsCorrespond dynamicPath1 staticPath1,
+    pathsCorrespond dynamicPath2 staticPath2
+  $\vdash$ strictPrefix dynamicPath1 dynamicPath2
 
-
-  lemma staticInclusivePreservedUnorderedExtension:
-    $\forall$ path1 path2 l1 l2 .
-      if
-        staticInclusive path1 path2, 
-        not (prefix path1 path2),
-        not (prefix path2 path1), 
-      then
-        staticInclusive (path1 @ [l1]) (path2 @ [l2])
+  lemma staticInclusivePreservedUnorderedExtension: path1 path2 l1 l2 .
+    staticInclusive path1 path2, 
+    $\neg$ (prefix path1 path2),
+    $\neg$ (prefix path2 path1), 
+  $\vdash$ staticInclusive (path1 @ [l1]) (path2 @ [l2])
 \end{lstlisting}
 
 These various preservation lemmas are derived from the basic properites of lists 
@@ -2974,35 +2888,26 @@ Since only sending identifiers are relevant the completeness of static reachabil
 used to ensure that the static step is indeed a sending identifier. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma sendChanStaticEvalSound:
-    $\forall$ t$_0$ pool comm staticEnv staticComm path
-      n n$_e$ t' env stack n$_{sc}$ n$_m$ env$_e$ path$_c$ n$_c$ .
-      if
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
-        staticEval staticEnv staticComm t$_0$,
-        pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
-        env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env$_e$),
-        env$_e$ n$_{sc}$ = Some (VChn (Chan path$_c$ n$_c$))
-      then
-        SChn n$_c$ $\in$ staticEnv n$_{sc}$
+  lemma sendChanStaticEvalSound: t$_0$ pool comm staticEnv staticComm path
+  n n$_e$ t' env stack n$_{sc}$ n$_m$ env$_e$ path$_c$ n$_c$ .
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
+    staticEval staticEnv staticComm t$_0$,
+    pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
+    env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env$_e$),
+    env$_e$ n$_{sc}$ = Some (VChn (Chan path$_c$ n$_c$))
+  $\vdash$ SChn n$_c$ $\in$ staticEnv n$_{sc}$
 
-  lemma staticEvalSound:
-    $\forall$ t$_0$ pool comm staticEnv staticComm path t env stack n v .
-      if
-        staticEval staticEnv staticComm t$_0$, 
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
-        pool path = Some (Stt t env stack), 
-        env n = Some v
-      then
-        abstract v $\in$ staticEnv n 
+  lemma staticEvalSound: t$_0$ pool comm staticEnv staticComm path t env stack n v .
+    staticEval staticEnv staticComm t$_0$, 
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
+    pool path = Some (Stt t env stack), 
+    env n = Some v
+  $\vdash$ abstract v $\in$ staticEnv n 
 
-  lemma staticReachableSound:
-    $\forall$ t$_0$ pool comm staticEnv staticComm path t env stack .
-      if
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
-        pool path = Some (Stt t env stack)
-      then
-        staticReachable t$_0$ t 
+  lemma staticReachableSound: t$_0$ pool comm staticEnv staticComm path t env stack .
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
+    pool path = Some (Stt t env stack)
+  $\vdash$ staticReachable t$_0$ t 
 \end{lstlisting}
 
 Both the soundness of static evaluation on the syncrhonization of a send event,
@@ -3026,91 +2931,73 @@ for all atoms other than functions, it holds without any additional demands.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticReachableForward: term -> term -> bool where
-    $\forall$ t$_0$ .
-      staticReachableForward t$_0$ t$_0$
-  * $\forall$ t$_0$ n t$_c$ t' .
-      if 
-        staticReachableForward t$_0$ (Bind n (Spwn t$_c$) t')
-      then
-        staticReachableForward t$_0$ t$_c$
-  * $\forall$ t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
-      if
-        staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-      then
-        staticReachableForward t$_0$ t$_l$
-  * $\forall$ t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
-      if
-        staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-      then
-        staticReachableForward t$_0$ t$_r$
-  * $\forall$ t$_0$ n n$_f$ n$_p$ t$_b$ t' .
-      if
-        staticReachableForward t$_0$ (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
-      then
-        staticReachableForward t$_0$ t$_b$
-  * $\forall$ t$_0$ n n$_f$ n$_p$ t$_b$ t' .
-      if
-        staticReachableForward t$_0$ (Bind n c t')
-      then
-        staticReachableForward t$_0$ t'
+    refl: t$_0$ .
+    $\vdash$ staticReachableForward t$_0$ t$_0$
+  * spawn: t$_0$ n t$_c$ t' .
+      staticReachableForward t$_0$ (Bind n (Spwn t$_c$) t')
+    $\vdash$ staticReachableForward t$_0$ t$_c$
+  * caseLeft: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
+      staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+    $\vdash$ staticReachableForward t$_0$ t$_l$
+  * caseRight: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
+      staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+    $\vdash$ staticReachableForward t$_0$ t$_r$
+  * function: t$_0$ n n$_f$ n$_p$ t$_b$ t' .
+      staticReachableForward t$_0$ (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
+    $\vdash$ staticReachableForward t$_0$ t$_b$
+  * seq: t$_0$ n n$_f$ n$_p$ t$_b$ t' .
+      staticReachableForward t$_0$ (Bind n c t')
+    $\vdash$ staticReachableForward t$_0$ t'
 
   predicate staticReachableAtom: term -> atom -> bool where
-    $\forall$ t$_0$ n$_c$ n$_m$ .
-      staticReachableAtom t$_0$ (SendEvt n$_c$ n$_m$)
-  * $\forall$ t$_0$ n$_c$ .
-      staticReachableAtom t$_0$ (RecvEvt n$_c$)
-  * $\forall$ t$_0$ n$_1$ n$_2$ .
-      staticReachableAtom t$_0$ (Pair n$_1$ n$_2$)
-  * $\forall$ t$_0$ n$_l$ .
-      staticReachableAtom t$_0$ (Lft n$_l$)
-  * $\forall$ t$_0$ n$_r$
-      staticReachableAtom t$_0$ (Rht n$_r$)
-  * $\forall$ t$_0$ t$_b$ n$_f$ n$_p$ t$_b$ . 
-      if
-        staticReachableForward t$_0$ t$_b$ 
-      then
-        staticReachableAtom t$_0$ (Fun n$_f$ n$_p$ t$_b$)
+    sendEvt: t$_0$ n$_c$ n$_m$ .
+    $\vdash$ staticReachableAtom t$_0$ (SendEvt n$_c$ n$_m$)
+  * recvEvt: t$_0$ n$_c$ .
+    $\vdash$ staticReachableAtom t$_0$ (RecvEvt n$_c$)
+  * pair: t$_0$ n$_1$ n$_2$ .
+    $\vdash$ staticReachableAtom t$_0$ (Pair n$_1$ n$_2$)
+  * left: t$_0$ n$_l$ .
+    $\vdash$ staticReachableAtom t$_0$ (Lft n$_l$)
+  * right: t$_0$ n$_r$
+    $\vdash$ staticReachableAtom t$_0$ (Rht n$_r$)
+  * function: t$_0$ t$_b$ n$_f$ n$_p$ t$_b$ . 
+      staticReachableForward t$_0$ t$_b$ 
+    $\vdash$ staticReachableAtom t$_0$ (Fun n$_f$ n$_p$ t$_b$)
 
   predicate staticReachableVal: term -> dynamic_value -> bool where
-    $\forall$ t$_0$ .
-      staticReachableValue t$_0$ VUnt
-  * $\forall$ t$_0$ c .
-      staticReachableValue t$_0$ (VChn c)
-  * $\forall$ t$_0$ t env .
-      if
-        staticReachableAtom t$_0$ t, 
-        staticReachableEnv t$_0$ env
-      then
-        staticReachableValue t$_0$ (VAtm t env)
+    unit: t$_0$ .
+    $\vdash$ staticReachableValue t$_0$ VUnt
+  * chan: t$_0$ c .
+    $\vdash$ staticReachableValue t$_0$ (VChn c)
+  * atom: t$_0$ t env .
+      staticReachableAtom t$_0$ t, 
+      staticReachableEnv t$_0$ env
+    $\vdash$ staticReachableValue t$_0$ (VAtm t env)
 
   predicate staticReachableEnv: term -> env -> bool where
-    $\forall$ t$_0$ env
-      if
-        $\forall$ n v . if env n = Some v then
-            staticReachableValue t$_0$ v
-      then
-        staticReachableEnv t$_0$ env
+    intro: t$_0$ env
+      $\forall$ n v . 
+        env n = Some v
+      $\rightarrow$ staticReachableValue t$_0$ v
+    $\vdash$ staticReachableEnv t$_0$ env
 
   predicate staticReachableStack: term -> stack -> bool where
-    $\forall$ t$_0$ .
-      staticReachableStack t$_0$ [])
-  * $\forall$ t$_0$ t$_k$ env$_k$ stack' .
-      if
-        staticReachableForward t$_0$ t$_k$, 
-        staticReachableEnv t$_0$ env$_k$,
-        staticReachableStack t$_0$ stack' 
-      then
-        staticReachableStack t$_0$ ((Ctn n$_k$ t$_k$ env$_k$) # stack')
+    empty: t$_0$ .
+    $\vdash$ staticReachableStack t$_0$ [])
+  * cons: t$_0$ t$_k$ env$_k$ stack' .
+      staticReachableForward t$_0$ t$_k$, 
+      staticReachableEnv t$_0$ env$_k$,
+      staticReachableStack t$_0$ stack' 
+    $\vdash$ staticReachableStack t$_0$ ((Ctn n$_k$ t$_k$ env$_k$) # stack')
 
   predicate staticReachablePool: term -> pool -> bool where
-    $\forall$ t$_0$ pool .
-      then
-        $\forall$ path t env stack . if pool path = Some (Stt t env stack) then 
-          staticReachableForward t$_0$ t, 
-          staticReachableEnv t$_0$ env, 
-          staticReachableStack t$_0$ stack
-          then
-        staticReachablePool t$_0$ pool
+    intro: t$_0$ pool .
+      $\forall$ path t env stack .
+        pool path = Some (Stt t env stack) 
+      $\rightarrow$ staticReachableForward t$_0$ t
+      $\wedge$ staticReachableEnv t$_0$ env
+      $\wedge$ staticReachableStack t$_0$ stack
+    $\vdash$ staticReachablePool t$_0$ pool
 
 \end{lstlisting}
 
@@ -3118,12 +3005,9 @@ The completeness of static reachability follows the definitions
 a generalized form of completeness over pools.
 
 \begin{lstlisting}[language=logic, mathescape]
-  lemma staticReachablePoolSound:
-    $\forall$ t$_0$ pool .
-      if
-        star dynamicEval [[] -> (Stt t$_0$ [->] [])], {} pool comm 
-      then
-        staticReachablePool t$_0$ pool
+  lemma staticReachablePoolSound: t$_0$ pool .
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])], {} pool comm 
+  $\vdash$ staticReachablePool t$_0$ pool
 \end{lstlisting}
 
 The completeness over pools follows from the lemma that the forward
