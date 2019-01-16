@@ -1742,7 +1742,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
       star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       forEveryTwo (isSendPath pool c) (op =),
       forEveryTwo (isRecvPath pool c) (op =)
-    $\vdash$ oneShot t$_0$  c
+    $\vdash$ oneSync t$_0$  c
 
 \end{lstlisting}
 
@@ -2355,18 +2355,12 @@ to paths starting from the beginning of a program.
       (path @ [(NBnd n, MSpwn)] @ path2)
 \end{lstlisting}
 
-The singularness means that two paths are the same or only of them can occur in a given run of
-a program. The noncompetitiveness means states that two paths can't compete during a run of a
+The noncompetitiveness means states that two paths can't compete during a run of a
 program, since they are ordered or cannot occur in the same run of a program.
+The singularness means that two paths are the same or only of them can occur in a given run of
+a program. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate singular: static_path -> static_path -> bool where
-    refl: path .
-    $\vdash$ singular path path
-  * notInclus: path1 path2 .
-      $\neg$ (staticInclusive path1 path2)
-    $\vdash$ singular path1 path2
-
   predicate noncompetitive: static_path -> static_path -> bool where
     ordered: path1 path2 .
       ordered path1 path2
@@ -2374,6 +2368,13 @@ program, since they are ordered or cannot occur in the same run of a program.
   * notInclus: path1 path2 .
       $\neg$ (staticInclusive path1 path2)
     $\vdash$ noncompetitive path1 path2
+
+  predicate singular: static_path -> static_path -> bool where
+    refl: path .
+    $\vdash$ singular path path
+  * notInclus: path1 path2 .
+      $\neg$ (staticInclusive path1 path2)
+    $\vdash$ singular path1 path2
 \end{lstlisting}
 
 
@@ -2445,7 +2446,7 @@ completed synchronization on a static channel in any run of a given program.
       staticFlowsAccept staticEnv graph t,
       forEveryTwo (staticTraceable graph (termId t) (staticSendId staticEnv t n$_c$)) singular,
       forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) singular,
-    $\vdash$ staticOneShot graph t n$_c$
+    $\vdash$ staticOneSync graph t n$_c$
 \end{lstlisting}
 
 
@@ -2533,23 +2534,15 @@ to less flexible relations.
 
 \subsection{Soundness}
 
-The theorem for soundness of static one-shot classification states that if a static channel is
-statically classified as one-shot for a given program and
+The theorem for soundness of static one-to-many classification states that if a static channel is
+statically classified as one-to-many for a given program and
 static environment consistent with the
 program, then any corresponding dynamic channel is classified
-as one-shot over any pool that results
-from running the program. The theorem for soundness of
-static one-to-many classification states that if
-a static channel is statically classified as one-to-many for a given program and static environment
-consistent with that program, then any corresponding dynamic channel is classified as one-to-many
-over any pool that results from running the program.  The theorems for soundness of many-to-one
-classification and one-to-one classification follow the same pattern. 
+as one-to-many over any pool that results
+from running the program. The soundness of classification of many-to-one, one-to-one, one-shot, and one-sync
+all follow the same pattern.
 
 \begin{lstlisting}[language=logic, mathescape]
-  theorem staticOneShotSound: t$_0$ n$_c$ path$_c$ .
-    staticOneShot t$_0$ n$_c$
-  $\vdash$ oneShot t$_0$ (Chan path$_c$ n$_c$)
-
   theorem staticOneToManySound: t$_0$ n$_c$ path$_c$ . 
     staticOneToMany t$_0$ n$_c$
   $\vdash$ oneToMany t$_0$ (Chan path$_c$ n$_c$)
@@ -2561,6 +2554,14 @@ classification and one-to-one classification follow the same pattern.
   theorem staticOneToOneSound: t$_0$ n$_c$ path$_c$ . 
     staticOneToOne staticEnv t$_0$ n$_c$
   $\vdash$ oneToOne t$_0$ (Chan path$_c$ n$_c$)
+
+  theorem staticOneShotSound: t$_0$ n$_c$ path$_c$ .
+    staticOneShot t$_0$ n$_c$
+  $\vdash$ oneShot t$_0$ (Chan path$_c$ n$_c$)
+
+  theorem staticOneShotSound: t$_0$ n$_c$ path$_c$ .
+    staticOneSync t$_0$ n$_c$
+  $\vdash$ oneSync t$_0$ (Chan path$_c$ n$_c$)
 \end{lstlisting}
 
 The formal proofs of soundness of each static classification follow a similar structure.
@@ -3635,15 +3636,6 @@ The communication classifications are described using the liveness properties, b
 are otherwise similar to the lower precision classifications.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticOneShot: static_value_map -> term -> name -> bool where
-    intro: staticEnv staticComm t graph entr exit n$_c$ . 
-      staticEval staticEnv staticComm t,
-      staticFlowsAccept staticEnv graph t,
-      staticLiveChan staticEnv entr exit n$_c$ t, 
-      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
-        (staticSendId staticEnv t n$_c$)) singular
-    $\vdash$ staticOneShot V t n$_c$
-
   predicate staticOneToMany: static_value_map -> term -> name -> bool where
     intro: staticEnv staticComm t graph entr exit n$_c$ 
       staticEval staticEnv staticComm t,
@@ -3672,6 +3664,26 @@ are otherwise similar to the lower precision classifications.
       forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
         (staticRecvId staticEnv t n$_c$)) noncompetitive
     $\vdash$ staticOneToOne staticEnv t n$_c$
+
+  predicate staticOneShot: static_value_map -> term -> name -> bool where
+    intro: staticEnv staticComm t graph entr exit n$_c$ . 
+      staticEval staticEnv staticComm t,
+      staticFlowsAccept staticEnv graph t,
+      staticLiveChan staticEnv entr exit n$_c$ t, 
+      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+        (staticSendId staticEnv t n$_c$)) singular
+    $\vdash$ staticOneShot V t n$_c$
+
+  predicate staticOneSync: static_value_map -> term -> name -> bool where
+    intro: staticEnv staticComm t graph entr exit n$_c$ . 
+      staticEval staticEnv staticComm t,
+      staticFlowsAccept staticEnv graph t,
+      staticLiveChan staticEnv entr exit n$_c$ t, 
+      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+        (staticSendId staticEnv t n$_c$)) singular,
+      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+        (staticRecvId staticEnv t n$_c$)) singular
+    $\vdash$ staticOneSync V t n$_c$
   \end{lstlisting}
 
 
