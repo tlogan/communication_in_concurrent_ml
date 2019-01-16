@@ -190,14 +190,6 @@ inductive staticTraceable :: "(tm_id * 'a * tm_id) set \<Rightarrow> tm_id \<Rig
   "
 
 
-inductive staticOneShot :: "tm \<Rightarrow> name \<Rightarrow> bool" where
-  Sync: "
-    forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
-    staticFlowsAccept V F e \<Longrightarrow>
-    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-    staticOneShot e xC 
-  "
-
 
 inductive staticOneToMany :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
@@ -224,5 +216,23 @@ inductive staticOneToOne :: "tm \<Rightarrow> name \<Rightarrow> bool" where
     (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
     staticOneToOne e xC 
   "
+inductive staticOneShot :: "tm \<Rightarrow> name \<Rightarrow> bool" where
+  Sync: "
+    forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
+    staticFlowsAccept V F e \<Longrightarrow>
+    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+    staticOneShot e xC 
+  "
+
+
+inductive staticOneSync :: "tm \<Rightarrow> name \<Rightarrow> bool" where
+  Sync: "
+    forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
+    forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) singular \<Longrightarrow>
+    staticFlowsAccept V F e \<Longrightarrow>
+    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
+    staticOneSync e xC 
+  "
+
 
 end

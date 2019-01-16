@@ -285,21 +285,21 @@ Your realize that these two theorems may be combined into \lstinline[mathescape]
 
 
 \begin{lstlisting}[language=logic, mathescape]
-
-$\vdash$ P1 $\vee$ P2 $\rightarrow$ Q
-proof
-  assume P1 $\vee$ P2:
-    case P1:
-      have $\vdash$ P1 $\rightarrow$ Q by A
-      have $\vdash$ Q by modus ponens
-    case P2:
-      have $\vdash$ P2 $\rightarrow$ Q by B    
-      have $\vdash$ Q by modus ponens
-    have P1 $\vdash$ Q, P2 $\vdash$ Q
-    have $\vdash$ Q by disjunction elimination
-  have P1 $\vee$ P2 $\vdash$ Q
-  have $\vdash$ P1 $\vee$ P2 $\rightarrow$ Q by implication introduction  
-qed
+  
+  $\vdash$ P1 $\vee$ P2 $\rightarrow$ Q
+  proof
+    assume P1 $\vee$ P2:
+      case P1:
+        have $\vdash$ P1 $\rightarrow$ Q by A
+        have $\vdash$ Q by modus ponens
+      case P2:
+        have $\vdash$ P2 $\rightarrow$ Q by B    
+        have $\vdash$ Q by modus ponens
+      have P1 $\vdash$ Q, P2 $\vdash$ Q
+      have $\vdash$ Q by disjunction elimination
+    have P1 $\vee$ P2 $\vdash$ Q
+    have $\vdash$ P1 $\vee$ P2 $\rightarrow$ Q by implication introduction  
+  qed
   
 \end{lstlisting}
 
@@ -316,27 +316,26 @@ after applying each manipulation rule.
 
 
 \begin{lstlisting}[language=logic, mathescape]
-theorem P1 $\vee$ P2 $\rightarrow$ Q
   $\vdash$ P1 $\vee$ P2 $\rightarrow$ Q
-apply (rule impI)
-  P1 $\vee$ P2 $\vdash$ Q
-apply (erule disjE)
-  P1 $\vdash$ Q
-* P2 $\vdash$ Q
-apply (insert A)
-  P1, P1 $\rightarrow$ Q $\vdash$ Q
-* P2 $\vdash$ Q
-apply (erule mp)
-  P1 $\vdash$ P1
-* P2 $\vdash$ Q
-apply assumption 
-  P2 $\vdash$ Q
-apply (insert B)
-  P2, P2 $\rightarrow$ Q $\vdash$ Q
-apply (erule mp)
-  P2 $\vdash$ P2
-apply assumption 
-done
+  apply (rule impI)
+    P1 $\vee$ P2 $\vdash$ Q
+  apply (erule disjE)
+    P1 $\vdash$ Q
+  * P2 $\vdash$ Q
+  apply (insert A)
+    P1, P1 $\rightarrow$ Q $\vdash$ Q
+  * P2 $\vdash$ Q
+  apply (erule mp)
+    P1 $\vdash$ P1
+  * P2 $\vdash$ Q
+  apply assumption 
+    P2 $\vdash$ Q
+  apply (insert B)
+    P2, P2 $\rightarrow$ Q $\vdash$ Q
+  apply (erule mp)
+    P2 $\vdash$ P2
+  apply assumption 
+  done
 \end{lstlisting}
 
 Note that the syntax used in Isabelle/HOL for writing proofs and propositions differs from
@@ -352,26 +351,26 @@ For instance, you can define the infinite set of natural numbers (with zero) as 
 and the binary relation that a natural number is less than or equal to another as an inductive predicate.
 
 \begin{lstlisting}[language=logic]
-datatype nat = Z | S nat
-
-predicate lte: nat -> nat -> bool where
-  eq: n . $\vdash$ lte n n
-* lt: n$_1$ n$_2$ . lte n$_1$ n$_2$ $\vdash$ lte n$_1$ (S n$_2$)
+  datatype nat = Z | S nat
+  
+  predicate lte: nat -> nat -> bool where
+    eq: n . $\vdash$ lte n n
+  * lt: n$_1$ n$_2$ . lte n$_1$ n$_2$ $\vdash$ lte n$_1$ (S n$_2$)
 \end{lstlisting}
 
 Additionally, you can define the infinite set of lists inductively, and the higher order predicte that checks
 sortedness using a supplied binary relation.
 
 \begin{lstlisting}[language=logic]
-datatype 'a list = Nil | Cons 'a ('a list)
-
-predicate sorted: ('a -> 'a -> bool) -> 'a list -> bool where
-  nil: r . $\vdash$ sorted r Nil
-* uni: r x . $\vdash$ sorted r (Cons x Nil)
-* cons: r x y r ys .
-    r x y,
-    sorted r (Cons y ys)
-  $\vdash$ sorted r (Cons x (Cons y ys))
+  datatype 'a list = Nil | Cons 'a ('a list)
+  
+  predicate sorted: ('a -> 'a -> bool) -> 'a list -> bool where
+    nil: r . $\vdash$ sorted r Nil
+  * uni: r x . $\vdash$ sorted r (Cons x Nil)
+  * cons: r x y r ys .
+      r x y,
+      sorted r (Cons y ys)
+    $\vdash$ sorted r (Cons x (Cons y ys))
 \end{lstlisting}
 
 Each case of the the predicate definition is considered a theorem, and you have the option to give it a name. 
@@ -381,44 +380,43 @@ in each case. This kind of theorem, and other similar theorems for inversion and
 are created with the each predicate definition.
 
 \begin{lstlisting}[language=logic]
-theorem sorted.simps: r xs .
-$\vdash$ sorted r xs $\equiv$
-    (xs = Nil)
-  $\vee$ $\exists$ x . (xs = (Cons x Nil))
-  $\vee$ $\exists$ x y ys . (xs = (Cons x (Cons y ys)) $\wedge$ r x y $\wedge$ sorted r (Cons y ys))
+  theorem sorted.simps: r xs .
+  $\vdash$ sorted r xs $\equiv$
+      (xs = Nil)
+    $\vee$ $\exists$ x . (xs = (Cons x Nil))
+    $\vee$ $\exists$ x y ys . (xs = (Cons x (Cons y ys)) $\wedge$ r x y $\wedge$ sorted r (Cons y ys))
 \end{lstlisting}
 
 By composing these definitions, you can state and prove a list of natural numbers is sorted in non-decreasing order.
 
 \begin{lstlisting}[language=logic]
-
-theorem sorted lte (Cons (Z) (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil))))
-apply (rule cons)
-  $\vdash$ lte Z (S Z)
-* $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
-apply (rule lt)
-  $\vdash$ lte Z Z
-* $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
-apply (rule eq)
-  $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
-apply (rule cons)
-  $\vdash$ lte (S Z) (S Z)
-* $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
-apply (rule eq)
-  $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
-apply (rule cons)
-  $\vdash$ lte (S Z) (S (S (S Z)))
-* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule lt)
-  $\vdash$ lte (S Z) (S (S Z))
-* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule lt)
-  $\vdash$ lte (S Z) (S Z)
-* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule eq)
-  $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule uni)
-done
+  $\vdash$ sorted lte (Cons (Z) (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil))))
+  apply (rule cons)
+    $\vdash$ lte Z (S Z)
+  * $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
+  apply (rule lt)
+    $\vdash$ lte Z Z
+  * $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
+  apply (rule eq)
+    $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
+  apply (rule cons)
+    $\vdash$ lte (S Z) (S Z)
+  * $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
+  apply (rule eq)
+    $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
+  apply (rule cons)
+    $\vdash$ lte (S Z) (S (S (S Z)))
+  * $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+  apply (rule lt)
+    $\vdash$ lte (S Z) (S (S Z))
+  * $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+  apply (rule lt)
+    $\vdash$ lte (S Z) (S Z)
+  * $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+  apply (rule eq)
+    $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+  apply (rule uni)
+  done
 \end{lstlisting}
 
 
@@ -488,7 +486,7 @@ steps to all possible control paths leading into the respective program steps.  
 CFA's mappings to abstract values, the algorithm determines the program steps for sends and
 receives per channel name.  Then it uses the mapping to control paths to determine all
 control paths that send or receive on each channel, from which it classifies channels as
-one-shot, one-to-one, many-to-one, one-to-many, or many-to-many.
+many-to-one, one-to-many, many-to-many, one-shot, or one-sync.
 
 The information at each program step is derived from control structures in the program, which
 dictate how information flows between program steps. Some uses of control structures are
@@ -534,7 +532,8 @@ a one-to-many channel has at most one sending thread and
 any number of receiving threads;
 a many-to-one channel has any number of sending threads and at most one receiving thread;
 a one-to-one channel has one or none of each;
-a one-shot channel has exactly one sending attempt.
+a one-shot channel has exactly one sending attempt;
+a one-sync channel has at most one syncronization.
 
 The following reimplementation of \lstinline{Serv} is annotated to indicate the communication topologies
 derived from its usage. Since there are four threads that make calls to the server, the
@@ -1306,13 +1305,14 @@ thus relating the dynamic environment with the static environment, which is esse
 
 
 The dynamic communication classification consists of four relations to categorize channels in a pool, as one-to-many,
-many-to-one, one-to-one, or one-shot. All four classification relations are defined in terms of how any two paths   
+many-to-one, one-to-one, one-shot, or one-sync. All four classification relations are defined in terms of how any two paths   
 in the pool relate to each other. The one-to-many classification holds if any two paths that send on the channel are ordered. 
 If the sending paths are all ordered or there are no sending paths, then there is simply only at most one thread that
 sends on the channel. Likewise, The many-to-one classification holds if any two paths that receive on the channel are ordered.
 The one-to-one classification holds if both all the receiving paths on the channel are ordered and all the sending paths on the
 channel are ordered.  The one-shot classification holds if there is at most one sending path on a channel, regardless
-of which paths receive on the channel.
+of which paths receive on the channel. The one-sync classification holds if there is at most one sending and one receiving path
+on a channel.
 
 The static communication classification relations, as with dynamic communication, are defined in terms of paths
 that send and receive a channel of interest. However, these sites of sending and receiving the channel, are approximations
@@ -1696,15 +1696,13 @@ synchronize on a channel are necessarily ordered for either end of the channel.
       pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
       env n$_e$ = Some (VAtm (RecvEvt n$_{rc}$) env$_e$),
       env$_e$ n$_{rc}$ = Some (VChn c)
-    $\vdash$
-      isRecvPath pool c path
+    $\vdash$ isRecvPath pool c path
 
   predicate forEveryTwo: ('a -> bool) -> ('a -> 'a -> bool) -> bool where
     intro: p r .
       $\forall$ path1 path2 .
         p path1 $\wedge$ p path2 $\rightarrow$ r path1 path2
-    $\vdash$ 
-      forEveryTwo p r
+    $\vdash$ forEveryTwo p r
 
   predicate ordered: 'a list -> 'a list -> bool where
     first: path1 path2 .
@@ -1713,12 +1711,6 @@ synchronize on a channel are necessarily ordered for either end of the channel.
   * second: path2 path1 .
       prefix path2 path1
     $\vdash$ ordered path1 path2
-
-  predicate oneShot: tm -> chan -> bool where
-    intro: t$_0$ c .
-      star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
-      forEveryTwo (isSendPath pool c) (op =)
-    $\vdash$ oneShot t$_0$  c
 
   predicate oneToMany: tm -> chan -> bool where
     intro: t$_0$ c .
@@ -1738,6 +1730,20 @@ synchronize on a channel are necessarily ordered for either end of the channel.
       forEveryTwo (isSendPath pool c) ordered,
       forEveryTwo (isRecvPath pool c) ordered
     $\vdash$ oneToOne t$_0$ c
+
+  predicate oneShot: tm -> chan -> bool where
+    intro: t$_0$ c .
+      star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
+      forEveryTwo (isSendPath pool c) (op =)
+    $\vdash$ oneShot t$_0$  c
+
+  predicate oneSync: tm -> chan -> bool where
+    intro: t$_0$ c .
+      star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
+      forEveryTwo (isSendPath pool c) (op =),
+      forEveryTwo (isRecvPath pool c) (op =)
+    $\vdash$ oneShot t$_0$  c
+
 \end{lstlisting}
 
 
@@ -2371,35 +2377,6 @@ program, since they are ordered or cannot occur in the same run of a program.
 \end{lstlisting}
 
 
-The static one-shot classification means that there is at most one attempt
-to synchronize to send on a static channel in any run of a given program.
-
-\begin{lstlisting}[language=logic, mathescape]
-  predicate staticOneShot: static_value_map -> term -> name -> bool where
-    intro: staticEnv staticComm t graph n$_c$ .
-      staticEval staticEnv staticComm t,
-      staticFlowsAccept staticEnv graph t,
-      forEveryTwo (staticTraceable graph (termId t)
-        (staticSendId staticEnv t n$_c$)) singular
-    $\vdash$ staticOneShot graph t n$_c$
-\end{lstlisting}
-
-The static one-to-one classification means that there is at most one thread that attempts to
-send and at most one thread that attempts to receive on a given static channel for any time
-during a run of a given program.
-
-\begin{lstlisting}[language=logic, mathescape]
-  predicate staticOneToOne: static_value_map -> term -> name -> bool where
-    intro: staticEnv staticComm t graph n$_c$ .
-      staticEval staticEnv staticComm t,
-      staticFlowsAccept staticEnv graph t,
-      forEveryTwo (staticTraceable graph (termId t)
-        (staticSendId staticEnv t n$_c$)) noncompetitive, 
-      forEveryTwo (staticTraceable graph (termId t)
-        (staticRecvId staticEnv t n$_c$)) noncompetitive
-    $\vdash$ staticOneToOne staticEnv t n$_c$
-\end{lstlisting}
-
 The static one-to-many classification means that there is at most one thread that attempts to
 send on a given static channel at any time during a run of a given program, but there may be
 many threads that attempt to receive on the channel.
@@ -2428,6 +2405,50 @@ program.
         (staticRecvId staticEnv t n$_c$)) noncompetitive
     $\vdash$ staticManyToOne staticEnv t n$_c$
 \end{lstlisting}
+
+The static one-to-one classification means that there is at most one thread that attempts to
+send and at most one thread that attempts to receive on a given static channel for any time
+during a run of a given program.
+
+\begin{lstlisting}[language=logic, mathescape]
+  predicate staticOneToOne: static_value_map -> term -> name -> bool where
+    intro: staticEnv staticComm t graph n$_c$ .
+      staticEval staticEnv staticComm t,
+      staticFlowsAccept staticEnv graph t,
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticSendId staticEnv t n$_c$)) noncompetitive, 
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticRecvId staticEnv t n$_c$)) noncompetitive
+    $\vdash$ staticOneToOne staticEnv t n$_c$
+\end{lstlisting}
+
+The static one-shot classification means that there is at most one attempt
+to synchronize to send on a static channel in any run of a given program.
+
+\begin{lstlisting}[language=logic, mathescape]
+  predicate staticOneShot: static_value_map -> term -> name -> bool where
+    intro: staticEnv staticComm t graph n$_c$ .
+      staticEval staticEnv staticComm t,
+      staticFlowsAccept staticEnv graph t,
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticSendId staticEnv t n$_c$)) singular
+    $\vdash$ staticOneShot graph t n$_c$
+\end{lstlisting}
+
+The static one-sync classification means that there is at most one
+completed synchronization on a static channel in any run of a given program.
+
+\begin{lstlisting}[language=logic, mathescape]
+  predicate staticOneSync: static_value_map -> term -> name -> bool where
+    intro: staticEnv staticComm t graph n$_c$ .
+      staticEval staticEnv staticComm t,
+      staticFlowsAccept staticEnv graph t,
+      forEveryTwo (staticTraceable graph (termId t) (staticSendId staticEnv t n$_c$)) singular,
+      forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) singular,
+    $\vdash$ staticOneShot graph t n$_c$
+\end{lstlisting}
+
+
 
 \subsection{Formal Reasoning}
 

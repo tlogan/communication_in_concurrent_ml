@@ -1826,14 +1826,6 @@ done
 
 
 
-theorem staticOneShotSound:
-  "
-      staticOneShot e xC \<Longrightarrow>
-      one_shot e (Ch \<pi> xC)"
-apply (erule staticOneShot.cases; auto)
-apply (unfold one_shot.simps; auto)
-using singular_to_equal apply blast
-done
 
 theorem staticOneToManySound:
   "
@@ -1863,5 +1855,25 @@ using fan_in.simps fan_out.simps noncompetitive_recv_to_ordered_recv noncompetit
 apply(meson star.refl)
 done
 
+
+theorem staticOneShotSound:
+  "
+      staticOneShot e xC \<Longrightarrow>
+      one_shot e (Ch \<pi> xC)"
+apply (erule staticOneShot.cases; auto)
+apply (unfold one_shot.simps; auto)
+using singular_to_equal apply blast
+done
+
+
+theorem staticOneSyncSound:
+  "
+      staticOneSync e xC \<Longrightarrow>
+      one_sync e (Ch \<pi> xC)"
+apply (erule staticOneSync.cases; auto)
+apply (unfold one_sync.simps; auto)
+using singular_to_equal
+apply (metis (mono_tags, lifting) forEveryTwo.intros fun_upd_other is_recv_path_implies_nonempty_pool star.refl)
+sorry
 
 end

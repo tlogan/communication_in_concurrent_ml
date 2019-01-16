@@ -32,13 +32,6 @@ inductive ordered :: "'a list \<Rightarrow> 'a list \<Rightarrow> bool" where
   left: "prefix \<pi>1 \<pi>2 \<Longrightarrow> ordered \<pi>1 \<pi>2"
 | right: "prefix \<pi>2 \<pi>1 \<Longrightarrow> ordered \<pi>1 \<pi>2"
 
-inductive one_shot :: "tm \<Rightarrow> chan \<Rightarrow> bool" where
-  intro: "
-    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (pool, H') \<Longrightarrow>
-    forEveryTwo (is_send_path pool c) op= \<Longrightarrow> 
-    one_shot e c
-  "
-
 inductive fan_out :: "tm \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
     star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (pool, H') \<Longrightarrow>
@@ -60,6 +53,24 @@ inductive one_to_one :: "tm \<Rightarrow> chan \<Rightarrow> bool" where
     forEveryTwo (is_recv_path pool c) ordered \<Longrightarrow> 
     one_to_one e c
   "
+
+
+inductive one_shot :: "tm \<Rightarrow> chan \<Rightarrow> bool" where
+  intro: "
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (pool, H') \<Longrightarrow>
+    forEveryTwo (is_send_path pool c) op= \<Longrightarrow> 
+    one_shot e c
+  "
+
+
+inductive one_sync :: "tm \<Rightarrow> chan \<Rightarrow> bool" where
+  intro: "
+    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (pool, H') \<Longrightarrow>
+    forEveryTwo (is_send_path pool c) op= \<Longrightarrow> 
+    forEveryTwo (is_recv_path pool c) op= \<Longrightarrow> 
+    one_sync e c
+  "
+
 
 
 inductive 
