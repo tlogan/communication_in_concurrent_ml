@@ -3370,152 +3370,125 @@ and each exit setappears right below its related term identifier.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticLiveChan:
-    static_value_map -> term_id_map ->
-    term_id_map -> name -> term -> bool where
-    $\forall$ staticEnv entr n$_c$ n$_y$ exit .
-      if
-        if (staticBuiltOnChan staticEnv n$_c$ n$_y$) then
-          {n$_y$} $\subseteq$ entr (NRslt n$_y$)
-      then
-        staticLiveChan staticEnv entr exit n$_c$ (Rslt n$_y$)
-  * $\forall$ exit n entr t' staticEnv n$_c$ .
-      if 
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then 
-        staticLiveChan staticEnv entr exit n$_c$ (Bind n Unt t')
-  * $\forall$ exit n entr t' staticEnv n$_c$ .
-      if
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then 
-        staticLiveChan staticEnv entr exit n$_c$ (Bind n MkChn t')
-  * $\forall$ exit n entr staticEnv n$_c$ n$_{sc}$ n$_m$ t' n$_c$ .
-      if
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_{sc}$ then
-          {n$_{sc}$} $\subseteq$ entr (NBnd n)),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_m$ then 
-          {n$_m$} $\subseteq$ entr (NBnd n)),
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then
-        staticLiveChan staticEnv entr exit n$_c$
-          (Bind n (Atom (SendEvt n$_{sc}$ n$_m$)) t')
-  * $\forall$ exit n entr staticEnv n$_c$ n$_r$ n$_{rc}$.    
-      if
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_r$ then
-          {n$_r$} $\subseteq$ entr (NBnd n)),
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then
-        staticLiveChan staticEnv entr exit n$_c$
-          (Bind n (Atom (RecvEvt n$_{rc}$)) t')
-  * $\forall$ exit n entr staticEnv t$_c$ n$_1$ n$_2$ t' .
-      if
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_1$ then
-          {n$_1$} $\subseteq$ entr (NBnd n)),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_2$ then
-          {n$_2$} $\subseteq$ entr (NBnd n)),
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then
-        staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Pair n$_1$ n$_2$)) t'))
-  * $\forall$ exit n entr staticEnv n$_c$ n$_a$ t' . 
-      if
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_a$ then
-          {n$_a$} $\subseteq$ entr (NBnd n)),
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then
-        staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Lft n$_a$)) t'))
-  * $\forall$ exit n entr staticEnv n$_c$ n$_a$ t' . 
-      if
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_a$ then
-          {n$_a$} $\subseteq$ entr (NBnd n))
-        entr (termId e) $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t
-      then
-        staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Rht n$_a$)) e)
-  * $\forall$  exit n entr t$_b$ n$_p$ n staticEnv n$_c$ t' n$_f$ . 
-      if
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (entr (termId t$_b$) \ {n$_f$, n$_p$}) $\subseteq$ entr (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t$_b$,
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then
-        staticLiveChan staticEnv entr exit n$_c$
-          (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
-  * $\forall$ exit n entr t' t$_c$ n$_c$ staticEnv .
-      if
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        entr (termId t$_c$) $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t$_c$,
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then
-        staticLiveChan staticEnv entr exit n$_c$
-          (Bind n (Spwn t$_c$) t')
-  * $\forall$ exit n entr staticEnv n$_c$ n$_e$ t' .
-      if
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_e$ then
-          {n$_e$} $\subseteq$ entr (NBnd n)),
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t',
-      then
-        staticLiveChan staticEnv entr exit n$_c$
-          (Bind n (Sync n$_e$) t')
+    static_value_map -> term_id_map 
+  -> term_id_map -> name -> term -> bool
+  where
+    result: staticEnv entr n$_c$ n$_y$ exit .
+      (
+        (staticBuiltOnChan staticEnv n$_c$ n$_y$)
+      $\rightarrow$ {n$_y$} $\subseteq$ entr (NRslt n$_y$)
+      )
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Rslt n$_y$)
+  * unit: exit n entr t' staticEnv n$_c$ .
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n Unt t')
+  * makeChan: exit n entr t' staticEnv n$_c$ .
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n MkChn t')
+  * sendEvt: exit n entr staticEnv n$_c$ n$_{sc}$ n$_m$ t' n$_c$ .
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (staticBuiltOnChan staticEnv n$_c$ n$_{sc}$
+      $\rightarrow$ {n$_{sc}$} $\subseteq$ entr (NBnd n)),
+      (staticBuiltOnChan staticEnv n$_c$ n$_m$
+      $\rightarrow$ {n$_m$} $\subseteq$ entr (NBnd n)),
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      (Bind n (Atom (SendEvt n$_{sc}$ n$_m$)) t')
+  * recvEvt: exit n entr staticEnv n$_c$ n$_r$ n$_{rc}$.    
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (staticBuiltOnChan staticEnv n$_c$ n$_r$ then
+      $\rightarrow$ {n$_r$} $\subseteq$ entr (NBnd n)),
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      (Bind n (Atom (RecvEvt n$_{rc}$)) t')
+  * pair: exit n entr staticEnv t$_c$ n$_1$ n$_2$ t' .
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (staticBuiltOnChan staticEnv n$_c$ n$_1$
+      $\rightarrow$ {n$_1$} $\subseteq$ entr (NBnd n)),
+      (staticBuiltOnChan staticEnv n$_c$ n$_2$
+      $\rightarrow$ {n$_2$} $\subseteq$ entr (NBnd n)),
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Pair n$_1$ n$_2$)) t'))
+  * left: exit n entr staticEnv n$_c$ n$_a$ t' . 
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (staticBuiltOnChan staticEnv n$_c$ n$_a$
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)),
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Lft n$_a$)) t'))
+  * right: exit n entr staticEnv n$_c$ n$_a$ t' . 
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (staticBuiltOnChan staticEnv n$_c$ n$_a$
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n))
+      entr (termId e) $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Rht n$_a$)) e)
+  * function: exit n entr t$_b$ n$_p$ n staticEnv n$_c$ t' n$_f$ . 
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (entr (termId t$_b$) \ {n$_f$, n$_p$}) $\subseteq$ entr (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t$_b$,
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
+  * spawn: exit n entr t' t$_c$ n$_c$ staticEnv .
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      entr (termId t$_c$) $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t$_c$,
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      (Bind n (Spwn t$_c$) t')
+  * sync: exit n entr staticEnv n$_c$ n$_e$ t' .
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (staticBuiltOnChan staticEnv n$_c$ n$_e$
+       $\rightarrow$ {n$_e$} $\subseteq$ entr (NBnd n)),
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t',
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      (Bind n (Sync n$_e$) t')
+  * first: exit n entr staticEnv n$_c$ n$_a$ t' .
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (staticBuiltOnChan staticEnv n$_c$ n$_a$
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)),
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Fst n$_a$) t')
   * $\forall$ exit n entr staticEnv n$_c$ n$_a$ t' .
-      if
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_a$ then
-          {n$_a$} $\subseteq$ entr (NBnd n)),
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then
-        staticLiveChan staticEnv entr exit n$_c$ (Bind n (Fst n$_a$) t')
-  * $\forall$ exit n entr staticEnv n$_c$ n$_a$ t' .
-      if 
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_a$ then
-          {n$_a$} $\subseteq$ entr (NBnd n)),
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then
-        staticLiveChan staticEnv entr exit n$_c$
-          (Bind n (Snd n$_a$) t')
-  * $\forall$ exit n entr t$_l$ n$_l$ t$_r$ n$_r$ staticEnv n$_c$ n$_s$ t' .
-      if 
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (entr (termId t$_l$) \ {n$_l$}) $\subseteq$ entr (NBnd n),
-        (entr (termId t$_r$) \ {n$_r$}) $\subseteq$ entr (NBnd n),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_s$ then
-          {n$_s$} $\subseteq$ entr (NBnd n)),
-        staticLiveChan staticEnv entr exit n$_c$ t$_l$,
-        staticLiveChan staticEnv entr exit n$_c$ t$_r$,
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then 
-        staticLiveChan staticEnv entr exit n$_c$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-  * $\forall$ exit n entr staticEnv n$_c$ n$_a$ n$_f$ t' .
-      if
-        (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_a$ then
-          {n$_a$} $\subseteq$ entr (NBnd n)),
-        (if staticBuiltOnChan staticEnv n$_c$ n$_f$ then
-          {n$_f$} $\subseteq$ entr (NBnd n)),
-        entr (termId t') $\subseteq$ exit (NBnd n),
-        staticLiveChan staticEnv entr exit n$_c$ t'
-      then
-        staticLiveChan staticEnv entr exit n$_c$ (Bind n (App n$_f$ n$_a$) t')
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (staticBuiltOnChan staticEnv n$_c$ n$_a$ then
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)),
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      (Bind n (Snd n$_a$) t')
+  * caseEither: exit n entr t$_l$ n$_l$ t$_r$ n$_r$ staticEnv n$_c$ n$_s$ t' .
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (entr (termId t$_l$) \ {n$_l$}) $\subseteq$ entr (NBnd n),
+      (entr (termId t$_r$) \ {n$_r$}) $\subseteq$ entr (NBnd n),
+      (staticBuiltOnChan staticEnv n$_c$ n$_s$
+      $\rightarrow$ {n$_s$} $\subseteq$ entr (NBnd n)),
+      staticLiveChan staticEnv entr exit n$_c$ t$_l$,
+      staticLiveChan staticEnv entr exit n$_c$ t$_r$,
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+  * app: exit n entr staticEnv n$_c$ n$_a$ n$_f$ t' .
+      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (staticBuiltOnChan staticEnv n$_c$ n$_a$
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)),
+      (staticBuiltOnChan staticEnv n$_c$ n$_f$
+      $\rightarrow$ {n$_f$} $\subseteq$ entr (NBnd n)),
+      entr (termId t') $\subseteq$ exit (NBnd n),
+      staticLiveChan staticEnv entr exit n$_c$ t'
+    $\rightarrow$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (App n$_f$ n$_a$) t')
 \end{lstlisting}
 
 The static liveness of a flow checks if a flow exists in a whole graph,
