@@ -506,7 +506,7 @@ static evaluation. In this work, control flow analysis is used for tracking cert
 like channels and events, in addition to constructing precise data flow analysis. 
 
 
-\section{Synchronization}
+\section{Synchronization} \label{synchronization}
 Synchronization of sending threads and receiving threads
 requires determining which threads should wait, and which threads should be dispatched.
 The greater the information needed
@@ -1213,66 +1213,64 @@ particular communication topologies.
 \section{Mechanized Theory}
 
 The definitions and theorems of this work were constructed in the formal
-language of Isabelle/HOL,
-to enable mechanical verification of the correctness of the proofs.
+language of Isabelle/HOL to enable mechanical verification of the proofs.
 However, in this presentation, the syntax of the stated definitions and propositions will differ from
-the actual Isabelle/HOL syntax, in order to be more intuitive for those unfamiliar
-with Isabelle/HOL.
+the actual Isabelle/HOL syntax, in order to be more intuitive for those unfamiliar with Isabelle/HOL.
 
-A static analysis for detecting communication patterns in Concurrent ML would be necessary for useful
+A static analysis for detecting communication topologies in Concurrent ML would be necessary for useful
 optimizations or checks. The optimization to replace general synchronization with specialized synchronization
 based on the results of static analysis is one that could have significant performance benefit, as shown
-empirically by Reppy and Xiao \cite{}. Hower, if the static analysis of communication patterns is wrong, then
+empirically by Reppy and Xiao. Howeverr, if the static analysis of communication topologies is wrong, then
 the optimizmization could produce an incorrect program. What you need is proof that the static analysis is sound
-with to the actualy communication patterns that occur when running a program.  However, the proof could also be
+with respect to the actual communication topologies that occur when running a program. However, the proof could also be
 erroneous, and with so many details could be extremely difficult for a human to manually check for errors.
-Isabelle/HOL can automatically check for errors in proofs and specifications and is much more reliable than a
-human. By using an optimization without a soundness proof, you are trusting that it is sound.  If soundness has
-been proved, you are trusting that the proof has no errors. If the proof has been verified by Isabelle/HOL, you are
-trusting that the Isabelle/HOL kernel is sound. The less you need to trust the better.
+Isabelle/HOL automatically checks for errors in proofs and specifications and is much more reliable than a
+human. By using an optimization without a soundness proof, you are trusting that it is sound. If soundness has
+been proved, then you are trusting that the proof has no errors. If the proof has been verified by Isabelle/HOL, 
+you are trusting that the Isabelle/HOL kernel is sound. The less you need to trust the better.
 
 I extend Reppy and Xiao's work by develpoing a mechanically checked specification and proofs
-for communication topologies in Concurrent ML. A proof checker requires that manipulations are
+for communication topologies in Concurrent ML. The proof checker requires that manipulations are
 constructed from a small kernel of primitive operations. It's possible that an intuitive step of reasoning in an
-informal proof could require multiple tedious steps of precise manipulation in a mechanically checked proof.
+informal proof requires multiple tedious steps of precise manipulation in a mechanically checked proof.
 To avoid the chance of running into these tricky scenarios, I specified the static analysis
 as inference rules, rather than as an algorithm. In Isabelle/HOL, algorithms are specified as computable functions
 that must be proved to terminate and be total, either automatically or with additional details supplied by the user.
 Reppy and Xiao's algorithm, as with many static analysis algorithms, relies on accumulating values in a growing set,
 with each recursive call until reaching a fixpoint.
-In Isabelle/HOL it is easy to prove termination for functions that branch on an inductive datatype, however
-it is far from straight foward to prove termination for those that branch on
+In Isabelle/HOL it is easy to prove termination for functions that branch on an inductive datatype, 
+however it is far from straight foward to prove termination for those that branch on
 whether or not a fixpoint has been reached.
 
-Concurrent ML separates itself from other languages for concurrency with its generalized concept of events,
-event sycnrhonization, and event combinators.  Reppy and Xiao's work produces a static analysis for a subset,
-which only contained synchronization on sending and receiving events.  I originally, wanted to extend Reppy and Xiao's
-analysis to encompass a more generalized notion of events, along with the evenet combinator for choice.
+Concurrent ML distinguishes itself from other languages for concurrency with its generalized concept of events,
+event sycnrhonization, and event combinators. Reppy and Xiao's work produces a static analysis for a subset,
+which only contained synchronization on sending and receiving events. Originally, I wanted to extend Reppy and Xiao's
+analysis to encompass a more generalized notion of events, along with the event combinator for choice.
 However, I quickly
-realized that the combination of creating a new specification, in an unfamiliar proof assistant, with a more complex
-semantics in the language, would be too much to detail with at once.  Instead, I adhered to Reppy and Xiao's decision
-to construct the specification and proofs for a simplied subset of Concurrent ML, containing synchronization on just
+realized that the combination of creating a new specification, in an unfamiliar proof assistant, along with a more complex
+semantics in the language, would be too much to deal with all at once. Instead, I adhered to Reppy and Xiao's decision
+to construct the specification and proofs for a small subset of Concurrent ML, containing synchronization on just
 sending and receiving events. Since I constructed these specifications and proofs in Isabelle/HOL, it will be possible
-to easily extend the semantics later, by using the proof assistant to pinpoint where the proofs and
+to easily extend the semantics and theorems later, by using the proof assistant to pinpoint where the proofs and
 specifications break upon changes.
 
 The language for the mechanized specification contains features found in untyped lambda calculus with
-some extensions, such as functions, function application, products, product elimination, sums, sum elimination, and unit. 
-Additionally, for concurrency it contains channel creation, sending events, receiving events, synchronization,
-and thread spawning. Features may be used together by binding the use of one feature to a name, and then
-sequencig to another term using that name. Additionally, spawning, function application, and sum elimination require
-use of other features.
+some extensions, such as functions, function application, pairs, first and second selection, left and right cases, case distinction, 
+and unit. 
+Additionally, for concurrency it contains thread spawning, channel creation, sending events, receiving events, and synchronization.
+These features may be used together by binding the use of one feature to a name, and then
+sequencig to another term. Additionally, spawning, function application, and case distinction require use of other features.
 
-The dynamic evaluation is represented by a small step relation for a variant of a CEK machine, in which one pool evalutes
-to the next pool. A pool consists of many states associated with paths taken to reach each state.  A state cosists
+The dynamic evaluation is represented by a small step relation, and a variant of a CEK machine, in which one pool evalutes
+to the next pool. A pool consists of many states associated with the paths taken to reach each state. A state consists
 of a term to be evaluated, an environment for looking up values from names, and a stack of continuations.
 A valid small step relation always steps from one pool to the pool extended with at least one new state.
-Terms containing names are not simplified.  Instead, an environment can be used to look the values of names.
-Names are locally scoped so that they can be reused with a precise meaning, such as function paramenter being bound to
-different argument each time its called. As such, for any term containing names, its corresponding value is simply
+Terms containing names are not reduced. Instead, an environment can be used to look the values of names.
+Names are locally scoped so that they can be reused with a precise meaning, e.g. a function paramenter may be bound to
+a different argument each time its called. As such, for any term containing names, its corresponding value is simply
 the term paired with its own environment.
 
-The initial pool of a running program is a pool with an empty path associated with a state containing the program,
+The initial pool of a running program only contains an empty path associated with a state containing the program,
 an empty environment and an empty continuation stack.
 Full evaluation is represented by the star predicate composed with the small step relation, applied to the initial pool.
 It states that an initial pool takes zero or more transitive steps to reach another pool.
@@ -1302,18 +1300,18 @@ the star relation. The static evaluation on a pool is taken taken apart into a s
 thus relating the dynamic environment with the static environment, which is essentially sound by definition. 
 
 
-The dynamic communication classification consists of four relations to categorize channels in a pool, as one-to-many,
-many-to-one, one-to-one, one-shot, or one-sync. All four classification relations are defined in terms of how any two paths   
+The dynamic communication classification consists of five relations to classify channels in a pool, as one-to-many,
+many-to-one, one-to-one, one-shot, or one-sync. All five classification relations are defined in terms of how any two paths   
 in the pool relate to each other. The one-to-many classification holds if any two paths that send on the channel are ordered. 
-If the sending paths are all ordered or there are no sending paths, then there is simply only at most one thread that
+If the sending paths are all ordered or there are no sending paths, then there is simply at most one thread that
 sends on the channel. Likewise, The many-to-one classification holds if any two paths that receive on the channel are ordered.
-The one-to-one classification holds if both all the receiving paths on the channel are ordered and all the sending paths on the
+The one-to-one classification holds if all the receiving paths on the channel are ordered and all the sending paths on the
 channel are ordered.  The one-shot classification holds if there is at most one sending path on a channel, regardless
 of which paths receive on the channel. The one-sync classification holds if there is at most one sending and one receiving path
 on a channel.
 
 The static communication classification relations, as with dynamic communication, are defined in terms of paths
-that send and receive a channel of interest. However, these sites of sending and receiving the channel, are approximations
+that send and receive on a channel of interest. However, these sites of sending and receiving on the channel, are approximations
 taken from the static environment, whose content is influenced by the rules of static evaluation.
 The static flows acceptance relation states that a set of flows, i.e. a graph, accepts a program or term, where each flow is
 an abstract representation of a small step in the dynamic evaluation. The relation is defined such that
@@ -1328,21 +1326,21 @@ simply unordered paths. Likewise, the static one-shot classification holds if an
 meaning that either they're equal, like the dynamic classification, or they cannot occur in the same run of the program.
 
 The soundness theorem of the static communication classification relations to their dynamic counterparts states that if
-a channel is statically classified in some way, then it is dynamically classified the same way.  For instance, if the
+a channel is statically classified in some way, then it is dynamically classified the same way. For instance, if the
 static one-to-many classification holds for a static channel, then the dynamic one-to-many classifaction holds for
-all dynamic counterparts of that channel.  The static communication classification is a "must" analysis, meaning that
+all dynamic counterparts of that channel. The static communication classification is a "must" analysis, meaning that
 if the classification holds statically, then it must hold dynamically. Soundness depends on the soundness and preservation
 of its constiuent parts,
 including the soundness of static evaluation, the soundness of the noncompetitive relation with respect to
 the unordered relation, the soundnes of the singular relation with respect to equality of paths,
-and the soundness and preservation of the static tracecable relation. As with the static evaluation, many proofs of
+and the soundness and preservation of the static tracecable relation. As with static evaluation, many proofs of
 soudnness for the static communication classification, rely on bridging the gap between the terms used in dynamic
-versions and the terms used in the static versions. Generalizations of the static communication classification relations to
-apply to dynamic terms, such as pools, environments, stacks, and values are derived to complete these proofs.
+versions and the terms used in the static versions. Generalizations of the static communication classification relations
+with respect to additional dynamic terms - pools, environments, stacks, and values - are derived to complete these proofs.
 
 This work does not contain formal proofs that the specialized implementations are
-behaviorally equivalent to a generic implementation, but the example implementations
-should provide good evidence for that.
+behaviorally equivalent to a generic implementation, but the example implementations in 
+section \ref{synchronization} should provide good evidence for that.
 
 \subsection{Syntax}
 The syntax used in this formal theory contains a very small subset of
@@ -1423,7 +1421,7 @@ which in turn is relied on to prove soundness of the static semantics.
 
 \begin{lstlisting}[language=logic]
   datatype dynamic_step =
-    DNxt name
+    DSeq name
   | DSpwn name
   | DCll name
   | DRtn name 
@@ -1451,7 +1449,8 @@ Additionally, all these terms evaluate to values in a single step.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate seqEval:
-    complex -> environment -> dynamic_value -> bool where
+    complex -> environment -> dynamic_value -> bool 
+  where
     unit: env . 
     $\vdash$ seqEval Unt env VUnt
   * atom: a env .
@@ -1481,15 +1480,15 @@ same applied function.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate callEval: complex -> env -> term -> env -> bool where
-    caseLeft: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
+    distinctLeft: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
       env n$_s$ = Some (VAtm (Lft n$_c$) env$_s$),
       env$_s$ n$_c$ = Some v
     $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_l$ (env(n$_l$ -> v))
-  * caseRight: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
+  * distinctRight: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
       env n$_s$ = Some (VAtm (Rht n$_c$) env$_s$),
       env$_s$ n$_c$ = Some v
     $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_r$ (env(n$_r$ -> v))
-  * app: env n$_f$ n$_f$' n$_p$ t$_b$ env$_f$ n$_a$ v .
+  * application: env n$_f$ n$_f$' n$_p$ t$_b$ env$_f$ n$_a$ v .
       env n$_f$ = Some (VAtm (Fun n$_f$' n$_p$ t$_b$) env$_f$),
       env n$_a$ = Some v
     $\vdash$ callEval
@@ -1605,7 +1604,7 @@ that the synchronization used for communication.
     $\vdash$ dynamicEval
       pool comm
       (pool(
-        path @ [DNxt n] -> (Stt t' (env(n -> v)) stack)
+        path @ [DSeq n] -> (Stt t' (env(n -> v)) stack)
       ))
       comm
   * call: pool path n c t' env stack t$_c$ env$_c$ comm .
@@ -1624,7 +1623,7 @@ that the synchronization used for communication.
     $\vdash$ dynamicEval
       pool comm 
       (pool(
-        path @ [DNxt n] ->
+        path @ [DSeq n] ->
           (Stt t' (env(n -> (VChn (Chan path n)))) stack)
       ))
       comm
@@ -1634,7 +1633,7 @@ that the synchronization used for communication.
     $\vdash$ dynamicEval
       pool comm 
       (pool(
-        path @ [DNxt n] -> (Stt t' (env(n -> VUnt)) stack),
+        path @ [DSeq n] -> (Stt t' (env(n -> VUnt)) stack),
         path @ [DSpwn n] -> (Stt t$_c$ env [])
       ))
       comm
@@ -1656,8 +1655,8 @@ that the synchronization used for communication.
     $\vdash$ dynamicEval
       pool comm
       (pool(
-        path$_s$ @ [DNxt n$_s$] -> (Stt t$_s$ (env$_s$(n$_s$ -> VUnt)) stack$_s$), 
-        path$_r$ @ [DNxt n$_r$] -> (Stt t$_r$ (env$_r$(n$_r$ -> v$_m$)) stack$_r$)
+        path$_s$ @ [DSeq n$_s$] -> (Stt t$_s$ (env$_s$(n$_s$ -> VUnt)) stack$_s$), 
+        path$_r$ @ [DSeq n$_r$] -> (Stt t$_r$ (env$_r$(n$_r$ -> v$_m$)) stack$_r$)
       )) 
       (comm $\cup$ {(path$_s$, c, path$_r$)})
 \end{lstlisting}
@@ -1888,7 +1887,7 @@ static evaluation is less precise.
       $\rightarrow$ staticEnv n$_2$ $\subseteq$ staticEnv n),
       staticEval staticEnv staticComm t'
     $\vdash$ staticEval staticEnv staticComm (Bind n (Snd n$_t$) t')
-  * caseEither: staticEnv n$_s$ n$_l$ t$_l$ n staticComm n$_r$ t$_r$ t' . 
+  * distinction: staticEnv n$_s$ n$_l$ t$_l$ n staticComm n$_r$ t$_r$ t' . 
       $\forall$ n$_c$ .  
         (SAtm (Lft n$_c$)) $\in$ staticEnv n$_s$
       $\rightarrow$ staticEnv n$_c$ $\subseteq$ staticEnv n$_l$,
@@ -1901,7 +1900,7 @@ static evaluation is less precise.
       staticEval staticEnv staticComm t$_r$,
       staticEval staticEnv staticComm t'
     $\vdash$ staticEval staticEnv staticComm (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-  * app: staticEnv n$_f$ n$_a$ n staticComm t' . 
+  * application: staticEnv n$_f$ n$_a$ n staticComm t' . 
       $\forall$ n$_f$' n$_t$ t$_b$ . 
         (SAtm (Fun n$_f$' n$_t$ t$_b$)) $\in$ staticEnv n$_f$
       $\rightarrow$ staticEnv n$_a$ $\subseteq$ staticEnv n$_t$, 
@@ -1914,7 +1913,7 @@ It is straightforward to follow the rules of static evaluation in order to build
 functions mapping names to static values for the static environment
 and the static communication.
 Recasting the example server implementation into the ANF syntax is demonstrates this informal procedure.
-The unit value, and left and right sum constructors are used to represent natural numbers.
+The unit value, and left and right case constructors are used to represent natural numbers.
 
 \begin{lstlisting}[language=normal_lang, mathescape]
   bind u1 = unt
@@ -2061,10 +2060,10 @@ and an initial term can statically reach any term that its embedded terms can st
   * spawn: t$_c$ t$_z$ n t' . 
       staticReachable t$_c$ t$_z$
     $\vdash$ staticReachable (Bind n (Spwn t$_c$) t') t$_z$
-  * caseLeft: t$_l$ t$_z$ n n$_s$ n$_l$ n$_r$ t$_r$ t' . 
+  * distinctLeft: t$_l$ t$_z$ n n$_s$ n$_l$ n$_r$ t$_r$ t' . 
       staticReachable t$_l$ t$_z$
     $\vdash$ staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
-  * caseRight: t$_r$ t$_z$ n n$_s$ n$_l$ t$_l$ n$_r$ t' . 
+  * distinctRight: t$_r$ t$_z$ n n$_s$ n$_l$ t$_l$ n$_r$ t' . 
       staticReachable t$_r$ t$_z$
     $\vdash$ staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
   * function: t$_b$ t$_z$ n n$_f$ n$_t$ t$_b$ t' . 
@@ -2152,7 +2151,7 @@ flow to its embedded term. A static path is a list of static steps.
 
 \begin{lstlisting}[language=logic, mathescape]
   datatype mode =
-    MNxt
+    MSeq
   | MSpwn
   | MCll
   | MRtn
@@ -2207,61 +2206,61 @@ accepting flows for the sequenced embedded term.
     result: staticEnv graph n .
     $\vdash$ staticFlowsAccept staticEnv graph (Rslt n)
   * unit: n t' graph staticEnv  .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n Unt t')
   * makeChan: n t' graph staticEnv  .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n MkChn t')
   * sendEvt: n t' graph staticEnv  n$_c$ n$_m$ .
-      (NBnd n , MNxt, termId t') $\in$ graph, 
+      (NBnd n , MSeq, termId t') $\in$ graph, 
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept
       staticEnv graph
       (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
   * recvEvt: n t' graph staticEnv n$_c$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (RecvEvt n$_c$)) t')
   * pair: n t' graph staticEnv n$_1$ n$_2$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Pair n$_1$ n$_2$)) t')
   * left: n t' graph staticEnv n$_s$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Lft n$_s$)) t')
   * right: n t' graph staticEnv n$_s$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Rht n$_s$)) t')
   * function: n t' graph staticEnv t$_b$ n$_f$ n$_t$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t', 
       staticFlowsAccept staticEnv graph t$_b$
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t')
   * spawn: n t' t$_c$ graph staticEnv .
       {
-        (NBnd n, MNxt, termId t'),
+        (NBnd n, MSeq, termId t'),
         (NBnd n, MSpwn, termId t$_c$)
       } $\subseteq$ graph, 
       staticFlowsAccept staticEnv graph t$_c$, 
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Spwn t$_c$) t')
   * sync: n t' graph staticEnv n$_{se}$ .
-      (NBnd n, MNxt, termId t') $\in$ graph, 
+      (NBnd n, MSeq, termId t') $\in$ graph, 
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Sync n$_{se}$) t')
   * first: n t' graph staticEnv n$_t$ .
-      (NBnd n, MNxt, termId t') $\in$ graph, 
+      (NBnd n, MSeq, termId t') $\in$ graph, 
       staticFlowsAccept staticEnv graph t', 
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Fst n$_t$) t')
   * second: n t' graph staticEnv n$_t$ .
-      (NBnd n, MNxt, termId t') $\in$ graph, 
+      (NBnd n, MSeq, termId t') $\in$ graph, 
       staticFlowsAccept staticEnv graph t', 
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Snd n$_t$) t')
-  * caseEither: n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
+  * distinction: n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
       {
         (NBnd n, MCll, termId t$_l$),
         (NBnd n, MCll, termId t$_r$),
@@ -2272,7 +2271,7 @@ accepting flows for the sequenced embedded term.
       staticFlowsAccept staticEnv graph t$_r$,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-  * app: staticEnv n$_f$ n t' n n$_a$ .
+  * application: staticEnv n$_f$ n t' n n$_a$ .
       $\forall$ n$_f$' n$_t$ t$_b$ . 
         (SAtm (Fun n$_f$' n$_t$ t$_b$)) $\in$ staticEnv n$_f$ 
       $\rightarrow$
@@ -2346,10 +2345,10 @@ to paths starting from the beginning of a program.
   * spawnFirst: path n path1 path2 .
     \$vdash$ staticInclusive
       (path @ [(NBnd n, MSpwn)] @ path1)
-      (path @ [(NBnd n, MNxt)] @ path2)
+      (path @ [(NBnd n, MSeq)] @ path2)
   * spawnSecond: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ [(NBnd n, MNxt)] @ path1])
+      (path @ [(NBnd n, MSeq)] @ path1])
       (path @ [(NBnd n, MSpwn)] @ path2)
 \end{lstlisting}
 
@@ -2576,8 +2575,8 @@ definitions of static and dynamic one-to-many classification.
 There is an isomorphic correspondence between the paths of
 dynamic evaluation and the paths of static evaluation, by definition.
 The static paths are derived from the static flow graph. Although it is possible to directly derive
-the dynamic paths from the static flow graph, deriving an isomorphoic path structure keeps the the
-paths relation to the static flow graph clear.  Additionally, for the higher precision analysis, static
+the dynamic paths from the static flow graph, deriving an isomorphoic path structure keeps the
+paths' relation to the flow graph clear.  Additionally, for the higher precision analysis, static
 paths are not isomorphic to dynamic paths. 
 
 The three main lemmas state the
@@ -2601,8 +2600,8 @@ sending identifier by its term identifier.
   * seq: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
-      (path @ [DNxt n])
-      (staticPath @ [(NBnd n, MNxt)])
+      (path @ [DSeq n])
+      (staticPath @ [(NBnd n, MSeq)])
   * spawn: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
@@ -2619,7 +2618,8 @@ sending identifier by its term identifier.
       (path @ [DRtn n])
       (staticPath @ [(NRslt n, MRtn)])
 
-  lemma staticTraceableSound: t$_0$ pool comm path n c t' env stack staticEnv staticComm graph isEnd .
+  lemma staticTraceableSound: t$_0$ pool comm path n c t'
+  env stack staticEnv staticComm graph isEnd .
     star dynamicEval ([[] -> (Stt t$_0$ [->] [])], {}) (pool, comm), 
     pool path = Some (Stt (Bind n c t') env stack),
     staticEval staticEnv staticComm t$_0$,
@@ -2945,9 +2945,9 @@ To show that an term is reachable from the initial program, it is necessary to
 show that each intermediate term is reachable from the initial term.  Thus, the
 induction needs to enable unraveling the goals from the end of the program to the beginning,
 maintaining the initial program state in context for each subgoal. Because the static
-reachable relation is a "may", the generalized relations should hold unless there is
-a clear reason that it could never hold. For instance, in the relation over atoms, it holds
-for all atoms other than functions, it holds without any additional demands. 
+reachable relation is a "may" analysis, the generalized relations hold unless there is
+a clear reason that it could never hold. For instance, in the relation over atoms, for all atoms other than functions, 
+it holds without any additional demands.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticReachableForward: term -> term -> bool where
@@ -2956,10 +2956,10 @@ for all atoms other than functions, it holds without any additional demands.
   * spawn: t$_0$ n t$_c$ t' .
       staticReachableForward t$_0$ (Bind n (Spwn t$_c$) t')
     $\vdash$ staticReachableForward t$_0$ t$_c$
-  * caseLeft: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
+  * distinctLeft: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
       staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
     $\vdash$ staticReachableForward t$_0$ t$_l$
-  * caseRight: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
+  * distinctRight: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
       staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
     $\vdash$ staticReachableForward t$_0$ t$_r$
   * function: t$_0$ n n$_f$ n$_p$ t$_b$ t' .
@@ -3083,7 +3083,7 @@ sequencing, calling, returning, and spawning are also included flows.
 
 \begin{lstlisting}[language=logic, mathescape]
   datatype mode =
-    MNxt
+    MSeq
   | MSpwn
   | ESend name
   | MCll
@@ -3184,48 +3184,48 @@ However, it must additionally consider flows with the sending mode.
     result: staticEnv graph n .
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Rslt n)
   * unit: n t' graph staticEnv .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n Unt t')
   * makeChan: n t' graph staticEnv  .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n MkChn t')
   * sendEvt: n t' graph staticEnv  n$_c$ n$_m$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAccept
       staticEnv graph
       (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
   * recvEvt: n t' graph staticEnv n$_c$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (RecvEvt n$_c$)) t')
   * pair: n t' graph staticEnv n$_1$ n$_2$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Pair n$_1$ n$_2$)) t')
   * left: n t' graph staticEnv n$_s$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Lft n$_s$)) t')
   * right: n t' graph staticEnv n$_s$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Rht n$_s$)) t')
   * function: n t' graph staticEnv t$_b$ n$_f$ n$_p$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t',
       staticFlowsAcceptTm staticEnv graph t$_0$ t$_b$
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
   * spawn: n t' t$_c$ graph staticEnv.
-      {(NBnd n, MNxt, termId t'),
+      {(NBnd n, MSeq, termId t'),
         (NBnd n, MSpwn, termId t$_c$)} $\subseteq$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t$_c$,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Spwn t$_c$) t')
   * sync: n t' graph staticEnv n$_{se}$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       $\forall$ n$_{sc}$ n$_m$ n$_c$ n$_y$.
         (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv nSE,
       $\rightarrow$ (SChn n$_c$) $\in$ staticEnv n$_{sc}$
@@ -3234,14 +3234,14 @@ However, it must additionally consider flows with the sending mode.
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Sync n$_{se}$) t')
   * first: n t' graph staticEnv n$_p$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t',
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Fst n$_p$) t')
   * second: n t' graph staticEnv n$_p$ .
-      (NBnd n , MNxt, termId t') $\in$ graph,
+      (NBnd n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t',
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Snd n$_p$) t')
-  * caseEither: n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
+  * distinction: n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
       {
         (NBnd n, MCll, termId t$_l$),
         (NBnd n, MCll, termId t$_r$),
@@ -3252,7 +3252,7 @@ However, it must additionally consider flows with the sending mode.
       staticFlowsAcceptTm staticEnv graph t$_0$ t$_r$,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-  * app: staticEnv n$_f$ n t' n n$_a$ .
+  * application: staticEnv n$_f$ n t' n n$_a$ .
       $\forall$ n$_f$' n$_p$ t$_b$ . 
         (SAtm (Fun n$_f$' n$_p$ t$_b$)) $\in$ staticEnv n$_f$
       $\rightarrow$
@@ -3386,8 +3386,7 @@ for channel \lstinline{k4} in
 the server example.  Each entry set appears right above its related term identifier,
 and each exit setappears right below its related term identifier. 
 
-\includegraphics[width=1\textwidth]{cml-liveness-analysis-k4.pdf}
-
+\includegraphics[width=1\textwidth]{cml-liveness-analysis-k4.pdf} \\\\\\\\\\\\
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticLiveChan:
     static_value_map -> term_id_map 
@@ -3399,57 +3398,79 @@ and each exit setappears right below its related term identifier.
       $\rightarrow$ {n$_y$} $\subseteq$ entr (NRslt n$_y$)
       )
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Rslt n$_y$)
+
   * unit: exit n entr t' staticEnv n$_c$ .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       entr (termId t') $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n Unt t')
+
   * makeChan: exit n entr t' staticEnv n$_c$ .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       entr (termId t') $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n MkChn t')
+
   * sendEvt: exit n entr staticEnv n$_c$ n$_{sc}$ n$_m$ t' n$_c$ .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      (staticBuiltOnChan staticEnv n$_c$ n$_{sc}$
-      $\rightarrow$ {n$_{sc}$} $\subseteq$ entr (NBnd n)),
-      (staticBuiltOnChan staticEnv n$_c$ n$_m$
-      $\rightarrow$ {n$_m$} $\subseteq$ entr (NBnd n)),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_{sc}$
+      $\rightarrow$ {n$_{sc}$} $\subseteq$ entr (NBnd n)
+      ),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_m$
+      $\rightarrow$ {n$_m$} $\subseteq$ entr (NBnd n)
+      ),
       entr (termId t') $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$
       (Bind n (Atom (SendEvt n$_{sc}$ n$_m$)) t')
+
   * recvEvt: exit n entr staticEnv n$_c$ n$_r$ n$_{rc}$.    
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      (staticBuiltOnChan staticEnv n$_c$ n$_r$ then
-      $\rightarrow$ {n$_r$} $\subseteq$ entr (NBnd n)),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_r$ then
+      $\rightarrow$ {n$_r$} $\subseteq$ entr (NBnd n)
+      ),
       entr (termId t') $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$
       (Bind n (Atom (RecvEvt n$_{rc}$)) t')
+
   * pair: exit n entr staticEnv t$_c$ n$_1$ n$_2$ t' .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      (staticBuiltOnChan staticEnv n$_c$ n$_1$
-      $\rightarrow$ {n$_1$} $\subseteq$ entr (NBnd n)),
-      (staticBuiltOnChan staticEnv n$_c$ n$_2$
-      $\rightarrow$ {n$_2$} $\subseteq$ entr (NBnd n)),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_1$
+      $\rightarrow$ {n$_1$} $\subseteq$ entr (NBnd n)
+      ),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_2$
+      $\rightarrow$ {n$_2$} $\subseteq$ entr (NBnd n)
+      ),
       entr (termId t') $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Pair n$_1$ n$_2$)) t'))
+
   * left: exit n entr staticEnv n$_c$ n$_a$ t' . 
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      (staticBuiltOnChan staticEnv n$_c$ n$_a$
-      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_a$
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
+      ),
       entr (termId t') $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Lft n$_a$)) t'))
+
   * right: exit n entr staticEnv n$_c$ n$_a$ t' . 
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      (staticBuiltOnChan staticEnv n$_c$ n$_a$
-      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n))
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_a$
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
+      ),
       entr (termId e) $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Rht n$_a$)) e)
+
   * function: exit n entr t$_b$ n$_p$ n staticEnv n$_c$ t' n$_f$ . 
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       (entr (termId t$_b$) \ {n$_f$, n$_p$}) $\subseteq$ entr (NBnd n),
@@ -3458,6 +3479,7 @@ and each exit setappears right below its related term identifier.
       staticLiveChan staticEnv entr exit n$_c$ t'
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$
       (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
+
   * spawn: exit n entr t' t$_c$ n$_c$ staticEnv .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       entr (termId t') $\subseteq$ exit (NBnd n),
@@ -3466,72 +3488,86 @@ and each exit setappears right below its related term identifier.
       staticLiveChan staticEnv entr exit n$_c$ t'
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$
       (Bind n (Spwn t$_c$) t')
+
   * sync: exit n entr staticEnv n$_c$ n$_e$ t' .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      (staticBuiltOnChan staticEnv n$_c$ n$_e$
-       $\rightarrow$ {n$_e$} $\subseteq$ entr (NBnd n)),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_e$
+      $\rightarrow$ {n$_e$} $\subseteq$ entr (NBnd n)
+      ),
       entr (termId t') $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t',
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$
       (Bind n (Sync n$_e$) t')
+
   * first: exit n entr staticEnv n$_c$ n$_a$ t' .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      (staticBuiltOnChan staticEnv n$_c$ n$_a$
-      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_a$
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
+      ),
       entr (termId t') $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Fst n$_a$) t')
-  * $\forall$ exit n entr staticEnv n$_c$ n$_a$ t' .
+  * second: exit n entr staticEnv n$_c$ n$_a$ t' .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      (staticBuiltOnChan staticEnv n$_c$ n$_a$ then
-      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_a$
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
+      ),
       entr (termId t') $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$
       (Bind n (Snd n$_a$) t')
-  * caseEither: exit n entr t$_l$ n$_l$ t$_r$ n$_r$ staticEnv n$_c$ n$_s$ t' .
+
+  * distinction: exit n entr t$_l$ n$_l$ t$_r$ n$_r$ staticEnv n$_c$ n$_s$ t' .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       (entr (termId t$_l$) \ {n$_l$}) $\subseteq$ entr (NBnd n),
       (entr (termId t$_r$) \ {n$_r$}) $\subseteq$ entr (NBnd n),
-      (staticBuiltOnChan staticEnv n$_c$ n$_s$
-      $\rightarrow$ {n$_s$} $\subseteq$ entr (NBnd n)),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_s$
+      $\rightarrow$ {n$_s$} $\subseteq$ entr (NBnd n)
+      ),
       staticLiveChan staticEnv entr exit n$_c$ t$_l$,
       staticLiveChan staticEnv entr exit n$_c$ t$_r$,
       entr (termId t') $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-  * app: exit n entr staticEnv n$_c$ n$_a$ n$_f$ t' .
+
+  * application: exit n entr staticEnv n$_c$ n$_a$ n$_f$ t' .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      (staticBuiltOnChan staticEnv n$_c$ n$_a$
-      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)),
-      (staticBuiltOnChan staticEnv n$_c$ n$_f$
-      $\rightarrow$ {n$_f$} $\subseteq$ entr (NBnd n)),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_a$
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
+      ),
+      (
+        staticBuiltOnChan staticEnv n$_c$ n$_f$
+      $\rightarrow$ {n$_f$} $\subseteq$ entr (NBnd n)
+      ),
       entr (termId t') $\subseteq$ exit (NBnd n),
       staticLiveChan staticEnv entr exit n$_c$ t'
-    $\rightarrow$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (App n$_f$ n$_a$) t')
+    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (App n$_f$ n$_a$) t')
 \end{lstlisting}
 
-The static liveness of a flow checks if a flow exists in a whole graph,
-and if it meets certain criteria with respect to the entry and exit liveness
-functions.  The channel liveness relation says if a channel is live within a function, but
+The static liveness of a flow checks if a flow is live across call and return boundaries,
+with respect to the entry and exit liveness functions.  
+The channel liveness relation says if a channel is live within a function, but
 does not say anything whether or not a channel remains live across calling or returning flows.
-The liveness of flows can check if the liveness is mainted across function bounardies, in addition
-to simply lifting the static liveness the analysis for the intraprocedural flows.
+Additionally, for the intraprocedural, it simply lifts the entry and exit function information.
 No channel is considered to be live in the body of the loop at \lstinline[language=normal_lang]{bind lp}.
-However, a channel may be live before the loop is
-called and after the loop returns. In such a case, the live flow is retained
-from the caller to within the loop function's body, even though the steps in
-the loop may not be live according to the entry function in the static channel liveness.
+However, a channel may be live before the loop is called and after the loop returns. 
+In such a case, the live flow is retained from the caller to within the loop function's body, 
+even though the steps in the loop may not be live according to the entry function in the static channel liveness.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticLiveFlow:
     graph -> term_id_map -> term_id_map -> flow -> bool
   where
     seq: l l' graph exit entr . 
-      (l, MNxt, l') $\in$ graph,
+      (l, MSeq, l') $\in$ graph,
       $\neg$ (exit l = {}),
       $\neg$ (entr l' = {})
-    $\vdash$ staticLiveFlow graph entr exit (l, MNxt, l')
+    $\vdash$ staticLiveFlow graph entr exit (l, MSeq, l')
   * spawn: l l' graph exit entr .
       (l, MSpwn, l') $\in$ graph, 
       $\neg$ (exit l = {}),
@@ -3599,20 +3635,20 @@ given paths do not compete in any run of a program.
     $\vdash$ staticInclusive path1 path2
   * spawnLeft: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ (NBnd n, MSpwn) # path1)
-      (path @ (NBnd n, MNxt) # path2)
+      (path @ [(NBnd n, MSpwn)] @ path1)
+      (path @ [(NBnd n, MSeq)] @ path2)
   * spawnRight: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ (NBnd n, MNxt) # path1)
-      (path @ (NBnd n, MSpwn) # path2)
+      (path @ [(NBnd n, MSeq)] @ path1)
+      (path @ [(NBnd n, MSpwn)] @ path2)
   * sendLeft: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ (NBnd n, ESend xE) # path1)
-      (path @ (NBnd n, MNxt) # path2)
+      (path @ [(NBnd n, ESend n$_e$)] @ path1)
+      (path @ [(NBnd n, MSeq)] @ path2)
   * sendRight: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ (NBnd n, MNxt) # path1)
-      (path @ (NBnd n, ESend xE) # path2)
+      (path @ [(NBnd n, MSeq)] @ path1)
+      (path @ [(NBnd n, ESend n$_e$)] @ path2)
 
   predicate singular: static_path -> static_path -> bool where
     refl: path .
@@ -3717,8 +3753,8 @@ correlating dynamic paths with static paths.
   * seq: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
-      (path @ [DNxt n])
-      (staticPath @ [(NBnd n, MNxt)])
+      (path @ [DSeq n])
+      (staticPath @ [(NBnd n, MSeq)])
   * spawn: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
@@ -3739,14 +3775,14 @@ correlating dynamic paths with static paths.
     pool -> communication -> chan -> dynamic_path -> static_path -> bool
   where
     seq: pool path$_c$ n$_c$ path$_{sfx}$ stt staticPath comm .
-      pool (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) = Some stt,
-      pathsCorrespond ((DNxt n$_c$) # path$_{sfx}$) staticPath
+      pool (path$_c$ @ (DSeq n$_c$) # path$_{sfx}$) = Some stt,
+      pathsCorrespond ((DSeq n$_c$) # path$_{sfx}$) staticPath
     $\vdash$ pathsCorrespondModChan
       (pool, comm) (Chan path$_c$ n$_c$)
-      (path$_c$ @ (DNxt n$_c$) # path$_{sfx}$) staticPath
+      (path$_c$ @ (DSeq n$_c$) # path$_{sfx}$) staticPath
   * send: pool path$_r$ n$_r$ path$_{sfx}$ stt  path$_s$ n$_s$ n$_{se}$ t$_{sy}$ env$_{sy}$ stack$_{sy}$
     n$_{re}$ t$_{ry}$ env$_{ry}$ stack$_{ry}$ c$_c$ comm c staticPath$_{re}$ staticPath$_{sfx}$ . 
-      pool (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$) = Some stt, 
+      pool (path$_r$ @ (DSeq n$_r$) # path$_{sfx}$) = Some stt, 
       pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_{se}$) t$_{sy}$) env$_{sy}$ stack$_{sy}$),
       pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_{re}$) t$_{ry}$) env$_{ry}$ stack$_{ry}$),
       {(path$_s$, c$_c$, path$_r$)} $\subseteq$ comm, 
@@ -3754,8 +3790,8 @@ correlating dynamic paths with static paths.
       pathsCorrespondModChan pool comm c path$_s$ staticPath$_{pfx}$,
       pathsCorrespond path$_{sfx}$ staticPath$_{sfx}$
     $\vdash$ pathsCorrespondModChan pool comm c
-      (path$_r$ @ (DNxt n$_r$) # path$_{sfx}$)
-      (staticPath$_{pfx}$ @ [(NBnd n$_s$, ESend n$_{se}$), (NBnd n$_r$, MNxt)] @ staticPath$_{sfx}$)
+      (path$_r$ @ (DSeq n$_r$) # path$_{sfx}$)
+      (staticPath$_{pfx}$ @ [(NBnd n$_s$, ESend n$_{se}$), (NBnd n$_r$, MSeq)] @ staticPath$_{sfx}$)
 \end{lstlisting}
 
 Additionally the soundness theorem follows from the completeness of static traceability,
