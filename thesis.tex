@@ -90,7 +90,7 @@
 
 \section{Introduction}
 For this master's thesis, I have developed a formal semantics of
-a concurrent language, an initial formal analysis, along with related theorems and formal 
+a language with concurrent processes (or threads), an initial formal analysis, along with related theorems and formal 
 proofs. The language under analysis is
 a very simplified version of \textit{Concurrent ML} \cite{reppy2007concurrent}. The formal analysis
 recasts an analysis with informal proofs developed by Reppy and Xiao \cite{reppy2007specialization}. It
@@ -113,7 +113,7 @@ syntactic transliteration.
 Although the definitions are structurally quite different,
 their philosophical equivalence is hopefully apparent. 
 In this formal theory, the dynamic semantics of Concurrent ML consists of 
-a CEK machine \cite{felleisen1986control}. The static semantics consists of a 0CFA control-flow analysis
+a CEK machine \cite{felleisen1986control}. The static semantics consists of a 0CFA control flow analysis
 \cite{shivers1991control}, defined in terms of constraints \cite{nielson2015principles}.
 
 \subsection{Concurrent ML}
@@ -124,12 +124,12 @@ when conceptually distinct tasks need to overlap in time, but are easier to unde
 are written as distinct structures within the program. Concurrent languages may also allow the
 evaluation order between steps of terms to be nondeterministic. If it's not necessary for
 tasks to be ordered in a precise way, then it may be better to allow a static or dynamic
-scheduler to pick the most efficient execution order. A common use case for concurrent languages
+scheduler to pick the most efficient execution order. A common use case for concurrency
 is for programs that interact with humans, in which a program has to process various requests
 while remaining responsive to subsequent user inputs, and it must continually provide the user
 feedback with latest information it has processed.
 
-\textit{Concurrent ML} is a particularly elegant concurrent programing language.
+\textit{Concurrent ML} is a particularly elegant programing language for concurrency.
 It features threads, which are pieces of code allowed to have a wide range of
 evaluation orders relative to code encapsulated in other threads. Its synchronization
 mechanism can mandate the execution order between parts of separate threads. It is often the
@@ -256,32 +256,32 @@ evaluates.
 
 
 \subsection{Isabelle/HOL}
-An interactive theorem proving assistant, or proof assistant, is a machine that helps its user
+An interactive theorem proving assistant, or proof assistant, is a machine (typically software) that helps its user
 specify propositions and prove theorems. Like typical programming systems, it checks
 that propositions are lexically correct, syntatically correct, and
-even logically correct according to its type system. To determine if a proposition is valid, a proof assistant
-often requires the user to supply a proof. If the proof assistant verified that the user's proof is correct,
+even compositionally correct according to its type system. To determine if a proposition is valid, a proof assistant
+often requires the user to supply a proof. Once the proof assistant has verified that the user's proof is correct,
 then the proposition may be considered a theorem. In addition to checking the correctness of proofs and
 propositions, the proof assistant also assists the user in constructing proofs.
 
 Isabelle/HOL is a popular proof assistant that assists in specifying and proving properties
-formulated in Higher Order Logic (HOL).  Predicates and terms may be higher order. That is, they
-may take other predicates or functions as arguments and return predicates or functions as arguments. 
+formulated in a higher order logic (HOL)\cite{}. Predicates and functions may be higher order. That is, they
+may take other predicates or functions as arguments, and functions may return predicates or functions. 
 In HOL, a predicate is actually just a function that returns a value of type boolean, and a proposition
-is simply a term of type boolean. Terms are deemed logical according to a system of simple types, similar to
-that of Standard ML.  Isabelle/HOL excels at assisting with proving propositions with numerous details details. 
+is simply a term of type boolean. Terms are deemed compositionally correct according to a system of simple types, similar to
+that of Standard ML. Isabelle/HOL excels at assisting with proving propositions containing numerous details. 
 
-A proof is just a sequence of manipulations from existing theorems and axioms to the proposition to be proved.  
-Typically, unassisted informal proofs, are written in a declarative form. The goal is stated at the top,
-and then an axiom or theorem is stated. Subsequently derived theorems are stated beneath, with
-or without the aspects of the manipulation explained.
-For instance, say you want to prove \lstinline[mathescape]{P1 $\vee$ P2 $\rightarrow$ Q}.  You might begin by 
+A proof is a sequence of manipulations from axioms to the claim.  
+Typically, unassisted informal proofs, are written in a declarative form. One first states the claim,
+and then starts off the proof by stating an axiom or theorem. Subsequently derived theorems follow, with
+or without the details of the manipulation explained.
+For instance, say you want to prove \lstinline[mathescape]{P1 $\vee$ P2 $\rightarrow$ Q}. You could begin by 
 stating the axiom \lstinline[mathescape]{P1 $\vee$ P2 $\vdash$ P1 $\vee$ P2}, commonly written as \lstinline[language=logic]{assume P1 $\vee$ P2}.
 You can also state \lstinline[mathescape]{P1 $\vdash$ P1} and \lstinline[mathescape]{P2 $\vdash$ P2}. Since
 these are inteded to form complementary cases of \lstinline[mathescape]{P1 $\vee$ P2}, they are written as \lstinline[language=logic]{case P1: ... case P2}.
 Perhaps you know \lstinline[language=logic]{theorem A: $\vdash$ P1 $\rightarrow$ Q}. Using modus ponens, you derive \lstinline[mathescape]{P1 $\vdash$ Q}. Let's say
 you also know \lstinline[language=logic]{theorem B: $\vdash$ P2 $\rightarrow$ Q}. Using modus ponens with theorem B, you derive \lstinline[mathescape]{P2 $\vdash$ Q}.
-Your realize that these two theorems may be combined into \lstinline[mathescape]{P1 $\vee$ P2 $\vdash$ Q}, which reduces to \lstinline[mathescape]{$\vdash$ P1 $\vee$ P2 $\rightarrow$ Q}.
+These two theorems may be combined into \lstinline[mathescape]{P1 $\vee$ P2 $\vdash$ Q}, which reduces to \lstinline[mathescape]{$\vdash$ P1 $\vee$ P2 $\rightarrow$ Q}.
 
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -307,12 +307,11 @@ Your realize that these two theorems may be combined into \lstinline[mathescape]
 For proving simple propositions, it may be easy to conjure up the theorems and axioms needed to
 combine and manipulate into the goal. However, for proving complex or unfamiliar propositions,
 it may be less clear. In addition to the declarative forward proof style, Isabelle/HOL also
-supports an imperative backwards proof style, by starting with the goal and breaking it into simpler
+supports an imperative backwards proof style, in which you start with the goal and break it into simpler
 and simpler subgoals until all subgoals are manipulated into axioms. The backwards style of reasoning,
-allows the proof
-writer to focus on the manipulation rule, rather than remembering and gathering up all the theorems that are
+allows the you to focus on the manipulation rule, rather than remembering and gathering up all the theorems that are
 necessary to combine to reach the goal. The interface of the interactive theorem prover displays the subgoals
-after applying each manipulation rule.
+resulting from applying each manipulation rule.
 
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -338,15 +337,13 @@ after applying each manipulation rule.
   done
 \end{lstlisting}
 
-Note that the syntax used in Isabelle/HOL for writing proofs and propositions differs from
-that of the examples shown here. To make these examples easier to understand, I have chosen
+Note that the syntax shown here differs slightly from that of Isabelle/HOL.  
+In order to make these examples more accesible to those unfamiliar with Isabelle/HOL, I have chosen
 to use a syntax that is more typical of mathematical logic and language theory literature.  
 
 In addition to creating theorems by proving propositions, Isabelle/HOL also allows creating theorems
-by defining predicates. This feature is critical for constructing inductive propositions that may hold
-over an infinite range of values. Infinite ranges may be defined as inductive datatypes,
-similar to Standard ML.
-
+by defining predicates and functions. This feature is critical for constructing inductive propositions that may hold
+over infinite ranges. Infinite ranges may be defined as inductive datatypes, similar to Standard ML.
 For instance, you can define the infinite set of natural numbers (with zero) as an inductive datatype,
 and the binary relation that a natural number is less than or equal to another as an inductive predicate.
 
@@ -354,8 +351,11 @@ and the binary relation that a natural number is less than or equal to another a
   datatype nat = Z | S nat
   
   predicate lte: nat -> nat -> bool where
-    eq: n . $\vdash$ lte n n
-  * lt: n$_1$ n$_2$ . lte n$_1$ n$_2$ $\vdash$ lte n$_1$ (S n$_2$)
+    eq: n . 
+    $\vdash$ lte n n
+  * lt: n$_1$ n$_2$ . 
+      lte n$_1$ n$_2$ 
+    $\vdash$ lte n$_1$ (S n$_2$)
 \end{lstlisting}
 
 Additionally, you can define the infinite set of lists inductively, and the higher order predicte that checks
@@ -365,26 +365,28 @@ sortedness using a supplied binary relation.
   datatype 'a list = Nil | Cons 'a ('a list)
   
   predicate sorted: ('a -> 'a -> bool) -> 'a list -> bool where
-    nil: r . $\vdash$ sorted r Nil
-  * uni: r x . $\vdash$ sorted r (Cons x Nil)
+    nil: r . 
+    $\vdash$ sorted r Nil
+  * uni: r x . 
+    $\vdash$ sorted r (Cons x Nil)
   * cons: r x y r ys .
       r x y,
       sorted r (Cons y ys)
     $\vdash$ sorted r (Cons x (Cons y ys))
 \end{lstlisting}
 
-Each case of the the predicate definition is considered a theorem, and you have the option to give it a name. 
-Additionaly, these are only cases that can hold for the predicate.  Therefore, the predicate applied to some free
+Each case of the predicate definition is considered a theorem, and you have the option to give it a name. 
+Additionaly, these are the only cases that can hold for the predicate. Therefore, the predicate applied to some free
 variables is equivalent to the disjunction of all the cases, with the variables equal to their respective patterns
 in each case. This kind of theorem, and other similar theorems for inversion and induction
-are created with the each predicate definition.
+are created with each predicate definition.
 
 \begin{lstlisting}[language=logic]
   theorem sorted.simps: r xs .
   $\vdash$ sorted r xs $\equiv$
-      (xs = Nil)
-    $\vee$ $\exists$ x . (xs = (Cons x Nil))
-    $\vee$ $\exists$ x y ys . (xs = (Cons x (Cons y ys)) $\wedge$ r x y $\wedge$ sorted r (Cons y ys))
+    (xs = Nil)
+  $\vee$ $\exists$ x . (xs = (Cons x Nil))
+  $\vee$ $\exists$ x y ys . (xs = (Cons x (Cons y ys)) $\wedge$ r x y $\wedge$ sorted r (Cons y ys))
 \end{lstlisting}
 
 By composing these definitions, you can state and prove a list of natural numbers is sorted in non-decreasing order.
@@ -419,21 +421,21 @@ By composing these definitions, you can state and prove a list of natural number
   done
 \end{lstlisting}
 
-
 The learning curve for using proof assistants in general and Isabelle/HOL in particular is very steep.
-Nevertheless, once the user has gained some fluency, there are great benefits for certain kinds of projects.  
-In a theory of Concurrent ML, with various propositions about evaluation and communication, there are many
-tedious details that must be specified. Furthermore, due to there being greater complexity with greater
-number of language features, or greater precision of propositions, it is very useful to start simple features
-and propositions to create a minimal viable theory, and then incrementally increase complexity and modify proofs.
-The automatic checking of propositions and proofs finding errors buried in numerous tedious details.
-Additionally, it eases the process incremental extension by pinpointing where the proofs and propositions break
+Nevertheless, once one has gained some fluency, there are great benefits for certain kinds of projects.  
+In a theory of Concurrent ML, with various propositions about semantics and communication, there are many
+tedious details that must be specified. 
+The automatic checking of propositions and proofs is excellent at finding errors buried in numerous tedious details.
+Furthermore, since greater complexity follows from greater
+number of language features, or greater precision of propositions, it is very useful to start with simple features
+and propositions to create a minimal viable theory, and then incrementally increase complexity and modify proofs, accordingly.
+The proof assistant eases the process incremental extension by pinpointing where the proofs and propositions break
 as features and complexity is added.
 
-The Isabelle/HOL formalization of this work consists of 12 theory files containing definitions, theorems
+The Isabelle/HOL formalization of this work consists of 12 theory files containing definitions, theorems,
 and proofs, for the syntax, dynamic semantics, static semantics, soundness of semantics, dynamic communication,
-static communication, soundness of communication, helper definitions and theorems, and the
-higher precision analysis.  There are roughly 1421 lines of definitions, and 3052 lines of completed proofs. 
+static communication, soundness of communication, helper definitions, and theorems. 
+There are roughly 1421 lines of definitions, and 3052 lines of completed proofs. 
 
 \subsection{Static Analysis for Concurrent ML}
 A static analysis that describes communication
@@ -441,27 +443,23 @@ topologies of channels has practical benefits in at least two ways.  It can high
 channels are candidates for optimized implementations of communication; or in a language
 extension allowing the specification of specialized channels, it can conservatively verify
 their correct usage. Without a static analysis to check the usage of the special channels, one
-could inadvertently use a one-shot channel for a channel that has multiple senders, thus
-violating the intended semantics. 
+could inadvertently use a channel intended for just one sender when really the program has multiple senders, 
+thereby violating the intended semantics. 
 
-The utility of the static analysis additionally depends on it being precise, sound, and
-computable. The analysis is precise if and only if there exist programs about which the analysis
-describes information that is not directly observable. The analysis is sound if and only if the
-information it describes about a program is the same or less precise than the dynamic
-semantics of the program. The analysis is computable if and only if there exists an algorithm that
-determines values sufficient for the analysis to hold on an input program.
+The utility of the static analysis depends on it being precise, sound, and computable. 
+The analysis is precise if it describes information that isn't invariantly true for all programs. 
+The analysis is sound if the information it describes about a program is the same or less precise than the information 
+described by the dynamic semantics of the program. The analysis is computable if there is an algorithm that
+determines values sufficient for the analysis to hold from an input program.
 
-Analyses can be described in a variety of ways. A computable algorithm that take programs
+Analyses can be described in a variety of ways. An algorithm that take programs
 as input and produces information about the behavior as output is ideal for automation. A
-non-algorithmic relation (i.e. a relation expressed in a language without an inherent evaluator
-from some parameters to the others),
-stated in terms of programs and execution information, may be
-more suitable for clarity of meaning and correctness with respect to the operational
-semantics. However, a non-algorithmic relation can be translated into an algorithm.
-One rather mechanical method essentially involves
-specifying a reasoner associated with the relation. 
+set of inference rules may be more suitable for clarity of meaning and correctness 
+with respect to the dynamic semantics. 
+However, inference rules can be translated into an algorithm.
+One rather mechanical method essentially involves specifying a reasoner associated with the rules. 
 First, the reasoner generates a comprehensive set of data structures representing
-constraints from the relation's description, then the reasoner solves the constraints.
+constraints from the rules' premises; then the reasoner solves the constraints.
 
 For a subset of Concurrent ML without event combinators, Reppy and Xiao developed an
 efficient algorithm that determines for each channel, all possible threads that send
@@ -470,42 +468,42 @@ labeled with a program step. A sequence of program steps ordered in a valid exec
 sequence forms a control path. Distinction between threads in a program can be inferred from
 whether or not their control paths diverge.  
 
-Their algorithm proceeds in multiple steps that produce intermediate data structures used for
-efficient lookup in the subsequent steps. It starts with a control-flow analysis that
+Reppy and Xiao's algorithm proceeds in multiple steps that produce intermediate data structures used for
+efficient lookup in the subsequent steps. It starts with a control flow analysis that
 results in multiple mappings. One mapping is from names to abstract values.
 Another mapping is from channel-bound names to abstract values that are
 sent on the respective channels. Another is from function-bound names to abstract values
-that are the result of respective function applications.  It constructs a control-flow graph 
+that are the result of the respective function applications. It constructs a control flow graph 
 with possible paths for conditional tests and thread spawning determined directly from the
 atoms used in the program. Relying on information from the mappings to abstract values,
 it constructs the possible paths of execution via function application and channel
 communication.  It uses the graph for live variable analysis of channels, which limits the
-scope for the remaining analysis.  Using the spawn and application edges of the control-flow
-graph, the algorithm then performs a data-flow analysis to determine a mapping from program
+scope for the remaining analysis and increases precisions. 
+Using the spawn and application edges of the control flow
+graph, the algorithm then performs a data flow analysis to determine a mapping from program
 steps to all possible control paths leading into the respective program steps.  Using the
 CFA's mappings to abstract values, the algorithm determines the program steps for sends and
 receives per channel name.  Then it uses the mapping to control paths to determine all
 control paths that send or receive on each channel, from which it classifies channels as
-many-to-one, one-to-many, many-to-many, one-shot, or one-sync.
+one-to-many, many-to-one, many-to-many, or one-shot.
 
 The information at each program step is derived from control structures in the program, which
 dictate how information flows between program steps. Some uses of control structures are
 literally represented in the syntax, such as the sequencing of namings and assignments in the
 previous examples. Other uses of control structures may be indirectly represented through
 names. Function application is a control structure that allows a calling piece of code to
-flow into a 's code.  functions can be named, which allows
+flow into a function's body. functions can be named, which allows
 multiple pieces of code to all flow into into the same section of code. The name adds an
-additional step in to uncover control structures, and determine data flow.
+additional step to uncover control structures, and determine data flow.
 Additionally, in languages with higher order functions and recursion, such as those in the Lisp
-and ML families, it may be impossible to exactly determine all the s that
+and ML families, it may be impossible to exactly determine all the values that
 terms resolve to. However, a control flow analysis can reveal a good
 approximation of the control structures and values that have been obfuscated by higher order
-s. Uncovering the control structures depends on resolving terms
+functions. Uncovering the control structures depends on resolving terms
 to values, and resolving terms to values depends on on uncovering the control
 structures. The mutual dependency means that control flow analysis is a form of
-static semantics that describes abstract evaluations of programs. in this work, control flow
-analysis is used for tracking certain kinds of values, like channels and events, in addition to
-constructing precise data flow analysis. 
+static evaluation. In this work, control flow analysis is used for tracking certain kinds of values, 
+like channels and events, in addition to constructing precise data flow analysis. 
 
 
 \section{Synchronization}
@@ -3808,18 +3806,18 @@ that correlates with the dynamic path is much more challenging.
 
 
 \section{Related Work}
-There has been much research on both dynamic and static analysis of concurrent languages.  
+There has been much research on both dynamic and static analysis of concurrency languages.  
 The formal communication classification analysis and soundness proofs in this work are
 based on the analysis and proofs of \textit{Specialization of CML message-passing primitives}
 by Reppy and Xiao \cite{reppy2007specialization}.
 The mechanization of concurrency analyses is prevalent, and mechanization is typically the main
 goal when developing the analyses. Examples include type checkers in compilers,
-model checking tools for concurrent models, such as Lustre \cite{halbwachs1991synchronous} and Kind \cite{kind},
+model checking tools for concurrency models, such as Lustre \cite{halbwachs1991synchronous} and Kind \cite{kind},
 and also verification libraries in proof assistants, such as Affeldt et al's Coq library \cite{affeldt2008coq}.
-These systems can verify certain properties of concurrent programs or models, but they don't
+These systems can verify certain properties of concurrency programs or models, but they don't
 make any guarantees about the analysis itself.
 Rather than focus on mechanizing the analysis, this work has focused on
-mechanizing the theory of analyses for concurrent languages, i.e. the meta-theory of concurrency.
+mechanizing the theory of analyses for concurrency languages, i.e. the meta-theory of concurrency.
 There have been a number of works on the meta-theory of Concurrent ML,
 such as the work of Reppy and Xiao, Nielson et al \cite{nielson1994higher}, Kobayashi et al \cite{kobayashi1995static}, and Gasser et al \cite{gasser1997systematic}.
 There has been relatively little work to mechanize theories of Concurrent ML; however,
