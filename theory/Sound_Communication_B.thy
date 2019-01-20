@@ -1183,6 +1183,19 @@ apply (drule spec[of _"\<lambda> id . id = (tmId (Rslt x))"]; clarify?)
 apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
 
   apply (erule notE)
+  apply (erule dynamicBuiltOnChanState.cases; auto)
+  apply (erule dynamicBuiltOnChanEnv.cases; auto)
+  
+  apply (case_tac "n = xk"; auto)
+  apply (rule dynamicBuiltOnChanState.Env)
+  apply (rule dynamicBuiltOnChanEnv_intro; auto)
+  apply (rule dynamicBuiltOnChanState.Stack)
+  apply (rule dynamicBuiltOnChanStack.Env)
+  apply (rule dynamicBuiltOnChanEnv_intro; auto)
+  apply (rule dynamicBuiltOnChanState.Stack)
+  apply (erule dynamicBuiltOnChanStack.Stack)
+  
+  
 
 sorry
 
