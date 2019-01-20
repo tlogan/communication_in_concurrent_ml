@@ -151,6 +151,13 @@ where
     dynamicBuiltOnChanTm \<rho> c (Bind x b e)
   "
 
+inductive dynamicBuiltOnChanEnv :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> bool" where
+  intro:
+  "
+    dynamicBuiltOnChan \<rho> c x \<Longrightarrow>
+    dynamicBuiltOnChanEnv \<rho> c
+  "
+
 inductive dynamicBuiltOnChanStack :: "contin list \<Rightarrow> chan \<Rightarrow> bool" where
   Tm:
   "
@@ -169,6 +176,13 @@ inductive dynamicBuiltOnChanState :: "state \<Rightarrow> chan \<Rightarrow> boo
      dynamicBuiltOnChanTm env c tm \<Longrightarrow>
      dynamicBuiltOnChanState (Stt tm env stack) c
   "
+(*
+| Env: 
+  "
+     dynamicBuiltOnChanEnv env c \<Longrightarrow>
+     dynamicBuiltOnChanState (Stt tm env stack) c
+  "
+*)
 | Stack:
   "
      dynamicBuiltOnChanStack stack c \<Longrightarrow>
