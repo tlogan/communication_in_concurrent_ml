@@ -1194,14 +1194,9 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (erule dynamicBuiltOnChanTm.cases; auto)
   apply (erule dynamicBuiltOnChan.cases; clarify)
   apply (case_tac "xaa = xk"; auto)
-
-
-
-  apply (rule dynamicBuiltOnChanState.Stack)
-  
-
-  
-  
+  apply (rule dynamicBuiltOnChanState.Env)
+  apply (rule dynamicBuiltOnChanEnv.intro[of _ _ x])
+  apply (rule DynBuiltChan; auto)
 
 sorry
 
@@ -1247,9 +1242,9 @@ apply (erule star_left.induct; clarify)
   apply (erule dynamicBuiltOnChanState.cases; auto)
     using dynamicBuiltOnChanComplexNonEmpty
     apply (metis option.inject option.simps(3) state.inject)
-
-    using dynamicBuiltOnChanStackNonEmpty
-    apply (metis option.inject option.simps(3) state.inject)
+    apply (erule dynamicBuiltOnChanEnv.cases; auto)
+    apply (metis dynamicBuiltOnChanComplexNonEmpty option.inject option.simps(3) state.inject)
+  apply (metis dynamicBuiltOnChanStackNonEmpty option.inject option.simps(3) state.inject)
   apply (rename_tac Em Hm E' H' \<pi>' e' env' stack' isEnd)
   apply (erule staticTraceablePoolSoundDynamicEval; auto?)
 done

@@ -176,13 +176,11 @@ inductive dynamicBuiltOnChanState :: "state \<Rightarrow> chan \<Rightarrow> boo
      dynamicBuiltOnChanTm env c tm \<Longrightarrow>
      dynamicBuiltOnChanState (Stt tm env stack) c
   "
-(*
 | Env: 
   "
      dynamicBuiltOnChanEnv env c \<Longrightarrow>
      dynamicBuiltOnChanState (Stt tm env stack) c
   "
-*)
 | Stack:
   "
      dynamicBuiltOnChanStack stack c \<Longrightarrow>
