@@ -154,7 +154,7 @@ where
 inductive dynamicBuiltOnChanEnv :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> bool" where
   intro:
   "
-    dynamicBuiltOnChan \<rho> c x \<Longrightarrow>
+    dynamicBuiltOnChan \<rho> c n \<Longrightarrow>
     dynamicBuiltOnChanEnv \<rho> c
   "
 
@@ -163,6 +163,11 @@ inductive dynamicBuiltOnChanStack :: "contin list \<Rightarrow> chan \<Rightarro
   "
     dynamicBuiltOnChanTm envk c tk \<Longrightarrow>
     dynamicBuiltOnChanStack (Ctn nk tk envk # stack') c
+  "
+| Env: 
+  "
+     dynamicBuiltOnChanEnv envk c \<Longrightarrow>
+     dynamicBuiltOnChanStack (Ctn nk tk envk # stack') c
   "
 | Stack:
   "

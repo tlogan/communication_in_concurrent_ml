@@ -1197,6 +1197,16 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (rule dynamicBuiltOnChanState.Env)
   apply (rule dynamicBuiltOnChanEnv.intro[of _ _ x])
   apply (rule DynBuiltChan; auto)
+  apply (rule dynamicBuiltOnChanState.Stack)
+  apply (rule dynamicBuiltOnChanStack.Env)
+  apply (rule_tac n = "xa" in dynamicBuiltOnChanEnv.intro)
+  apply (rule DynBuiltChan; auto)
+  apply (case_tac "xaa = xk"; auto)
+  apply (rule dynamicBuiltOnChanState.Env)
+  apply (rule dynamicBuiltOnChanEnv.intro[of _ _ x])
+  apply (rule DynBuiltChanClosure; simp)
+  
+  
 
 sorry
 
