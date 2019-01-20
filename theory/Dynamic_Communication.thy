@@ -71,8 +71,7 @@ inductive one_sync :: "tm \<Rightarrow> chan \<Rightarrow> bool" where
     one_sync e c
   "
 
-
-
+(*
 inductive 
   dynamicBuiltOnChan :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> name \<Rightarrow> bool" and
   dynamicBuiltOnChanAtom :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> atom \<Rightarrow> bool" and
@@ -138,7 +137,7 @@ where
     dynamicBuiltOnChanComplex \<rho> c (Case xS xL eL xR eR)
   "
 | App: "
-    dynamicBuiltOnChan \<rho> c f \<or>
+    (* dynamicBuiltOnChan \<rho> c f \<or> *)
     dynamicBuiltOnChan \<rho> c xA \<Longrightarrow>
     dynamicBuiltOnChanComplex \<rho> c (App f xA)
   "
@@ -151,20 +150,28 @@ where
     dynamicBuiltOnChanTm \<rho> c (Bind x b e)
   "
 
-inductive dynamicBuiltOnChanEnv :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> bool" where
-  intro:
+*)
+
+inductive 
+    dynamicBuiltOnChanVal :: "val \<Rightarrow> chan \<Rightarrow> bool" 
+and dynamicBuiltOnChanEnv :: "(name \<rightharpoonup> val) \<Rightarrow> chan \<Rightarrow> bool" 
+where
+  dynamicBuiltOnChanVal_chan: "
+    dynamicBuiltOnChanVal (VChn c) c
   "
-    dynamicBuiltOnChan \<rho> c n \<Longrightarrow>
+| dynamicBuiltOnChanVal_closure: "
+    dynamicBuiltOnChanEnv \<rho>' c \<Longrightarrow>
+    dynamicBuiltOnChanVal (VClsr p \<rho>') c
+  " 
+| dynamicBuiltOnChanEnv_intro:
+  "
+    \<rho> n = Some v \<Longrightarrow>
+    dynamicBuiltOnChanVal v c \<Longrightarrow>
     dynamicBuiltOnChanEnv \<rho> c
   "
 
 inductive dynamicBuiltOnChanStack :: "contin list \<Rightarrow> chan \<Rightarrow> bool" where
-  Tm:
-  "
-    dynamicBuiltOnChanTm envk c tk \<Longrightarrow>
-    dynamicBuiltOnChanStack (Ctn nk tk envk # stack') c
-  "
-| Env: 
+  Env: 
   "
      dynamicBuiltOnChanEnv envk c \<Longrightarrow>
      dynamicBuiltOnChanStack (Ctn nk tk envk # stack') c
@@ -176,12 +183,7 @@ inductive dynamicBuiltOnChanStack :: "contin list \<Rightarrow> chan \<Rightarro
   "
 
 inductive dynamicBuiltOnChanState :: "state \<Rightarrow> chan \<Rightarrow> bool" where
-  Tm: 
-  "
-     dynamicBuiltOnChanTm env c tm \<Longrightarrow>
-     dynamicBuiltOnChanState (Stt tm env stack) c
-  "
-| Env: 
+  Env: 
   "
      dynamicBuiltOnChanEnv env c \<Longrightarrow>
      dynamicBuiltOnChanState (Stt tm env stack) c

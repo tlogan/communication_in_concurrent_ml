@@ -1146,15 +1146,7 @@ apply (simp add: staticLiveChanEnv.simps)
 apply (simp add: staticLiveChanStack.Empty)
 done
 
-lemma dynamicBuiltOnChanComplexNonEmpty:
-"
-(dynamicBuiltOnChan env chan n \<longrightarrow> env \<noteq> empty) \<and>
-(dynamicBuiltOnChanAtom env chan a \<longrightarrow> env \<noteq> empty) \<and>
-(dynamicBuiltOnChanComplex env chan c \<longrightarrow> env \<noteq> empty) \<and>
-(dynamicBuiltOnChanTm env chan tm \<longrightarrow> env \<noteq> empty)
-"
-apply (rule dynamicBuiltOnChan_dynamicBuiltOnChanAtom_dynamicBuiltOnChanComplex_dynamicBuiltOnChanTm.induct; auto)
-done
+(*
 
 lemma dynamicBuiltOnChanStackNonEmpty:
 "
@@ -1162,6 +1154,8 @@ dynamicBuiltOnChanStack stack c \<Longrightarrow> stack \<noteq> []
 "
 apply (erule dynamicBuiltOnChanStack.induct; auto)
 done
+
+*)
 
 lemma staticTraceablePoolSoundReturn: 
 "
@@ -1189,30 +1183,6 @@ apply (drule spec[of _"\<lambda> id . id = (tmId (Rslt x))"]; clarify?)
 apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
 
   apply (erule notE)
-  apply (erule dynamicBuiltOnChanState.cases; auto)
-  apply (erule dynamicBuiltOnChanTm.cases; auto)
-  apply (erule dynamicBuiltOnChan.cases; clarify)
-  apply (case_tac "xaa = xk"; auto)
-  apply (rule dynamicBuiltOnChanState.Env)
-  apply (rule dynamicBuiltOnChanEnv.intro[of _ _ x])
-  apply (rule DynBuiltChan; auto)
-  apply (rule dynamicBuiltOnChanState.Stack)
-  apply (rule dynamicBuiltOnChanStack.Env)
-  apply (rule_tac n = "xa" in dynamicBuiltOnChanEnv.intro)
-  apply (rule DynBuiltChan; auto)
-  apply (case_tac "xaa = xk"; auto)
-  apply (rule dynamicBuiltOnChanState.Env)
-  apply (rule dynamicBuiltOnChanEnv.intro[of _ _ x])
-  apply (rule DynBuiltChanClosure; simp)
-  apply (rule dynamicBuiltOnChanState.Stack)
-  apply (rule dynamicBuiltOnChanStack.Env)
-  apply (rule_tac n = "xa" in dynamicBuiltOnChanEnv.intro)
-  apply (rule DynBuiltChanClosure; simp)
-
-
-  
-
-  
 
 sorry
 
@@ -1254,13 +1224,13 @@ staticFlowsAcceptPool V F e [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
     pathsCongruentModChan (E', H') (Ch \<pi>C xC) \<pi>' path \<and>
     staticTraceable F Ln Lx (IdBind xC) isEnd path)
 "
+
 apply (erule star_left.induct; clarify)
   apply (erule dynamicBuiltOnChanState.cases; auto)
-    using dynamicBuiltOnChanComplexNonEmpty
-    apply (metis option.inject option.simps(3) state.inject)
-    apply (erule dynamicBuiltOnChanEnv.cases; auto)
-    apply (metis dynamicBuiltOnChanComplexNonEmpty option.inject option.simps(3) state.inject)
-  apply (metis dynamicBuiltOnChanStackNonEmpty option.inject option.simps(3) state.inject)
+  apply (case_tac "\<pi>' = []"; auto)
+  apply (erule dynamicBuiltOnChanEnv.cases; auto)
+    apply (case_tac "\<pi>' = []"; auto)
+  apply (erule dynamicBuiltOnChanStack.cases; auto)
   apply (rename_tac Em Hm E' H' \<pi>' e' env' stack' isEnd)
   apply (erule staticTraceablePoolSoundDynamicEval; auto?)
 done
@@ -1303,17 +1273,14 @@ apply (drule staticLiveChanToPool)
 apply (simp add: staticTraceablePoolSound)
 done
 
+
 lemma sendEvtBuiltOnChan:
 "
 env xe = Some (VClsr (SendEvt xsc xm) enve) \<Longrightarrow>
 enve xsc = Some (VChn (Ch \<pi>C xC)) \<Longrightarrow>
-dynamicBuiltOnChanComplex env (Ch \<pi>C xC) (Sync xe)
+dynamicBuiltOnChanEnv env (Ch \<pi>C xC)
 "
-apply (rule DynBuiltChanSync)
-apply (rule DynBuiltChanClosure; auto?)
-apply (rule DynBuiltChanSendEvt; auto)
-apply (rule DynBuiltChan; auto)
-done
+by (simp add: dynamicBuiltOnChanEnv_intro dynamicBuiltOnChanVal_chan dynamicBuiltOnChanVal_closure)
 
 
 lemma staticTraceableSendSound: "
@@ -1324,12 +1291,12 @@ lemma staticTraceableSendSound: "
   staticFlowsAccept V F e \<Longrightarrow>
   \<exists> pathSync .
     (pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
-    staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) pathSync"
+    staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) pathSync
+"
  apply (unfold is_send_path.simps; auto) 
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticSendSiteSound; auto?)
   apply (frule staticTraceableSound; auto?)
-  using dynamicBuiltOnChan_dynamicBuiltOnChanAtom_dynamicBuiltOnChanComplex_dynamicBuiltOnChanTm.Bind sendEvtBuiltOnChan 
-  apply (simp add: dynamicBuiltOnChanState.Tm)
+  apply (metis dynamicBuiltOnChanState.Env sendEvtBuiltOnChan)
 done
 
 (* END PATH SOUND *)
