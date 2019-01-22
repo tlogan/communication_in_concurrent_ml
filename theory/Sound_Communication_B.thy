@@ -236,6 +236,13 @@ where
     pathsCongruent \<pi>Suffix pathSuffix \<Longrightarrow>
     pathsCongruentModChan t0 c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (IdBind xS, ESend xSE) # (IdBind xR, ENext) # pathSuffix)
   " 
+| Snoc:
+  "
+    pathsCongruentModChan t0 c \<pi> path \<Longrightarrow>
+    pathsCongruent [site] [step] \<Longrightarrow>
+    pathsCongruentModChan t0 c (\<pi> @ [site]) (path @ [step])
+  " 
+
 
 
 lemma staticInclusiveSound: "
@@ -1186,8 +1193,8 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (erule dynamicBuiltOnChanStack.Stack)
   apply (rule_tac x = "path @ [(IdRslt x, EReturn)]" in exI; auto)
   
+  using Snoc pathsCongruent.Empty pathsCongruent.Return apply fastforce
   
-sorry
 
 lemma staticTraceablePoolSoundDynamicEval:
 "
@@ -1290,7 +1297,7 @@ lemma staticTraceableSendSound: "
   staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   \<exists> pathSync .
-    (pathsCongruentModChan (\<E>', H') (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
+    (pathsCongruentModChan e (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
     staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto) 
