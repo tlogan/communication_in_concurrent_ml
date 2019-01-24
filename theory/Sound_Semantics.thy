@@ -1761,16 +1761,16 @@ inductive staticReachablePool :: "tm \<Rightarrow> trace_pool \<Rightarrow> bool
 
 lemma staticReachablePoolPreservedDynamicEval:
   "
-  dynamicEval (env, H) (env', H') \<Longrightarrow>
-  staticReachablePool e0 env \<Longrightarrow>
-  staticReachablePool e0 env'
+  dynamicEval (pool, H) (pool', H') \<Longrightarrow>
+  staticReachablePool e0 pool \<Longrightarrow>
+  staticReachablePool e0 pool'
 "
 proof -
   assume
-    H1: "staticReachablePool e0 env" and
-    H3: "dynamicEval (env, H) (env', H')"
+    H1: "staticReachablePool e0 pool" and
+    H3: "dynamicEval (pool, H) (pool', H')"
 
-  from H3 show "staticReachablePool e0 env'"
+  from H3 show "staticReachablePool e0 pool'"
   proof cases
     case (Seq_Step_Down \<pi> x \<rho> x\<^sub>\<kappa> e\<^sub>\<kappa> \<rho>\<^sub>\<kappa> \<kappa> \<omega>)
 

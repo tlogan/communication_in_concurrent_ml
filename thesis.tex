@@ -78,7 +78,7 @@
 }
 
 
-\title{Formal Theory of Communication in CML}
+\title{A Mechanized Theory of Communication Analysis in CML}
 \author{Thomas Logan}
 \begin{document}
 
@@ -113,7 +113,7 @@ syntactic transliteration.
 Although the definitions are structurally quite different,
 their philosophical equivalence is hopefully apparent. 
 In this formal theory, the dynamic semantics of Concurrent ML consists of 
-a CEK machine \cite{felleisen1986control}. The static semantics consists of a 0CFA control flow analysis
+a CEK machine \cite{felleisen1986control}. The static semantics consists of a control flow analysis (0CFA)
 \cite{shivers1991control}, defined in terms of constraints \cite{nielson2015principles}.
 
 \subsection{Concurrent ML}
@@ -265,7 +265,7 @@ then the proposition may be considered a theorem. In addition to checking the co
 propositions, the proof assistant also assists the user in constructing proofs.
 
 Isabelle/HOL is a popular proof assistant that assists in specifying and proving properties
-formulated in a higher order logic (HOL)\cite{}. Predicates and functions may be higher order. That is, they
+formulated in a higher order logic (HOL). Predicates and functions may be higher order. That is, they
 may take other predicates or functions as arguments, and functions may return predicates or functions. 
 In HOL, a predicate is actually just a function that returns a value of type boolean, and a proposition
 is simply a term of type boolean. Terms are deemed compositionally correct according to a system of simple types, similar to
@@ -1293,7 +1293,8 @@ and continuation stacks of states in previous pools.
 Thus, if the static evaluation holds for a static environment and a program,
 then there must be a relation that holds for the same static environment and
 any pool that the program may dynamically evaluate to. 
-Generalizing static evaluation to work for pools, environemnts, and stacks, gives a version that does not lose precision.
+Generalizing static evaluation to work for pools, environemnts, and stacks, gives a version that
+that can be related to each component and step of dynamic evaluation.
 The generalized static evaluation on the intial pool is defined to follow from the static evaluation on the program.
 The preservation of the static evaluation of a pool across multiple steps of dynamic evaluation is proved by induction on
 the star relation. The static evaluation on a pool is taken taken apart into a static evaluation on a dynamic environment,
@@ -3771,25 +3772,40 @@ correlating dynamic paths with static paths.
       (path @ [DRtn n])
       (staticPath @ [(NRslt n, MRtn)])
 
+
+  predicate dynamicBuiltOnChanVal val -> chan -> bool where
+    chan: c .
+    $\vdash$ dynamicBuiltOnChanVal (VChn c) c
+  * closure: env c atom .
+      dynamicBuiltOnChanEnv env c
+    $\vdash$ dynamicBuiltOnChanVal (VClsr atom env) c
+
+  and dynamicBuiltOnChanEnv: environment -> chan -> bool where
+    intro: env n v c . 
+      env n = Some v,
+      dynamicBuiltOnChanVal v c
+    $\vdash$ dynamicBuiltOnChanEnv env c
+
+
   predicate pathsCorrespondModChan:
-    pool -> communication -> chan -> dynamic_path -> static_path -> bool
+    tm -> chan -> dynamic_path -> static_path -> bool
   where
-    seq: pool path$_c$ n$_c$ path$_{sfx}$ stt staticPath comm .
-      pool (path$_c$ @ (DSeq n$_c$) # path$_{sfx}$) = Some stt,
+    chan: t$_0$ path$_c$ n$_c$ path$_{sfx}$ stt staticPath comm .
       pathsCorrespond ((DSeq n$_c$) # path$_{sfx}$) staticPath
     $\vdash$ pathsCorrespondModChan
-      (pool, comm) (Chan path$_c$ n$_c$)
+      t$_0$ (Chan path$_c$ n$_c$)
       (path$_c$ @ (DSeq n$_c$) # path$_{sfx}$) staticPath
-  * send: pool path$_r$ n$_r$ path$_{sfx}$ stt  path$_s$ n$_s$ n$_{se}$ t$_{sy}$ env$_{sy}$ stack$_{sy}$
-    n$_{re}$ t$_{ry}$ env$_{ry}$ stack$_{ry}$ c$_c$ comm c staticPath$_{re}$ staticPath$_{sfx}$ . 
-      pool (path$_r$ @ (DSeq n$_r$) # path$_{sfx}$) = Some stt, 
+  * send: t$_0$ pool comm path$_r$ n$_r$ path$_{sfx}$ stt  path$_s$ n$_s$ n$_{se}$ t$_{sy}$ env$_{sy}$ stack$_{sy}$
+    n$_{re}$ t$_{ry}$ env$_{ry}$ stack$_{ry}$ c$_c$ c staticPath$_{re}$ staticPath$_{sfx}$ . 
+      star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_{se}$) t$_{sy}$) env$_{sy}$ stack$_{sy}$),
       pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_{re}$) t$_{ry}$) env$_{ry}$ stack$_{ry}$),
       {(path$_s$, c$_c$, path$_r$)} $\subseteq$ comm, 
-      dynamicBuiltOnChanVar env$_{ry}$ c n$_r$, 
-      pathsCorrespondModChan pool comm c path$_s$ staticPath$_{pfx}$,
+      env$_{ry}$ c n$_r$ = Some v$_{ry}$
+      dynamicBuiltOnChanVal v$_{ry}$ c, 
+      pathsCorrespondModChan t$_0$ c path$_s$ staticPath$_{pfx}$,
       pathsCorrespond path$_{sfx}$ staticPath$_{sfx}$
-    $\vdash$ pathsCorrespondModChan pool comm c
+    $\vdash$ pathsCorrespondModChan t$_0$ c
       (path$_r$ @ (DSeq n$_r$) # path$_{sfx}$)
       (staticPath$_{pfx}$ @ [(NBnd n$_s$, ESend n$_{se}$), (NBnd n$_r$, MSeq)] @ staticPath$_{sfx}$)
 \end{lstlisting}
@@ -3806,16 +3822,36 @@ to correlate with the given dynamic path. In the higher precision analysis, the 
 between the two kinds of paths is not so simple, and finding a description of the static path
 that correlates with the dynamic path is much more challenging.
 
+
+The proposition \lstinline{isSendPath pool' (Ch path$_c$ n$_c$) path'} is derived by unfolding the definition of \lstinline{oneShot}.  It is generalized by form \lstinline{pool' path' = Some (Stt t' env' stack'), dynamicBuiltOnChanState (Stt t' env' stack') (Ch path$_c$ n$_c$)} in the soundess of static traceability.
+
 \begin{lstlisting}[language=logic, mathescape]
+
+  predicate dynamicBuiltOnChanStack: contin list -> chan -> bool where
+    env: env$_k$ c n$_k$ t$_k$ stack' .
+       dynamicBuiltOnChanEnv env$_k$ c
+    $\vdash$ dynamicBuiltOnChanStack (Ctn n$_k$ t$_k$ env$_k$ # stack') c
+  * stack: env$_k$ c n$_k$ t$_k$ stack' .
+      dynamicBuiltOnChanStack stack' c
+    $\vdash$ dynamicBuiltOnChanStack (Ctn n$_k$ t$_k$ env$_k$ # stack') c
+  
+  predicate dynamicBuiltOnChanState: state -> chan -> bool where
+    env: env c t stack . 
+      dynamicBuiltOnChanEnv env c
+    $\vdash$ dynamicBuiltOnChanState (Stt t env stack) c
+  * stack: stack c t env .
+      dynamicBuiltOnChanStack stack c
+    $\vdash$ dynamicBuiltOnChanState (Stt t env stack) c
 
   lemma staticTraceableSound: t$_0$ pool comm path n c t' env stack staticEnv staticComm
   entr exit n$_c$ graph isEnd path$_c$  . 
     star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
-    pool path = Some (Stt (Bind n c t') env stack),
+    pool path = Some (Stt t env stack),
+    dynamicBuiltOnChanState (Stt t env stack) (ch path$_c$ n$_c$)
     staticEval staticEnv staticComm t$_0$,
     staticLiveChan staticEnv entr exit n$_c$ t$_0$,
     staticFlowsAccept staticEnv graph t$_0$, 
-    isEnd (NBnd n)
+    isEnd (tmId t)
   $\vdash$ exists staticPath . 
     pathsCorrespondModChan pool comm (Chan path$_c$ n$_c$) path staticPath
   $\wedge$ staticTraceable graph entr exit (NBnd n$_c$) isEnd staticPath
@@ -3836,6 +3872,12 @@ that correlates with the dynamic path is much more challenging.
       (NBnd n$_c$) (staticSendId staticEnv t$_0$ n$_c$) staticPath2
   $\vdash$ staticInclusive staticPath1 staticPath2
 \end{lstlisting}
+
+
+
+The generalization to the dynamic channels built on state appears necessary in order to prove the soundness of
+the paths corresponding modulo a channel and static traceability.  This proof and the soundness of static inclusivity
+are under active development at the time of this writing.
 
   
 
