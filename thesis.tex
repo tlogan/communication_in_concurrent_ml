@@ -121,25 +121,24 @@ In programing languages, concurrency is a program structuring technique that all
 steps to hop back and forth between disjoint syntactic structures within a program.
 It is useful
 when conceptually distinct tasks need to overlap in time, but are easier to understand if they
-are written as distinct structures within the program. Concurrent languages may also allow the
+are written as distinct structures within the program. Concurrency languages may also allow the
 evaluation order between steps of terms to be nondeterministic. If it's not necessary for
 tasks to be ordered in a precise way, then it may be better to allow a static or dynamic
 scheduler to pick the most efficient execution order. A common use case for concurrency
 is for programs that interact with humans, in which a program has to process various requests
 while remaining responsive to subsequent user inputs, and it must continually provide the user
-feedback with latest information it has processed.
+feedback with the latest information it has processed.
 
-\textit{Concurrent ML} is a particularly elegant programing language for concurrency.
+Concurrent ML is a particularly elegant programing language for concurrency.
 It features threads, which are pieces of code allowed to have a wide range of
 evaluation orders relative to code encapsulated in other threads. Its synchronization
 mechanism can mandate the execution order between parts of separate threads. It is often the
-case that synchronization is necessary when data is shared. Thus, in \textit{Concurrent ML},
-synchronization is inherent in communication. Additional threads can be spawned
-in order to share data asynchronously.
+case that synchronization is necessary when data is shared. Thus, in Concurrent ML,
+synchronization is inherent in communication. For asynchronous communication, additional threads may be spawned.
 
 Threads communicate by having shared access to a common channel. A channel can be used to
-either send data or receive data.  When a thread sends on a channel, another thread must
-receive on the same channel before the sending thread can continue.  Likewise, when a thread
+either send data or receive data. When a thread sends on a channel, another thread must
+receive on the same channel before the sending thread can continue. Likewise, when a thread
 receives on a channel, another thread must send on the same channel before the receiving thread
 can continue.
 
@@ -155,25 +154,25 @@ can continue.
 
 A given channel can have any arbitrary number of threads sending or receiving data on it over
 the course of the program's execution. A simple example, derived from Reppy's book
-\textit{Concurrent Programing in ML}, illustrates these essential
+\textit{Concurrent Programing in ML} \cite{reppy2007concurrent}, illustrates these essential
 features.
 
 The implementation of \lstinline{Serv} defines a server that holds a number in its state.
 When a client gives the server a number \lstinline{v}, the server gives back the number in
-its state, and updates its state with the number \lstinline{v}.  The next client request will
+its state, and updates its state with the number \lstinline{v}. The next client request will
 get the number \lstinline{v}, and so on. Essentially, a request and reply is equivalent
 to reading and writing a mutable cell in isolation. The function \lstinline{make} makes a new
 server, by creating a new channel \lstinline{reqCh}, and a loop \lstinline{loop} which listens
 for requests. The loop expects the request to be composed of a number \lstinline{v} and a
 channel \lstinline{replCh}. It sends its current state's number on \lstinline{replCh} and
 updates the loop's state with the request's number \lstinline{v}, by calling the loop with a
-new that number. The server is created with a new thread with the initial state \lstinline{0}
+that number. The server is created with a new thread with the initial state \lstinline{0}
 by calling \lstinline[language=ML]{spawn (fn () => loop 0)}. The request channel is returned
-as the handle to the server.  The function \lstinline{call} makes a request to the passed in
-server \lstinline{server} with a number \lstinline{v} and returns a number from the
+as the handle to the server. The function \lstinline{call} makes a request to a server
+\lstinline{server} with a number \lstinline{v} and returns a number from the
 server. Internally, it extracts the request channel \lstinline{reqCh} from the
-server handle and creates a new channel \lstinline{replCh}. It makes a request to the server
-with the number \lstinline{v} and the reply channel \lstinline{replCh} by calling
+server handle and creates a new channel \lstinline{replCh}. It makes a request to the server,
+sending the number \lstinline{v} and the reply channel \lstinline{replCh} by calling
 \lstinline{send (reqCh, (v, replCh))}. Then it receives the reply with the new number by
 calling \lstinline{recv replCh}.
 
@@ -188,7 +187,7 @@ calling \lstinline{recv replCh}.
 
   structure Serv : SERV =
   struct 
-    datatype serv = S of (int * int chan) channel 
+    datatype serv = S of (int * int chan) chan
 
     fun make () =
     let 
@@ -218,10 +217,10 @@ calling \lstinline{recv replCh}.
 \end{lstlisting}
 
 
-\textit{Concurrent ML} actually allows for events other than sending and receiving to
+Concurrent ML actually allows for events other than sending and receiving to
 occur during synchronization. in fact, the synchronization mechanism is decoupled from
-events, like sending and receiving, much in the same way that function application is decoupled
-from . Sending and receiving events are represented by \lstinline{sendEvt}
+events, much in the same way that application is decoupled
+from functions. Sending and receiving events are represented by \lstinline{sendEvt}
 and \lstinline{recvEvt} and synchronization is represented by \lstinline{sync}.
 
 \begin{lstlisting}[language=ML, mathescape]
@@ -240,12 +239,13 @@ combined with other events via event combinators, and synchronized on exactly on
 event combinator is \lstinline{choose}, which constructs a new event consisting of two
 constituent events, such that when sycnronized on, exactly one of the two events may take
 effect. There are many other useful combinators, such as the \lstinline{wrap} and
-\lstinline{guard} combinators designed by Reppy[8]. Additionally, Donnelly and Fluet extended
-\textit{Concurrent ML} with the \lstinline{thenEvt} combinator described in their work on
+\lstinline{guard} combinators designed by Reppy \cite{reppy2007specialization}.
+Additionally, Donnelly and Fluet extended
+Concurrent ML with the \lstinline{thenEvt} combinator described in their work on
 transactional events \cite{donnelly2008transactional}. Transactional events enable more robust
 structuring of programs by allowing non-isolated code to be turned into isolated code via
 the \lstinline{thenEvt} combinator, instead of duplicating code with the addition of stronger
-isolation. When the event constructed by the \lstinline{thenEvt} combinator is is synchronized
+isolation. When the event constructed by the \lstinline{thenEvt} combinator is synchronized
 on, either all of its constituent events and functions evaluate in isolation, or none
 evaluates.
 
@@ -271,7 +271,7 @@ In HOL, a predicate is actually just a function that returns a value of type boo
 is simply a term of type boolean. Terms are deemed compositionally correct according to a system of simple types, similar to
 that of Standard ML. Isabelle/HOL excels at assisting with proving propositions containing numerous details. 
 
-A proof is a sequence of manipulations from axioms to the claim.  
+A proof is a sequence of manipulations from axioms to a claim. 
 Typically, unassisted informal proofs, are written in a declarative form. One first states the claim,
 and then starts off the proof by stating an axiom or theorem. Subsequently derived theorems follow, with
 or without the details of the manipulation explained.
@@ -308,9 +308,10 @@ For proving simple propositions, it may be easy to conjure up the theorems and a
 combine and manipulate into the goal. However, for proving complex or unfamiliar propositions,
 it may be less clear. In addition to the declarative forward proof style, Isabelle/HOL also
 supports an imperative backwards proof style, in which you start with the goal and break it into simpler
-and simpler subgoals until all subgoals are manipulated into axioms. The backwards style of reasoning,
-allows the you to focus on the manipulation rule, rather than remembering and gathering up all the theorems that are
-necessary to combine to reach the goal. The interface of the interactive theorem prover displays the subgoals
+and simpler subgoals until all subgoals are manipulated into axioms. The backwards style of reasoning
+allows the you to focus on the manipulation rule, rather than remembering and gathering up all the
+propositions that are necessary to combine to reach the goal.
+The interface of the interactive theorem prover displays the subgoals
 resulting from applying each manipulation rule.
 
 
@@ -337,13 +338,13 @@ resulting from applying each manipulation rule.
   done
 \end{lstlisting}
 
-Note that the syntax shown here differs slightly from that of Isabelle/HOL.  
+Note that the syntax shown here differs slightly from that of Isabelle/HOL.
 In order to make these examples more accesible to those unfamiliar with Isabelle/HOL, I have chosen
-to use a syntax that is more typical of mathematical logic and language theory literature.  
+to use a syntax that is more typical of mathematical logic and language theory literature.
 
 In addition to creating theorems by proving propositions, Isabelle/HOL also allows creating theorems
 by defining predicates and functions. This feature is critical for constructing inductive propositions that may hold
-over infinite ranges. Infinite ranges may be defined as inductive datatypes, similar to Standard ML.
+over infinite domains. Infinite domains may be defined as inductive datatypes, similar to Standard ML.
 For instance, you can define the infinite set of natural numbers (with zero) as an inductive datatype,
 and the binary relation that a natural number is less than or equal to another as an inductive predicate.
 
@@ -369,14 +370,14 @@ sortedness using a supplied binary relation.
     $\vdash$ sorted r Nil
   * uni: r x . 
     $\vdash$ sorted r (Cons x Nil)
-  * cons: r x y r ys .
+  * cons: r x y ys .
       r x y,
       sorted r (Cons y ys)
     $\vdash$ sorted r (Cons x (Cons y ys))
 \end{lstlisting}
 
 Each case of the predicate definition is considered a theorem, and you have the option to give it a name. 
-Additionaly, these are the only cases that can hold for the predicate. Therefore, the predicate applied to some free
+Additionally, these are the only cases that can hold for the predicate. Therefore, the predicate applied to some free
 variables is equivalent to the disjunction of all the cases, with the variables equal to their respective patterns
 in each case. This kind of theorem, and other similar theorems for inversion and induction
 are created with each predicate definition.
@@ -422,7 +423,7 @@ By composing these definitions, you can state and prove a list of natural number
 \end{lstlisting}
 
 The learning curve for using proof assistants in general and Isabelle/HOL in particular is very steep.
-Nevertheless, once one has gained some fluency, there are great benefits for certain kinds of projects.  
+Nevertheless, once one has gained some fluency, there are great benefits for certain kinds of projects.
 In a theory of Concurrent ML, with various propositions about semantics and communication, there are many
 tedious details that must be specified. 
 The automatic checking of propositions and proofs is excellent at finding errors buried in numerous tedious details.
@@ -430,16 +431,16 @@ Furthermore, since greater complexity follows from greater
 number of language features, or greater precision of propositions, it is very useful to start with simple features
 and propositions to create a minimal viable theory, and then incrementally increase complexity and modify proofs, accordingly.
 The proof assistant eases the process incremental extension by pinpointing where the proofs and propositions break
-as features and complexity is added.
+as features and complexity are added.
 
 The Isabelle/HOL formalization of this work consists of 12 theory files containing definitions, theorems,
 and proofs, for the syntax, dynamic semantics, static semantics, soundness of semantics, dynamic communication,
-static communication, soundness of communication, helper definitions, and theorems. 
+static communication, soundness of communication, helper definitions, and lemmas. 
 There are roughly 1421 lines of definitions, and 3052 lines of completed proofs. 
 
 \subsection{Static Analysis for Concurrent ML}
 A static analysis that describes communication
-topologies of channels has practical benefits in at least two ways.  It can highlight which
+topologies of channels has practical benefits in at least two ways. It can highlight which
 channels are candidates for optimized implementations of communication; or in a language
 extension allowing the specification of specialized channels, it can conservatively verify
 their correct usage. Without a static analysis to check the usage of the special channels, one
@@ -449,8 +450,7 @@ thereby violating the intended semantics.
 The utility of the static analysis depends on it being precise, sound, and computable. 
 The analysis is precise if it describes information that isn't invariantly true for all programs. 
 The analysis is sound if the information it describes about a program is the same or less precise than the information 
-described by the dynamic semantics of the program. The analysis is computable if there is an algorithm that
-determines values sufficient for the analysis to hold from an input program.
+described by the dynamic semantics of the program. The analysis is computable if there is an algorithm that,from an input program, determines values sufficient for the analysis to hold.
 
 Analyses can be described in a variety of ways. An algorithm that take programs
 as input and produces information about the behavior as output is ideal for automation. A
@@ -466,7 +466,7 @@ efficient algorithm that determines for each channel, all possible threads that 
 and receive on it. The algorithm depends on each operation in the program being
 labeled with a program step. A sequence of program steps ordered in a valid execution
 sequence forms a control path. Distinction between threads in a program can be inferred from
-whether or not their control paths diverge.  
+whether or not their control paths diverge.
 
 Reppy and Xiao's algorithm proceeds in multiple steps that produce intermediate data structures used for
 efficient lookup in the subsequent steps. It starts with a control flow analysis that
@@ -475,15 +475,15 @@ Another mapping is from channel-bound names to abstract values that are
 sent on the respective channels. Another is from function-bound names to abstract values
 that are the result of the respective function applications. It constructs a control flow graph 
 with possible paths for conditional tests and thread spawning determined directly from the
-atoms used in the program. Relying on information from the mappings to abstract values,
+syntax used in the program. Relying on information from the mappings to abstract values,
 it constructs the possible paths of execution via function application and channel
-communication.  It uses the graph for live variable analysis of channels, which limits the
+communication. It uses the graph for live variable analysis of channels, which limits the
 scope for the remaining analysis and increases precisions. 
 Using the spawn and application edges of the control flow
 graph, the algorithm then performs a data flow analysis to determine a mapping from program
-steps to all possible control paths leading into the respective program steps.  Using the
-CFA's mappings to abstract values, the algorithm determines the program steps for sends and
-receives per channel name.  Then it uses the mapping to control paths to determine all
+steps to all possible control paths leading into the respective program steps. Using the
+CFA's mappings to abstract values, the algorithm determines the program steps for sending and
+receiving synchronizations per channel name. Then it uses the mapping to control paths to determine all
 control paths that send or receive on each channel, from which it classifies channels as
 one-to-many, many-to-one, many-to-many, or one-shot.
 
@@ -515,7 +515,7 @@ implementation of synchronization can have very little penalty. Since only one t
 progress at a time, only one thread requests synchronization at a time, meaning the scheduler
 won't waste steps checking for threads competing for the same synchronization opportunity,
 before dispatching. A multiprocessor implementation, on the other hand, must consider that
-competing threads may exists, therefore perform additional checks. Additionally, there may be 
+competing threads may exist, so it must perform additional checks. Additionally, there may be 
 overhead in sharing data between processors due to memory hierarchy designs \cite{hennessy2011computer}. 
 
 One way to lower synchronization and communication costs is to use specialized implementations
@@ -524,7 +524,7 @@ specialized implementations would avoid unnecessary checks for competing threads
 Concurrent ML does not feature multiple kinds of channels distinguished by their communication
 topologies, i.e. the number of threads that may end up sending or receiving on the channels.
 However, channels can be classified into various topologies simply by counting the number of
-threads per channel during the execution of a program.  A many-to-many channel has any number
+threads per channel during the execution of a program. A many-to-many channel has any number
 of sending threads and receiving threads;
 a one-to-many channel has at most one sending thread and
 any number of receiving threads;
@@ -535,19 +535,20 @@ a one-sync channel has at most one syncronization.
 
 The following reimplementation of \lstinline{Serv} is annotated to indicate the communication topologies
 derived from its usage. Since there are four threads that make calls to the server, the
-server's particular \lstinline{reqCh} has four senders.  Servers are created with only one
+server's particular \lstinline{reqCh} has four senders. Servers are created with only one
 thread listening for requests, so the \lstinline{reqCh} of this server has just one receiver.
 So the server's \lstinline{reqCh} is classified as many-to-one.
 Each application of \lstinline{call} creates a distinct
-new channel \lstinline{replCh} for receiving data.  The function \lstinline{call} receives on the channel
+new channel \lstinline{replCh} for receiving data. The function \lstinline{call} receives on the channel
 once and the server sends on the channel once, so each instance of \lstinline{replCh} is
-one-shot.
+one-shot. It could be even more precisely classified as one-sync, since the client function receives on
+the channel at most once.
 
 \begin{lstlisting}[language=ML, mathescape]
   structure Serv : SERV =
   struct 
 
-    datatype serv = S of (int * int chan) channel 
+    datatype serv = S of (int * int chan) chan 
 
     fun make () =
     let 
@@ -580,20 +581,19 @@ one-shot.
   val server = Serv.make ()
 
   val () =
-  spawn (fn () => Serv.call (server, 35));
-  (spawn fn () => 
-    Serv.call (server, 12); 
-    Serv.call (server, 13)
-  );
-  spawn (fn () => Serv.call (server, 81));
-  spawn (fn () => Serv.call (server, 44))
+    spawn (fn () => Serv.call (server, 35));
+    (spawn fn () => 
+      Serv.call (server, 12); 
+      Serv.call (server, 13)
+    );
+    spawn (fn () => Serv.call (server, 81));
+    spawn (fn () => Serv.call (server, 44))
 \end{lstlisting}
-
 
 Some hypothetical implementations of specialized and generic
 Concurrent ML illustrate opportunities
 for cheaper synchronization. These implementaitons use 
-feasible low-level thread-centric features such as wait and poll.  The thread-centric approach
+feasible low-level thread-centric features such as wait and poll. The thread-centric approach
 allows us to focus on optimizations common to many implementations by decoupling the
 implementation of communication features from thread scheduling and management. However, a
 lower level view or scheduler-centric view of synchronization might offer more opportunites
@@ -602,16 +602,15 @@ for optimization.
 In a language with low-level support for concurrency,
 Concurrent ML could be implemented as a library,
 which is the case for SML/NJ \cite{smlnj} and MLton \cite{mlton}.
-It could also be implemented by a compiler and runtime or interpreter.
-Thus, the implementations shown here can be viewed either as a library or as an intermediate
-representation within a compiler or interpreter presented with concrete syntax.
+The implementations shown here can be viewed either as a library or as part of
+a runtime or interpreter.
 
 \begin{lstlisting}[language=ML, mathescape]
   signature CHANNEL =
   sig
-    type 'a channel 
+    type 'a chan 
     val channel : unit -> 'a chan
-    val send : 'a channel * 'a -> unit
+    val send : 'a chan * 'a -> unit
     val recv : 'a chan -> 'a
   end     
 \end{lstlisting}
@@ -632,10 +631,8 @@ The cost of trying to achieve parallelism
 is increased overhead due to contention over acquiring
 synchronization rights. 
 
-
-
 \subsection{Many-to-many Synchronization}
-A channel can be in one of three states.  Either some threads are trying to send on it,
+A channel can be in one of three states. Either some threads are trying to send on it,
 some threads are trying to receive on it, or no threads are trying to send or receive on it.
 Additionally a channel is composed of a mutex lock,
 so that sending and receiving operations can yield
@@ -652,7 +649,7 @@ the channel content.
 
 The sending operation acquires the channel's lock to
 ensure that it updates the channel based on
-its current state.  If the channel is in the receiving state,
+its current state. If the channel is in the receiving state,
 i.e. there are threads trying to receive from the channel,
 then the sending operation dequeues an item from the state's associated queue.
 The item consists of a condition waited on by a receiving thread and an empty cell
@@ -671,9 +668,9 @@ the sending operation returns with the unit value.
 
 The receiving operation acquires the channel's lock
 to ensure that it updates the channel based on
-its current state.  If there are threads
+its current state. If there are threads
 sending on the channel, the receiving 
-operation dequeues an item from the sending state's associated queue.  The item consists of a condition
+operation dequeues an item from the sending state's associated queue. The item consists of a condition
 waited on by a sending thread along with a message.
 The receiving operation signals on the sending state's condition.
 If there are no further sending threads waiting, it updates the channel's state to inactive; otherwise,
@@ -681,8 +678,8 @@ it leaves the state in the sending state.
 Next, it releases the lock and returns the message from the sending state.
 If there are no sending threads on the
 channel, the receiving operation updates the channel state to the receiving state, and enqueues
-a new condition \lstinline{recvCond} and an empty cell.  It releases the lock and waits on
-the its condition \lstinline{recvCond}.  Once a sending thread signals on its condition,
+a new condition \lstinline{recvCond} and an empty cell. It releases the lock and waits on
+the its condition \lstinline{recvCond}. Once a sending thread signals on its condition,
 the receiving operation returns with the value deposited in its cell.
 
 \begin{lstlisting}[language=ML, mathescape]
@@ -695,7 +692,7 @@ the receiving operation returns with the value deposited in its cell.
     | Recv of (condition * 'a option ref) queue
     | Inac
 
-    datatype 'a channel =
+    datatype 'a chan =
       Chn of 'a chan_content ref * mutex_lock 
 
     fun channel () = Chn (ref Inac, mutexLock ())
@@ -775,8 +772,8 @@ Implementation of one-to-many channels, compared to that of many-to-many channel
 requires fewer
 steps to synchronize and can execute more steps outside of critical regions, which reduces
 contention for locks. A channel is composed of a lock and one of three possible states, as is
-the case for many-to-many channels.  However, the state of a thread trying to send only needs
-to be associated with one condition and one message, rather than a queue.  
+the case for many-to-many channels. However, the state of a thread trying to send only needs
+to be associated with one condition and one message, rather than a queue. 
 
 The sending operation starts by creating a condition \lstinline{sendCond}, then checks
 if the channel's state is inactive and tries to use the
@@ -794,9 +791,9 @@ Next, it releases the lock it, then signals on the receiving condition and retur
 
 The lock is acquired after the state is determined to be that of
 threads trying to receive, since the expectation is that the current thread is the only one
-that tries to update the channel from that state.  If the communication classification analysis were
+that tries to update the channel from that state. If the communication classification analysis were
 incorrect and there were actually multiple threads that could call the sending operation,
-then there might be data races.  Likewise, due to the expectation of a single thread
+then there might be data races. Likewise, due to the expectation of a single thread
 sending on the channel, the sending operation will never witness the state in the sending state,
 which would mean another thread is in the process of sending a message.
 
@@ -818,7 +815,7 @@ returns the message held in the sending state.
     | Recv of (condition * 'a option ref) queue
     | Inac
 
-    datatype 'a channel =
+    datatype 'a chan =
       Chn of 'a chan_content ref * mutex_lock
 
     fun channel () = Chn (ref Inac, mutexLock ())
@@ -895,7 +892,7 @@ The implementation of many-to-one channels is very similar to that of one-to-man
     | Recv of condition * 'a option ref
     | Inac
 
-    datatype 'a channel =
+    datatype 'a chan =
       Chn of 'a chan_content ref * mutex_lock
 
     fun channel () = Chn (ref Inac, mutexLock ())
@@ -986,7 +983,7 @@ witness a preexisting sending state since it is running on the one and only send
 The receiving operation creates a condition \lstinline{recvCond} and an empty cell,
 then checks if the channel's state is inactive and tries to use the
 compare-and-swap operator to transactionally update the state of the channel to
-the receiving state.  If successful, it simply waits on its condition \lstinline{recvCond}.
+the receiving state. If successful, it simply waits on its condition \lstinline{recvCond}.
 If the transactional update fails and the state is a sending state,
 then it updates the channel state to inactive, then signals on the sending state's
 condition and returns the message held in the sending state.
@@ -1006,7 +1003,7 @@ witness a preexisting receiving state since it is running on the one and only re
     | Recv of condition * 'a option ref
     | Inac  
 
-    datatype 'a channel = Chn of 'a chan_content ref
+    datatype 'a chan = Chn of 'a chan_content ref
 
     fun channel () = Chn (ref Inac)
 
@@ -1075,11 +1072,11 @@ no further attempts to send are expected.
 The receiving operation creates a condition \lstinline{recvCond} and an empty cell,
 then checks if the channel's state is inactive and tries to use the
 compare-and-swap operator to transactionally update the state of the channel to
-the receiving state.  If successful, it simply waits on its condition \lstinline{recvCond},
+the receiving state. If successful, it simply waits on its condition \lstinline{recvCond},
 then returns the message deposited in its cell.
 If the transactional update fails and the state is a sending state,
 then it acquires the lock, signals on the state's associated condition and returns the message
-held in the sending state.  It never releases the lock, blocking any additional attempts to receive,
+held in the sending state. It never releases the lock, blocking any additional attempts to receive,
 which is fine if there is truly at most one message ever sent on the channel.
 If the state is a receiving state, then the receiving operation attempts to acquire the lock,
 but it will never actually acquire it since the thread associated with the receiving state will
@@ -1095,7 +1092,7 @@ never release it.
     | Recv of condition * 'a option ref
     | Inac  
 
-    datatype 'a channel = Chn of 'a chan_content ref * mutex_lock
+    datatype 'a chan = Chn of 'a chan_content ref * mutex_lock
 
     fun channel () = Chn (ref Inac, lock ())
 
@@ -1165,7 +1162,7 @@ then signals on \lstinline{sendCond}, then returns the deposited message.
   structure OneSyncChan : CHANNEL =
   struct
 
-    datatype 'a channel =
+    datatype 'a chan =
       Chn of condition * condition * 'a option ref
 
     fun channel () =
@@ -1193,11 +1190,11 @@ The example implementations of generic synchronization and specialized synchroni
 that cost savings of specialized implementation are significant. For example, if you know that
 a channel has at most one sending thread and one receiving thread, then you will
 lower synchronization costs by
-using an implementation that is specialized for one-to-one communication.  To be certain that
+using an implementation that is specialized for one-to-one communication. To be certain that
 the new program with the specialized implementation behaves the same as the original program
 with the generic implementation, you need to be certain that the
 specialized program behaves the same, assuming one-to-one or less communication, that
-static classification as one-to-one is sound with respect to the semantics of the program.  
+static classification as one-to-one is sound with respect to the semantics of the program. 
 
 Spending your energy to determine the topologies for each unique program and then verifying
 them for each program would be exhausting. Instead, you would probably rather have a generic
@@ -1284,7 +1281,7 @@ the static environment simply considers both to be options.
 
 The soundness theorem of the static evaluation with respect to dynamic evaluation states that if full dynamic evaluation
 of a program reaches a pool with containing some environent, and the static evaluation holds for the program and some
-static environemnt, then the static environemnt is an abstraction of the dynamic environment.  That is, if a name maps
+static environemnt, then the static environemnt is an abstraction of the dynamic environment. That is, if a name maps
 to some value in the dynamic environment, then, in the static environment, the name maps to a set containing the same value
 or an abstraction of the value. The static evaluation relates static environments to initial programs,
 but soundness relates static environments
@@ -1307,7 +1304,7 @@ in the pool relate to each other. The one-to-many classification holds if any tw
 If the sending paths are all ordered or there are no sending paths, then there is simply at most one thread that
 sends on the channel. Likewise, The many-to-one classification holds if any two paths that receive on the channel are ordered.
 The one-to-one classification holds if all the receiving paths on the channel are ordered and all the sending paths on the
-channel are ordered.  The one-shot classification holds if there is at most one sending path on a channel, regardless
+channel are ordered. The one-shot classification holds if there is at most one sending path on a channel, regardless
 of which paths receive on the channel. The one-sync classification holds if there is at most one sending and one receiving path
 on a channel.
 
@@ -1509,8 +1506,8 @@ of continuations. With each sequential step, the program is reduced to a subterm
 and the environment is updated with the name bound to the value of the term. Each time a
 embedded term is sidestepped to evaluate a dependent term, a continuation is formed around
 it and pushed onto a stack of continuations. A continuation is popped off the stack when a
-state's program is reduces to a result program.  A pool of states keeps track of all the states
-that have been reached through the evaluation of an initial program.  Each state is indexed by
+state's program is reduces to a result program. A pool of states keeps track of all the states
+that have been reached through the evaluation of an initial program. Each state is indexed by
 the dynamic path taken to reach it. A pool's leaf path indicates a state that has yet to be
 evaluated. Additionally, the communication between threads is also recorded as a set of
 correspondences consisting of the path to the sending state, the path to the receiving state,
@@ -1543,7 +1540,7 @@ and the channel used for communication.
 
 The evaluation of a program may involve evaluation of multiple threads concurrently and also
 communication between threads. Since pools contain multiple states and paths, they can
-accommodate multiple threads as well.  A single evaluation step depends on one pool and
+accommodate multiple threads as well. A single evaluation step depends on one pool and
 evaluates to a new pool based on one or more states in that pool. The initial pool for a
 program contains just one state indexed by an empty path. The state contains the program, an
 empty environment, and an empty stack. The pool will grow strictly larger with each evaluation
@@ -1567,18 +1564,18 @@ value of a channel consisting of the path leading to its creation; it leaves the
 unchanged and reduces the program to the next embedded term.
 
 In the case of spawning, the evaluation is updated with two
-new paths extending the leaf path.  For one, the leaf path is extended with a sequential
+new paths extending the leaf path. For one, the leaf path is extended with a sequential
 program step whose state has the next term and the environment updated
 with the unit value bound to
 the bind name, and the original continuation stack. For the other, the leaf path
-extended with an program step indicating a spawning flow.  Its state has the spawned
+extended with an program step indicating a spawning flow. Its state has the spawned
 term, the original environment, and an empty continuation stack. 
 
 In the case where two leaf paths in the pool correspond to synchronization on the same channel,
 and one synchronizes on a send event and the other synchronizes on a receive event, then
 evaluation updates the pool with two new paths and corresponding states.
 It updates the send event's state with its embedded term, the environment updates with the unit
-value, and the stack unchanged.  It updates the receive event's state with its embedded term, the
+value, and the stack unchanged. It updates the receive event's state with its embedded term, the
 environment updates with the sent value, and the stack unchanged.
 Additionally, the communication is updated with the sending and receiving paths, and the channel
 that the synchronization used for communication. 
@@ -1748,7 +1745,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
 \subsection{Static Semantics}
 
 The static semantics describes an estimation of the intermediate static values and embedded terms
-that might result from running a program.  Although the estimations are imprecise with
+that might result from running a program. Although the estimations are imprecise with
 respect to the dynamic semantics, they are certainly accurate,
 which is confirmed by the formal proofs of soundness.
 The static semantics enable deduction of static information about channels and events, which is
@@ -1758,8 +1755,8 @@ The static values consist of the static unit value, static channels, and static 
 values. The static unit value is no less precise than the dynamic unit value, but
 static channels and static atom values are imprecise versions of their dynamic
 counterparts. A static channel is identified only by the name it binds to at creation time,
-rather than the full path that leads up to its creation.  A static atom value is simply an
-atomic term without an environment for looking up its named arguments.  A static
+rather than the full path that leads up to its creation. A static atom value is simply an
+atomic term without an environment for looking up its named arguments. A static
 environment contains the internal evaluation results by
 associating names to multiple potential static values.
 Thus, in addition to some static values being imprecise,
@@ -1817,7 +1814,7 @@ Function terms are dynamically evaluated similarly to other atomic terms.
 Additionally, the static evaluation has only a single global environment for
 looking of values of names in the whole program, whereas the dynamic evaluation
 associates local environemnts with different terms, in the program, allowing the same
-names to resolve to different values depending on the context.  Therefore, the
+names to resolve to different values depending on the context. Therefore, the
 static evaluation is less precise.
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -1889,7 +1886,7 @@ static evaluation is less precise.
       staticEval staticEnv staticComm t'
     $\vdash$ staticEval staticEnv staticComm (Bind n (Snd n$_t$) t')
   * distinction: staticEnv n$_s$ n$_l$ t$_l$ n staticComm n$_r$ t$_r$ t' . 
-      $\forall$ n$_c$ .  
+      $\forall$ n$_c$ . 
         (SAtm (Lft n$_c$)) $\in$ staticEnv n$_s$
       $\rightarrow$ staticEnv n$_c$ $\subseteq$ staticEnv n$_l$,
       staticEnv (resultName t$_l$) $\subseteq$ staticEnv n,
@@ -2124,7 +2121,7 @@ synchronization to receive on a given abstract channel.
 
 In the server implementation,
 the static channel identified by the name \lstinline{k1} is waited on
-by the server.  It has one receiving identifier in the server function
+by the server. It has one receiving identifier in the server function
 at identifier \lstinline[language=sugar_lang]{bind p1} and a sending identifier 
 in the request function at identifier \lstinline[language=sugar_lang]{bind z9}.
 The channel idetifiend by the name \lstinline{k4} is sent with a client's request for
@@ -2141,14 +2138,14 @@ The definitions are purposely structured to allow adding live channel analysis t
 definition fairly straightforward with just a few alterations. Section \ref{high-precision} expands on
 these alterations and outlines a strategy that is likely to result in formal proofs of
 soundness, although the actual formal proof of the version with live channel analysis is
-not yet complete.  
+not yet complete. 
 
 For the lower precision version without the liveness of channels, there are four modes -
 sequencing, calling, spawning, and returning -
 indicating how the term identifier flows to the term identifier of one of its embedded terms.
 A flow is a triplet of a term identifier, a mode of flow, and a term identifier of a
 embedded term. A static step is just a term identifier along with the mode it uses to
-flow to its embedded term. A static path is a list of static steps.  
+flow to its embedded term. A static path is a list of static steps. 
 
 \begin{lstlisting}[language=logic, mathescape]
   datatype mode =
@@ -2167,16 +2164,16 @@ flow to its embedded term. A static path is a list of static steps.
 \end{lstlisting}
 
 The evaluation of a term results in the flow to new terms,
-via sequencing, calling, returning, or spawning.  These flows are represented concretely
+via sequencing, calling, returning, or spawning. These flows are represented concretely
 by the term identifiers of the starting and ending terms and a mode
 to represent the nature of the flow.
 The static acceptance by flows describes a set of flows consisting of all the flows
 that could be traversed during a program's evaluation.
 It depends on the static environment for name bindings.
-For a result term, there are no demands on the flow graph.  For all bind terms, except those binding
+For a result term, there are no demands on the flow graph. For all bind terms, except those binding
 to case matching and function application, the sequential flow from the top term to
 the sequenced term might accept the term, and the accepting flows are also the
-accepting flows for the sequenced term.  For binding to a function, the
+accepting flows for the sequenced term. For binding to a function, the
 accepting flows are also accepting flows for the body of the function.
 For binding to thread spawning, the spawning flow from the top term
 to the spawned term might be traversed, and the accepting flows are also
@@ -2189,9 +2186,9 @@ the right case's embedded term might accept the conditional testing term.
 The returning flow from the result of the
 left case's embedded term to the sequenced embedded term might accept the result term,
 and the returning flow from the result of the right embedded term to the sequenced embedded term
-might also accept the result term.  Additionally, the accepting flows for a term are also
+might also accept the result term. Additionally, the accepting flows for a term are also
 accepting flows for its left case's embedded term, right case's embedded term,
-and the sequenced embedded term.   
+and the sequenced embedded term.  
 
 In the case of application, if the applied name is actually bound to a function
 , then a calling flow from the application term to the function's embedded term
@@ -2284,7 +2281,7 @@ accepting flows for the sequenced embedded term.
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (App n$_f$ n$_a$) t')
 \end{lstlisting}
 
-The smallest graph of flows that accepts a progam is finite.  Additionally, the static
+The smallest graph of flows that accepts a progam is finite. Additionally, the static
 acceptance relation is syntax-directed, which offers guidance towards computing the graph
 from a program. Thus, to statically determine communication classifications, it should
 be possible to compute the two shortest paths that send or receive on the same channel. 
@@ -2298,7 +2295,7 @@ condition, can be traced by traversing the flows in a graph.
 The empty path is statically traceable if the starting step meets the ending condition.
 Otherwise, a path is statically traceable if the last static step corresponds to a flow
 that meets the ending condition, and the longest strict prefix of the path is statically
-traceable.  
+traceable. 
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticTraceable:
@@ -2325,7 +2322,7 @@ to sending on static channel \lstinline[language=sugar_lang]{chn k4}, and two pa
 that lead to receiving on static channel
 \lstinline[language=sugar_lang]{chn k4}. This is certainly imprecise,
 as the static \lstinline[language=sugar_lang]{chn k4} corresponds to
-multiple distinct dynamic channels, each with just one sender and one receiver.  The higher
+multiple distinct dynamic channels, each with just one sender and one receiver. The higher
 precision analysis discussed in section \ref{high-precision} addresses this issue.
 
 The static inclusion means that two static paths might be traced in
@@ -2479,7 +2476,7 @@ checker was satisfied.
 
 The reasoning involved in proving the soundness of each communication classification
 is based around breaking the goal into simpler subgoals, and generalizing assumptions to create
-useful induction hypotheses.  It is often useful to
+useful induction hypotheses. It is often useful to
 create helper definitions that can be deduced
 from premises of the theorem being proved and enable
 general reasoning across arbitrary programs.
@@ -2577,7 +2574,7 @@ There is an isomorphic correspondence between the paths of
 dynamic evaluation and the paths of static evaluation, by definition.
 The static paths are derived from the static flow graph. Although it is possible to directly derive
 the dynamic paths from the static flow graph, deriving an isomorphoic path structure keeps the
-paths' relation to the flow graph clear.  Additionally, for the higher precision analysis, static
+paths' relation to the flow graph clear. Additionally, for the higher precision analysis, static
 paths are not isomorphic to dynamic paths. 
 
 The three main lemmas state the
@@ -2749,7 +2746,7 @@ to static values in a fixed number of logical steps. Static evaluation of progra
 program syntax to static values, but the generalized static evaluations correlate dynamic
 semantic structures, like, value, environments, and stacks, to static values. The function
 relates dynamic values to static values and helps the larger goal of relating dynamic
-semantic elements to static values and static environments.    
+semantic elements to static values and static environments.   
 
 \begin{lstlisting}[language=logic, mathescape]
   fun abstract: dynamic_value -> static_value where
@@ -2878,7 +2875,7 @@ The preservation of static evalatuation of pools over multiple steps is also rel
 \end{lstlisting}
 
 The completeness of static inclusiveness is derived from various lemmas that
-preserve relations from pairs of dynamic paths to pairs of corresponding static paths.  
+preserve relations from pairs of dynamic paths to pairs of corresponding static paths. 
 Some of these, among many others, are
 the preservation of the strict prefix relation from static to dynamic paths,
 and the preservation of static inclusiveness over extension of static paths.
@@ -2937,13 +2934,13 @@ the preservation of static evaluation over multiple steps of dynamic evaluation.
 
 The lemma for completeness of static reachability relies on a reformulation of
 static reachability defined by proofs that induct on a larger term
-containing the reachable term.  This definition is useful for forward derivations
+containing the reachable term. This definition is useful for forward derivations
 of reachability relations, however it doesn't offer much guidance for deciding reachability. 
 In constrast, the definition of the original static reachability relation is
 syntax-directed in order to portray a clear connection to
 a computable algorithm that can determine the reachable term from an initial program.
 To show that an term is reachable from the initial program, it is necessary to
-show that each intermediate term is reachable from the initial term.  Thus, the
+show that each intermediate term is reachable from the initial term. Thus, the
 induction needs to enable unraveling the goals from the end of the program to the beginning,
 maintaining the initial program state in context for each subgoal. Because the static
 reachable relation is a "may" analysis, the generalized relations hold unless there is
@@ -3033,9 +3030,9 @@ a generalized form of completeness over pools.
 
 The completeness over pools follows from the lemma that the forward
 static reachability implies the rightward (and syntax-directed) static reachability,
-and the equivalence between star and the forward star.  It relies on induction of the
+and the equivalence between star and the forward star. It relies on induction of the
 forward star and constructs the static reachability
-proposition using the forward definition.  
+proposition using the forward definition. 
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma staticReachableForwardImpliesStaticReachable: t$_0$ t. 
@@ -3062,21 +3059,21 @@ Thus, it would classify those channels as being used more than once.
 
 It is possible to be more precise by trimming the program under analysis down to just the part
 where the static channel is live. The static channel cannot be live between the last use of a
-dynamic channel and the creation of a new dynamic channel with the same name.  Thus, each
+dynamic channel and the creation of a new dynamic channel with the same name. Thus, each
 truncated program would have just one dynamic channel corresponding to the static channel under
 analysis. 
 
 The higher precision analysis uses a trimmed down graph to better differentiate between distinct channels. 
-A trimmed graph is specialized for a particular dynamic channel.  From the creation
+A trimmed graph is specialized for a particular dynamic channel. From the creation
 step, it must contain transitive flows to all the program steps where the
 channel is live. It should also be as small as possible, for higher precision.
 
 In the whole graph used in the previous analysis, a spawning flow
-connects a child thread to the rest of the program.  For a trimmed graph,
+connects a child thread to the rest of the program. For a trimmed graph,
 it may be clear the channel of interest is not created until after the spawn step,
-so there is not need to include the spawning flow.  However, later on in the
+so there is not need to include the spawning flow. However, later on in the
 program it may become apparent that the channel of interest is sent via another channel to
-that spawned thread.  Since there is no spawning flow already connecting that
+that spawned thread. Since there is no spawning flow already connecting that
 thread to the trimmed graph, a flow with a sending mode is used between the
 sending identifier and the receiving identifier of synchronization.
 Modes for typical control flow of
@@ -3377,14 +3374,14 @@ term identifier.
 
 The following diagram illustrates the entry and exit sets of each term id
 for channel \lstinline{k1} in
-the server example.  Each entry set appears right above its related term identifier,
+the server example. Each entry set appears right above its related term identifier,
 and each exit setappears right below its related term identifier. 
 
 \includegraphics[width=1\textwidth]{cml-liveness-analysis-k1.pdf}
 
 The following diagram illustrates the entry and exit sets of each term id
 for channel \lstinline{k4} in
-the server example.  Each entry set appears right above its related term identifier,
+the server example. Each entry set appears right above its related term identifier,
 and each exit setappears right below its related term identifier. 
 
 \includegraphics[width=1\textwidth]{cml-liveness-analysis-k4.pdf} \\\\\\\\\\\\
@@ -3427,7 +3424,7 @@ and each exit setappears right below its related term identifier.
     $\vdash$ staticLiveChan staticEnv entr exit n$_c$
       (Bind n (Atom (SendEvt n$_{sc}$ n$_m$)) t')
 
-  * recvEvt: exit n entr staticEnv n$_c$ n$_r$ n$_{rc}$.    
+  * recvEvt: exit n entr staticEnv n$_c$ n$_r$ n$_{rc}$.   
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_r$ then
@@ -3551,7 +3548,7 @@ and each exit setappears right below its related term identifier.
 \end{lstlisting}
 
 The static liveness of a flow checks if a flow is live across call and return boundaries,
-with respect to the entry and exit liveness functions.  
+with respect to the entry and exit liveness functions. 
 The channel liveness relation says if a channel is live within a function, but
 does not say anything whether or not a channel remains live across calling or returning flows.
 Additionally, for the intraprocedural, it simply lifts the entry and exit function information.
@@ -3623,10 +3620,10 @@ whether or not two paths can actually occur within in a single run of a program.
 inclusiveness states which paths might occur within the same run of the program.
 In contrast to the analogous definition for the lower precision
 alysis, the higher precision definition needs to consider paths containing the
-sending mode.  As mentioned earlier, the path from the synchronization on sending to the
+sending mode. As mentioned earlier, the path from the synchronization on sending to the
 synchronization on receiving is necessary to ensure that all uses of a channel are reachable
-from the channel's creation identifier.  The singularness means that only one of the two
-given paths can occur in a run of program.  The noncompetitveness means that the two
+from the channel's creation identifier. The singularness means that only one of the two
+given paths can occur in a run of program. The noncompetitveness means that the two
 given paths do not compete in any run of a program. 
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -3815,7 +3812,7 @@ the completeness of static inclusiveness, and the completeness of a sending iden
 The reasoning about the sending identifier is identical to that of the lower precision analysis, but
 the reasoning for the former two is significantly more complicated and not yet completed.
 The complication arises from the
-correlation between dynamic paths and static paths.  The proofs depend on finding a static 
+correlation between dynamic paths and static paths. The proofs depend on finding a static 
 path that depends on a given dynamic path. In the lower precision analysis the
 correlation was straightforward. There was only one possible static path to choose for it
 to correlate with the given dynamic path. In the higher precision analysis, the relationship
@@ -3823,7 +3820,7 @@ between the two kinds of paths is not so simple, and finding a description of th
 that correlates with the dynamic path is much more challenging.
 
 
-The proposition \lstinline{isSendPath pool' (Ch path$_c$ n$_c$) path'} is derived by unfolding the definition of \lstinline{oneShot}.  It is generalized by form \lstinline{pool' path' = Some (Stt t' env' stack'), dynamicBuiltOnChanState (Stt t' env' stack') (Ch path$_c$ n$_c$)} in the soundess of static traceability.
+The proposition \lstinline{isSendPath pool' (Ch path$_c$ n$_c$) path'} is derived by unfolding the definition of \lstinline{oneShot}. It is generalized by form \lstinline{pool' path' = Some (Stt t' env' stack'), dynamicBuiltOnChanState (Stt t' env' stack') (Ch path$_c$ n$_c$)} in the soundess of static traceability.
 
 \begin{lstlisting}[language=logic, mathescape]
 
@@ -3876,7 +3873,7 @@ The proposition \lstinline{isSendPath pool' (Ch path$_c$ n$_c$) path'} is derive
 
 
 The generalization to the dynamic channels built on state appears necessary in order to prove the soundness of
-the paths corresponding modulo a channel and static traceability.  This proof and the soundness of static inclusivity
+the paths corresponding modulo a channel and static traceability. This proof and the soundness of static inclusivity
 are under active development at the time of this writing.
 
   
@@ -3884,7 +3881,7 @@ are under active development at the time of this writing.
 
 
 \section{Related Work}
-There has been much research on both dynamic and static analysis of concurrency languages.  
+There has been much research on both dynamic and static analysis of concurrency languages. 
 The formal communication classification analysis and soundness proofs in this work are
 based on the analysis and proofs of \textit{Specialization of CML message-passing primitives}
 by Reppy and Xiao \cite{reppy2007specialization}.
