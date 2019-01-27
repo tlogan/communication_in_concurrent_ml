@@ -228,7 +228,7 @@ inductive staticOneShot :: "tm \<Rightarrow> name \<Rightarrow> bool" where
 inductive staticOneSync :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync: "
     forEveryTwo (staticTraceable F (tmId e) (staticSendSite V e xC)) singular \<Longrightarrow>
-    forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) singular \<Longrightarrow>
+    forEveryTwo (staticTraceable F (tmId e) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
     staticFlowsAccept V F e \<Longrightarrow>
     (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
     staticOneSync e xC 

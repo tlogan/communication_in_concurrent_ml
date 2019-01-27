@@ -487,28 +487,28 @@ inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow>
 
 
 
-inductive staticOneToMany :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneToMany :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
     forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) noncompetitive \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
     (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-    staticOneToMany staticEnv e xC 
+    staticOneToMany e xC 
   "
 
-inductive staticManyToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticManyToOne :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
     forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
     (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-    staticManyToOne staticEnv e xC 
+    staticManyToOne e xC 
   "
 
 
-inductive staticOneToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneToOne :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
     forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) noncompetitive \<Longrightarrow>
@@ -516,28 +516,28 @@ inductive staticOneToOne :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Ri
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
     (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-    staticOneToOne staticEnv e xC 
+    staticOneToOne e xC 
   "
 
-inductive staticOneShot :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneShot :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
     forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) singular \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
     (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-    staticOneShot staticEnv e xC 
+    staticOneShot e xC 
   "
 
-inductive staticOneSync :: "static_env \<Rightarrow> tm \<Rightarrow> name \<Rightarrow> bool" where
+inductive staticOneSync :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Intro:
   "
     forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) singular \<Longrightarrow>
-    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) singular \<Longrightarrow>
+    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
     (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
-    staticOneSync staticEnv e xC 
+    staticOneSync e xC 
   "
 
 

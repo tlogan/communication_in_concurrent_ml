@@ -67,7 +67,7 @@ inductive one_sync :: "tm \<Rightarrow> chan \<Rightarrow> bool" where
   intro: "
     star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (pool, H') \<Longrightarrow>
     forEveryTwo (is_send_path pool c) op= \<Longrightarrow> 
-    forEveryTwo (is_recv_path pool c) op= \<Longrightarrow> 
+    forEveryTwo (is_recv_path pool c) ordered \<Longrightarrow> 
     one_sync e c
   "
 

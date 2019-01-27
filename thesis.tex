@@ -1731,7 +1731,7 @@ synchronize on a channel are necessarily ordered for either end of the channel.
     intro: t$_0$ c .
       star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       forEveryTwo (isSendPath pool c) (op =),
-      forEveryTwo (isRecvPath pool c) (op =)
+      forEveryTwo (isRecvPath pool c) ordered 
     $\vdash$ oneSync t$_0$  c
 
 \end{lstlisting}
@@ -2435,7 +2435,7 @@ completed synchronization on a static channel in any run of a given program.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       forEveryTwo (staticTraceable graph (termId t) (staticSendId staticEnv t n$_c$)) singular,
-      forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) singular,
+      forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) noncompetitive,
     $\vdash$ staticOneSync graph t n$_c$
 \end{lstlisting}
 

@@ -1194,7 +1194,7 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (rule_tac x = "path @ [(IdRslt x, EReturn)]" in exI; auto)
   
   using Snoc pathsCongruent.Empty pathsCongruent.Return apply fastforce
-  
+  sorry
 
 lemma staticTraceablePoolSoundDynamicEval:
 "
@@ -1328,7 +1328,7 @@ done
 
 theorem staticOneShotSound: "
   \<lbrakk>
-    staticOneShot V e xC
+    staticOneShot e xC
   \<rbrakk> \<Longrightarrow>
   one_shot e (Ch \<pi> xC)
 "
@@ -1355,7 +1355,7 @@ sorry
 
 theorem staticOneToManySound: "
   \<lbrakk>
-    staticOneToMany V e xC
+    staticOneToMany e xC
   \<rbrakk> \<Longrightarrow>
   fan_out e (Ch \<pi> xC)
 "
@@ -1377,7 +1377,7 @@ sorry
 
 theorem staticManyToOneSound: "
   \<lbrakk>
-    staticManyToOne V e xC
+    staticManyToOne e xC
   \<rbrakk> \<Longrightarrow>
   fan_in e (Ch \<pi> xC)
 "
@@ -1389,13 +1389,24 @@ done
 
 theorem staticOneToOneSound: "
   \<lbrakk>
-    staticOneToOne V e xC
+    staticOneToOne e xC
   \<rbrakk> \<Longrightarrow>
   one_to_one e (Ch \<pi> xC)
 "
  apply (erule staticOneToOne.cases; auto)
   apply (unfold one_to_one.simps)
  apply (metis fan_out.cases noncompetitive_recv_to_ordered_recv staticOneToMany.intros staticOneToManySound)
+done
+
+theorem staticOneSyncSound:
+  "
+      staticOneSync e xC \<Longrightarrow>
+      one_sync e (Ch \<pi> xC)"
+apply (erule staticOneSync.cases; auto)
+apply (unfold one_sync.simps; auto)
+using
+fan_in.simps fan_out.simps noncompetitive_recv_to_ordered_recv noncompetitive_send_to_ordered_send
+apply (metis star.refl staticOneShotSound')
 done
 
 end
