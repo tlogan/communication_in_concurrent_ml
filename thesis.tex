@@ -1206,16 +1206,16 @@ particular communication topologies, but such is beyond the scope of this work.
 
 The definitions and theorems of this work were constructed in the formal
 language of Isabelle/HOL to enable mechanical verification of the proofs.
-However, in this presentation, the syntax of the stated definitions and propositions will differ from
+However, in this presentation, the syntax of the stated definitions and propositions differ from
 the actual Isabelle/HOL syntax, in order to be more intuitive for those unfamiliar with Isabelle/HOL.
 
 A static analysis for detecting communication topologies in Concurrent ML would be necessary for useful
 optimizations or checks. The optimization to replace general synchronization with specialized synchronization
 based on the results of static analysis is one that could have significant performance benefit, as shown
-empirically by Reppy and Xiao. Howeverr, if the static analysis of communication topologies is wrong, then
+empirically by Reppy and Xiao. However, if the static analysis of communication topologies is wrong, then
 the optimizmization could produce an incorrect program. What you need is proof that the static analysis is sound
 with respect to the actual communication topologies that occur when running a program. However, the proof could also be
-erroneous, and with so many details could be extremely difficult for a human to manually check for errors.
+erroneous, and with so many details, it could be extremely difficult for a human to manually check for errors.
 Isabelle/HOL automatically checks for errors in proofs and specifications and is much more reliable than a
 human. By using an optimization without a soundness proof, you are trusting that it is sound. If soundness has
 been proved, then you are trusting that the proof has no errors. If the proof has been verified by Isabelle/HOL, 
@@ -1228,11 +1228,12 @@ informal proof requires multiple tedious steps of precise manipulation in a mech
 To avoid the chance of running into these tricky scenarios, I specified the static analysis
 as inference rules, rather than as an algorithm. In Isabelle/HOL, algorithms are specified as computable functions
 that must be proved to terminate and be total, either automatically or with additional details supplied by the user.
-Reppy and Xiao's algorithm, as with many static analysis algorithms, relies on accumulating values in a growing set,
+Reppy and Xiao's algorithm, as with many static analysis algorithms, relies on accumulating values in a growing set
 with each recursive call until reaching a fixpoint.
 In Isabelle/HOL it is easy to prove termination for functions that branch on an inductive datatype, 
 however it is far from straight foward to prove termination for those that branch on
-whether or not a fixpoint has been reached.
+whether or not a fixpoint has been reached. Thus, reformulating the specification as inference rules
+appears to make formal reasoning more attainable. 
 
 Concurrent ML distinguishes itself from other languages for concurrency with its generalized concept of events,
 event sycnrhonization, and event combinators. Reppy and Xiao's work produces a static analysis for a subset,
@@ -1257,9 +1258,9 @@ The dynamic evaluation is represented by a small step relation, and a variant of
 to the next pool. A pool consists of many states associated with the paths taken to reach each state. A state consists
 of a term to be evaluated, an environment for looking up values from names, and a stack of continuations.
 A valid small step relation always steps from one pool to the pool extended with at least one new state.
-Terms containing names are not reduced. Instead, an environment can be used to look the values of names.
+Terms containing names are not reduced. Instead, an environment can be used to look up the values of names.
 Names are locally scoped so that they can be reused with a precise meaning, e.g. a function paramenter may be bound to
-a different argument each time its called. As such, for any term containing names, its corresponding value is simply
+a different argument each time it's called. As such, for any term containing names, its corresponding value is simply
 the term paired with its own environment.
 
 The initial pool of a running program only contains an empty path associated with a state containing the program,
@@ -1275,7 +1276,7 @@ for the entire program. If a name takes on different values in different scopes 
 the static environment simply considers both to be options. 
 
 The soundness theorem of the static evaluation with respect to dynamic evaluation states that if full dynamic evaluation
-of a program reaches a pool with containing some environent, and the static evaluation holds for the program and some
+of a program reaches a pool containing some environent, and the static evaluation holds for the program and some
 static environemnt, then the static environemnt is an abstraction of the dynamic environment. That is, if a name maps
 to some value in the dynamic environment, then, in the static environment, the name maps to a set containing the same value
 or an abstraction of the value. The static evaluation relates static environments to initial programs,
@@ -1286,10 +1287,10 @@ Thus, if the static evaluation holds for a static environment and a program,
 then there must be a relation that holds for the same static environment and
 any pool that the program may dynamically evaluate to. 
 Generalizing static evaluation to work for pools, environemnts, and stacks, gives a version that
-that can be related to each component and step of dynamic evaluation.
+that can relate the static environment to each component and step of dynamic evaluation.
 The generalized static evaluation on the intial pool is defined to follow from the static evaluation on the program.
 The preservation of the static evaluation of a pool across multiple steps of dynamic evaluation is proved by induction on
-the star relation. The static evaluation on a pool is taken taken apart into a static evaluation on a dynamic environment,
+the star relation. The static evaluation on a pool is taken apart into a static evaluation on a dynamic environment,
 thus relating the dynamic environment with the static environment, which is essentially sound by definition. 
 
 
@@ -1300,15 +1301,14 @@ If the sending paths are all ordered or there are no sending paths, then there i
 sends on the channel. Likewise, The many-to-one classification holds if any two paths that receive on the channel are ordered.
 The one-to-one classification holds if all the receiving paths on the channel are ordered and all the sending paths on the
 channel are ordered. The one-shot classification holds if there is at most one sending path on a channel, regardless
-of which paths receive on the channel. The one-sync classification holds if there is at most one sending and one receiving path
-on a channel.
+of which paths receive on the channel. The one-sync classification holds if there is at most one sending and one receiving thread on a channel.
 
 The static communication classification relations, as with dynamic communication, are defined in terms of paths
 that send and receive on a channel of interest. However, these sites of sending and receiving on the channel, are approximations
 taken from the static environment, whose content is influenced by the rules of static evaluation.
 The static flows acceptance relation states that a set of flows, i.e. a graph, accepts a program or term, where each flow is
 an abstract representation of a small step in the dynamic evaluation. The relation is defined such that
-it is decidable if a given finite set of flows holds. The static paths are formed from the chaining of flows, according
+whether or not a given finite set of flows holds is decideable. The static paths are formed from the chaining of flows, according
 to the rules ot the static traceable relation.
 The set of static paths to a sending or receiving syncrhonization site is bounded by the static flows acceptance
 relation. Due to cycles in the graph, the set of paths may be inifite. 
