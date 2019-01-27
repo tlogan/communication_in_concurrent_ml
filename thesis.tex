@@ -632,7 +632,8 @@ is increased overhead due to contention over acquiring
 synchronization rights. 
 
 \subsection{Many-to-many Synchronization}
-A channel can be in one of three states. Either some threads are trying to send on it,
+For many-to-many synchronization, a channel can be in one of three states.
+Either some threads are trying to send on it,
 some threads are trying to receive on it, or no threads are trying to send or receive on it.
 Additionally a channel is composed of a mutex lock,
 so that sending and receiving operations can yield
@@ -642,10 +643,8 @@ conditions waited on by sending threads. When multiple threads are trying to rec
 channel, the channel is associated with a queue consisting of
 initially empty cells that are accessible by receiving threads and
 conditions waited on by the receiving threads.
-The channel content holds one of three three potential states and their
-associated content of queues and conditions.
-The channel is composed of the channel content and also a mutex lock that regulates access to
-the channel content.
+The channel content holds one of the three potential states and their
+associated queues and conditions.
 
 The sending operation acquires the channel's lock to
 ensure that it updates the channel based on
@@ -658,13 +657,11 @@ The sending operation deposits the message in the cell and signals on the receiv
 Then, if there are no further receiving threads waiting, it updates the channel's state to inactive; otherwise,
 it leaves the state in the receiving state.
 Next, it releases the lock, signals on the receiving state's condition and returns the unit value.
-
 If there are no threads receiving on the
 channel, the sending operation updates the channel state to the sending state,
-and enqueues a condition and the message.
-It releases the lock and waits on the enqueued condition.
-Once a receiving thread signals on the same condition,
-the sending operation returns with the unit value.
+and enqueues a new condition \lstinline{sendCond} and the message.
+It releases the lock and waits on its condition \lstinline{sendCond}.
+Once a receiving thread signals on its condition, the sending operation returns with the unit value.
 
 The receiving operation acquires the channel's lock
 to ensure that it updates the channel based on
@@ -687,13 +684,13 @@ the receiving operation returns with the value deposited in its cell.
   structure ManyToManyChan : CHANNEL =
   struct
 
-    datatype 'a chan_content = 
+    datatype 'a state = 
       Send of (condition * 'a) queue
     | Recv of (condition * 'a option ref) queue
     | Inac
 
     datatype 'a chan =
-      Chn of 'a chan_content ref * mutex_lock 
+      Chn of 'a state ref * mutex_lock 
 
     fun channel () = Chn (ref Inac, mutexLock ())
 
@@ -704,7 +701,7 @@ the receiving operation returns with the value deposited in its cell.
         let
           val (recvCond, msgCell) = dequeue q
         in
-          msgCell := Some m;
+          msgCell := SOME m;
           if (isEmpty q) then ctntRef := Inac else ();
           release lock;
           signal recvCond
@@ -719,7 +716,7 @@ the receiving operation returns with the value deposited in its cell.
         end
       | Inac =>
         let
-          val sendCond = condition () in
+          val sendCond = condition ()
         in
           ctntRef := Send (queue [(sendCond, m)]);
           release lock;
@@ -746,7 +743,7 @@ the receiving operation returns with the value deposited in its cell.
         in
           enqueue (q, (recvCond, msgCell));
           release lock;
-          wait recvCond
+          wait recvCond;
           valOf (!msgCell)
         end
       | Inac =>
@@ -756,7 +753,7 @@ the receiving operation returns with the value deposited in its cell.
         in
           ctntRef := Recv (queue [(recvCond, msgCell)]);
           release lock;
-          wait recvCond
+          wait recvCond;
           valOf (!msgCell)
         end
       )
@@ -781,16 +778,14 @@ compare-and-swap operator to transactionally update the state of
 the channel to a sending state.
 If successful, it simply waits on its condition \lstinline{sendCond}.
 After the receiving thread signals on \lstinline{sendCond}, the sending operation returns the unit value.
-If the transactional update fails and the state is
-that of threads trying to receive on the channel, then the sending operation acquires the lock,
-then dequeues an item from the associated queue where the item consists of a receiving condition \lstinline{recvCond},
-and a cell for depositing the message to the receiving thread.
-If there are no further items on the queue, the sending operation updates the state to inactive; otherwise, it
-leaves the state in the receiving state.
+If the transactional update fails and the channes is in the receiving state, then the sending operation acquires the lock, dequeues an item from the state's associated queue where the item consists of a receiving condition \lstinline{recvCond},
+and a cell for depositing the message to the receiving thread. It deposits the message in the cell. Then,
+if there are no further items on the queue, the sending operation updates the state to inactive;
+otherwise, it leaves the state in the receiving state.
 Next, it releases the lock it, then signals on the receiving condition and returns the unit value.
 
-The lock is acquired after the state is determined to be that of
-threads trying to receive, since the expectation is that the current thread is the only one
+The lock is acquired after the state is determined to be the receiving state,
+since the expectation is that the current thread is the only one
 that tries to update the channel from that state. If the communication classification analysis were
 incorrect and there were actually multiple threads that could call the sending operation,
 then there might be data races. Likewise, due to the expectation of a single thread
@@ -810,13 +805,13 @@ returns the message held in the sending state.
   structure OneToManyChan : CHANNEL =
   struct
 
-    datatype 'a chan_content =
+    datatype 'a state =
       Send of condition * 'a
     | Recv of (condition * 'a option ref) queue
     | Inac
 
     datatype 'a chan =
-      Chn of 'a chan_content ref * mutex_lock
+      Chn of 'a state ref * mutex_lock
 
     fun channel () = Chn (ref Inac, mutexLock ())
 
@@ -887,13 +882,13 @@ The implementation of many-to-one channels is very similar to that of one-to-man
   structure ManyToOneChan : CHANNEL =
   struct
 
-    datatype 'a chan_content =
+    datatype 'a state =
       Send of (condition * 'a) queue
     | Recv of condition * 'a option ref
     | Inac
 
     datatype 'a chan =
-      Chn of 'a chan_content ref * mutex_lock
+      Chn of 'a state ref * mutex_lock
 
     fun channel () = Chn (ref Inac, mutexLock ())
 
@@ -946,7 +941,7 @@ The implementation of many-to-one channels is very similar to that of one-to-man
          val () = acquire lock
          val (sendCond, m) = dequeue q 
       in
-        if case (isEmpty q) then ctntRef := Inac else ();
+        if (isEmpty q) then ctntRef := Inac else ();
         release lock;
         signal sendCond;
         m
@@ -961,7 +956,7 @@ The implementation of many-to-one channels is very similar to that of one-to-man
 \subsection{One-to-one Synchronization}
 
 A one-to-one channel can also be in one of three possible states, but there is no associated
-lock. Additionally, none of the states is associated a queue. Instead, the potential states are
+lock. Additionally, none of the states is associated with a queue. Instead, the potential states are
 that of a thread trying to send, with a condition and a message, that of a
 thread trying to receive with a condition and an empty cell, or the inactive state.
 
@@ -975,21 +970,21 @@ then it deposits the message in the receiving state's associated cell,
 updates the channel state to inactive, then signals on the receiving state's 
 condition and returns the unit value.
 If the communication analysis for the channel is
-truly one-to-one, then no other thread will be trying to update the state while in
-the receiving state, so no locks are necessary.
+truly one-to-one, then no other thread will be trying to update the state, so no locks are necessary.
 Additionally, if the channel is truly one-on-one, the sending operation will never
 witness a preexisting sending state since it is running on the one and only sending thread. 
 
 The receiving operation creates a condition \lstinline{recvCond} and an empty cell,
 then checks if the channel's state is inactive and tries to use the
 compare-and-swap operator to transactionally update the state of the channel to
-the receiving state. If successful, it simply waits on its condition \lstinline{recvCond}.
+the receiving state. If successful, it simply waits on its condition \lstinline{recvCond},
+then returns the sender's message in the cell.
 If the transactional update fails and the state is a sending state,
 then it updates the channel state to inactive, then signals on the sending state's
 condition and returns the message held in the sending state.
 If the communication
 analysis for the channel is truly one-to-one, then no other thread will be trying
-trying to send, so no locks are necessary.
+trying to update the state, so no locks are necessary.
 Additionally, if the channel is truly one-to-one, the receiving operation will never
 witness a preexisting receiving state since it is running on the one and only receiving thread.
 
@@ -998,12 +993,12 @@ witness a preexisting receiving state since it is running on the one and only re
   structure OneToOneChan : CHANNEL =
   struct
 
-    datatype 'a chan_content =
+    datatype 'a state =
       Send of condition * 'a
     | Recv of condition * 'a option ref
     | Inac  
 
-    datatype 'a chan = Chn of 'a chan_content ref
+    datatype 'a chan = Chn of 'a state ref
 
     fun channel () = Chn (ref Inac)
 
@@ -1087,12 +1082,12 @@ never release it.
   structure OneShotChan : CHANNEL =
   struct
 
-    datatype 'a chan_content =
+    datatype 'a state =
       Send of condition * 'a
     | Recv of condition * 'a option ref
     | Inac  
 
-    datatype 'a chan = Chn of 'a chan_content ref * mutex_lock
+    datatype 'a chan = Chn of 'a state ref * mutex_lock
 
     fun channel () = Chn (ref Inac, lock ())
 
@@ -1187,25 +1182,25 @@ then signals on \lstinline{sendCond}, then returns the deposited message.
 
 \subsection{Discussion}
 The example implementations of generic synchronization and specialized synchronization suggest
-that cost savings of specialized implementation are significant. For example, if you know that
+that cost savings of specialized implementations are significant. For instance, if you know that
 a channel has at most one sending thread and one receiving thread, then you will
 lower synchronization costs by
 using an implementation that is specialized for one-to-one communication. To be certain that
 the new program with the specialized implementation behaves the same as the original program
 with the generic implementation, you need to be certain that the
-specialized program behaves the same, assuming one-to-one or less communication, that
-static classification as one-to-one is sound with respect to the semantics of the program. 
+specialized program behaves the same, assuming one-to-one or less communication, and that
+the static classification as one-to-one is sound with respect to the semantics of the program. 
 
 Spending your energy to determine the topologies for each unique program and then verifying
 them for each program would be exhausting. Instead, you would probably rather have a generic
 procedure that can compute communication topologies for any program in a language, along with
-a proof that the procedure is sound with respect to the programing language.
+a proof that the procedure is sound with respect to the semantics of the programing language.
 
-This work discusses proofs that a static analysis to determine communication topologies is
+This work discusses proofs that a static analysis describing communication topologies is
 sound with respect to the dynamic semantics.
 Additionally, it would be important to have proofs that the above specialized
 implementations are equivalent to the many-to-many implementation under the assumption of
-particular communication topologies.
+particular communication topologies, but such is beyond the scope of this work.
 
 \section{Mechanized Theory}
 
@@ -3704,7 +3699,7 @@ are otherwise similar to the lower precision classifications.
       staticLiveChan staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
         (staticSendId staticEnv t n$_c$)) singular
-    $\vdash$ staticOneShot V t n$_c$
+    $\vdash$ staticOneShot staticEnv t n$_c$
 
   predicate staticOneSync: static_value_map -> term -> name -> bool where
     intro: staticEnv staticComm t graph entr exit n$_c$ . 
@@ -3715,7 +3710,7 @@ are otherwise similar to the lower precision classifications.
         (staticSendId staticEnv t n$_c$)) singular,
       forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
         (staticRecvId staticEnv t n$_c$)) singular
-    $\vdash$ staticOneSync V t n$_c$
+    $\vdash$ staticOneSync staticEnv t n$_c$
   \end{lstlisting}
 
 
