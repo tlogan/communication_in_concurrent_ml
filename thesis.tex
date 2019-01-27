@@ -1337,24 +1337,24 @@ section \ref{synchronization} should provide good evidence for that.
 
 \subsection{Syntax}
 The syntax used in this formal theory contains a very small subset of
-\textit{Concurrent ML}'s features. The features include recursive  with
-application, left and right construction with pattern matching, pair construction with first
-and second selections, sending and receiving event construction with synchronization,
+Concurrent ML's features. The features include recursive functions with
+application, left and right cases with case distinction, pairs with first
+and second selection, sending and receiving events with synchronization,
 channel creation, thread spawning, and the unit literal. The syntax is defined in a way to
-make it possible to relate the dynamic semantics of programs to the syntax programs.
+make it possible to relate the dynamic semantics of programs to the syntax of programs.
 The syntax is defined in administrative normal form (ANF) \cite{flanagan1993essence}, in which every term
 is bound to a name. Furthermore, terms only accept names in place of eagerly evaluated
 inputs. 
 
 Restricting the grammar to ANF allows the operational semantics
 to maintain graph information by associating values with succinct names.
-Maintaining the values' ties to the syntax,
+Maintaining the values' ties to the syntax
 simplifies proofs of soundness, since they must relate dynamic evaluation information
 to static information based on the syntax.
 
 Additionally, ANF melds nicely with the semantincs of control paths, which succicntly identify
 the evaluation taken to reach some intermediate result.
-Instead of relying on additional meta-syntax to associate atom operations with identifiers,
+Instead of relying on additional metalanguage structures to associate atom operations with identifiers,
 the analysis can simply use the required names of ANF syntax to identify locations in the program.
 
 The ANF syntax is impractical for a programer to write,
@@ -1391,8 +1391,9 @@ more user-friendly syntax into ANF.
 
 \subsection{Dynamic Semantics}
 The dynamic semantics describes how programs evaluate to values.
-A history of execution is represented as a list of steps, where a step is a
-binding name or resulting name of a term, paired with a mode of control indicating
+A history of execution is represented by a control path.
+A control path is a list of steps, where a step is a term's 
+binding name or resulting name, paired with a mode of control indicating
 flows by sequencing, spawning, calling, or returning.
 Channels have no literal representation, but each
 time a channel is created, it is uniquely identified by the history of the execution up until
@@ -1403,11 +1404,10 @@ constituent names to their values.
 In order to relate the static analyses to the operational semantics, I
 borrowed Reppy and Xiao's strategy of stepping between sets of execution paths and
 their associated terms.
-
 The semantics are defined as a CEK machine, rather than a
 substitution based operational semantics. By avoiding simplification of terms in the
 operational semantics, it is possible to relate
-the abstract evaluations of the static semantics to the
+the static evaluations of the static semantics to the
 evaluations produced by the dynamic semantics,
 which in turn is relied on to prove soundness of the static semantics.
 
@@ -1458,26 +1458,26 @@ Additionally, all these terms evaluate to values in a single step.
     $\vdash$ seqEval (Snd n$_p$) env v
 \end{lstlisting}
 
-The evaluation of a complex term for application or conditional testing
-results in flowing by calling. A calling flows is characterized
+The evaluation of a complex term for application or case distinction 
+results in flows by calling. A calling flow is characterized
 by the need to save a subterm in the continuation stack for later evaluation.
 The evaluation depends on the syntax
 and an environment for looking up the values of names within the syntax.
-A term is evaluated to a subterm, and a new environment that will
-later be used in the evaluation of the subterm. For conditional testing, either the left or the right
+A term is evaluated to a subterm along with a new environment that will
+later be used in the evaluation of the subterm. For case distinction, either the left or the right
 term is called, and the environment is updated with the corresponding name mapped to the
-value extracted from the pattern. For application, the term inside of an applied function 
+value extracted from the left or right pattern. For application, the body of the applied function 
 is called, and the environment is updated with the function's parameter mapped to the
-application's argument. The environment is also updated with the recursive name mapped to the
-same applied function.
+application's argument. The environment is also updated with the function's recursive name mapped back to
+the function.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate callEval: complex -> env -> term -> env -> bool where
-    distinctLeft: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
+    distingLeft: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
       env n$_s$ = Some (VAtm (Lft n$_c$) env$_s$),
       env$_s$ n$_c$ = Some v
     $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_l$ (env(n$_l$ -> v))
-  * distinctRight: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
+  * distingRight: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
       env n$_s$ = Some (VAtm (Rht n$_c$) env$_s$),
       env$_s$ n$_c$ = Some v
     $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_r$ (env(n$_r$ -> v))
@@ -1495,13 +1495,13 @@ same applied function.
 The continuation stack maintains a record of terms that should be evaluated
 once a corresponding called branch of the evaluation has returned.
 Each continuation in the stack consists of a term, the environment for resolving the
-term's names, an unresolved name, to be resolved when the corresponding branch returns. 
+term's names, and an unresolved name, to be resolved when the corresponding branch returns. 
 The initial state of execution consists of a program, an empty environment, and an empty stack
 of continuations. With each sequential step, the program is reduced to a subterm,
-and the environment is updated with the name bound to the value of the term. Each time a
-embedded term is sidestepped to evaluate a dependent term, a continuation is formed around
-it and pushed onto a stack of continuations. A continuation is popped off the stack when a
-state's program is reduces to a result program. A pool of states keeps track of all the states
+and the environment is updated with the term's name bound to the value of the complex term.
+Each time a complex term's inner term is called, the sequenced term is saved as a part of a continuation
+and pushed onto a stack of continuations. A continuation is popped off the stack when a
+state's term is reduced to a result term. A pool of states keeps track of all the states
 that have been reached through the evaluation of an initial program. Each state is indexed by
 the dynamic path taken to reach it. A pool's leaf path indicates a state that has yet to be
 evaluated. Additionally, the communication between threads is also recorded as a set of
@@ -1538,42 +1538,39 @@ communication between threads. Since pools contain multiple states and paths, th
 accommodate multiple threads as well. A single evaluation step depends on one pool and
 evaluates to a new pool based on one or more states in that pool. The initial pool for a
 program contains just one state indexed by an empty path. The state contains the program, an
-empty environment, and an empty stack. The pool will grow strictly larger with each evaluation
+empty environment, and an empty stack. The pool grows strictly larger with each evaluation
 step, maintaining a full history. Each step adds new states and paths extended from previous
-ones, and each step in the path indicates the mode of flow to take to reach the state.
+ones, and each step in the path indicates the mode of flow taken to reach the state.
 Only states indexed by leaf paths are used to evaluate to the next pool.
 
+For the evaluation a leaf path proceding from a result term, a continuation is popped of the
+stack. The pool's new state is formed from the term and environment in the continuation, and
+the environment is updated with the continuation's name bound to the result's value.
 A sequencing evaluation step of a program picks a leaf state and relies on
-sequential evaluation of its top term. It updates the state's environment with the
-value of the term, leaves the stack unchanged, and reduces the program to the next
-embedded term. A calling evaluation step relies on the calling evaluation of a state's top
-term. The binding name, embedded term, environment are pushed onto the stack, and the new
-state gets its program and environment from the evaluation of the term. 
-
-For the evaluation a leaf path steping to a result program, a continuation is popped of the
-stack, the new state's program is taken from the continuation, and the new state's environment
-is taken from the continuation and modified with the result value.
-
+sequential evaluation of its top complex term. It updates the state's environment with the
+value of the complex term and reduces the program to the sequenced term.
+A calling evaluation step relies on the calling evaluation of a state's top
+complex term. The binding name, sequenced term, and environment are pushed onto the stack,
+and the new state gets its program and environment from the calling evaluation of the complex term. 
 In the case of channel creation, the evaluation updates the state's environment with the
-value of a channel consisting of the path leading to its creation; it leaves the stack
-unchanged and reduces the program to the next embedded term.
-
-In the case of spawning, the evaluation is updated with two
+value of the new channel consisting of the path leading to its creation; it leaves the stack
+unchanged and reduces the program to the sequenced term.
+In the case of spawning, the evaluation updates the pool with two
 new paths extending the leaf path. For one, the leaf path is extended with a sequential
-program step whose state has the next term and the environment updated
-with the unit value bound to
-the bind name, and the original continuation stack. For the other, the leaf path
-extended with an program step indicating a spawning flow. Its state has the spawned
-term, the original environment, and an empty continuation stack. 
+step whose state has the sequenced term and the environment updated
+with binding name bound to the unit value along with the original continuation stack.
+For the other, the leaf path is
+extended with a spawning step.
+Its state has the spawned term, the original environment, and an empty continuation stack. 
 
 In the case where two leaf paths in the pool correspond to synchronization on the same channel,
-and one synchronizes on a send event and the other synchronizes on a receive event, then
+and one synchronizes on a sending event and the other synchronizes on a receiving event, the
 evaluation updates the pool with two new paths and corresponding states.
-It updates the send event's state with its embedded term, the environment updates with the unit
-value, and the stack unchanged. It updates the receive event's state with its embedded term, the
-environment updates with the sent value, and the stack unchanged.
-Additionally, the communication is updated with the sending and receiving paths, and the channel
-that the synchronization used for communication. 
+It updates the pool with a new state containing the sending event's sequenced term, its environment updated with the unit value, and its stack unchanged.
+It updates the pool with a new state containing the receive event's sequenced embedded term,
+the environment updated with the sent value, and its stack unchanged.
+Additionally, the communication is updated with the sending and receiving paths,
+and the channel used for communication. 
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate dynamicEval:
@@ -2053,10 +2050,10 @@ and an initial term can statically reach any term that its embedded terms can st
   * spawn: t$_c$ t$_z$ n t' . 
       staticReachable t$_c$ t$_z$
     $\vdash$ staticReachable (Bind n (Spwn t$_c$) t') t$_z$
-  * distinctLeft: t$_l$ t$_z$ n n$_s$ n$_l$ n$_r$ t$_r$ t' . 
+  * distingLeft: t$_l$ t$_z$ n n$_s$ n$_l$ n$_r$ t$_r$ t' . 
       staticReachable t$_l$ t$_z$
     $\vdash$ staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
-  * distinctRight: t$_r$ t$_z$ n n$_s$ n$_l$ t$_l$ n$_r$ t' . 
+  * distingRight: t$_r$ t$_z$ n n$_s$ n$_l$ t$_l$ n$_r$ t' . 
       staticReachable t$_r$ t$_z$
     $\vdash$ staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
   * function: t$_b$ t$_z$ n n$_f$ n$_t$ t$_b$ t' . 
@@ -2949,10 +2946,10 @@ it holds without any additional demands.
   * spawn: t$_0$ n t$_c$ t' .
       staticReachableForward t$_0$ (Bind n (Spwn t$_c$) t')
     $\vdash$ staticReachableForward t$_0$ t$_c$
-  * distinctLeft: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
+  * distingLeft: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
       staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
     $\vdash$ staticReachableForward t$_0$ t$_l$
-  * distinctRight: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
+  * distingRight: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
       staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
     $\vdash$ staticReachableForward t$_0$ t$_r$
   * function: t$_0$ n n$_f$ n$_p$ t$_b$ t' .
