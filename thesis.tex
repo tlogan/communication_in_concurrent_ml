@@ -2300,7 +2300,7 @@ accepting flows for the sequenced term.
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
 
-  * application: staticEnv n$_f$ n t' n n$_a$ .
+  * application: n t' graph staticEnv n$_f$ n$_a$ .
       $\forall$ n$_f$' n$_t$ t$_b$ . 
         (SAtm (Fun n$_f$' n$_t$ t$_b$)) $\in$ staticEnv n$_f$ 
       $\rightarrow$
@@ -2321,9 +2321,9 @@ illustrates how static acceptance by flows can interpret a graph from a program.
 
 \includegraphics[width=.9\textwidth]{cml-graph.pdf}
 
-The static traceability means that a static path with a given starting step, and ending
+The static traceability means that a static path with a given starting term identifier, and ending
 condition, can be traced by traversing the flows in a graph.
-The empty path is statically traceable if the starting step meets the ending condition.
+The empty path is statically traceable if the starting term identifier meets the ending condition.
 Otherwise, a path is statically traceable if the last static step corresponds to a flow
 that meets the ending condition, and the longest strict prefix of the path is statically
 traceable. 
@@ -2351,14 +2351,14 @@ channel \lstinline[language=sugar_lang]{chn k1}, but all on the same thread.
 There are an infinite number of paths that lead
 to sending on static channel \lstinline[language=sugar_lang]{chn k4}, and two paths
 that lead to receiving on static channel
-\lstinline[language=sugar_lang]{chn k4}. This is certainly imprecise,
-as the static \lstinline[language=sugar_lang]{chn k4} corresponds to
+\lstinline[language=sugar_lang]{chn k4}. This is analysis is better than nothing,
+but it's still somewhat imprecise. The static \lstinline[language=sugar_lang]{chn k4} corresponds to
 multiple distinct dynamic channels, each with just one sender and one receiver. The higher
 precision analysis discussed in section \ref{high-precision} addresses this issue.
 
 The static inclusion means that two static paths might be traced in
 the same run of a program. Ordered paths might be inclusive, and also a path that diverges
-from another at a spawn flow might be inclusive. This concept is useful for achieving
+from another at a spawn point might be inclusive. This concept is useful for achieving
 greater precision, since if two paths cannot occur in the same run of a program, only one needs
 to be counted towards the communication classification. The predicates are intended to be applied
 to paths starting from the beginning of a program.
@@ -2372,7 +2372,7 @@ to paths starting from the beginning of a program.
       prefix path2 path1
     $\vdash$ staticInclusive path1 path2
   * spawnFirst: path n path1 path2 .
-    \$vdash$ staticInclusive
+    $\vdash$ staticInclusive
       (path @ [(NBnd n, MSpwn)] @ path1)
       (path @ [(NBnd n, MSeq)] @ path2)
   * spawnSecond: path n path1 path2 .
@@ -2381,10 +2381,10 @@ to paths starting from the beginning of a program.
       (path @ [(NBnd n, MSpwn)] @ path2)
 \end{lstlisting}
 
-The noncompetitiveness means states that two paths can't compete during a run of a
-program, since they are ordered or cannot occur in the same run of a program.
-The singularness means that two paths are the same or only of them can occur in a given run of
-a program. 
+The noncompetitiveness means that two paths can't compete during a run of a
+program. Either they are ordered or they cannot occur in the same run of a program.
+The singularness means that two paths are the same or only of them can occur
+in a given run of a program. 
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate noncompetitive: static_path -> static_path -> bool where
@@ -2462,8 +2462,9 @@ to synchronize to send on a static channel in any run of a given program.
     $\vdash$ staticOneShot graph t n$_c$
 \end{lstlisting}
 
-The static one-sync classification means that there is at most one
-completed synchronization on a static channel in any run of a given program.
+The static one-sync classification means that there is at most one attempt to send on a
+static channel and at most one
+thread that attempts to receive on a static channel in any run of a given program.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticOneSync: static_value_map -> term -> name -> bool where
@@ -2478,29 +2479,18 @@ completed synchronization on a static channel in any run of a given program.
 
 
 \subsection{Formal Reasoning}
-
-Reppy and Xiao informally prove soundness of their analysis by showing that their static analysis
-determines that more than one thread sends (or receives) on a channel if the execution allows more
-than one to send (or receive) on that channel. The proof of soundness depends on the
-ability to relate the execution of a program to the static analysis of a program. The static
-analysis describes threads in terms of static paths, since it can only describe threads in
-terms of statically available information. Thus, in order to describe the relationship between
-the threads of the static analysis and the dynamic semantics, the dynamic semantics is
-defined as stepping between sets of control paths paired with terms. Divergent control paths
-are added whenever a new thread is spawned.
-
-The semantics and analysis must contain many details. To ensure the
+The semantics and analyses must contain many details. To ensure the
 correctness of proofs, it is necessary to check that there are no subtle errors in either the 
-definitions or proofs. Proofs in general require many subtle manipulations of symbols. The
+definitions or the proofs. Proofs require many subtle manipulations of symbols. The
 difference between a false statement and a true statement can often be difficult to spot, since
-the two may be very similar lexically. However, a mechanical proof checker, such as that of 
-Isabelle, has no difficulty discerning between valid and invalid derivations.
+the two may be very similar lexically. However, a mechanical proof checker, such as the one in
+Isabelle/HOL, has no difficulty discerning between valid and invalid derivations.
 Mechanical checking of proofs can notify users of errors in the proofs or definitions far better
 and faster than manual checking. This work has greatly benefited from Isabelle's proof checker in
 order to correctly define the language semantics, control flow analysis, communication analysis,
 and other helpful definitions. For instance, some bugs in the
-definintions were found trying to prove
-soundness. The proof checker would not accept the proof unless I provided facts that
+definintions were found while trying to prove soundness.
+The proof checker would not accept the proof unless I provided facts that
 should be false, indicating that the definitions did not state my intentions.
 After correcting the errors in the definitions, the proof was completed such that the proof
 checker was satisfied.
@@ -2516,12 +2506,11 @@ predicates in terms of semantic structures, like the environment, stack, and poo
 the instantiation of these predicates on the initial program state. 
 
 Some aspects of the generalized predicate definitions exist simply to prove that they imply
-instantiations of the original program based predicates. However, the generalized
-definitions exist in order to allow direct access to properties that would
+instantiations of the term based predicates on the initial program. The generalized
+definitions are necessary in order to allow direct access to properties that would
 otherwise be deeply nested
 in an inductive structure and inaccessible by a predictable number of
-logical steps for an arbitrary
-program.
+logical steps for an arbitrary program.
 
 One of the most difficult aspects of formal reasoning is in developing adequate definitions.
 It is often possible to define a single semantics in multiple ways.
@@ -2536,8 +2525,8 @@ to less flexible relations.
 \begin{lstlisting}[language=logic, mathescape]
   predicate sortedLeft: nat list -> bool where
     empty:
-    $\vdash$ sortedRight []
-  * single: x .
+    $\vdash$ sortedLeft []
+  * uni: x .
     $\vdash$ sortedLeft [x]
   * cons: x y zs .
       n $\leq$ y,
@@ -2547,7 +2536,7 @@ to less flexible relations.
   predicate sortedRight: nat list -> bool where
     empty:
     $\vdash$ sortedRight []
-  * single: z .
+  * uni: z .
     $\vdash$ sortedRight [z]
   * snoc: xs y z .
       sortedRight (xs @ [y]),
@@ -2561,11 +2550,10 @@ to less flexible relations.
 \subsection{Soundness}
 
 The theorem for soundness of static one-to-many classification states that if a static channel is
-statically classified as one-to-many for a given program and
-static environment consistent with the
-program, then any corresponding dynamic channel is classified
-as one-to-many over any pool that results
-from running the program. The soundness of classification of many-to-one, one-to-one, one-shot, and one-sync
+statically classified as one-to-many for a given program,
+then any corresponding dynamic channel is classified
+as one-to-many for the same program.
+The soundness of classification of many-to-one, one-to-one, one-shot, and one-sync
 all follow the same pattern.
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -2592,10 +2580,8 @@ all follow the same pattern.
 
 The formal proofs of soundness of each static classification follow a similar structure.
 Let's examine in some detail the formal proof of soudness of static one-to-many classification,
-by unwinding the theorem into the lemmas that it follows from.
-
-The following diagram illustrates the key dependencies of the theorems and lemmas in
-used in the derivations.
+by unwinding the theorem into the lemmas that it follows from. The following diagram illustrates
+the key dependencies of the theorems and lemmas in used in the derivations.
 
 \includegraphics[width=1\textwidth]{cml-proof-low.pdf}
 
@@ -3304,7 +3290,7 @@ However, it must additionally consider flows with the sending mode.
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
 
-  * application: staticEnv n$_f$ n t' n n$_a$ .
+  * application: staticEnv n t' graph n$_f$ n$_a$ .
       $\forall$ n$_f$' n$_p$ t$_b$ . 
         (SAtm (Fun n$_f$' n$_p$ t$_b$)) $\in$ staticEnv n$_f$
       $\rightarrow$
