@@ -2097,17 +2097,17 @@ The term identifier of a binding term is the binding name, and indication of its
 The term identifier of a result term is the embedded name, and indication of its use in a result.
 
 \begin{lstlisting}[language=logic, mathescape]
-  datatype termId =
+  datatype term_id =
     NBnd name
   | NRslt name 
 
-  fun termId: term -> termId where
+  fun termId: term -> term_id where
     n c t' . 
     $\vdash$ termId (Bind n c t') = NBnd n
   * n . 
     $\vdash$ termId (Rslt n) = NRslt n
 
-  type term_id_map = termId -> name set
+  type term_id_map = term_id -> name set
 \end{lstlisting}
 
 The static communication describes a sound approximation of
@@ -2115,11 +2115,11 @@ the static paths that communicate on static channels.
 The static sending identifier classification means that a term identifier might represent a
 sycnronization to send on a given static channel.
 The static receiving identifier classification means that a term identifier might represent a
-synchronization to receive on a given abstract channel. 
+synchronization to receive on a given static channel. 
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticSendId:
-    static_value_map -> term -> name -> termId -> bool 
+    static_value_map -> term -> name -> term_id -> bool 
   where
     intro: t$_0$ n n$_e$ t' n$_{sc}$ n$_m$ staticEnv n$_c$ .
       staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
@@ -2128,7 +2128,7 @@ synchronization to receive on a given abstract channel.
     $\vdash$ staticSendId staticEnv t$_0$ n$_c$ (NBnd n)
 
   predicate staticRecvId:
-    static_value_map -> term -> name -> termId -> bool
+    static_value_map -> term -> name -> term_id -> bool
   where
     intro: t$_0$ n n$_e$ t' n$_{rc}$ staticEnv n$_c$ .
       staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
@@ -2151,20 +2151,19 @@ the server to reply on. It has a receiving identifier in the request function at
 Reppy and Xiao's work relies on detecting the liveness of channels in order to gain higher
 precision in the static classification of communication. Since formal proofs are inherently
 complicated with numerous details, it was easier to first formally prove soundness for a
-version without the added complication of considering liveness of channel.
+version without the added complication of considering liveness of channels.
 
 The definitions are purposely structured to allow adding live channel analysis to the
-definition fairly straightforward with just a few alterations. Section \ref{high-precision} expands on
+definition fairly easily with just a few alterations. Section \ref{high-precision} expands on
 these alterations and outlines a strategy that is likely to result in formal proofs of
-soundness, although the actual formal proof of the version with live channel analysis is
-not yet complete. 
+soundness.
 
 For the lower precision version without the liveness of channels, there are four modes -
 sequencing, calling, spawning, and returning -
-indicating how the term identifier flows to the term identifier of one of its embedded terms.
-A flow is a triplet of a term identifier, a mode of flow, and a term identifier of a
-embedded term. A static step is just a term identifier along with the mode it uses to
-flow to its embedded term. A static path is a list of static steps. 
+indicating how the term identifier flows to the identifier of the next term.
+A flow is a triplet of a term identifier, a mode of flow, and a term identifier for the next term.
+A static step is just a term identifier along with the mode it uses to
+flow to the next term. A static path is a list of static steps. 
 
 \begin{lstlisting}[language=logic, mathescape]
   datatype mode =
@@ -2173,48 +2172,46 @@ flow to its embedded term. A static path is a list of static steps.
   | MCll
   | MRtn
 
-  type flow = termId * mode * termId
+  type flow = term_id * mode * term_id
 
   type graph = flow set
 
-  type static_step = termId * mode
+  type static_step = term_id * mode
 
   type static_path = static_step list
 \end{lstlisting}
 
 The evaluation of a term results in the flow to new terms,
-via sequencing, calling, returning, or spawning. These flows are represented concretely
-by the term identifiers of the starting and ending terms and a mode
-to represent the nature of the flow.
-The static acceptance by flows describes a set of flows consisting of all the flows
+via sequencing, calling, returning, or spawning.
+The static acceptance by flows describes a set of all the flows
 that could be traversed during a program's evaluation.
-It depends on the static environment for name bindings.
+It depends on the static environment.
 For a result term, there are no demands on the flow graph. For all bind terms, except those binding
-to case matching and function application, the sequential flow from the top term to
-the sequenced term might accept the term, and the accepting flows are also the
+to case distinction and function application, the sequential flow from the top term to
+the sequenced term accept the term, and the accepting flows are also the
 accepting flows for the sequenced term. For binding to a function, the
 accepting flows are also accepting flows for the body of the function.
 For binding to thread spawning, the spawning flow from the top term
 to the spawned term might be traversed, and the accepting flows are also
 accepting flows for the spawned term.
 
-In the case of conditional testing, the calling flow from the conditional testing term to
-its left case's embedded term might accept the conditional testing term, and
-the calling flow from the a term to
-the right case's embedded term might accept the conditional testing term.
+In the case of case distinction, the calling flow from the case distinction term to
+its left case's term accept the case distinction term, and
+the calling flow from a term to
+the right case's term accept the case distinction term.
 The returning flow from the result of the
-left case's embedded term to the sequenced embedded term might accept the result term,
-and the returning flow from the result of the right embedded term to the sequenced embedded term
-might also accept the result term. Additionally, the accepting flows for a term are also
-accepting flows for its left case's embedded term, right case's embedded term,
-and the sequenced embedded term.  
+left case's term to the sequenced term accept the result term,
+and the returning flow from the result of the right case's term to the sequenced term
+also accept the result term. Additionally, the accepting flows for a term are also
+accepting flows for its left case's term, right case's term,
+and the sequenced term.  
 
-In the case of application, if the applied name is actually bound to a function
-, then a calling flow from the application term to the function's embedded term
-might accept the term, and the returning flow from the result of the function
- to the sequenced embedded term might accept the term.
+In the case of application, if the applied name is actually bound to a function,
+then a calling flow from the application term to the function's body 
+accept the application term, and the returning flow from the result of the function
+ to the sequenced term accept the aplication term.
 Additionally, the accepting flows for the application term are also
-accepting flows for the sequenced embedded term. 
+accepting flows for the sequenced term. 
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticFlowsAccept:
@@ -2333,7 +2330,7 @@ traceable.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticTraceable:
-    flow set -> termId -> (termId -> bool) -> static_path -> bool
+    flow set -> term_id -> (term_id -> bool) -> static_path -> bool
   where
     empty: start graph isEnd .
       isEnd start
@@ -3129,9 +3126,9 @@ sequencing, calling, returning, and spawning are also included flows.
   | MCll
   | MRtn
 
-  type flow = termId * mode * termId
+  type flow = term_id * mode * term_id
 
-  type static_step = termId * mode
+  type static_step = term_id * mode
 
   type staticPath = static_step list
 \end{lstlisting}
@@ -3668,7 +3665,7 @@ containing only live flows for channel \lstinline{k4}. \
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticTraceable:
     static_value_map -> graph -> term_id_map -> term_id_map
-  -> termId -> (termId -> bool) -> static_path -> bool
+  -> term_id -> (term_id -> bool) -> static_path -> bool
   where
      empty: isEnd start staticEnv graph entr exit .
        isEnd start
