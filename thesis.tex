@@ -1473,11 +1473,11 @@ the function.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate callEval: complex -> env -> term -> env -> bool where
-    distingLeft: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
+    distincLeft: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
       env n$_s$ = Some (VAtm (Lft n$_c$) env$_s$),
       env$_s$ n$_c$ = Some v
     $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_l$ (env(n$_l$ -> v))
-  * distingRight: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
+  * distincRight: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
       env n$_s$ = Some (VAtm (Rht n$_c$) env$_s$),
       env$_s$ n$_c$ = Some v
     $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_r$ (env(n$_r$ -> v))
@@ -1997,9 +1997,9 @@ the rule concluding with \
 \lstinline[language=logic, mathescape]{staticEval staticEnv staticComm (Bind n Unt ...)},
 with \lstinline[language=logic, mathescape]{n = (Nm "u1")}. 
 The conditions for that rule require 
-\lstinline[language=logic, mathescape]{SUnt $\in$ staticEnv (Nm "u1"), staticEval staticEnv staticComm ...}.\
-We choose the smallest static environment \lstinline{staticEnv}, for which
-\lstinline[language=logic]{SUnt in staticEnv (Nm "u1")} holds, and that happens to be 
+\lstinline[language=logic, mathescape]{SUnt $\in$ staticEnv (Nm "u1"), staticEval staticEnv staticComm ...} .\
+We choose the smallest static environment, for which
+\lstinline[language=logic]{SUnt $\in$ staticEnv (Nm "u1")} holds, and that happens to be 
 \lstinline[language=logic]|$\lambda$ n . if n = (Nm "u1") then {SUnt} else {}|. \
 Since there's no condition that directly states what's required of the static communication, we can
 simply choose an empty environment to start with. The second condition is static evaluation on
@@ -2077,10 +2077,10 @@ and an initial term can statically reach any term that its embedded terms can st
   * spawn: t$_c$ t$_z$ n t' . 
       staticReachable t$_c$ t$_z$
     $\vdash$ staticReachable (Bind n (Spwn t$_c$) t') t$_z$
-  * distingLeft: t$_l$ t$_z$ n n$_s$ n$_l$ n$_r$ t$_r$ t' . 
+  * distincLeft: t$_l$ t$_z$ n n$_s$ n$_l$ n$_r$ t$_r$ t' . 
       staticReachable t$_l$ t$_z$
     $\vdash$ staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
-  * distingRight: t$_r$ t$_z$ n n$_s$ n$_l$ t$_l$ n$_r$ t' . 
+  * distincRight: t$_r$ t$_z$ n n$_s$ n$_l$ t$_l$ n$_r$ t' . 
       staticReachable t$_r$ t$_z$
     $\vdash$ staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
   * function: t$_b$ t$_z$ n n$_f$ n$_t$ t$_b$ t' . 
@@ -2996,10 +2996,10 @@ it holds without any additional demands.
   * spawn: t$_0$ n t$_c$ t' .
       staticReachableForward t$_0$ (Bind n (Spwn t$_c$) t')
     $\vdash$ staticReachableForward t$_0$ t$_c$
-  * distingLeft: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
+  * distincLeft: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
       staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
     $\vdash$ staticReachableForward t$_0$ t$_l$
-  * distingRight: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
+  * distincRight: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
       staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
     $\vdash$ staticReachableForward t$_0$ t$_r$
   * function: t$_0$ n n$_f$ n$_p$ t$_b$ t' .
