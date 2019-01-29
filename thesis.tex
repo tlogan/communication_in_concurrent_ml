@@ -121,7 +121,7 @@ In programing languages, concurrency is a program structuring technique that all
 steps to hop back and forth between disjoint syntactic structures within a program.
 It is useful
 when conceptually distinct tasks need to overlap in time, but are easier to understand if they
-are written as distinct structures within the program. Concurrency languages may also allow the
+are written as distinct structures within the program. Concurrent languages may also allow the
 evaluation order between steps of terms to be nondeterministic. If it's not necessary for
 tasks to be ordered in a precise way, then it may be better to allow a static or dynamic
 scheduler to pick the most efficient execution order. A common use case for concurrency
@@ -2183,7 +2183,7 @@ flow to the next term. A static path is a list of static steps.
 
 The evaluation of a term results in the flow to new terms,
 via sequencing, calling, returning, or spawning.
-The static acceptance by flows describes a set of all the flows
+The static flows acceptance describes a set of all the flows
 that could be traversed during a program's evaluation.
 It depends on the static environment.
 For a result term, there are no demands on the flow graph. For all bind terms, except those binding
@@ -2317,7 +2317,7 @@ acceptance relation is syntax-directed, which offers guidance towards computing 
 from a program. Thus, to statically determine communication classifications, it should
 be possible to compute the two shortest paths that send or receive on the same channel. 
 The server implementation represented as a control flow graph
-illustrates how static acceptance by flows can interpret a graph from a program.
+illustrates how static flows acceptance can interpret a graph from a program.
 
 \includegraphics[width=.9\textwidth]{cml-graph.pdf}
 
@@ -2595,17 +2595,17 @@ paths' relation to the flow graph clear. Additionally, for the higher precision 
 paths are not isomorphic to dynamic paths. 
 
 The three main lemmas state the
-soundness of the static traceability, the soundness of the static inclusiveness, and
-the soundness of a program step not being a static sending identifier. These lemmas depend on a
-correspondence between static paths and dynamic paths, which is bijective for the lower
-precision analysis. The lemma for soundness of static inclusiveness states that any two
+soundness of static traceability, the soundness of static inclusiveness, and
+the soundness of static sending identifier classification. These lemmas depend on a
+correspondence between static paths and dynamic paths.
+The lemma for soundness of static inclusiveness states that any two
 dynamic paths traced by running a program correspond to statically inclusive static paths. It
 follows from a straightforward case analysis of static inclusivity. The lemma for soundness of
 static traceability states that for any dynamic path traced by running a program, there
-is a corresponding static path that is statically traceable. The lemma for soundness of a
-program step not being a static sending identifier states that running a program reaches a
-synchronization on a sending event, then that synchronization is statically identified as a
-sending identifier by its term identifier.
+is a corresponding static path that is statically traceable. The lemma for soundness of
+static sending identifier classification states that if running a program reaches a
+synchronization on a sending event, then that identifier for that synchronization
+is statically classified as sending.
 
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -2633,18 +2633,19 @@ sending identifier by its term identifier.
       (path @ [DRtn n])
       (staticPath @ [(NRslt n, MRtn)])
 
-  lemma staticTraceableSound: t$_0$ pool comm path n c t'
+  lemma staticTraceableSound: t$_0$ pool comm path t 
   env stack staticEnv staticComm graph isEnd .
-    star dynamicEval ([[] -> (Stt t$_0$ [->] [])], {}) (pool, comm), 
-    pool path = Some (Stt (Bind n c t') env stack),
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm, 
+    pool path = Some (Stt t env stack),
     staticEval staticEnv staticComm t$_0$,
     staticFlowsAccept staticEnv graph t$_0$,
-    isEnd (NBnd n)
+    isEnd (termId t)
   $\vdash$ exists staticPath . 
     pathsCorrespond path staticPath
   $\wedge$ staticTraceable graph (termId t$_0$) isEnd staticPath
 
-  lemma staticInclusiveSound: t$_0$ pool comm path1 stt1 path2 stt2 staticPath1 staticPath2 . 
+  lemma staticInclusiveSound: t$_0$ pool comm path1 stt1 path2 stt2
+  staticPath1 staticPath2 . 
     star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm
     pool path1 = Some stt1, 
     pool path2 = Some stt2, 
@@ -2652,7 +2653,8 @@ sending identifier by its term identifier.
     pathsCorrespond path2 staticPath2
   $\vdash$ staticInclusive staticPath1 staticPath2
 
-  lemma staticSendIdSound: t$_0$ pool comm path n n$_e$ t' env stack n$_{sc}$ n$_m$ env' path$_c$ n$_c$ .
+  lemma staticSendIdSound: t$_0$ pool comm path n n$_e$ t' env
+  stack n$_{sc}$ n$_m$ env' path$_c$ n$_c$ staticEnv staticComm .
     star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm, 
     pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack), 
     env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env'), 
@@ -2661,23 +2663,23 @@ sending identifier by its term identifier.
   $\vdash$ staticSendId staticEnv t$_0$ n$_c$ (NBnd n)
 \end{lstlisting}
 
-The completeness of static traceability is proved by generalizing
-static acceptance by flows and static evaluation over pools, such that information about a step in
+The soundness of static traceability is proved by generalizing
+static flows acceptance and static evaluation over pools, such that information about a step in
 the program can be deduced by a fixed number of logical steps regardless of the location of the
 program step or the size of the program. Without such generalization, it would be possible to
 prove soundness for a fixed program, but not any arbitrary program.
 
-The generalization of static acceptance by flows is comprised of static acceptance by flows over values,
-static acceptance by flows over environments, static acceptance by flows over stacks, and static
-acceptance by flows over pools.
-In most cases, it simply states that an embedded term of some semantic element is also statically
+The generalization of static flows acceptance is comprised of static flows acceptance of values,
+static flows acceptance of environments, static flows acceptance of stacks, and static
+flows acceptance of pools.
+In most cases, it simply states that a subterm of some semantic element is also statically
 accepting. The exception is in the case of
-static acceptance by flows over a non-empty stack, where
-there is an additional condition that the flow
-from a result identifier to the term identifier
-of the continuation program exists in the graph.
+static flows acceptance of a non-empty stack, where
+there is an additional condition that the graph contains a
+flow from a result identifier to the term identifier
+of the continuation.
 This information is consistent with static
-acceptance by flows over programs, but provides direct information about a flow in the
+flows acceptance of terms, but provides direct information about a flow in the
 graph, which would otherwise only be deducible by a varying number of logical steps
 depending on the program.
 
@@ -2685,31 +2687,39 @@ depending on the program.
   predicate staticFlowsAcceptValue:
     static_value_map -> graph -> dynamic_value -> bool
   where
+
     unit: staticEnv graph .
     $\vdash$ staticFlowsAcceptValue staticEnv graph VUnt
+
   * chan: staticEnv graph n$_c$ .
     $\vdash$ staticFlowsAcceptValue staticEnv graph (VChn n$_c$)
+
   * sendEvt: staticEnv graph env n$_c$ n$_m$.
       staticFlowsAcceptEnv staticEnv graph env 
     $\vdash$ staticFlowsAcceptVal
       staticEnv graph (VAtm (SendEvt n$_c$ n$_m$) env)
+
   * recvEvt: staticEnv graph env n$_c$.
       staticFlowsAcceptEnv staticEnv graph env 
     $\vdash$ staticFlowsAcceptVal
       staticEnv graph (VAtm (RecvEvt n$_c$) env)
+
   * left: staticEnv graph env n$_p$ .
       staticFlowsAcceptEnv staticEnv graph env 
     $\vdash$ staticFlowsAcceptVal
       staticEnv graph (VAtm (Lft n$_p$) env)
+
   * right: staticEnv graph env n$_p$ .
       staticFlowsAcceptEnv staticEnv graph env
     $\vdash$ staticFlowsAcceptVal
         staticEnv graph (VAtm (Rht n$_p$) env)
+
   * function: staticEnv graph t$_b$ env n$_f$ n$_p$ .
       staticFlowsAccept staticEnv graph t$_b$, 
       staticFlowsAcceptEnv staticEnv graph env
     $\vdash$ staticFlowsAcceptVal
         staticEnv graph (VAtm (Fun n$_f$ n$_p$ t$_b$) env)
+
   * pair: staticEnv graph env . 
       staticFlowsAcceptEnv staticEnv graph env
     $\vdash$ staticFlowsAcceptVal
@@ -2727,21 +2737,23 @@ depending on the program.
   predicate staticFlowsAcceptStack:
     static_value_map -> graph -> name -> stack -> bool
   where
+
     empty: staticEnv graph n$_r$ .
     $\vdash$ staticFlowsAcceptStack staticEnv graph n$_r$ []
-  * cons: n$_r$ t graph staticEnv graph env stack n env .
-      {(NRslt y, MRtn, termId t)} $\subseteq$ graph,
+
+  * cons: n$_r$ t graph staticEnv graph env stack' n env .
+      {(NRslt n$_r$, MRtn, termId t)} $\subseteq$ graph,
       staticFlowsAccept staticEnv graph t,
       staticFlowsAcceptEnv staticEnv graph env,
-      staticFlowsAcceptStack staticEnv graph (resultName t) stack 
-    $\vdash$ staticFlowsAcceptStack staticEnv graph n$_r$ ((Ctn n t env) # stack)
+      staticFlowsAcceptStack staticEnv graph (resultName t) stack' 
+    $\vdash$ staticFlowsAcceptStack staticEnv graph n$_r$ ((Ctn n t env) # stack')
 
   predicate staticFlowsAcceptPool of
     static_value_map -> graph -> pool -> bool
   where
-    intro: staticEnv graph pool .
+    intro: pool staticEnv graph .
       $\forall$ path t env stack .
-        env path = Some (Stt t env stack)
+        pool path = Some (Stt t env stack)
       $\rightarrow$
         staticFlowsAccept staticEnv graph t
       $\wedge$ staticFlowsAcceptEnv staticEnv graph env
@@ -2749,21 +2761,20 @@ depending on the program.
     $\vdash$ staticFlowsAcceptPool staticEnv graph pool
 \end{lstlisting}
 
-The flows described by the various versions of static acceptance by flows depend on static
-environments in order to look up the control flow in the case where the term is a function.
-The static environment
-results from the static evaluation of the program that is dynamically evaluated. Thus,
-generalized
-versions of static evaluation enable further deduction about flows.
-As with the generalized versions of static acceptance by flows,
+The flows described by the various versions of static flows acceptance depend on static
+environments in order to look up the flow in the case where the term is a function.
+The static environment is constrained by the static evaluation of the program that is dynamically evaluated.
+Generalized versions of static evaluation that related the static environemnt to other elements of dynamic evaluation
+enable further deduction about flows.
+As with the generalized versions of static flows acceptance,
 the generalized versions of static evaluation are designed to
-preserve static environments across
-dynamic evaluations of pools. They also provide direct access to binding information from names
-to static values in a fixed number of logical steps. Static evaluation of programs correlates
-program syntax to static values, but the generalized static evaluations correlate dynamic
-semantic structures, like, value, environments, and stacks, to static values. The function
-relates dynamic values to static values and helps the larger goal of relating dynamic
-semantic elements to static values and static environments.   
+preserve static environments across dynamic evaluations of pools.
+They also provide direct access to binding information from names
+to static values in a fixed number of logical steps. Static evaluation of terms correlates
+terms to static values, but the generalized static evaluations correlate dynamic
+evaluation structures of values, environments, and stacks, to static values.
+The abstraction function relates dynamic values to static values and helps with the larger goal of
+relating dynamic semantic elements to static values and static environments.   
 
 \begin{lstlisting}[language=logic, mathescape]
   fun abstract: dynamic_value -> static_value where
@@ -2778,42 +2789,42 @@ semantic elements to static values and static environments.
   where
 
     unit: staticEnv staticComm .
-    $\vdash$  staticEvalValue staticEnv staticComm VUnit)
+    $\vdash$ staticEvalValue staticEnv staticComm VUnit
 
-  * chan: staticEnv staticComm c .
-    $\vdash$ staticEvalValue staticEnv staticComm (VChn c))
+  * chan: staticEnv staticComm chan .
+    $\vdash$ staticEvalValue staticEnv staticComm (VChn chan)
 
   * sendEvt: staticEnv staticComm env n$_c$ n$_m$ .
       staticEvalEnv staticEnv staticComm env
     $\vdash$ staticEvalValue staticEnv staticComm
-      (VAtm (SendEvt n$_c$ n$_m$) env))
+      (VAtm (SendEvt n$_c$ n$_m$) env)
 
   * recvEvt: staticEnv staticComm env n$_c$  .
       staticEvalEnv staticEnv staticComm env
     $\vdash$ staticEvalValue staticEnv staticComm
-      (VAtm (RecvEvt n$_c$) env))
+      (VAtm (RecvEvt n$_c$) env)
 
-  * left: staticEnv staticComm env n$_p$  .
+  * left: staticEnv staticComm env n  .
       staticEvalEnv staticEnv staticComm env
     $\vdash$ staticEvalValue staticEnv staticComm
-      (VAtm (Lft n$_p$) env))
+      (VAtm (Lft n) env)
 
-  * right: staticEnv staticComm env n$_p$  .
+  * right: staticEnv staticComm env n  .
       staticEvalEnv staticEnv staticComm env
     $\vdash$ staticEvalValue staticEnv staticComm
-      (VAtm (Rht n$_p$) env))
+      (VAtm (Rht n) env)
 
   * function: n$_f$ n$_p$ t$_b$ staticEnv staticComm env .
       {SAtm (Fun n$_f$ n$_p$ t$_b$)} $\subseteq$ staticEnv f, 
       staticEval staticEnv staticComm t$_b$, 
       staticEvalEnv staticEnv staticComm env
     $\vdash$ staticEvalValue staticEnv staticComm
-      (VAtm (Fun n$_f$ n$_p$ t$_b$) env))
+      (VAtm (Fun n$_f$ n$_p$ t$_b$) env)
 
   * pair: staticEnv staticComm env n$_1$ n$_2$ .
       staticEvalEnv staticEnv staticComm env
     $\vdash$ staticEvalValue staticEnv staticComm
-      (VAtm (Pair n$_1$ n$_2$) env))
+      (VAtm (Pair n$_1$ n$_2$) env)
 
   predicate staticEvalEnv:
     static_value_map -> static_value_map -> env -> bool
@@ -2829,33 +2840,33 @@ semantic elements to static values and static environments.
     static_value_map -> static_value_map 
   -> static_value set -> stack -> bool 
   where
-    empty: staticEnv staticComm staticVals .
-    $\vdash$ staticEvalStack staticEnv staticComm staticVals [])
-  * cons: staticVals staticEnv staticComm . 
+    empty: staticVals n staticEnv staticComm t env stack' .
+    $\vdash$ staticEvalStack staticEnv staticComm staticVals []
+  * cons: staticVals staticEnv staticComm stack' . 
       staticVals $\subseteq$ staticEnv n,
       staticEval staticEnv staticComm t,
       staticEvalEnv staticEnv staticComm env,
-      staticEvalStack staticEnv staticComm (staticEnv (resultName t)) stack 
-    $\vdash$ staticEvalStack staticEnv staticComm staticVals ((Ctn n t env) # stack))
+      staticEvalStack staticEnv staticComm (staticEnv (resultName t)) stack' 
+    $\vdash$ staticEvalStack staticEnv staticComm staticVals ((Ctn n t env) # stack')
 
   predicate staticEvalPool:
     static_value_map -> static_value_map -> pool -> bool
   where
-    intro: staticEnv staticComm pool .
+    intro: pool staticEnv staticComm .
       $\forall$ path t env stack .
         pool path = Some (Stt t env stack)
       $\rightarrow$ 
         staticEval staticEnv staticComm t
       $\wedge$ staticEvalEnv staticEnv staticComm env
-      $\wedge$ staticEvalStack staticEnv staticComm (staticEnv (resultName t)) stack)
-    $\vdash$ staticEvalPool staticEnv staticComm pool)
+      $\wedge$ staticEvalStack staticEnv staticComm (staticEnv (resultName t)) stack
+    $\vdash$ staticEvalPool staticEnv staticComm pool
   \end{lstlisting}
 
 
-A variant of star that inducts toward the left of the transitive connection is helpful for
+A variant of star that inducts on the left of the transitive connection is helpful for
 relating dynamic traceability to static traceability, since it mirrors the direction that way
-paths grow, which influenced the choice of induction in the definition of static
-traceability.
+paths grow, which influenced the choice of induction on the longest strict prefix of paths
+in the definition of static traceability.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate starLeft: ('a -> 'a -> bool) -> 'a -> 'a -> bool where
@@ -2876,9 +2887,9 @@ traceability.
   $\vdash$ starLeft r x z
 \end{lstlisting}
 
-The lemma for the completeness of static traceability follows from the generalized definitions
-of static acceptance by flows, the definition of static traceability, and the preservation
-of static acceptance by flows across multiples steps of evaluation.
+The lemma for soundness of static traceability follows from the generalized definitions
+of static flows acceptance, the definition of static traceability, and the preservation
+of static flows acceptance across multiples steps of evaluation.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma staticFlowsAcceptPoolPreserved: t$_0$ pool comm staticEnv staticComm graph .
@@ -2888,7 +2899,7 @@ of static acceptance by flows across multiples steps of evaluation.
   $\vdash$ staticFlowsAcceptPool staticEnv graph pool 
 \end{lstlisting}
 
-The preservation of static acceptance by flows over pools is proved by the
+The preservation of static flows acceptance over pools is proved by the
 equivalence between star and its leftward variant, and induction on the leftward variant.
 The preservation of static evalatuation of pools over multiple steps is also relied upon.
 
@@ -2899,9 +2910,9 @@ The preservation of static evalatuation of pools over multiple steps is also rel
   $\vdash$ staticEvalPool staticEnv staticComm pool'
 \end{lstlisting}
 
-The completeness of static inclusiveness is derived from various lemmas that
+The soundness of static inclusiveness is derived from various lemmas that
 preserve relations from pairs of dynamic paths to pairs of corresponding static paths. 
-Some of these, among many others, are
+Some of these lemmas are
 the preservation of the strict prefix relation from static to dynamic paths,
 and the preservation of static inclusiveness over extension of static paths.
 
@@ -2915,7 +2926,7 @@ and the preservation of static inclusiveness over extension of static paths.
   lemma staticInclusivePreservedUnorderedExtension: path1 path2 l1 l2 .
     staticInclusive path1 path2, 
     $\neg$ (prefix path1 path2),
-    $\neg$ (prefix path2 path1), 
+    $\neg$ (prefix path2 path1)
   $\vdash$ staticInclusive (path1 @ [l1]) (path2 @ [l2])
 \end{lstlisting}
 
@@ -2923,11 +2934,11 @@ These various preservation lemmas are derived from the basic properites of lists
 and straight forward properities of path correspondence, such as commutitivity, as
 well as foundational principles like induction of corresponding paths.
 
-The lemma for completeness of sending identifier classification \lstinline{staticSendIdSound}
-is proved using the lemma for
-soundness of static evaluation for synchronization of a send event,
+The lemma for soundness of static sending identifier classification \lstinline{staticSendIdSound}
+is proved using the lemma for soundness of static evaluation for synchronization of a send event,
 and the lemma for soundness of static evaluation.
-Since only sending identifiers are relevant the completeness of static reachability is
+Since only sending identifiers are relevant,
+the soundness of static reachability is
 used to ensure that the static step is indeed a sending identifier. 
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -2957,52 +2968,65 @@ Both the soundness of static evaluation on the syncrhonization of a send event,
 and the soundness of static evaluation follow from
 the preservation of static evaluation over multiple steps of dynamic evaluation.
 
-The lemma for completeness of static reachability relies on a reformulation of
+The lemma for soundness of static reachability relies on a reformulation of
 static reachability defined by proofs that induct on a larger term
 containing the reachable term. This definition is useful for forward derivations
 of reachability relations, however it doesn't offer much guidance for deciding reachability. 
 In constrast, the definition of the original static reachability relation is
 syntax-directed in order to portray a clear connection to
 a computable algorithm that can determine the reachable term from an initial program.
-To show that an term is reachable from the initial program, it is necessary to
+To show that a term is reachable from the initial program, it is necessary to
 show that each intermediate term is reachable from the initial term. Thus, the
 induction needs to enable unraveling the goals from the end of the program to the beginning,
 maintaining the initial program state in context for each subgoal. Because the static
 reachable relation is a "may" analysis, the generalized relations hold unless there is
-a clear reason that it could never hold. For instance, in the relation over atoms, for all atoms other than functions, 
+a clear reason that it could never hold.
+For instance, in the relation over atoms, for all atoms other than functions, 
 it holds without any additional demands.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticReachableForward: term -> term -> bool where
+
     refl: t$_0$ .
     $\vdash$ staticReachableForward t$_0$ t$_0$
+
   * spawn: t$_0$ n t$_c$ t' .
       staticReachableForward t$_0$ (Bind n (Spwn t$_c$) t')
     $\vdash$ staticReachableForward t$_0$ t$_c$
+
   * distincLeft: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
       staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
     $\vdash$ staticReachableForward t$_0$ t$_l$
+
   * distincRight: t$_0$ n n$_s$ n$_l$ t$_l$ n$_r$ t$_r$ t' .
       staticReachableForward t$_0$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
     $\vdash$ staticReachableForward t$_0$ t$_r$
+
   * function: t$_0$ n n$_f$ n$_p$ t$_b$ t' .
       staticReachableForward t$_0$ (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
     $\vdash$ staticReachableForward t$_0$ t$_b$
+
   * seq: t$_0$ n n$_f$ n$_p$ t$_b$ t' .
       staticReachableForward t$_0$ (Bind n c t')
     $\vdash$ staticReachableForward t$_0$ t'
 
   predicate staticReachableAtom: term -> atom -> bool where
+
     sendEvt: t$_0$ n$_c$ n$_m$ .
     $\vdash$ staticReachableAtom t$_0$ (SendEvt n$_c$ n$_m$)
+
   * recvEvt: t$_0$ n$_c$ .
     $\vdash$ staticReachableAtom t$_0$ (RecvEvt n$_c$)
+
   * pair: t$_0$ n$_1$ n$_2$ .
     $\vdash$ staticReachableAtom t$_0$ (Pair n$_1$ n$_2$)
+
   * left: t$_0$ n$_l$ .
     $\vdash$ staticReachableAtom t$_0$ (Lft n$_l$)
+
   * right: t$_0$ n$_r$
     $\vdash$ staticReachableAtom t$_0$ (Rht n$_r$)
+
   * function: t$_0$ t$_b$ n$_f$ n$_p$ t$_b$ . 
       staticReachableForward t$_0$ t$_b$ 
     $\vdash$ staticReachableAtom t$_0$ (Fun n$_f$ n$_p$ t$_b$)
@@ -3026,7 +3050,7 @@ it holds without any additional demands.
 
   predicate staticReachableStack: term -> stack -> bool where
     empty: t$_0$ .
-    $\vdash$ staticReachableStack t$_0$ [])
+    $\vdash$ staticReachableStack t$_0$ []
   * cons: t$_0$ t$_k$ env$_k$ stack' .
       staticReachableForward t$_0$ t$_k$, 
       staticReachableEnv t$_0$ env$_k$,
@@ -3044,8 +3068,8 @@ it holds without any additional demands.
 
 \end{lstlisting}
 
-The completeness of static reachability follows the definitions
-a generalized form of completeness over pools.
+The soundness of static reachability follows from the definitions
+its generalized form of static reachability of pools and its soundness.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma staticReachablePoolSound: t$_0$ pool .
@@ -3053,11 +3077,10 @@ a generalized form of completeness over pools.
   $\vdash$ staticReachablePool t$_0$ pool
 \end{lstlisting}
 
-The completeness over pools follows from the lemma that the forward
-static reachability implies the rightward (and syntax-directed) static reachability,
-and the equivalence between star and the forward star. It relies on induction of the
-forward star and constructs the static reachability
-proposition using the forward definition. 
+The soundness of static reachability of pools follows from the lemma that the forward
+static reachability implies the syntax-directed static reachability,
+and the equivalence between star and the leftward star. It relies on induction of the
+leftward star and constructs the static reachability proposition using the forward definition. 
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma staticReachableForwardImpliesStaticReachable: t$_0$ t. 
@@ -3075,16 +3098,17 @@ reachability follows from induction on the forward static reachability and the
 transitivity of static reachability, which follows from induction on static reachability.
 
 \section{Higher Precision Communication} \label{high-precision}
-In many programs, like in the server example, channels are created within s.
-The s may be applied multiple times, creating multiple distinct channels
+In many programs, like in the server example, channels are created within functions.
+The functions may be applied multiple times, creating multiple distinct channels
 with each application. It may be that each channel is used just once and then discarded.
-However, the static analysis just described would identify all the distinct channels by the
+However, the static analysis described so far would identify all the distinct channels by the
 same name, since each distinct channel is created by the same piece of syntax.
-Thus, it would classify those channels as being used more than once.
+Thus, it would classify those channels as being used more than once,
+when actually they might be used at most once each.
 
 It is possible to be more precise by trimming the program under analysis down to just the part
 where the static channel is live. The static channel cannot be live between the last use of a
-dynamic channel and the creation of a new dynamic channel with the same name. Thus, each
+corresponding dynamic channel and the creation of a new dynamic channel with the same name. Thus, each
 truncated program would have just one dynamic channel corresponding to the static channel under
 analysis. 
 
@@ -3095,20 +3119,21 @@ channel is live. It should also be as small as possible, for higher precision.
 
 In the whole graph used in the previous analysis, a spawning flow
 connects a child thread to the rest of the program. For a trimmed graph,
-it may be clear the channel of interest is not created until after the spawn step,
-so there is not need to include the spawning flow. However, later on in the
+it may be that the channel of interest is not created until after some spawn step,
+so there is no need to include the spawning flow in the trimmed graph. However, later on in the
 program it may become apparent that the channel of interest is sent via another channel to
 that spawned thread. Since there is no spawning flow already connecting that
 thread to the trimmed graph, a flow with a sending mode is used between the
-sending identifier and the receiving identifier of synchronization.
-Modes for typical control flow of
-sequencing, calling, returning, and spawning are also included flows.
+sending identifier and the receiving identifier of synchronization
+in order to link the part of the thread with the live channel into the graph.
+In additions to the new mode of sending, previous modes of
+sequencing, calling, returning, and spawning are also included.
 
 \begin{lstlisting}[language=logic, mathescape]
   datatype mode =
     MSeq
   | MSpwn
-  | ESend name
+  | MSend name
   | MCll
   | MRtn
 
@@ -3119,10 +3144,10 @@ sequencing, calling, returning, and spawning are also included flows.
   type staticPath = static_step list
 \end{lstlisting}
 
-We use a slightly modified version of the server implementation
-to demonstrate some key concepts of the higher precision analysis.
-An additional loop function \lstinline{lp} has been added to the
-server implementation. The loop basically just wastes steps, but it is used to demontrate how
+To demonstrate some key concepts of the higher precision analysis,
+an additional loop function \lstinline{lp} is added to the
+example server implementation. The loop basically just wastes steps,
+but it is used to demontrate how
 liveness analysis treats functions that don't contain any channel of interest.
 
 \begin{lstlisting}[language=normal_lang, mathescape]
@@ -3194,11 +3219,13 @@ liveness analysis treats functions that don't contain any channel of interest.
   bind p4 = pair srvr l2
   bind z12 = app rqst p4
   rslt z12
+
 \end{lstlisting}
 
 
-The static acceptance by flows for higher precision is similar to that of the lower precision analysis.
-However, it must additionally consider flows with the sending mode. 
+The static flows acceptance for higher precision is similar to that of the lower precision analysis.
+However, it must additionally consider flows with the sending mode. To accomodate the sending flow
+from sender to receiver, the initial program must be carried each inference rule.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticFlowsAcceptTm:
@@ -3264,7 +3291,7 @@ However, it must additionally consider flows with the sending mode.
         (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv nSE,
       $\rightarrow$ (SChn n$_c$) $\in$ staticEnv n$_{sc}$
       $\rightarrow$ staticRecvId staticEnv t$_0$ n$_c$ (NBnd n$_y$)
-      $\rightarrow$ (NBnd n, ESend n$_{se}$, NBnd n$_y$) $\in$ graph),
+      $\rightarrow$ (NBnd n, MSend n$_{se}$, NBnd n$_y$) $\in$ graph),
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Sync n$_{se}$) t')
 
@@ -3315,12 +3342,10 @@ flows can interpret a program as a flow graph.
 
 \includegraphics[width=1\textwidth]{cml-graph-lp.pdf}
 
-
 For the liveness of channel analysis, it is necessary to track any name built on a channel.
-A name is build on a channel if the name binds to a static value 
-containing a channel of interest, or a static value that contains names built on the channel.
-In the case where the tracked name possibly binds to a function,
-for the name to be considered built on a channel,
+A name is built on a channel if the name binds to a static value 
+containing a channel of interest or a static value that contains names thar are built on the channel.
+For the name to be considered built on a channel in the case where the tracked name possibly binds to a function,
 the channel simply needs to be live in the body of the function.
 This condition is represented formally as the requirement that there is a 
 name, such that it is a free variable in the function, and it's built on the channel.
@@ -3411,8 +3436,7 @@ name, such that it is a free variable in the function, and it's built on the cha
     $\vdash$ staticBuiltOnChan staticEnv n$_c$ n
 \end{lstlisting}
 
-
-The static liveness of a channel describes entry functions and exit functions.
+The static channel liveness describes entry functions and exit functions.
 The entry function maps a term identifier to a set of names built on
 the given channel, if those names are live at the entry of that term identifier.
 The exit function maps a term identifier to a
@@ -3420,20 +3444,20 @@ set of names built on the given channel, if those names are live at the exit of 
 term identifier.
 
 The following diagram illustrates the entry and exit sets of each term id
-for channel \lstinline{k1} in
-the server example. Each entry set appears right above its related term identifier,
-and each exit setappears right below its related term identifier. 
+for channel \lstinline{chn k1} in the server example.
+Each entry set appears right above its related term identifier,
+and each exit set appears right below its related term identifier. 
 
 \includegraphics[width=1\textwidth]{cml-liveness-analysis-k1.pdf}
 
 The following diagram illustrates the entry and exit sets of each term id
-for channel \lstinline{k4} in
+for channel \lstinline{chn k4} in
 the server example. Each entry set appears right above its related term identifier,
 and each exit setappears right below its related term identifier. 
 
-\includegraphics[width=1\textwidth]{cml-liveness-analysis-k4.pdf} \\\\\\\\\\\\
+\includegraphics[width=1\textwidth]{cml-liveness-analysis-k4.pdf}
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticLiveChan:
+  predicate staticChanLive:
     static_value_map -> term_id_map 
   -> term_id_map -> name -> term -> bool
   where
@@ -3443,19 +3467,19 @@ and each exit setappears right below its related term identifier.
         (staticBuiltOnChan staticEnv n$_c$ n$_y$)
       $\rightarrow$ {n$_y$} $\subseteq$ entr (NRslt n$_y$)
       )
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Rslt n$_y$)
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Rslt n$_y$)
 
   * unit: exit n entr t' staticEnv n$_c$ .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n Unt t')
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n Unt t')
 
   * makeChan: exit n entr t' staticEnv n$_c$ .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n MkChn t')
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n MkChn t')
 
   * sendEvt: exit n entr staticEnv n$_c$ n$_{sc}$ n$_m$ t' n$_c$ .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
@@ -3468,19 +3492,19 @@ and each exit setappears right below its related term identifier.
       $\rightarrow$ {n$_m$} $\subseteq$ entr (NBnd n)
       ),
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Atom (SendEvt n$_{sc}$ n$_m$)) t')
 
   * recvEvt: exit n entr staticEnv n$_c$ n$_r$ n$_{rc}$.   
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       (
-        staticBuiltOnChan staticEnv n$_c$ n$_r$ then
+        staticBuiltOnChan staticEnv n$_c$ n$_r$
       $\rightarrow$ {n$_r$} $\subseteq$ entr (NBnd n)
       ),
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Atom (RecvEvt n$_{rc}$)) t')
 
   * pair: exit n entr staticEnv t$_c$ n$_1$ n$_2$ t' .
@@ -3494,8 +3518,8 @@ and each exit setappears right below its related term identifier.
       $\rightarrow$ {n$_2$} $\subseteq$ entr (NBnd n)
       ),
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Pair n$_1$ n$_2$)) t'))
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (Atom (Pair n$_1$ n$_2$)) t'))
 
   * left: exit n entr staticEnv n$_c$ n$_a$ t' . 
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
@@ -3504,8 +3528,8 @@ and each exit setappears right below its related term identifier.
       $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
       ),
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Lft n$_a$)) t'))
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (Atom (Lft n$_a$)) t'))
 
   * right: exit n entr staticEnv n$_c$ n$_a$ t' . 
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
@@ -3514,25 +3538,25 @@ and each exit setappears right below its related term identifier.
       $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
       ),
       entr (termId e) $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Atom (Rht n$_a$)) e)
+      staticChanLive staticEnv entr exit n$_c$ t
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (Atom (Rht n$_a$)) e)
 
   * function: exit n entr t$_b$ n$_p$ n staticEnv n$_c$ t' n$_f$ . 
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       (entr (termId t$_b$) \ {n$_f$, n$_p$}) $\subseteq$ entr (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t$_b$,
+      staticChanLive staticEnv entr exit n$_c$ t$_b$,
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
 
   * spawn: exit n entr t' t$_c$ n$_c$ staticEnv .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       entr (termId t') $\subseteq$ exit (NBnd n),
       entr (termId t$_c$) $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t$_c$,
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      staticChanLive staticEnv entr exit n$_c$ t$_c$,
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Spwn t$_c$) t')
 
   * sync: exit n entr staticEnv n$_c$ n$_e$ t' .
@@ -3542,8 +3566,8 @@ and each exit setappears right below its related term identifier.
       $\rightarrow$ {n$_e$} $\subseteq$ entr (NBnd n)
       ),
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t',
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      staticChanLive staticEnv entr exit n$_c$ t',
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Sync n$_e$) t')
 
   * first: exit n entr staticEnv n$_c$ n$_a$ t' .
@@ -3553,8 +3577,8 @@ and each exit setappears right below its related term identifier.
       $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
       ),
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Fst n$_a$) t')
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (Fst n$_a$) t')
   * second: exit n entr staticEnv n$_c$ n$_a$ t' .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
       (
@@ -3562,8 +3586,8 @@ and each exit setappears right below its related term identifier.
       $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
       ),
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Snd n$_a$) t')
 
   * distinction: exit n entr t$_l$ n$_l$ t$_r$ n$_r$ staticEnv n$_c$ n$_s$ t' .
@@ -3574,11 +3598,11 @@ and each exit setappears right below its related term identifier.
         staticBuiltOnChan staticEnv n$_c$ n$_s$
       $\rightarrow$ {n$_s$} $\subseteq$ entr (NBnd n)
       ),
-      staticLiveChan staticEnv entr exit n$_c$ t$_l$,
-      staticLiveChan staticEnv entr exit n$_c$ t$_r$,
+      staticChanLive staticEnv entr exit n$_c$ t$_l$,
+      staticChanLive staticEnv entr exit n$_c$ t$_r$,
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
 
   * application: exit n entr staticEnv n$_c$ n$_a$ n$_f$ t' .
       (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
@@ -3591,55 +3615,57 @@ and each exit setappears right below its related term identifier.
       $\rightarrow$ {n$_f$} $\subseteq$ entr (NBnd n)
       ),
       entr (termId t') $\subseteq$ exit (NBnd n),
-      staticLiveChan staticEnv entr exit n$_c$ t'
-    $\vdash$ staticLiveChan staticEnv entr exit n$_c$ (Bind n (App n$_f$ n$_a$) t')
+      staticChanLive staticEnv entr exit n$_c$ t'
+    $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (App n$_f$ n$_a$) t')
 \end{lstlisting}
 
-The static liveness of a flow checks if a flow is live across call and return boundaries,
+The static flow liveness checks if a flow is live across call and return boundaries,
 with respect to the entry and exit liveness functions. 
 The channel liveness relation says if a channel is live within a function, but
 does not say anything whether or not a channel remains live across calling or returning flows.
-Additionally, for the intraprocedural, it simply lifts the entry and exit function information.
+Additionally, for the intraprocedural flows, it simply lifts the entry and exit function information.
 No channel is considered to be live in the body of the loop at \lstinline[language=normal_lang]{bind lp}.
 However, a channel may be live before the loop is called and after the loop returns. 
-In such a case, the live flow is retained from the caller to within the loop function's body, 
-even though the steps in the loop may not be live according to the entry function in the static channel liveness.
+In such a case, the live flow is retained from the caller to within the loop function's body and from the result
+of the body back to the caller's sequenced term, 
+even though the steps in the loop may not be live according to the entry function in static channel liveness.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticLiveFlow:
+  predicate staticFlowLive:
     graph -> term_id_map -> term_id_map -> flow -> bool
   where
+
     seq: l l' graph exit entr . 
       (l, MSeq, l') $\in$ graph,
       $\neg$ (exit l = {}),
       $\neg$ (entr l' = {})
-    $\vdash$ staticLiveFlow graph entr exit (l, MSeq, l')
+    $\vdash$ staticFlowLive graph entr exit (l, MSeq, l')
+
   * spawn: l l' graph exit entr .
       (l, MSpwn, l') $\in$ graph, 
       $\neg$ (exit l = {}),
       $\neg$ (entr l' = {})
-    $\vdash$ staticLiveFlow graph entr exit (l, MSpwn, l')
+    $\vdash$ staticFlowLive graph entr exit (l, MSpwn, l')
+
   * call: l l' graph exit entr .
       (l, MCll, l') $\in$ graph,
       ($\neg$ (exit l = {})) $\vee$ ($\neg$ (entr l' = {}))
-    $\vdash$ staticLiveFlow graph entr exit (l, MCll, l')
+    $\vdash$ staticFlowLive graph entr exit (l, MCll, l')
+
   * return: l l' graph entr exit .
       (l, MRtn, l') $\in$ graph,
       $\neg$ (entr l' = {})
-    $\vdash$ staticLiveFlow graph entr exit (l, MRtn, l')
+    $\vdash$ staticFlowLive graph entr exit (l, MRtn, l')
+
   * send: n$_s$ n$_e$ n$_r$ graph entr exit .
-      ((NBnd n$_s$), ESend n$_e$, (NBnd n$_r$)) $\in$ graph, 
+      ((NBnd n$_s$), MSend n$_e$, (NBnd n$_r$)) $\in$ graph, 
       {n$_e$} $\subseteq$ (entr (NBnd n$_s$))
-    $\vdash$ staticLiveFlow graph entr exit
-      ((NBnd n$_s$), ESend n$_e$, (NBnd n$_r$))
+    $\vdash$ staticFlowLive graph entr exit
+      ((NBnd n$_s$), MSend n$_e$, (NBnd n$_r$))
 \end{lstlisting}
 
-The static traceability for the higher precision analysis states
-that an entire static path can be traced through some graph and
-is live with respect to some entry and exit functions.
-
 The following diagram illustrates the graph of the server example,
-containing only live flows for channel \lstinline{k1}. \
+containing only live flows for channel \lstinline{chn k1}. \
 
 \includegraphics[width=0.9\textwidth]{cml-graph-k1.pdf}
 
@@ -3647,6 +3673,9 @@ The following diagram illustrates the graph of the server example,
 containing only live flows for channel \lstinline{k4}. \
 
 \includegraphics[width=0.7\textwidth]{cml-graph-k4.pdf}
+
+The static traceability for the higher precision analysis states
+that a channel is live for an entire static path found within a graph.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticTraceable:
@@ -3659,7 +3688,7 @@ containing only live flows for channel \lstinline{k4}. \
    * snoc: graph entr exit start middle path isEnd mode. 
        staticTraceable graph entr exit start ($\lambda$ l . l = middle) path, 
        (isEnd end),
-       staticLiveFlow graph entr exit (middle, mode, end) 
+       staticFlowLive graph entr exit (middle, mode, end) 
      $\vdash$ staticTraceable graph entr exit start isEnd (path @ [(middle, mode)]
 \end{lstlisting}
 
@@ -3689,12 +3718,12 @@ given paths do not compete in any run of a program.
       (path @ [(NBnd n, MSpwn)] @ path2)
   * sendLeft: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ [(NBnd n, ESend n$_e$)] @ path1)
+      (path @ [(NBnd n, MSend n$_e$)] @ path1)
       (path @ [(NBnd n, MSeq)] @ path2)
   * sendRight: path n path1 path2 .
     $\vdash$ staticInclusive
       (path @ [(NBnd n, MSeq)] @ path1)
-      (path @ [(NBnd n, ESend n$_e$)] @ path2)
+      (path @ [(NBnd n, MSend n$_e$)] @ path2)
 
   predicate singular: static_path -> static_path -> bool where
     refl: path .
@@ -3720,7 +3749,7 @@ are otherwise similar to the lower precision classifications.
     intro: staticEnv staticComm t graph entr exit n$_c$ 
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
-      staticLiveChan staticEnv entr exit n$_c$ t, 
+      staticChanLive staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
         (staticSendId staticEnv t n$_c$)) noncompetitive
     $\vdash$ staticOneToMany staticEnv t n$_c$
@@ -3729,7 +3758,7 @@ are otherwise similar to the lower precision classifications.
     intro: staticEnv staticComm t graph entr exit n$_c$ 
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
-      staticLiveChan staticEnv entr exit n$_c$ t, 
+      staticChanLive staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
         (staticRecvId staticEnv t n$_c$)) noncompetitive
     $\vdash$ staticManyToOne staticEnv t n$_c$
@@ -3738,7 +3767,7 @@ are otherwise similar to the lower precision classifications.
     intro: staticEnv staticComm t graph entr exit n$_c$ 
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
-      staticLiveChan staticEnv entr exit n$_c$ t, 
+      staticChanLive staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$) 
         (staticSendId staticEnv t n$_c$)) noncompetitive, 
       forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
@@ -3749,7 +3778,7 @@ are otherwise similar to the lower precision classifications.
     intro: staticEnv staticComm t graph entr exit n$_c$ . 
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
-      staticLiveChan staticEnv entr exit n$_c$ t, 
+      staticChanLive staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
         (staticSendId staticEnv t n$_c$)) singular
     $\vdash$ staticOneShot staticEnv t n$_c$
@@ -3758,23 +3787,23 @@ are otherwise similar to the lower precision classifications.
     intro: staticEnv staticComm t graph entr exit n$_c$ . 
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
-      staticLiveChan staticEnv entr exit n$_c$ t, 
+      staticChanLive staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
         (staticSendId staticEnv t n$_c$)) singular,
       forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
-        (staticRecvId staticEnv t n$_c$)) singular
+        (staticRecvId staticEnv t n$_c$)) noncompetitive 
     $\vdash$ staticOneSync staticEnv t n$_c$
   \end{lstlisting}
 
 
 \subsection{Higher Precision Soundness Proof Strategy}
-To prove soundness of the communication classification, it should be possible to use
+To prove soundness of the static communication classification, it should be possible to use
 previous techniques of generalizing propositions over pools and other semantic components,
-along with finding equivalent representations of propositions that vary in the inductive
+along with finding equivalent representations of propositions that vary in their inductive
 subcomponent. One thing that will make carrying out the formal proof particularly tricky is
 that dynamic paths in the dynamic semantics need to correspond to static paths from
 the trimmed graphs, which might also contain sending flows,
-instead of the dynamic paths spawning flows.
+instead of the spawning flows of the dynamic paths.
 The correspondence between these dynamic paths and static paths
 is not bijective, as it is for the lower precision analysis. However, finding a satisfactory
 correspondence for each dynamic and static path is critical for proving soundness.
@@ -3782,10 +3811,10 @@ correspondence for each dynamic and static path is critical for proving soundnes
 Essentially, it will be necessary to show that static
 properties that hold for some static path are preserved for corresponding dyamic paths. 
 However, in the higher precision analysis these paths correspond modulo the channel of interest.
-Let's outline the derivation of soundness of one-shot classification.
+An an outline of the derivation of soundness of one-shot classification demonstrates the strategy so far.
 
 \begin{lstlisting}[language=logic, mathescape]
-  theorem staticOneShotSound:t$_0$ n$_c$ path$_c$ . 
+  theorem staticOneShotSound: t$_0$ n$_c$ path$_c$ . 
     staticOneShot t$_0$ n$_c$
   $\vdash$ oneShot t$_0$  (Chan path$_c$ n$_c$)
 \end{lstlisting}
@@ -3795,22 +3824,27 @@ correlating dynamic paths with static paths.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate pathsCorrespond: dynamic_path -> static_path -> bool where
+
     empty: pathsCorrespond [] []
+
   * seq: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
       (path @ [DSeq n])
       (staticPath @ [(NBnd n, MSeq)])
+
   * spawn: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
       (path @ [DSpwn n])
       (staticPath @ [(NBnd n, MSpwn)])
+
   * call: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
       (path @ [DCll n])
       (staticPath @ [(NBnd n, MCll)])
+
   * return: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
@@ -3819,18 +3853,17 @@ correlating dynamic paths with static paths.
 
 
   predicate dynamicBuiltOnChanVal val -> chan -> bool where
-    chan: c .
-    $\vdash$ dynamicBuiltOnChanVal (VChn c) c
+    chan: chan .
+    $\vdash$ dynamicBuiltOnChanVal (VChn chan) chan
   * closure: env c atom .
-      dynamicBuiltOnChanEnv env c
-    $\vdash$ dynamicBuiltOnChanVal (VClsr atom env) c
+      dynamicBuiltOnChanEnv env chan
+    $\vdash$ dynamicBuiltOnChanVal (VClsr atom env) chan
 
   and dynamicBuiltOnChanEnv: environment -> chan -> bool where
-    intro: env n v c . 
+    intro: env n v chan . 
       env n = Some v,
-      dynamicBuiltOnChanVal v c
-    $\vdash$ dynamicBuiltOnChanEnv env c
-
+      dynamicBuiltOnChanVal v chan
+    $\vdash$ dynamicBuiltOnChanEnv env chan
 
   predicate pathsCorrespondModChan:
     tm -> chan -> dynamic_path -> static_path -> bool
@@ -3854,7 +3887,7 @@ correlating dynamic paths with static paths.
       pathsCorrespond path$_{sfx}$ staticPath$_{sfx}$
     $\vdash$ pathsCorrespondModChan t$_0$ chan
       (path$_r$ @ (DSeq n$_r$) # path$_{sfx}$)
-      (staticPath$_{pfx}$ @ [(NBnd n$_s$, ESend n$_{se}$), (NBnd n$_r$, MSeq)] @ staticPath$_{sfx}$)
+      (staticPath$_{pfx}$ @ [(NBnd n$_s$, MSend n$_{se}$), (NBnd n$_r$, MSeq)] @ staticPath$_{sfx}$)
 
   * snoc: t$_0$ chan path staticPath site step .
       pathsCongruentModChan t$_0$ chan path staticPath,
@@ -3862,46 +3895,48 @@ correlating dynamic paths with static paths.
     $\vdash$ pathsCongruentModChan t$_0$ chan (path @ [site]) (staticPath @ [step])
 \end{lstlisting}
 
-Additionally the soundness theorem follows from the completeness of static traceability,
-the completeness of static inclusiveness, and the completeness of a sending identifier classification. 
-The reasoning about the sending identifier is identical to that of the lower precision analysis, but
-the reasoning for the former two is significantly more complicated and not yet completed.
-The complication arises from the
-correlation between dynamic paths and static paths. The proofs depend on finding a static 
-path that depends on a given dynamic path. In the lower precision analysis the
-correlation was straightforward. There was only one possible static path to choose for it
+Additionally the soundness theorem follows from the soundness of static traceability,
+the soundness of static inclusiveness, and the soundness of sending identifier classification. 
+The reasoning about the sending identifier classification is identical to that of the lower precision analysis,
+but the reasoning for the former two is significantly more complicated and not yet completed.
+The complication arises from the correlation between dynamic paths and static paths.
+The proofs depend on finding a static path that depends on a given dynamic path.
+In the lower precision analysis the correlation was straightforward.
+There was only one possible static path to choose for it
 to correlate with the given dynamic path. In the higher precision analysis, the relationship
 between the two kinds of paths is not so simple, and finding a description of the static path
-that correlates with the dynamic path is much more challenging.
+that correlates with the dynamic path is more challenging.
 
-
-The proposition \lstinline{isSendPath pool' (Ch path$_c$ n$_c$) path'} is derived by unfolding the definition of \lstinline{oneShot}. It is generalized by form \lstinline{pool' path' = Some (Stt t' env' stack'), dynamicBuiltOnChanState (Stt t' env' stack') (Ch path$_c$ n$_c$)} in the soundess of static traceability.
+The proposition \lstinline[mathescape]{isSendPath pool' (Ch path$_c$ n$_c$) path'} is derived
+by unfolding the definition of \lstinline{oneShot}.
+It is generalized by \lstinline[mathescape]{pool' path' = Some (Stt t' env' stack'),}\\
+\lstinline[mathescape]{dynamicBuiltOnChanState (Stt t' env' stack') (Ch path$_c$ n$_c$)} in the soundess of static traceability.
 
 \begin{lstlisting}[language=logic, mathescape]
 
   predicate dynamicBuiltOnChanStack: contin list -> chan -> bool where
-    env: env$_k$ c n$_k$ t$_k$ stack' .
-       dynamicBuiltOnChanEnv env$_k$ c
-    $\vdash$ dynamicBuiltOnChanStack (Ctn n$_k$ t$_k$ env$_k$ # stack') c
-  * stack: env$_k$ c n$_k$ t$_k$ stack' .
-      dynamicBuiltOnChanStack stack' c
-    $\vdash$ dynamicBuiltOnChanStack (Ctn n$_k$ t$_k$ env$_k$ # stack') c
+    env: env$_k$ chan n$_k$ t$_k$ stack' .
+       dynamicBuiltOnChanEnv env$_k$ chan
+    $\vdash$ dynamicBuiltOnChanStack (Ctn n$_k$ t$_k$ env$_k$ # stack') chan
+  * stack: env$_k$ chan n$_k$ t$_k$ stack' .
+      dynamicBuiltOnChanStack stack' chan
+    $\vdash$ dynamicBuiltOnChanStack (Ctn n$_k$ t$_k$ env$_k$ # stack') chan
   
   predicate dynamicBuiltOnChanState: state -> chan -> bool where
-    env: env c t stack . 
-      dynamicBuiltOnChanEnv env c
-    $\vdash$ dynamicBuiltOnChanState (Stt t env stack) c
-  * stack: stack c t env .
-      dynamicBuiltOnChanStack stack c
-    $\vdash$ dynamicBuiltOnChanState (Stt t env stack) c
+    env: env chan t stack . 
+      dynamicBuiltOnChanEnv env chan
+    $\vdash$ dynamicBuiltOnChanState (Stt t env stack) chan
+  * stack: stack chan t env .
+      dynamicBuiltOnChanStack stack chan
+    $\vdash$ dynamicBuiltOnChanState (Stt t env stack) chan
 
-  lemma staticTraceableSound: t$_0$ pool comm path n c t' env stack staticEnv staticComm
+  lemma staticTraceableSound: t$_0$ pool comm path t env stack staticEnv staticComm
   entr exit n$_c$ graph isEnd path$_c$  . 
     star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
     pool path = Some (Stt t env stack),
     dynamicBuiltOnChanState (Stt t env stack) (ch path$_c$ n$_c$)
     staticEval staticEnv staticComm t$_0$,
-    staticLiveChan staticEnv entr exit n$_c$ t$_0$,
+    staticChanLive staticEnv entr exit n$_c$ t$_0$,
     staticFlowsAccept staticEnv graph t$_0$, 
     isEnd (tmId t)
   $\vdash$ exists staticPath . 
@@ -3911,7 +3946,7 @@ The proposition \lstinline{isSendPath pool' (Ch path$_c$ n$_c$) path'} is derive
   lemma staticInclusiveSound: t$_0$ pool comm staticEnv entr exit n$_c$ graph staticComm
   path1 stt1 path$_c$ staticPath1 path2 stt2 staticPath2 .
     star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm, 
-    staticLiveChan staticEnv entr exit n$_c$ t$_0$, 
+    staticChanLive staticEnv entr exit n$_c$ t$_0$, 
     staticFlowsAccept staticEnv graph t$_0$, 
     staticEval staticEnv staticComm t$_0$, 
     pool path1 = Some stt1, 
@@ -3926,17 +3961,14 @@ The proposition \lstinline{isSendPath pool' (Ch path$_c$ n$_c$) path'} is derive
 \end{lstlisting}
 
 
-
 The generalization to the dynamic channels built on state appears necessary in order to prove the soundness of
-the paths corresponding modulo a channel and static traceability. This proof and the soundness of static inclusivity
-are under active development at the time of this writing.
-
-  
+the paths corresponding modulo a channel and static traceability.
+This proof and the soundness of static inclusivity are under active development at the time of this writing.
 
 
 
 \section{Related Work}
-There has been much research on both dynamic and static analysis of concurrency languages. 
+There has been much research on both dynamic and static analysis of concurrent languages. 
 The formal communication classification analysis and soundness proofs in this work are
 based on the analysis and proofs of \textit{Specialization of CML message-passing primitives}
 by Reppy and Xiao \cite{reppy2007specialization}.
@@ -3947,7 +3979,7 @@ and also verification libraries in proof assistants, such as Affeldt et al's Coq
 These systems can verify certain properties of concurrency programs or models, but they don't
 make any guarantees about the analysis itself.
 Rather than focus on mechanizing the analysis, this work has focused on
-mechanizing the theory of analyses for concurrency languages, i.e. the meta-theory of concurrency.
+mechanizing the theory of analyses for concurrent languages, i.e. the meta-theory of concurrency.
 There have been a number of works on the meta-theory of Concurrent ML,
 such as the work of Reppy and Xiao, Nielson et al \cite{nielson1994higher}, Kobayashi et al \cite{kobayashi1995static}, and Gasser et al \cite{gasser1997systematic}.
 There has been relatively little work to mechanize theories of Concurrent ML; however,
@@ -3956,7 +3988,7 @@ there has been much work in the mechanization of the theories of $\pi$-calculus
 
 \section{Future Work}
 The formal syntax, semantics, and communication analysis of this work form the basis of
-a framework for studying concurrency functions, synchronization mechanisms, and their
+a framework for studying Concurrennt ML events, synchronization mechanisms, and their
 applications. These language features enable the construction of reactive programs, which
 have separation of parts that are conceptually distinct, yet still depend on each
 other.
@@ -3970,13 +4002,12 @@ events, sequencencing events, guardining events, among others, would be an impor
 Concurreny is a double edged sword. Without specification of ordering, programs may
 desribe their behavior more clearly or allow parallelism for faster execution. On the other hand,
 unspecified orderings may also lead to nondetermistic behavior, which may be not be wanted. 
-To gain the benefits of concurrency without its hinderance, the language could be extended
+To gain the benefits of concurrency without its hindrance, the language could be extended
 with syntax to identify blocks of code that are required to be deterministic,
 along with a corresponding static analysis that checks if such code is actually
 deterministic. The determinism analysis could rely on the static communication analysis
 to ensure that all syncronized receiving events receive from at most one channel,
-that channel is sent on by at most one thread, and that thread is also deterministic.
-
+and that channel is sent on by at most one thread, and that thread is also deterministic.
 Other analyses could aid optimizations for incremental computation
 \cite{acar2002adaptive}. One possible optimzation could transform a program into one
 that checks for altered dependencies and only recomputes the data that depends on altered dependencies.
