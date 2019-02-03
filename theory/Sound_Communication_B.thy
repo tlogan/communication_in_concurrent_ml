@@ -1159,6 +1159,7 @@ lemma staticTraceablePoolSoundReturn:
 staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
 staticFlowsAcceptPool V F e [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
 star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+
 \<forall>\<pi>' e' env' stack' isEnd.
   ([[] \<mapsto> Stt e Map.empty []], {}) = ([[] \<mapsto> Stt e Map.empty []], {}) \<longrightarrow>
   Em \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
@@ -1167,19 +1168,19 @@ star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Lo
 (Em(pi @ [LRtn x] \<mapsto> Stt ek (envk(xk \<mapsto> v)) k)) \<pi>' = Some (Stt e' env' stack') \<Longrightarrow>
 dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<Longrightarrow>
 isEnd (tmId e') \<Longrightarrow>
-leaf Em pi \<Longrightarrow>
+ leaf Em pi \<Longrightarrow> 
 Em pi = Some (Stt (Rslt x) env (Ctn xk ek envk # k)) \<Longrightarrow>
 env x = Some v \<Longrightarrow>
 \<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path
 "
-apply (drule spec[of _ pi]; clarify?)
-apply (drule spec[of _ "Rslt x"]; clarify?)
-apply (drule spec[of _ "env"]; clarify?)
-apply (drule spec[of _ "(Ctn xk ek envk # k)"]; clarify?)
-apply (drule spec[of _"\<lambda> id . id = (tmId (Rslt x))"]; clarify?)
-apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
 
-  apply (erule notE)
+apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
+  apply (drule spec[of _ pi]; clarify?)
+  apply (drule spec[of _ "Rslt x"]; clarify?)
+  apply (drule spec[of _ "env"]; clarify?)
+  apply (drule spec[of _ "(Ctn xk ek envk # k)"]; clarify?)
+  apply (erule impE)
+
   apply (erule dynamicBuiltOnChanState.cases; auto)
   apply (erule dynamicBuiltOnChanEnv.cases; auto)
   
@@ -1191,9 +1192,12 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (rule dynamicBuiltOnChanEnv_intro; auto)
   apply (rule dynamicBuiltOnChanState.Stack)
   apply (erule dynamicBuiltOnChanStack.Stack)
+  apply (drule_tac x = "\<lambda> id . id = IdRslt x" in spec; auto)
+(*
   apply (rule_tac x = "path @ [(IdRslt x, EReturn)]" in exI; auto)
   
   using Snoc pathsCongruent.Empty pathsCongruent.Return apply fastforce
+*)
   sorry
 
 lemma staticTraceablePoolSoundDynamicEval:
