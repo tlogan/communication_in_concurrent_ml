@@ -373,7 +373,7 @@ inductive staticLiveChan :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm
     \<rbrakk> \<Longrightarrow>
     staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (App f x\<^sub>a) e)
   "
-
+(*
 inductive staticLiveFlow :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> flow \<Rightarrow> bool"  where
   Next:
   "
@@ -413,23 +413,90 @@ inductive staticLiveFlow :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_i
     {xE} \<subseteq> (entr (IdBind xSend)) \<Longrightarrow>
     staticLiveFlow graph entr exit ((IdBind xSend), ESend xE, (IdBind xRecv))
   "
-
-
-
-inductive staticTraceable :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> tm_id \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
+*)
+inductive staticPathExists :: "flow_set \<Rightarrow> tm_id \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty:
   "
-    \<forall> end edge . isEnd end \<longrightarrow> \<not> staticLiveFlow graph entr exit (start, edge, end) \<Longrightarrow>
-    staticTraceable graph entr exit start isEnd []
+    staticPathExists graph start isEnd []
   "
 | Edge:
   "
-    staticTraceable graph entr exit start (\<lambda> l . l = middle) path \<Longrightarrow>
+    staticPathExists graph start (\<lambda> l . l = middle) path \<Longrightarrow>
+    isEnd end \<Longrightarrow>
+    (middle, ENext, end) \<in> graph \<Longrightarrow>
+    staticPathExists graph start isEnd (path @ [(middle, edge)])
+  "
+
+inductive staticPathBalanced :: "static_path \<Rightarrow> bool" where
+  Empty: "
+    staticPathBalanced []  
+  "
+|  CallReturn: "
+    staticPathBalanced path \<Longrightarrow>
+    staticPathBalanced ([(l, ECall)] @ path @ [(l', EReturn)])  
+  "
+| SnocSeq: "
+    staticPathBalanced path \<Longrightarrow>
+    staticPathBalanced (path @ [(l, ENext)])
+  "
+| SnocSpawn: "
+    staticPathBalanced path \<Longrightarrow>
+    staticPathBalanced (path @ [(l, ESpawn)])
+  "
+| SnocSend: "
+   staticPathBalanced path \<Longrightarrow>
+   staticPathBalanced (path @ [(l, ESend _)])
+"
+
+
+
+inductive staticDetour :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> tm_id \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
+  Short: "
     isEnd end \<Longrightarrow>
 
-    staticLiveFlow graph entr exit (middle, edge, end) \<Longrightarrow>
+    \<not> Set.is_empty (exit (IdBind x)) \<Longrightarrow>
+    Set.is_empty (entr (IdRslt xR)) \<Longrightarrow>
 
-    staticTraceable graph entr exit start isEnd (path @ [(middle, edge)])
+    Set.is_empty (exit (IdRslt xR)) \<Longrightarrow>
+    \<not> Set.is_empty (entr end) \<Longrightarrow>
+
+    staticDetour graph entr exit start isEnd [(IdBind x, ECall), (IdRslt xR, EReturn)]
+  "
+|  Long: "
+    isEnd end \<Longrightarrow>
+
+    \<not> Set.is_empty (exit (IdBind x)) \<Longrightarrow>
+    Set.is_empty (entr middle) \<Longrightarrow>
+
+    Set.is_empty (exit (IdRslt xR)) \<Longrightarrow>
+    \<not> Set.is_empty (entr end) \<Longrightarrow>
+    staticPathExists graph start isEnd ([(IdBind x, ECall), (middle, mode)] @ path @ [(IdRslt xR, EReturn)]) \<Longrightarrow>
+    staticPathBalanced ([(IdBind x, ECall), (middle, mode)] @ path @ [(IdRslt xR, EReturn)]) \<Longrightarrow>
+    staticDetour graph entr exit start isEnd ([(IdBind x, ECall), (middle, mode)] @ path @ [(IdRslt xR, EReturn)])
+  "
+
+
+
+inductive staticPathLive :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> tm_id \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
+  Empty:
+  "
+    staticPathLive graph entr exit start isEnd []
+  "
+| Edge:
+  "
+    staticPathLive graph entr exit start (\<lambda> l . l = middle) path \<Longrightarrow>
+    isEnd end \<Longrightarrow>
+    (middle, ENext, end) \<in> graph \<Longrightarrow>
+    \<not> Set.is_empty (exit middle) \<Longrightarrow>
+    \<not> Set.is_empty (entr end) \<Longrightarrow>
+    staticPathLive graph entr exit start isEnd (path @ [(middle, edge)])
+  "
+| Detour:
+  "
+    staticPathLive graph entr exit start (\<lambda> l . l = middle) path \<Longrightarrow>
+    isEnd end \<Longrightarrow>
+    staticDetour graph entr exit start isEnd ((middle, ENext) # detour) \<Longrightarrow>
+    staticPathLive graph entr exit start isEnd (path @ [(middle, ENext)] @ detour)
   "
 
 inductive staticInclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
@@ -490,7 +557,7 @@ inductive noncompetitive :: "static_path \<Rightarrow> static_path \<Rightarrow>
 inductive staticOneToMany :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticPathLive graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) noncompetitive \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
     (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -500,7 +567,7 @@ inductive staticOneToMany :: "tm \<Rightarrow> name \<Rightarrow> bool" where
 inductive staticManyToOne :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticPathLive graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
     (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -511,8 +578,8 @@ inductive staticManyToOne :: "tm \<Rightarrow> name \<Rightarrow> bool" where
 inductive staticOneToOne :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) noncompetitive \<Longrightarrow>
-    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticPathLive graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticPathLive graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
     (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -522,7 +589,7 @@ inductive staticOneToOne :: "tm \<Rightarrow> name \<Rightarrow> bool" where
 inductive staticOneShot :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Sync:
   "
-    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) singular \<Longrightarrow>
+    forEveryTwo (staticPathLive graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) singular \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
     (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -532,8 +599,8 @@ inductive staticOneShot :: "tm \<Rightarrow> name \<Rightarrow> bool" where
 inductive staticOneSync :: "tm \<Rightarrow> name \<Rightarrow> bool" where
   Intro:
   "
-    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) singular \<Longrightarrow>
-    forEveryTwo (staticTraceable graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
+    forEveryTwo (staticPathLive graph entr exit (IdBind xC) (staticSendSite staticEnv e xC)) singular \<Longrightarrow>
+    forEveryTwo (staticPathLive graph entr exit (IdBind xC) (staticRecvSite staticEnv e xC)) noncompetitive \<Longrightarrow>
     staticLiveChan staticEnv entr exit xC e \<Longrightarrow>
     staticFlowsAccept staticEnv graph e \<Longrightarrow>
     (staticEnv, C) \<Turnstile>\<^sub>e e \<Longrightarrow>

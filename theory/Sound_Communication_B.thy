@@ -253,11 +253,11 @@ lemma staticInclusiveSound: "
 
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   pathsCongruentModChan e (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) path1 \<Longrightarrow>
+  staticPathLive F Ln Lx (IdBind xC) (staticSendSite V e xC) path1 \<Longrightarrow>
   
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
   pathsCongruentModChan e (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-  staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) path2 \<Longrightarrow>
+  staticPathLive F Ln Lx (IdBind xC) (staticSendSite V e xC) path2 \<Longrightarrow>
 
   staticInclusive path1 path2
 "
@@ -291,10 +291,10 @@ lemma static_equalitySound: "
   
   \<E>' \<pi>1 \<noteq> None \<Longrightarrow> 
   pathsCongruentModChan e (Ch \<pi> xC) \<pi>1 path1 \<Longrightarrow>
-  staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) path1 \<Longrightarrow>
+  staticPathLive F Ln Lx (IdBind xC) (staticSendSite V e xC) path1 \<Longrightarrow>
   
   pathsCongruentModChan e (Ch \<pi> xC) \<pi>2 path2 \<Longrightarrow>
-  staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) path2 \<Longrightarrow>
+  staticPathLive F Ln Lx (IdBind xC) (staticSendSite V e xC) path2 \<Longrightarrow>
   \<E>' \<pi>2 \<noteq> None \<Longrightarrow> 
 
   \<pi>1 = \<pi>2
@@ -867,9 +867,12 @@ apply (erule callEval.cases; auto; rule staticLiveChanPool.intros; clarify; (cas
     apply (drule_tac x = "xl'" in spec; auto)
     apply (simp add: staticLiveChanEnv.simps)
 
- sorry
+
+    apply (erule staticLiveChan.cases; auto)
+    apply (rule staticLiveChanStack.Nonempty; auto?)
+
+
 (*
-  apply (erule staticLiveChan.cases; auto)
     apply (simp add: staticLiveChanStack.Nonempty)
     apply (simp add: staticLiveChanStack.Nonempty)
 
@@ -1155,7 +1158,7 @@ apply (simp add: staticLiveChanStack.Empty)
 done
 
 
-lemma staticTraceablePoolSoundReturn: 
+lemma staticPathLivePoolSoundReturn: 
 "
 (V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
 staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
@@ -1166,14 +1169,14 @@ star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Lo
   ([[] \<mapsto> Stt e Map.empty []], {}) = ([[] \<mapsto> Stt e Map.empty []], {}) \<longrightarrow>
   Em \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
   dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<longrightarrow>
-  isEnd (tmId e') \<longrightarrow> (\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path) \<Longrightarrow>
+  isEnd (tmId e') \<longrightarrow> (\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticPathLive F Ln Lx (IdBind xC) isEnd path) \<Longrightarrow>
 (Em(pi @ [LRtn x] \<mapsto> Stt ek (envk(xk \<mapsto> v)) k)) \<pi>' = Some (Stt e' env' stack') \<Longrightarrow>
 dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<Longrightarrow>
 isEnd (tmId e') \<Longrightarrow>
  leaf Em pi \<Longrightarrow> 
 Em pi = Some (Stt (Rslt x) env (Ctn xk ek envk # k)) \<Longrightarrow>
 env x = Some v \<Longrightarrow>
-\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path
+\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticPathLive F Ln Lx (IdBind xC) isEnd path
 "
 
 apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
@@ -1200,7 +1203,7 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (rule_tac x = "path @ [(IdRslt x, EReturn)]" in exI; auto)
   apply (rule pathsCongruentModChan.Snoc; auto?)
   using pathsCongruent.Empty pathsCongruent.Return apply fastforce
-  apply (rule staticTraceable.Edge; auto?)
+  apply (rule staticPathLive.Edge; auto?)
 
 
 thm staticFlowsAcceptPoolPreserved[of V F e C Em Hm]
@@ -1224,7 +1227,7 @@ thm staticFlowsAcceptPoolPreserved[of V F e C Em Hm]
   apply (erule staticLiveChanStack.cases; auto)
 done
 
-lemma staticTraceablePoolSoundDynamicEval:
+lemma staticPathLivePoolSoundDynamicEval:
 "
 (V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
 staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
@@ -1235,18 +1238,18 @@ star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Lo
   Em \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
   dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<longrightarrow>
   isEnd (tmId e') \<longrightarrow> 
-  (\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path) \<Longrightarrow>
+  (\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticPathLive F Ln Lx (IdBind xC) isEnd path) \<Longrightarrow>
 (Em, Hm) \<rightarrow> (E', H') \<Longrightarrow>
 E' \<pi>' = Some (Stt e' env' stack') \<Longrightarrow>
 dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<Longrightarrow>
 isEnd (tmId e') \<Longrightarrow> 
-\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticTraceable F Ln Lx (IdBind xC) isEnd path
+\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticPathLive F Ln Lx (IdBind xC) isEnd path
 "
 apply (erule dynamicEval.cases; clarify?)
-apply (insert staticTraceablePoolSoundReturn; auto)
+apply (insert staticPathLivePoolSoundReturn; auto)
 sorry
 
-lemma staticTraceablePoolSound':
+lemma staticPathLivePoolSound':
 "
 star_left dynamicEval EH EH' \<Longrightarrow>
 (V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
@@ -1259,7 +1262,7 @@ staticFlowsAcceptPool V F e [[] \<mapsto> (Stt e empty [])] \<Longrightarrow>
   isEnd (tmId e') \<longrightarrow>
   (\<exists> path .
     pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and>
-    staticTraceable F Ln Lx (IdBind xC) isEnd path)
+    staticPathLive F Ln Lx (IdBind xC) isEnd path)
 "
 
 apply (erule star_left.induct; clarify)
@@ -1268,10 +1271,10 @@ apply (erule star_left.induct; clarify)
   apply (erule dynamicBuiltOnChanEnv.cases; auto)
     apply (case_tac "\<pi>' = []"; auto)
   apply (erule dynamicBuiltOnChanStack.cases; auto)
-  apply (insert staticTraceablePoolSoundDynamicEval; auto?)
+  apply (insert staticPathLivePoolSoundDynamicEval; auto?)
 done
 
-lemma staticTraceablePoolSound:
+lemma staticPathLivePoolSound:
 "
   \<E>' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<Longrightarrow>
   dynamicBuiltOnChanState (Stt e' \<rho>' \<kappa>') (Ch \<pi>C xC) \<Longrightarrow>
@@ -1282,15 +1285,15 @@ lemma staticTraceablePoolSound:
   isEnd (tmId e') \<Longrightarrow>
   (\<exists> path . 
       pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and>
-      staticTraceable F Ln Lx (IdBind xC) isEnd path)
+      staticPathLive F Ln Lx (IdBind xC) isEnd path)
 "
 apply (drule star_implies_star_left)
-apply (insert staticTraceablePoolSound')
+apply (insert staticPathLivePoolSound')
 apply auto
 done
 
 
-lemma staticTraceableSound: "
+lemma staticPathLiveSound: "
   \<E>' \<pi>' = Some (Stt e' \<rho>' \<kappa>') \<Longrightarrow>
   dynamicBuiltOnChanState (Stt e' \<rho>' \<kappa>') (Ch \<pi>C xC) \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
@@ -1300,12 +1303,12 @@ lemma staticTraceableSound: "
   isEnd (tmId e') \<Longrightarrow>
   \<exists> path .
     pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and>
-    staticTraceable F Ln Lx (IdBind xC) isEnd path
+    staticPathLive F Ln Lx (IdBind xC) isEnd path
 "
 apply (drule staticEval_to_pool)
 apply (drule staticFlowsAcceptToPool)
 apply (drule staticLiveChanToPool)
-apply (simp add: staticTraceablePoolSound)
+apply (simp add: staticPathLivePoolSound)
 done
 
 
@@ -1318,7 +1321,7 @@ dynamicBuiltOnChanEnv env (Ch \<pi>C xC)
 by (simp add: dynamicBuiltOnChanEnv_intro dynamicBuiltOnChanVal_chan dynamicBuiltOnChanVal_closure)
 
 
-lemma staticTraceableSendSound: "
+lemma staticPathLiveSendSound: "
   is_send_path \<E>' (Ch \<pi>C xC) \<pi>Sync \<Longrightarrow>
   star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -1326,11 +1329,11 @@ lemma staticTraceableSendSound: "
   staticFlowsAccept V F e \<Longrightarrow>
   \<exists> pathSync .
     (pathsCongruentModChan e (Ch \<pi>C xC) \<pi>Sync pathSync) \<and> 
-    staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC) pathSync
+    staticPathLive F Ln Lx (IdBind xC) (staticSendSite V e xC) pathSync
 "
  apply (unfold is_send_path.simps; auto) 
  apply (frule_tac x\<^sub>s\<^sub>c = xsc and \<pi>C = \<pi>C and \<rho>\<^sub>e = enve in staticSendSiteSound; auto?)
-  apply (frule staticTraceableSound; auto?)
+  apply (frule staticPathLiveSound; auto?)
   apply (metis dynamicBuiltOnChanState.Env sendEvtBuiltOnChan)
 done
 
@@ -1338,7 +1341,7 @@ done
 
 
 theorem staticOneShotSound': "
-  forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) singular \<Longrightarrow>
+  forEveryTwo (staticPathLive F Ln Lx (IdBind xC) (staticSendSite V e xC)) singular \<Longrightarrow>
   staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -1346,9 +1349,9 @@ theorem staticOneShotSound': "
   forEveryTwo (is_send_path \<E>' (Ch \<pi> xC)) op =
 "
  apply (simp add: forEveryTwo.simps singular.simps; auto)
- apply (frule_tac \<pi>Sync = \<pi>1 in staticTraceableSendSound; auto)
+ apply (frule_tac \<pi>Sync = \<pi>1 in staticPathLiveSendSound; auto)
  apply (drule_tac x = pathSync in spec)
- apply (frule_tac \<pi>Sync = \<pi>2 in staticTraceableSendSound; auto?)
+ apply (frule_tac \<pi>Sync = \<pi>2 in staticPathLiveSendSound; auto?)
  apply (drule_tac x = pathSynca in spec)
  apply (erule impE, simp)
  apply (metis is_send_path_implies_nonempty_pool staticInclusiveSound static_equalitySound)
@@ -1371,7 +1374,7 @@ TO DO LATER:
 *)
 
 theorem noncompetitive_send_to_ordered_send: "
-  forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
+  forEveryTwo (staticPathLive F Ln Lx (IdBind xC) (staticSendSite V e xC)) noncompetitive \<Longrightarrow>
   staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -1394,7 +1397,7 @@ done
 
 lemma noncompetitive_recv_to_ordered_recv:
   "
-   forEveryTwo (staticTraceable F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
+   forEveryTwo (staticPathLive F Ln Lx (IdBind xC) (staticRecvSite V e xC)) noncompetitive \<Longrightarrow>
    staticFlowsAccept V F e \<Longrightarrow>
    (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
    star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
