@@ -1193,11 +1193,31 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (rule dynamicBuiltOnChanState.Stack)
   apply (erule dynamicBuiltOnChanStack.Stack)
   apply (drule_tac x = "\<lambda> id . id = IdRslt x" in spec; auto)
-(*
+
+
   apply (rule_tac x = "path @ [(IdRslt x, EReturn)]" in exI; auto)
-  
-  using Snoc pathsCongruent.Empty pathsCongruent.Return apply fastforce
-*)
+  apply (rule pathsCongruentModChan.Snoc; auto?)
+  using pathsCongruent.Empty pathsCongruent.Return apply fastforce
+  apply (rule staticTraceable.Edge; auto?)
+
+
+thm staticFlowsAcceptPoolPreserved[of V F e C Em Hm]
+  apply (drule staticFlowsAcceptPoolPreserved[of V F e C Em Hm]; auto?)
+  apply (erule staticEvalPool.cases; auto?)
+  apply (drule spec[of  _ "[]"]; auto)
+  apply (erule staticEvalState.cases; auto)
+  apply (simp add: star_left_implies_star)
+  apply (erule staticFlowsAcceptPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (rule staticLiveFlow.Return; auto?)
+  apply (erule staticFlowsAcceptStack.cases; auto)
+
+  apply (drule staticLiveChanPoolPreserved[of V Ln Lx xC e C Em Hm]; auto?)
+  apply (erule staticEvalPool.cases; auto?)
+  apply (drule spec[of  _ "[]"]; auto)
+  apply (erule staticEvalState.cases; auto)
+  apply (simp add: star_left_implies_star)
+
   sorry
 
 lemma staticTraceablePoolSoundDynamicEval:

@@ -1391,7 +1391,7 @@ proof -
       have L2H5: "ek = e'" using H4 H5 L2H1 local.Seq_Step_Down(2) by auto
 
       have L2H5: "{(IdRslt x, EReturn, (tmId e'))} \<subseteq> F" using L2H4 L2H5 by auto
-    
+  
       have L2H6: "pathsCongruent (pi @ [LRtn x]) (p @ [(IdRslt x, EReturn)])" by (simp add: L1H4 Return)
       have L2H7: "staticTraceable F (tmId e) isEnd (p @ [(IdRslt x, EReturn)])" using H7 L1H5 L2H5 Step by auto
     
