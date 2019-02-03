@@ -134,7 +134,7 @@ inductive staticLiveChanStack :: "static_env \<Rightarrow> tm_id_map \<Rightarro
 | Nonempty:
   "
     \<lbrakk> 
-      (* \<not> Set.is_empty (Ln (tmId e)); *)
+      \<not> Set.is_empty (Ln (tmId e));
       staticLiveChan V Ln Lx x\<^sub>c e;
       staticLiveChanEnv V Ln Lx x\<^sub>c \<rho>; 
       staticLiveChanStack V Ln Lx x\<^sub>c \<kappa>
@@ -867,7 +867,8 @@ apply (erule callEval.cases; auto; rule staticLiveChanPool.intros; clarify; (cas
     apply (drule_tac x = "xl'" in spec; auto)
     apply (simp add: staticLiveChanEnv.simps)
 
-  
+ sorry
+(*
   apply (erule staticLiveChan.cases; auto)
     apply (simp add: staticLiveChanStack.Nonempty)
     apply (simp add: staticLiveChanStack.Nonempty)
@@ -914,6 +915,7 @@ apply (erule callEval.cases; auto; rule staticLiveChanPool.intros; clarify; (cas
     apply (erule staticLiveChan.cases; auto; simp add: staticLiveChanStack.Nonempty)
     apply (erule staticLiveChanPool.cases; auto)+
 done
+*)
 
 lemma staticLiveChanPreservedMkChan:
 "
@@ -1217,8 +1219,10 @@ thm staticFlowsAcceptPoolPreserved[of V F e C Em Hm]
   apply (drule spec[of  _ "[]"]; auto)
   apply (erule staticEvalState.cases; auto)
   apply (simp add: star_left_implies_star)
-
-  sorry
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (erule staticLiveChanStack.cases; auto)
+done
 
 lemma staticTraceablePoolSoundDynamicEval:
 "
