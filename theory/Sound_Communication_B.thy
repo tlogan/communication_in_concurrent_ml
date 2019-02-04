@@ -134,7 +134,7 @@ inductive staticLiveChanStack :: "static_env \<Rightarrow> tm_id_map \<Rightarro
 | Nonempty:
   "
     \<lbrakk> 
-      \<not> Set.is_empty (Ln (tmId e));
+      (* \<not> Set.is_empty (Ln (tmId e))  this is in the middle of a detour path ... *)
       staticLiveChan V Ln Lx x\<^sub>c e;
       staticLiveChanEnv V Ln Lx x\<^sub>c \<rho>; 
       staticLiveChanStack V Ln Lx x\<^sub>c \<kappa>
@@ -869,10 +869,7 @@ apply (erule callEval.cases; auto; rule staticLiveChanPool.intros; clarify; (cas
 
 
     apply (erule staticLiveChan.cases; auto)
-    apply (rule staticLiveChanStack.Nonempty; auto?)
 
-
-(*
     apply (simp add: staticLiveChanStack.Nonempty)
     apply (simp add: staticLiveChanStack.Nonempty)
 
@@ -918,7 +915,6 @@ apply (erule callEval.cases; auto; rule staticLiveChanPool.intros; clarify; (cas
     apply (erule staticLiveChan.cases; auto; simp add: staticLiveChanStack.Nonempty)
     apply (erule staticLiveChanPool.cases; auto)+
 done
-*)
 
 lemma staticLiveChanPreservedMkChan:
 "
@@ -1203,10 +1199,11 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (rule_tac x = "path @ [(IdRslt x, EReturn)]" in exI; auto)
   apply (rule pathsCongruentModChan.Snoc; auto?)
   using pathsCongruent.Empty pathsCongruent.Return apply fastforce
+
+
+(*
   apply (rule staticPathLive.Edge; auto?)
 
-
-thm staticFlowsAcceptPoolPreserved[of V F e C Em Hm]
   apply (drule staticFlowsAcceptPoolPreserved[of V F e C Em Hm]; auto?)
   apply (erule staticEvalPool.cases; auto?)
   apply (drule spec[of  _ "[]"]; auto)
@@ -1214,7 +1211,6 @@ thm staticFlowsAcceptPoolPreserved[of V F e C Em Hm]
   apply (simp add: star_left_implies_star)
   apply (erule staticFlowsAcceptPool.cases; auto)
   apply (drule spec[of _ pi]; auto)
-  apply (rule staticLiveFlow.Return; auto?)
   apply (erule staticFlowsAcceptStack.cases; auto)
 
   apply (drule staticLiveChanPoolPreserved[of V Ln Lx xC e C Em Hm]; auto?)
@@ -1225,7 +1221,9 @@ thm staticFlowsAcceptPoolPreserved[of V F e C Em Hm]
   apply (erule staticLiveChanPool.cases; auto)
   apply (drule spec[of _ pi]; auto)
   apply (erule staticLiveChanStack.cases; auto)
-done
+*)
+
+sorry
 
 lemma staticPathLivePoolSoundDynamicEval:
 "
