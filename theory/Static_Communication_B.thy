@@ -373,58 +373,19 @@ inductive staticLiveChan :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm
     \<rbrakk> \<Longrightarrow>
     staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (App f x\<^sub>a) e)
   "
-(*
-inductive staticLiveFlow :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> flow \<Rightarrow> bool"  where
-  Next:
-  "
-    (l, ENext, l') \<in> graph \<Longrightarrow>
-    \<not> Set.is_empty (exit l) \<Longrightarrow>
-    \<not> Set.is_empty (entr l') \<Longrightarrow>
-    staticLiveFlow graph entr exit (l, ENext, l')
-  "
-| Spawn:
-  "
-    (l, ESpawn, l') \<in> graph \<Longrightarrow>
-    \<not> Set.is_empty (exit l) \<Longrightarrow>
-    \<not> Set.is_empty (entr l') \<Longrightarrow>
-    staticLiveFlow graph entr exit (l, ESpawn, l')
-  "
-| CallOuter:
-  "
-    (l, ECall, l') \<in> graph \<Longrightarrow>
-    \<not> Set.is_empty (exit l) \<Longrightarrow>
-    staticLiveFlow graph entr exit (l, ECall, l')
-  "
-| CallInner:
-  "
-    (l, ECall, l') \<in> graph \<Longrightarrow>
-    \<not> Set.is_empty (entr l') \<Longrightarrow>
-    staticLiveFlow graph entr exit (l, ECall, l')
-  "
-| Return:
-  "
-    (l, EReturn, l') \<in> graph \<Longrightarrow>
-    \<not> Set.is_empty (entr l') \<Longrightarrow>
-    staticLiveFlow graph entr exit (l, EReturn, l')
-  "
-| Send:
-  "
-    ((IdBind xSend), ESend xE, (IdBind xRecv)) \<in> graph \<Longrightarrow>
-    {xE} \<subseteq> (entr (IdBind xSend)) \<Longrightarrow>
-    staticLiveFlow graph entr exit ((IdBind xSend), ESend xE, (IdBind xRecv))
-  "
-*)
-inductive staticPathExists :: "flow_set \<Rightarrow> tm_id \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
+
+
+inductive staticPathExists :: "flow_set \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty:
   "
-    staticPathExists graph start isEnd []
+    staticPathExists graph isEnd []
   "
 | Edge:
   "
-    staticPathExists graph start (\<lambda> l . l = middle) path \<Longrightarrow>
+    staticPathExists graph (\<lambda> l . l = middle) path \<Longrightarrow>
     isEnd end \<Longrightarrow>
     (middle, ENext, end) \<in> graph \<Longrightarrow>
-    staticPathExists graph start isEnd (path @ [(middle, edge)])
+    staticPathExists graph isEnd (path @ [(middle, edge)])
   "
 
 inductive staticPathBalanced :: "static_path \<Rightarrow> bool" where
@@ -435,18 +396,10 @@ inductive staticPathBalanced :: "static_path \<Rightarrow> bool" where
     staticPathBalanced path \<Longrightarrow>
     staticPathBalanced ([(l, ECall)] @ path @ [(l', EReturn)])  
   "
-| SnocSeq: "
+| Snoc: "
     staticPathBalanced path \<Longrightarrow>
     staticPathBalanced (path @ [(l, ENext)])
   "
-| SnocSpawn: "
-    staticPathBalanced path \<Longrightarrow>
-    staticPathBalanced (path @ [(l, ESpawn)])
-  "
-| SnocSend: "
-   staticPathBalanced path \<Longrightarrow>
-   staticPathBalanced (path @ [(l, ESend _)])
-"
 
 
 
@@ -454,25 +407,25 @@ inductive staticDetour :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_
   Short: "
     isEnd end \<Longrightarrow>
 
-    \<not> Set.is_empty (exit (IdBind x)) \<Longrightarrow>
-    Set.is_empty (entr (IdRslt xR)) \<Longrightarrow>
+    \<not> Set.is_empty (exit l) \<Longrightarrow>
+    Set.is_empty (entr l') \<Longrightarrow>
 
-    Set.is_empty (exit (IdRslt xR)) \<Longrightarrow>
+    Set.is_empty (exit l') \<Longrightarrow>
     \<not> Set.is_empty (entr end) \<Longrightarrow>
 
-    staticDetour graph entr exit start isEnd [(IdBind x, ECall), (IdRslt xR, EReturn)]
+    staticDetour graph entr exit start isEnd [(l, ECall), (l', EReturn)]
   "
 |  Long: "
     isEnd end \<Longrightarrow>
 
-    \<not> Set.is_empty (exit (IdBind x)) \<Longrightarrow>
+    \<not> Set.is_empty (exit l) \<Longrightarrow>
     Set.is_empty (entr middle) \<Longrightarrow>
 
-    Set.is_empty (exit (IdRslt xR)) \<Longrightarrow>
+    Set.is_empty (exit l') \<Longrightarrow>
     \<not> Set.is_empty (entr end) \<Longrightarrow>
-    staticPathExists graph start isEnd ([(IdBind x, ECall), (middle, mode)] @ path @ [(IdRslt xR, EReturn)]) \<Longrightarrow>
-    staticPathBalanced ([(IdBind x, ECall), (middle, mode)] @ path @ [(IdRslt xR, EReturn)]) \<Longrightarrow>
-    staticDetour graph entr exit start isEnd ([(IdBind x, ECall), (middle, mode)] @ path @ [(IdRslt xR, EReturn)])
+    staticPathExists graph isEnd ([(l, ECall), (middle, mode)] @ path @ [(IdRslt xR, EReturn)]) \<Longrightarrow>
+    staticPathBalanced ((middle, mode) # path) \<Longrightarrow>
+    staticDetour graph entr exit start isEnd ([(l, ECall), (middle, mode)] @ path @ [(l', EReturn)])
   "
 
 
