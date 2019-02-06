@@ -384,7 +384,7 @@ inductive staticPathExists :: "flow_set \<Rightarrow> (tm_id \<Rightarrow> bool)
   "
     staticPathExists graph (\<lambda> l . l = middle) path \<Longrightarrow>
     isEnd end \<Longrightarrow>
-    (middle, ENext, end) \<in> graph \<Longrightarrow>
+    (middle, edge, end) \<in> graph \<Longrightarrow>
     staticPathExists graph isEnd (path @ [(middle, edge)])
   "
 
@@ -403,7 +403,7 @@ inductive staticPathBalanced :: "static_path \<Rightarrow> bool" where
 
 
 
-inductive staticDetour :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> tm_id \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
+inductive staticDetour :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
   Short: "
     isEnd end \<Longrightarrow>
 
@@ -413,7 +413,7 @@ inductive staticDetour :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_
     Set.is_empty (exit l') \<Longrightarrow>
     \<not> Set.is_empty (entr end) \<Longrightarrow>
 
-    staticDetour graph entr exit start isEnd [(l, ECall), (l', EReturn)]
+    staticDetour graph entr exit  isEnd [(l, ECall), (l', EReturn)]
   "
 |  Long: "
     isEnd end \<Longrightarrow>
@@ -425,7 +425,7 @@ inductive staticDetour :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_
     \<not> Set.is_empty (entr end) \<Longrightarrow>
     staticPathExists graph isEnd ([(l, ECall), (middle, mode)] @ path @ [(IdRslt xR, EReturn)]) \<Longrightarrow>
     staticPathBalanced ((middle, mode) # path) \<Longrightarrow>
-    staticDetour graph entr exit start isEnd ([(l, ECall), (middle, mode)] @ path @ [(l', EReturn)])
+    staticDetour graph entr exit isEnd ([(l, ECall), (middle, mode)] @ path @ [(l', EReturn)])
   "
 
 
@@ -448,7 +448,7 @@ inductive staticPathLive :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_i
   "
     staticPathLive graph entr exit start (\<lambda> l . l = middle) path \<Longrightarrow>
     isEnd end \<Longrightarrow>
-    staticDetour graph entr exit start isEnd ((middle, ENext) # detour) \<Longrightarrow>
+    staticDetour graph entr exit isEnd ((middle, ENext) # detour) \<Longrightarrow>
     staticPathLive graph entr exit start isEnd (path @ [(middle, ENext)] @ detour)
   "
 

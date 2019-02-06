@@ -1309,7 +1309,7 @@ taken from the static environment, whose content is influenced by the rules of s
 The static flows acceptance relation states that a set of flows, i.e. a graph, accepts a program or term, where each flow is
 an abstract representation of a small step in the dynamic evaluation. The relation is defined such that
 whether or not a given finite set of flows holds is decideable. The static paths are formed from the chaining of flows, according
-to the rules ot the static traceable relation.
+to the rules ot the static path existence relation.
 The set of static paths to a sending or receiving syncrhonization site is bounded by the static flows acceptance
 relation. Due to cycles in the graph, the set of paths may be inifite. 
 The static one-to-many classification holds if any two static sending paths are noncompetitive, meaning
@@ -1326,7 +1326,7 @@ if the classification holds statically, then it must hold dynamically. Soundness
 of its constiuent parts,
 including the soundness of static evaluation, the soundness of the noncompetitive relation with respect to
 the unordered relation, the soundnes of the singular relation with respect to equality of paths,
-and the soundness and preservation of the static tracecable relation. As with static evaluation, many proofs of
+and the soundness and preservation of the static path existence relation. As with static evaluation, many proofs of
 soudnness for the static communication classification, rely on bridging the gap between the terms used in dynamic
 versions and the terms used in the static versions. Generalizations of the static communication classification relations
 with respect to additional dynamic terms - pools, environments, stacks, and values - are derived to complete these proofs.
@@ -2097,17 +2097,17 @@ The term identifier of a binding term is the binding name, and indication of its
 The term identifier of a result term is the embedded name, and indication of its use in a result.
 
 \begin{lstlisting}[language=logic, mathescape]
-  datatype term_id =
+  datatype tm_id =
     NBnd name
   | NRslt name 
 
-  fun termId: term -> term_id where
+  fun termId: term -> tm_id where
     n c t' . 
     $\vdash$ termId (Bind n c t') = NBnd n
   * n . 
     $\vdash$ termId (Rslt n) = NRslt n
 
-  type term_id_map = term_id -> name set
+  type tm_id_map = tm_id -> name set
 \end{lstlisting}
 
 The static communication describes a sound approximation of
@@ -2119,7 +2119,7 @@ synchronization to receive on a given static channel.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticSendId:
-    static_value_map -> term -> name -> term_id -> bool 
+    static_value_map -> term -> name -> tm_id -> bool 
   where
     intro: t$_0$ n n$_e$ t' n$_{sc}$ n$_m$ staticEnv n$_c$ .
       staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
@@ -2128,7 +2128,7 @@ synchronization to receive on a given static channel.
     $\vdash$ staticSendId staticEnv t$_0$ n$_c$ (NBnd n)
 
   predicate staticRecvId:
-    static_value_map -> term -> name -> term_id -> bool
+    static_value_map -> term -> name -> tm_id -> bool
   where
     intro: t$_0$ n n$_e$ t' n$_{rc}$ staticEnv n$_c$ .
       staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
@@ -2172,11 +2172,11 @@ flow to the next term. A static path is a list of static steps.
   | MCll
   | MRtn
 
-  type flow = term_id * mode * term_id
+  type flow = tm_id * mode * tm_id
 
   type graph = flow set
 
-  type static_step = term_id * mode
+  type static_step = tm_id * mode
 
   type static_path = static_step list
 \end{lstlisting}
@@ -2321,25 +2321,25 @@ illustrates how static flows acceptance can interpret a graph from a program.
 
 \includegraphics[width=.9\textwidth]{cml-graph.pdf}
 
-The static traceability means that a static path with a given starting term identifier, and ending
+The static path existence means that a static path with a given starting term identifier, and ending
 condition, can be traced by traversing the flows in a graph.
-The empty path is statically traceable if the starting term identifier meets the ending condition.
-Otherwise, a path is statically traceable if the last static step corresponds to a flow
-that meets the ending condition, and the longest strict prefix of the path is statically
-traceable. 
+The empty path statically exists if the starting term identifier meets the ending condition.
+Otherwise, a path statically exists if the last static step corresponds to a flow
+that meets the ending condition, and the longest strict prefix of the path statically
+exists. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticTraceable:
-    flow set -> term_id -> (term_id -> bool) -> static_path -> bool
+  predicate staticPathExists:
+    flow set -> tm_id -> (tm_id -> bool) -> static_path -> bool
   where
     empty: start graph isEnd .
       isEnd start
-    $\vdash$ staticTraceable graph start isEnd []
+    $\vdash$ staticPathExists graph start isEnd []
   * snoc: graph star middle path isEnd end mode .
       staticTraceable graph start ($\lambda$ l . l = middle) path, 
       isEnd end, 
       (middle, mode, end) $\in$ graph 
-    $\vdash$ staticTraceable graph start isEnd (path @ [(middle, mode)])
+    $\vdash$ staticPathExists graph start isEnd (path @ [(middle, mode)])
 \end{lstlisting}
 
 In the graph of the server implementation, there are two paths each corresponding to its
@@ -2595,13 +2595,13 @@ paths' relation to the flow graph clear. Additionally, for the higher precision 
 paths are not isomorphic to dynamic paths. 
 
 The three main lemmas state the
-soundness of static traceability, the soundness of static inclusiveness, and
+soundness of static path existence, the soundness of static inclusiveness, and
 the soundness of static sending identifier classification. These lemmas depend on a
 correspondence between static paths and dynamic paths.
 The lemma for soundness of static inclusiveness states that any two
 dynamic paths traced by running a program correspond to statically inclusive static paths. It
 follows from a straightforward case analysis of static inclusivity. The lemma for soundness of
-static traceability states that for any dynamic path traced by running a program, there
+static path existence states that for any dynamic path traced by running a program, there
 is a corresponding static path that is statically traceable. The lemma for soundness of
 static sending identifier classification states that if running a program reaches a
 synchronization on a sending event, then that identifier for that synchronization
@@ -2663,7 +2663,7 @@ is statically classified as sending.
   $\vdash$ staticSendId staticEnv t$_0$ n$_c$ (NBnd n)
 \end{lstlisting}
 
-The soundness of static traceability is proved by generalizing
+The soundness of static path existence is proved by generalizing
 static flows acceptance and static evaluation over pools, such that information about a step in
 the program can be deduced by a fixed number of logical steps regardless of the location of the
 program step or the size of the program. Without such generalization, it would be possible to
@@ -2864,9 +2864,9 @@ relating dynamic semantic elements to static values and static environments.
 
 
 A variant of star that inducts on the left of the transitive connection is helpful for
-relating dynamic traceability to static traceability, since it mirrors the direction that way
+relating dynamic path existence to static path existence, since it mirrors the direction that way
 paths grow, which influenced the choice of induction on the longest strict prefix of paths
-in the definition of static traceability.
+in the definition of static path existence.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate starLeft: ('a -> 'a -> bool) -> 'a -> 'a -> bool where
@@ -2887,8 +2887,8 @@ in the definition of static traceability.
   $\vdash$ starLeft r x z
 \end{lstlisting}
 
-The lemma for soundness of static traceability follows from the generalized definitions
-of static flows acceptance, the definition of static traceability, and the preservation
+The lemma for soundness of static path existence follows from the generalized definitions
+of static flows acceptance, the definition of static path existence, and the preservation
 of static flows acceptance across multiples steps of evaluation.
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -3137,9 +3137,9 @@ sequencing, calling, returning, and spawning are also included.
   | MCll
   | MRtn
 
-  type flow = term_id * mode * term_id
+  type flow = tm_id * mode * tm_id
 
-  type static_step = term_id * mode
+  type static_step = tm_id * mode
 
   type staticPath = static_step list
 \end{lstlisting}
@@ -3458,8 +3458,8 @@ and each exit setappears right below its related term identifier.
 \includegraphics[width=1\textwidth]{cml-liveness-analysis-k4.pdf}
 \begin{lstlisting}[language=logic, mathescape]
   predicate staticChanLive:
-    static_value_map -> term_id_map 
-  -> term_id_map -> name -> term -> bool
+    static_value_map -> tm_id_map 
+  -> tm_id_map -> name -> term -> bool
   where
 
     result: staticEnv entr n$_c$ n$_y$ exit .
@@ -3619,50 +3619,6 @@ and each exit setappears right below its related term identifier.
     $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (App n$_f$ n$_a$) t')
 \end{lstlisting}
 
-The static flow liveness checks if a flow is live across call and return boundaries,
-with respect to the entry and exit liveness functions. 
-The channel liveness relation says if a channel is live within a function, but
-does not say anything whether or not a channel remains live across calling or returning flows.
-Additionally, for the intraprocedural flows, it simply lifts the entry and exit function information.
-No channel is considered to be live in the body of the loop at \lstinline[language=normal_lang]{bind lp}.
-However, a channel may be live before the loop is called and after the loop returns. 
-In such a case, the live flow is retained from the caller to within the loop function's body and from the result
-of the body back to the caller's sequenced term, 
-even though the steps in the loop may not be live according to the entry function in static channel liveness.
-
-\begin{lstlisting}[language=logic, mathescape]
-  predicate staticFlowLive:
-    graph -> term_id_map -> term_id_map -> flow -> bool
-  where
-
-    seq: l l' graph exit entr . 
-      (l, MSeq, l') $\in$ graph,
-      $\neg$ (exit l = {}),
-      $\neg$ (entr l' = {})
-    $\vdash$ staticFlowLive graph entr exit (l, MSeq, l')
-
-  * spawn: l l' graph exit entr .
-      (l, MSpwn, l') $\in$ graph, 
-      $\neg$ (exit l = {}),
-      $\neg$ (entr l' = {})
-    $\vdash$ staticFlowLive graph entr exit (l, MSpwn, l')
-
-  * call: l l' graph exit entr .
-      (l, MCll, l') $\in$ graph,
-      ($\neg$ (exit l = {})) $\vee$ ($\neg$ (entr l' = {}))
-    $\vdash$ staticFlowLive graph entr exit (l, MCll, l')
-
-  * return: l l' graph entr exit .
-      (l, MRtn, l') $\in$ graph,
-      $\neg$ (entr l' = {})
-    $\vdash$ staticFlowLive graph entr exit (l, MRtn, l')
-
-  * send: n$_s$ n$_e$ n$_r$ graph entr exit .
-      ((NBnd n$_s$), MSend n$_e$, (NBnd n$_r$)) $\in$ graph, 
-      {n$_e$} $\subseteq$ (entr (NBnd n$_s$))
-    $\vdash$ staticFlowLive graph entr exit
-      ((NBnd n$_s$), MSend n$_e$, (NBnd n$_r$))
-\end{lstlisting}
 
 The following diagram illustrates the graph of the server example,
 containing only live flows for channel \lstinline{chn k1}. \
@@ -3674,22 +3630,91 @@ containing only live flows for channel \lstinline{k4}. \
 
 \includegraphics[width=0.7\textwidth]{cml-graph-k4.pdf}
 
-The static traceability for the higher precision analysis states
+The channel liveness relation says if a channel is live within a function, but
+does not say anything whether or not a channel remains live across calling or returning flows.
+If a function is called that does nothing with the channel of interest, then the entry and exit functions
+for the sites in that function will be empty; however, the path from before it's called
+until after it returns should be considered live all the way through.
+For instance, no channel is considered to be live in the body of the loop at \lstinline[language=normal_lang]{bind lp}.
+However, a channel may be live before the loop is called and after the loop returns. 
+
+A few additional definitions are needed to describe if a static path is live.
+The static path balance checks if a path has balanced call and return flows with
+of zero or more sequencuential steps between them.
+The static path existence is the same as that for the lower precision analysis.
+The static detour describes paths that have live sites before a call flow
+and after a return flow, but not in between.
+
+
+\begin{lstlisting}[language=logic, mathescape]
+  predicate staticPathBalanced: static_path -> bool where
+    empty:
+      staticPathBalanced []  
+  * call_return: path id id' .
+      staticPathBalanced path
+    $\vdash$ staticPathBalanced ([(id, MCll)] @ path @ [(id', MRtn)])  
+  * snoc: path id .
+      staticPathBalanced path
+    $\vdash$ staticPathBalanced (path @ [(id, MSeq)])
+
+  predicate staticPathExists: graph -> (tm_id -> bool) -> static_path -> bool where
+    empty: graph isEnd .
+    $\vdash$ staticPathExists graph isEnd []
+  * edge: graph middle path isEnd end mode .
+      staticPathExists graph ($\lambda$ l . l = middle) path,
+      isEnd end,
+      (middle, mode, end) $\in$ graph 
+    $\vdash$ staticPathExists graph isEnd (path @ [(middle, mode)])
+
+  predicate staticDetour:
+    graph -> tm_id_map -> tm_id_map -> tm_id
+  -> (tm_id -> bool) -> static_path -> bool
+  where
+    short: isEnd end exit id entr id' graph .
+      isEnd end,
+      $\neg$ Set.is_empty (exit id),
+      Set.is_empty (entr id'),
+      Set.is_empty (exit id'),
+      $\neg$ Set.is_empty (entr end),
+    $\vdash$ staticDetour graph entr exit isEnd [(id, MCll), (id', MRtn)]
+  * long: isEnd end exit id entr middle id' end graph mode .
+      isEnd end,
+      $\neg$ Set.is_empty (exit id),
+      Set.is_empty (entr middle),
+      Set.is_empty (exit id'),
+      $\neg$ Set.is_empty (entr end),
+      staticPathExists graph isEnd
+        ([(l, MCll), (middle, mode)] @ path @ [(id', MRtn)]),
+      staticPathBalanced ((middle, mode) # path),
+    $\vdash$  staticDetour graph entr exit isEnd
+      ([(id, MCll), (middle, mode)] @ path @ [(id', MRtn)])
+
+\end{lstlisting}
+
+
+The static path liveness for the higher precision analysis states
 that a channel is live for an entire static path found within a graph.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticTraceable:
-    static_value_map -> graph -> term_id_map -> term_id_map
-  -> term_id -> (term_id -> bool) -> static_path -> bool
+  predicate staticPathLive:
+    graph -> tm_id_map -> tm_id_map -> tm_id
+  -> (tm_id -> bool) -> static_path -> bool
   where
-     empty: isEnd start staticEnv graph entr exit .
-       isEnd start
-     $\vdash$ staticTraceable graph entr exit start isEnd []
-   * snoc: graph entr exit start middle path isEnd mode. 
-       staticTraceable graph entr exit start ($\lambda$ l . l = middle) path, 
-       (isEnd end),
-       staticFlowLive graph entr exit (middle, mode, end) 
-     $\vdash$ staticTraceable graph entr exit start isEnd (path @ [(middle, mode)]
+    empty: graph entr exit start isEnd .
+    $\vdash$ staticPathLive graph entr exit start isEnd []
+  * edge: graph entr exit start middle path isEnd end .
+      staticPathLive graph entr exit start ($\lambda$ l . l = middle) path,
+      isEnd end,
+      (middle, MSeq, end) $\in$ graph,
+      $\neg$ Set.is_empty (exit middle),
+      $\neg$ Set.is_empty (entr end)
+    $\vdash$ staticPathLive graph entr exit start isEnd (path @ [(middle, edge)])
+  * detour: graph entr exit start middle path isEnd end detour .
+      staticPathLive graph entr exit start ($\lambda$ l . l = middle) path,
+      isEnd end,
+      staticDetour graph entr exit isEnd ((middle, MSeq) # detour)
+    $\vdash$ staticPathLive graph entr exit start isEnd (path @ [(middle, MSeq)] @ detour)
+
 \end{lstlisting}
 
 As with the lower precision analysis, the higher precision analysis relies on recognizing
@@ -3727,7 +3752,7 @@ given paths do not compete in any run of a program.
 
   predicate singular: static_path -> static_path -> bool where
     refl: path .
-      singular path path
+    $\vdash$ singular path path
   * notInclus: path1 path2 .
       $\neg$ (staticInclusive path1 path2)
     $\vdash$ singular path1 path2
@@ -3895,7 +3920,7 @@ correlating dynamic paths with static paths.
     $\vdash$ pathsCongruentModChan t$_0$ chan (path @ [site]) (staticPath @ [step])
 \end{lstlisting}
 
-Additionally the soundness theorem follows from the soundness of static traceability,
+Additionally the soundness theorem follows from the soundness of static path liveness,
 the soundness of static inclusiveness, and the soundness of sending identifier classification. 
 The reasoning about the sending identifier classification is identical to that of the lower precision analysis,
 but the reasoning for the former two is significantly more complicated and not yet completed.
@@ -3910,7 +3935,7 @@ that correlates with the dynamic path is more challenging.
 The proposition \lstinline[mathescape]{isSendPath pool' (Ch path$_c$ n$_c$) path'} is derived
 by unfolding the definition of \lstinline{oneShot}.
 It is generalized by \lstinline[mathescape]{pool' path' = Some (Stt t' env' stack'),}\\
-\lstinline[mathescape]{dynamicBuiltOnChanState (Stt t' env' stack') (Ch path$_c$ n$_c$)} in the soundess of static traceability.
+\lstinline[mathescape]{dynamicBuiltOnChanState (Stt t' env' stack') (Ch path$_c$ n$_c$)} in the soundess of static path liveness.
 
 \begin{lstlisting}[language=logic, mathescape]
 
@@ -3962,7 +3987,7 @@ It is generalized by \lstinline[mathescape]{pool' path' = Some (Stt t' env' stac
 
 
 The generalization to the dynamic channels built on state appears necessary in order to prove the soundness of
-the paths corresponding modulo a channel and static traceability.
+the paths corresponding modulo a channel and static path liveness.
 This proof and the soundness of static inclusivity are under active development at the time of this writing.
 
 
