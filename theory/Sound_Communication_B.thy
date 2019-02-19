@@ -129,17 +129,18 @@ where
   " 
 
 
-inductive staticLiveChanStack :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> contin list \<Rightarrow> bool" where
-  Empty: "staticLiveChanStack V Ln Lx x\<^sub>c []"
+inductive staticLiveChanStack :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> name \<Rightarrow> name \<Rightarrow> contin list \<Rightarrow> bool" where
+  Empty: "staticLiveChanStack V Ln Lx x\<^sub>c x\<^sub>r []"
 | Nonempty:
   "
     \<lbrakk> 
-      (* \<not> Set.is_empty (Ln (tmId e))  this is in the middle of a detour path ... *)
+      \<not> Set.is_empty (Lx (IdRslt x\<^sub>r));
+      \<not> Set.is_empty (Ln (tmId e));
       staticLiveChan V Ln Lx x\<^sub>c e;
       staticLiveChanEnv V Ln Lx x\<^sub>c \<rho>; 
-      staticLiveChanStack V Ln Lx x\<^sub>c \<kappa>
+      staticLiveChanStack V Ln Lx x\<^sub>c (resultName e) \<kappa>
     \<rbrakk> \<Longrightarrow> 
-    staticLiveChanStack V Ln Lx x\<^sub>c ((Ctn x e \<rho>) # \<kappa>)
+    staticLiveChanStack V Ln Lx x\<^sub>c x\<^sub>r ((Ctn x e \<rho>) # \<kappa>)
   "
 
 
@@ -149,7 +150,7 @@ inductive staticLiveChanPool ::  "static_env \<Rightarrow> tm_id_map \<Rightarro
     (\<forall> \<pi> e \<rho> \<kappa> . pool \<pi> = Some (Stt e \<rho> \<kappa>) \<longrightarrow>
       staticLiveChan V Ln Lx x\<^sub>c e \<and>
       staticLiveChanEnv V Ln Lx x\<^sub>c \<rho> \<and>
-      staticLiveChanStack V Ln Lx x\<^sub>c \<kappa>) \<Longrightarrow>
+      staticLiveChanStack V Ln Lx x\<^sub>c (resultName e) \<kappa>) \<Longrightarrow>
     staticLiveChanPool V Ln Lx x\<^sub>c pool
   "
 
@@ -215,7 +216,6 @@ inductive pathsCongruent :: "control_path \<Rightarrow> static_path \<Rightarrow
   " 
 
 
-(* reconsider def of pathsCongruentModChan; maybe in terms of term intead of pool*)
 inductive pathsCongruentModChan :: 
   "tm \<Rightarrow> chan \<Rightarrow> control_path \<Rightarrow> static_path \<Rightarrow> bool" 
 where
@@ -242,7 +242,6 @@ where
     pathsCongruent [site] [step] \<Longrightarrow>
     pathsCongruentModChan t0 c (\<pi> @ [site]) (path @ [step])
   " 
-
 
 
 lemma staticInclusiveSound: "
@@ -828,6 +827,7 @@ apply (case_tac "\<pi> = pi @ [LNxt x]"; auto)
   apply (rotate_tac -4)
   apply (erule staticLiveChanPool.cases; auto)
 
+(*
   apply (rotate_tac -4)
   apply (erule staticLiveChanPool.cases; auto)
 
@@ -838,7 +838,8 @@ apply (case_tac "\<pi> = pi @ [LNxt x]"; auto)
   apply (erule staticLiveChanPool.cases; auto)
 
 done
-
+*)
+sorry
 
 lemma staticLiveChanPoolPreservedCall:
 "       
@@ -869,7 +870,7 @@ apply (erule callEval.cases; auto; rule staticLiveChanPool.intros; clarify; (cas
 
 
     apply (erule staticLiveChan.cases; auto)
-
+(*
     apply (simp add: staticLiveChanStack.Nonempty)
     apply (simp add: staticLiveChanStack.Nonempty)
 
@@ -915,6 +916,8 @@ apply (erule callEval.cases; auto; rule staticLiveChanPool.intros; clarify; (cas
     apply (erule staticLiveChan.cases; auto; simp add: staticLiveChanStack.Nonempty)
     apply (erule staticLiveChanPool.cases; auto)+
 done
+*)
+sorry
 
 lemma staticLiveChanPreservedMkChan:
 "
@@ -944,6 +947,7 @@ apply (rule staticLiveChanPool.Intro; auto)
   apply (rotate_tac 3)
   apply (erule staticLiveChanPool.cases; auto)
 
+(*
   apply (rotate_tac 3)
   apply (erule staticLiveChanPool.cases; auto)
 
@@ -951,6 +955,8 @@ apply (rule staticLiveChanPool.Intro; auto)
   apply (erule staticLiveChanPool.cases; auto)
 
 done
+*)
+sorry
 
 lemma staticLiveChanPoolPreservedSpawn:
 "
@@ -976,6 +982,7 @@ apply (rule staticLiveChanPool.Intro; auto)
   apply (rotate_tac 3)
   apply (erule staticLiveChanPool.cases; auto)
 
+(*
   apply (rotate_tac 3)
   apply (erule staticLiveChanPool.cases; auto)
   apply (drule spec[of _ pi]; auto)
@@ -996,7 +1003,8 @@ apply (rule staticLiveChanPool.Intro; auto)
   apply (erule staticLiveChanPool.cases; auto)
 
 done
-
+*)
+sorry
 
 (* this might make a nice proof demonstration *)
 lemma staticLiveChanPoolPreservedSync:
@@ -1030,6 +1038,7 @@ apply (rule staticLiveChanPool.Intro; auto)
   apply (rotate_tac 3)
   apply (erule staticLiveChanPool.cases; auto)
 
+(*
   apply (rotate_tac 3)
   apply (erule staticLiveChanPool.cases; auto)
   apply (drule spec[of _ pis]; auto)
@@ -1099,6 +1108,8 @@ apply (rule staticLiveChanPool.Intro; auto)
   apply (erule staticLiveChanPool.cases; auto)
 
 done
+*)
+sorry
 
 lemma staticLiveChanPoolPreservedDynamicEval: 
 "
@@ -1195,15 +1206,11 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (erule dynamicBuiltOnChanStack.Stack)
   apply (drule_tac x = "\<lambda> id . id = IdRslt x" in spec; auto)
 
-
   apply (rule_tac x = "path @ [(IdRslt x, EReturn)]" in exI; auto)
   apply (rule pathsCongruentModChan.Snoc; auto?)
   using pathsCongruent.Empty pathsCongruent.Return apply fastforce
 
-
-(*
   apply (rule staticPathLive.Edge; auto?)
-
   apply (drule staticFlowsAcceptPoolPreserved[of V F e C Em Hm]; auto?)
   apply (erule staticEvalPool.cases; auto?)
   apply (drule spec[of  _ "[]"]; auto)
@@ -1221,9 +1228,17 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (erule staticLiveChanPool.cases; auto)
   apply (drule spec[of _ pi]; auto)
   apply (erule staticLiveChanStack.cases; auto)
-*)
 
-sorry
+  apply (drule staticLiveChanPoolPreserved[of V Ln Lx xC e C Em Hm]; auto?)
+  apply (erule staticEvalPool.cases; auto?)
+  apply (drule spec[of  _ "[]"]; auto)
+  apply (erule staticEvalState.cases; auto)
+  apply (simp add: star_left_implies_star)
+  apply (erule staticLiveChanPool.cases; auto)
+  apply (drule spec[of _ pi]; auto)
+  apply (erule staticLiveChanStack.cases; auto)
+   
+done
 
 lemma staticPathLivePoolSoundDynamicEval:
 "

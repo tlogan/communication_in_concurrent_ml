@@ -358,6 +358,8 @@ inductive staticLiveChan :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm
       staticLiveChan staticEnv entr exit x\<^sub>c e\<^sub>l;
       staticLiveChan staticEnv entr exit x\<^sub>c e\<^sub>r;
       entr (tmId e) \<subseteq> exit (IdBind x);
+      exit (IdRslt (resultName e\<^sub>l)) \<subseteq> entr (tmId e);
+      exit (IdRslt (resultName e\<^sub>r)) \<subseteq> entr (tmId e);
       staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (Case x\<^sub>s x\<^sub>l e\<^sub>l x\<^sub>r e\<^sub>r) e)
@@ -369,66 +371,12 @@ inductive staticLiveChan :: "static_env \<Rightarrow> tm_id_map \<Rightarrow> tm
       staticBuiltOnChan staticEnv x\<^sub>c x\<^sub>a \<longrightarrow> {x\<^sub>a} \<subseteq> entr (IdBind x);
       staticBuiltOnChan staticEnv x\<^sub>c f \<longrightarrow> {f} \<subseteq> entr (IdBind x);
       entr (tmId e) \<subseteq> exit (IdBind x);
+      SAtm (Fun f' x\<^sub>p e\<^sub>b) \<in> staticEnv f \<longrightarrow>
+        exit (IdRslt (resultName e\<^sub>b)) \<subseteq> entr (tmId e);
       staticLiveChan staticEnv entr exit x\<^sub>c e
     \<rbrakk> \<Longrightarrow>
     staticLiveChan staticEnv entr exit x\<^sub>c (Bind x (App f x\<^sub>a) e)
   "
-
-
-inductive staticPathExists :: "flow_set \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
-  Empty:
-  "
-    staticPathExists graph isEnd []
-  "
-| Edge:
-  "
-    staticPathExists graph (\<lambda> l . l = middle) path \<Longrightarrow>
-    isEnd end \<Longrightarrow>
-    (middle, edge, end) \<in> graph \<Longrightarrow>
-    staticPathExists graph isEnd (path @ [(middle, edge)])
-  "
-
-inductive staticPathBalanced :: "static_path \<Rightarrow> bool" where
-  Empty: "
-    staticPathBalanced []  
-  "
-|  CallReturn: "
-    staticPathBalanced path \<Longrightarrow>
-    staticPathBalanced ([(l, ECall)] @ path @ [(l', EReturn)])  
-  "
-| Snoc: "
-    staticPathBalanced path \<Longrightarrow>
-    staticPathBalanced (path @ [(l, ENext)])
-  "
-
-
-
-inductive staticDetour :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
-  Short: "
-    isEnd end \<Longrightarrow>
-
-    \<not> Set.is_empty (exit l) \<Longrightarrow>
-    Set.is_empty (entr l') \<Longrightarrow>
-
-    Set.is_empty (exit l') \<Longrightarrow>
-    \<not> Set.is_empty (entr end) \<Longrightarrow>
-
-    staticDetour graph entr exit  isEnd [(l, ECall), (l', EReturn)]
-  "
-|  Long: "
-    isEnd end \<Longrightarrow>
-
-    \<not> Set.is_empty (exit l) \<Longrightarrow>
-    Set.is_empty (entr middle) \<Longrightarrow>
-
-    Set.is_empty (exit l') \<Longrightarrow>
-    \<not> Set.is_empty (entr end) \<Longrightarrow>
-    staticPathExists graph isEnd ([(l, ECall), (middle, mode)] @ path @ [(IdRslt xR, EReturn)]) \<Longrightarrow>
-    staticPathBalanced ((middle, mode) # path) \<Longrightarrow>
-    staticDetour graph entr exit isEnd ([(l, ECall), (middle, mode)] @ path @ [(l', EReturn)])
-  "
-
-
 
 inductive staticPathLive :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_id_map \<Rightarrow> tm_id \<Rightarrow> (tm_id \<Rightarrow> bool) \<Rightarrow> static_path \<Rightarrow> bool" where
   Empty:
@@ -439,17 +387,10 @@ inductive staticPathLive :: "flow_set \<Rightarrow> tm_id_map \<Rightarrow> tm_i
   "
     staticPathLive graph entr exit start (\<lambda> l . l = middle) path \<Longrightarrow>
     isEnd end \<Longrightarrow>
-    (middle, ENext, end) \<in> graph \<Longrightarrow>
+    (middle, edge, end) \<in> graph \<Longrightarrow>
     \<not> Set.is_empty (exit middle) \<Longrightarrow>
     \<not> Set.is_empty (entr end) \<Longrightarrow>
     staticPathLive graph entr exit start isEnd (path @ [(middle, edge)])
-  "
-| Detour:
-  "
-    staticPathLive graph entr exit start (\<lambda> l . l = middle) path \<Longrightarrow>
-    isEnd end \<Longrightarrow>
-    staticDetour graph entr exit isEnd ((middle, ENext) # detour) \<Longrightarrow>
-    staticPathLive graph entr exit start isEnd (path @ [(middle, ENext)] @ detour)
   "
 
 inductive staticInclusive :: "static_path \<Rightarrow> static_path \<Rightarrow> bool" where
