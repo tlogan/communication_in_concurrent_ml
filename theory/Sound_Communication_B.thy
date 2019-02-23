@@ -213,7 +213,7 @@ inductive pathsCongruent :: "control_path \<Rightarrow> static_path \<Rightarrow
   "
     pathsCongruent \<pi> path \<Longrightarrow>
     pathsCongruent (\<pi> @ [LRtn y]) (path @ [(IdRslt y, EReturn)])
-  " 
+  "
 
 
 inductive pathsCongruentModChan :: 
@@ -223,7 +223,7 @@ where
   "
     pathsCongruent ((LNxt xC) # \<pi>Suff) path \<Longrightarrow>
     pathsCongruentModChan t0 (Ch \<pi>C xC) (\<pi>C @ (LNxt xC) # \<pi>Suff) path
-  " 
+  "
 | Sync:
   "
     star dynamicEval ([[] \<mapsto> (Stt t0 empty [])], {}) (\<E>, comm) \<Longrightarrow>
@@ -234,18 +234,22 @@ where
     dynamicBuiltOnChanVal vR c \<Longrightarrow>
     pathsCongruentModChan t0 c \<pi>S pathPre \<Longrightarrow>
     pathsCongruent \<pi>Suffix pathSuffix \<Longrightarrow>
-    pathsCongruentModChan t0 c (\<pi>R @ (LNxt xR) # \<pi>Suffix) (pathPre @ (IdBind xS, ESend xSE) # (IdBind xR, ENext) # pathSuffix)
-  " 
-| Snoc:
+    pathsCongruentModChan t0 c 
+      (\<pi>R @ (LNxt xR) # \<pi>Suffix) 
+      (pathPre @ (IdBind xS, ESend xSE) # (IdBind xR, ENext) # pathSuffix)
+  "
+
+lemma pathsCongruentModChanPreservedSnoc:
   "
     pathsCongruentModChan t0 c \<pi> path \<Longrightarrow>
     pathsCongruent [site] [step] \<Longrightarrow>
     pathsCongruentModChan t0 c (\<pi> @ [site]) (path @ [step])
-  " 
+  "
+sorry
 
 
 lemma staticInclusiveSound: "
-  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow> 
+  star dynamicEval ([[] \<mapsto> (Stt e empty [])], {}) (\<E>', H') \<Longrightarrow>
   staticLiveChan V Ln Lx xC e \<Longrightarrow>
   staticFlowsAccept V F e \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>e e \<Longrightarrow>
@@ -981,6 +985,7 @@ apply (rule staticLiveChanPool.Intro; auto)
 
   apply (rotate_tac 3)
   apply (erule staticLiveChanPool.cases; auto)
+  apply (simp add: StaticLiveChanUnit staticLiveChanEnv.simps)
 
 (*
   apply (rotate_tac 3)
@@ -1207,7 +1212,7 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (drule_tac x = "\<lambda> id . id = IdRslt x" in spec; auto)
 
   apply (rule_tac x = "path @ [(IdRslt x, EReturn)]" in exI; auto)
-  apply (rule pathsCongruentModChan.Snoc; auto?)
+  apply (rule pathsCongruentModChanPreservedSnoc; auto?)
   using pathsCongruent.Empty pathsCongruent.Return apply fastforce
 
   apply (rule staticPathLive.Edge; auto?)
