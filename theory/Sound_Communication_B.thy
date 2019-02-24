@@ -1260,6 +1260,25 @@ lemma staticPathsLivePoolSoundUnitEval:
            (\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) pi path \<and> staticPathLive F Ln Lx (IdBind xC) isEnd path)) \<Longrightarrow>
   \<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) (pi @ [LNxt x]) path \<and> staticPathLive F Ln Lx (IdBind xC) isEnd path
 "
+ apply (erule impE)
+  apply (erule dynamicBuiltOnChanState.cases; auto)
+   apply (erule dynamicBuiltOnChanEnv.cases; auto)
+   apply (case_tac "n = x"; auto)
+    apply (erule dynamicBuiltOnChanVal.cases; blast)
+   apply (rule dynamicBuiltOnChanState.Env)
+   apply (rule dynamicBuiltOnChanEnv_intro[of env]; auto)
+  apply (rule dynamicBuiltOnChanState.Stack; auto)
+ apply (drule spec[of _ "\<lambda> id . id = IdBind x"]; auto)
+ apply (rule_tac x = "path @ [(IdBind x, ENext)]" in exI; auto)
+  using Next pathsCongruent.Empty pathsCongruentModChanPreservedSnoc apply fastforce
+ apply (rule staticPathLive.Edge; auto?)
+   apply (drule staticFlowsAcceptPoolPreserved[of V F e C Em Hm])
+     apply (erule staticEvalPool.cases; auto?)
+     apply (drule spec[of  _ "[]"]; auto)
+     apply (erule staticEvalState.cases; auto)
+    apply (simp add: star_left_implies_star)
+   apply (erule staticFlowsAcceptPool.cases; auto)
+   apply (drule spec[of _ pi]; auto)
 sorry
 
 lemma staticPathLivePoolSoundSeqEval: 
