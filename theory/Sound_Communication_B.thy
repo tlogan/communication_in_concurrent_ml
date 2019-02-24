@@ -1245,6 +1245,51 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
    
 done
 
+lemma staticPathsLivePoolSoundUnitEval:
+"
+  (V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
+  staticFlowsAcceptPool V F e [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
+  star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+  dynamicBuiltOnChanState (Stt e' (env(x \<mapsto> VUnt)) stack') (Ch \<pi>C xC) \<Longrightarrow>
+  isEnd (tmId e') \<Longrightarrow>
+  leaf Em pi \<Longrightarrow>
+  Em pi = Some (Stt (Bind x Unt e') env stack') \<Longrightarrow>
+  dynamicBuiltOnChanState (Stt (Bind x Unt e') env stack') (Ch \<pi>C xC) \<longrightarrow>
+  (\<forall>isEnd. isEnd (tmId (Bind x Unt e')) \<longrightarrow>
+           (\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) pi path \<and> staticPathLive F Ln Lx (IdBind xC) isEnd path)) \<Longrightarrow>
+  \<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) (pi @ [LNxt x]) path \<and> staticPathLive F Ln Lx (IdBind xC) isEnd path
+"
+sorry
+
+lemma staticPathLivePoolSoundSeqEval: 
+"
+(V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
+staticLiveChanPool V Ln Lx xC [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
+staticFlowsAcceptPool V F e [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
+star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Longrightarrow>
+\<forall>\<pi>' e' env' stack' isEnd.
+  ([[] \<mapsto> Stt e Map.empty []], {}) = ([[] \<mapsto> Stt e Map.empty []], {}) \<longrightarrow>
+  Em \<pi>' = Some (Stt e' env' stack') \<longrightarrow>
+  dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<longrightarrow>
+  isEnd (tmId e') \<longrightarrow> (\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticPathLive F Ln Lx (IdBind xC) isEnd path) \<Longrightarrow>
+(Em(pi @ [LNxt x] \<mapsto> Stt ea (env(x \<mapsto> v)) k)) \<pi>' = Some (Stt e' env' stack') \<Longrightarrow>
+dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<Longrightarrow>
+isEnd (tmId e') \<Longrightarrow>
+leaf Em pi \<Longrightarrow>
+Em pi = Some (Stt (Bind x b ea) env k) \<Longrightarrow>
+seqEval b env v \<Longrightarrow>
+\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticPathLive F Ln Lx (IdBind xC) isEnd path
+"
+ apply (case_tac "\<pi>' = pi @ [LNxt x]"; auto)
+ apply (drule spec[of _ pi]; clarify?)
+ apply (drule spec[of _ "Bind x b e'"]; clarify?)
+ apply (drule spec[of _ env]; clarify?)
+ apply (drule spec[of _ stack']; clarify?)
+ apply (erule seqEval.cases; clarify)
+    apply (insert staticPathsLivePoolSoundUnitEval; auto)
+sorry
+
 lemma staticPathLivePoolSoundDynamicEval:
 "
 (V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
@@ -1257,7 +1302,7 @@ star_left op \<rightarrow> ([[] \<mapsto> Stt e Map.empty []], {}) (Em, Hm) \<Lo
   dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<longrightarrow>
   isEnd (tmId e') \<longrightarrow> 
   (\<exists>path. pathsCongruentModChan e (Ch \<pi>C xC) \<pi>' path \<and> staticPathLive F Ln Lx (IdBind xC) isEnd path) \<Longrightarrow>
-(Em, Hm) \<rightarrow> (E', H') \<Longrightarrow>
+dynamicEval (Em, Hm) (E', H') \<Longrightarrow>
 E' \<pi>' = Some (Stt e' env' stack') \<Longrightarrow>
 dynamicBuiltOnChanState (Stt e' env' stack') (Ch \<pi>C xC) \<Longrightarrow>
 isEnd (tmId e') \<Longrightarrow> 
@@ -1265,6 +1310,7 @@ isEnd (tmId e') \<Longrightarrow>
 "
 apply (erule dynamicEval.cases; clarify?)
 apply (insert staticPathLivePoolSoundReturn; auto)
+apply (insert staticPathLivePoolSoundSeqEval; auto)
 sorry
 
 lemma staticPathLivePoolSound':
