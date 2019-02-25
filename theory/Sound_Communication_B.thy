@@ -1271,14 +1271,29 @@ lemma staticPathsLivePoolSoundUnitEval:
  apply (drule spec[of _ "\<lambda> id . id = IdBind x"]; auto)
  apply (rule_tac x = "path @ [(IdBind x, ENext)]" in exI; auto)
   using Next pathsCongruent.Empty pathsCongruentModChanPreservedSnoc apply fastforce
- apply (rule staticPathLive.Edge; auto?)
-   apply (drule staticFlowsAcceptPoolPreserved[of V F e C Em Hm])
-     apply (erule staticEvalPool.cases; auto?)
-     apply (drule spec[of  _ "[]"]; auto)
-     apply (erule staticEvalState.cases; auto)
-    apply (simp add: star_left_implies_star)
+
+ apply (drule staticFlowsAcceptPoolPreserved[of V F e C Em Hm])
+   apply (erule staticEvalPool.cases; auto?)
+   apply (drule spec[of  _ "[]"]; auto)
+   apply (erule staticEvalState.cases; auto)
+  apply (simp add: star_left_implies_star)
+
+ apply (drule staticLiveChanPoolPreserved[of V Ln Lx xC e C Em Hm])
+   apply (erule staticEvalPool.cases; auto?)
+   apply (drule spec[of  _ "[]"]; auto)
+   apply (erule staticEvalState.cases; auto)
+  apply (simp add: star_left_implies_star)
+
+
+ apply (rule staticPathLive.Edge; simp?)
    apply (erule staticFlowsAcceptPool.cases; auto)
    apply (drule spec[of _ pi]; auto)
+   apply (erule staticFlowsAcceptTm.cases; auto)
+(***)
+
+   
+  
+   
 sorry
 
 lemma staticPathLivePoolSoundSeqEval: 
