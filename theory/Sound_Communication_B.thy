@@ -1345,6 +1345,11 @@ apply (insert staticPathLivePoolSoundReturn; auto)
 apply (insert staticPathLivePoolSoundSeqEval; auto)
 sorry
 
+(*
+Need Soundness of static built on chan:
+dynamicBuiltOnChan \<longrightarrow> staticBuiltOnChan.
+*)
+
 lemma staticPathLivePoolSound':
 "
 star_left dynamicEval EH EH' \<Longrightarrow>
