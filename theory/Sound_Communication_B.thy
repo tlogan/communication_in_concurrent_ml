@@ -1284,16 +1284,14 @@ lemma staticPathsLivePoolSoundUnitEval:
    apply (erule staticEvalState.cases; auto)
   apply (simp add: star_left_implies_star)
 
-
  apply (rule staticPathLive.Edge; simp?)
    apply (erule staticFlowsAcceptPool.cases; auto)
    apply (drule spec[of _ pi]; auto)
    apply (erule staticFlowsAcceptTm.cases; auto)
 (***)
+  apply (erule staticLiveChanPool.cases; clarsimp)
+  apply (drule spec[of _ pi]; auto)
 
-   
-  
-   
 sorry
 
 lemma staticPathLivePoolSoundSeqEval: 
