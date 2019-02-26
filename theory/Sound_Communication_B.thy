@@ -1170,6 +1170,21 @@ apply (simp add: staticLiveChanStack.Empty)
 done
 
 
+
+
+lemma staticBuiltOnChanSound:
+"
+  dynamicBuiltOnChanVal v (Ch \<pi>C xC) \<Longrightarrow>
+  \<rho> n = Some v \<Longrightarrow>
+  pool pi = Some (Stt e' \<rho>' \<kappa>') \<Longrightarrow>
+  (V, C) \<Turnstile>\<^sub>\<E> pool \<Longrightarrow>
+  staticLiveChanPool V Ln Lx xC pool \<Longrightarrow>
+  staticFlowsAcceptPool V F e pool \<Longrightarrow>
+  staticBuiltOnChan V xC n
+"
+sorry
+
+
 lemma staticPathLivePoolSoundReturn: 
 "
 (V, C) \<Turnstile>\<^sub>\<E> [[] \<mapsto> Stt e Map.empty []] \<Longrightarrow>
@@ -1241,9 +1256,9 @@ apply (case_tac "\<pi>' = pi @ [LRtn x]"; auto)
   apply (simp add: star_left_implies_star)
   apply (erule staticLiveChanPool.cases; auto)
   apply (drule spec[of _ pi]; auto)
-  apply (erule staticLiveChanStack.cases; auto)
-   
+  apply (erule staticLiveChanStack.cases; auto)   
 done
+
 
 lemma staticPathsLivePoolSoundUnitEval:
 "
@@ -1344,11 +1359,6 @@ apply (erule dynamicEval.cases; clarify?)
 apply (insert staticPathLivePoolSoundReturn; auto)
 apply (insert staticPathLivePoolSoundSeqEval; auto)
 sorry
-
-(*
-Need Soundness of static built on chan:
-dynamicBuiltOnChan \<longrightarrow> staticBuiltOnChan.
-*)
 
 lemma staticPathLivePoolSound':
 "
