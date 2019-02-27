@@ -3601,6 +3601,8 @@ and each exit setappears right below its related term identifier.
       staticChanLive staticEnv entr exit n$_c$ t$_l$,
       staticChanLive staticEnv entr exit n$_c$ t$_r$,
       entr (termId t') $\subseteq$ exit (NBnd n),
+      exit (IdRslt (resultName t$_l$)) $\subseteq$ entr (tmId t'),
+      exit (IdRslt (resultName t$_r$)) $\subseteq$ entr (tmId t'),
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
 
@@ -3615,6 +3617,10 @@ and each exit setappears right below its related term identifier.
       $\rightarrow$ {n$_f$} $\subseteq$ entr (NBnd n)
       ),
       entr (termId t') $\subseteq$ exit (NBnd n),
+      (
+        SAtm (Fun n$_f$' x$_p$ t$_b$) $\in$ staticEnv n$_f$
+      $\rightarrow$ exit (IdRslt (resultName t$_b$)) $\subseteq$  entr (tmId t');
+      )
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (App n$_f$ n$_a$) t')
 \end{lstlisting}
@@ -3629,68 +3635,6 @@ The following diagram illustrates the graph of the server example,
 containing only live flows for channel \lstinline{k4}. \
 
 \includegraphics[width=0.7\textwidth]{cml-graph-k4.pdf}
-
-The channel liveness relation says if a channel is live within a function, but
-does not say anything whether or not a channel remains live across calling or returning flows.
-If a function is called that does nothing with the channel of interest, then the entry and exit functions
-for the sites in that function will be empty; however, the path from before it's called
-until after it returns should be considered live all the way through.
-For instance, no channel is considered to be live in the body of the loop at \lstinline[language=normal_lang]{bind lp}.
-However, a channel may be live before the loop is called and after the loop returns. 
-
-A few additional definitions are needed to describe if a static path is live.
-The static path balance checks if a path has balanced call and return flows with
-of zero or more sequencuential steps between them.
-The static path existence is the same as that for the lower precision analysis.
-The static detour describes paths that have live sites before a call flow
-and after a return flow, but not in between.
-
-
-\begin{lstlisting}[language=logic, mathescape]
-  predicate staticPathBalanced: static_path -> bool where
-    empty:
-      staticPathBalanced []  
-  * call_return: path id id' .
-      staticPathBalanced path
-    $\vdash$ staticPathBalanced ([(id, MCll)] @ path @ [(id', MRtn)])  
-  * snoc: path id .
-      staticPathBalanced path
-    $\vdash$ staticPathBalanced (path @ [(id, MSeq)])
-
-  predicate staticPathExists: graph -> (tm_id -> bool) -> static_path -> bool where
-    empty: graph isEnd .
-    $\vdash$ staticPathExists graph isEnd []
-  * edge: graph middle path isEnd end mode .
-      staticPathExists graph ($\lambda$ l . l = middle) path,
-      isEnd end,
-      (middle, mode, end) $\in$ graph 
-    $\vdash$ staticPathExists graph isEnd (path @ [(middle, mode)])
-
-  predicate staticDetour:
-    graph -> tm_id_map -> tm_id_map -> tm_id
-  -> (tm_id -> bool) -> static_path -> bool
-  where
-    short: isEnd end exit id entr id' graph .
-      isEnd end,
-      $\neg$ Set.is_empty (exit id),
-      Set.is_empty (entr id'),
-      Set.is_empty (exit id'),
-      $\neg$ Set.is_empty (entr end),
-    $\vdash$ staticDetour graph entr exit isEnd [(id, MCll), (id', MRtn)]
-  * long: isEnd end exit id entr middle id' end graph mode .
-      isEnd end,
-      $\neg$ Set.is_empty (exit id),
-      Set.is_empty (entr middle),
-      Set.is_empty (exit id'),
-      $\neg$ Set.is_empty (entr end),
-      staticPathExists graph isEnd
-        ([(l, MCll), (middle, mode)] @ path @ [(id', MRtn)]),
-      staticPathBalanced ((middle, mode) # path),
-    $\vdash$  staticDetour graph entr exit isEnd
-      ([(id, MCll), (middle, mode)] @ path @ [(id', MRtn)])
-
-\end{lstlisting}
-
 
 The static path liveness for the higher precision analysis states
 that a channel is live for an entire static path found within a graph.
@@ -3914,10 +3858,11 @@ correlating dynamic paths with static paths.
       (path$_r$ @ (DSeq n$_r$) # path$_{sfx}$)
       (staticPath$_{pfx}$ @ [(NBnd n$_s$, MSend n$_{se}$), (NBnd n$_r$, MSeq)] @ staticPath$_{sfx}$)
 
-  * snoc: t$_0$ chan path staticPath site step .
-      pathsCongruentModChan t$_0$ chan path staticPath,
-      pathsCongruent [site] [step]
-    $\vdash$ pathsCongruentModChan t$_0$ chan (path @ [site]) (staticPath @ [step])
+
+  lemma pathsCorrespondModChanPreservedSnoc: t$_0$ chan path staticPath site step .
+    pathsCongruentModChan t$_0$ chan path staticPath,
+    pathsCongruent [site] [step]
+  $\vdash$ pathsCongruentModChan t$_0$ chan (path @ [site]) (staticPath @ [step])
 \end{lstlisting}
 
 Additionally the soundness theorem follows from the soundness of static path liveness,
@@ -3935,7 +3880,11 @@ that correlates with the dynamic path is more challenging.
 The proposition \lstinline[mathescape]{isSendPath pool' (Ch path$_c$ n$_c$) path'} is derived
 by unfolding the definition of \lstinline{oneShot}.
 It is generalized by \lstinline[mathescape]{pool' path' = Some (Stt t' env' stack'),}\\
-\lstinline[mathescape]{dynamicBuiltOnChanState (Stt t' env' stack') (Ch path$_c$ n$_c$)} in the soundess of static path liveness.
+\lstinline[mathescape]{dynamicBuiltOnChanState (Stt t' env' stack') (Ch path$_c$ n$_c$)} in the soundess of
+static path liveness. Since the static chan liveness depends on names being statically built on the channel,
+the soundness theorem also depends on the soundness of static built-on-channel classification with respect
+to the dynamic built-on-channel classification.
+
 
 \begin{lstlisting}[language=logic, mathescape]
 
@@ -3983,6 +3932,18 @@ It is generalized by \lstinline[mathescape]{pool' path' = Some (Stt t' env' stac
     staticTraceable graph entr exit
       (NBnd n$_c$) (staticSendId staticEnv t$_0$ n$_c$) staticPath2
   $\vdash$ staticInclusive staticPath1 staticPath2
+
+
+  lemma staticBuiltOnChanSound:
+    dynamicBuiltOnChanVal v (Ch path$_c$ x$_c$),
+    env n = Some v,
+    pool path = Some (Stt t' env' stack'),
+    staticEvalPool staticEnv staticComm pool,
+    staticLiveChanPool staticEnv entr exit x$_c$ pool,
+    staticFlowsAcceptPool staticEnv graph t pool
+  $\vdash$ staticBuiltOnChan staticEnv x$_c$ n
+
+
 \end{lstlisting}
 
 
