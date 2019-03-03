@@ -1179,7 +1179,7 @@ lemma staticBuiltOnChanSound:
   pool pi = Some (Stt e' \<rho>' \<kappa>') \<Longrightarrow>
   (V, C) \<Turnstile>\<^sub>\<E> pool \<Longrightarrow>
   staticLiveChanPool V Ln Lx xC pool \<Longrightarrow>
-  staticFlowsAcceptPool V F e pool \<Longrightarrow>
+  staticFlowsAcceptPool V F e0 pool \<Longrightarrow>
   staticBuiltOnChan V xC n
 "
 sorry

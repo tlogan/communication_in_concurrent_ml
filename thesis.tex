@@ -2098,14 +2098,14 @@ The term identifier of a result term is the embedded name, and indication of its
 
 \begin{lstlisting}[language=logic, mathescape]
   datatype tm_id =
-    NBnd name
-  | NRslt name 
+    IdBind name
+  | IdRslt name 
 
   fun termId: term -> tm_id where
     n c t' . 
-    $\vdash$ termId (Bind n c t') = NBnd n
+    $\vdash$ termId (Bind n c t') = IdBind n
   * n . 
-    $\vdash$ termId (Rslt n) = NRslt n
+    $\vdash$ termId (Rslt n) = IdRslt n
 
   type tm_id_map = tm_id -> name set
 \end{lstlisting}
@@ -2125,7 +2125,7 @@ synchronization to receive on a given static channel.
       staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
       (SAtm (SendEvt n$_{sc}$ n$_m$)) $\subseteq$ staticEnv n$_e$, 
       (SChn n$_c$) $\in$ staticEnv n$_{sc}$
-    $\vdash$ staticSendId staticEnv t$_0$ n$_c$ (NBnd n)
+    $\vdash$ staticSendId staticEnv t$_0$ n$_c$ (IdBind n)
 
   predicate staticRecvId:
     static_value_map -> term -> name -> tm_id -> bool
@@ -2134,7 +2134,7 @@ synchronization to receive on a given static channel.
       staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
       (SAtm (RecvEvt n$_{rc}$)) $\in$ staticEnv n$_e$, 
       (SChn n$_c$) $\in$ staticEnv n$_{rc}$ 
-    $\vdash$ staticRecvId staticEnv t$_0$ n$_c$ (NBnd n)
+    $\vdash$ staticRecvId staticEnv t$_0$ n$_c$ (IdBind n)
 \end{lstlisting}
 
 
@@ -2222,78 +2222,78 @@ accepting flows for the sequenced term.
     $\vdash$ staticFlowsAccept staticEnv graph (Rslt n)
 
   * unit: n t' graph staticEnv  .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n Unt t')
 
   * makeChan: n t' graph staticEnv  .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n MkChn t')
 
   * sendEvt: n t' graph staticEnv  n$_c$ n$_m$ .
-      (NBnd n , MSeq, termId t') $\in$ graph, 
+      (IdBind n , MSeq, termId t') $\in$ graph, 
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept
       staticEnv graph
       (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
 
   * recvEvt: n t' graph staticEnv n$_c$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (RecvEvt n$_c$)) t')
 
   * pair: n t' graph staticEnv n$_1$ n$_2$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Pair n$_1$ n$_2$)) t')
 
   * left: n t' graph staticEnv n$_s$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Lft n$_s$)) t')
 
   * right: n t' graph staticEnv n$_s$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Rht n$_s$)) t')
 
   * function: n t' graph staticEnv t$_b$ n$_f$ n$_t$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t', 
       staticFlowsAccept staticEnv graph t$_b$
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t')
 
   * spawn: n t' t$_c$ graph staticEnv .
       {
-        (NBnd n, MSeq, termId t'),
-        (NBnd n, MSpwn, termId t$_c$)
+        (IdBind n, MSeq, termId t'),
+        (IdBind n, MSpwn, termId t$_c$)
       } $\subseteq$ graph, 
       staticFlowsAccept staticEnv graph t$_c$, 
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Spwn t$_c$) t')
 
   * sync: n t' graph staticEnv n$_{se}$ .
-      (NBnd n, MSeq, termId t') $\in$ graph, 
+      (IdBind n, MSeq, termId t') $\in$ graph, 
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Sync n$_{se}$) t')
 
   * first: n t' graph staticEnv n$_t$ .
-      (NBnd n, MSeq, termId t') $\in$ graph, 
+      (IdBind n, MSeq, termId t') $\in$ graph, 
       staticFlowsAccept staticEnv graph t', 
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Fst n$_t$) t')
 
   * second: n t' graph staticEnv n$_t$ .
-      (NBnd n, MSeq, termId t') $\in$ graph, 
+      (IdBind n, MSeq, termId t') $\in$ graph, 
       staticFlowsAccept staticEnv graph t', 
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Snd n$_t$) t')
 
   * distinction: n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
       {
-        (NBnd n, MCll, termId t$_l$),
-        (NBnd n, MCll, termId t$_r$),
-        (NRslt (resultName t$_l$), MRtn, termId t'),
-        (NRslt (resultName t$_r$), MRtn, termId t')
+        (IdBind n, MCll, termId t$_l$),
+        (IdBind n, MCll, termId t$_r$),
+        (IdRslt (resultName t$_l$), MRtn, termId t'),
+        (IdRslt (resultName t$_r$), MRtn, termId t')
       } $\subseteq$ graph, 
       staticFlowsAccept staticEnv graph t$_l$, 
       staticFlowsAccept staticEnv graph t$_r$,
@@ -2305,8 +2305,8 @@ accepting flows for the sequenced term.
         (SAtm (Fun n$_f$' n$_t$ t$_b$)) $\in$ staticEnv n$_f$ 
       $\rightarrow$
         {
-          (NBnd n, MCll, termId t$_b$),
-          (NRslt (resultName t$_b$), MRtn, termId t')
+          (IdBind n, MCll, termId t$_b$),
+          (IdRslt (resultName t$_b$), MRtn, termId t')
         } $\subseteq$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (App n$_f$ n$_a$) t')
@@ -2373,12 +2373,12 @@ to paths starting from the beginning of a program.
     $\vdash$ staticInclusive path1 path2
   * spawnFirst: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ [(NBnd n, MSpwn)] @ path1)
-      (path @ [(NBnd n, MSeq)] @ path2)
+      (path @ [(IdBind n, MSpwn)] @ path1)
+      (path @ [(IdBind n, MSeq)] @ path2)
   * spawnSecond: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ [(NBnd n, MSeq)] @ path1])
-      (path @ [(NBnd n, MSpwn)] @ path2)
+      (path @ [(IdBind n, MSeq)] @ path1])
+      (path @ [(IdBind n, MSpwn)] @ path2)
 \end{lstlisting}
 
 The noncompetitiveness means that two paths can't compete during a run of a
@@ -2616,22 +2616,22 @@ is statically classified as sending.
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
       (path @ [DSeq n])
-      (staticPath @ [(NBnd n, MSeq)])
+      (staticPath @ [(IdBind n, MSeq)])
   * spawn: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
       (path @ [DSpwn n])
-      (staticPath @ [(NBnd n, MSpwn)])
+      (staticPath @ [(IdBind n, MSpwn)])
   * call: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
       (path @ [DCll n])
-      (staticPath @ [(NBnd n, MCll)])
+      (staticPath @ [(IdBind n, MCll)])
   * return: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
       (path @ [DRtn n])
-      (staticPath @ [(NRslt n, MRtn)])
+      (staticPath @ [(IdRslt n, MRtn)])
 
   lemma staticTraceableSound: t$_0$ pool comm path t 
   env stack staticEnv staticComm graph isEnd .
@@ -2660,7 +2660,7 @@ is statically classified as sending.
     env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env'), 
     env' n$_{sc}$ = Some (VChn (Chan path$_c$ n$_c$)), 
     staticEval staticEnv staticComm t$_0$
-  $\vdash$ staticSendId staticEnv t$_0$ n$_c$ (NBnd n)
+  $\vdash$ staticSendId staticEnv t$_0$ n$_c$ (IdBind n)
 \end{lstlisting}
 
 The soundness of static path existence is proved by generalizing
@@ -2742,7 +2742,7 @@ depending on the program.
     $\vdash$ staticFlowsAcceptStack staticEnv graph n$_r$ []
 
   * cons: n$_r$ t graph staticEnv graph env stack' n env .
-      {(NRslt n$_r$, MRtn, termId t)} $\subseteq$ graph,
+      {(IdRslt n$_r$, MRtn, termId t)} $\subseteq$ graph,
       staticFlowsAccept staticEnv graph t,
       staticFlowsAcceptEnv staticEnv graph env,
       staticFlowsAcceptStack staticEnv graph (resultName t) stack' 
@@ -3236,81 +3236,81 @@ from sender to receiver, the initial program must be carried each inference rule
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Rslt n)
 
   * unit: n t' graph staticEnv .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n Unt t')
 
   * makeChan: n t' graph staticEnv  .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n MkChn t')
 
   * sendEvt: n t' graph staticEnv  n$_c$ n$_m$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAccept
       staticEnv graph
       (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
 
   * recvEvt: n t' graph staticEnv n$_c$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (RecvEvt n$_c$)) t')
 
   * pair: n t' graph staticEnv n$_1$ n$_2$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Pair n$_1$ n$_2$)) t')
 
   * left: n t' graph staticEnv n$_s$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Lft n$_s$)) t')
 
   * right: n t' graph staticEnv n$_s$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Rht n$_s$)) t')
 
   * function: n t' graph staticEnv t$_b$ n$_f$ n$_p$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t',
       staticFlowsAcceptTm staticEnv graph t$_0$ t$_b$
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
 
   * spawn: n t' t$_c$ graph staticEnv.
-      {(NBnd n, MSeq, termId t'),
-        (NBnd n, MSpwn, termId t$_c$)} $\subseteq$ graph,
+      {(IdBind n, MSeq, termId t'),
+        (IdBind n, MSpwn, termId t$_c$)} $\subseteq$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t$_c$,
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Spwn t$_c$) t')
 
   * sync: n t' graph staticEnv n$_{se}$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       $\forall$ n$_{sc}$ n$_m$ n$_c$ n$_y$.
         (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv nSE,
       $\rightarrow$ (SChn n$_c$) $\in$ staticEnv n$_{sc}$
-      $\rightarrow$ staticRecvId staticEnv t$_0$ n$_c$ (NBnd n$_y$)
-      $\rightarrow$ (NBnd n, MSend n$_{se}$, NBnd n$_y$) $\in$ graph),
+      $\rightarrow$ staticRecvId staticEnv t$_0$ n$_c$ (IdBind n$_y$)
+      $\rightarrow$ (IdBind n, MSend n$_{se}$, IdBind n$_y$) $\in$ graph),
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Sync n$_{se}$) t')
 
   * first: n t' graph staticEnv n$_p$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t',
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Fst n$_p$) t')
 
   * second: n t' graph staticEnv n$_p$ .
-      (NBnd n , MSeq, termId t') $\in$ graph,
+      (IdBind n , MSeq, termId t') $\in$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t',
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (Snd n$_p$) t')
 
   * distinction: n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
       {
-        (NBnd n, MCll, termId t$_l$),
-        (NBnd n, MCll, termId t$_r$),
-        (NRslt (resultName t$_l$), MRtn, termId t'),
-        (NRslt (resultName t$_r$), MRtn, termId t')
+        (IdBind n, MCll, termId t$_l$),
+        (IdBind n, MCll, termId t$_r$),
+        (IdRslt (resultName t$_l$), MRtn, termId t'),
+        (IdRslt (resultName t$_r$), MRtn, termId t')
       } $\subseteq$ graph,
       staticFlowsAcceptTm staticEnv graph t$_0$ t$_l$,
       staticFlowsAcceptTm staticEnv graph t$_0$ t$_r$,
@@ -3322,8 +3322,8 @@ from sender to receiver, the initial program must be carried each inference rule
         (SAtm (Fun n$_f$' n$_p$ t$_b$)) $\in$ staticEnv n$_f$
       $\rightarrow$
         {
-          (NBnd n, MCll, termId t$_b$),
-          (NRslt (resultName t$_b$), MRtn, termId t')
+          (IdBind n, MCll, termId t$_b$),
+          (IdRslt (resultName t$_b$), MRtn, termId t')
         } $\subseteq$ graph),
       staticFlowsAcceptTm staticEnv graph t$_0$ t'
     $\vdash$ staticFlowsAcceptTm staticEnv graph t$_0$ (Bind n (App n$_f$ n$_a$) t')
@@ -3465,158 +3465,158 @@ and each exit setappears right below its related term identifier.
     result: staticEnv entr n$_c$ n$_y$ exit .
       (
         (staticBuiltOnChan staticEnv n$_c$ n$_y$)
-      $\rightarrow$ {n$_y$} $\subseteq$ entr (NRslt n$_y$)
+      $\rightarrow$ {n$_y$} $\subseteq$ entr (IdRslt n$_y$)
       )
     $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Rslt n$_y$)
 
   * unit: exit n entr t' staticEnv n$_c$ .
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n Unt t')
 
   * makeChan: exit n entr t' staticEnv n$_c$ .
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n MkChn t')
 
   * sendEvt: exit n entr staticEnv n$_c$ n$_{sc}$ n$_m$ t' n$_c$ .
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_{sc}$
-      $\rightarrow$ {n$_{sc}$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_{sc}$} $\subseteq$ entr (IdBind n)
       ),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_m$
-      $\rightarrow$ {n$_m$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_m$} $\subseteq$ entr (IdBind n)
       ),
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Atom (SendEvt n$_{sc}$ n$_m$)) t')
 
   * recvEvt: exit n entr staticEnv n$_c$ n$_r$ n$_{rc}$.   
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_r$
-      $\rightarrow$ {n$_r$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_r$} $\subseteq$ entr (IdBind n)
       ),
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Atom (RecvEvt n$_{rc}$)) t')
 
   * pair: exit n entr staticEnv t$_c$ n$_1$ n$_2$ t' .
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_1$
-      $\rightarrow$ {n$_1$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_1$} $\subseteq$ entr (IdBind n)
       ),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_2$
-      $\rightarrow$ {n$_2$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_2$} $\subseteq$ entr (IdBind n)
       ),
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (Atom (Pair n$_1$ n$_2$)) t'))
 
   * left: exit n entr staticEnv n$_c$ n$_a$ t' . 
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_a$
-      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (IdBind n)
       ),
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (Atom (Lft n$_a$)) t'))
 
   * right: exit n entr staticEnv n$_c$ n$_a$ t' . 
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_a$
-      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (IdBind n)
       ),
-      entr (termId e) $\subseteq$ exit (NBnd n),
+      entr (termId e) $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t
     $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (Atom (Rht n$_a$)) e)
 
   * function: exit n entr t$_b$ n$_p$ n staticEnv n$_c$ t' n$_f$ . 
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      (entr (termId t$_b$) \ {n$_f$, n$_p$}) $\subseteq$ entr (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
+      (entr (termId t$_b$) \ {n$_f$, n$_p$}) $\subseteq$ entr (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t$_b$,
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Atom (Fun n$_f$ n$_p$ t$_b$)) t')
 
   * spawn: exit n entr t' t$_c$ n$_c$ staticEnv .
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      entr (termId t') $\subseteq$ exit (NBnd n),
-      entr (termId t$_c$) $\subseteq$ exit (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
+      entr (termId t$_c$) $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t$_c$,
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Spwn t$_c$) t')
 
   * sync: exit n entr staticEnv n$_c$ n$_e$ t' .
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_e$
-      $\rightarrow$ {n$_e$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_e$} $\subseteq$ entr (IdBind n)
       ),
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t',
     $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Sync n$_e$) t')
 
   * first: exit n entr staticEnv n$_c$ n$_a$ t' .
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_a$
-      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (IdBind n)
       ),
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (Fst n$_a$) t')
   * second: exit n entr staticEnv n$_c$ n$_a$ t' .
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_a$
-      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (IdBind n)
       ),
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$
       (Bind n (Snd n$_a$) t')
 
   * distinction: exit n entr t$_l$ n$_l$ t$_r$ n$_r$ staticEnv n$_c$ n$_s$ t' .
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
-      (entr (termId t$_l$) \ {n$_l$}) $\subseteq$ entr (NBnd n),
-      (entr (termId t$_r$) \ {n$_r$}) $\subseteq$ entr (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
+      (entr (termId t$_l$) \ {n$_l$}) $\subseteq$ entr (IdBind n),
+      (entr (termId t$_r$) \ {n$_r$}) $\subseteq$ entr (IdBind n),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_s$
-      $\rightarrow$ {n$_s$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_s$} $\subseteq$ entr (IdBind n)
       ),
       staticChanLive staticEnv entr exit n$_c$ t$_l$,
       staticChanLive staticEnv entr exit n$_c$ t$_r$,
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       exit (IdRslt (resultName t$_l$)) $\subseteq$ entr (tmId t'),
       exit (IdRslt (resultName t$_r$)) $\subseteq$ entr (tmId t'),
       staticChanLive staticEnv entr exit n$_c$ t'
     $\vdash$ staticChanLive staticEnv entr exit n$_c$ (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
 
   * application: exit n entr staticEnv n$_c$ n$_a$ n$_f$ t' .
-      (exit (NBnd n) \ {n}) $\subseteq$ entr (NBnd n),
+      (exit (IdBind n) \ {n}) $\subseteq$ entr (IdBind n),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_a$
-      $\rightarrow$ {n$_a$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_a$} $\subseteq$ entr (IdBind n)
       ),
       (
         staticBuiltOnChan staticEnv n$_c$ n$_f$
-      $\rightarrow$ {n$_f$} $\subseteq$ entr (NBnd n)
+      $\rightarrow$ {n$_f$} $\subseteq$ entr (IdBind n)
       ),
-      entr (termId t') $\subseteq$ exit (NBnd n),
+      entr (termId t') $\subseteq$ exit (IdBind n),
       (
         SAtm (Fun n$_f$' x$_p$ t$_b$) $\in$ staticEnv n$_f$
       $\rightarrow$ exit (IdRslt (resultName t$_b$)) $\subseteq$  entr (tmId t');
@@ -3674,20 +3674,20 @@ given paths do not compete in any run of a program.
     $\vdash$ staticInclusive path1 path2
   * spawnLeft: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ [(NBnd n, MSpwn)] @ path1)
-      (path @ [(NBnd n, MSeq)] @ path2)
+      (path @ [(IdBind n, MSpwn)] @ path1)
+      (path @ [(IdBind n, MSeq)] @ path2)
   * spawnRight: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ [(NBnd n, MSeq)] @ path1)
-      (path @ [(NBnd n, MSpwn)] @ path2)
+      (path @ [(IdBind n, MSeq)] @ path1)
+      (path @ [(IdBind n, MSpwn)] @ path2)
   * sendLeft: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ [(NBnd n, MSend n$_e$)] @ path1)
-      (path @ [(NBnd n, MSeq)] @ path2)
+      (path @ [(IdBind n, MSend n$_e$)] @ path1)
+      (path @ [(IdBind n, MSeq)] @ path2)
   * sendRight: path n path1 path2 .
     $\vdash$ staticInclusive
-      (path @ [(NBnd n, MSeq)] @ path1)
-      (path @ [(NBnd n, MSend n$_e$)] @ path2)
+      (path @ [(IdBind n, MSeq)] @ path1)
+      (path @ [(IdBind n, MSend n$_e$)] @ path2)
 
   predicate singular: static_path -> static_path -> bool where
     refl: path .
@@ -3714,7 +3714,7 @@ are otherwise similar to the lower precision classifications.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
-      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticSendId staticEnv t n$_c$)) noncompetitive
     $\vdash$ staticOneToMany staticEnv t n$_c$
 
@@ -3723,7 +3723,7 @@ are otherwise similar to the lower precision classifications.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
-      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticRecvId staticEnv t n$_c$)) noncompetitive
     $\vdash$ staticManyToOne staticEnv t n$_c$
 
@@ -3732,9 +3732,9 @@ are otherwise similar to the lower precision classifications.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
-      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$) 
+      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$) 
         (staticSendId staticEnv t n$_c$)) noncompetitive, 
-      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticRecvId staticEnv t n$_c$)) noncompetitive
     $\vdash$ staticOneToOne staticEnv t n$_c$
 
@@ -3743,7 +3743,7 @@ are otherwise similar to the lower precision classifications.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
-      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticSendId staticEnv t n$_c$)) singular
     $\vdash$ staticOneShot staticEnv t n$_c$
 
@@ -3752,9 +3752,9 @@ are otherwise similar to the lower precision classifications.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
-      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticSendId staticEnv t n$_c$)) singular,
-      forEveryTwo (staticTraceable graph entr exit (NBnd n$_c$)
+      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticRecvId staticEnv t n$_c$)) noncompetitive 
     $\vdash$ staticOneSync staticEnv t n$_c$
   \end{lstlisting}
@@ -3797,25 +3797,25 @@ correlating dynamic paths with static paths.
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
       (path @ [DSeq n])
-      (staticPath @ [(NBnd n, MSeq)])
+      (staticPath @ [(IdBind n, MSeq)])
 
   * spawn: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
       (path @ [DSpwn n])
-      (staticPath @ [(NBnd n, MSpwn)])
+      (staticPath @ [(IdBind n, MSpwn)])
 
   * call: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
       (path @ [DCll n])
-      (staticPath @ [(NBnd n, MCll)])
+      (staticPath @ [(IdBind n, MCll)])
 
   * return: path staticPath n .
       pathsCorrespond path staticPath
     $\vdash$ pathsCorrespond
       (path @ [DRtn n])
-      (staticPath @ [(NRslt n, MRtn)])
+      (staticPath @ [(IdRslt n, MRtn)])
 
 
   predicate dynamicBuiltOnChanVal val -> chan -> bool where
@@ -3853,13 +3853,7 @@ correlating dynamic paths with static paths.
       pathsCorrespond path$_{sfx}$ staticPath$_{sfx}$
     $\vdash$ pathsCorrespondModChan t$_0$ chan
       (path$_r$ @ (DSeq n$_r$) # path$_{sfx}$)
-      (staticPath$_{pfx}$ @ [(NBnd n$_s$, MSend n$_{se}$), (NBnd n$_r$, MSeq)] @ staticPath$_{sfx}$)
-
-
-  lemma pathsCorrespondModChanPreservedSnoc: t$_0$ chan path staticPath site step .
-    pathsCongruentModChan t$_0$ chan path staticPath,
-    pathsCongruent [site] [step]
-  $\vdash$ pathsCongruentModChan t$_0$ chan (path @ [site]) (staticPath @ [step])
+      (staticPath$_{pfx}$ @ [(IdBind n$_s$, MSend n$_{se}$), (IdBind n$_r$, MSeq)] @ staticPath$_{sfx}$)
 \end{lstlisting}
 
 Additionally the soundness theorem follows from the soundness of static path liveness,
@@ -3874,10 +3868,10 @@ to correlate with the given dynamic path. In the higher precision analysis, the 
 between the two kinds of paths is not so simple, and finding a description of the static path
 that correlates with the dynamic path is more challenging.
 
-The proposition \lstinline[mathescape]{isSendPath pool' (Ch path$_c$ n$_c$) path'} is derived
+The proposition \lstinline[mathescape]{isSendPath pool' (Chan path$_c$ n$_c$) path'} is derived
 by unfolding the definition of \lstinline{oneShot}.
 It is generalized by \lstinline[mathescape]{pool' path' = Some (Stt t' env' stack'),}\\
-\lstinline[mathescape]{dynamicBuiltOnChanState (Stt t' env' stack') (Ch path$_c$ n$_c$)} in the soundess of
+\lstinline[mathescape]{dynamicBuiltOnChanState (Stt t' env' stack') (Chan path$_c$ n$_c$)} in the soundess of
 static path liveness. Since the static chan liveness depends on names being statically built on the channel,
 the soundness theorem also depends on the soundness of static built-on-channel classification with respect
 to the dynamic built-on-channel classification.
@@ -3901,18 +3895,19 @@ to the dynamic built-on-channel classification.
       dynamicBuiltOnChanStack stack chan
     $\vdash$ dynamicBuiltOnChanState (Stt t env stack) chan
 
-  lemma staticTraceableSound: t$_0$ pool comm path t env stack staticEnv staticComm
+
+  lemma staticPathLiveSound: t$_0$ pool comm path t env stack staticEnv staticComm
   entr exit n$_c$ graph isEnd path$_c$  . 
     star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
     pool path = Some (Stt t env stack),
-    dynamicBuiltOnChanState (Stt t env stack) (ch path$_c$ n$_c$)
+    dynamicBuiltOnChanState (Stt t env stack) (Chan path$_c$ n$_c$)
     staticEval staticEnv staticComm t$_0$,
     staticChanLive staticEnv entr exit n$_c$ t$_0$,
     staticFlowsAccept staticEnv graph t$_0$, 
     isEnd (tmId t)
   $\vdash$ exists staticPath . 
     pathsCorrespondModChan pool comm (Chan path$_c$ n$_c$) path staticPath
-  $\wedge$ staticTraceable graph entr exit (NBnd n$_c$) isEnd staticPath
+  $\wedge$ staticTraceable graph entr exit (IdBind n$_c$) isEnd staticPath
 
   lemma staticInclusiveSound: t$_0$ pool comm staticEnv entr exit n$_c$ graph staticComm
   path1 stt1 path$_c$ staticPath1 path2 stt2 staticPath2 .
@@ -3923,16 +3918,16 @@ to the dynamic built-on-channel classification.
     pool path1 = Some stt1, 
     pathsCorrespondModChan pool comm (Chan path$_c$ n$_c$) path1 staticPath1, 
     staticTraceable graph entr exit
-      (NBnd n$_c$) (staticSendId staticEnv t$_0$ n$_c$) staticPath1, 
+      (IdBind n$_c$) (staticSendId staticEnv t$_0$ n$_c$) staticPath1, 
     pool path2 = Some stt2, 
     pathsCorrespondModChan pool comm (Chan path$_c$ n$_c$) path2 staticPath2, 
     staticTraceable graph entr exit
-      (NBnd n$_c$) (staticSendId staticEnv t$_0$ n$_c$) staticPath2
+      (IdBind n$_c$) (staticSendId staticEnv t$_0$ n$_c$) staticPath2
   $\vdash$ staticInclusive staticPath1 staticPath2
 
 
   lemma staticBuiltOnChanSound:
-    dynamicBuiltOnChanVal v (Ch path$_c$ x$_c$),
+    dynamicBuiltOnChanVal v (Chan path$_c$ x$_c$),
     env n = Some v,
     pool path = Some (Stt t' env' stack'),
     staticEvalPool staticEnv staticComm pool,
@@ -3943,11 +3938,40 @@ to the dynamic built-on-channel classification.
 
 \end{lstlisting}
 
+Additional lemmas are needed to prove the soundness of static path liveness.  These lemmas include
+preservation of the correspondence of paths, preservation of the static chan liveness, and soundness of
+a name statically built on a static channel.
+
+
+\begin{lstlisting}[language=logic, mathescape]
+
+  lemma pathsCorrespondModChanPreservedSnoc: t$_0$ chan path staticPath site step .
+    pathsCongruentModChan t$_0$ chan path staticPath,
+    pathsCongruent [site] [step]
+  $\vdash$ pathsCongruentModChan t$_0$ chan (path @ [site]) (staticPath @ [step])
+
+  lemma staticChanLivePoolPreserved: staticEnv entr exit x$_c$ t$_0$ pool' comm' . 
+    staticLiveChanPool staticEnv entr exit x$_c$ [[] -> (Stt t$_0$ [->] [])],
+    staticEval staticEnv staticComm t$_0$,
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool' comm'
+  $\vdash$ staticLiveChanPool staticEnv entr exit x$_c$ pool'
+
+  lemma staticBuiltOnChanSound: v path$_c$ n$_c$ env n pool path t' env' stack'
+  staticEnv staticComm pool graph t$_0$ . 
+    dynamicBuiltOnChanVal v (Chan path$_c$ n$_c$),
+    env n = Some v,
+    pool path = Some (Stt t' env' stack'),
+    staticEvalPool staticEnv staticComm pool,
+    staticChanLivePool staticEnv entr exit n$_c$ pool,
+    staticFlowsAcceptPool staticEnv graph t$_0$ pool
+  $\vdash$ staticBuiltOnChan staticEnv n$_c$ n
+
+\end{lstlisting}
+
 
 The generalization to the dynamic channels built on state appears necessary in order to prove the soundness of
 the paths corresponding modulo a channel and static path liveness.
 This proof and the soundness of static inclusivity are under active development at the time of this writing.
-
 
 
 \section{Related Work}

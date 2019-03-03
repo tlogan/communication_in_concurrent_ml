@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  3 MAR 2019 09:17
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  3 MAR 2019 11:55
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1016,32 +1016,39 @@ Overfull \hbox (17.0pt too wide) in paragraph at lines 3780--3781
 [][] 
  []
 
-[81 <./cml-proof-high.pdf>] [82] [83] [84] [85] [86] (./thesis.bbl [87])
-[88] (./thesis.aux) ) 
+[81 <./cml-proof-high.pdf>] [82]
+Overfull \hbox (2.34703pt too wide) in paragraph at lines 3871--3878
+[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][
+][][][][][][][][] \T1/LinuxLibertineT-TLF/m/n/10.95 in the soundess of static p
+ath
+ []
+
+[83] [84] [85] [86] (./thesis.bbl [87]) [88] (./thesis.aux) ) 
 Here is how much of TeX's memory you used:
- 7877 strings out of 493014
- 116211 string characters out of 6133351
+ 7878 strings out of 493014
+ 116275 string characters out of 6133351
  401404 words of memory out of 5000000
- 11237 multiletter control sequences out of 15000+600000
+ 11238 multiletter control sequences out of 15000+600000
  55927 words of font info for 68 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  38i,6n,74p,284b,1700s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/base/8
-r.enc}{/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/libertine/lbtn_7grukw
-.enc}{/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/libertine/lbtn_nh77jq.
-enc}{/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.e
-nc}</usr/local/texlive/2016/texmf-dist/fonts/type1/public/libertine/LinLibertin
-eT.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/libertine/LinLibe
-rtineTB.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/libertine/Li
-nLibertineTI.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfont
-s/cm/cmmi10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts
-/cm/cmmi7.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/c
-m/cmr7.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/c
-msy10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pf
-b></usr/local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/
-local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr/local/t
-exlive/2016/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (89 pages, 745519 bytes).
+{/usr/local/texliv
+e/2016/texmf-dist/fonts/enc/dvips/base/8r.enc}{/usr/local/texlive/2016/texmf-di
+st/fonts/enc/dvips/libertine/lbtn_7grukw.enc}{/usr/local/texlive/2016/texmf-dis
+t/fonts/enc/dvips/libertine/lbtn_nh77jq.enc}{/usr/local/texlive/2016/texmf-dist
+/fonts/enc/dvips/libertine/lbtn_76gpa5.enc}</usr/local/texlive/2016/texmf-dist/
+fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2016/texmf-d
+ist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2016/te
+xmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/20
+16/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/201
+6/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2016/
+texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2016/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2016/texm
+f-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2016/texmf-dist/f
+onts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/typ
+e1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/publ
+ic/amsfonts/symbols/msbm10.pfb>
+Output written on thesis.pdf (89 pages, 746422 bytes).
 PDF statistics:
  479 PDF objects out of 1000 (max. 8388607)
  337 compressed objects within 4 object streams
