@@ -3653,11 +3653,6 @@ that a channel is live for an entire static path found within a graph.
       $\neg$ Set.is_empty (exit middle),
       $\neg$ Set.is_empty (entr end)
     $\vdash$ staticPathLive graph entr exit start isEnd (path @ [(middle, edge)])
-  * detour: graph entr exit start middle path isEnd end detour .
-      staticPathLive graph entr exit start ($\lambda$ l . l = middle) path,
-      isEnd end,
-      staticDetour graph entr exit isEnd ((middle, MSeq) # detour)
-    $\vdash$ staticPathLive graph entr exit start isEnd (path @ [(middle, MSeq)] @ detour)
 
 \end{lstlisting}
 
@@ -3781,6 +3776,8 @@ Essentially, it will be necessary to show that static
 properties that hold for some static path are preserved for corresponding dyamic paths. 
 However, in the higher precision analysis these paths correspond modulo the channel of interest.
 An an outline of the derivation of soundness of one-shot classification demonstrates the strategy so far.
+
+\includegraphics[width=1\textwidth]{cml-proof-high.pdf}
 
 \begin{lstlisting}[language=logic, mathescape]
   theorem staticOneShotSound: t$_0$ n$_c$ path$_c$ . 
@@ -3939,7 +3936,7 @@ to the dynamic built-on-channel classification.
     env n = Some v,
     pool path = Some (Stt t' env' stack'),
     staticEvalPool staticEnv staticComm pool,
-    staticLiveChanPool staticEnv entr exit x$_c$ pool,
+    staticChanLivePool staticEnv entr exit x$_c$ pool,
     staticFlowsAcceptPool staticEnv graph t pool
   $\vdash$ staticBuiltOnChan staticEnv x$_c$ n
 
