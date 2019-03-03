@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  3 MAR 2019 11:55
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  3 MAR 2019 13:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -6,31 +6,23 @@ entering extended mode
 (./thesis.tex
 LaTeX2e <2016/03/31>
 Babel <3.9r> and hyphenation patterns for 83 language(s) loaded.
-(/usr/local/texlive/2016/texmf-dist/tex/latex/extsizes/extarticle.cls
-Document Class: extarticle 1996/10/08 v1.0 Non Standard LaTeX document class
+(/usr/local/texlive/2016/texmf-dist/tex/latex/base/report.cls
+Document Class: report 2014/09/29 v1.4h Standard LaTeX document class
 (/usr/local/texlive/2016/texmf-dist/tex/latex/base/size11.clo
 File: size11.clo 2014/09/29 v1.4h Standard LaTeX file (size option)
 )
-(/usr/local/texlive/2016/texmf-dist/tex/latex/base/exscale.sty
-Package: exscale 2014/09/29 v2.1h Standard LaTeX package exscale
-LaTeX Font Info:    Redeclaring symbol font `largesymbols' on input line 57.
-LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `normal'
-(Font)                  OMX/cmex/m/n --> OMX/cmex/m/n on input line 57.
-LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `bold'
-(Font)                  OMX/cmex/m/n --> OMX/cmex/m/n on input line 57.
-\big@size=\dimen102
-)
 \c@part=\count79
-\c@section=\count80
-\c@subsection=\count81
-\c@subsubsection=\count82
-\c@paragraph=\count83
-\c@subparagraph=\count84
-\c@figure=\count85
-\c@table=\count86
+\c@chapter=\count80
+\c@section=\count81
+\c@subsection=\count82
+\c@subsubsection=\count83
+\c@paragraph=\count84
+\c@subparagraph=\count85
+\c@figure=\count86
+\c@table=\count87
 \abovecaptionskip=\skip41
 \belowcaptionskip=\skip42
-\bibindent=\dimen103
+\bibindent=\dimen102
 )
 (/usr/local/texlive/2016/texmf-dist/tex/latex/geometry/geometry.sty
 Package: geometry 2010/09/12 v5.6 Page Geometry
@@ -49,22 +41,61 @@ Package ifvtex Info: VTeX not detected.
 (/usr/local/texlive/2016/texmf-dist/tex/generic/ifxetex/ifxetex.sty
 Package: ifxetex 2010/09/12 v0.6 Provides ifxetex conditional
 )
-\Gm@cnth=\count87
-\Gm@cntv=\count88
-\c@Gm@tempcnt=\count89
-\Gm@bindingoffset=\dimen104
-\Gm@wd@mp=\dimen105
-\Gm@odd@mp=\dimen106
-\Gm@even@mp=\dimen107
-\Gm@layoutwidth=\dimen108
-\Gm@layoutheight=\dimen109
-\Gm@layouthoffset=\dimen110
-\Gm@layoutvoffset=\dimen111
+\Gm@cnth=\count88
+\Gm@cntv=\count89
+\c@Gm@tempcnt=\count90
+\Gm@bindingoffset=\dimen103
+\Gm@wd@mp=\dimen104
+\Gm@odd@mp=\dimen105
+\Gm@even@mp=\dimen106
+\Gm@layoutwidth=\dimen107
+\Gm@layoutheight=\dimen108
+\Gm@layouthoffset=\dimen109
+\Gm@layoutvoffset=\dimen110
 \Gm@dimlist=\toks15
 )
-(/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsmath.sty
+(./utdiss2.sty
+*
+* U.T. Austin Doctoral Dissertation Format by Young. U. Ryu,
+* June 1991. With some fixes by Miguel A. Lerma, Fall 1995, 
+* Spring 1996, Summer 1996, Spring 1997, Summer 1997, Spring 1998.
+*
+* Modified to new Graduate School standards Fall 2001
+* by Craig McCluskey mccluskey@mail.utexas.edu 
+* - this is utdiss2-05.sty
+*
+\regular@textheight=\skip43
+\short@textheight=\skip44
+\c@regular@short=\count91
+\one@num=\skip45
+\two@num=\skip46
+\three@num=\skip47
+\four@num=\skip48
+\five@num=\skip49
+\six@num=\skip50
+\c@onenum=\skip51
+\c@twonum=\skip52
+\c@threenum=\skip53
+\c@fournum=\skip54
+\c@fivenum=\skip55
+\toc@chap@indent=\skip56
+\chap@or@app=\count92
+\with@parts=\count93
+\c@no@chapters=\count94
+\s@short@textheight=\skip57
+\c@regular@short@col=\count95
+* *
+* *
+* This is a dissertation *
+* *
+* *
+\numberofsupervisors=\count96
+\supervisornumbercounter=\count97
+\numberofmembers=\count98
+\membernumbercounter=\count99
+) (/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsmath.sty
 Package: amsmath 2016/03/10 v2.15b AMS math features
-\@mathmargin=\skip43
+\@mathmargin=\skip58
 
 For additional information on amsmath, use the `?' option.
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amstext.sty
@@ -73,81 +104,162 @@ Package: amstext 2000/06/29 v2.01 AMS text
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0 generic functions
 \@emptytoks=\toks16
-\ex@=\dimen112
+\ex@=\dimen111
 ))
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d Bold Symbols
-\pmbraise@=\dimen113
+\pmbraise@=\dimen112
 )
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsopn.sty
 Package: amsopn 2016/03/08 v2.02 operator names
 )
-\inf@bad=\count90
+\inf@bad=\count100
 LaTeX Info: Redefining \frac on input line 199.
-\uproot@=\count91
-\leftroot@=\count92
+\uproot@=\count101
+\leftroot@=\count102
 LaTeX Info: Redefining \overline on input line 297.
-\classnum@=\count93
-\DOTSCASE@=\count94
+\classnum@=\count103
+\DOTSCASE@=\count104
 LaTeX Info: Redefining \ldots on input line 394.
 LaTeX Info: Redefining \dots on input line 397.
 LaTeX Info: Redefining \cdots on input line 518.
 \Mathstrutbox@=\box26
 \strutbox@=\box27
-\big@size=\dimen114
+\big@size=\dimen113
 LaTeX Font Info:    Redeclaring font encoding OML on input line 634.
 LaTeX Font Info:    Redeclaring font encoding OMS on input line 635.
-\macc@depth=\count95
-\c@MaxMatrixCols=\count96
+\macc@depth=\count105
+\c@MaxMatrixCols=\count106
 \dotsspace@=\muskip10
-\c@parentequation=\count97
-\dspbrk@lvl=\count98
+\c@parentequation=\count107
+\dspbrk@lvl=\count108
 \tag@help=\toks17
-\row@=\count99
-\column@=\count100
-\maxfields@=\count101
+\row@=\count109
+\column@=\count110
+\maxfields@=\count111
 \andhelp@=\toks18
-\eqnshift@=\dimen115
-\alignsep@=\dimen116
-\tagshift@=\dimen117
-\tagwidth@=\dimen118
-\totwidth@=\dimen119
-\lineht@=\dimen120
+\eqnshift@=\dimen114
+\alignsep@=\dimen115
+\tagshift@=\dimen116
+\tagwidth@=\dimen117
+\totwidth@=\dimen118
+\lineht@=\dimen119
 \@envbody=\toks19
-\multlinegap=\skip44
-\multlinetaggap=\skip45
+\multlinegap=\skip59
+\multlinetaggap=\skip60
 \mathdisplay@stack=\toks20
 LaTeX Info: Redefining \[ on input line 2739.
 LaTeX Info: Redefining \] on input line 2740.
 )
-(/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/amssymb.sty
-Package: amssymb 2013/01/14 v3.01 AMS font symbols
-
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amscls/amsthm.sty
+Package: amsthm 2015/03/04 v2.20.2
+\thm@style=\toks21
+\thm@bodyfont=\toks22
+\thm@headfont=\toks23
+\thm@notefont=\toks24
+\thm@headpunct=\toks25
+\thm@preskip=\skip61
+\thm@postskip=\skip62
+\thm@headsep=\skip63
+\dth@everypar=\toks26
+)
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/amsfonts.sty
 Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 \symAMSa=\mathgroup4
 \symAMSb=\mathgroup5
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amscd.sty
+Package: amscd 1999/11/29 v2.0 AMS Commutatitive Diagrams
+\athelp@=\toks27
+\minaw@=\dimen120
+\bigaw@=\dimen121
+\minCDarrowwidth=\dimen122
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/eucal.sty
+Package: eucal 2009/06/22 v3.00 Euler Script fonts
+LaTeX Font Info:    Overwriting math alphabet `\EuScript' in version `bold'
+(Font)                  U/eus/m/n --> U/eus/b/n on input line 33.
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/tools/verbatim.sty
+Package: verbatim 2014/10/28 v1.5q LaTeX2e package for verbatim enhancements
+\every@verbatim=\toks28
+\verbatim@line=\toks29
+\verbatim@in@stream=\read1
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/base/makeidx.sty
+Package: makeidx 2014/09/29 v1.0m Standard LaTeX package
+) (./psfig.sty
+\@unused=\write3
+\ps@stream=\read2
+\p@intvaluex=\dimen123
+\p@intvaluey=\dimen124
+
+psfig/tex 1.10-dvips
+) (/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/epsfig.sty
+Package: epsfig 1999/02/16 v1.7a (e)psfig emulation (SPQR)
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 2014/10/28 v1.0g Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2016/05/09 v1.0r Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/01/02 v1.10 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 96.
+
+(/usr/local/texlive/2016/texmf-dist/tex/latex/pdftex-def/pdftex.def
+File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
+
+(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/infwarerr.sty
+Package: infwarerr 2016/05/16 v1.4 Providing info/warning/error messages (HO)
+)
+(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
+Package: ltxcmds 2016/05/16 v1.23 LaTeX kernel commands for general use (HO)
+)
+\Gread@gobject=\count112
 ))
+\Gin@req@height=\dimen125
+\Gin@req@width=\dimen126
+)
+\epsfxsize=\dimen127
+\epsfysize=\dimen128
+)
+(./citesort.sty
+\@minsofar=\count113
+\@min=\count114
+\@cite@temp=\count115
+) (/usr/local/texlive/2016/texmf-dist/tex/latex/url/url.sty
+\Urlmuskip=\muskip11
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
+(/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+)
 (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/listings.sty
-\lst@mode=\count102
+\lst@mode=\count116
 \lst@gtempboxa=\box28
-\lst@token=\toks21
-\lst@length=\count103
-\lst@currlwidth=\dimen121
-\lst@column=\count104
-\lst@pos=\count105
-\lst@lostspace=\dimen122
-\lst@width=\dimen123
-\lst@newlines=\count106
-\lst@lineno=\count107
-\lst@maxwidth=\dimen124
+\lst@token=\toks30
+\lst@length=\count117
+\lst@currlwidth=\dimen129
+\lst@column=\count118
+\lst@pos=\count119
+\lst@lostspace=\dimen130
+\lst@width=\dimen131
+\lst@newlines=\count120
+\lst@lineno=\count121
+\lst@maxwidth=\dimen132
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/lstmisc.sty
 File: lstmisc.sty 2015/06/04 1.6 (Carsten Heinz)
-\c@lstnumber=\count108
-\lst@skipnumbers=\count109
+\c@lstnumber=\count122
+\lst@skipnumbers=\count123
 \lst@framebox=\box29
 )
 (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/listings.cfg
@@ -157,8 +269,8 @@ Package: listings 2015/06/04 1.6 (Carsten Heinz)
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/base/inputenc.sty
 Package: inputenc 2015/03/17 v1.2c Input encoding file
-\inpenc@prehook=\toks22
-\inpenc@posthook=\toks23
+\inpenc@prehook=\toks31
+\inpenc@posthook=\toks32
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/base/utf8.def
 File: utf8.def 2016/02/28 v1.1s UTF-8 support for inputenc
@@ -476,34 +588,6 @@ Package: color 2016/05/09 v1.1c Standard LaTeX Color (DPC)
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
 Package color Info: Driver file: pdftex.def on input line 144.
-
-(/usr/local/texlive/2016/texmf-dist/tex/latex/pdftex-def/pdftex.def
-File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
-
-(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/infwarerr.sty
-Package: infwarerr 2016/05/16 v1.4 Providing info/warning/error messages (HO)
-)
-(/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
-Package: ltxcmds 2016/05/16 v1.23 LaTeX kernel commands for general use (HO)
-)
-\Gread@gobject=\count110
-))
-(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/graphicx.sty
-Package: graphicx 2014/10/28 v1.0g Enhanced LaTeX Graphics (DPC,SPQR)
-
-(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/graphics.sty
-Package: graphics 2016/05/09 v1.0r Standard LaTeX Graphics (DPC,SPQR)
-
-(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/trig.sty
-Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
-)
-(/usr/local/texlive/2016/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
-File: graphics.cfg 2016/01/02 v1.10 sample graphics configuration
-)
-Package graphics Info: Driver file: pdftex.def on input line 96.
-)
-\Gin@req@height=\dimen125
-\Gin@req@width=\dimen126
 )
 (/usr/local/texlive/2016/texmf-dist/tex/latex/base/fontenc.sty
 Package: fontenc 2005/09/27 v1.99g Standard LaTeX package
@@ -525,10 +609,10 @@ Package: xkeyval 2014/12/03 v2.7a package option processing (HA)
 
 (/usr/local/texlive/2016/texmf-dist/tex/generic/xkeyval/xkeyval.tex
 (/usr/local/texlive/2016/texmf-dist/tex/generic/xkeyval/xkvutils.tex
-\XKV@toks=\toks24
-\XKV@tempa@toks=\toks25
+\XKV@toks=\toks33
+\XKV@tempa@toks=\toks34
 )
-\XKV@depth=\count111
+\XKV@depth=\count124
 File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
 ))
 (/usr/local/texlive/2016/texmf-dist/tex/latex/base/textcomp.sty
@@ -726,54 +810,64 @@ Package: trimclip 2012/05/16 v1.0 Trim and clip general TeX material
 Package: collectbox 2012/05/17 v0.4b Collect macro arguments as boxes
 \collectedbox=\box30
 )
-\tc@llx=\dimen127
-\tc@lly=\dimen128
-\tc@urx=\dimen129
-\tc@ury=\dimen130
+\tc@llx=\dimen133
+\tc@lly=\dimen134
+\tc@urx=\dimen135
+\tc@ury=\dimen136
 Package trimclip Info: Using driver 'tc-pdftex.def'.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/adjustbox/tc-pdftex.def
 File: tc-pdftex.def 2012/05/13 v1.0 Clipping driver for pdftex
 ))
-\adjbox@Width=\dimen131
-\adjbox@Height=\dimen132
-\adjbox@Depth=\dimen133
-\adjbox@Totalheight=\dimen134
+\adjbox@Width=\dimen137
+\adjbox@Height=\dimen138
+\adjbox@Depth=\dimen139
+\adjbox@Totalheight=\dimen140
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/ifoddpage/ifoddpage.sty
 Package: ifoddpage 2016/04/23 v1.1 Conditionals for odd/even page detection
-\c@checkoddpage=\count112
+\c@checkoddpage=\count125
 )
 (/usr/local/texlive/2016/texmf-dist/tex/latex/varwidth/varwidth.sty
 Package: varwidth 2009/03/30 ver 0.92;  Variable-width minipages
 \@vwid@box=\box31
-\sift@deathcycles=\count113
-\@vwid@loff=\dimen135
-\@vwid@roff=\dimen136
+\sift@deathcycles=\count126
+\@vwid@loff=\dimen141
+\@vwid@roff=\dimen142
 ))
+* *
+* *
+* This is a master thesis *
+* *
+* *
+\@indexfile=\write4
+\openout4 = `thesis.idx'.
+
+Writing index file thesis.idx
 (./thesis.aux)
 \openout1 = `thesis.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 83.
-LaTeX Font Info:    Try loading font information for TS1+cmr on input line 83.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 106.
+LaTeX Font Info:    ... okay on input line 106.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 106.
+LaTeX Font Info:    ... okay on input line 106.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 106.
+LaTeX Font Info:    ... okay on input line 106.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 106.
+LaTeX Font Info:    ... okay on input line 106.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 106.
+LaTeX Font Info:    ... okay on input line 106.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 106.
+LaTeX Font Info:    ... okay on input line 106.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 106.
+LaTeX Font Info:    Try loading font information for TS1+cmr on input line 106.
+
  (/usr/local/texlive/2016/texmf-dist/tex/latex/base/ts1cmr.fd
 File: ts1cmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
-LaTeX Font Info:    ... okay on input line 83.
+LaTeX Font Info:    ... okay on input line 106.
 LaTeX Font Info:    Try loading font information for T1+LinuxLibertineT-TLF on 
-input line 83.
+input line 106.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/libertine/T1LinuxLibertineT-TLF.f
 d
@@ -781,7 +875,7 @@ File: T1LinuxLibertineT-TLF.fd 2012/11/26 (autoinst) Font definitions for T1/Li
 nuxLibertineT-TLF.
 )
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 10.95pt on input line 83.
+(Font)              scaled to size 10.95pt on input line 106.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -795,19 +889,19 @@ LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
 * v-part:(T,H,B)=(95.39737pt, 556.47656pt, 143.09605pt)
 * \paperwidth=614.295pt
 * \paperheight=794.96999pt
-* \textwidth=430.00462pt
-* \textheight=556.47656pt
-* \oddsidemargin=19.8752pt
-* \evensidemargin=19.8752pt
+* \textwidth=397.48499pt
+* \textheight=578.15999pt
+* \oddsidemargin=45.16875pt
+* \evensidemargin=45.16875pt
 * \topmargin=-13.87262pt
-* \headheight=12.0pt
-* \headsep=25.0pt
+* \headheight=15.17719pt
+* \headsep=20.95781pt
 * \topskip=11.0pt
-* \footskip=30.0pt
+* \footskip=36.135pt
 * \marginparwidth=59.0pt
 * \marginparsep=10.0pt
 * \columnsep=10.0pt
-* \skip\footins=10.0pt plus 4.0pt minus 2.0pt
+* \skip\footins=22.8pt plus 4.0pt minus 2.0pt
 * \hoffset=0.0pt
 * \voffset=0.0pt
 * \mag=1000
@@ -817,20 +911,19 @@ LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-\c@lstlisting=\count114
 (/usr/local/texlive/2016/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count115
-\scratchdimen=\dimen137
+\scratchcounter=\count127
+\scratchdimen=\dimen143
 \scratchbox=\box32
-\nofMPsegments=\count116
-\nofMParguments=\count117
-\everyMPshowfont=\toks26
-\MPscratchCnt=\count118
-\MPscratchDim=\dimen138
-\MPnumerator=\count119
-\makeMPintoPDFobject=\count120
-\everyMPtoPDFconversion=\toks27
+\nofMPsegments=\count128
+\nofMParguments=\count129
+\everyMPshowfont=\toks35
+\MPscratchCnt=\count130
+\MPscratchDim=\dimen144
+\MPnumerator=\count131
+\makeMPintoPDFobject=\count132
+\everyMPtoPDFconversion=\toks36
 ) (/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
 Package: pdftexcmds 2016/05/10 v0.21 Utility functions of pdfTeX for LuaTeX (HO
 )
@@ -870,188 +963,214 @@ G,.JBIG2,.JB2,.eps]
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-\c@mv@tabular=\count121
-\c@mv@boldtabular=\count122
+\c@lstlisting=\count133
+\c@mv@tabular=\count134
+\c@mv@boldtabular=\count135
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 17.28pt on input line 85.
+(Font)              scaled to size 12.0pt on input line 109.
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
+(Font)              scaled to size 12.0pt on input line 109.
+
+[1
+
+{/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
+(Font)              scaled to size 10.95pt on input line 111.
+
+[2
+
+]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 12.0pt on input line 85.
-LaTeX Font Info:    Try loading font information for U+msa on input line 85.
+(Font)              scaled to size 14.4pt on input line 113.
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
+(Font)              scaled to size 14.4pt on input line 113.
+ (./thesis.toc
+LaTeX Font Info:    Try loading font information for U+msa on input line 1.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 85.
+LaTeX Font Info:    Try loading font information for U+msb on input line 1.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [1
+))
+\tf@toc=\write5
+\openout5 = `thesis.toc'.
 
-{/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 14.4pt on input line 91.
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 14.4pt on input line 91.
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 12.0pt on input line 119.
- [1]
+ [1
+
+
+] [1]
 (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2015/06/04 1.6 listings language file
 )
 (/usr/local/texlive/2016/texmf-dist/tex/latex/listings/lstlang2.sty
 File: lstlang2.sty 2015/06/04 1.6 listings language file
 )
-LaTeX Font Info:    Try loading font information for T1+fvm on input line 145.
+LaTeX Font Info:    Try loading font information for T1+fvm on input line 174.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/bera/t1fvm.fd
 File: t1fvm.fd 2004/09/07 scalable font definitions for T1/fvm.
 )
 LaTeX Font Info:    Font shape `T1/fvm/m/n' will be
-(Font)              scaled to size 9.30756pt on input line 145.
+(Font)              scaled to size 9.30756pt on input line 174.
 LaTeX Font Info:    Font shape `T1/fvm/m/n' will be
-(Font)              scaled to size 8.50006pt on input line 145.
+(Font)              scaled to size 8.50006pt on input line 174.
 LaTeX Font Info:    Font shape `T1/fvm/bx/n' in size <10> not available
-(Font)              Font shape `T1/fvm/b/n' tried instead on input line 146.
+(Font)              Font shape `T1/fvm/b/n' tried instead on input line 175.
 LaTeX Font Info:    Font shape `T1/fvm/b/n' will be
-(Font)              scaled to size 8.50006pt on input line 146.
+(Font)              scaled to size 8.50006pt on input line 175.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
-(Font)              scaled to size 10.95pt on input line 157.
+(Font)              scaled to size 10.95pt on input line 186.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 10.0pt on input line 192.
+(Font)              scaled to size 10.0pt on input line 224.
  [2] [3] [4]
 [5] [6] [7] [8] [9] [10] [11] [12] [13] [14]
 LaTeX Font Info:    Font shape `T1/fvm/m/it' in size <10> not available
-(Font)              Font shape `T1/fvm/m/sl' tried instead on input line 824.
+(Font)              Font shape `T1/fvm/m/sl' tried instead on input line 853.
 LaTeX Font Info:    Font shape `T1/fvm/m/sl' will be
-(Font)              scaled to size 8.50006pt on input line 824.
+(Font)              scaled to size 8.50006pt on input line 853.
  [15] [16] [17] [18] [19] [20]
 [21] [22]
-Overfull \hbox (2.38583pt too wide) in paragraph at lines 1207--1211
-\T1/LinuxLibertineT-TLF/m/n/10.95 The def-i-ni-tions and the-o-rems of this wor
-k were con-structed in the for-mal lan-guage of Is-abelle/HOL
+Overfull \hbox (0.31679pt too wide) in paragraph at lines 1228--1233
+[]\T1/LinuxLibertineT-TLF/m/n/10.95 This work dis-cusses proofs that a static a
+nal-y-sis de-scrib-ing com-mu-ni-ca-tion topolo-
  []
 
 [23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34] [35] [36] [37]
-[38] [39] [40] [41] [42] [43] [44]
-<cml-graph.pdf, id=156, 1494.58376pt x 1964.33875pt>
+[38] [39] [40] [41] [42] [43] [44] [45]
+<cml-graph.pdf, id=165, 1494.58376pt x 1964.33875pt>
 File: cml-graph.pdf Graphic file (type pdf)
  <use cml-graph.pdf>
-Package pdftex.def Info: cml-graph.pdf used on input line 2322.
-(pdftex.def)             Requested size: 387.00153pt x 508.6179pt.
+Package pdftex.def Info: cml-graph.pdf used on input line 2351.
+(pdftex.def)             Requested size: 357.73405pt x 470.16208pt.
 
-[45] [46 <./cml-graph.pdf>] [47] [48] [49] [50]
-<cml-proof-low.pdf, id=202, 791.95876pt x 576.1525pt>
+[46] [47 <./cml-graph.pdf>] [48] [49] [50] [51]
+<cml-proof-low.pdf, id=211, 791.95876pt x 576.1525pt>
 File: cml-proof-low.pdf Graphic file (type pdf)
  <use cml-proof-low.pdf>
-Package pdftex.def Info: cml-proof-low.pdf used on input line 2586.
-(pdftex.def)             Requested size: 430.00462pt x 312.83202pt.
+Package pdftex.def Info: cml-proof-low.pdf used on input line 2615.
+(pdftex.def)             Requested size: 397.48499pt x 289.17445pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 2586--2587
+Overfull \hbox (36.135pt too wide) in paragraph at lines 2615--2616
 [][] 
  []
 
-[51] [52 <./cml-proof-low.pdf>] [53] [54] [55] [56] [57] [58]
-Overfull \hbox (5.56883pt too wide) in paragraph at lines 2937--2943
+[52] [53 <./cml-proof-low.pdf>] [54] [55] [56] [57] [58] [59]
+Overfull \hbox (15.35738pt too wide) in paragraph at lines 2966--2972
 []\T1/LinuxLibertineT-TLF/m/n/10.95 The lemma for sound-ness of static send-ing
- iden-ti-fier clas-si-fi-ca-tion [][][][] is proved
+ iden-ti-fier clas-si-fi-ca-tion []
  []
 
-[59] [60] [61] [62] [63] [64] [65] [66]
-<cml-graph-lp.pdf, id=265, 1729.46124pt x 1925.1925pt>
+[60]
+Overfull \hbox (1.52177pt too wide) in paragraph at lines 3000--3015
+\T1/LinuxLibertineT-TLF/m/n/10.95 This def-i-ni-tion is use-ful for for-ward de
+riva-tions of reach-a-bil-ity re-la-tions, how-ever it doesn't
+ []
+
+[61] [62] [63] [64] [65] [66] [67] [68]
+<cml-graph-lp.pdf, id=277, 1729.46124pt x 1925.1925pt>
 File: cml-graph-lp.pdf Graphic file (type pdf)
  <use cml-graph-lp.pdf>
-Package pdftex.def Info: cml-graph-lp.pdf used on input line 3343.
-(pdftex.def)             Requested size: 430.00462pt x 478.6531pt.
+Package pdftex.def Info: cml-graph-lp.pdf used on input line 3372.
+(pdftex.def)             Requested size: 397.48499pt x 442.46182pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 3343--3344
+Overfull \hbox (36.135pt too wide) in paragraph at lines 3372--3373
 [][] 
  []
 
-[67] [68 <./cml-graph-lp.pdf>] [69] [70]
-<cml-liveness-analysis-k1.pdf, id=289, 1731.46875pt x 1908.12875pt>
+[69 <./cml-graph-lp.pdf>] [70] [71]
+<cml-liveness-analysis-k1.pdf, id=299, 1731.46875pt x 1908.12875pt>
 File: cml-liveness-analysis-k1.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k1.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3451.
-(pdftex.def)             Requested size: 430.00462pt x 473.8574pt.
+Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3480.
+(pdftex.def)             Requested size: 397.48499pt x 438.04515pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 3451--3452
+Overfull \hbox (36.135pt too wide) in paragraph at lines 3480--3481
 [][] 
  []
 
-<cml-liveness-analysis-k4.pdf, id=290, 1776.6375pt x 1939.245pt>
+<cml-liveness-analysis-k4.pdf, id=300, 1776.6375pt x 1939.245pt> [72 <./cml-liv
+eness-analysis-k1.pdf>]
 File: cml-liveness-analysis-k4.pdf Graphic file (type pdf)
+ <use cml-liveness-analysis-k4.pdf>
+Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3487.
+(pdftex.def)             Requested size: 397.48499pt x 433.85529pt.
 
-<use cml-liveness-analysis-k4.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3458.
-(pdftex.def)             Requested size: 430.00462pt x 469.33426pt.
-
-Overfull \hbox (17.0pt too wide) in paragraph at lines 3458--3459
+Overfull \hbox (36.135pt too wide) in paragraph at lines 3487--3488
 [][] 
  []
 
-[71 <./cml-liveness-analysis-k1.pdf>] [72 <./cml-liveness-analysis-k4.pdf>]
-[73] [74] [75] <cml-graph-k1.pdf, id=330, 1559.8275pt x 1677.26625pt>
+[73 <./cml-liveness-analysis-k4.pdf>] [74] [75] [76]
+<cml-graph-k1.pdf, id=340, 1559.8275pt x 1677.26625pt>
 File: cml-graph-k1.pdf Graphic file (type pdf)
+ <use cml-graph-k1.pdf>
+Package pdftex.def Info: cml-graph-k1.pdf used on input line 3661.
+(pdftex.def)             Requested size: 357.73405pt x 384.66263pt.
 
-<use cml-graph-k1.pdf>
-Package pdftex.def Info: cml-graph-k1.pdf used on input line 3632.
-(pdftex.def)             Requested size: 387.00153pt x 416.11641pt.
- [76]
-<cml-graph-k4.pdf, id=334, 1090.0725pt x 954.56625pt>
+[77] <cml-graph-k4.pdf, id=344, 1090.0725pt x 954.56625pt>
 File: cml-graph-k4.pdf Graphic file (type pdf)
- <use cml-graph-k4.pdf>
-Package pdftex.def Info: cml-graph-k4.pdf used on input line 3637.
-(pdftex.def)             Requested size: 301.00192pt x 263.57709pt.
 
-[77 <./cml-graph-k1.pdf>] [78 <./cml-graph-k4.pdf>] [79] [80]
-<cml-proof-high.pdf, id=398, 791.95876pt x 576.1525pt>
+<use cml-graph-k4.pdf>
+Package pdftex.def Info: cml-graph-k4.pdf used on input line 3666.
+(pdftex.def)             Requested size: 278.23827pt x 243.6515pt.
+ [78 <./cml-graph-k1.pdf>] [79 <./cml-graph-k4.pdf>]
+[80] [81] <cml-proof-high.pdf, id=407, 791.95876pt x 576.1525pt>
 File: cml-proof-high.pdf Graphic file (type pdf)
 
 <use cml-proof-high.pdf>
-Package pdftex.def Info: cml-proof-high.pdf used on input line 3780.
-(pdftex.def)             Requested size: 430.00462pt x 312.83202pt.
+Package pdftex.def Info: cml-proof-high.pdf used on input line 3809.
+(pdftex.def)             Requested size: 397.48499pt x 289.17445pt.
 
-Overfull \hbox (17.0pt too wide) in paragraph at lines 3780--3781
+Overfull \hbox (36.135pt too wide) in paragraph at lines 3809--3810
 [][] 
  []
 
-[81 <./cml-proof-high.pdf>] [82]
-Overfull \hbox (2.34703pt too wide) in paragraph at lines 3871--3878
+[82 <./cml-proof-high.pdf>] [83]
+Overfull \hbox (13.00284pt too wide) in paragraph at lines 3900--3907
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][
-][][][][][][][][] \T1/LinuxLibertineT-TLF/m/n/10.95 in the soundess of static p
-ath
+][][][][][][][][] \T1/LinuxLibertineT-TLF/m/n/10.95 in the soundess of static
  []
 
-[83] [84] [85] [86] (./thesis.bbl [87]) [88] (./thesis.aux) ) 
+[84] [85] [86] [87] (./thesis.bbl
+Overfull \hbox (2.8159pt too wide) in paragraph at lines 47--50
+\T1/LinuxLibertineT-TLF/m/n/10.95 chronous data flow pro-gram-ming lan-guage lu
+s-tre.  \T1/LinuxLibertineT-TLF/m/it/10.95 Pro-ceed-ings of the IEEE\T1/LinuxLi
+bertineT-TLF/m/n/10.95 , 79(9):1305--
+ []
+
+[88
+
+] [89]) [90] (./thesis.aux) ) 
 Here is how much of TeX's memory you used:
- 7878 strings out of 493014
- 116275 string characters out of 6133351
- 401404 words of memory out of 5000000
- 11238 multiletter control sequences out of 15000+600000
- 55927 words of font info for 68 fonts, out of 8000000 for 9000
+ 8477 strings out of 493014
+ 121602 string characters out of 6133351
+ 409397 words of memory out of 5000000
+ 11807 multiletter control sequences out of 15000+600000
+ 54274 words of font info for 62 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 38i,6n,74p,284b,1700s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/local/texliv
-e/2016/texmf-dist/fonts/enc/dvips/base/8r.enc}{/usr/local/texlive/2016/texmf-di
-st/fonts/enc/dvips/libertine/lbtn_7grukw.enc}{/usr/local/texlive/2016/texmf-dis
-t/fonts/enc/dvips/libertine/lbtn_nh77jq.enc}{/usr/local/texlive/2016/texmf-dist
-/fonts/enc/dvips/libertine/lbtn_76gpa5.enc}</usr/local/texlive/2016/texmf-dist/
-fonts/type1/public/libertine/LinLibertineT.pfb></usr/local/texlive/2016/texmf-d
-ist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/local/texlive/2016/te
-xmf-dist/fonts/type1/public/libertine/LinLibertineTI.pfb></usr/local/texlive/20
-16/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/201
-6/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2016/
-texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2016/tex
-mf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2016/texm
-f-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texlive/2016/texmf-dist/f
-onts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/typ
-e1/public/bera/fvmro8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/publ
-ic/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (89 pages, 746422 bytes).
+ 38i,6n,74p,284b,1707s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/local/texlive/2016/texmf-dist/fonts/enc/dvip
+s/base/8r.enc}{/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/libertine/lbt
+n_7grukw.enc}{/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/libertine/lbtn
+_76gpa5.enc}{/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/libertine/lbtn_
+nh77jq.enc}</usr/local/texlive/2016/texmf-dist/fonts/type1/public/libertine/Lin
+LibertineT.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/libertine
+/LinLibertineTB.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/libe
+rtine/LinLibertineTI.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/
+amsfonts/cm/cmmi7.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/am
+sfonts/cm/cmr7.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmsy10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/bera/f
+vmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pf
+b></usr/local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></usr
+/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on thesis.pdf (93 pages, 752589 bytes).
 PDF statistics:
- 479 PDF objects out of 1000 (max. 8388607)
- 337 compressed objects within 4 object streams
+ 492 PDF objects out of 1000 (max. 8388607)
+ 346 compressed objects within 4 object streams
  0 named destinations out of 1000 (max. 500000)
  41 words of extra memory for PDF output out of 10000 (max. 10000000)
 

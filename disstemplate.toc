@@ -1,0 +1,15 @@
+\contentsline {chapter}{Acknowledgments}{iii}
+\contentsline {chapter}{Abstract}{iv}
+\contentsline {chapter}{List of Tables}{vi}
+\contentsline {chapter}{List of Figures}{vii}
+\contentsline {chapter}{Chapter 1.\hspace *{1em}Introduction}{1}
+\contentsline {chapter}{Chapter 2.\hspace *{1em}Background}{2}
+\contentsline {section}{\numberline {2.1}Preprocessing}{3}
+\contentsline {section}{\numberline {2.2}Character segmentation}{4}
+\contentsline {section}{\numberline {2.3}Symbol-Arrangement Analysis}{7}
+\contentsline {section}{\numberline {2.4}Conclusion}{10}
+\contentsline {chapter}{Chapter 3.\hspace *{1em}Methodology}{13}
+\contentsline {chapter}{Chapter 4.\hspace *{1em}Results and Discussion}{14}
+\contentsline {chapter}{Chapter 5.\hspace *{1em}Conclusion and Future Work}{15}
+\contentsline {chapter}{Bibliography}{16}
+\contentsline {chapter}{Vita}{20}
