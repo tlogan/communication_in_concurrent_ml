@@ -1,30 +1,25 @@
-\frametitle{Isabelle/HOL}
+\frametitle{Dynamic Semantics}
 \begin{lstlisting}[language=logic, mathescape]
-$\vdash$ sorted lte (Cons (Z) (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil))))
-apply (rule cons)
-  $\vdash$ lte Z (S Z)
-* $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
-apply (rule lt)
-  $\vdash$ lte Z Z
-* $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
-apply (rule eq)
-  $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
-apply (rule cons)
-  $\vdash$ lte (S Z) (S Z)
-* $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
-apply (rule eq)
-  $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
-apply (rule cons)
-  $\vdash$ lte (S Z) (S (S (S Z)))
-* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule lt)
-  $\vdash$ lte (S Z) (S (S Z))
-* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule lt)
-  $\vdash$ lte (S Z) (S Z)
-* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule eq)
-  $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule uni)
-done
+* sync: pool path$_s$ n$_s$ n$_{se}$ t$_s$ env$_s$ stack$_s$ n$_{sc}$ n$_m$
+  env$_{se}$ path$_r$ n$_r$ n$_{re}$ t$_r$ env$_r$ stack$_r$ n$_{rc}$ env$_{re}$ chan comm .
+    leaf pool path$_s$,
+    pool path$_s$ = Some
+      (Stt (Bind n$_s$ (Sync n$_{se}$) t$_s$) env$_s$ stack$_s$),
+    env$_s$ n$_{se}$ = Some
+      (VAtm (SendEvt n$_{sc}$ n$_m$) env$_{se}$),
+    leaf pool path$_r$,
+    pool path$_r$ = Some
+      (Stt (Bind n$_r$ (Sync n$_{re}$) t$_r$) env$_r$ stack$_r$),
+    env$_r$ n$_{re}$ = Some
+      (VAtm (RecvEvt n$_{rc}$) env$_{re}$),
+    env$_{se}$ n$_{sc}$ = Some (VChn chan),
+    env$_{re}$ n$_{rc}$ = Some (VChn chan),
+    env$_{se}$ n$_m$ = Some v$_m$
+  $\vdash$ dynamicEval
+    pool comm
+    (pool(
+      path$_s$ @ [DSeq n$_s$] -> (Stt t$_s$ (env$_s$(n$_s$ -> VUnt)) stack$_s$),
+      path$_r$ @ [DSeq n$_r$] -> (Stt t$_r$ (env$_r$(n$_r$ -> v$_m$)) stack$_r$)
+    ))
+    (comm $\cup$ {(path$_s$, chan, path$_r$)})
 \end{lstlisting}

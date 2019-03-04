@@ -344,4 +344,241 @@ done
 \end{frame}
 
 
+
+\begin{frame}[fragile]
+	\frametitle{Syntax}
+\begin{lstlisting}[language=logic, mathescape]
+datatype name = Nm string
+
+datatype term = 
+  Bind name complex term 
+| Rslt name
+
+and complex = 
+  Unt
+| MkChn
+| Atom atom
+| Spwn term 
+| Sync name
+| Fst name
+| Snd name
+| Case name name term name term 
+| App name name
+
+and atom = 
+  SendEvt name name
+| RecvEvt name
+| Pair name name
+| Lft name
+| Rht name
+| Fun name name term 
+\end{lstlisting}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+	\frametitle{Dynamic Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+datatype dynamic_step =
+  DSeq name
+| DSpwn name
+| DCll name
+| DRtn name 
+
+type dynamic_path =
+  dynamic_step list
+
+datatype chan =
+  Chan dynamic_path name 
+
+datatype dynamic_value = 
+  VUnt
+| VChn chan
+| VAtm atom (name -> dynamic_value option)
+
+type environment =
+  name -> dynamic_value option
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Dynamic Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+predicate seqEval: complex -> environment -> dynamic_value -> bool where
+
+  unit: env . 
+  $\vdash$ seqEval Unt env VUnt
+
+* atom: a env .
+  $\vdash$ seqEval (Atom a) env (VAtm a env)
+
+* first: env n$_p$ n$_1$ n$_2$ env$_p$ v . 
+    env n$_p$ = Some (VAtm (Pair n$_1$ n$_2$) env$_p$),
+    env$_p$ n$_1$ = Some v
+  $\vdash$ seqEval (Fst n$_p$) env v
+
+* second: env n$_p$ n$_1$ n$_2$ env$_p$ v . 
+    env n$_p$ = Some (VAtm (Pair n$_1$ n$_2$) env$_p$), 
+    env$_p$ n$_2$ = Some v 
+  $\vdash$ seqEval (Snd n$_p$) env v
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Dynamic Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+predicate callEval: complex -> env -> term -> env -> bool where
+
+  distincLeft: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
+    env n$_s$ = Some (VAtm (Lft n$_c$) env$_s$),
+    env$_s$ n$_c$ = Some v
+  $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_l$ (env(n$_l$ -> v))
+
+* distincRight: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
+    env n$_s$ = Some (VAtm (Rht n$_c$) env$_s$),
+    env$_s$ n$_c$ = Some v
+  $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_r$ (env(n$_r$ -> v))
+
+* application: env n$_f$ n$_f$' n$_p$ t$_b$ env$_f$ n$_a$ v .
+    env n$_f$ = Some (VAtm (Fun n$_f$' n$_p$ t$_b$) env$_f$),
+    env n$_a$ = Some v
+  $\vdash$ callEval
+    (App n$_f$ n$_a$) env t$_b$
+    (env$_f$(
+      n$_f$' -> (VAtm (Fun n$_f$' n$_p$ t$_b$) env$_f$),
+      n$_p$ -> v
+    ))
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Dynamic Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+datatype contin = Ctn name tm env
+
+type stack = contin list
+
+datatype state =
+  Stt program env stack 
+
+type pool =
+  dynamic_path -> state option
+
+predicate leaf: pool -> dynamic_path -> bool where
+  intro: pool path stt .
+    pool path = Some stt,
+    ($\nexists$ path' stt' .
+      pool path' = Some stt',
+      strictPrefix path path'
+    )
+  $\vdash$ leaf pool path
+
+type corresp = dynamic_path * chan * dynamic_path
+
+type communication = corresp set 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Dynamic Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+predicate dynamicEval:
+  pool -> communication -> pool -> communication -> bool
+where
+
+  return: pool path n env n$_k$ t$_k$ env$_k$ stack' v comm .
+    leaf pool path,
+    pool path = Some (Stt (Rslt n) env ((Ctn n$_k$ t$_k$ env$_k$) # stack')),
+    env n = Some v
+  $\vdash$ dynamicEval
+    pool comm
+    (pool(
+      path @ [DRtn n] ->
+        (Stt t$_k$ env$_k$(n$_k$ -> v) stack')
+    ))
+    comm
+
+* seq: pool path n c t' env stack v .
+    leaf pool path,
+    pool path = Some (Stt (Bind n c t') env stack),
+    seqEval c env v
+  $\vdash$ dynamicEval
+    pool comm
+    (pool(
+      path @ [DSeq n] -> (Stt t' (env(n -> v)) stack)
+    ))
+    comm
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Dynamic Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+* call: pool path n c t' env stack t$_c$ env$_c$ comm .
+    leaf pool path,
+    pool path = Some (Stt (Bind n c t') env stack),
+    callEval c env t$_c$ env$_c$
+  $\vdash$ dynamicEval
+    pool comm
+    (pool(
+      path @ [DCll n] -> (Stt t$_c$ env$_c$ ((Ctn n t' env) # stack))
+    )) comm
+
+* makeChan: pool path n t' env stack .
+    leaf pool path,
+    pool path = Some (Stt (Bind n MkChn t') env stack)
+  $\vdash$ dynamicEval pool comm 
+    (pool(
+      path @ [DSeq n] ->
+        (Stt t' (env(n -> (VChn (Chan path n)))) stack)
+    )) comm
+
+* spawn: pool path n t$_c$ t' env stack comm .
+    leaf pool path, 
+    pool path = Some (Stt (Bind n (Spwn t$_c$) t') env stack)
+  $\vdash$ dynamicEval pool comm 
+    (pool(
+      path @ [DSeq n] -> (Stt t' (env(n -> VUnt)) stack),
+      path @ [DSpwn n] -> (Stt t$_c$ env [])
+    )) comm
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Dynamic Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+* sync: pool path$_s$ n$_s$ n$_{se}$ t$_s$ env$_s$ stack$_s$ n$_{sc}$ n$_m$
+  env$_{se}$ path$_r$ n$_r$ n$_{re}$ t$_r$ env$_r$ stack$_r$ n$_{rc}$ env$_{re}$ chan comm .
+    leaf pool path$_s$,
+    pool path$_s$ = Some
+      (Stt (Bind n$_s$ (Sync n$_{se}$) t$_s$) env$_s$ stack$_s$),
+    env$_s$ n$_{se}$ = Some
+      (VAtm (SendEvt n$_{sc}$ n$_m$) env$_{se}$),
+    leaf pool path$_r$,
+    pool path$_r$ = Some
+      (Stt (Bind n$_r$ (Sync n$_{re}$) t$_r$) env$_r$ stack$_r$),
+    env$_r$ n$_{re}$ = Some
+      (VAtm (RecvEvt n$_{rc}$) env$_{re}$),
+    env$_{se}$ n$_{sc}$ = Some (VChn chan),
+    env$_{re}$ n$_{rc}$ = Some (VChn chan), 
+    env$_{se}$ n$_m$ = Some v$_m$
+  $\vdash$ dynamicEval
+    pool comm
+    (pool(
+      path$_s$ @ [DSeq n$_s$] -> (Stt t$_s$ (env$_s$(n$_s$ -> VUnt)) stack$_s$), 
+      path$_r$ @ [DSeq n$_r$] -> (Stt t$_r$ (env$_r$(n$_r$ -> v$_m$)) stack$_r$)
+    )) 
+    (comm $\cup$ {(path$_s$, chan, path$_r$)})
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Dynamic Communication}
+\begin{lstlisting}[language=logic, mathescape]
+\end{lstlisting}
+\end{frame}
+
+
+
 \end{document}

@@ -1473,14 +1473,18 @@ Additionally, all these terms evaluate to values in a single step.
   predicate seqEval:
     complex -> environment -> dynamic_value -> bool 
   where
+
     unit: env . 
     $\vdash$ seqEval Unt env VUnt
+
   * atom: a env .
     $\vdash$ seqEval (Atom a) env (VAtm a env)
+
   * first: env n$_p$ n$_1$ n$_2$ env$_p$ v . 
       env n$_p$ = Some (VAtm (Pair n$_1$ n$_2$) env$_p$),
       env$_p$ n$_1$ = Some v
     $\vdash$ seqEval (Fst n$_p$) env v
+
   * second: env n$_p$ n$_1$ n$_2$ env$_p$ v . 
       env n$_p$ = Some (VAtm (Pair n$_1$ n$_2$) env$_p$), 
       env$_p$ n$_2$ = Some v 
@@ -1502,14 +1506,17 @@ the function.
 
 \begin{lstlisting}[language=logic, mathescape]
   predicate callEval: complex -> env -> term -> env -> bool where
+
     distincLeft: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
       env n$_s$ = Some (VAtm (Lft n$_c$) env$_s$),
       env$_s$ n$_c$ = Some v
     $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_l$ (env(n$_l$ -> v))
+
   * distincRight: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
       env n$_s$ = Some (VAtm (Rht n$_c$) env$_s$),
       env$_s$ n$_c$ = Some v
     $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_r$ (env(n$_r$ -> v))
+
   * application: env n$_f$ n$_f$' n$_p$ t$_b$ env$_f$ n$_a$ v .
       env n$_f$ = Some (VAtm (Fun n$_f$' n$_p$ t$_b$) env$_f$),
       env n$_a$ = Some v
