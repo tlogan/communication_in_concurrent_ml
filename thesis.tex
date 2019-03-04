@@ -3934,8 +3934,8 @@ to the dynamic built-on-channel classification.
     $\vdash$ dynamicBuiltOnChanState (Stt t env stack) chan
 
 
-  lemma staticPathLiveSound: t$_0$ pool comm path t env stack staticEnv staticComm
-  entr exit n$_c$ graph isEnd path$_c$  . 
+  lemma staticPathLiveSound: t$_0$ pool comm path t env stack
+  staticEnv staticComm entr exit n$_c$ graph isEnd path$_c$  . 
     star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
     pool path = Some (Stt t env stack),
     dynamicBuiltOnChanState (Stt t env stack) (Chan path$_c$ n$_c$)
