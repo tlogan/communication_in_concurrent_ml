@@ -266,7 +266,7 @@ and \lstinline{recvEvt} and synchronization is represented by \lstinline{sync}.
 An advantageous consequence of decoupling synchronization from events, is that events can be
 combined with other events via event combinators, and synchronized on exactly once. One such
 event combinator is \lstinline{choose}, which constructs a new event consisting of two
-constituent events, such that when sycnronized on, exactly one of the two events may take
+constituent events, such that when synchronized on, exactly one of the two events may take
 effect. There are many other useful combinators, such as the \lstinline{wrap} and
 \lstinline{guard} combinators designed by Reppy \cite{reppy2007specialization}.
 Additionally, Donnelly and Fluet extended
@@ -287,7 +287,7 @@ evaluates.
 \subsection{Isabelle/HOL}
 An interactive theorem proving assistant, or proof assistant, is a machine (typically software) that helps its user
 specify propositions and prove theorems. Like typical programming systems, it checks
-that propositions are lexically correct, syntatically correct, and
+that propositions are lexically correct, syntactically correct, and
 even compositionally correct according to its type system. To determine if a proposition is valid, a proof assistant
 often requires the user to supply a proof. Once the proof assistant has verified that the user's proof is correct,
 then the proposition may be considered a theorem. In addition to checking the correctness of proofs and
@@ -368,13 +368,13 @@ resulting from applying each manipulation rule.
 \end{lstlisting}
 
 Note that the syntax shown here differs slightly from that of Isabelle/HOL.
-In order to make these examples more accesible to those unfamiliar with Isabelle/HOL, I have chosen
+In order to make these examples more accessible to those unfamiliar with Isabelle/HOL, I have chosen
 to use a syntax that is more typical of mathematical logic and language theory literature.
 
 In addition to creating theorems by proving propositions, Isabelle/HOL also allows creating theorems
 by defining predicates and functions. This feature is critical for constructing inductive propositions that may hold
-over infinite domains. Infinite domains may be defined as inductive datatypes, similar to Standard ML.
-For instance, you can define the infinite set of natural numbers (with zero) as an inductive datatype,
+over infinite domains. Infinite domains may be defined as inductive data types, similar to Standard ML.
+For instance, you can define the infinite set of natural numbers (with zero) as an inductive data type,
 and the binary relation that a natural number is less than or equal to another as an inductive predicate.
 
 \begin{lstlisting}[language=logic]
@@ -388,7 +388,7 @@ and the binary relation that a natural number is less than or equal to another a
     $\vdash$ lte n$_1$ (S n$_2$)
 \end{lstlisting}
 
-Additionally, you can define the infinite set of lists inductively, and the higher order predicte that checks
+Additionally, you can define the infinite set of lists inductively, and the higher order predicate that checks
 sortedness using a supplied binary relation.
 
 \begin{lstlisting}[language=logic]
@@ -560,7 +560,7 @@ any number of receiving threads;
 a many-to-one channel has any number of sending threads and at most one receiving thread;
 a one-to-one channel has one or none of each;
 a one-shot channel has exactly one sending attempt;
-a one-sync channel has at most one syncronization.
+a one-sync channel has at most one synchronization.
 
 The following reimplementation of \lstinline{Serv} is annotated to indicate the communication topologies
 derived from its usage. Since there are four threads that make calls to the server, the
@@ -1242,7 +1242,7 @@ A static analysis for detecting communication topologies in Concurrent ML would 
 optimizations or checks. The optimization to replace general synchronization with specialized synchronization
 based on the results of static analysis is one that could have significant performance benefit, as shown
 empirically by Reppy and Xiao. However, if the static analysis of communication topologies is wrong, then
-the optimizmization could produce an incorrect program. What you need is proof that the static analysis is sound
+the optimization could produce an incorrect program. What you need is proof that the static analysis is sound
 with respect to the actual communication topologies that occur when running a program. However, the proof could also be
 erroneous, and with so many details, it could be extremely difficult for a human to manually check for errors.
 Isabelle/HOL automatically checks for errors in proofs and specifications and is much more reliable than a
@@ -1250,7 +1250,7 @@ human. By using an optimization without a soundness proof, you are trusting that
 been proved, then you are trusting that the proof has no errors. If the proof has been verified by Isabelle/HOL, 
 you are trusting that the Isabelle/HOL kernel is sound. The less you need to trust the better.
 
-I extend Reppy and Xiao's work by develpoing a mechanically checked specification and proofs
+I extend Reppy and Xiao's work by developing a mechanically checked specification and proofs
 for communication topologies in Concurrent ML. The proof checker requires that manipulations are
 constructed from a small kernel of primitive operations. It's possible that an intuitive step of reasoning in an
 informal proof requires multiple tedious steps of precise manipulation in a mechanically checked proof.
@@ -1259,13 +1259,13 @@ as inference rules, rather than as an algorithm. In Isabelle/HOL, algorithms are
 that must be proved to terminate and be total, either automatically or with additional details supplied by the user.
 Reppy and Xiao's algorithm, as with many static analysis algorithms, relies on accumulating values in a growing set
 with each recursive call until reaching a fixpoint.
-In Isabelle/HOL it is easy to prove termination for functions that branch on an inductive datatype, 
+In Isabelle/HOL it is easy to prove termination for functions that branch on an inductive data type, 
 however it is far from straight foward to prove termination for those that branch on
 whether or not a fixpoint has been reached. Thus, reformulating the specification as inference rules
 appears to make formal reasoning more attainable. 
 
 Concurrent ML distinguishes itself from other languages for concurrency with its generalized concept of events,
-event sycnrhonization, and event combinators. Reppy and Xiao's work produces a static analysis for a subset,
+event synchronization, and event combinators. Reppy and Xiao's work produces a static analysis for a subset,
 which only contained synchronization on sending and receiving events. Originally, I wanted to extend Reppy and Xiao's
 analysis to encompass a more generalized notion of events, along with the event combinator for choice.
 However, I quickly
@@ -1281,14 +1281,14 @@ some extensions, such as functions, function application, pairs, first and secon
 and unit. 
 Additionally, for concurrency it contains thread spawning, channel creation, sending events, receiving events, and synchronization.
 These features may be used together by binding the use of one feature to a name, and then
-sequencig to another term. Additionally, spawning, function application, and case distinction require use of other features.
+sequencing to another term. Additionally, spawning, function application, and case distinction require use of other features.
 
-The dynamic evaluation is represented by a small step relation, and a variant of a CEK machine, in which one pool evalutes
+The dynamic evaluation is represented by a small step relation, and a variant of a CEK machine, in which one pool evaluates
 to the next pool. A pool consists of many states associated with the paths taken to reach each state. A state consists
 of a term to be evaluated, an environment for looking up values from names, and a stack of continuations.
 A valid small step relation always steps from one pool to the pool extended with at least one new state.
 Terms containing names are not reduced. Instead, an environment can be used to look up the values of names.
-Names are locally scoped so that they can be reused with a precise meaning, e.g. a function paramenter may be bound to
+Names are locally scoped so that they can be reused with a precise meaning, e.g. a function parameter may be bound to
 a different argument each time it's called. As such, for any term containing names, its corresponding value is simply
 the term paired with its own environment.
 
@@ -1300,24 +1300,24 @@ It states that an initial pool takes zero or more transitive steps to reach anot
 The static evaluation is represented by a control flow analysis relation. Control flow analysis is a "may" analysis,
 meaning that the analysis is sound if it holds for all possible evaluations of the dynamic evaluation.
 It may also hold for evaluations that are impossible to occur in the dynamic evaluation.
-Instead of associating each term with its own environment, the control flow analysis simply has one static environemnt
+Instead of associating each term with its own environment, the control flow analysis simply has one static environment
 for the entire program. If a name takes on different values in different scopes during dynamic evaluation, then
 the static environment simply considers both to be options. 
 
 The soundness theorem of the static evaluation with respect to dynamic evaluation states that if full dynamic evaluation
-of a program reaches a pool containing some environent, and the static evaluation holds for the program and some
-static environemnt, then the static environemnt is an abstraction of the dynamic environment. That is, if a name maps
+of a program reaches a pool containing some environment, and the static evaluation holds for the program and some
+static environment, then the static environment is an abstraction of the dynamic environment. That is, if a name maps
 to some value in the dynamic environment, then, in the static environment, the name maps to a set containing the same value
 or an abstraction of the value. The static evaluation relates static environments to initial programs,
 but soundness relates static environments
-to dynamic environments. Furthermore, the dynamic environment of a state in a pool depends on, the terms, environemnts,
+to dynamic environments. Furthermore, the dynamic environment of a state in a pool depends on, the terms, environments,
 and continuation stacks of states in previous pools.
 Thus, if the static evaluation holds for a static environment and a program,
 then there must be a relation that holds for the same static environment and
 any pool that the program may dynamically evaluate to. 
-Generalizing static evaluation to work for pools, environemnts, and stacks, gives a version that
+Generalizing static evaluation to work for pools, environments, and stacks, gives a version that
 that can relate the static environment to each component and step of dynamic evaluation.
-The generalized static evaluation on the intial pool is defined to follow from the static evaluation on the program.
+The generalized static evaluation on the initial pool is defined to follow from the static evaluation on the program.
 The preservation of the static evaluation of a pool across multiple steps of dynamic evaluation is proved by induction on
 the star relation. The static evaluation on a pool is taken apart into a static evaluation on a dynamic environment,
 thus relating the dynamic environment with the static environment, which is essentially sound by definition. 
@@ -1337,11 +1337,11 @@ that send and receive on a channel of interest. However, these sites of sending 
 taken from the static environment, whose content is influenced by the rules of static evaluation.
 The static flows acceptance relation states that a set of flows, i.e. a graph, accepts a program or term, where each flow is
 an abstract representation of a small step in the dynamic evaluation. The relation is defined such that
-whether or not a given finite set of flows holds is decideable. The static paths are formed from the chaining of flows, according
+whether or not a given finite set of flows holds is decidable. The static paths are formed from the chaining of flows, according
 to the rules ot the static path existence relation.
-The set of static paths to a sending or receiving syncrhonization site is bounded by the static flows acceptance
+The set of static paths to a sending or receiving synchronization site is bounded by the static flows acceptance
 relation. Due to cycles in the graph, the set of paths may be inifite. 
-The static one-to-many classification holds if any two static sending paths are noncompetitive, meaning
+The static one-to-many classification holds if any two static sending paths are uncompetitive, meaning
 that either they are ordered, like the dynamic classification, or there's no way for the paths to occur in the same run
 of the program. The many-to-one and one-to-one classification also rely on the notion of noncompeititive paths, rather than
 simply unordered paths. Likewise, the static one-shot classification holds if any two static sending paths are singular,
@@ -1352,11 +1352,11 @@ a channel is statically classified in some way, then it is dynamically classifie
 static one-to-many classification holds for a static channel, then the dynamic one-to-many classifaction holds for
 all dynamic counterparts of that channel. The static communication classification is a "must" analysis, meaning that
 if the classification holds statically, then it must hold dynamically. Soundness depends on the soundness and preservation
-of its constiuent parts,
-including the soundness of static evaluation, the soundness of the noncompetitive relation with respect to
+of its constituent parts,
+including the soundness of static evaluation, the soundness of the uncompetitive relation with respect to
 the unordered relation, the soundnes of the singular relation with respect to equality of paths,
 and the soundness and preservation of the static path existence relation. As with static evaluation, many proofs of
-soudnness for the static communication classification, rely on bridging the gap between the terms used in dynamic
+soundness for the static communication classification, rely on bridging the gap between the terms used in dynamic
 versions and the terms used in the static versions. Generalizations of the static communication classification relations
 with respect to additional dynamic terms - pools, environments, stacks, and values - are derived to complete these proofs.
 
@@ -1381,7 +1381,7 @@ Maintaining the values' ties to the syntax
 simplifies proofs of soundness, since they must relate dynamic evaluation information
 to static information based on the syntax.
 
-Additionally, ANF melds nicely with the semantincs of control paths, which succicntly identify
+Additionally, ANF melds nicely with the semantics of control paths, which succinctly identify
 the evaluation taken to reach some intermediate result.
 Instead of relying on additional metalanguage structures to associate atom operations with identifiers,
 the analysis can simply use the required names of ANF syntax to identify locations in the program.
@@ -1579,7 +1579,7 @@ step, maintaining a full history. Each step adds new states and paths extended f
 ones, and each step in the path indicates the mode of flow taken to reach the state.
 Only states indexed by leaf paths are used to evaluate to the next pool.
 
-For the evaluation a leaf path proceding from a result term, a continuation is popped of the
+For the evaluation a leaf path proceeding from a result term, a continuation is popped of the
 stack. The pool's new state is formed from the term and environment in the continuation, and
 the environment is updated with the continuation's name bound to the result's value.
 A sequencing evaluation step of a program picks a leaf state and relies on
@@ -1795,12 +1795,12 @@ values. The static unit value is no less precise than the dynamic unit value, bu
 static channels and static atom values are imprecise versions of their dynamic
 counterparts. A static channel is identified only by the name it binds to at creation time,
 rather than the full path that leads up to its creation. A static atom value is simply an
-atomic term without an environment for looking up its consituent names. A static
+atomic term without an environment for looking up its constituent names. A static
 environment contains the intermediate evaluation results by
 associating names to multiple potential static values.
 Thus, in addition to some static values being imprecise,
 the results of evaluation may have even lower precision
-by containinng multiple potential static values. 
+by containing multiple potential static values. 
 In order to find the return value of a term, it is useful to fetch the name
 embedded within the term's eventual result term, which is formally defined by \lstinline{resultName}.
 
@@ -1828,7 +1828,7 @@ The second map is the static communication, containing names of channels mapped 
 values that might be sent over the channels identified by those names.
 
 The definition of static evaluation is syntax-directed, meaning the proof of a static evaluation
-is definied to be strucutrally inductive following the self-similar structure of the syntax.
+is definied to be structurally inductive following the self-similar structure of the syntax.
 It should be possible to decide if a static evaluation holds
 by unraveling the program term into smaller and smaller terms,
 until reaching a term without any smaller terms.
@@ -1845,14 +1845,14 @@ For instance, if a term has a sequenced term,
 the static evaluation of the term is defined
 by the static evaluation of its sequenced term,
 whether the orginal term is a spawning term, a function term, or a case distinction term.
-In constrast, in the definition of dynamic evaluation,
+In contrast, in the definition of dynamic evaluation,
 the evaluation of certain syntactic forms is more similar to some forms than others.
 Case distinction terms are evaluated similarly to application terms. They both require
 saving some terms on the continuation stack, while evaluating other terms.
 Function terms are dynamically evaluated similarly to other atomic terms.
 The static evaluation has only a single global environment for
 looking up values of names in the whole program, whereas the dynamic evaluation
-associates local environemnts with different terms in the program, allowing the same
+associates local environments with different terms in the program, allowing the same
 names to resolve to different values depending on the context. Therefore, the
 static evaluation is less precise.
 
@@ -2043,9 +2043,9 @@ a smaller term, which indicates that we should repeat this procedure again for t
 the program, incrementally adding more static values for each binding name in the program.
 We continually repeat this procedure from the top of the program until there's
 nothing more we can add to the static environments.
-The rule for syncrhonization is the only rule in which there are conditions on
+The rule for synchronization is the only rule in which there are conditions on
 the static communication environment. So we will only add to the static communication
-environment when we encounter syncrhonization terms.
+environment when we encounter synchronization terms.
 The following static environments result from following this informal procedure on
 the example ANF server implementation.
 To make the presentation clear, the syntactic sugar \lstinline|(r1 -> {rht u1}, ...)| is used 
@@ -2149,7 +2149,7 @@ The term identifier of a result term is the embedded name, and indication of its
 The static communication describes a sound approximation of
 the static paths that communicate on static channels.
 The static sending identifier classification means that a term identifier might represent a
-sycnronization to send on a given static channel.
+synchronization to send on a given static channel.
 The static receiving identifier classification means that a term identifier might represent a
 synchronization to receive on a given static channel. 
 
@@ -2245,7 +2245,7 @@ and the sequenced term.
 In the case of application, if the applied name is actually bound to a function,
 then a calling flow from the application term to the function's body 
 accept the application term, and the returning flow from the result of the function
- to the sequenced term accept the aplication term.
+ to the sequenced term accept the application term.
 Additionally, the accepting flows for the application term are also
 accepting flows for the sequenced term. 
 
@@ -2417,19 +2417,19 @@ to paths starting from the beginning of a program.
       (path @ [(IdBind n, MSpwn)] @ path2)
 \end{lstlisting}
 
-The noncompetitiveness means that two paths can't compete during a run of a
+The uncompetitiveness means that two paths can't compete during a run of a
 program. Either they are ordered or they cannot occur in the same run of a program.
-The singularness means that two paths are the same or only of them can occur
+The singularity means that two paths are the same or only of them can occur
 in a given run of a program. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate noncompetitive: static_path -> static_path -> bool where
+  predicate uncompetitive: static_path -> static_path -> bool where
     ordered: path1 path2 .
       ordered path1 path2
-    $\vdash$ noncompetitive path1 path2
+    $\vdash$ uncompetitive path1 path2
   * notInclus: path1 path2 .
       $\neg$ (staticInclusive path1 path2)
-    $\vdash$ noncompetitive path1 path2
+    $\vdash$ uncompetitive path1 path2
 
   predicate singular: static_path -> static_path -> bool where
     refl: path .
@@ -2450,7 +2450,7 @@ many threads that attempt to receive on the channel.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       forEveryTwo (staticTraceable graph (termId t)
-        (staticSendId staticEnv t n$_c$)) noncompetitive
+        (staticSendId staticEnv t n$_c$)) uncompetitive
     $\vdash$ staticOneToMany staticEnv t n$_c$
 \end{lstlisting}
 
@@ -2465,7 +2465,7 @@ program.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       forEveryTwo (staticTraceable graph (termId t)
-        (staticRecvId staticEnv t n$_c$)) noncompetitive
+        (staticRecvId staticEnv t n$_c$)) uncompetitive
     $\vdash$ staticManyToOne staticEnv t n$_c$
 \end{lstlisting}
 
@@ -2479,9 +2479,9 @@ during a run of a given program.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       forEveryTwo (staticTraceable graph (termId t)
-        (staticSendId staticEnv t n$_c$)) noncompetitive, 
+        (staticSendId staticEnv t n$_c$)) uncompetitive, 
       forEveryTwo (staticTraceable graph (termId t)
-        (staticRecvId staticEnv t n$_c$)) noncompetitive
+        (staticRecvId staticEnv t n$_c$)) uncompetitive
     $\vdash$ staticOneToOne staticEnv t n$_c$
 \end{lstlisting}
 
@@ -2508,7 +2508,7 @@ thread that attempts to receive on a static channel in any run of a given progra
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       forEveryTwo (staticTraceable graph (termId t) (staticSendId staticEnv t n$_c$)) singular,
-      forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) noncompetitive,
+      forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) uncompetitive,
     $\vdash$ staticOneSync graph t n$_c$
 \end{lstlisting}
 
@@ -2800,7 +2800,7 @@ depending on the program.
 The flows described by the various versions of static flows acceptance depend on static
 environments in order to look up the flow in the case where the term is a function.
 The static environment is constrained by the static evaluation of the program that is dynamically evaluated.
-Generalized versions of static evaluation that related the static environemnt to other elements of dynamic evaluation
+Generalized versions of static evaluation that related the static environment to other elements of dynamic evaluation
 enable further deduction about flows.
 As with the generalized versions of static flows acceptance,
 the generalized versions of static evaluation are designed to
@@ -2937,7 +2937,7 @@ of static flows acceptance across multiples steps of evaluation.
 
 The preservation of static flows acceptance over pools is proved by the
 equivalence between star and its leftward variant, and induction on the leftward variant.
-The preservation of static evalatuation of pools over multiple steps is also relied upon.
+The preservation of static evaluation of pools over multiple steps is also relied upon.
 
 \begin{lstlisting}[language=logic, mathescape]
   lemma staticEvalPoolPreserved: pool comm pool' comm' staticEnv staticComm .
@@ -2966,8 +2966,8 @@ and the preservation of static inclusiveness over extension of static paths.
   $\vdash$ staticInclusive (path1 @ [l1]) (path2 @ [l2])
 \end{lstlisting}
 
-These various preservation lemmas are derived from the basic properites of lists 
-and straight forward properities of path correspondence, such as commutitivity, as
+These various preservation lemmas are derived from the basic properties of lists 
+and straight forward properities of path correspondence, such as commutativity, as
 well as foundational principles like induction of corresponding paths.
 
 The lemma for soundness of static sending identifier classification \lstinline{staticSendIdSound}
@@ -3000,7 +3000,7 @@ used to ensure that the static step is indeed a sending identifier.
   $\vdash$ staticReachable t$_0$ t 
 \end{lstlisting}
 
-Both the soundness of static evaluation on the syncrhonization of a send event,
+Both the soundness of static evaluation on the synchronization of a send event,
 and the soundness of static evaluation follow from
 the preservation of static evaluation over multiple steps of dynamic evaluation.
 
@@ -3008,7 +3008,7 @@ The lemma for soundness of static reachability relies on a reformulation of
 static reachability defined by proofs that induct on a larger term
 containing the reachable term. This definition is useful for forward derivations
 of reachability relations, however it doesn't offer much guidance for deciding reachability. 
-In constrast, the definition of the original static reachability relation is
+In contrast, the definition of the original static reachability relation is
 syntax-directed in order to portray a clear connection to
 a computable algorithm that can determine the reachable term from an initial program.
 To show that a term is reachable from the initial program, it is necessary to
@@ -3183,7 +3183,7 @@ sequencing, calling, returning, and spawning are also included.
 To demonstrate some key concepts of the higher precision analysis,
 an additional loop function \lstinline{lp} is added to the
 example server implementation. The loop basically just wastes steps,
-but it is used to demontrate how
+but it is used to demonstrate how
 liveness analysis treats functions that don't contain any channel of interest.
 
 \begin{lstlisting}[language=normal_lang, mathescape]
@@ -3260,7 +3260,7 @@ liveness analysis treats functions that don't contain any channel of interest.
 
 
 The static flows acceptance for higher precision is similar to that of the lower precision analysis.
-However, it must additionally consider flows with the sending mode. To accomodate the sending flow
+However, it must additionally consider flows with the sending mode. To accommodate the sending flow
 from sender to receiver, the initial program must be carried each inference rule.
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -3489,7 +3489,7 @@ and each exit set appears right below its related term identifier.
 The following diagram illustrates the entry and exit sets of each term id
 for channel \lstinline{chn k4} in
 the server example. Each entry set appears right above its related term identifier,
-and each exit setappears right below its related term identifier. 
+and each exit set appears right below its related term identifier. 
 
 \includegraphics[width=1\textwidth]{cml-liveness-analysis-k4.pdf}
 \begin{lstlisting}[language=logic, mathescape]
@@ -3699,8 +3699,8 @@ In contrast to the analogous definition for the lower precision
 alysis, the higher precision definition needs to consider paths containing the
 sending mode. As mentioned earlier, the path from the synchronization on sending to the
 synchronization on receiving is necessary to ensure that all uses of a channel are reachable
-from the channel's creation identifier. The singularness means that only one of the two
-given paths can occur in a run of program. The noncompetitveness means that the two
+from the channel's creation identifier. The singularity means that only one of the two
+given paths can occur in a run of program. The uncompetitveness means that the two
 given paths do not compete in any run of a program. 
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -3732,13 +3732,13 @@ given paths do not compete in any run of a program.
       $\neg$ (staticInclusive path1 path2)
     $\vdash$ singular path1 path2
 
-  predicate noncompetitive: static_path -> static_path -> bool where
+  predicate uncompetitive: static_path -> static_path -> bool where
     ordered: path1 path2 . 
       ordered path1 path2
-    $\vdash$ noncompetitive path1 path2
+    $\vdash$ uncompetitive path1 path2
   * notInclus: path1 path2 .
       $\neg$ (staticInclusive path1 path2)
-    $\vdash$ noncompetitive path1 path2
+    $\vdash$ uncompetitive path1 path2
   \end{lstlisting}
 
 The communication classifications are described using the liveness properties, but
@@ -3751,7 +3751,7 @@ are otherwise similar to the lower precision classifications.
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
-        (staticSendId staticEnv t n$_c$)) noncompetitive
+        (staticSendId staticEnv t n$_c$)) uncompetitive
     $\vdash$ staticOneToMany staticEnv t n$_c$
 
   predicate staticManyToOne: static_value_map -> term -> name -> bool where
@@ -3760,7 +3760,7 @@ are otherwise similar to the lower precision classifications.
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
-        (staticRecvId staticEnv t n$_c$)) noncompetitive
+        (staticRecvId staticEnv t n$_c$)) uncompetitive
     $\vdash$ staticManyToOne staticEnv t n$_c$
 
   predicate staticOneToOne: static_value_map -> term -> name -> bool where
@@ -3769,9 +3769,9 @@ are otherwise similar to the lower precision classifications.
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$) 
-        (staticSendId staticEnv t n$_c$)) noncompetitive, 
+        (staticSendId staticEnv t n$_c$)) uncompetitive, 
       forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
-        (staticRecvId staticEnv t n$_c$)) noncompetitive
+        (staticRecvId staticEnv t n$_c$)) uncompetitive
     $\vdash$ staticOneToOne staticEnv t n$_c$
 
   predicate staticOneShot: static_value_map -> term -> name -> bool where
@@ -3791,7 +3791,7 @@ are otherwise similar to the lower precision classifications.
       forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticSendId staticEnv t n$_c$)) singular,
       forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
-        (staticRecvId staticEnv t n$_c$)) noncompetitive 
+        (staticRecvId staticEnv t n$_c$)) uncompetitive 
     $\vdash$ staticOneSync staticEnv t n$_c$
   \end{lstlisting}
 
@@ -3809,7 +3809,7 @@ is not bijective, as it is for the lower precision analysis. However, finding a 
 correspondence for each dynamic and static path is critical for proving soundness.
 
 Essentially, it will be necessary to show that static
-properties that hold for some static path are preserved for corresponding dyamic paths. 
+properties that hold for some static path are preserved for corresponding dynamic paths. 
 However, in the higher precision analysis these paths correspond modulo the channel of interest.
 An an outline of the derivation of soundness of one-shot classification demonstrates the strategy so far.
 
@@ -3907,7 +3907,7 @@ that correlates with the dynamic path is more challenging.
 The proposition \lstinline[mathescape]{isSendPath pool' (Chan path$_c$ n$_c$) path'} is derived
 by unfolding the definition of \lstinline{oneShot}.
 It is generalized by \lstinline[mathescape]{pool' path' = Some (Stt t' env' stack'),}\\
-\lstinline[mathescape]{dynamicBuiltOnChanState (Stt t' env' stack') (Chan path$_c$ n$_c$)} in the soundess of
+\lstinline[mathescape]{dynamicBuiltOnChanState (Stt t' env' stack') (Chan path$_c$ n$_c$)} in the soundness of
 static path liveness. Since the static chan liveness depends on names being statically built on the channel,
 the soundness theorem also depends on the soundness of static built-on-channel classification with respect
 to the dynamic built-on-channel classification.
@@ -3974,7 +3974,8 @@ and soundness of a name statically built on a static channel.
 
 \begin{lstlisting}[language=logic, mathescape]
 
-  lemma pathsCorrespondModChanPreservedSnoc: t$_0$ chan path staticPath site step .
+  lemma pathsCorrespondModChanPreservedSnoc:
+  t$_0$ chan path staticPath site step .
     pathsCongruentModChan t$_0$ chan path staticPath,
     pathsCongruent [site] [step]
   $\vdash$ pathsCongruentModChan t$_0$ chan (path @ [site]) (staticPath @ [step])
@@ -4020,7 +4021,7 @@ there has been much work in the mechanization of the theories of $\pi$-calculus
 
 \section{Future Work}
 The formal syntax, semantics, and communication analysis of this work form the basis of
-a framework for studying Concurrennt ML events, synchronization mechanisms, and their
+a framework for studying Concurrent ML events, synchronization mechanisms, and their
 applications. These language features enable the construction of reactive programs, which
 have separation of parts that are conceptually distinct, yet still depend on each
 other.
@@ -4031,17 +4032,17 @@ analyses could be built on the existing semantics, in order to verify the correc
 extensions or optimizations. Extending the semantics to handle event combinators for choosing
 events, sequencencing events, guardining events, among others, would be an important next step.
 
-Concurreny is a double edged sword. Without specification of ordering, programs may
-desribe their behavior more clearly or allow parallelism for faster execution. On the other hand,
-unspecified orderings may also lead to nondetermistic behavior, which may be not be wanted. 
+Concurrency is a double edged sword. Without specification of ordering, programs may
+describe their behavior more clearly or allow parallelism for faster execution. On the other hand,
+unspecified orderings may also lead to nondeterministic behavior, which may be not be wanted. 
 To gain the benefits of concurrency without its hindrance, the language could be extended
 with syntax to identify blocks of code that are required to be deterministic,
 along with a corresponding static analysis that checks if such code is actually
 deterministic. The determinism analysis could rely on the static communication analysis
-to ensure that all syncronized receiving events receive from at most one channel,
+to ensure that all synchronized receiving events receive from at most one channel,
 and that channel is sent on by at most one thread, and that thread is also deterministic.
 Other analyses could aid optimizations for incremental computation
-\cite{acar2002adaptive}. One possible optimzation could transform a program into one
+\cite{acar2002adaptive}. One possible optimization could transform a program into one
 that checks for altered dependencies and only recomputes the data that depends on altered dependencies.
 
 \newpage
