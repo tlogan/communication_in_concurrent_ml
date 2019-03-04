@@ -72,26 +72,6 @@
   }
 }
 
-
-%
-%	\frame {
-%		\frametitle{Sample Page 1}
-%		\[\frac{-b \pm \sqrt{b^2 - c}}{2a}\]
-%	}
-%	\frame{
-%		\frametitle{Sample Page 2}
-%		\framesubtitle{An Example of Lists}
-%		\begin{itemize}
-%			\item 1
-%			\item 2
-%			\item 3
-%		\end{itemize}
-%	}
-%	\frame{
-%	    \frametitle{Paragraph Content}
-%	    This is a paragraph.
-%	}
-
 \title{A Mechanized Theory of Communication Analysis in CML}
 
 %\usetheme{lucid}
@@ -184,12 +164,184 @@ sig
 end
 \end{lstlisting}
 \end{column}
-
 \end{columns}
-
-
 \end{frame}
 
+
+
+\begin{frame}
+\frametitle{Isabelle/HOL}
+\begin{itemize}
+\item interactive theorem proving assistant; proof assistant
+\item unification and rewriting
+\item simply typed terms
+\item propositions as boolean typed terms
+\item higher order terms
+\item computable functions
+\item inductive data
+\item inductive reasoning
+\item tactics and composition
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+	\frametitle{Isabelle/HOL}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[language=logic, mathescape]
+$\vdash$ P1 $\vee$ P2 $\rightarrow$ Q
+proof
+  assume P1 $\vee$ P2:
+    case P1:
+      have $\vdash$ P1 $\rightarrow$ Q by A
+      have $\vdash$ Q by modus ponens
+    case P2:
+      have $\vdash$ P2 $\rightarrow$ Q by B    
+      have $\vdash$ Q by modus ponens
+    have P1 $\vdash$ Q, P2 $\vdash$ Q
+    have $\vdash$ Q by disjunction elimination
+  have P1 $\vee$ P2 $\vdash$ Q
+  have $\vdash$ P1 $\vee$ P2 $\rightarrow$ Q
+    by implication introduction  
+qed
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[language=logic, mathescape]
+$\vdash$ P1 $\vee$ P2 $\rightarrow$ Q
+apply (rule impI)
+  P1 $\vee$ P2 $\vdash$ Q
+apply (erule disjE)
+  P1 $\vdash$ Q
+* P2 $\vdash$ Q
+apply (insert A)
+  P1, P1 $\rightarrow$ Q $\vdash$ Q
+* P2 $\vdash$ Q
+apply (erule mp)
+  P1 $\vdash$ P1
+* P2 $\vdash$ Q
+apply assumption 
+  P2 $\vdash$ Q
+apply (insert B)
+  P2, P2 $\rightarrow$ Q $\vdash$ Q
+apply (erule mp)
+  P2 $\vdash$ P2
+apply assumption 
+done
+\end{lstlisting}
+\end{column}
+\end{columns}
+\end{frame}
+
+
+
+
+
+
+\begin{frame}[fragile]
+	\frametitle{Isabelle/HOL}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[language=logic, mathescape]
+datatype nat = Z | S nat
+
+predicate lte: nat -> nat -> bool where
+  eq: n . 
+  $\vdash$ lte n n
+* lt: n$_1$ n$_2$ . 
+    lte n$_1$ n$_2$ 
+  $\vdash$ lte n$_1$ (S n$_2$)
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[language=logic, mathescape]
+datatype 'a list =
+  Nil
+| Cons 'a ('a list)
+ 
+predicate sorted:
+  ('a -> 'a -> bool) -> 'a list -> bool
+where
+  nil: r . 
+  $\vdash$ sorted r Nil
+* uni: r x . 
+  $\vdash$ sorted r (Cons x Nil)
+* cons: r x y ys .
+    r x y,
+    sorted r (Cons y ys)
+  $\vdash$ sorted r (Cons x (Cons y ys))
+\end{lstlisting}
+\end{column}
+\end{columns}
+\end{frame}
+
+
+
+
+
+\begin{frame}[fragile]
+\frametitle{Isabelle/HOL}
+\begin{lstlisting}[language=logic, mathescape]
+$\vdash$ sorted lte (Cons (Z) (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil))))
+apply (rule cons)
+  $\vdash$ lte Z (S Z)
+* $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
+apply (rule lt)
+  $\vdash$ lte Z Z
+* $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
+apply (rule eq)
+  $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
+apply (rule cons)
+  $\vdash$ lte (S Z) (S Z)
+* $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
+apply (rule eq)
+  $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
+apply (rule cons)
+  $\vdash$ lte (S Z) (S (S (S Z)))
+* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+apply (rule lt)
+  $\vdash$ lte (S Z) (S (S Z))
+* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+apply (rule lt)
+  $\vdash$ lte (S Z) (S Z)
+* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+apply (rule eq)
+  $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
+apply (rule uni)
+done
+\end{lstlisting}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Analysis}
+\begin{itemize}
+\item communication classification: one-shot, one-to-many, many-to-one, many-to-many
+\item control flow analysis
+\item channel liveness
+\item algorithm vs constraints
+\item structural recursion vs fixpoint accumulation
+\item performance improvements
+\item safety
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Synchronization}
+\begin{itemize}
+\item uniprocessor; dispatch scheduling
+\item multiprocessor; mutex and compare-and-swap
+\item synchronization state
+\item sender and receiver thread containers
+\item message containers
+\end{itemize}
+\end{frame}
 
 
 \end{document}
