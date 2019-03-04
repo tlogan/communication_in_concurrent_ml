@@ -1,0 +1,195 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+ 
+\usepackage{listings}
+\usepackage{color}
+%
+%\usepackage{graphicx}
+%\graphicspath{ {./} }
+%
+\usepackage[T1]{fontenc}
+\usepackage{libertine}
+\usepackage[scaled=0.6]{beramono}
+\usepackage[export]{adjustbox}
+
+\lstset{
+  basicstyle=\linespread{0.65}\ttfamily\small,
+  breakatwhitespace=false,     
+  breaklines=true,         
+  captionpos=b,          
+  keepspaces=true,         
+  showspaces=false,        
+  showstringspaces=false,
+  showtabs=false,          
+  tabsize=2,
+}
+
+\lstdefinelanguage{logic}{
+  morekeywords={
+    datatype,
+    type,
+    fun,
+    val,
+    predicate,
+    where, only,
+    if, then, else,
+    and, or, not,
+    lemma,
+    theorem,
+    of,
+    have,
+    assume, case, apply, done, by, proof, qed,
+    goal
+  },
+  mathescape
+}
+
+\lstdefinelanguage{normal_lang}{
+  morekeywords={
+    bind, rslt, fun, app, unt, pair,
+    mkChn, sync, fst, snd, lft, rht,
+    spawn, case, of, sendEvt, recvEvt
+  }
+}
+
+\lstdefinelanguage{sugar_lang}{
+  morekeywords={
+    datatype,
+    type,
+    fun,
+    val,
+    predicate,
+    only, if, then, else,
+    and, or, not,
+    lemma,
+    theorem,
+    of,
+    fun,
+    bind, rslt, unt, pair,
+    chn, lft, rht,
+    sendEvt, recvEvt
+  }
+}
+
+
+%
+%	\frame {
+%		\frametitle{Sample Page 1}
+%		\[\frac{-b \pm \sqrt{b^2 - c}}{2a}\]
+%	}
+%	\frame{
+%		\frametitle{Sample Page 2}
+%		\framesubtitle{An Example of Lists}
+%		\begin{itemize}
+%			\item 1
+%			\item 2
+%			\item 3
+%		\end{itemize}
+%	}
+%	\frame{
+%	    \frametitle{Paragraph Content}
+%	    This is a paragraph.
+%	}
+
+\title{A Mechanized Theory of Communication Analysis in CML}
+
+%\usetheme{lucid}
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}
+\frametitle{Concurrent ML}
+\begin{itemize}
+\item extension of Standard ML
+\item concurrency and synchronization
+\item synchronized communication over channels: send event, receive event
+\item composition of events: choose event, wrap event ...
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Concurrent ML}
+\begin{lstlisting}[language=ML]
+
+type thread_id
+val spawn : (unit -> unit) -> thread_id
+
+type 'a chan
+val channel : unit -> 'a chan
+
+type 'a event
+val sync: 'a event -> 'a
+
+val recvEvt: 'a chan -> 'a event
+val sendEvt: 'a channel * 'a -> unit event
+
+val send: 'a chan * 'a -> unit
+fun send (ch, v) = sync (sendEvt (ch, v))
+
+val recv: 'a chan -> 'a
+fun recv ch = sync (recvEvt ch)
+
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+	\frametitle{Concurrent ML}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[language=ML, mathescape]
+structure Serv : SERV =
+struct 
+  datatype serv = S of (int * int chan) chan
+
+  fun make () =
+  let 
+    val reqCh = channel ()
+    fun loop state =
+    let
+      val (v, replCh) = recv reqCh
+      val () = send (replCh, state)
+    in
+      loop v
+    end
+    val () = spawn (fn () => loop 0)
+  in
+    S reqCh
+  end 
+\end{lstlisting}
+\end{column}
+
+
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[language=ML, mathescape]
+  fun call (server, v) =
+  let 
+    val S reqCh = server
+    val replCh = channel () 
+    val () = send (reqCh, (v, replCh))
+  in
+    recv replCh
+  end
+end
+
+signature SERV =
+sig 
+  type serv
+  val make : unit -> serv
+  val call : serv * int -> int
+end
+\end{lstlisting}
+\end{column}
+
+\end{columns}
+
+
+\end{frame}
+
+
+
+\end{document}

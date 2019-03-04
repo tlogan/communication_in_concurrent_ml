@@ -1,0 +1,50 @@
+\frametitle{Concurrent ML}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[language=ML, mathescape]
+structure Serv : SERV =
+struct
+  datatype serv = S of (int * int chan) chan
+
+  fun make () =
+  let
+    val reqCh = channel ()
+    fun loop state =
+    let
+      val (v, replCh) = recv reqCh
+      val () = send (replCh, state)
+    in
+      loop v
+    end
+    val () = spawn (fn () => loop 0)
+  in
+    S reqCh
+  end
+\end{lstlisting}
+\end{column}
+
+
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[language=ML, mathescape]
+  fun call (server, v) =
+  let
+    val S reqCh = server
+    val replCh = channel ()
+    val () = send (reqCh, (v, replCh))
+  in
+    recv replCh
+  end
+end
+
+signature SERV =
+sig
+  type serv
+  val make : unit -> serv
+  val call : serv * int -> int
+end
+\end{lstlisting}
+\end{column}
+
+\end{columns}
+
+

@@ -178,7 +178,7 @@ can continue.
   type 'a chan
   val channel : unit -> 'a chan
   val recv : 'a chan -> 'a
-  val send : ('a chan * 'a) -> unit
+  val send : 'a chan * 'a -> unit
   \end{lstlisting}
 
 A given channel can have any arbitrary number of threads sending or receiving data on it over
@@ -260,7 +260,7 @@ and \lstinline{recvEvt} and synchronization is represented by \lstinline{sync}.
   val sendEvt : 'a channel * 'a -> unit event
 
   fun send (ch, v) = sync (sendEvt (ch, v))
-  fun recv v = sync (recvEvt v)
+  fun recv ch = sync (recvEvt ch)
 \end{lstlisting}
 
 An advantageous consequence of decoupling synchronization from events, is that events can be
@@ -3906,6 +3906,8 @@ the soundness theorem also depends on the soundness of static built-on-channel c
 to the dynamic built-on-channel classification.
 
 
+
+
 \begin{lstlisting}[language=logic, mathescape]
 
   predicate dynamicBuiltOnChanStack: contin list -> chan -> bool where
@@ -3955,21 +3957,12 @@ to the dynamic built-on-channel classification.
   $\vdash$ staticInclusive staticPath1 staticPath2
 
 
-  lemma staticBuiltOnChanSound:
-    dynamicBuiltOnChanVal v (Chan path$_c$ x$_c$),
-    env n = Some v,
-    pool path = Some (Stt t' env' stack'),
-    staticEvalPool staticEnv staticComm pool,
-    staticChanLivePool staticEnv entr exit x$_c$ pool,
-    staticFlowsAcceptPool staticEnv graph t pool
-  $\vdash$ staticBuiltOnChan staticEnv x$_c$ n
-
-
 \end{lstlisting}
 
-Additional lemmas are needed to prove the soundness of static path liveness.  These lemmas include
-preservation of the correspondence of paths, preservation of the static chan liveness, and soundness of
-a name statically built on a static channel.
+Additional lemmas are needed to prove the soundness of static path liveness.
+These lemmas include preservation of the correspondence of paths,
+preservation of the static chan liveness,
+and soundness of a name statically built on a static channel.
 
 
 \begin{lstlisting}[language=logic, mathescape]
@@ -3985,8 +3978,8 @@ a name statically built on a static channel.
     star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool' comm'
   $\vdash$ staticLiveChanPool staticEnv entr exit x$_c$ pool'
 
-  lemma staticBuiltOnChanSound: v path$_c$ n$_c$ env n pool path t' env' stack'
-  staticEnv staticComm pool graph t$_0$ . 
+  lemma staticBuiltOnChanSound: v path$_c$ n$_c$ env n pool path
+  t' env' stack' staticEnv staticComm pool graph t$_0$ . 
     dynamicBuiltOnChanVal v (Chan path$_c$ n$_c$),
     env n = Some v,
     pool path = Some (Stt t' env' stack'),
@@ -3997,11 +3990,7 @@ a name statically built on a static channel.
 
 \end{lstlisting}
 
-
-The generalization to the dynamic channels built on state appears necessary in order to prove the soundness of
-the paths corresponding modulo a channel and static path liveness.
-This proof and the soundness of static inclusivity are under active development at the time of this writing.
-
+The formal proofs for these lemmas are under active development at the time of this writing.
 
 \section{Related Work}
 There has been much research on both dynamic and static analysis of concurrent languages. 
