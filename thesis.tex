@@ -3745,25 +3745,25 @@ The communication classifications are described using the liveness properties, b
 are otherwise similar to the lower precision classifications.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticOneToMany: static_value_map -> term -> name -> bool where
+  predicate staticOneToMany: term -> name -> bool where
     intro: staticEnv staticComm t graph entr exit n$_c$ 
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticSendId staticEnv t n$_c$)) uncompetitive
-    $\vdash$ staticOneToMany staticEnv t n$_c$
+    $\vdash$ staticOneToMany t n$_c$
 
-  predicate staticManyToOne: static_value_map -> term -> name -> bool where
+  predicate staticManyToOne: term -> name -> bool where
     intro: staticEnv staticComm t graph entr exit n$_c$ 
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticRecvId staticEnv t n$_c$)) uncompetitive
-    $\vdash$ staticManyToOne staticEnv t n$_c$
+    $\vdash$ staticManyToOne t n$_c$
 
-  predicate staticOneToOne: static_value_map -> term -> name -> bool where
+  predicate staticOneToOne: term -> name -> bool where
     intro: staticEnv staticComm t graph entr exit n$_c$ 
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
@@ -3772,18 +3772,18 @@ are otherwise similar to the lower precision classifications.
         (staticSendId staticEnv t n$_c$)) uncompetitive, 
       forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticRecvId staticEnv t n$_c$)) uncompetitive
-    $\vdash$ staticOneToOne staticEnv t n$_c$
+    $\vdash$ staticOneToOne t n$_c$
 
-  predicate staticOneShot: static_value_map -> term -> name -> bool where
+  predicate staticOneShot: term -> name -> bool where
     intro: staticEnv staticComm t graph entr exit n$_c$ . 
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
       forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticSendId staticEnv t n$_c$)) singular
-    $\vdash$ staticOneShot staticEnv t n$_c$
+    $\vdash$ staticOneShot t n$_c$
 
-  predicate staticOneSync: static_value_map -> term -> name -> bool where
+  predicate staticOneSync: term -> name -> bool where
     intro: staticEnv staticComm t graph entr exit n$_c$ . 
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
@@ -3792,7 +3792,7 @@ are otherwise similar to the lower precision classifications.
         (staticSendId staticEnv t n$_c$)) singular,
       forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
         (staticRecvId staticEnv t n$_c$)) uncompetitive 
-    $\vdash$ staticOneSync staticEnv t n$_c$
+    $\vdash$ staticOneSync t n$_c$
   \end{lstlisting}
 
 

@@ -238,27 +238,6 @@ done
 \end{frame}
 
 
-
-
-
-
-\begin{frame}[fragile]
-	\frametitle{Isabelle/HOL}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\begin{lstlisting}[language=logic, mathescape]
-datatype nat = Z | S nat
-
-predicate lte: nat -> nat -> bool where
-  eq: n . 
-  $\vdash$ lte n n
-* lt: n$_1$ n$_2$ . 
-    lte n$_1$ n$_2$ 
-  $\vdash$ lte n$_1$ (S n$_2$)
-\end{lstlisting}
-\end{column}
-
-
 \begin{frame}
 \frametitle{Analysis}
 \begin{itemize}
@@ -313,61 +292,6 @@ and atom =
 | Lft name
 | Rht name
 | Fun name name term 
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Dynamic Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-datatype dynamic_step =
-  DSeq name
-| DSpwn name
-| DCll name
-| DRtn name 
-
-type dynamic_path =
-  dynamic_step list
-
-datatype chan =
-  Chan dynamic_path name 
-
-datatype dynamic_value = 
-  VUnt
-| VChn chan
-| VAtm atom (name -> dynamic_value option)
-
-type environment =
-  name -> dynamic_value option
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Dynamic Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-datatype contin = Ctn name tm env
-
-type stack = contin list
-
-datatype state =
-  Stt program env stack 
-
-type pool =
-  dynamic_path -> state option
-
-predicate leaf: pool -> dynamic_path -> bool where
-  intro: pool path stt .
-    pool path = Some stt,
-    ($\nexists$ path' stt' .
-      pool path' = Some stt',
-      strictPrefix path path'
-    )
-  $\vdash$ leaf pool path
-
-type corresp = dynamic_path * chan * dynamic_path
-
-type communication = corresp set 
 \end{lstlisting}
 \end{frame}
 
@@ -834,5 +758,146 @@ predicate staticOneSync: term -> name -> bool where
 \end{lstlisting}
 \end{frame}
 
+
+\begin{frame}
+\frametitle{Soundness}
+\begin{itemize}
+\item induction on transition system 
+\item generalization for direct derivation   
+\item equivalent defintions with different structures 
+\item preservation under transitions 
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+	\frametitle{Soundness}
+\begin{lstlisting}[language=logic, mathescape]
+theorem staticOneToManySound: t$_0$ n$_c$ path$_c$ . 
+  staticOneToMany t$_0$ n$_c$
+$\vdash$ oneToMany t$_0$ (Chan path$_c$ n$_c$)
+
+theorem staticManyToOneSound: t$_0$ n$_c$ path$_c$ . 
+  staticManyToOne t$_0$ n$_c$
+$\vdash$ manyToOne t$_0$ (Chan path$_c$ n$_c$)
+
+theorem staticOneToOneSound: t$_0$ n$_c$ path$_c$ . 
+  staticOneToOne staticEnv t$_0$ n$_c$
+$\vdash$ oneToOne t$_0$ (Chan path$_c$ n$_c$)
+
+theorem staticOneShotSound: t$_0$ n$_c$ path$_c$ .
+  staticOneShot t$_0$ n$_c$
+$\vdash$ oneShot t$_0$ (Chan path$_c$ n$_c$)
+
+theorem staticOneShotSound: t$_0$ n$_c$ path$_c$ .
+  staticOneSync t$_0$ n$_c$
+$\vdash$ oneSync t$_0$ (Chan path$_c$ n$_c$)
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+	\frametitle{Soundness}
+\begin{lstlisting}[language=logic, mathescape]
+lemma staticEvalSound: t$_0$ pool comm staticEnv staticComm path t env stack n v .
+  staticEval staticEnv staticComm t$_0$, 
+  star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
+  pool path = Some (Stt t env stack), 
+  env n = Some v
+$\vdash$ abstract v $\in$ staticEnv n 
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Higher Precision Analysis}
+\begin{itemize}
+\item different channel instances with same name  
+\item channel liveness analysis
+\item trimmed graph
+\item paths from channel creation site
+\item paths along sending transitions 
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Higher Precision Analysis}
+\includegraphics[width=.7\textwidth]{cml-graph-lp.pdf}
+\end{frame}
+
+\begin{frame}
+\frametitle{Higher Precision Analysis}
+\includegraphics[width=.7\textwidth]{cml-liveness-analysis-k1.pdf}
+\end{frame}
+
+\begin{frame}
+\frametitle{Higher Precision Analysis}
+\includegraphics[width=0.7\textwidth]{cml-graph-k1.pdf}
+\end{frame}
+
+\begin{frame}
+\frametitle{Higher Precision Analysis}
+\includegraphics[width=.72\textwidth]{cml-liveness-analysis-k4.pdf}
+\end{frame}
+
+\begin{frame}
+\frametitle{Higher Precision Analysis}
+\includegraphics[width=0.6\textwidth]{cml-graph-k4.pdf}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+	\frametitle{Higher Precision Analysis}
+\begin{lstlisting}[language=logic, mathescape]
+predicate staticOneToMany: term -> name -> bool where
+  intro: staticEnv staticComm t graph entr exit n$_c$ 
+    staticEval staticEnv staticComm t,
+    staticFlowsAccept staticEnv graph t,
+    staticChanLive staticEnv entr exit n$_c$ t, 
+    forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
+      (staticSendId staticEnv t n$_c$)) uncompetitive
+  $\vdash$ staticOneToMany t n$_c$
+
+predicate staticManyToOne: term -> name -> bool where
+  intro: staticEnv staticComm t graph entr exit n$_c$ 
+    staticEval staticEnv staticComm t,
+    staticFlowsAccept staticEnv graph t,
+    staticChanLive staticEnv entr exit n$_c$ t, 
+    forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
+      (staticRecvId staticEnv t n$_c$)) uncompetitive
+  $\vdash$ staticManyToOne t n$_c$
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Higher Precision Analysis}
+\begin{lstlisting}[language=logic, mathescape]
+
+predicate staticOneToOne: term -> name -> bool where
+  intro: staticEnv staticComm t graph entr exit n$_c$ 
+    staticEval staticEnv staticComm t,
+    staticFlowsAccept staticEnv graph t,
+    staticChanLive staticEnv entr exit n$_c$ t, 
+    forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$) 
+      (staticSendId staticEnv t n$_c$)) uncompetitive, 
+    forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
+      (staticRecvId staticEnv t n$_c$)) uncompetitive
+  $\vdash$ staticOneToOne t n$_c$
+
+predicate staticOneShot: term -> name -> bool where
+  intro: staticEnv staticComm t graph entr exit n$_c$ . 
+    staticEval staticEnv staticComm t,
+    staticFlowsAccept staticEnv graph t,
+    staticChanLive staticEnv entr exit n$_c$ t, 
+    forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
+      (staticSendId staticEnv t n$_c$)) singular
+  $\vdash$ staticOneShot t n$_c$
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Discussion}
+\end{frame}
 
 \end{document}

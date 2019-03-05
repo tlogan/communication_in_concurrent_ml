@@ -1,18 +1,1 @@
-\frametitle{Static Communication}
-\begin{lstlisting}[language=logic, mathescape]
-predicate staticOneShot: term -> name -> bool where
-  intro: staticEnv staticComm t graph n$_c$ .
-    staticEval staticEnv staticComm t,
-    staticFlowsAccept staticEnv graph t,
-    forEveryTwo (staticTraceable graph (termId t)
-      (staticSendId staticEnv t n$_c$)) singular
-  $\vdash$ staticOneShot t n$_c$
-
-predicate staticOneSync: term -> name -> bool where
-  intro: staticEnv staticComm t graph n$_c$ .
-    staticEval staticEnv staticComm t,
-    staticFlowsAccept staticEnv graph t,
-    forEveryTwo (staticTraceable graph (termId t) (staticSendId staticEnv t n$_c$)) singular,
-    forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) uncompetitive
-  $\vdash$ staticOneSync t n$_c$
-\end{lstlisting}
+\frametitle{Discussion}
