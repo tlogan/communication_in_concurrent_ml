@@ -1,25 +1,18 @@
-\frametitle{Dynamic Semantics}
+\frametitle{Static Communication}
 \begin{lstlisting}[language=logic, mathescape]
-* sync: pool path$_s$ n$_s$ n$_{se}$ t$_s$ env$_s$ stack$_s$ n$_{sc}$ n$_m$
-  env$_{se}$ path$_r$ n$_r$ n$_{re}$ t$_r$ env$_r$ stack$_r$ n$_{rc}$ env$_{re}$ chan comm .
-    leaf pool path$_s$,
-    pool path$_s$ = Some
-      (Stt (Bind n$_s$ (Sync n$_{se}$) t$_s$) env$_s$ stack$_s$),
-    env$_s$ n$_{se}$ = Some
-      (VAtm (SendEvt n$_{sc}$ n$_m$) env$_{se}$),
-    leaf pool path$_r$,
-    pool path$_r$ = Some
-      (Stt (Bind n$_r$ (Sync n$_{re}$) t$_r$) env$_r$ stack$_r$),
-    env$_r$ n$_{re}$ = Some
-      (VAtm (RecvEvt n$_{rc}$) env$_{re}$),
-    env$_{se}$ n$_{sc}$ = Some (VChn chan),
-    env$_{re}$ n$_{rc}$ = Some (VChn chan),
-    env$_{se}$ n$_m$ = Some v$_m$
-  $\vdash$ dynamicEval
-    pool comm
-    (pool(
-      path$_s$ @ [DSeq n$_s$] -> (Stt t$_s$ (env$_s$(n$_s$ -> VUnt)) stack$_s$),
-      path$_r$ @ [DSeq n$_r$] -> (Stt t$_r$ (env$_r$(n$_r$ -> v$_m$)) stack$_r$)
-    ))
-    (comm $\cup$ {(path$_s$, chan, path$_r$)})
+predicate staticOneShot: term -> name -> bool where
+  intro: staticEnv staticComm t graph n$_c$ .
+    staticEval staticEnv staticComm t,
+    staticFlowsAccept staticEnv graph t,
+    forEveryTwo (staticTraceable graph (termId t)
+      (staticSendId staticEnv t n$_c$)) singular
+  $\vdash$ staticOneShot t n$_c$
+
+predicate staticOneSync: term -> name -> bool where
+  intro: staticEnv staticComm t graph n$_c$ .
+    staticEval staticEnv staticComm t,
+    staticFlowsAccept staticEnv graph t,
+    forEveryTwo (staticTraceable graph (termId t) (staticSendId staticEnv t n$_c$)) singular,
+    forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) uncompetitive
+  $\vdash$ staticOneSync t n$_c$
 \end{lstlisting}

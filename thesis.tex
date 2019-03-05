@@ -117,7 +117,7 @@
 \newpage
 \pagenumbering{arabic}
 
-\section{Introduction}
+\chapter{Introduction}
 For this master's thesis, I have developed a formal semantics of
 a language with concurrent processes (or threads), an initial formal analysis, along with related theorems and formal 
 proofs. The language under analysis is
@@ -145,7 +145,7 @@ In this formal theory, the dynamic semantics of Concurrent ML consists of
 a CEK machine \cite{felleisen1986control}. The static semantics consists of a control flow analysis (0CFA)
 \cite{shivers1991control}, defined in terms of constraints \cite{nielson2015principles}.
 
-\subsection{Concurrent ML}
+\section{Concurrent ML}
 In programing languages, concurrency is a program structuring technique that allows evaluation
 steps to hop back and forth between disjoint syntactic structures within a program.
 It is useful
@@ -284,7 +284,7 @@ evaluates.
   \end{lstlisting}
 
 
-\subsection{Isabelle/HOL}
+\section{Isabelle/HOL}
 An interactive theorem proving assistant, or proof assistant, is a machine (typically software) that helps its user
 specify propositions and prove theorems. Like typical programming systems, it checks
 that propositions are lexically correct, syntactically correct, and
@@ -467,7 +467,7 @@ and proofs, for the syntax, dynamic semantics, static semantics, soundness of se
 static communication, soundness of communication, helper definitions, and lemmas. 
 There are roughly 1421 lines of definitions, and 3052 lines of completed proofs. 
 
-\subsection{Static Analysis of Concurrent ML}
+\section{Static Analysis of Concurrent ML}
 A static analysis that describes communication
 topologies of channels has practical benefits in at least two ways. It can highlight which
 channels are candidates for optimized implementations of communication; or in a language
@@ -535,7 +535,7 @@ static evaluation. In this work, control flow analysis is used for tracking cert
 like channels and events, in addition to constructing precise data flow analysis. 
 
 
-\section{Synchronization} \label{synchronization}
+\chapter{Synchronization} \label{synchronization}
 Synchronization of sending threads and receiving threads
 requires determining which threads should wait, and which threads should be dispatched.
 The greater the information needed
@@ -660,7 +660,7 @@ The cost of trying to achieve parallelism
 is increased overhead due to contention over acquiring
 synchronization rights. 
 
-\subsection{Many-to-many Synchronization}
+\section{Many-to-many Synchronization}
 For many-to-many synchronization, a channel can be in one of three states.
 Either some threads are trying to send on it,
 some threads are trying to receive on it, or no threads are trying to send or receive on it.
@@ -792,7 +792,7 @@ the receiving operation returns with the value deposited in its cell.
 \end{lstlisting}
 
 
-\subsection{One-to-many Synchronization}
+\section{One-to-many Synchronization}
 
 Implementation of one-to-many channels, compared to that of many-to-many channels,
 requires fewer
@@ -903,7 +903,7 @@ returns the message held in the sending state.
   end 
 \end{lstlisting}
 
-\subsection{Many-to-one Synchronization}
+\section{Many-to-one Synchronization}
 
 The implementation of many-to-one channels is very similar to that of one-to-many channels.
 
@@ -982,7 +982,7 @@ The implementation of many-to-one channels is very similar to that of one-to-man
 
 \end{lstlisting}
 
-\subsection{One-to-one Synchronization}
+\section{One-to-one Synchronization}
 
 A one-to-one channel can also be in one of three possible states, but there is no associated
 lock. Additionally, none of the states is associated with a queue. Instead, the potential states are
@@ -1081,7 +1081,7 @@ witness a preexisting receiving state since it is running on the one and only re
   end
 \end{lstlisting}
 
-\subsection{One-shot Synchronization}
+\section{One-shot Synchronization}
 
 A one-shot channel consists of the same possible states as a one-to-one channel, but is
 additionally associated with a mutex lock, to account for the fact that multiple threads may
@@ -1168,7 +1168,7 @@ never release it.
 \end{lstlisting}
 
 
-\subsection{One-sync Synchronization}
+\section{One-sync Synchronization}
 
 An even more restrictive version of a channel with at most one send could be used if it's
 determined that the number of receiving threads is at most one,
@@ -1209,7 +1209,7 @@ then signals on \lstinline{sendCond}, then returns the deposited message.
   end
 \end{lstlisting}
 
-\subsection{Discussion}
+\section{Discussion}
 The example implementations of generic synchronization and specialized synchronization suggest
 that cost savings of specialized implementations are significant. For instance, if you know that
 a channel has at most one sending thread and one receiving thread, then you will
@@ -1231,7 +1231,7 @@ Additionally, it would be important to have proofs that the above specialized
 implementations are equivalent to the many-to-many implementation under the assumption of
 particular communication topologies, but such is beyond the scope of this work.
 
-\section{Mechanized Theory}
+\chapter{Mechanized Theory}
 
 The definitions and theorems of this work were constructed in the formal
 language of Isabelle/HOL to enable mechanical verification of the proofs.
@@ -1364,7 +1364,7 @@ This work does not contain formal proofs that the specialized implementations ar
 behaviorally equivalent to a generic implementation, but the example implementations in 
 section \ref{synchronization} should provide good evidence for that.
 
-\subsection{Syntax}
+\section{Syntax}
 The syntax used in this formal theory contains a very small subset of
 Concurrent ML's features. The features include recursive functions with
 application, left and right cases with case distinction, pairs with first
@@ -1418,7 +1418,7 @@ more user-friendly syntax into ANF.
   | Fun name name term 
 \end{lstlisting}
 
-\subsection{Dynamic Semantics}
+\section{Dynamic Semantics}
 The dynamic semantics describes how programs evaluate to values.
 A history of execution is represented by a control path.
 A control path is a list of steps, where a step is a term's 
@@ -1693,7 +1693,7 @@ and the channel used for communication.
       (comm $\cup$ {(path$_s$, chan, path$_r$)})
 \end{lstlisting}
 
-\subsection{Dynamic Communication}
+\section{Dynamic Communication}
 
 Whether or not two threads compete to
 synchronize on a channel can be determined by
@@ -1781,7 +1781,7 @@ that receives on it.
 \end{lstlisting}
 
 
-\subsection{Static Semantics}
+\section{Static Semantics}
 
 The static semantics describes an estimation of the intermediate static values and terms
 that might result from running a program. Although the estimations are imprecise with
@@ -1813,7 +1813,7 @@ embedded within the term's eventual result term, which is formally defined by \l
   type static_value_map =
     name -> static_value set
 
-  fun resultName of term -> name: where
+  fun resultName: term -> name where
     n .
     $\vdash$ resultName (Rslt n) = n
   * n c t' . 
@@ -1917,11 +1917,11 @@ static evaluation is less precise.
       $\forall$ n$_{sc}$ n$_m$ n$_c$ . 
         (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv n$_e$
       $\rightarrow$ SChn n$_c$ $\in$ staticEnv n$_{sc}$ 
-      $\rightarrow$ SUnt $\in$ staticEnv n $\wedge$ staticEnv n$_m$ $\subseteq$ staticComm n$_c$),
+      $\rightarrow$ SUnt $\in$ staticEnv n $\wedge$ staticEnv n$_m$ $\subseteq$ staticComm n$_c$,
       $\forall$ n$_{rc}$ n$_c$ . 
         (SAtm (RecvEvt n$_{rc}$)) $\in$ staticEnv n$_e$
       $\rightarrow$ SChn n$_c$ $\in$ staticEnv n$_{rc}$ 
-      $\rightarrow$ staticComm n$_c$ $\subseteq$ staticEnv n),
+      $\rightarrow$ staticComm n$_c$ $\subseteq$ staticEnv n,
       staticEval staticEnv staticComm t'
     $\vdash$ staticEval staticEnv staticComm (Bind n (Sync n$_e$) t')
 
@@ -2127,7 +2127,7 @@ and an initial term can statically reach any term that its embedded terms can st
     $\vdash$ staticReachable (Bind n c t') t$_z$
 \end{lstlisting}
 
-\subsection{Static Communication}
+\section{Static Communication}
 To describe communication statically, it is helpful to identify each term with a short description.
 The term identifier of a binding term is the binding name, and indication of its use in a binding.
 The term identifier of a result term is the embedded name, and indication of its use in a result.
@@ -2357,7 +2357,7 @@ illustrates how static flows acceptance can interpret a graph from a program.
 
 \includegraphics[width=.9\textwidth]{cml-graph.pdf}
 
-The static path existence means that a static path with a given starting term identifier, and ending
+The static path traceability means that a static path with a given starting term identifier, and ending
 condition, can be traced by traversing the flows in a graph.
 The empty path statically exists if the starting term identifier meets the ending condition.
 Otherwise, a path statically exists if the last static step corresponds to a flow
@@ -2365,17 +2365,17 @@ that meets the ending condition, and the longest strict prefix of the path stati
 exists. 
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticPathExists:
+  predicate staticTraceable:
     flow set -> tm_id -> (tm_id -> bool) -> static_path -> bool
   where
     empty: start graph isEnd .
       isEnd start
-    $\vdash$ staticPathExists graph start isEnd []
+    $\vdash$ staticTraceable graph start isEnd []
   * snoc: graph star middle path isEnd end mode .
       staticTraceable graph start ($\lambda$ l . l = middle) path, 
       isEnd end, 
       (middle, mode, end) $\in$ graph 
-    $\vdash$ staticPathExists graph start isEnd (path @ [(middle, mode)])
+    $\vdash$ staticTraceable graph start isEnd (path @ [(middle, mode)])
 \end{lstlisting}
 
 In the graph of the server implementation, there are two paths each corresponding to its
@@ -2460,13 +2460,13 @@ one thread that attempts to receive on the channel for any time during a run of 
 program.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticManyToOne: static_value_map -> term -> name -> bool where
+  predicate staticManyToOne: term -> name -> bool where
     intro: staticEnv statcComm t graph n$_c$ .
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       forEveryTwo (staticTraceable graph (termId t)
         (staticRecvId staticEnv t n$_c$)) uncompetitive
-    $\vdash$ staticManyToOne staticEnv t n$_c$
+    $\vdash$ staticManyToOne t n$_c$
 \end{lstlisting}
 
 The static one-to-one classification means that there is at most one thread that attempts to
@@ -2474,7 +2474,7 @@ send and at most one thread that attempts to receive on a given static channel f
 during a run of a given program.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticOneToOne: static_value_map -> term -> name -> bool where
+  predicate staticOneToOne: term -> name -> bool where
     intro: staticEnv staticComm t graph n$_c$ .
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
@@ -2482,20 +2482,20 @@ during a run of a given program.
         (staticSendId staticEnv t n$_c$)) uncompetitive, 
       forEveryTwo (staticTraceable graph (termId t)
         (staticRecvId staticEnv t n$_c$)) uncompetitive
-    $\vdash$ staticOneToOne staticEnv t n$_c$
+    $\vdash$ staticOneToOne t n$_c$
 \end{lstlisting}
 
 The static one-shot classification means that there is at most one attempt
 to synchronize to send on a static channel in any run of a given program.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticOneShot: static_value_map -> term -> name -> bool where
+  predicate staticOneShot: term -> name -> bool where
     intro: staticEnv staticComm t graph n$_c$ .
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       forEveryTwo (staticTraceable graph (termId t)
         (staticSendId staticEnv t n$_c$)) singular
-    $\vdash$ staticOneShot graph t n$_c$
+    $\vdash$ staticOneShot t n$_c$
 \end{lstlisting}
 
 The static one-sync classification means that there is at most one attempt to send on a
@@ -2503,18 +2503,18 @@ static channel and at most one
 thread that attempts to receive on a static channel in any run of a given program.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticOneSync: static_value_map -> term -> name -> bool where
+  predicate staticOneSync: term -> name -> bool where
     intro: staticEnv staticComm t graph n$_c$ .
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       forEveryTwo (staticTraceable graph (termId t) (staticSendId staticEnv t n$_c$)) singular,
-      forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) uncompetitive,
-    $\vdash$ staticOneSync graph t n$_c$
+      forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) uncompetitive
+    $\vdash$ staticOneSync t n$_c$
 \end{lstlisting}
 
 
 
-\subsection{Formal Reasoning}
+\section{Formal Reasoning}
 The semantics and analyses must contain many details. To ensure the
 correctness of proofs, it is necessary to check that there are no subtle errors in either the 
 definitions or the proofs. Proofs require many subtle manipulations of symbols. The
@@ -2583,7 +2583,7 @@ to less flexible relations.
   $\vdash$ sortedLeft xs $\equiv$ sortedRight xs  
 \end{lstlisting}
 
-\subsection{Soundness}
+\section{Soundness}
 
 The theorem for soundness of static one-to-many classification states that if a static channel is
 statically classified as one-to-many for a given program,
@@ -3133,7 +3133,7 @@ The lemma that the forward variant of static reachability implies the syntax-dir
 reachability follows from induction on the forward static reachability and the
 transitivity of static reachability, which follows from induction on static reachability.
 
-\section{Higher Precision Static Analysis} \label{high-precision}
+\chapter{Higher Precision Static Analysis} \label{high-precision}
 In many programs, like in the server example, channels are created within functions.
 The functions may be applied multiple times, creating multiple distinct channels
 with each application. It may be that each channel is used just once and then discarded.
@@ -3796,7 +3796,7 @@ are otherwise similar to the lower precision classifications.
   \end{lstlisting}
 
 
-\subsection{Higher Precision Soundness Proof Strategy}
+\section{Higher Precision Soundness Proof Strategy}
 To prove soundness of the static communication classification, it should be possible to use
 previous techniques of generalizing propositions over pools and other semantic components,
 along with finding equivalent representations of propositions that vary in their inductive
@@ -4000,7 +4000,7 @@ and soundness of a name statically built on a static channel.
 
 The formal proofs for these lemmas are under active development at the time of this writing.
 
-\section{Related Work}
+\chapter{Related Work}
 There has been much research on both dynamic and static analysis of concurrent languages. 
 The formal communication classification analysis and soundness proofs in this work are
 based on the analysis and proofs of \textit{Specialization of CML message-passing primitives}
@@ -4019,7 +4019,7 @@ There has been relatively little work to mechanize theories of Concurrent ML; ho
 there has been much work in the mechanization of the theories of $\pi$-calculus
 \cite{milner1999communicating}, such as the work by Gay \cite{gay2001framework} and Melham \cite{melham1994mechanized}. 
 
-\section{Future Work}
+\chapter{Future Work}
 The formal syntax, semantics, and communication analysis of this work form the basis of
 a framework for studying Concurrent ML events, synchronization mechanisms, and their
 applications. These language features enable the construction of reactive programs, which
