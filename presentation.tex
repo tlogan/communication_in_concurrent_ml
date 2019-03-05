@@ -177,8 +177,9 @@ end
 \item simply typed terms
 \item propositions as boolean typed terms
 \item higher order terms
-\item computable functions
 \item inductive data
+\item computable recursive functions
+\item inductive predicates
 \item inductive reasoning
 \item tactics and composition
 \end{itemize}
@@ -257,66 +258,6 @@ predicate lte: nat -> nat -> bool where
 \end{lstlisting}
 \end{column}
 
-\begin{column}{0.5\textwidth}
-\begin{lstlisting}[language=logic, mathescape]
-datatype 'a list =
-  Nil
-| Cons 'a ('a list)
- 
-predicate sorted:
-  ('a -> 'a -> bool) -> 'a list -> bool
-where
-  nil: r . 
-  $\vdash$ sorted r Nil
-* uni: r x . 
-  $\vdash$ sorted r (Cons x Nil)
-* cons: r x y ys .
-    r x y,
-    sorted r (Cons y ys)
-  $\vdash$ sorted r (Cons x (Cons y ys))
-\end{lstlisting}
-\end{column}
-\end{columns}
-\end{frame}
-
-
-
-
-
-\begin{frame}[fragile]
-\frametitle{Isabelle/HOL}
-\begin{lstlisting}[language=logic, mathescape]
-$\vdash$ sorted lte (Cons (Z) (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil))))
-apply (rule cons)
-  $\vdash$ lte Z (S Z)
-* $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
-apply (rule lt)
-  $\vdash$ lte Z Z
-* $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
-apply (rule eq)
-  $\vdash$ sorted lte (Cons (S Z) (Cons (S Z) (Cons (S (S (S Z))) Nil)))
-apply (rule cons)
-  $\vdash$ lte (S Z) (S Z)
-* $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
-apply (rule eq)
-  $\vdash$ sorted lte (Cons (S Z) (Cons (S (S (S Z))) Nil))
-apply (rule cons)
-  $\vdash$ lte (S Z) (S (S (S Z)))
-* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule lt)
-  $\vdash$ lte (S Z) (S (S Z))
-* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule lt)
-  $\vdash$ lte (S Z) (S Z)
-* $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule eq)
-  $\vdash$ sorted lte (Cons (S (S (S Z))) Nil)
-apply (rule uni)
-done
-\end{lstlisting}
-\end{frame}
-
-
 
 \begin{frame}
 \frametitle{Analysis}
@@ -376,7 +317,6 @@ and atom =
 \end{frame}
 
 
-
 \begin{frame}[fragile]
 	\frametitle{Dynamic Semantics}
 \begin{lstlisting}[language=logic, mathescape]
@@ -402,55 +342,6 @@ type environment =
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]
-	\frametitle{Dynamic Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-predicate seqEval: complex -> environment -> dynamic_value -> bool where
-
-  unit: env . 
-  $\vdash$ seqEval Unt env VUnt
-
-* atom: a env .
-  $\vdash$ seqEval (Atom a) env (VAtm a env)
-
-* first: env n$_p$ n$_1$ n$_2$ env$_p$ v . 
-    env n$_p$ = Some (VAtm (Pair n$_1$ n$_2$) env$_p$),
-    env$_p$ n$_1$ = Some v
-  $\vdash$ seqEval (Fst n$_p$) env v
-
-* second: env n$_p$ n$_1$ n$_2$ env$_p$ v . 
-    env n$_p$ = Some (VAtm (Pair n$_1$ n$_2$) env$_p$), 
-    env$_p$ n$_2$ = Some v 
-  $\vdash$ seqEval (Snd n$_p$) env v
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{Dynamic Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-predicate callEval: complex -> env -> term -> env -> bool where
-
-  distincLeft: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
-    env n$_s$ = Some (VAtm (Lft n$_c$) env$_s$),
-    env$_s$ n$_c$ = Some v
-  $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_l$ (env(n$_l$ -> v))
-
-* distincRight: env n$_s$ n$_c$ env$_s$ v n$_l$ t$_l$ n$_r$ t$_r$ .
-    env n$_s$ = Some (VAtm (Rht n$_c$) env$_s$),
-    env$_s$ n$_c$ = Some v
-  $\vdash$ callEval (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) env t$_r$ (env(n$_r$ -> v))
-
-* application: env n$_f$ n$_f$' n$_p$ t$_b$ env$_f$ n$_a$ v .
-    env n$_f$ = Some (VAtm (Fun n$_f$' n$_p$ t$_b$) env$_f$),
-    env n$_a$ = Some v
-  $\vdash$ callEval
-    (App n$_f$ n$_a$) env t$_b$
-    (env$_f$(
-      n$_f$' -> (VAtm (Fun n$_f$' n$_p$ t$_b$) env$_f$),
-      n$_p$ -> v
-    ))
-\end{lstlisting}
-\end{frame}
 
 \begin{frame}[fragile]
 	\frametitle{Dynamic Semantics}
@@ -479,6 +370,7 @@ type corresp = dynamic_path * chan * dynamic_path
 type communication = corresp set 
 \end{lstlisting}
 \end{frame}
+
 
 \begin{frame}[fragile]
 	\frametitle{Dynamic Semantics}
@@ -649,24 +541,6 @@ predicate oneSync: tm -> chan -> bool where
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]
-	\frametitle{Static Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-datatype static_value =
-  SUnt
-| SChn name
-| SAtm atom 
-
-type static_value_map =
-  name -> static_value set
-
-fun resultName: term -> name where
-  n .
-  $\vdash$ resultName (Rslt n) = n
-* n c t' . 
-  $\vdash$ resultName (Bind n c t') = (resultName t)
-\end{lstlisting}
-\end{frame}
 
 \begin{frame}[fragile]
 	\frametitle{Static Semantics}
@@ -699,6 +573,7 @@ where
   $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (RecvEvt n$_c$)) t')
 \end{lstlisting}
 \end{frame}
+
 
 \begin{frame}[fragile]
 	\frametitle{Static Semantics}
@@ -858,11 +733,6 @@ rslt z12
 
 
 
-
-
-
-
-
 \begin{frame}[fragile]
 	\frametitle{Static Semantics}
 \begin{columns}
@@ -921,279 +791,6 @@ val staticComm: name -> static_value set =
 \end{columns}
 \end{frame}
 
-
-\begin{frame}[fragile]
-	\frametitle{Static Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-predicate staticReachable: term -> term -> bool where
-
-  refl: t .
-  $\vdash$ staticReachable t t 
-
-* spawn: t$_c$ t$_z$ n t' . 
-    staticReachable t$_c$ t$_z$
-  $\vdash$ staticReachable (Bind n (Spwn t$_c$) t') t$_z$
-
-* distincLeft: t$_l$ t$_z$ n n$_s$ n$_l$ n$_r$ t$_r$ t' . 
-    staticReachable t$_l$ t$_z$
-  $\vdash$ staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
-
-* distincRight: t$_r$ t$_z$ n n$_s$ n$_l$ t$_l$ n$_r$ t' . 
-    staticReachable t$_r$ t$_z$
-  $\vdash$ staticReachable (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t') t$_z$
-
-* function: t$_b$ t$_z$ n n$_f$ n$_t$ t$_b$ t' . 
-    staticReachable t$_b$ t$_z$
-  $\vdash$ staticReachable (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t') t$_z$
-
-* seq: t' t$_z$ n c . 
-    staticReachable t' t$_z$
-  $\vdash$ staticReachable (Bind n c t') t$_z$
-\end{lstlisting}
-\end{frame}
-
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Communication}
-\begin{lstlisting}[language=logic, mathescape]
-datatype tm_id =
-  IdBind name
-| IdRslt name 
-
-fun termId: term -> tm_id where
-  n c t' . 
-  $\vdash$ termId (Bind n c t') = IdBind n
-* n . 
-  $\vdash$ termId (Rslt n) = IdRslt n
-
-type tm_id_map = tm_id -> name set
-
-predicate staticSendId: static_value_map -> term -> name -> tm_id -> bool where
-  intro: t$_0$ n n$_e$ t' n$_{sc}$ n$_m$ staticEnv n$_c$ .
-    staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
-    (SAtm (SendEvt n$_{sc}$ n$_m$)) $\subseteq$ staticEnv n$_e$, 
-    (SChn n$_c$) $\in$ staticEnv n$_{sc}$
-  $\vdash$ staticSendId staticEnv t$_0$ n$_c$ (IdBind n)
-
-predicate staticRecvId: static_value_map -> term -> name -> tm_id -> bool where
-  intro: t$_0$ n n$_e$ t' n$_{rc}$ staticEnv n$_c$ .
-    staticReachable t$_0$ (Bind n (Sync n$_e$) t'),
-    (SAtm (RecvEvt n$_{rc}$)) $\in$ staticEnv n$_e$, 
-    (SChn n$_c$) $\in$ staticEnv n$_{rc}$ 
-  $\vdash$ staticRecvId staticEnv t$_0$ n$_c$ (IdBind n)
-\end{lstlisting}
-\end{frame}
-
-
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Communication}
-\begin{lstlisting}[language=logic, mathescape]
-datatype mode =
-  MSeq
-| MSpwn
-| MCll
-| MRtn
-
-type flow = tm_id * mode * tm_id
-
-type graph = flow set
-
-type static_step = tm_id * mode
-
-type static_path = static_step list
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Communication}
-\begin{lstlisting}[language=logic, mathescape]
-predicate staticFlowsAccept:
-  static_value_map -> graph -> term -> bool
-where
-
-  result: staticEnv graph n .
-  $\vdash$ staticFlowsAccept staticEnv graph (Rslt n)
-
-* unit: n t' graph staticEnv  .
-    (IdBind n , MSeq, termId t') $\in$ graph,
-    staticFlowsAccept staticEnv graph t'
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n Unt t')
-
-* makeChan: n t' graph staticEnv  .
-    (IdBind n , MSeq, termId t') $\in$ graph,
-    staticFlowsAccept staticEnv graph t'
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n MkChn t')
-
-* sendEvt: n t' graph staticEnv  n$_c$ n$_m$ .
-    (IdBind n , MSeq, termId t') $\in$ graph, 
-    staticFlowsAccept staticEnv graph t'
-  $\vdash$ staticFlowsAccept
-    staticEnv graph
-    (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
-
-* recvEvt: n t' graph staticEnv n$_c$ .
-    (IdBind n , MSeq, termId t') $\in$ graph,
-    staticFlowsAccept staticEnv graph t'
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (RecvEvt n$_c$)) t')
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Communication}
-\begin{lstlisting}[language=logic, mathescape]
-* pair: n t' graph staticEnv n$_1$ n$_2$ .
-    (IdBind n , MSeq, termId t') $\in$ graph,
-    staticFlowsAccept staticEnv graph t'
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Pair n$_1$ n$_2$)) t')
-
-* left: n t' graph staticEnv n$_s$ .
-    (IdBind n , MSeq, termId t') $\in$ graph,
-    staticFlowsAccept staticEnv graph t'
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Lft n$_s$)) t')
-
-* right: n t' graph staticEnv n$_s$ .
-    (IdBind n , MSeq, termId t') $\in$ graph,
-    staticFlowsAccept staticEnv graph t'
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Rht n$_s$)) t')
-
-* function: n t' graph staticEnv t$_b$ n$_f$ n$_t$ .
-    (IdBind n , MSeq, termId t') $\in$ graph,
-    staticFlowsAccept staticEnv graph t', 
-    staticFlowsAccept staticEnv graph t$_b$
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t')
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Communication}
-\begin{lstlisting}[language=logic, mathescape]
-* spawn: n t' t$_c$ graph staticEnv .
-    {
-      (IdBind n, MSeq, termId t'),
-      (IdBind n, MSpwn, termId t$_c$)
-    } $\subseteq$ graph, 
-    staticFlowsAccept staticEnv graph t$_c$, 
-    staticFlowsAccept staticEnv graph t'
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Spwn t$_c$) t')
-
-* sync: n t' graph staticEnv n$_{se}$ .
-    (IdBind n, MSeq, termId t') $\in$ graph, 
-    staticFlowsAccept staticEnv graph t'
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Sync n$_{se}$) t')
-
-* first: n t' graph staticEnv n$_t$ .
-    (IdBind n, MSeq, termId t') $\in$ graph, 
-    staticFlowsAccept staticEnv graph t', 
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Fst n$_t$) t')
-
-* second: n t' graph staticEnv n$_t$ .
-    (IdBind n, MSeq, termId t') $\in$ graph, 
-    staticFlowsAccept staticEnv graph t', 
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Snd n$_t$) t')
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Communication}
-\begin{lstlisting}[language=logic, mathescape]
-* distinction: n t$_l$ t$_r$ t' graph staticEnv n$_s$ .
-    {
-      (IdBind n, MCll, termId t$_l$),
-      (IdBind n, MCll, termId t$_r$),
-      (IdRslt (resultName t$_l$), MRtn, termId t'),
-      (IdRslt (resultName t$_r$), MRtn, termId t')
-    } $\subseteq$ graph, 
-    staticFlowsAccept staticEnv graph t$_l$, 
-    staticFlowsAccept staticEnv graph t$_r$,
-    staticFlowsAccept staticEnv graph t'
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-
-* application: n t' graph staticEnv n$_f$ n$_a$ .
-    $\forall$ n$_f$' n$_t$ t$_b$ . 
-      (SAtm (Fun n$_f$' n$_t$ t$_b$)) $\in$ staticEnv n$_f$ 
-    $\rightarrow$
-      {
-        (IdBind n, MCll, termId t$_b$),
-        (IdRslt (resultName t$_b$), MRtn, termId t')
-      } $\subseteq$ graph,
-    staticFlowsAccept staticEnv graph t'
-  $\vdash$ staticFlowsAccept staticEnv graph (Bind n (App n$_f$ n$_a$) t')
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Communication}
-\begin{lstlisting}[language=logic, mathescape]
-predicate staticTraceable:
-  flow set -> tm_id -> (tm_id -> bool) -> static_path -> bool
-where
-
-  empty: start graph isEnd .
-    isEnd start
-  $\vdash$ staticTraceable graph start isEnd []
-
-* snoc: graph star middle path isEnd end mode .
-    staticTraceable graph start ($\lambda$ l . l = middle) path, 
-    isEnd end, 
-    (middle, mode, end) $\in$ graph 
-  $\vdash$ staticTraceable graph start isEnd (path @ [(middle, mode)])
-\end{lstlisting}
-\end{frame}
-
-
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Communication}
-\begin{lstlisting}[language=logic, mathescape]
-predicate staticInclusive: static_path -> static_path -> bool where
-  first: path1 path2 .
-    prefix path1 path2
-  $\vdash$ staticInclusive path1 path2
-* second path2 path1 .
-    prefix path2 path1
-  $\vdash$ staticInclusive path1 path2
-* spawnFirst: path n path1 path2 .
-  $\vdash$ staticInclusive
-    (path @ [(IdBind n, MSpwn)] @ path1)
-    (path @ [(IdBind n, MSeq)] @ path2)
-* spawnSecond: path n path1 path2 .
-  $\vdash$ staticInclusive
-    (path @ [(IdBind n, MSeq)] @ path1])
-    (path @ [(IdBind n, MSpwn)] @ path2)
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Communication}
-\begin{lstlisting}[language=logic, mathescape]
-predicate uncompetitive: static_path -> static_path -> bool where
-  ordered: path1 path2 .
-    ordered path1 path2
-  $\vdash$ uncompetitive path1 path2
-* notInclus: path1 path2 .
-    $\neg$ (staticInclusive path1 path2)
-  $\vdash$ uncompetitive path1 path2
-
-predicate singular: static_path -> static_path -> bool where
-  refl: path .
-  $\vdash$ singular path path
-* notInclus: path1 path2 .
-    $\neg$ (staticInclusive path1 path2)
-  $\vdash$ singular path1 path2
-\end{lstlisting}
-\end{frame}
-
-
 \begin{frame}[fragile]
 	\frametitle{Static Communication}
 \begin{lstlisting}[language=logic, mathescape]
@@ -1236,7 +833,6 @@ predicate staticOneSync: term -> name -> bool where
   $\vdash$ staticOneSync t n$_c$
 \end{lstlisting}
 \end{frame}
-
 
 
 \end{document}

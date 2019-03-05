@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  4 MAR 2019 19:26
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  4 MAR 2019 20:01
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1581,7 +1581,7 @@ LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/it' will be
 \openout4 = `presentation.vrb'.
 
  (./presentation.vrb)
-Overfull \vbox (11.48454pt too high) detected at line 317
+Overfull \vbox (11.48454pt too high) detected at line 318
  []
 
 [8
@@ -1760,15 +1760,15 @@ Overfull \vbox (11.48454pt too high) detected at line 317
 \tf@snm=\write8
 \openout8 = `presentation.snm'.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1242.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1242.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1243.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1243.
  (./presentation.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1242.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1242.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1243.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1243.
 
 Package rerunfilecheck Info: File `presentation.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1242.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1243.
  ) 
 Here is how much of TeX's memory you used:
  21385 strings out of 493014
@@ -1788,7 +1788,7 @@ al/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmb8a.pfb></usr/local/texli
 ve/2016/texmf-dist/fonts/type1/public/bera/fvmr8a.pfb></usr/local/texlive/2016/
 texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb></usr/local/texlive/2
 016/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on presentation.pdf (40 pages, 188571 bytes).
+Output written on presentation.pdf (40 pages, 188585 bytes).
 PDF statistics:
  1088 PDF objects out of 1200 (max. 8388607)
  1021 compressed objects within 11 object streams
