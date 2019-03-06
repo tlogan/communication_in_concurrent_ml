@@ -2445,13 +2445,13 @@ send on a given static channel at any time during a run of a given program, but 
 many threads that attempt to receive on the channel.
 
 \begin{lstlisting}[language=logic, mathescape]
-  predicate staticOneToMany: static_value_map -> term -> name -> bool where
+  predicate staticOneToMany: term -> name -> bool where
     intro: staticEnv staticComm t graph n$_c$ .
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       forEveryTwo (staticTraceable graph (termId t)
         (staticSendId staticEnv t n$_c$)) uncompetitive
-    $\vdash$ staticOneToMany staticEnv t n$_c$
+    $\vdash$ staticOneToMany t n$_c$
 \end{lstlisting}
 
 The static many-to-one predicate means
@@ -3750,7 +3750,7 @@ are otherwise similar to the lower precision classifications.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
-      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
+      forEveryTwo (staticPathLive graph entr exit (IdBind n$_c$)
         (staticSendId staticEnv t n$_c$)) uncompetitive
     $\vdash$ staticOneToMany t n$_c$
 
@@ -3759,7 +3759,7 @@ are otherwise similar to the lower precision classifications.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
-      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
+      forEveryTwo (staticPathLive graph entr exit (IdBind n$_c$)
         (staticRecvId staticEnv t n$_c$)) uncompetitive
     $\vdash$ staticManyToOne t n$_c$
 
@@ -3768,9 +3768,9 @@ are otherwise similar to the lower precision classifications.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
-      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$) 
+      forEveryTwo (staticPathLive graph entr exit (IdBind n$_c$) 
         (staticSendId staticEnv t n$_c$)) uncompetitive, 
-      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
+      forEveryTwo (staticPathLive graph entr exit (IdBind n$_c$)
         (staticRecvId staticEnv t n$_c$)) uncompetitive
     $\vdash$ staticOneToOne t n$_c$
 
@@ -3779,7 +3779,7 @@ are otherwise similar to the lower precision classifications.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
-      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
+      forEveryTwo (staticPathLive graph entr exit (IdBind n$_c$)
         (staticSendId staticEnv t n$_c$)) singular
     $\vdash$ staticOneShot t n$_c$
 
@@ -3788,9 +3788,9 @@ are otherwise similar to the lower precision classifications.
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
       staticChanLive staticEnv entr exit n$_c$ t, 
-      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
+      forEveryTwo (staticPathLive graph entr exit (IdBind n$_c$)
         (staticSendId staticEnv t n$_c$)) singular,
-      forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
+      forEveryTwo (staticPathLive graph entr exit (IdBind n$_c$)
         (staticRecvId staticEnv t n$_c$)) uncompetitive 
     $\vdash$ staticOneSync t n$_c$
   \end{lstlisting}
@@ -4000,7 +4000,10 @@ and soundness of a name statically built on a static channel.
 
 The formal proofs for these lemmas are under active development at the time of this writing.
 
-\chapter{Related Work}
+\chapter{Conclusion}
+In this thesis, I developed a formal theory for a subset of Concurrent ML. The main contributions consist of formal specifications of dynamic and static evaluation, dynamic and static communication classification, dynamic and static channel liveness, and various related concepts.  The formal specifications enabled the creation of mechanically checked formal proofs of soundness of static evaluation and static communication classification.  Through the process of developing these formal proofs, I noticed a number of important reasoning patterns - generalization of propositions to related concepts on alternate structures; skewing the direction of induction to different subparts of structures; changing the direction of inference from forward to backward. This work is a small contribution based on a significant amount of previous related work.  Additionally, there are many ways for this work to be extended.
+
+\section{Related Work}
 There has been much research on both dynamic and static analysis of concurrent languages. 
 The formal communication classification analysis and soundness proofs in this work are
 based on the analysis and proofs of \textit{Specialization of CML message-passing primitives}
@@ -4019,7 +4022,7 @@ There has been relatively little work to mechanize theories of Concurrent ML; ho
 there has been much work in the mechanization of the theories of $\pi$-calculus
 \cite{milner1999communicating}, such as the work by Gay \cite{gay2001framework} and Melham \cite{melham1994mechanized}. 
 
-\chapter{Future Work}
+\section{Future Work}
 The formal syntax, semantics, and communication analysis of this work form the basis of
 a framework for studying Concurrent ML events, synchronization mechanisms, and their
 applications. These language features enable the construction of reactive programs, which

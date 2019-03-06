@@ -23,6 +23,10 @@
   showstringspaces=false,
   showtabs=false,          
   tabsize=2,
+  emph={  
+    OneToMany, OneShot, ManyToOne
+  },
+  emphstyle={\color{orange}\bfseries}
 }
 
 \lstdefinelanguage{logic}{
@@ -174,6 +178,7 @@ end
 \frametitle{Isabelle/HOL}
 \begin{itemize}
 \item interactive theorem proving assistant; proof assistant
+\item trusted kernel of manipulation rules
 \item unification and rewriting
 \item simply typed terms
 \item propositions as boolean typed terms
@@ -329,7 +334,7 @@ val () =
 \item Isabelle/HOL  
 \item $\sim$ 1421 lines of definitions  
 \item $\sim$ 3052 lines of completed proofs 
-\item syntax-directed rules 
+\item syntax-directed rules
 \end{itemize}
 \end{frame}
 
@@ -365,348 +370,9 @@ and atom =
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]
-\frametitle{Dynamic Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-datatype dynamic_step =
-  DSeq name
-| DSpwn name
-| DCll name
-| DRtn name 
-
-type dynamic_path = dynamic_step list
-
-datatype chan =
-  Chan dynamic_path name 
-
-datatype dynamic_value = 
-  VUnt
-| VChn chan
-| VAtm atom (name -> dynamic_value option)
-
-type environment =
-  name -> dynamic_value option
-\end{lstlisting}
-\end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Dynamic Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-predicate seqEval: complex -> environment -> dynamic_value -> bool 
-predicate callEval: complex -> env -> term -> env -> bool 
-
-datatype contin = Ctn name tm env
-
-type stack = contin list
-
-datatype state = Stt program env stack 
-
-type pool = dynamic_path -> state option
-
-predicate leaf: pool -> dynamic_path -> bool
-
-type corresp = dynamic_path * chan * dynamic_path
-
-type communication = corresp set 
-
-predicate dynamicEval: pool -> communication -> pool -> communication -> bool
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Dynamic Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-predicate dynamicEval:
-  pool -> communication -> pool -> communication -> bool
-where
-
-  return: pool path n env n$_k$ t$_k$ env$_k$ stack' v comm .
-    leaf pool path,
-    pool path = Some (Stt (Rslt n) env ((Ctn n$_k$ t$_k$ env$_k$) # stack')),
-    env n = Some v
-  $\vdash$ dynamicEval
-    pool comm
-    (pool(
-      path @ [DRtn n] ->
-        (Stt t$_k$ env$_k$(n$_k$ -> v) stack')
-    ))
-    comm
-
-* seq: pool path n c t' env stack v .
-    leaf pool path,
-    pool path = Some (Stt (Bind n c t') env stack),
-    seqEval c env v
-  $\vdash$ dynamicEval
-    pool comm
-    (pool(
-      path @ [DSeq n] -> (Stt t' (env(n -> v)) stack)
-    ))
-    comm
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{Dynamic Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-* call: pool path n c t' env stack t$_c$ env$_c$ comm .
-    leaf pool path,
-    pool path = Some (Stt (Bind n c t') env stack),
-    callEval c env t$_c$ env$_c$
-  $\vdash$ dynamicEval
-    pool comm
-    (pool(
-      path @ [DCll n] -> (Stt t$_c$ env$_c$ ((Ctn n t' env) # stack))
-    )) comm
-
-* makeChan: pool path n t' env stack .
-    leaf pool path,
-    pool path = Some (Stt (Bind n MkChn t') env stack)
-  $\vdash$ dynamicEval pool comm 
-    (pool(
-      path @ [DSeq n] ->
-        (Stt t' (env(n -> (VChn (Chan path n)))) stack)
-    )) comm
-
-* spawn: pool path n t$_c$ t' env stack comm .
-    leaf pool path, 
-    pool path = Some (Stt (Bind n (Spwn t$_c$) t') env stack)
-  $\vdash$ dynamicEval pool comm 
-    (pool(
-      path @ [DSeq n] -> (Stt t' (env(n -> VUnt)) stack),
-      path @ [DSpwn n] -> (Stt t$_c$ env [])
-    )) comm
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{Dynamic Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-* sync: pool path$_s$ n$_s$ n$_{se}$ t$_s$ env$_s$ stack$_s$ n$_{sc}$ n$_m$
-  env$_{se}$ path$_r$ n$_r$ n$_{re}$ t$_r$ env$_r$ stack$_r$ n$_{rc}$ env$_{re}$ chan comm .
-    leaf pool path$_s$,
-    pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_{se}$) t$_s$) env$_s$ stack$_s$),
-    env$_s$ n$_{se}$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env$_{se}$),
-    leaf pool path$_r$,
-    pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_{re}$) t$_r$) env$_r$ stack$_r$),
-    env$_r$ n$_{re}$ = Some (VAtm (RecvEvt n$_{rc}$) env$_{re}$),
-    env$_{se}$ n$_{sc}$ = Some (VChn chan),
-    env$_{re}$ n$_{rc}$ = Some (VChn chan), 
-    env$_{se}$ n$_m$ = Some v$_m$
-  $\vdash$ dynamicEval
-    pool comm
-    (pool(
-      path$_s$ @ [DSeq n$_s$] -> (Stt t$_s$ (env$_s$(n$_s$ -> VUnt)) stack$_s$), 
-      path$_r$ @ [DSeq n$_r$] -> (Stt t$_r$ (env$_r$(n$_r$ -> v$_m$)) stack$_r$)
-    )) 
-    (comm $\cup$ {(path$_s$, chan, path$_r$)})
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{Dynamic Communication}
-\begin{lstlisting}[language=logic, mathescape]
-predicate isSendPath: pool -> chan -> dynamic_path -> bool where
-  intro: pool path n n$_e$ t' env stack n$_{sc}$ n$_m$ env$_e$ chan .
-    pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
-    env n$_e$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env$_e$), 
-    env$_e$ n$_{sc}$ = Some (VChn chan)
-  $\vdash$ isSendPath pool chan path
-
-predicate isRecvPath: pool -> chan -> dynamic_path -> bool where
-  intro: pool path n n$_e$ t' env stack n$_{rc}$ env$_e$ chan .
-    pool path = Some (Stt (Bind n (Sync n$_e$) t') env stack),
-    env n$_e$ = Some (VAtm (RecvEvt n$_{rc}$) env$_e$),
-    env$_e$ n$_{rc}$ = Some (VChn chan)
-  $\vdash$ isRecvPath pool chan path
-
-predicate forEveryTwo: ('a -> bool) -> ('a -> 'a -> bool) -> bool where
-  intro: p r .
-    $\forall$ path1 path2 .
-      p path1 $\wedge$ p path2 $\rightarrow$ r path1 path2
-  $\vdash$ forEveryTwo p r
-
-predicate ordered: 'a list -> 'a list -> bool where
-  first: path1 path2 .
-    prefix path1 path2
-  $\vdash$ ordered path1 path2
-* second: path2 path1 .
-    prefix path2 path1
-  $\vdash$ ordered path1 path2
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{Dynamic Communication}
-\begin{lstlisting}[language=logic, mathescape]
-predicate oneToMany: tm -> chan -> bool where
-  intro: t$_0$ chan .
-    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
-    forEveryTwo (isSendPath pool chan) ordered
-  $\vdash$ oneToMany pool chan
-
-predicate manyToOne: tm -> chan -> bool where
-  intro: t$_0$ chan .
-    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
-    forEveryTwo (isRecvPath pool chan) ordered
-  $\vdash$ manyToOne t$_0$ chan
-
-predicate oneToOne: tm -> chan -> bool where
-  intro: t$_0$ chan .
-    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
-    forEveryTwo (isSendPath pool chan) ordered,
-    forEveryTwo (isRecvPath pool chan) ordered
-  $\vdash$ oneToOne t$_0$ chan
-
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{Dynamic Communication}
-\begin{lstlisting}[language=logic, mathescape]
-predicate oneShot: tm -> chan -> bool where
-  intro: t$_0$ chan .
-    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
-    forEveryTwo (isSendPath pool chan) (op =)
-  $\vdash$ oneShot t$_0$ chan
-
-predicate oneSync: tm -> chan -> bool where
-  intro: t$_0$ chan .
-    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
-    forEveryTwo (isSendPath pool chan) (op =),
-    forEveryTwo (isRecvPath pool chan) ordered 
-  $\vdash$ oneSync t$_0$  chan
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-predicate staticEval:
-  static_value_map -> static_value_map -> term -> bool
-where
-
-  result: staticEnv staticComm n .
-  $\vdash$ staticEval staticEnv staticComm (Rslt n)
-
-* unit: staticEnv n staticComm t' .
-    SUnt $\in$ staticEnv n,
-    staticEval staticEnv staticComm t'
-  $\vdash$ staticEval staticEnv staticComm (Bind n Unt t')
-
-* makeChan: n staticEnv staticComm t' .
-    (SChn n) $\in$ staticEnv n,
-    staticEval staticEnv staticComm t'
-  $\vdash$ staticEval staticEnv staticComm (Bind n MkChn t')
-
-* sendEvt: n$_c$ n$_m$ staticEnv n staticComm t' .
-    (SAtm (SendEvt n$_c$ n$_m$)) $\in$ staticEnv n,
-    staticEval staticEnv staticComm t' 
-  $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
-
-* recvEvt: n$_c$ staticEnv n staticComm t' . 
-    (SAtm (RecvEvt n$_c$)) $\in$ staticEnv n,
-    staticEval staticEnv staticComm t'
-  $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (RecvEvt n$_c$)) t')
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-* pair: n$_1$ n$_2$ staticEnv n staticComm t' .
-    (SAtm (Pair n$_1$ n$_2$)) $\in$ staticEnv n,
-    staticEval staticEnv staticComm t'
-  $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (Pair n$_1$ n$_2$)) t')
-
-* left: n$_a$ staticEnv n staticComm t' .
-    (SAtm(Lft n$_a$)) $\in$ staticEnv n,
-    staticEval staticEnv staticComm t' 
-  $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (Lft n$_a$)) t')
-
-* right: n$_a$ staticEnv n staticComm t' .
-    (SAtm(Rht n$_a$)) $\in$ staticEnv n, 
-    staticEval staticEnv staticComm t
-  $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (Rht n$_a$)) t')
-
-* function: n$_f$ n$_t$ t$_b$ staticEnv staticComm n t' .
-    (SAtm (Fun n$_f$ n$_t$ t$_b$)) $\in$ staticEnv n$_f$, 
-    staticEval staticEnv staticComm t$_b$, 
-    (SAtm (Fun n$_f$ n$_t$ t$_b$)) $\in$ staticEnv n, 
-    staticEval staticEnv staticComm t'
-  $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t')
-
-* spawn: n$_f$ n$_t$ t$_b$ staticEnv staticComm n t' .
-    SUnt $\in$ staticEnv n, 
-    staticEval staticEnv staticComm t$_c$, 
-    staticEval staticEnv staticComm t'
-  $\vdash$ staticEval staticEnv staticComm (Bind n (Spwn t$_c$) t')
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{Static Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-* sync: staticEnv n$_e$ n staticComm  t'.
-    $\forall$ n$_{sc}$ n$_m$ n$_c$ . 
-      (SAtm (SendEvt n$_{sc}$ n$_m$)) $\in$ staticEnv n$_e$
-    $\rightarrow$ SChn n$_c$ $\in$ staticEnv n$_{sc}$ 
-    $\rightarrow$ SUnt $\in$ staticEnv n $\wedge$ staticEnv n$_m$ $\subseteq$ staticComm n$_c$,
-    $\forall$ n$_{rc}$ n$_c$ . 
-      (SAtm (RecvEvt n$_{rc}$)) $\in$ staticEnv n$_e$
-    $\rightarrow$ SChn n$_c$ $\in$ staticEnv n$_{rc}$ 
-    $\rightarrow$ staticComm n$_c$ $\subseteq$ staticEnv n,
-    staticEval staticEnv staticComm t'
-  $\vdash$ staticEval staticEnv staticComm (Bind n (Sync n$_e$) t')
-
-* first: staticEnv n$_t$ n staticComm t' . 
-    $\forall$ n$_1$ n$_2$ .
-      (SAtm (Pair n$_1$ n$_2$)) $\in$ staticEnv n$_t$
-    $\rightarrow$ staticEnv n$_1$ $\subseteq$ staticEnv n,
-    staticEval staticEnv staticComm t'
-  $\vdash$ staticEval staticEnv staticComm (Bind n (Fst n$_t$) t')
-
-* second: staticEnv n$_t$ n staticComm t' . 
-    $\forall$ n$_1$ n$_2$ . 
-      (SAtm (Pair n$_1$ n$_2$)) $\in$ staticEnv n$_t$
-    $\rightarrow$ staticEnv n$_2$ $\subseteq$ staticEnv n,
-    staticEval staticEnv staticComm t'
-  $\vdash$ staticEval staticEnv staticComm (Bind n (Snd n$_t$) t')
-
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{Static Semantics}
-\begin{lstlisting}[language=logic, mathescape]
-* distinction: staticEnv n$_s$ n$_l$ t$_l$ n staticComm n$_r$ t$_r$ t' . 
-    $\forall$ n$_c$ . 
-      (SAtm (Lft n$_c$)) $\in$ staticEnv n$_s$
-    $\rightarrow$ staticEnv n$_c$ $\subseteq$ staticEnv n$_l$,
-    staticEnv (resultName t$_l$) $\subseteq$ staticEnv n,
-    staticEval staticEnv staticComm t$_l$,
-    $\forall$ n$_c$ . 
-      (SAtm (Rht n$_c$)) $\in$ staticEnv n$_s$
-    $\rightarrow$ staticEnv n$_c$ $\subseteq$ staticEnv n$_r$, 
-    staticEnv (resultName t$_r$) $\subseteq$ staticEnv n, 
-    staticEval staticEnv staticComm t$_r$,
-    staticEval staticEnv staticComm t'
-  $\vdash$ staticEval staticEnv staticComm (Bind n (Case n$_s$ n$_l$ t$_l$ n$_r$ t$_r$) t')
-
-* application: staticEnv n$_f$ n$_a$ n staticComm t' . 
-    $\forall$ n$_f$' n$_t$ t$_b$ . 
-      (SAtm (Fun n$_f$' n$_t$ t$_b$)) $\in$ staticEnv n$_f$
-    $\rightarrow$ staticEnv n$_a$ $\subseteq$ staticEnv n$_t$, 
-    staticEnv (resultName t$_b$) $\subseteq$ staticEnv n),
-    staticEval staticEnv staticComm t'
-  $\vdash$ staticEval staticEnv staticComm (Bind n (App n$_f$ n$_a$) t')
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{Static Semantics}
+	\frametitle{Syntax}
 \begin{columns}
 \begin{column}{0.5\textwidth}
 \begin{lstlisting}[language=normal_lang, mathescape]
@@ -769,7 +435,109 @@ rslt z12
 \end{columns}
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Dynamic Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+datatype dynamic_step =
+  DSeq name
+| DSpwn name
+| DCll name
+| DRtn name 
 
+type dynamic_path = dynamic_step list
+
+datatype chan =
+  Chan dynamic_path name 
+
+datatype dynamic_value = 
+  VUnt
+| VChn chan
+| VAtm atom (name -> dynamic_value option)
+
+type environment =
+  name -> dynamic_value option
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Dynamic Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+predicate seqEval: complex -> environment -> dynamic_value -> bool 
+
+predicate callEval: complex -> env -> term -> env -> bool 
+
+datatype contin = Ctn name tm env
+
+type stack = contin list
+
+datatype state = Stt program env stack 
+
+type pool = dynamic_path -> state option
+
+predicate leaf: pool -> dynamic_path -> bool
+
+type corresp = dynamic_path * chan * dynamic_path
+
+type communication = corresp set 
+
+predicate dynamicEval: pool -> communication -> pool -> communication -> bool
+
+predicate star: ('a -> 'a -> bool) -> 'a -> 'a -> bool 
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+	\frametitle{Dynamic Communication}
+\begin{lstlisting}[language=logic, mathescape]
+predicate isSendPath: pool -> chan -> dynamic_path -> bool 
+
+predicate isRecvPath: pool -> chan -> dynamic_path -> bool
+
+predicate forEveryTwo: ('a -> bool) -> ('a -> 'a -> bool) -> bool
+
+predicate ordered: 'a list -> 'a list -> bool
+
+predicate oneToMany: tm -> chan -> bool
+
+predicate manyToOne: tm -> chan -> bool
+
+predicate oneToOne: tm -> chan -> bool
+
+predicate oneShot: tm -> chan -> bool
+
+predicate oneSync: tm -> chan -> bool
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Dynamic Communication}
+\begin{lstlisting}[language=logic, mathescape]
+predicate oneToMany: tm -> chan -> bool where
+  intro: t$_0$ chan .
+    star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
+    forEveryTwo (isSendPath pool chan) ordered
+  $\vdash$ oneToMany pool chan
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+	\frametitle{Static Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+datatype static_value =
+  SUnt
+| SChn name
+| SAtm atom 
+
+type static_value_map =
+  name -> static_value set
+
+fun resultName: term -> name
+
+predicate staticEval: static_value_map -> static_value_map -> term -> bool
+\end{lstlisting}
+\end{frame}
 
 \begin{frame}[fragile]
 	\frametitle{Static Semantics}
@@ -829,6 +597,31 @@ val staticComm: name -> static_value set =
 \end{columns}
 \end{frame}
 
+
+\begin{frame}[fragile]
+	\frametitle{Static Communication}
+\begin{lstlisting}[language=logic, mathescape]
+predicate staticFlowsAccept: static_value_map -> graph -> term -> bool
+
+predicate staticTraceable:
+  flow set -> tm_id -> (tm_id -> bool) -> static_path -> bool
+
+predicate staticInclusive: static_path -> static_path -> bool
+
+predicate uncompetitive: static_path -> static_path -> bool
+
+predicate staticOneToMany: term -> name -> bool
+
+predicate staticManyToOne: term -> name -> bool
+
+predicate staticOneToOne: term -> name -> bool
+
+predicate staticOneShot: term -> name -> bool
+
+predicate staticOneSync: term -> name -> bool
+\end{lstlisting}
+\end{frame}
+
 \begin{frame}[fragile]
 	\frametitle{Static Communication}
 \begin{lstlisting}[language=logic, mathescape]
@@ -839,36 +632,6 @@ predicate staticOneToMany: term -> name -> bool where
     forEveryTwo (staticTraceable graph (termId t)
       (staticSendId staticEnv t n$_c$)) uncompetitive
   $\vdash$ staticOneToMany t n$_c$
-
-predicate staticManyToOne: term -> name -> bool where
-  intro: staticEnv statcComm t graph n$_c$ .
-    staticEval staticEnv staticComm t,
-    staticFlowsAccept staticEnv graph t,
-    forEveryTwo (staticTraceable graph (termId t)
-      (staticRecvId staticEnv t n$_c$)) uncompetitive
-  $\vdash$ staticManyToOne t n$_c$
-\end{lstlisting}
-\end{frame}
-
-
-\begin{frame}[fragile]
-	\frametitle{Static Communication}
-\begin{lstlisting}[language=logic, mathescape]
-predicate staticOneShot: term -> name -> bool where
-  intro: staticEnv staticComm t graph n$_c$ .
-    staticEval staticEnv staticComm t,
-    staticFlowsAccept staticEnv graph t,
-    forEveryTwo (staticTraceable graph (termId t)
-      (staticSendId staticEnv t n$_c$)) singular
-  $\vdash$ staticOneShot t n$_c$
-
-predicate staticOneSync: term -> name -> bool where
-  intro: staticEnv staticComm t graph n$_c$ .
-    staticEval staticEnv staticComm t,
-    staticFlowsAccept staticEnv graph t,
-    forEveryTwo (staticTraceable graph (termId t) (staticSendId staticEnv t n$_c$)) singular,
-    forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) uncompetitive
-  $\vdash$ staticOneSync t n$_c$
 \end{lstlisting}
 \end{frame}
 
@@ -935,6 +698,17 @@ $\vdash$ abstract v $\in$ staticEnv n
 \end{itemize}
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Higher Precision Analysis}
+\begin{lstlisting}[language=logic, mathescape]
+predicate staticChanLive:
+  static_value_map -> tm_id_map -> tm_id_map -> name -> term -> bool
+
+predicate staticPathLive:
+  graph -> tm_id_map -> tm_id_map -> tm_id -> (tm_id -> bool) -> static_path -> bool
+\end{lstlisting}
+\end{frame}
+
 \begin{frame}
 \frametitle{Higher Precision Analysis}
 \includegraphics[width=.7\textwidth]{cml-graph-lp.pdf}
@@ -961,58 +735,28 @@ $\vdash$ abstract v $\in$ staticEnv n
 \end{frame}
 
 
-
 \begin{frame}[fragile]
-	\frametitle{Higher Precision Analysis}
+\frametitle{Higher Precision Analysis}
 \begin{lstlisting}[language=logic, mathescape]
 predicate staticOneToMany: term -> name -> bool where
   intro: staticEnv staticComm t graph entr exit n$_c$ 
     staticEval staticEnv staticComm t,
     staticFlowsAccept staticEnv graph t,
     staticChanLive staticEnv entr exit n$_c$ t, 
-    forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
+    forEveryTwo (staticPathLive graph entr exit (IdBind n$_c$)
       (staticSendId staticEnv t n$_c$)) uncompetitive
   $\vdash$ staticOneToMany t n$_c$
-
-predicate staticManyToOne: term -> name -> bool where
-  intro: staticEnv staticComm t graph entr exit n$_c$ 
-    staticEval staticEnv staticComm t,
-    staticFlowsAccept staticEnv graph t,
-    staticChanLive staticEnv entr exit n$_c$ t, 
-    forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
-      (staticRecvId staticEnv t n$_c$)) uncompetitive
-  $\vdash$ staticManyToOne t n$_c$
 \end{lstlisting}
 \end{frame}
 
 \begin{frame}[fragile]
-	\frametitle{Higher Precision Analysis}
-\begin{lstlisting}[language=logic, mathescape]
-
-predicate staticOneToOne: term -> name -> bool where
-  intro: staticEnv staticComm t graph entr exit n$_c$ 
-    staticEval staticEnv staticComm t,
-    staticFlowsAccept staticEnv graph t,
-    staticChanLive staticEnv entr exit n$_c$ t, 
-    forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$) 
-      (staticSendId staticEnv t n$_c$)) uncompetitive, 
-    forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
-      (staticRecvId staticEnv t n$_c$)) uncompetitive
-  $\vdash$ staticOneToOne t n$_c$
-
-predicate staticOneShot: term -> name -> bool where
-  intro: staticEnv staticComm t graph entr exit n$_c$ . 
-    staticEval staticEnv staticComm t,
-    staticFlowsAccept staticEnv graph t,
-    staticChanLive staticEnv entr exit n$_c$ t, 
-    forEveryTwo (staticTraceable graph entr exit (IdBind n$_c$)
-      (staticSendId staticEnv t n$_c$)) singular
-  $\vdash$ staticOneShot t n$_c$
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Discussion}
+\frametitle{Summary}
+\begin{itemize}
+\item analysis of simple subset of Concurrent ML
+\item formal specification: evaluation, communication classifcation, channel liveness
+\item mechanized soundness proofs: evaluation, communication classifcation 
+\item formal reasoning techniques: generalization, induction skewing, inference direction 
+\end{itemize}
 \end{frame}
 
 \end{document}
