@@ -124,7 +124,8 @@ fun recv ch = sync (recvEvt ch)
 \begin{lstlisting}[language=ML, mathescape]
 structure Serv : SERV =
 struct 
-  datatype serv = S of (int * int chan) chan
+  datatype serv =
+    S of (int * int chan) chan
 
   fun make () =
   let 
@@ -252,6 +253,65 @@ done
 \end{frame}
 
 
+
+\begin{frame}[fragile]
+\frametitle{Communication Classification}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[language=ML, mathescape]
+structure Serv : SERV =
+struct 
+
+  datatype serv =
+    S of (int * int chan) chan 
+
+  fun make () =
+  let 
+    val reqCh = ManyToOne.channel ()
+    fun loop state =
+    let
+      val (v, replCh) = ManyToOne.recv reqCh
+      val () = OneShot.send (replCh, state)
+    in
+      loop v
+    end
+    val () = spawn (fn () => loop 0)
+  in
+    S reqCh
+  end 
+\end{lstlisting}
+\end{column}
+
+
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[language=ML, mathescape]
+  fun call (server, v) =
+  let 
+    val S reqCh = server
+    val replCh = OneShot.channel ()
+    val () = ManyToOne.send (reqCh, (v, replCh))
+  in
+    OneShot.recv replCh
+  end
+
+end
+
+val server = Serv.make ()
+
+val () =
+  spawn (fn () => Serv.call (server, 35));
+  (spawn fn () => 
+    Serv.call (server, 12); 
+    Serv.call (server, 13)
+  );
+  spawn (fn () => Serv.call (server, 81));
+  spawn (fn () => Serv.call (server, 44))
+\end{lstlisting}
+\end{column}
+\end{columns}
+\end{frame}
+
+
 \begin{frame}
 \frametitle{Synchronization}
 \begin{itemize}
@@ -260,6 +320,16 @@ done
 \item synchronization state
 \item sender and receiver thread containers
 \item message containers
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Formal Mechanized Theory}
+\begin{itemize}
+\item Isabelle/HOL  
+\item $\sim$ 1421 lines of definitions  
+\item $\sim$ 3052 lines of completed proofs 
+\item syntax-directed rules 
 \end{itemize}
 \end{frame}
 
@@ -292,6 +362,54 @@ and atom =
 | Lft name
 | Rht name
 | Fun name name term 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Dynamic Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+datatype dynamic_step =
+  DSeq name
+| DSpwn name
+| DCll name
+| DRtn name 
+
+type dynamic_path = dynamic_step list
+
+datatype chan =
+  Chan dynamic_path name 
+
+datatype dynamic_value = 
+  VUnt
+| VChn chan
+| VAtm atom (name -> dynamic_value option)
+
+type environment =
+  name -> dynamic_value option
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Dynamic Semantics}
+\begin{lstlisting}[language=logic, mathescape]
+predicate seqEval: complex -> environment -> dynamic_value -> bool 
+predicate callEval: complex -> env -> term -> env -> bool 
+
+datatype contin = Ctn name tm env
+
+type stack = contin list
+
+datatype state = Stt program env stack 
+
+type pool = dynamic_path -> state option
+
+predicate leaf: pool -> dynamic_path -> bool
+
+type corresp = dynamic_path * chan * dynamic_path
+
+type communication = corresp set 
+
+predicate dynamicEval: pool -> communication -> pool -> communication -> bool
 \end{lstlisting}
 \end{frame}
 
@@ -367,15 +485,11 @@ where
 * sync: pool path$_s$ n$_s$ n$_{se}$ t$_s$ env$_s$ stack$_s$ n$_{sc}$ n$_m$
   env$_{se}$ path$_r$ n$_r$ n$_{re}$ t$_r$ env$_r$ stack$_r$ n$_{rc}$ env$_{re}$ chan comm .
     leaf pool path$_s$,
-    pool path$_s$ = Some
-      (Stt (Bind n$_s$ (Sync n$_{se}$) t$_s$) env$_s$ stack$_s$),
-    env$_s$ n$_{se}$ = Some
-      (VAtm (SendEvt n$_{sc}$ n$_m$) env$_{se}$),
+    pool path$_s$ = Some (Stt (Bind n$_s$ (Sync n$_{se}$) t$_s$) env$_s$ stack$_s$),
+    env$_s$ n$_{se}$ = Some (VAtm (SendEvt n$_{sc}$ n$_m$) env$_{se}$),
     leaf pool path$_r$,
-    pool path$_r$ = Some
-      (Stt (Bind n$_r$ (Sync n$_{re}$) t$_r$) env$_r$ stack$_r$),
-    env$_r$ n$_{re}$ = Some
-      (VAtm (RecvEvt n$_{rc}$) env$_{re}$),
+    pool path$_r$ = Some (Stt (Bind n$_r$ (Sync n$_{re}$) t$_r$) env$_r$ stack$_r$),
+    env$_r$ n$_{re}$ = Some (VAtm (RecvEvt n$_{rc}$) env$_{re}$),
     env$_{se}$ n$_{sc}$ = Some (VChn chan),
     env$_{re}$ n$_{rc}$ = Some (VChn chan), 
     env$_{se}$ n$_m$ = Some v$_m$
@@ -763,9 +877,10 @@ predicate staticOneSync: term -> name -> bool where
 \frametitle{Soundness}
 \begin{itemize}
 \item induction on transition system 
-\item generalization for direct derivation   
-\item equivalent defintions with different structures 
-\item preservation under transitions 
+\item generalization to intermediate semantic data structures 
+\item skewing of induction direction
+\item reversing of inference direction  
+\item preservation
 \end{itemize}
 \end{frame}
 
