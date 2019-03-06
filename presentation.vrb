@@ -1,6 +1,6 @@
 \frametitle{Summary}
 \begin{itemize}
-\item analysis of simple subset of Concurrent ML
+\item analysis of a simple subset of Concurrent ML
 \item formal specification: evaluation, communication classifcation, channel liveness
 \item mechanized soundness proofs: evaluation, communication classifcation
 \item formal reasoning techniques: generalization, induction skewing, inference direction
