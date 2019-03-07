@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  6 MAR 2019 17:01
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  7 MAR 2019 12:36
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -967,34 +967,30 @@ e
 \c@mv@tabular=\count134
 \c@mv@boldtabular=\count135
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 12.0pt on input line 109.
+(Font)              scaled to size 12.0pt on input line 111.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 12.0pt on input line 109.
+(Font)              scaled to size 12.0pt on input line 111.
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
+(Font)              scaled to size 10.95pt on input line 111.
 
 [1
 
 {/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 10.95pt on input line 111.
-
-[2
-
-]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
 (Font)              scaled to size 14.4pt on input line 113.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
 (Font)              scaled to size 14.4pt on input line 113.
- (./thesis.toc
-LaTeX Font Info:    Try loading font information for U+msa on input line 2.
 
-(/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsa.fd
+(./thesis.toc
+LaTeX Font Info:    Try loading font information for U+msa on input line 2.
+ (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
 LaTeX Font Info:    Try loading font information for U+msb on input line 2.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [3
+) [2
 
 
 ])
@@ -1052,14 +1048,14 @@ Chapter 3.
 
 ] [35] [36] [37] [38] [39] [40] [41] [42] [43] [44] [45] [46] [47] [48]
 [49] [50] [51] [52] [53] [54] [55] [56] [57] [58] [59] [60] [61] [62] [63]
-[64] <cml-graph.pdf, id=230, 1494.58376pt x 1964.33875pt>
+[64] <cml-graph.pdf, id=227, 1494.58376pt x 1964.33875pt>
 File: cml-graph.pdf Graphic file (type pdf)
  <use cml-graph.pdf>
 Package pdftex.def Info: cml-graph.pdf used on input line 2358.
 (pdftex.def)             Requested size: 357.73405pt x 470.16208pt.
 
 [65] [66 <./cml-graph.pdf>] [67] [68] [69] [70] [71] [72]
-<cml-proof-low.pdf, id=281, 791.95876pt x 576.1525pt>
+<cml-proof-low.pdf, id=278, 791.95876pt x 576.1525pt>
 File: cml-proof-low.pdf Graphic file (type pdf)
  <use cml-proof-low.pdf>
 Package pdftex.def Info: cml-proof-low.pdf used on input line 2622.
@@ -1086,7 +1082,7 @@ Chapter 4.
 [87
 
 ] [88] [89] [90] [91]
-<cml-graph-lp.pdf, id=354, 1729.46124pt x 1925.1925pt> [92]
+<cml-graph-lp.pdf, id=351, 1729.46124pt x 1925.1925pt> [92]
 File: cml-graph-lp.pdf Graphic file (type pdf)
 
 <use cml-graph-lp.pdf>
@@ -1098,7 +1094,7 @@ Overfull \hbox (36.135pt too wide) in paragraph at lines 3379--3380
  []
 
 [93 <./cml-graph-lp.pdf>] [94] [95]
-<cml-liveness-analysis-k1.pdf, id=379, 1731.46875pt x 1908.12875pt>
+<cml-liveness-analysis-k1.pdf, id=376, 1731.46875pt x 1908.12875pt>
 File: cml-liveness-analysis-k1.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k1.pdf>
@@ -1109,7 +1105,7 @@ Overfull \hbox (36.135pt too wide) in paragraph at lines 3487--3488
 [][] 
  []
 
-[96] <cml-liveness-analysis-k4.pdf, id=383, 1776.6375pt x 1939.245pt>
+[96] <cml-liveness-analysis-k4.pdf, id=380, 1776.6375pt x 1939.245pt>
 File: cml-liveness-analysis-k4.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k4.pdf>
@@ -1121,21 +1117,21 @@ Overfull \hbox (36.135pt too wide) in paragraph at lines 3494--3495
  []
 
 [97 <./cml-liveness-analysis-k1.pdf>] [98 <./cml-liveness-analysis-k4.pdf>]
-[99] [100] [101] <cml-graph-k1.pdf, id=422, 1559.8275pt x 1677.26625pt>
+[99] [100] [101] <cml-graph-k1.pdf, id=419, 1559.8275pt x 1677.26625pt>
 File: cml-graph-k1.pdf Graphic file (type pdf)
 
 <use cml-graph-k1.pdf>
 Package pdftex.def Info: cml-graph-k1.pdf used on input line 3668.
 (pdftex.def)             Requested size: 357.73405pt x 384.66263pt.
  [102]
-<cml-graph-k4.pdf, id=426, 1090.0725pt x 954.56625pt>
+<cml-graph-k4.pdf, id=423, 1090.0725pt x 954.56625pt>
 File: cml-graph-k4.pdf Graphic file (type pdf)
  <use cml-graph-k4.pdf>
 Package pdftex.def Info: cml-graph-k4.pdf used on input line 3673.
 (pdftex.def)             Requested size: 278.23827pt x 243.6515pt.
 
 [103 <./cml-graph-k1.pdf>] [104 <./cml-graph-k4.pdf>] [105] [106]
-<cml-proof-high.pdf, id=491, 791.95876pt x 576.1525pt>
+<cml-proof-high.pdf, id=488, 791.95876pt x 576.1525pt>
 File: cml-proof-high.pdf Graphic file (type pdf)
 
 <use cml-proof-high.pdf>
@@ -1184,10 +1180,10 @@ fonts/cm/cmsy10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/bera
 pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></u
 sr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb
 >
-Output written on thesis.pdf (122 pages, 765074 bytes).
+Output written on thesis.pdf (121 pages, 762697 bytes).
 PDF statistics:
- 586 PDF objects out of 1000 (max. 8388607)
- 410 compressed objects within 5 object streams
+ 583 PDF objects out of 1000 (max. 8388607)
+ 408 compressed objects within 5 object streams
  0 named destinations out of 1000 (max. 500000)
  41 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -514,10 +514,10 @@ predicate oneSync: tm -> chan -> bool
 	\frametitle{Dynamic Communication}
 \begin{lstlisting}[language=logic, mathescape]
 predicate oneToMany: tm -> chan -> bool where
-  intro: t$_0$ chan .
+  intro: t$_0$ chan pool comm .
     star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
     forEveryTwo (isSendPath pool chan) ordered
-  $\vdash$ oneToMany pool chan
+  $\vdash$ oneToMany t$_0$ chan
 \end{lstlisting}
 \end{frame}
 

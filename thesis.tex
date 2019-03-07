@@ -106,7 +106,7 @@
 \begin{document}
 
 
-\commcertpage
+%\commcertpage
 
 \titlepage
 
@@ -1747,32 +1747,32 @@ that receives on it.
     $\vdash$ ordered path1 path2
 
   predicate oneToMany: tm -> chan -> bool where
-    intro: t$_0$ chan .
+    intro: t$_0$ chan pool comm .
       star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       forEveryTwo (isSendPath pool chan) ordered
     $\vdash$ oneToMany pool chan
 
   predicate manyToOne: tm -> chan -> bool where
-    intro: t$_0$ chan .
+    intro: t$_0$ chan pool comm .
       star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       forEveryTwo (isRecvPath pool chan) ordered
     $\vdash$ manyToOne t$_0$ chan
 
   predicate oneToOne: tm -> chan -> bool where
-    intro: t$_0$ chan .
+    intro: t$_0$ chan pool comm .
       star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       forEveryTwo (isSendPath pool chan) ordered,
       forEveryTwo (isRecvPath pool chan) ordered
     $\vdash$ oneToOne t$_0$ chan
 
   predicate oneShot: tm -> chan -> bool where
-    intro: t$_0$ chan .
+    intro: t$_0$ chan pool comm .
       star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       forEveryTwo (isSendPath pool chan) (op =)
     $\vdash$ oneShot t$_0$ chan
 
   predicate oneSync: tm -> chan -> bool where
-    intro: t$_0$ chan .
+    intro: t$_0$ chan pool comm .
       star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       forEveryTwo (isSendPath pool chan) (op =),
       forEveryTwo (isRecvPath pool chan) ordered 
