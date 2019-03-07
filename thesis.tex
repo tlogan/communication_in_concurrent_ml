@@ -40,6 +40,10 @@
   showstringspaces=false,
   showtabs=false,          
   tabsize=2,
+  emph={  
+    OneToMany, OneShot, ManyToOne
+  },
+  emphstyle={\bfseries}
 }
 
 \lstdefinelanguage{logic}{
@@ -1776,7 +1780,7 @@ that receives on it.
       star dynamicEval [[] -> (Stt t$_0$ [->] [])] {} pool comm,
       forEveryTwo (isSendPath pool chan) (op =),
       forEveryTwo (isRecvPath pool chan) ordered 
-    $\vdash$ oneSync t$_0$  chan
+    $\vdash$ oneSync t$_0$ chan
 
 \end{lstlisting}
 
