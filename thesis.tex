@@ -1895,12 +1895,12 @@ static evaluation is less precise.
     $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (Pair n$_1$ n$_2$)) t')
 
   * left: n$_a$ staticEnv n staticComm t' .
-      (SAtm(Lft n$_a$)) $\in$ staticEnv n,
+      (SAtm (Lft n$_a$)) $\in$ staticEnv n,
       staticEval staticEnv staticComm t' 
     $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (Lft n$_a$)) t')
 
   * right: n$_a$ staticEnv n staticComm t' .
-      (SAtm(Rht n$_a$)) $\in$ staticEnv n, 
+      (SAtm (Rht n$_a$)) $\in$ staticEnv n, 
       staticEval staticEnv staticComm t
     $\vdash$ staticEval staticEnv staticComm (Bind n (Atom (Rht n$_a$)) t')
 
@@ -2262,24 +2262,24 @@ accepting flows for the sequenced term.
     $\vdash$ staticFlowsAccept staticEnv graph (Rslt n)
 
   * unit: n t' graph staticEnv  .
-      (IdBind n , MSeq, termId t') $\in$ graph,
+      (IdBind n, MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n Unt t')
 
   * makeChan: n t' graph staticEnv  .
-      (IdBind n , MSeq, termId t') $\in$ graph,
+      (IdBind n, MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n MkChn t')
 
   * sendEvt: n t' graph staticEnv  n$_c$ n$_m$ .
-      (IdBind n , MSeq, termId t') $\in$ graph, 
+      (IdBind n, MSeq, termId t') $\in$ graph, 
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept
       staticEnv graph
       (Bind n (Atom (SendEvt n$_c$ n$_m$)) t')
 
   * recvEvt: n t' graph staticEnv n$_c$ .
-      (IdBind n , MSeq, termId t') $\in$ graph,
+      (IdBind n, MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (RecvEvt n$_c$)) t')
 
@@ -2289,17 +2289,17 @@ accepting flows for the sequenced term.
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Pair n$_1$ n$_2$)) t')
 
   * left: n t' graph staticEnv n$_s$ .
-      (IdBind n , MSeq, termId t') $\in$ graph,
+      (IdBind n, MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Lft n$_s$)) t')
 
   * right: n t' graph staticEnv n$_s$ .
-      (IdBind n , MSeq, termId t') $\in$ graph,
+      (IdBind n, MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t'
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Rht n$_s$)) t')
 
   * function: n t' graph staticEnv t$_b$ n$_f$ n$_t$ .
-      (IdBind n , MSeq, termId t') $\in$ graph,
+      (IdBind n, MSeq, termId t') $\in$ graph,
       staticFlowsAccept staticEnv graph t', 
       staticFlowsAccept staticEnv graph t$_b$
     $\vdash$ staticFlowsAccept staticEnv graph (Bind n (Atom (Fun n$_f$ n$_t$ t$_b$)) t')
@@ -2511,8 +2511,10 @@ thread that attempts to receive on a static channel in any run of a given progra
     intro: staticEnv staticComm t graph n$_c$ .
       staticEval staticEnv staticComm t,
       staticFlowsAccept staticEnv graph t,
-      forEveryTwo (staticTraceable graph (termId t) (staticSendId staticEnv t n$_c$)) singular,
-      forEveryTwo (staticTraceable graph (termId t) (staticRecvId staticEnv t n$_c$)) uncompetitive
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticSendId staticEnv t n$_c$)) singular,
+      forEveryTwo (staticTraceable graph (termId t)
+        (staticRecvId staticEnv t n$_c$)) uncompetitive
     $\vdash$ staticOneSync t n$_c$
 \end{lstlisting}
 

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  7 MAR 2019 12:43
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  7 MAR 2019 13:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1058,21 +1058,21 @@ Package pdftex.def Info: cml-graph.pdf used on input line 2362.
 <cml-proof-low.pdf, id=278, 791.95876pt x 576.1525pt>
 File: cml-proof-low.pdf Graphic file (type pdf)
  <use cml-proof-low.pdf>
-Package pdftex.def Info: cml-proof-low.pdf used on input line 2626.
+Package pdftex.def Info: cml-proof-low.pdf used on input line 2628.
 (pdftex.def)             Requested size: 397.48499pt x 289.17445pt.
 
-Overfull \hbox (36.135pt too wide) in paragraph at lines 2626--2627
+Overfull \hbox (36.135pt too wide) in paragraph at lines 2628--2629
 [][] 
  []
 
 [73] [74 <./cml-proof-low.pdf>] [75] [76] [77] [78] [79] [80] [81]
-Overfull \hbox (15.35738pt too wide) in paragraph at lines 2977--2983
+Overfull \hbox (15.35738pt too wide) in paragraph at lines 2979--2985
 []\T1/LinuxLibertineT-TLF/m/n/10.95 The lemma for sound-ness of static send-ing
  iden-ti-fier clas-si-fi-ca-tion []
  []
 
 [82]
-Overfull \hbox (1.52177pt too wide) in paragraph at lines 3011--3026
+Overfull \hbox (1.52177pt too wide) in paragraph at lines 3013--3028
 \T1/LinuxLibertineT-TLF/m/n/10.95 This def-i-ni-tion is use-ful for for-ward de
 riva-tions of reach-a-bil-ity re-la-tions, how-ever it doesn't
  []
@@ -1086,10 +1086,10 @@ Chapter 4.
 File: cml-graph-lp.pdf Graphic file (type pdf)
 
 <use cml-graph-lp.pdf>
-Package pdftex.def Info: cml-graph-lp.pdf used on input line 3383.
+Package pdftex.def Info: cml-graph-lp.pdf used on input line 3385.
 (pdftex.def)             Requested size: 397.48499pt x 442.46182pt.
 
-Overfull \hbox (36.135pt too wide) in paragraph at lines 3383--3384
+Overfull \hbox (36.135pt too wide) in paragraph at lines 3385--3386
 [][] 
  []
 
@@ -1098,10 +1098,10 @@ Overfull \hbox (36.135pt too wide) in paragraph at lines 3383--3384
 File: cml-liveness-analysis-k1.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k1.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3491.
+Package pdftex.def Info: cml-liveness-analysis-k1.pdf used on input line 3493.
 (pdftex.def)             Requested size: 397.48499pt x 438.04515pt.
 
-Overfull \hbox (36.135pt too wide) in paragraph at lines 3491--3492
+Overfull \hbox (36.135pt too wide) in paragraph at lines 3493--3494
 [][] 
  []
 
@@ -1109,10 +1109,10 @@ Overfull \hbox (36.135pt too wide) in paragraph at lines 3491--3492
 File: cml-liveness-analysis-k4.pdf Graphic file (type pdf)
 
 <use cml-liveness-analysis-k4.pdf>
-Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3498.
+Package pdftex.def Info: cml-liveness-analysis-k4.pdf used on input line 3500.
 (pdftex.def)             Requested size: 397.48499pt x 433.85529pt.
 
-Overfull \hbox (36.135pt too wide) in paragraph at lines 3498--3499
+Overfull \hbox (36.135pt too wide) in paragraph at lines 3500--3501
 [][] 
  []
 
@@ -1121,13 +1121,13 @@ Overfull \hbox (36.135pt too wide) in paragraph at lines 3498--3499
 File: cml-graph-k1.pdf Graphic file (type pdf)
 
 <use cml-graph-k1.pdf>
-Package pdftex.def Info: cml-graph-k1.pdf used on input line 3672.
+Package pdftex.def Info: cml-graph-k1.pdf used on input line 3674.
 (pdftex.def)             Requested size: 357.73405pt x 384.66263pt.
  [102]
 <cml-graph-k4.pdf, id=423, 1090.0725pt x 954.56625pt>
 File: cml-graph-k4.pdf Graphic file (type pdf)
  <use cml-graph-k4.pdf>
-Package pdftex.def Info: cml-graph-k4.pdf used on input line 3677.
+Package pdftex.def Info: cml-graph-k4.pdf used on input line 3679.
 (pdftex.def)             Requested size: 278.23827pt x 243.6515pt.
 
 [103 <./cml-graph-k1.pdf>] [104 <./cml-graph-k4.pdf>] [105] [106]
@@ -1135,10 +1135,10 @@ Package pdftex.def Info: cml-graph-k4.pdf used on input line 3677.
 File: cml-proof-high.pdf Graphic file (type pdf)
 
 <use cml-proof-high.pdf>
-Package pdftex.def Info: cml-proof-high.pdf used on input line 3820.
+Package pdftex.def Info: cml-proof-high.pdf used on input line 3822.
 (pdftex.def)             Requested size: 397.48499pt x 289.17445pt.
 
-Overfull \hbox (36.135pt too wide) in paragraph at lines 3820--3821
+Overfull \hbox (36.135pt too wide) in paragraph at lines 3822--3823
 [][] 
  []
 
@@ -1180,7 +1180,7 @@ fonts/cm/cmsy10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/bera
 pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/bera/fvmro8a.pfb></u
 sr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb
 >
-Output written on thesis.pdf (121 pages, 763106 bytes).
+Output written on thesis.pdf (121 pages, 763046 bytes).
 PDF statistics:
  583 PDF objects out of 1000 (max. 8388607)
  408 compressed objects within 5 object streams
