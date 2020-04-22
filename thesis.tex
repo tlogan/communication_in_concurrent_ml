@@ -110,11 +110,17 @@
 \begin{document}
 
 
-%\commcertpage
+\commcertpage
 
 \titlepage
 
-\tableofcontents   % Table of Contents will be automatically
+
+\utabstract
+\index{Abstract}%
+\indent
+For this master's thesis, I have developed a formal semantics of a language with concurrent processes (or threads), an initial formal analysis, along with related theorems and formal proofs. The language under analysis is a very simplified version of Concurrent ML. The formal analysis recasts an analysis with informal proofs developed by Reppy and Xiao. It categorizes communication described by programs into simple topologies. One description of topologies is static; that is, it describes all static topologies of a program in a finite number of steps. Another description is dynamic; that is, it describes topologies in terms of running a program for an arbitrary number of steps. The main formal theorem states that the static analysis is sound with respect to the dynamic analysis. Two versions of the static analysis have been developed so far; one with lower precision, and one with higher precision. The higher precision analysis is closer to the work by Reppy and Xiao, but contains many more details making it more challenging to prove formally than the lower precision analysis. The proofs for the soundness theorems of the lower precision analysis have been mechanically verified using Isabelle/HOL, while the higher precision analysis is currently under development. Indeed, one of the motivations for implementing the analysis in a mechanical setting is to enable gradual extension of analysis and language without introducing uncaught bugs in the definitions or proofs. The definitions used in this formal theory differ significantly from that of Reppy and Xiao, in order to aid formal reasoning. Thus, recasting Reppy and Xiao's work was far more nuanced than a straightforward syntactic transliteration. Although the definitions are structurally quite different, their philosophical equivalence is hopefully apparent. In this formal theory, the dynamic semantics of Concurrent ML consists of a CEK machine. The static semantics consists of a control flow analysis (0CFA), defined in terms of constraints.
+
+\tableofcontents
 
 \pagenumbering{gobble}
 
@@ -122,32 +128,7 @@
 \pagenumbering{arabic}
 
 \chapter{Introduction}
-For this master's thesis, I have developed a formal semantics of
-a language with concurrent processes (or threads), an initial formal analysis, along with related theorems and formal 
-proofs. The language under analysis is
-a very simplified version of Concurrent ML \cite{reppy2007concurrent}. The formal analysis
-recasts an analysis with informal proofs developed by Reppy and Xiao \cite{reppy2007specialization}. It
-categorizes communication described by programs into simple topologies. One description of
-topologies is static; that is, it describes all static topologies of a program in a finite number of steps.
-Another description is dynamic; that is, it describes topologies in terms of running
-a program for an arbitrary number of steps. The main formal theorem states that the static
-analysis is sound with respect to the dynamic analysis. Two versions of the static analysis
-have been developed so far; one with lower precision, and one with higher precision. The higher
-precision analysis is closer to the work by Reppy and Xiao, but contains many more details making
-it more challenging to prove formally than the lower precision analysis.
-The proofs for the soundness theorems of the lower precision analysis
-have been mechanically verified using Isabelle/HOL \cite{nipkow2002isabelle}, while the higher precision
-analysis is currently under development. Indeed, one of the motivations for implementing the analysis 
-in a mechanical setting is to enable gradual extension of analysis and language without introducing
-uncaught bugs in the definitions or proofs. The definitions used in this formal theory differ
-significantly from that of Reppy and Xiao, in order to aid formal reasoning. Thus, recasting
-Reppy and Xiao's work was far more nuanced than a straightforward
-syntactic transliteration.
-Although the definitions are structurally quite different,
-their philosophical equivalence is hopefully apparent. 
-In this formal theory, the dynamic semantics of Concurrent ML consists of 
-a CEK machine \cite{felleisen1986control}. The static semantics consists of a control flow analysis (0CFA)
-\cite{shivers1991control}, defined in terms of constraints \cite{nielson2015principles}.
+For this master's thesis, I have developed a formal semantics of a language with concurrent processes (or threads), an initial formal analysis, along with related theorems and formal proofs. The language under analysis is a very simplified version of Concurrent ML \cite{reppy2007concurrent}. The formal analysis recasts an analysis with informal proofs developed by Reppy and Xiao \cite{reppy2007specialization}. It categorizes communication described by programs into simple topologies. One description of topologies is static; that is, it describes all static topologies of a program in a finite number of steps. Another description is dynamic; that is, it describes topologies in terms of running a program for an arbitrary number of steps. The main formal theorem states that the static analysis is sound with respect to the dynamic analysis. Two versions of the static analysis have been developed so far; one with lower precision, and one with higher precision. The higher precision analysis is closer to the work by Reppy and Xiao, but contains many more details making it more challenging to prove formally than the lower precision analysis. The proofs for the soundness theorems of the lower precision analysis have been mechanically verified using Isabelle/HOL \cite{nipkow2002isabelle}, while the higher precision analysis is currently under development. Indeed, one of the motivations for implementing the analysis in a mechanical setting is to enable gradual extension of analysis and language without introducing uncaught bugs in the definitions or proofs. The definitions used in this formal theory differ significantly from that of Reppy and Xiao, in order to aid formal reasoning. Thus, recasting Reppy and Xiao's work was far more nuanced than a straightforward syntactic transliteration. Although the definitions are structurally quite different, their philosophical equivalence is hopefully apparent. In this formal theory, the dynamic semantics of Concurrent ML consists of a CEK machine \cite{felleisen1986control}. The static semantics consists of a control flow analysis (0CFA) \cite{shivers1991control}, defined in terms of constraints \cite{nielson2015principles}.
 
 \section{Concurrent ML}
 In programing languages, concurrency is a program structuring technique that allows evaluation
